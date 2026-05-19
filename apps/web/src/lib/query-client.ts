@@ -71,10 +71,23 @@ export function restoreQueryCache() {
     }
 
     for (const { queryKey, data, dataUpdatedAt } of queries) {
-      queryClient.setQueryData(queryKey, data, { updatedAt: dataUpdatedAt })
+      // Guard: skip any cached entry that looks like an error object
+      // (e.g. axios error { code, message } or API error { error })
+      // Rendering these directly would cause React error #31
+      if (
+        data === null ||
+        data === undefined ||
+        typeof data !== 'object' ||
+        Array.isArray(data) ||
+        // Allow plain data objects but block known error shapes
+        !('code' in data && 'message' in data) &&
+        !('error' in data && Object.keys(data).length === 1)
+      ) {
+        queryClient.setQueryData(queryKey, data, { updatedAt: dataUpdatedAt })
+      }
     }
   } catch {
-    // Ignore parse errors
+    // Ignore parse errors — nuke the cache to prevent boot crashes
     localStorage.removeItem(CACHE_KEY)
   }
 }
