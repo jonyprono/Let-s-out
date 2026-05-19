@@ -25,37 +25,42 @@ function getLocalIP() {
   return candidates[0]?.address || 'localhost'
 }
 
-// Local IP for development - update this if your IP changes (run: pnpm setup-network)
-const LOCAL_IP = getLocalIP();
+// Set CAPACITOR_PRODUCTION=true when building the production APK
+const isProduction = process.env.CAPACITOR_PRODUCTION === 'true'
+
+const LOCAL_IP = getLocalIP()
 
 const config: CapacitorConfig = {
   appId: 'com.letsout.app',
   appName: 'Lets Out',
   webDir: 'dist',
-  server: {
-    // Point the native app to the Vite dev server on your local network
-    // This allows live-reload and avoids needing to rebuild after every change
-    url: `http://${LOCAL_IP}:3000`,
-    cleartext: true, // Allow HTTP for local network development
-    allowNavigation: ['*'], // Allow all network requests
-    errorPath: 'error.html', // Fallback UI for network errors
-  },
+  server: isProduction
+    ? {
+        // Production: load the live Vercel web app
+        url: 'https://let-s-out-web.vercel.app',
+        cleartext: false,
+        allowNavigation: ['let-s-out.onrender.com', 'let-s-out-web.vercel.app'],
+      }
+    : {
+        // Development: point to local Vite dev server for live-reload
+        url: `http://${LOCAL_IP}:3000`,
+        cleartext: true,
+        allowNavigation: ['*'],
+        errorPath: 'error.html',
+      },
   plugins: {
-    // Configure SplashScreen
     SplashScreen: {
       launchShowDuration: 0,
     },
-    // Status bar overlays the WebView for edge-to-edge display
     StatusBar: {
       overlaysWebView: true,
       style: 'DARK',
       backgroundColor: '#00000000',
     },
-    // Allow HTTP requests (important for local network)
     CapacitorHttp: {
       enabled: true,
     },
   },
-};
+}
 
-export default config;
+export default config

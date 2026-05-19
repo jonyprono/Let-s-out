@@ -324,11 +324,16 @@ export class AuthService {
     }
 
     const cleanPhone = phone.startsWith('+') ? phone.slice(1) : phone
+    // 5-second timeout — if Meta API doesn't respond, we log and move on.
+    // The OTP is already saved in DB/Redis so the user can still enter it.
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
     try {
       const response = await fetch(
         `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
         {
           method: 'POST',
+          signal: controller.signal,
           headers: {
             Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
             'Content-Type': 'application/json',
@@ -357,6 +362,7 @@ export class AuthService {
           }),
         },
       )
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         const errData = await response.json().catch(() => null)
@@ -367,8 +373,13 @@ export class AuthService {
       const result = (await response.json()) as any
       console.log('[Meta WhatsApp] OTP envoyé à', cleanPhone, '| message_id:', result.messages?.[0]?.id)
     } catch (error: any) {
-      console.error('[Meta WhatsApp Error]', { raw: error?.message || error })
-      // Don't throw — the OTP is saved in DB, user can retry via SMS (Firebase)
+      clearTimeout(timeoutId)
+      if (error?.name === 'AbortError') {
+        console.error('[Meta WhatsApp] Timeout — API did not respond within 5s. OTP is in DB.')
+      } else {
+        console.error('[Meta WhatsApp Error]', { raw: error?.message || error })
+      }
+      // Don't throw — the OTP is saved in DB, user can still validate it manually
     }
   }
 

@@ -31,8 +31,9 @@ export const apiClient = axios.create({
   baseURL: resolveApiUrl(),
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
-  // Shorter timeout on mobile to fail fast and show cached data
-  timeout: 10000,
+  // On mobile (Capacitor), allow more time for Render free-tier cold starts (~50s)
+  // On web browser, keep a snappy 10s timeout
+  timeout: isCapacitor() ? 60000 : 10000,
 })
 
 // ── Request interceptor ───────────────────────────────────────────────────────
