@@ -88,8 +88,17 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         setTimeout(() => otpRefs.current[0]?.focus(), 100)
       },
       onError: (e: any) => {
-        if (e?.response?.status === 429) toast.error("Trop de tentatives. Veuillez réessayer plus tard.")
-        else toast.error(e?.response?.data?.error || (e?.message === 'Network Error' ? "Erreur réseau : serveur inaccessible" : `Erreur: ${e?.message || 'Inconnue'}`))
+        if (e?.response?.status === 429) {
+          toast.error("Trop de tentatives. Veuillez réessayer plus tard.")
+        } else {
+          const errData = e?.response?.data?.error
+          const msg = typeof errData === 'string'
+            ? errData
+            : e?.message === 'Network Error'
+              ? "Erreur réseau : serveur inaccessible"
+              : `Erreur: ${e?.message || 'Inconnue'}`
+          toast.error(msg)
+        }
       }
     })
   }
