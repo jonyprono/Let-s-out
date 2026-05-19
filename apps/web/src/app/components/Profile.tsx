@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Settings, LogOut, MapPin, UserCheck, UserPlus, ChevronRight, Star, Lock } from 'lucide-react';
+import { Settings, LogOut, MapPin, UserCheck, UserPlus, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -8,8 +8,7 @@ import { useLogout } from '@/features/auth/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+
 import { useNavigate, useParams } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
 
@@ -122,11 +121,6 @@ export function Profile({ onNavigate }: ProfileProps) {
     );
   }
 
-  const CATEGORY_EMOJI: Record<string, string> = {
-    SPORT: '⚽️', MUSIC: '🎸', FOOD: '🍔', CULTURE: '🎭',
-    GAMING: '🎮', TRAVEL: '✈️', WELLNESS: '🧘', ART: '🎨',
-    NIGHTLIFE: '🌃', OTHER: '✨'
-  };
 
   return (
     <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">

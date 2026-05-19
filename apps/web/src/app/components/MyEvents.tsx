@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { Bell, Share2, Star, Loader2, Calendar } from 'lucide-react';
+import { Bell, Loader2, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
-import { SafeImage } from '@/components/shared/SafeImage';
 import { hapticFeedback } from '@/lib/haptics';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNotifications } from '@/features/notifications/api';
-import { toast } from 'sonner';
 import { EventCard } from '@/components/shared/EventCard';
 import { useFavoritesStore } from '@/stores/favorites.store';
 
@@ -22,23 +20,6 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'past', label: 'Passés' },
 ];
 
-function formatEventDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).replace(/^\w/, c => c.toUpperCase()) + ' • ' +
-    date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' GMT';
-}
-
-function formatPrice(price: number, currency: string): string {
-  if (price === 0) return 'Gratuit';
-  if (currency === 'XOF' || currency === 'CFA') return `${Number(price).toLocaleString('fr-FR')} F`;
-  if (currency === 'EUR') return `${price} €`;
-  return `${price} ${currency}`;
-}
 
 export function MyEvents({ onNavigate }: MyEventsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('upcoming');
@@ -54,7 +35,6 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
   });
 
   const now = new Date();
-  const allCreated: any[] = activity?.createdEvents || [];
   const allJoined: any[] = activity?.joinedEvents || [];
   const allPast: any[] = activity?.pastEvents || [];
   const upcomingEvents = allJoined.filter((e: any) => new Date(e.startAt) >= now);

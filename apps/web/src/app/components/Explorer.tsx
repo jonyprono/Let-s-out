@@ -1,11 +1,9 @@
-import { useState, memo, lazy, Suspense } from 'react';
-import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Share2, Star } from 'lucide-react';
+import { useState, lazy, Suspense } from 'react';
+import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
-import { SafeImage } from '@/components/shared/SafeImage';
 import { hapticFeedback } from '@/lib/haptics';
 import { getCurrentPosition, searchPlaces, type GeoPlace } from '@/lib/geo';
-import { toast } from 'sonner';
 import { EventCard } from '@/components/shared/EventCard';
 
 // ── Leaflet lazy-loaded only when Map mode is actually used ──────────────────

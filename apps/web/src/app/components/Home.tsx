@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef, memo } from 'react';
-import { Search, Bell, Share2, Star, Loader2, SlidersHorizontal, QrCode, WifiOff, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, Bell, Loader2, SlidersHorizontal, QrCode, WifiOff, RefreshCw } from 'lucide-react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
 import { usersApi } from '@/features/users/api';
-import { SafeImage } from '@/components/shared/SafeImage';
 import { hapticFeedback } from '@/lib/haptics';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { PermissionsRequest } from './PermissionsRequest';
-import { toast } from 'sonner';
 import { EventCard } from '@/components/shared/EventCard';
 
 interface HomeProps {
@@ -45,16 +43,6 @@ function filterOngoing(events: Event[]): Event[] {
   });
 }
 
-function formatEventDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('fr-FR', {
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).replace(/^\w/, c => c.toUpperCase()) + ' • ' +
-    date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' GMT';
-}
 
 // ── Skeleton loaders ───────────────────────────────────────────────────────────
 function EventCardSkeleton() {

@@ -47,7 +47,7 @@ export const EventCard = memo(function EventCard({
 
   const { data: fullEvent, isLoading: isLoadingEvent } = useQuery({
     queryKey: ['events', event.id],
-    queryFn: () => eventsApi.getEvent(event.id),
+    queryFn: () => eventsApi.getById(event.id),
     enabled: showQRModal && !event.joinCode,
   });
 

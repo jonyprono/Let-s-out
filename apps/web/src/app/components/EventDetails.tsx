@@ -5,7 +5,6 @@ import {
   MapPin,
   Calendar,
   Share2,
-  Heart,
   Loader2,
   Users,
   MessageCircle,
