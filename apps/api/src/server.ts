@@ -1,7 +1,6 @@
 import Fastify from 'fastify'
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 import dotenv from 'dotenv'
-import { join } from 'path'
 
 dotenv.config()
 
