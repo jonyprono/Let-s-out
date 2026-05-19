@@ -52,6 +52,9 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  console.error(err)
-  process.exit(1)
+  console.error('CRITICAL STARTUP ERROR:', err)
+  // Flush stdout/stderr before exiting
+  setTimeout(() => {
+    process.exit(1)
+  }, 1000)
 })
