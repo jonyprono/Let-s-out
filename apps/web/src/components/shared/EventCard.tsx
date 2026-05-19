@@ -51,7 +51,7 @@ export const EventCard = memo(function EventCard({
     enabled: showQRModal && !event.joinCode,
   });
 
-  const joinCode = event.joinCode || fullEvent?.joinCode;
+  const joinCode = event.joinCode || fullEvent?.data?.joinCode;
 
   const price = formatPrice(event.price, event.currency);
   const dateStr = formatEventDate(event.startAt);
