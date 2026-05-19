@@ -104,7 +104,10 @@ apiClient.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const body = isCapacitor() ? { refreshToken: useAuthStore.getState().refreshToken } : {}
+        // Always send refreshToken in body (works for cross-origin web + Capacitor)
+        // Also relies on cookie as fallback if body token is missing
+        const storedRefreshToken = useAuthStore.getState().refreshToken
+        const body = storedRefreshToken ? { refreshToken: storedRefreshToken } : {}
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_URL}/auth/refresh`,
           body,

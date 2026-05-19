@@ -275,13 +275,13 @@ export class AuthController {
 
     reply.setCookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/api/v1/auth',
+      secure: true, // Always secure in production (HTTPS)
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' allows cross-origin (Vercel → Render)
+      path: '/',
       maxAge: 30 * 24 * 60 * 60,
     })
 
-    return reply.send({ accessToken, user: { ...user, passwordHash: undefined } })
+    return reply.send({ accessToken, refreshToken, user: { ...user, passwordHash: undefined } })
   }
 
   async refresh(req: FastifyRequest, reply: FastifyReply) {

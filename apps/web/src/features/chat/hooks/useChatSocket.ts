@@ -63,8 +63,21 @@ export function useChatSocket() {
     }
 
     ws.current.onclose = () => {
-      console.log('[WS] Disconnected — reconnecting in 3s')
-      reconnectTimer.current = setTimeout(connect, 3000)
+      // Don't reconnect if the token is expired — wait for auth store to refresh it
+      const token = useAuthStore.getState().accessToken
+      if (!token) return
+
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const isExpired = payload.exp && payload.exp * 1000 < Date.now()
+        if (isExpired) return // Token expired — let the auth interceptor handle refresh
+      } catch {
+        // If we can't decode the token, don't reconnect
+        return
+      }
+
+      console.log('[WS] Disconnected — reconnecting in 5s')
+      reconnectTimer.current = setTimeout(connect, 5000)
     }
 
     ws.current.onerror = () => {

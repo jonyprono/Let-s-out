@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Megaphone, Map as MapIcon, Check } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Megaphone, Map as MapIcon, Check, Edit3, BadgeCheck } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
@@ -79,6 +79,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [isPrivate, setIsPrivate] = useState(false)
   const [enablePool, setEnablePool] = useState(false)
   const [poolTarget, setPoolTarget] = useState('')
+  // Cagnotte modal
+  const [showPoolModal, setShowPoolModal] = useState(false)
+  const [poolStep, setPoolStep] = useState(1) // 1=but, 2=objectif, 3=participation, 4=mode
+  const [poolDescription, setPoolDescription] = useState('')
+  const [poolDeadline, setPoolDeadline] = useState('')
+  const [poolMode, setPoolMode] = useState<'libre' | 'minimum' | 'fixe'>('libre')
+  const [poolMinAmount, setPoolMinAmount] = useState('')
 
   // Step 4
   const [description, setDescription] = useState('')
@@ -349,23 +356,25 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     <div className="w-full h-full bg-white flex flex-col">
 
       {/* Header */}
-      <div className="px-5 pt-4 pb-0">
+      <div className={`px-5 pt-4 ${step === 6 ? 'pb-4 bg-gray-50' : 'pb-0'}`}>
         <div className="flex items-center justify-center relative mb-3">
           <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
-            className="absolute left-0 w-8 h-8 flex items-center justify-center">
-            <ChevronLeft className="w-6 h-6 text-gray-800" />
+            className={`absolute left-0 w-8 h-8 flex items-center justify-center ${step === 6 ? 'bg-gray-100 rounded-full' : ''}`}>
+            <ChevronLeft className={`w-6 h-6 text-gray-800 ${step === 6 ? 'w-5 h-5' : ''}`} />
           </button>
-          <span className="text-[15px] font-semibold text-gray-900">Créer un événement</span>
+          <span className="text-[15px] font-semibold text-gray-900">{step === 6 ? 'Détails événement' : 'Créer un événement'}</span>
         </div>
         {/* Progress bar */}
-        <div className="h-0.5 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-[#FF9F1C] rounded-full transition-all duration-300"
-            style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
-        </div>
+        {step < 6 && (
+          <div className="h-0.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-full bg-[#FF9F1C] rounded-full transition-all duration-300"
+              style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
+          </div>
+        )}
       </div>
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-28">
+      <div className={`flex-1 overflow-y-auto px-5 pt-6 pb-28 ${step === 6 ? 'bg-gray-50 pt-2 pb-40' : ''}`}>
         <h2 className="text-[20px] font-bold text-[#FF9F1C] mb-1">{stepTitles[step - 1]}</h2>
         <p className="text-[13px] text-gray-400 mb-6">{stepSubs[step - 1]}</p>
 
@@ -541,50 +550,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
             </div>
 
-            {/* Cagnotte toggle */}
-            <div className="rounded-xl border border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[14px] font-semibold text-gray-800">Activer une cagnotte</p>
-                  <p className="text-[12px] text-gray-500 mt-0.5">Collectez des fonds pour votre événement</p>
-                </div>
-                {/* Toggle switch */}
-                <button
-                  type="button"
-                  onClick={() => setEnablePool(p => !p)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    enablePool ? 'bg-[#FF9F1C]' : 'bg-gray-200'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                      enablePool ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-              {enablePool && (
-                <div className="mt-4">
-                  <label className="text-[13px] font-medium text-gray-700 mb-2 block">Objectif de collecte</label>
-                  <div className="flex gap-2 items-center">
-                    <input
-                      type="number"
-                      min={1}
-                      value={poolTarget}
-                      onChange={e => setPoolTarget(e.target.value)}
-                      placeholder="Ex: 100000"
-                      className="flex-1 px-4 py-3 border border-[#FF9F1C] rounded-xl text-[15px] focus:outline-none"
-                    />
-                    <div className="px-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-600 bg-gray-50 flex-shrink-0">
-                      F CFA
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-gray-400 mt-2">
-                    ⚠️ Une vérification d'identité (KYC) sera requise pour effectuer le retrait.
-                  </p>
-                </div>
-              )}
-            </div>
+
 
             <div>
               <label className="text-[13px] font-medium text-gray-700 mb-3 block">Confidentialité</label>
@@ -682,160 +648,147 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         {/* ── STEP 6: Rendu après publication ── */}
         {step === 6 && (
-          <div className="space-y-6">
-            <div className="bg-[#FFF8F1] border border-[#FFE8D6] rounded-lg py-2 text-center text-[#FF9F1C] text-[12px] font-bold uppercase tracking-wider mb-2">
-              Rendu après publication
+          <div className="space-y-4 min-h-full">
+            <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-4">{title || 'Titre de l\'événement'}</h1>
+            
+            <div className="bg-[#EBF3FA] mb-6 p-4 rounded-xl text-gray-600 text-[13px] leading-relaxed">
+              Cet événement n'est pas encore visible sur Let's Out.<br/>
+              Publiez-le pour le rendre accessible publiquement.<br/>
+              Ou ajoutez une cagnotte pour partager les frais.
             </div>
 
-            {/* Cover */}
-            <div className="w-full h-48 rounded-2xl overflow-hidden bg-gray-100 relative">
-              {coverPreview ? (
-                <img src={coverPreview} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-3xl">
-                  {categories[0] === 'SPORT' ? '⚽️' : categories[0] === 'MUSIC' ? '🎸' : '✨'}
-                </div>
-              )}
+            {/* Organisateurs Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+               <div className="flex justify-between items-center mb-4">
+                 <h3 className="font-bold text-gray-900 text-[15px]">Organisateurs</h3>
+                 <button onClick={() => setStep(5)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+               </div>
+               <div className="flex items-center gap-3 mb-3">
+                 {me?.profile?.avatarUrl ? (
+                   <img src={me.profile.avatarUrl} className="w-8 h-8 rounded-full object-cover" />
+                 ) : (
+                   <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm">
+                     {me?.profile?.displayName?.charAt(0) || 'M'}
+                   </div>
+                 )}
+                 <span className="text-[14px] text-gray-700 font-medium">{me?.profile?.displayName || 'Vous'}</span>
+               </div>
+               {selectedCoOrgs.map(org => (
+                 <div key={org.id} className="flex items-center gap-3 mt-3">
+                   {org.avatarUrl ? (
+                     <SafeImage src={org.avatarUrl} alt={org.name} className="w-8 h-8 rounded-full object-cover" />
+                   ) : (
+                     <div className="w-8 h-8 rounded-full bg-orange-300 flex items-center justify-center text-white font-bold text-sm">
+                       {org.name.charAt(0).toUpperCase()}
+                     </div>
+                   )}
+                   <span className="text-[14px] text-gray-700 font-medium">{org.name}</span>
+                 </div>
+               ))}
             </div>
 
-            {/* Title & Tags */}
-            <div>
-              <h1 className="text-2xl font-black text-gray-900 mb-3">{title || 'Titre de l\'événement'}</h1>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-3 py-1 bg-blue-50 text-blue-500 rounded-full text-[12px] font-bold">
-                  {CATEGORIES.find(c => c.value === categories[0])?.label || 'Catégorie'}
-                </span>
-                <span className="px-3 py-1 bg-blue-50 text-blue-500 rounded-full text-[12px] font-bold">
-                  Social
-                </span>
-              </div>
+            {/* Informations Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+               <div className="flex justify-between items-center mb-4">
+                 <h3 className="font-bold text-gray-900 text-[15px]">Informations</h3>
+                 <button onClick={() => setStep(1)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+               </div>
+               <div className="flex justify-between items-center mb-3">
+                 <span className="text-[14px] text-gray-500">Nom</span>
+                 <span className="text-[14px] font-medium text-gray-900 truncate max-w-[180px]">{title || '—'}</span>
+               </div>
+               <div className="flex justify-between items-center">
+                 <span className="text-[14px] text-gray-500">Catégories</span>
+                 <div className="flex gap-1">
+                   {categories.length > 0 ? categories.map(cat => (
+                     <span key={cat} className="text-[12px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{CATEGORIES.find(c => c.value === cat)?.label}</span>
+                   )) : (
+                     <span className="text-[12px] font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">—</span>
+                   )}
+                 </div>
+               </div>
             </div>
 
-            {/* Info lines */}
-            <div className="space-y-4">
-              <div className="flex gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[14px] font-bold text-gray-900">{city || 'Ville'}</p>
-                  <p className="text-[13px] text-gray-500">{address || 'Adresse'}</p>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Calendar className="w-5 h-5 text-gray-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[14px] font-bold text-gray-900 capitalize">
-                    {date ? format(new Date(date), "EEE dd MMM yyyy", { locale: fr }) : 'Date'}
-                  </p>
-                  <p className="text-[13px] text-gray-500">
-                    {startTime || '00:00'} — {endTime || '00:00'} (GMT)
-                  </p>
-                </div>
-              </div>
+            {/* Date & Lieu Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+               <div className="flex justify-between items-center mb-4">
+                 <h3 className="font-bold text-gray-900 text-[15px]">Date & lieu</h3>
+                 <button onClick={() => setStep(2)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+               </div>
+               <div className="flex justify-between items-center mb-3">
+                 <span className="text-[14px] text-gray-500">Date</span>
+                 <span className="text-[14px] font-medium text-gray-900 capitalize">{formattedDate || '—'}</span>
+               </div>
+               <div className="flex justify-between items-center mb-3">
+                 <span className="text-[14px] text-gray-500">Heure</span>
+                 <span className="text-[14px] font-medium text-gray-900">{startTime ? `${startTime} – ${endTime} (GMT)` : '—'}</span>
+               </div>
+               <div className="flex justify-between items-center mb-3">
+                 <span className="text-[14px] text-gray-500">Ville</span>
+                 <span className="text-[14px] font-medium text-gray-900">{city || '—'}</span>
+               </div>
+               <div className="flex justify-between items-center">
+                 <span className="text-[14px] text-gray-500">Localisation</span>
+                 <span className="text-[14px] font-medium text-gray-900 truncate max-w-[150px]">{address || '—'}</span>
+               </div>
             </div>
 
-            {/* À propos */}
-            <div>
-              <h3 className="text-[15px] font-bold text-gray-900 mb-2">À propos</h3>
-              <p className="text-[13px] text-gray-500 leading-relaxed whitespace-pre-wrap">
-                {description || "Aucune description fournie."}
-              </p>
+            {/* Participation Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+               <div className="flex justify-between items-center mb-4">
+                 <h3 className="font-bold text-gray-900 text-[15px]">Participation</h3>
+                 <button onClick={() => setStep(3)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+               </div>
+               <div className="flex justify-between items-center mb-3">
+                 <span className="text-[14px] text-gray-500">Places</span>
+                 <span className="text-[14px] font-medium text-gray-900">{maxPlaces || 'Illimitées'}</span>
+               </div>
+               <div className="flex justify-between items-center mb-3">
+                 <span className="text-[14px] text-gray-500">Ticket</span>
+                 <span className="text-[14px] font-medium text-gray-900">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
+               </div>
+               <div className="flex justify-between items-center">
+                 <span className="text-[14px] text-gray-500">Confidentialité</span>
+                 <span className="text-[14px] font-medium text-gray-900">{isPrivate ? 'Privée' : 'Publique'}</span>
+               </div>
             </div>
 
-            {/* Organisateurs */}
-            <div>
-              <h3 className="text-[15px] font-bold text-gray-900 mb-3">Organisateurs</h3>
-              <div className="space-y-3">
-                <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between border border-gray-100">
-                  <div className="flex items-center gap-3">
-                    {me?.profile?.avatarUrl ? (
-                      <img src={me.profile.avatarUrl} className="w-12 h-12 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-xl font-bold">
-                        {me?.profile?.displayName?.charAt(0) || 'M'}
-                      </div>
-                    )}
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-[14px] font-bold text-gray-900">{me?.profile?.displayName || 'Moi'}</p>
-                        <svg className="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                      </div>
-                      <p className="text-[11px] text-gray-500">{me?.profile?.followersCount || 0} followers • {me?.profile?.eventsCount || 0} événement{(me?.profile?.eventsCount || 0) > 1 ? 's' : ''}</p>
+            {/* Description Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+               <div className="flex justify-between items-center mb-4">
+                 <h3 className="font-bold text-gray-900 text-[15px]">Description</h3>
+                 <button onClick={() => setStep(4)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+               </div>
+               <p className="text-[13px] text-gray-600 line-clamp-3 leading-relaxed whitespace-pre-wrap">{description || 'Aucune description'}</p>
+               {description && description.length > 100 && (
+                 <span className="text-[13px] text-gray-400 underline mt-1 block">Voir plus</span>
+               )}
+            </div>
+
+            {/* Couverture Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+               <div className="flex justify-between items-center mb-4">
+                 <h3 className="font-bold text-gray-900 text-[15px]">Couverture</h3>
+                 <button onClick={() => setStep(4)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+               </div>
+               <div className="w-full h-40 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shadow-sm relative">
+                  {coverPreview ? (
+                    <img src={coverPreview} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                      <div className="text-3xl">{categories[0] === 'SPORT' ? '⚽️' : categories[0] === 'MUSIC' ? '🎸' : '✨'}</div>
+                      <span className="text-[12px] text-gray-400 font-medium">Image par défaut</span>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button disabled className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-400 opacity-50 cursor-not-allowed">Contacter</button>
-                    <button disabled className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-400 opacity-50 cursor-not-allowed">Suivre</button>
-                  </div>
-                </div>
-
-                {selectedCoOrgs.map(org => (
-                  <div key={org.id} className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between border border-gray-100">
-                    <div className="flex items-center gap-3">
-                      {org.avatarUrl ? (
-                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
-                          <SafeImage src={org.avatarUrl} alt={org.name} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-orange-300 flex items-center justify-center text-white font-bold text-lg shrink-0">
-                          {org.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-[14px] font-bold text-gray-900">{org.name}</p>
-                        </div>
-                        <p className="text-[11px] text-gray-500">Co-organisateur</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button disabled className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-400 opacity-50 cursor-not-allowed">Contacter</button>
-                      <button disabled className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-400 opacity-50 cursor-not-allowed">Suivre</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+               </div>
             </div>
 
-            {/* Participation */}
-            <div>
-              <h3 className="text-[15px] font-bold text-gray-900 mb-3">Participation</h3>
-              <div className="bg-gray-50 rounded-2xl p-4 flex justify-between items-center border border-gray-100">
-                <span className="text-[14px] text-gray-900 font-medium">Montant</span>
-                <span className="text-[14px] font-bold text-blue-600">
-                  {amount === '0' || !amount ? 'Gratuit' : `${parseInt(amount).toLocaleString()} F CFA`}
-                </span>
-              </div>
-            </div>
-
-            {/* Participants */}
-            <div>
-              <h3 className="text-[15px] font-bold text-gray-900 mb-3">Participants</h3>
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex -space-x-3">
-                    <div className="w-9 h-9 rounded-full bg-gray-200 border-2 border-white z-20" />
-                    <div className="w-9 h-9 rounded-full bg-gray-300 border-2 border-white z-10" />
-                    <div className="w-9 h-9 rounded-full bg-gray-400 border-2 border-white flex items-center justify-center text-[10px] text-white z-0">
-                      +0
-                    </div>
-                  </div>
-                  <span className="text-[14px] font-bold text-gray-600 ml-2">
-                    0/{maxPlaces || '∞'}
-                  </span>
-                </div>
-                <button disabled className="px-4 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-400 opacity-50 cursor-not-allowed">
-                  Voir tous
-                </button>
-              </div>
-            </div>
-
-            <div className="h-6" /> {/* spacer for bottom nav */}
           </div>
         )}
       </div>
 
       {/* Bottom nav */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 py-4">
+      <div className={`absolute bottom-0 left-0 right-0 border-t border-gray-100 px-5 pt-4 pb-6 ${step === 6 ? 'bg-white' : 'bg-white'}`}>
         <div className="flex gap-3">
           {step < TOTAL_STEPS ? (
             <>
@@ -852,24 +805,301 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </button>
             </>
           ) : (
-            <>
-              <button onClick={() => handleSubmit('DRAFT')} disabled={loading}
-                className="flex-[0.8] py-4 rounded-full border border-gray-200 font-bold text-[15px] text-gray-700 flex items-center justify-center gap-2 transition-all active:scale-95 bg-white shadow-sm text-center px-2">
-                Enregistrer au brouillon
+            <div className="w-full space-y-3">
+              <button
+                onClick={() => { setPoolStep(1); setShowPoolModal(true) }}
+                className="w-full py-4 rounded-full border border-gray-200 font-bold text-[15px] text-[#FF9F1C] flex items-center justify-center gap-2 bg-white active:scale-95 transition-transform"
+              >
+                <div className="flex items-center gap-1.5">
+                  <div className="w-5 h-5 flex items-center justify-center"><span className="text-[16px] leading-none">🪙</span></div>
+                  Ajouter cagnotte
+                </div>
               </button>
-              <button onClick={() => handleSubmit('PUBLISHED')} disabled={loading}
-                className={`flex-[1.2] py-4 rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 transition-all active:scale-95 ${!loading ? 'bg-[#FF9F1C]' : 'bg-[#FF9F1C]/50'
-                  }`}>
+              <button
+                onClick={() => handleSubmit('PUBLISHED')}
+                disabled={loading}
+                className={`w-full py-4 rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-transform ${
+                  !loading ? 'bg-[#FF9F1C]' : 'bg-[#FF9F1C]/50'
+                }`}
+              >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Megaphone className="w-5 h-5" />}
-                {loading ? 'Publication...' : 'Publier'}
+                {loading ? 'Publication...' : 'Publier l\'événement'}
               </button>
-            </>
+            </div>
           )}
         </div>
-        <div className="flex justify-center mt-3 pb-1">
-          <div className="w-32 h-[5px] bg-black rounded-full" />
-        </div>
+        {step < 6 && (
+          <div className="flex justify-center mt-3 pb-1">
+            <div className="w-32 h-[5px] bg-black rounded-full" />
+          </div>
+        )}
       </div>
+
+      {/* ── Modal Cagnotte multi-étapes ── */}
+      {showPoolModal && (
+        <div className="absolute inset-0 z-50 bg-white flex flex-col">
+          {/* Header */}
+          <div className="px-5 pt-4 pb-0 flex-shrink-0">
+            <div className="flex items-center justify-center relative mb-3">
+              <button
+                onClick={() => {
+                  if (poolStep === 1) {
+                    setShowPoolModal(false)
+                  } else {
+                    setPoolStep(s => s - 1)
+                  }
+                }}
+                className="absolute left-0 w-8 h-8 flex items-center justify-center"
+              >
+                <ChevronLeft className="w-6 h-6 text-gray-800" />
+              </button>
+              <span className="text-[15px] font-semibold text-gray-900">Ajouter cagnotte</span>
+              {enablePool && (
+                <button
+                  onClick={() => { setEnablePool(false); setPoolTarget(''); setPoolDescription(''); setPoolDeadline(''); setPoolMode('libre'); setPoolMinAmount(''); setShowPoolModal(false) }}
+                  className="absolute right-0 text-[12px] text-red-400 font-medium"
+                >
+                  Supprimer
+                </button>
+              )}
+            </div>
+            {/* Progress bar — 4 segments */}
+            <div className="flex gap-1.5 mb-1">
+              {[1,2,3,4].map(s => (
+                <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-300 ${s <= poolStep ? 'bg-[#FF9F1C]' : 'bg-gray-100'}`} />
+              ))}
+            </div>
+            {/* Event name chip */}
+            <p className="text-[11px] text-gray-400 text-center mt-2 mb-1">
+              Cagnotte · <span className="font-medium text-gray-600">{title || 'Votre événement'}</span>
+            </p>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-5 pt-5 pb-32">
+
+            {/* ── POOL STEP 1: But de la cagnotte ── */}
+            {poolStep === 1 && (
+              <div>
+                <h2 className="text-[20px] font-bold text-gray-900 mb-1">But de la cagnotte</h2>
+                <p className="text-[13px] text-gray-400 mb-6">Expliquez l'objectif &amp; le dépôt de la cagnotte</p>
+                <label className="text-[13px] font-semibold text-gray-700 mb-2 block">Description</label>
+                <textarea
+                  value={poolDescription}
+                  onChange={e => setPoolDescription(e.target.value)}
+                  placeholder="Indiquez l'objectif..."
+                  rows={5}
+                  className="w-full px-4 py-3.5 border border-gray-200 rounded-2xl text-[14px] text-gray-700 resize-none focus:outline-none focus:border-[#FF9F1C] placeholder:text-gray-300 transition-colors"
+                />
+                <p className="text-[12px] text-gray-400 mt-2">{poolDescription.length}/500 caractères</p>
+              </div>
+            )}
+
+            {/* ── POOL STEP 2: Objectif de collecte ── */}
+            {poolStep === 2 && (
+              <div>
+                <h2 className="text-[20px] font-bold text-gray-900 mb-1">Objectif de collecte</h2>
+                <p className="text-[13px] text-gray-400 mb-6">Définissez le montant à atteindre</p>
+
+                <label className="text-[13px] font-semibold text-gray-700 mb-2 block">Montant cible</label>
+                <div className="flex gap-2 items-center mb-5">
+                  <input
+                    type="number"
+                    min={1}
+                    value={poolTarget}
+                    onChange={e => setPoolTarget(e.target.value)}
+                    placeholder="150 000"
+                    className="flex-1 px-4 py-3.5 border border-gray-200 rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-[#FF9F1C] transition-colors"
+                  />
+                  <div className="px-4 py-3.5 border border-gray-200 rounded-2xl text-[13px] font-semibold text-gray-500 bg-gray-50 flex-shrink-0 flex items-center gap-1">
+                    F CFA <ChevronLeft className="w-3 h-3 rotate-[-90deg] text-gray-400" />
+                  </div>
+                </div>
+
+                <label className="text-[13px] font-semibold text-gray-700 mb-2 block">Date limite de participation</label>
+                <div className="relative">
+                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="date"
+                    value={poolDeadline}
+                    onChange={e => setPoolDeadline(e.target.value)}
+                    className="w-full pl-11 pr-4 py-3.5 border border-gray-200 rounded-2xl text-[14px] text-gray-500 focus:outline-none focus:border-[#FF9F1C] transition-colors"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-400 mt-3">
+                  ⚠️ Une vérification d'identité (KYC) sera requise pour le retrait des fonds.
+                </p>
+              </div>
+            )}
+
+            {/* ── POOL STEP 3: Mode de participation ── */}
+            {poolStep === 3 && (
+              <div>
+                <h2 className="text-[20px] font-bold text-gray-900 mb-1">Participation</h2>
+                <p className="text-[13px] text-gray-400 mb-6">Choisissez comment les participants pourront contribuer</p>
+
+                <label className="text-[13px] font-semibold text-gray-700 mb-3 block">Mode de participation</label>
+
+                <div className="relative">
+                  <select
+                    value={poolMode}
+                    onChange={e => setPoolMode(e.target.value as any)}
+                    className="w-full appearance-none px-4 py-3.5 border border-gray-200 rounded-2xl text-[14px] text-gray-700 font-medium bg-white focus:outline-none focus:border-[#FF9F1C] transition-colors pr-10"
+                  >
+                    <option value="libre">Montant libre</option>
+                    <option value="minimum">Montant minimum</option>
+                    <option value="fixe">Montant fixe</option>
+                  </select>
+                  <ChevronLeft className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-[-90deg] pointer-events-none" />
+                </div>
+
+                {/* Description du mode */}
+                <div className="mt-4 p-4 bg-gray-50 rounded-2xl">
+                  {poolMode === 'libre' && (
+                    <p className="text-[13px] text-gray-500 leading-relaxed">
+                      🎁 Chaque participant contribue librement, <strong>selon ses moyens</strong>. Aucun montant minimum n'est imposé.
+                    </p>
+                  )}
+                  {poolMode === 'minimum' && (
+                    <p className="text-[13px] text-gray-500 leading-relaxed">
+                      📌 Chaque participant doit contribuer <strong>au moins le montant minimum</strong>. Il peut donner plus s'il le souhaite.
+                    </p>
+                  )}
+                  {poolMode === 'fixe' && (
+                    <p className="text-[13px] text-gray-500 leading-relaxed">
+                      🔒 Chaque participant contribue <strong>exactement le même montant</strong>, ni plus ni moins.
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── POOL STEP 4: Montant minimum ou fixe ── */}
+            {poolStep === 4 && (
+              <div>
+                <h2 className="text-[20px] font-bold text-gray-900 mb-1">Participation</h2>
+                <p className="text-[13px] text-gray-400 mb-6">Choisissez comment les participants pourront contribuer</p>
+
+                <label className="text-[13px] font-semibold text-gray-700 mb-3 block">Mode de participation</label>
+
+                {/* Mode affiché en lecture seule — tap pour modifier */}
+                <div className="relative mb-5">
+                  <select
+                    value={poolMode}
+                    onChange={e => setPoolMode(e.target.value as any)}
+                    className="w-full appearance-none px-4 py-3.5 border border-[#FF9F1C] rounded-2xl text-[14px] text-gray-700 font-medium bg-white focus:outline-none pr-10"
+                  >
+                    <option value="libre">Montant libre</option>
+                    <option value="minimum">Montant minimum</option>
+                    <option value="fixe">Montant fixe</option>
+                  </select>
+                  <ChevronLeft className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF9F1C] rotate-[-90deg] pointer-events-none" />
+                </div>
+
+                {poolMode !== 'libre' && (
+                  <>
+                    <label className="text-[13px] font-semibold text-gray-700 mb-2 block">
+                      {poolMode === 'minimum' ? 'Montant minimum (F CFA)' : 'Montant fixe par participant (F CFA)'}
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="number"
+                        min={1}
+                        value={poolMinAmount}
+                        onChange={e => setPoolMinAmount(e.target.value)}
+                        placeholder="Ex: 5 000"
+                        className="flex-1 px-4 py-3.5 border border-gray-200 rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-[#FF9F1C] transition-colors"
+                      />
+                      <div className="px-4 py-3.5 border border-gray-200 rounded-2xl text-[13px] font-semibold text-gray-500 bg-gray-50 flex-shrink-0">
+                        F CFA
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {poolMode === 'libre' && (
+                  <div className="p-4 bg-[#FFF8F1] border border-[#FF9F1C]/20 rounded-2xl">
+                    <p className="text-[13px] text-[#FF9F1C] font-medium">
+                      ✅ Mode libre sélectionné — aucun montant minimum requis.
+                    </p>
+                  </div>
+                )}
+
+                {/* Récapitulatif cagnotte */}
+                {poolTarget && (
+                  <div className="mt-6 p-4 bg-gray-50 rounded-2xl space-y-2">
+                    <p className="text-[12px] font-bold text-gray-500 uppercase tracking-wider mb-3">Récapitulatif</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[13px] text-gray-500">Objectif</span>
+                      <span className="text-[13px] font-bold text-gray-900">{parseInt(poolTarget).toLocaleString()} F CFA</span>
+                    </div>
+                    {poolDeadline && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[13px] text-gray-500">Date limite</span>
+                        <span className="text-[13px] font-bold text-gray-900">
+                          {new Date(poolDeadline + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-[13px] text-gray-500">Mode</span>
+                      <span className="text-[13px] font-bold text-gray-900 capitalize">
+                        {poolMode === 'libre' ? 'Montant libre' : poolMode === 'minimum' ? 'Montant minimum' : 'Montant fixe'}
+                      </span>
+                    </div>
+                    {poolMode !== 'libre' && poolMinAmount && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[13px] text-gray-500">{poolMode === 'minimum' ? 'Minimum' : 'Montant'}</span>
+                        <span className="text-[13px] font-bold text-[#FF9F1C]">{parseInt(poolMinAmount).toLocaleString()} F CFA</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 py-4">
+            <button
+              onClick={() => {
+                if (poolStep < 4) {
+                  // Step 3 → si mode libre, on saute step 4 et on valide directement
+                  if (poolStep === 3 && poolMode === 'libre') {
+                    setEnablePool(true)
+                    setShowPoolModal(false)
+                    toast.success('Cagnotte configurée !')
+                  } else {
+                    setPoolStep(s => s + 1)
+                  }
+                } else {
+                  // Confirmer
+                  setEnablePool(true)
+                  setShowPoolModal(false)
+                  toast.success('Cagnotte configurée !')
+                }
+              }}
+              disabled={
+                (poolStep === 1 && poolDescription.trim().length < 5) ||
+                (poolStep === 2 && !poolTarget)
+              }
+              className={`w-full py-4 rounded-full font-bold text-[15px] text-white transition-all active:scale-[0.98] ${
+                (poolStep === 1 && poolDescription.trim().length < 5) ||
+                (poolStep === 2 && !poolTarget)
+                  ? 'bg-[#FF9F1C]/30'
+                  : 'bg-[#FF9F1C]'
+              }`}
+            >
+              {poolStep === 4 || (poolStep === 3 && poolMode === 'libre')
+                ? '✓ Confirmer la cagnotte'
+                : 'Suivant'}
+            </button>
+            <div className="flex justify-center mt-3">
+              <div className="w-32 h-[5px] bg-black rounded-full" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Search co-organizer modal ── */}
       {showSearchModal && (
