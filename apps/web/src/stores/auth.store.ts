@@ -74,6 +74,31 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage),
       // Persist both token AND user — user is still re-validated on boot via AppBootstrap
       partialize: (state) => ({ accessToken: state.accessToken, refreshToken: state.refreshToken, user: state.user }),
+      // Guard against corrupted persisted state (e.g. Firebase error objects with {code, message})
+      // that would cause React error #31 when rendered
+      merge: (persisted: any, current) => {
+        const safe = { ...current }
+        if (persisted && typeof persisted === 'object') {
+          // Validate accessToken
+          if (typeof persisted.accessToken === 'string') {
+            safe.accessToken = persisted.accessToken
+          }
+          // Validate refreshToken
+          if (typeof persisted.refreshToken === 'string') {
+            safe.refreshToken = persisted.refreshToken
+          }
+          // Validate user — must have an id string, not be a Firebase error {code, message}
+          if (
+            persisted.user &&
+            typeof persisted.user === 'object' &&
+            typeof persisted.user.id === 'string' &&
+            !('code' in persisted.user && 'message' in persisted.user)
+          ) {
+            safe.user = persisted.user
+          }
+        }
+        return safe
+      },
     },
   ),
 )
