@@ -1,0 +1,107 @@
+import { useEffect, useRef, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '@/stores/auth.store'
+
+type WsMessage =
+  | { type: 'new_message'; message: any }
+  | { type: 'typing'; userId: string; conversationId: string; displayName?: string }
+  | { type: 'read'; userId: string; conversationId: string; messageId: string }
+  | { type: 'reaction_update'; messageId: string; conversationId: string; reactions: any[] }
+  | { type: 'notification:new'; notification: any }
+
+type SendPayload =
+  | { type: 'message'; conversationId: string; content: string; messageType?: string }
+  | { type: 'typing'; conversationId: string }
+  | { type: 'read'; conversationId: string; messageId: string }
+
+export function useChatSocket() {
+  const ws = useRef<WebSocket | null>(null)
+  const token = useAuthStore((s) => s.accessToken)
+  const qc = useQueryClient()
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout>>()
+
+  const connect = useCallback(() => {
+    if (!token) return
+    if (ws.current?.readyState === WebSocket.OPEN) return
+
+    const url = `${import.meta.env.VITE_WS_URL || 'ws://localhost:3001'}/api/v1/chat/ws?token=${token}`
+    ws.current = new WebSocket(url)
+
+    ws.current.onopen = () => {
+      console.log('[WS] Connected')
+      clearTimeout(reconnectTimer.current)
+    }
+
+    ws.current.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as WsMessage
+
+        if (data.type === 'new_message') {
+          qc.invalidateQueries({ queryKey: ['chat', 'messages', data.message.conversationId] })
+          qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
+        }
+
+        if (data.type === 'reaction_update') {
+          qc.invalidateQueries({ queryKey: ['chat', 'messages', data.conversationId] })
+        }
+
+        if (data.type === 'typing') {
+          // Dispatch a DOM event so ChatDetails can listen regardless of re-renders
+          window.dispatchEvent(new CustomEvent('ws:typing', {
+            detail: { conversationId: data.conversationId, displayName: data.displayName }
+          }))
+        }
+
+        if (data.type === 'notification:new') {
+          // Instantly refresh notification badge & list without waiting for polling
+          qc.invalidateQueries({ queryKey: ['notifications'] })
+          qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    ws.current.onclose = () => {
+      console.log('[WS] Disconnected — reconnecting in 3s')
+      reconnectTimer.current = setTimeout(connect, 3000)
+    }
+
+    ws.current.onerror = () => {
+      ws.current?.close()
+    }
+  }, [token, qc])
+
+  useEffect(() => {
+    connect()
+    return () => {
+      clearTimeout(reconnectTimer.current)
+      ws.current?.close()
+    }
+  }, [connect])
+
+  const send = useCallback((payload: SendPayload) => {
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify(payload))
+    }
+  }, [])
+
+  const sendMessage = useCallback(
+    (conversationId: string, content: string, messageType: string = 'TEXT') =>
+      send({ type: 'message', conversationId, content, messageType }),
+    [send],
+  )
+
+  const sendTyping = useCallback(
+    (conversationId: string) => send({ type: 'typing', conversationId }),
+    [send],
+  )
+
+  const sendRead = useCallback(
+    (conversationId: string, messageId: string) =>
+      send({ type: 'read', conversationId, messageId }),
+    [send],
+  )
+
+  return { sendMessage, sendTyping, sendRead, isConnected: ws.current?.readyState === WebSocket.OPEN }
+}

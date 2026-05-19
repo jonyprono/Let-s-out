@@ -1,0 +1,508 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ORGANIZER
+  ADMIN
+}
+
+enum AuthProvider {
+  PHONE
+  EMAIL
+  GOOGLE
+  APPLE
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventCategory {
+  SPORT
+  CULTURE
+  FOOD
+  NIGHTLIFE
+  TRAVEL
+  GAMING
+  WELLNESS
+  ART
+  MUSIC
+  OTHER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+  SYSTEM
+}
+
+enum NotifType {
+  EVENT_INVITE
+  EVENT_UPDATE
+  EVENT_CANCELLED
+  JOIN_REQUEST
+  JOIN_ACCEPTED
+  JOIN_CONFIRMED
+  NEW_MESSAGE
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  EVENT_REVIEW_REQUEST
+  SYSTEM
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum WalletTxType {
+  DEPOSIT
+  WITHDRAWAL
+  PAYMENT
+  REFUND
+  TRANSFER
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE
+  HARASSMENT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+// ─── USERS ────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String       @id @default(cuid())
+  phone        String?      @unique
+  email        String?      @unique
+  passwordHash String?
+  role         UserRole     @default(USER)
+  isVerified   Boolean      @default(false)
+  isActive     Boolean      @default(true)
+  provider     AuthProvider @default(PHONE)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  lastSeenAt   DateTime?
+
+  profile           Profile?
+  eventsCreated     Event[]              @relation("EventCreator")
+  bookings          Booking[]
+  wallet            Wallet?
+  sentMessages      Message[]            @relation("MessageSender")
+  conversations     ConversationMember[]
+  notifications     Notification[]
+  payments          Payment[]
+  reports           Report[]             @relation("Reporter")
+  reportedBy        Report[]             @relation("Reported")
+  friendsInitiated  Friendship[]         @relation("FriendInitiator")
+  friendsReceived   Friendship[]         @relation("FriendReceiver")
+  following         Follow[]             @relation("UserFollows")
+  followers         Follow[]             @relation("UserFollowers")
+  refreshTokens     RefreshToken[]
+  deviceTokens      DeviceToken[]
+  messageReactions  MessageReaction[]
+  reviews           Review[]
+
+  @@map("users")
+}
+
+model Profile {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  username       String    @unique
+  displayName    String
+  bio            String?
+  avatarUrl      String?
+  coverUrl       String?
+  city           String?
+  country        String?
+  latitude       Float?
+  longitude      Float?
+  birthDate      DateTime?
+  gender         String?
+  interests      String[]
+  isPublic       Boolean   @default(true)
+  followersCount Int       @default(0)
+  followingCount Int       @default(0)
+  eventsCount    Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  target    String   // phone number or email
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([target])
+  @@map("otp_codes")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+  userAgent String?
+  ipAddress String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  platform  String   // ios | android | web
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_tokens")
+}
+
+// ─── EVENTS ───────────────────────────────────────────────────────────────────
+
+model Event {
+  id               String        @id @default(cuid())
+  creatorId        String
+  coHostIds        String[]      @default([])
+  title            String
+  description      String
+  category         EventCategory
+  status           EventStatus   @default(DRAFT)
+  coverUrl         String?
+  mediaUrls        String[]
+  maxAttendees     Int?
+  currentAttendees Int           @default(0)
+  price            Float         @default(0)
+  currency         String        @default("EUR")
+  isPrivate        Boolean       @default(false)
+  requiresApproval Boolean       @default(false)
+  joinCode         String?       @unique
+  address          String?
+  city             String?
+  country          String?
+  latitude         Float?
+  longitude        Float?
+  poolTarget       Float?
+  poolCollected    Float         @default(0)
+  poolReleased     Boolean       @default(false)
+  startAt          DateTime
+  endAt            DateTime
+  tags             String[]
+  viewCount        Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  creator      User          @relation("EventCreator", fields: [creatorId], references: [id])
+  bookings     Booking[]
+  reviews      Review[]
+  conversation Conversation? @relation("EventConversation")
+
+  @@index([creatorId])
+  @@index([status])
+  @@index([category])
+  @@index([startAt])
+  @@index([city])
+  @@index([joinCode])
+  @@map("events")
+}
+
+// ─── BOOKINGS ─────────────────────────────────────────────────────────────────
+
+model Booking {
+  id        String        @id @default(cuid())
+  userId    String
+  eventId   String
+  status    BookingStatus @default(PENDING)
+  quantity  Int           @default(1)
+  totalPaid Float         @default(0)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id])
+  event   Event    @relation(fields: [eventId], references: [id])
+  payment Payment?
+
+  @@unique([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
+  @@map("bookings")
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────────────────
+
+model Conversation {
+  id            String    @id @default(cuid())
+  name          String?
+  isGroup       Boolean   @default(false)
+  avatarUrl     String?
+  eventId       String?   @unique
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  event    Event?               @relation("EventConversation", fields: [eventId], references: [id])
+  members  ConversationMember[]
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id             String    @id @default(cuid())
+  conversationId String
+  userId         String
+  isAdmin        Boolean   @default(false)
+  joinedAt       DateTime  @default(now())
+  lastReadAt     DateTime?
+  mutedUntil     DateTime?
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  senderId       String
+  type           MessageType @default(TEXT)
+  content        String?
+  mediaUrl       String?
+  replyToId      String?
+  isDeleted      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("MessageSender", fields: [senderId], references: [id])
+  replyTo      Message?     @relation("MessageReply", fields: [replyToId], references: [id])
+  replies      Message[]    @relation("MessageReply")
+  reactions    MessageReaction[]
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@map("message_reactions")
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      NotifType
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ─── PAYMENTS & WALLETS ───────────────────────────────────────────────────────
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Float    @default(0)
+  currency  String   @default("EUR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id])
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id           String       @id @default(cuid())
+  walletId     String
+  type         WalletTxType
+  amount       Float
+  balanceAfter Float
+  description  String?
+  refId        String?
+  createdAt    DateTime     @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@index([walletId])
+  @@map("wallet_transactions")
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  userId          String
+  bookingId       String?       @unique
+  stripePaymentId String?       @unique
+  amount          Float
+  currency        String        @default("EUR")
+  status          PaymentStatus @default(PENDING)
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id])
+  booking Booking? @relation(fields: [bookingId], references: [id])
+
+  @@index([userId])
+  @@map("payments")
+}
+
+// ─── SOCIAL ───────────────────────────────────────────────────────────────────
+
+model Friendship {
+  id          String       @id @default(cuid())
+  initiatorId String
+  receiverId  String
+  status      FriendStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  initiator User @relation("FriendInitiator", fields: [initiatorId], references: [id])
+  receiver  User @relation("FriendReceiver", fields: [receiverId], references: [id])
+
+  @@unique([initiatorId, receiverId])
+  @@index([receiverId])
+  @@map("friendships")
+}
+
+// ─── REPORTS ──────────────────────────────────────────────────────────────────
+
+model Report {
+  id          String       @id @default(cuid())
+  reporterId  String
+  reportedId  String
+  reason      ReportReason
+  description String?
+  status      ReportStatus @default(PENDING)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  reporter User @relation("Reporter", fields: [reporterId], references: [id])
+  reported User @relation("Reported", fields: [reportedId], references: [id])
+
+  @@index([reportedId])
+  @@map("reports")
+}
+
+// ─── FOLLOWERS ────────────────────────────────────────────────────────────────
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// ─── REVIEWS ──────────────────────────────────────────────────────────────────
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+  @@index([eventId])
+  @@map("reviews")
+}

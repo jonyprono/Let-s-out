@@ -1,0 +1,436 @@
+import { useState, useRef, useEffect } from 'react'
+import { ChevronLeft, Eye, EyeOff, Loader2, Check } from 'lucide-react'
+import { useSendOtp, useCheckTarget, useCheckOtp, useResetPassword } from '@/features/auth/hooks/useAuth'
+import { toast } from 'sonner'
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
+
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+  }
+}
+
+interface ForgotPasswordProps {
+  onBack: () => void
+  onComplete: () => void
+}
+
+const COUNTRIES = [
+  { flag: '🇧🇯', code: '+229', name: 'Bénin' },
+  { flag: '🇹🇬', code: '+228', name: 'Togo' },
+  { flag: '🇨🇮', code: '+225', name: "Côte d'Ivoire" },
+  { flag: '🇸🇳', code: '+221', name: 'Sénégal' },
+  { flag: '🇳🇬', code: '+234', name: 'Nigeria' },
+  { flag: '🇫🇷', code: '+33', name: 'France' },
+]
+
+function maskPhone(full: string) {
+  if (full.length <= 7) return full
+  return full.slice(0, 5) + ' ' + full.slice(5, 7) + ' ' + full.slice(7, -2).replace(/\d/g, '0') + ' ' + full.slice(-2)
+}
+
+function validatePhone(code: string, phone: string) {
+  const cleanPhone = phone.replace(/\s+/g, '')
+  if (code === '+229') {
+    return /^01\d{8}$/.test(cleanPhone)
+  }
+  if (code === '+225' || code === '+234') {
+    return /^\d{10,11}$/.test(cleanPhone)
+  }
+  if (code === '+228' || code === '+221') {
+    return /^\d{8,9}$/.test(cleanPhone)
+  }
+  return /^\d{8,15}$/.test(cleanPhone)
+}
+
+export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
+  const [step, setStep] = useState(1)
+
+  // Form State
+  const [country, setCountry] = useState(COUNTRIES[0])
+  const [phone, setPhone] = useState('')
+  const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp'>('whatsapp')
+  const [showCountry, setShowCountry] = useState(false)
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [countdown, setCountdown] = useState(0)
+
+  // Password Step
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
+  const [idToken, setIdToken] = useState<string>('')
+  const [isFirebaseSending, setIsFirebaseSending] = useState(false)
+  const [isFirebaseVerifying, setIsFirebaseVerifying] = useState(false)
+
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const { mutate: checkTarget, isPending: checkingTarget } = useCheckTarget()
+  const { mutate: sendOtp, isPending: sendingOtp } = useSendOtp()
+  const { mutate: checkOtp, isPending: checkingOtp } = useCheckOtp()
+  const { mutate: resetPassword, isPending: resetting } = useResetPassword()
+
+  const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
+
+  useEffect(() => {
+    if (countdown <= 0) return
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [countdown])
+
+  const handleNext = async () => {
+    if (step === 1) {
+      if (!phone.trim()) return
+      if (!validatePhone(country.code, phone)) {
+        return toast.error(country.code === '+229' 
+          ? "Au Bénin, le numéro doit faire 10 chiffres et commencer par 01."
+          : "Le format de votre numéro de téléphone est incorrect.")
+      }
+
+      checkTarget({ target: fullPhone }, {
+        onSuccess: async ({ data }) => {
+          if (!data.exists) {
+            toast.error("Ce numéro n'est lié à aucun compte.")
+          } else {
+            if (currentChannel === 'sms') {
+              try {
+                setIsFirebaseSending(true)
+                if (!window.recaptchaVerifier) {
+                  window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
+                }
+                const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
+                setConfirmationResult(confirmation)
+                setStep(2)
+                setCountdown(59)
+                setTimeout(() => otpRefs.current[0]?.focus(), 100)
+              } catch {
+                if (window.recaptchaVerifier) {
+                  try { window.recaptchaVerifier.clear() } catch {}
+                  window.recaptchaVerifier = undefined
+                }
+                setConfirmationResult(null)
+                sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
+                  onSuccess: () => {
+                    setStep(2)
+                    setCountdown(59)
+                    setTimeout(() => otpRefs.current[0]?.focus(), 100)
+                  },
+                  onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi du code")
+                })
+              } finally {
+                setIsFirebaseSending(false)
+              }
+            } else {
+              sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
+                onSuccess: () => {
+                  setStep(2)
+                  setCountdown(59)
+                  setTimeout(() => otpRefs.current[0]?.focus(), 100)
+                },
+                onError: (e: any) => toast.error(e.response?.data?.message || 'Erreur d\'envoi')
+              })
+            }
+          }
+        },
+        onError: () => toast.error("Erreur de vérification du numéro")
+      })
+    } else if (step === 2) {
+      const codeStr = otp.join('')
+      if (codeStr.length < 6) return
+
+      if (currentChannel === 'sms' && confirmationResult) {
+        setIsFirebaseVerifying(true)
+        try {
+          const result = await confirmationResult.confirm(codeStr)
+          const token = await result.user.getIdToken()
+          setIdToken(token)
+          setStep(3)
+        } catch {
+          toast.error("Code SMS invalide ou expiré")
+        } finally {
+          setIsFirebaseVerifying(false)
+        }
+      } else {
+        checkOtp({ target: fullPhone, code: codeStr }, {
+          onSuccess: () => setStep(3),
+          onError: () => toast.error("Code invalide ou expiré. Vérifiez et réessayez."),
+        })
+      }
+    } else if (step === 3) {
+      const isFirebaseFlow = currentChannel === 'sms' && !!idToken
+      resetPassword({
+        target: fullPhone,
+        code: isFirebaseFlow ? undefined : otp.join(''),
+        idToken: isFirebaseFlow ? idToken : undefined,
+        newPassword: password,
+      }, {
+        onSuccess: () => {
+          toast.success('Mot de passe réinitialisé avec succès !')
+          onComplete()
+        },
+        onError: (e: any) => {
+          const msg = e.response?.data?.error || ''
+          toast.error(msg || "Erreur lors de la réinitialisation du mot de passe")
+        }
+      })
+    }
+  }
+
+  const handlePrev = () => {
+    if (step === 1) onBack()
+    else setStep(s => s - 1)
+  }
+
+  const handleOtpChange = (i: number, v: string) => {
+    if (!/^\d*$/.test(v)) return
+    const next = [...otp]; next[i] = v.slice(-1); setOtp(next)
+    if (v && i < 5) otpRefs.current[i + 1]?.focus()
+  }
+
+  const handleOtpKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus()
+  }
+
+  const handleResend = async () => {
+    if (countdown > 0) return
+    setOtp(['', '', '', '', '', ''])
+
+    try {
+      setIsFirebaseSending(true)
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
+      }
+      const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
+      setConfirmationResult(confirmation)
+      setCountdown(59)
+      setCurrentChannel('sms')
+      toast.success('Code renvoyé par SMS')
+      setTimeout(() => otpRefs.current[0]?.focus(), 100)
+    } catch {
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear() } catch {}
+        window.recaptchaVerifier = undefined
+      }
+      setConfirmationResult(null)
+      sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
+        onSuccess: () => {
+          setCountdown(59)
+          toast.success('Code renvoyé (vérifiez le terminal en dev)')
+          setTimeout(() => otpRefs.current[0]?.focus(), 100)
+        },
+        onError: () => toast.error('Impossible de renvoyer le code'),
+      })
+    } finally {
+      setIsFirebaseSending(false)
+    }
+  }
+
+  // Password validation
+  const pwdLength = password.length >= 6
+  const pwdMixed = /[a-z]/.test(password) && /[A-Z]/.test(password)
+  const pwdNumber = /[0-9]/.test(password)
+  const pwdMatch = password === confirmPassword && password.length > 0
+  const isPwdValid = pwdLength && pwdMixed && pwdNumber && pwdMatch
+
+  const isNextDisabled = () => {
+    if (step === 1) return !phone.trim() || sendingOtp || checkingTarget || isFirebaseSending
+    if (step === 2) return otp.join('').length < 6 || isFirebaseVerifying || checkingOtp
+    if (step === 3) return !isPwdValid || resetting
+    return false
+  }
+
+  return (
+    <div className="w-full h-full bg-white flex flex-col">
+      <div id="recaptcha-container"></div>
+      
+      {/* Header */}
+      <div className="px-5 py-4 shrink-0">
+        <div className="flex items-center gap-4">
+          <button onClick={handlePrev} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full active:bg-gray-200 transition-colors shrink-0">
+            <ChevronLeft className="w-5 h-5 text-gray-700" />
+          </button>
+          <span className="text-[14px] font-bold text-[#1A1A1A]">Réinitialiser votre mot de passe</span>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 px-6 pb-6 overflow-y-auto flex flex-col">
+
+        {/* STEP 1: PHONE */}
+        {step === 1 && (
+          <div className="flex-1 flex flex-col animate-in slide-in-from-right-4 fade-in duration-300">
+            <h1 className="text-[24px] font-bold text-[#1A1A1A] mb-2 leading-tight">Entrez votre numéro de téléphone</h1>
+            <p className="text-[14px] text-[#666666] mb-8 leading-relaxed">
+              Entrez le numéro de téléphone lié à votre compte pour recevoir un code et réinitialiser votre mot de passe.
+            </p>
+
+            <label className="text-[13px] text-[#4D4D4D] font-medium mb-2 block">Numéro de téléphone</label>
+            <div className="flex gap-2 mb-8">
+              <div className="relative shrink-0">
+                <button
+                  onClick={() => setShowCountry(!showCountry)}
+                  className="flex items-center gap-1.5 px-3 py-3.5 border border-gray-300 rounded-xl bg-white text-[16px] font-medium whitespace-nowrap shrink-0"
+                >
+                  <span>{country.flag}</span>
+                  <span className="text-[#1A1A1A]">({country.code.replace('+', '')})</span>
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {showCountry && (
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 w-48 py-1">
+                    {COUNTRIES.map(c => (
+                      <button key={c.code} onClick={() => { setCountry(c); setShowCountry(false) }}
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-[16px] text-left">
+                        <span>{c.flag}</span><span className="text-gray-700">{c.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <input
+                type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                placeholder="XX XX XX XX"
+                className="flex-1 min-w-0 px-4 py-3.5 border border-gray-300 rounded-xl text-[16px] focus:outline-none focus:border-[#FF9F1C] bg-white"
+              />
+            </div>
+
+            <label className="text-[13px] text-[#4D4D4D] font-medium mb-2 block">Recevoir le code par</label>
+            <div className="flex gap-2 sm:gap-3 mb-auto">
+              <button onClick={() => setCurrentChannel('sms')} className={`flex-1 flex items-center justify-between px-3 sm:px-4 py-3.5 border rounded-xl bg-white transition-colors ${currentChannel === 'sms' ? 'border-[#1A1A1A]' : 'border-gray-300'}`}>
+                <span className="text-[15px] sm:text-[16px] font-medium text-[#1A1A1A]">SMS</span>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${currentChannel === 'sms' ? 'border-[#1A1A1A]' : 'border-gray-300'}`}>
+                  {currentChannel === 'sms' && <div className="w-2.5 h-2.5 rounded-full bg-[#1A1A1A]" />}
+                </div>
+              </button>
+              <button onClick={() => setCurrentChannel('whatsapp')} className={`flex-1 flex items-center justify-between px-3 sm:px-4 py-3.5 border rounded-xl bg-white transition-colors ${currentChannel === 'whatsapp' ? 'border-[#1A1A1A]' : 'border-gray-300'}`}>
+                <span className="text-[15px] sm:text-[16px] font-medium text-[#1A1A1A]">Whatsapp</span>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${currentChannel === 'whatsapp' ? 'border-[#1A1A1A]' : 'border-gray-300'}`}>
+                  {currentChannel === 'whatsapp' && <div className="w-2.5 h-2.5 rounded-full bg-[#1A1A1A]" />}
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={handleNext}
+              disabled={isNextDisabled()}
+              className="w-full bg-[#1A1A1A] text-white py-[18px] rounded-full font-bold mt-8 flex items-center justify-center gap-2 disabled:opacity-60 disabled:bg-gray-300 disabled:text-gray-500 active:scale-[0.98] transition-all"
+            >
+              {(sendingOtp || checkingTarget || isFirebaseSending) && <Loader2 className="w-4 h-4 animate-spin" />}
+              Suivant
+            </button>
+          </div>
+        )}
+
+        {/* STEP 2: OTP */}
+        {step === 2 && (
+          <div className="flex-1 flex flex-col animate-in slide-in-from-right-4 fade-in duration-300">
+            <h1 className="text-[24px] font-bold text-[#1A1A1A] mb-2 leading-tight">Entrez le code reçu</h1>
+            <p className="text-[14px] text-[#666666] mb-8 leading-relaxed">
+              Entrez le code à 6 chiffres envoyé par <strong className="text-[#1A1A1A]">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
+              <strong className="text-[#1A1A1A]">{maskPhone(fullPhone)}</strong>
+            </p>
+
+            <div className="grid grid-cols-6 gap-1.5 mb-6 w-full">
+              {otp.map((d, i) => (
+                <input
+                  key={i} ref={el => { otpRefs.current[i] = el }} type="text" inputMode="numeric" maxLength={1} value={d}
+                  onChange={e => handleOtpChange(i, e.target.value)} onKeyDown={e => handleOtpKey(i, e)}
+                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors ${d ? 'border-[#1A1A1A] bg-white' : 'border-gray-200 bg-transparent'} focus:border-[#1A1A1A]`}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 mb-auto">
+              <button onClick={handleResend} disabled={countdown > 0} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-[13px] font-medium text-[#666666] disabled:opacity-50">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                {currentChannel === 'whatsapp' ? "Je n'ai rien reçu, renvoyer par SMS" : "Renvoyer le code"}
+              </button>
+              {countdown > 0 && <span className="text-[13px] text-[#666666] font-medium">dans 00:{String(countdown).padStart(2, '0')}</span>}
+            </div>
+
+            <button
+              onClick={handleNext}
+              disabled={isNextDisabled()}
+              className="w-full bg-[#1A1A1A] text-white py-[18px] rounded-full font-bold mt-8 flex items-center justify-center gap-2 disabled:opacity-60 disabled:bg-gray-300 disabled:text-gray-500 active:scale-[0.98] transition-all"
+            >
+              {(isFirebaseVerifying || checkingOtp) && <Loader2 className="w-4 h-4 animate-spin" />}
+              Suivant
+            </button>
+          </div>
+        )}
+
+        {/* STEP 3: PASSWORD */}
+        {step === 3 && (
+          <div className="flex-1 flex flex-col animate-in slide-in-from-right-4 fade-in duration-300">
+            <h1 className="text-[24px] font-bold text-[#1A1A1A] mb-2 leading-tight">Nouveau mot de passe</h1>
+            <p className="text-[14px] text-[#666666] mb-8 leading-relaxed">Définissez un nouveau mot de passe robuste et sécurisé pour vous connecter à votre compte</p>
+
+            <div className="mb-4">
+              <label className="text-[13px] text-[#4D4D4D] font-medium mb-2 block">Nouveau mot de passe</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3.5 border border-gray-300 rounded-xl text-[16px] focus:outline-none focus:border-[#FF9F1C] bg-white pr-12"
+                />
+                <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="text-[13px] text-[#4D4D4D] font-medium mb-2 block">Confirmez le mot de passe</label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3.5 border border-gray-300 rounded-xl text-[16px] focus:outline-none focus:border-[#FF9F1C] bg-white pr-12"
+                />
+                <button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 mb-auto">
+              <div className="flex items-center gap-2">
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center ${pwdLength ? 'bg-[#10B981]' : 'bg-gray-300'}`}>
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <span className={`text-[13px] font-medium ${pwdLength ? 'text-[#10B981]' : 'text-gray-500'}`}>Au moins 6 caractères minimum</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center ${pwdMixed ? 'bg-[#10B981]' : 'bg-gray-300'}`}>
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <span className={`text-[13px] font-medium ${pwdMixed ? 'text-[#10B981]' : 'text-gray-500'}`}>Au moins 1 majuscule et 1 minuscule</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`w-4 h-4 rounded-full flex items-center justify-center ${pwdNumber ? 'bg-[#10B981]' : 'bg-gray-300'}`}>
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+                <span className={`text-[13px] font-medium ${pwdNumber ? 'text-[#10B981]' : 'text-gray-500'}`}>Au moins 1 chiffre</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleNext}
+              disabled={isNextDisabled()}
+              className="w-full bg-[#FF9F1C] text-white py-[18px] rounded-full font-bold mt-8 flex items-center justify-center gap-2 disabled:opacity-60 disabled:bg-gray-300 disabled:text-gray-500 active:scale-[0.98] transition-all"
+            >
+              {resetting && <Loader2 className="w-4 h-4 animate-spin" />}
+              Terminer
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="h-8 flex items-center justify-center shrink-0">
+        <div className="w-32 h-1 bg-black rounded-full" />
+      </div>
+    </div>
+  )
+}
