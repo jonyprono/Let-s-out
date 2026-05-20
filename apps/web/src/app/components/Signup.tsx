@@ -52,7 +52,7 @@ export function Signup({ onBack }: SignupProps) {
 
   const [country, setCountry] = useState(COUNTRIES[0])
   const [phone, setPhone] = useState('')
-  const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp'>('sms')
+  const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
   const [showCountry, setShowCountry] = useState(false)
   const [otp, setOtp] = useState(['', '', '', ''])
   const [countdown, setCountdown] = useState(0)
@@ -98,6 +98,10 @@ export function Signup({ onBack }: SignupProps) {
   const handleNext = async () => {
     if (step === 1) {
       if (!phone.trim()) return
+      if (!currentChannel) {
+        toast.error('Veuillez sélectionner SMS ou Whatsapp.')
+        return
+      }
       if (!validatePhone(country.code, phone)) {
         return toast.error(country.code === '+229'
           ? "Au Bénin, le numéro doit faire 10 chiffres et commencer par 01."
@@ -228,7 +232,7 @@ export function Signup({ onBack }: SignupProps) {
   const isPwdValid = pwdLength && pwdMixed && pwdNumber && pwdMatch
 
   const isNextDisabled = () => {
-    if (step === 1) return !phone.trim() || sendingOtp || checkingTarget || isFirebaseSending
+    if (step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
     if (step === 2) return otp.join('').length < 4 || isFirebaseVerifying || checkingOtp
     if (step === 3) return !isPwdValid || !acceptedTerms
     if (step === 4) return !firstName.trim() || !lastName.trim()
@@ -307,7 +311,7 @@ export function Signup({ onBack }: SignupProps) {
               <input
                 type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                 placeholder=""
-                className="flex-1 min-w-0 px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A]"
+                className="flex-1 min-w-0 px-4 py-3.5 border border-[#E5E5E5] border-[1px] rounded-xl text-[15px] focus:outline-none focus:ring-0 focus:border-[#FF9F1C] focus:border-[1px] bg-white text-[#1A1A1A]"
               />
             </div>
 
@@ -318,11 +322,11 @@ export function Signup({ onBack }: SignupProps) {
                 const isActive = currentChannel === val
                 return (
                   <button key={ch} onClick={() => setCurrentChannel(val)}
-                    className={`flex-1 flex items-center justify-between px-4 py-3.5 border rounded-xl bg-white transition-colors ${isActive ? 'border-[#E5E5E5]' : 'border-[#E5E5E5]'}`}
+                    className="flex-1 flex items-center justify-between px-4 py-3.5 border border-[#E5E5E5] rounded-xl bg-white transition-colors"
                   >
-                    <span className="text-[15px] font-medium text-[#1A1A1A]">{ch}</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
-                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}    
+                    <span className="flex-1 text-left text-[15px] font-medium text-[#1A1A1A]">{ch}</span>
+                    <div className={`shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
+                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                     </div>
                   </button>
                 )
