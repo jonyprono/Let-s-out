@@ -25,8 +25,8 @@ function getLocalIP() {
   return candidates[0]?.address || 'localhost'
 }
 
-// Set CAPACITOR_PRODUCTION=true when building the production APK
-const isProduction = process.env.CAPACITOR_PRODUCTION === 'true'
+// Default to production unless CAPACITOR_DEV is set to 'true'
+const isProduction = process.env.CAPACITOR_DEV !== 'true' && process.env.CAPACITOR_PRODUCTION !== 'false'
 
 const LOCAL_IP = getLocalIP()
 
