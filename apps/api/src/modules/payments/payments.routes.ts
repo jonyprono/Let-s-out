@@ -131,7 +131,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 
   // DEV uniquement : confirmer manuellement (simule le webhook)
   app.post('/dev/confirm-booking', { preHandler: [app.authenticate] }, async (req, reply) => {
-    if (process.env.NODE_ENV === 'production') return reply.code(404).send()
+    if (process.env.NODE_ENV === 'production' && process.env.FEDAPAY_SECRET_KEY) return reply.code(404).send()
     const { sub } = req.user as { sub: string }
     const { eventId, amount: customAmount } = req.body as { eventId: string; amount?: number }
 

@@ -57,6 +57,105 @@ const getIcon = () => {
   return customIcon;
 }
 
+interface CoHostRowProps {
+  coHost: any
+  currentUser: any
+  onOpenProfile: (id: string, data: any) => void
+  onContactUser: (userId: string) => void
+}
+
+function CoHostRow({ coHost, currentUser, onOpenProfile, onContactUser }: CoHostRowProps) {
+  const coHostName = coHost.profile?.displayName || 'Co-organisateur'
+  const coHostAvatar = coHost.profile?.avatarUrl
+  const coHostFollowers = coHost.profile?.followersCount || 0
+  const coHostEvents = coHost.profile?.eventsCount || 0
+  const isThisCoHostMe = currentUser?.id === coHost.id
+
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleFollow = async () => {
+    if (!currentUser) {
+      toast.error("Connectez-vous pour suivre le co-organisateur.")
+      return
+    }
+    setLoading(true)
+    try {
+      if (isFollowing) {
+        await usersApi.unfollowUser(coHost.id)
+        setIsFollowing(false)
+        toast.success("Vous ne suivez plus cet utilisateur")
+      } else {
+        await usersApi.followUser(coHost.id)
+        setIsFollowing(true)
+        toast.success("Vous suivez cet utilisateur")
+      }
+    } catch {
+      toast.error("Une erreur est survenue")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100">
+      <div className="flex items-start gap-3">
+        <div 
+          className="cursor-pointer flex-shrink-0"
+          onClick={() => onOpenProfile(coHost.id, { displayName: coHostName, avatarUrl: coHostAvatar })}
+        >
+          <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm">
+            <SafeImage 
+              src={coHostAvatar} 
+              alt={coHostName} 
+              className="w-full h-full object-cover"
+              fallback={
+                <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center text-xl font-bold text-white">
+                  {coHostName.charAt(0).toUpperCase()}
+                </div>
+              }
+            />
+          </div>
+        </div>
+        
+        <div className="flex-1">
+          <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => onOpenProfile(coHost.id, { displayName: coHostName, avatarUrl: coHostAvatar })}>
+            <p className="text-[15px] font-bold text-gray-900">{coHostName}</p>
+            <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Co-hôte</span>
+          </div>
+          <p className="text-[12px] text-gray-500 mt-0.5 mb-2">
+            {coHostFollowers + (isFollowing ? 1 : 0)} followers • {coHostEvents} événement{coHostEvents > 1 ? 's' : ''}
+          </p>
+          
+          {isThisCoHostMe ? (
+            <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Vous</span>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => onContactUser(coHost.id)} 
+                className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform"
+              >
+                Contacter
+              </button>
+              <button 
+                onClick={handleFollow} 
+                disabled={loading}
+                className={`px-3 py-1 rounded-full border text-[11px] font-bold shadow-sm active:scale-95 transition-all ${
+                  isFollowing 
+                    ? 'bg-blue-50 text-blue-600 border-blue-200' 
+                    : 'bg-white border-gray-200 text-gray-700'
+                }`}
+              >
+                {isFollowing ? 'Suivi' : 'Suivre'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface EventDetailsProps {
   onBack: () => void
 }
@@ -238,15 +337,21 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     hapticFeedback.impact()
     if (!user) { toast.error("Connectez-vous pour suivre l'organisateur."); return }
     if (!event?.creator?.id) return
-    setIsFollowing(true)
+    const wasFollowing = isFollowing
+    setIsFollowing(!wasFollowing)
     try {
-      await usersApi.followUser(event.creator.id)
+      if (wasFollowing) {
+        await usersApi.unfollowUser(event.creator.id)
+        toast.success(`Vous ne suivez plus ${organizerName}`)
+      } else {
+        await usersApi.followUser(event.creator.id)
+        toast.success(`Vous suivez ${organizerName}`)
+      }
       hapticFeedback.success()
-      toast.success(`Vous suivez ${organizerName}`)
     } catch {
-      setIsFollowing(false)
+      setIsFollowing(wasFollowing)
       hapticFeedback.error()
-      toast.error("Erreur lors de l'abonnement")
+      toast.error("Erreur lors de l'abonnement/désabonnement")
     }
   }
 
@@ -328,11 +433,36 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   // ─── Derived data ─────────────────────────────────────────────────────────
 
-  const startDate = new Date(event.startAt)
-  const endDate = new Date(event.endAt)
-  const formattedDate = format(startDate, "EEEE d MMMM yyyy", { locale: fr })
-  const formattedStart = format(startDate, "HH:mm", { locale: fr })
-  const formattedEnd = format(endDate, "HH:mm", { locale: fr })
+  const parseSafeDate = (dateStr: any): Date => {
+    if (!dateStr) return new Date();
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) return d;
+    if (typeof dateStr === 'string') {
+      const fixedStr = dateStr.replace(' ', 'T');
+      const d2 = new Date(fixedStr);
+      if (!isNaN(d2.getTime())) return d2;
+    }
+    return new Date();
+  };
+
+  const startDate = parseSafeDate(event.startAt)
+  const endDate = parseSafeDate(event.endAt)
+
+  let formattedDate = "Date non précisée"
+  let formattedStart = "--:--"
+  let formattedEnd = "--:--"
+
+  try {
+    if (event.startAt) {
+      formattedDate = format(startDate, "EEEE d MMMM yyyy", { locale: fr })
+      formattedStart = format(startDate, "HH:mm", { locale: fr })
+    }
+    if (event.endAt) {
+      formattedEnd = format(endDate, "HH:mm", { locale: fr })
+    }
+  } catch (err) {
+    console.error("Error formatting date in EventDetails:", err)
+  }
 
   const attendeeCount = event._count?.bookings ?? event.currentAttendees ?? 0
   const maxAttendees = event.maxAttendees
@@ -545,60 +675,25 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </div>
                 </div>
 
-                {event.coHosts?.map((coHost: any) => {
-                  const coHostName = coHost.profile?.displayName || 'Co-organisateur'
-                  const coHostAvatar = coHost.profile?.avatarUrl
-                  const coHostFollowers = coHost.profile?.followersCount || 0
-                  const coHostEvents = coHost.profile?.eventsCount || 0
-                  const isThisCoHostMe = user?.id === coHost.id
-                  
-                  return (
-                    <div key={coHost.id} className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                      <div className="flex items-start gap-3">
-                        <div 
-                          className="cursor-pointer flex-shrink-0"
-                          onClick={() => openUserProfile(coHost.id, { displayName: coHostName, avatarUrl: coHostAvatar })}
-                        >
-                          <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm">
-                            <SafeImage 
-                              src={coHostAvatar} 
-                              alt={coHostName} 
-                              className="w-full h-full object-cover"
-                              fallback={
-                                <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center text-xl font-bold text-white">
-                                  {coHostName.charAt(0).toUpperCase()}
-                                </div>
-                              }
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="flex-1">
-                          <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => openUserProfile(coHost.id, { displayName: coHostName, avatarUrl: coHostAvatar })}>
-                            <p className="text-[15px] font-bold text-gray-900">{coHostName}</p>
-                            <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Co-hôte</span>
-                          </div>
-                          <p className="text-[12px] text-gray-500 mt-0.5 mb-2">
-                            {coHostFollowers} followers • {coHostEvents} événement{coHostEvents > 1 ? 's' : ''}
-                          </p>
-                          
-                          {isThisCoHostMe ? (
-                            <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Vous</span>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <button onClick={() => {}} className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform">
-                                Contacter
-                              </button>
-                              <button onClick={() => {}} className={`px-3 py-1 rounded-full border text-[11px] font-bold shadow-sm active:scale-95 transition-all bg-white border-gray-200 text-gray-700`}>
-                                Suivre
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+                {event.coHosts?.map((coHost: any) => (
+                  <CoHostRow
+                    key={coHost.id}
+                    coHost={coHost}
+                    currentUser={user}
+                    onOpenProfile={openUserProfile}
+                    onContactUser={async (userId) => {
+                      hapticFeedback.impact()
+                      if (!user) { toast.error("Connectez-vous pour contacter le co-organisateur."); return }
+                      try {
+                        const conv = await chatApi.createDM(userId)
+                        navigate(`/chat/${conv.id}`)
+                      } catch {
+                        hapticFeedback.error()
+                        toast.error("Impossible d'ouvrir la discussion.")
+                      }
+                    }}
+                  />
+                ))}
               </div>
             </div>
 

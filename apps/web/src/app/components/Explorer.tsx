@@ -13,19 +13,15 @@ interface ExplorerProps {
 }
 
 const CATEGORIES_FILTER = [
-  { key: 'Sports', label: 'Sports' },
-  { key: 'CULTURE', label: 'Conférences' },
-  { key: 'MUSIC', label: 'Concerts' },
-  { key: 'OTHER', label: 'Festivals' },
+  { key: 'SPORT', label: 'Sport' },
+  { key: 'CULTURE', label: 'Culture & Art' },
+  { key: 'FOOD', label: 'Gastronomie' },
   { key: 'NIGHTLIFE', label: 'Soirées' },
-  { key: 'ART', label: 'Théâtre' },
-  { key: 'FOOD', label: 'Cinéma' },
-  { key: 'WELLNESS', label: 'Formations' },
-  { key: 'Gastronomie', label: 'Gastronomie' },
-  { key: 'Lifestyle', label: 'Lifestyle' },
-  { key: 'Mode', label: 'Mode' },
-  { key: 'Sante', label: 'Santé' },
-  { key: 'Science', label: 'Science' },
+  { key: 'TRAVEL', label: 'Voyages' },
+  { key: 'GAMING', label: 'Gaming' },
+  { key: 'WELLNESS', label: 'Bien-être' },
+  { key: 'MUSIC', label: 'Musique' },
+  { key: 'OTHER', label: 'Autre' },
 ];
 
 const DATE_FILTERS = [
@@ -46,13 +42,19 @@ const TIME_FILTERS = [
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  SPORT: 'Sport', CULTURE: 'Culture', FOOD: 'Food',
-  NIGHTLIFE: 'Soirée', MUSIC: 'Musique', WELLNESS: 'Bien-être',
-  ART: 'Art', TRAVEL: 'Voyage', GAMING: 'Gaming', OTHER: 'Autre',
+  SPORT: 'Sport',
+  CULTURE: 'Culture & Art',
+  FOOD: 'Gastronomie',
+  NIGHTLIFE: 'Soirées',
+  TRAVEL: 'Voyages',
+  GAMING: 'Gaming',
+  WELLNESS: 'Bien-être',
+  MUSIC: 'Musique',
+  OTHER: 'Autre',
 };
 
 // Base category list for search tab
-const BROWSE_CATEGORIES = ['Tous', 'SPORT', 'CULTURE', 'FOOD', 'NIGHTLIFE', 'MUSIC', 'WELLNESS', 'ART', 'OTHER'];
+const BROWSE_CATEGORIES = ['Tous', 'SPORT', 'CULTURE', 'FOOD', 'NIGHTLIFE', 'TRAVEL', 'GAMING', 'WELLNESS', 'MUSIC', 'OTHER'];
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
 

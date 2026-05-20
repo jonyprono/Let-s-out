@@ -42,9 +42,30 @@ export function ManageEventView({
              <h3 className="font-bold text-gray-900 text-[15px]">Organisateurs</h3>
              <button onClick={() => handleEdit(5)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
            </div>
-           <div className="flex items-center gap-3 mb-3">
-             <SafeImage src={organizerAvatar} alt={organizerName} className="w-8 h-8 rounded-full object-cover" />
-             <span className="text-[14px] text-gray-700 font-medium">{organizerName}</span>
+           <div className="space-y-3 mb-3">
+             <div className="flex items-center gap-3">
+               <SafeImage src={organizerAvatar} alt={organizerName} className="w-8 h-8 rounded-full object-cover" />
+               <span className="text-[14px] text-gray-700 font-medium">{organizerName}</span>
+             </div>
+             {event.coHosts?.map((coHost: any) => {
+               const coHostName = coHost.profile?.displayName || 'Co-organisateur'
+               const coHostAvatar = coHost.profile?.avatarUrl
+               return (
+                 <div key={coHost.id} className="flex items-center gap-3 pl-2 border-l-2 border-gray-100">
+                   {coHostAvatar ? (
+                     <SafeImage src={coHostAvatar} alt={coHostName} className="w-6 h-6 rounded-full object-cover" />
+                   ) : (
+                     <div className="w-6 h-6 rounded-full bg-orange-200 flex items-center justify-center text-white font-bold text-[9px]">
+                       {coHostName.charAt(0).toUpperCase()}
+                     </div>
+                   )}
+                   <span className="text-[13px] text-gray-600 font-medium flex items-center gap-1.5">
+                     {coHostName}
+                     <span className="text-[9px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-bold">Co-hôte</span>
+                   </span>
+                 </div>
+               )
+             })}
            </div>
            <div className="flex items-center gap-3">
              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FFCA28] to-[#FF9F1C] flex items-center justify-center">

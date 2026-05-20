@@ -589,7 +589,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 className="w-full h-40 border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 overflow-hidden relative bg-gray-50">
                 {coverPreview ? (
                   <>
-                    <img src={coverPreview} className="absolute inset-0 w-full h-full object-cover" />
+                    <SafeImage src={coverPreview} alt="Aperçu couverture" className="absolute inset-0 w-full h-full object-cover" />
                     <button onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
                       className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">
                       <X className="w-4 h-4 text-white" />
@@ -665,7 +665,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                </div>
                <div className="flex items-center gap-3 mb-3">
                  {me?.profile?.avatarUrl ? (
-                   <img src={me.profile.avatarUrl} className="w-8 h-8 rounded-full object-cover" />
+                    <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-8 h-8 rounded-full object-cover" />
                  ) : (
                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm">
                      {me?.profile?.displayName?.charAt(0) || 'M'}
@@ -773,7 +773,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                </div>
                <div className="w-full h-40 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shadow-sm relative">
                   {coverPreview ? (
-                    <img src={coverPreview} className="w-full h-full object-cover" />
+                     <SafeImage src={coverPreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                       <div className="text-3xl">{categories[0] === 'SPORT' ? '⚽️' : categories[0] === 'MUSIC' ? '🎸' : '✨'}</div>

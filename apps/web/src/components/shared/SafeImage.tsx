@@ -43,7 +43,7 @@ export function SafeImage({ src, alt, className, fallback, onError, style, ...re
     .replace(/http:\/\/localhost:\d+/g, API_BASE)
     .replace(/http:\/\/127\.0\.0\.1:\d+/g, API_BASE)
 
-  const resolvedSrc = (!fixedSrc.startsWith('http') && !fixedSrc.startsWith('data:'))
+  const resolvedSrc = (!fixedSrc.startsWith('http') && !fixedSrc.startsWith('data:') && !fixedSrc.startsWith('blob:'))
     ? `${API_BASE}${fixedSrc.startsWith('/') ? '' : '/'}${fixedSrc}`
     : fixedSrc
 
