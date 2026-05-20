@@ -24,7 +24,25 @@ export function useChatSocket() {
     if (!token) return
     if (ws.current?.readyState === WebSocket.OPEN) return
 
-    const url = `${import.meta.env.VITE_WS_URL || 'ws://localhost:3001'}/api/v1/chat/ws?token=${token}`
+    let wsUrl = import.meta.env.VITE_WS_URL as string | undefined
+    if (wsUrl && (wsUrl.includes('localhost') || wsUrl.includes('127.0.0.1') || wsUrl.includes('172.30.') || wsUrl.includes('192.168.'))) {
+      // Local dev config from env, keep it
+    } else {
+      if (typeof window !== 'undefined' && window.location && window.location.origin) {
+        const origin = window.location.origin
+        if (origin.includes('vercel.app') || origin.includes('let-s-out-web')) {
+          wsUrl = 'wss://let-s-out.onrender.com'
+        } else if (origin.includes(':3000')) {
+          wsUrl = origin.replace('http://', 'ws://').replace(':3000', ':3001')
+        } else {
+          wsUrl = origin.replace('http://', 'ws://').replace('https://', 'wss://')
+        }
+      } else {
+        wsUrl = 'ws://localhost:3001'
+      }
+    }
+
+    const url = `${wsUrl}/api/v1/chat/ws?token=${token}`
     ws.current = new WebSocket(url)
 
     ws.current.onopen = () => {

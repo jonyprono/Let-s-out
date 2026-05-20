@@ -14,17 +14,31 @@ const isCapacitor = () => {
 
 const resolveApiUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL as string | undefined
-  if (envUrl) return envUrl
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1') && !envUrl.includes('172.30.') && !envUrl.includes('192.168.')) {
+    // If a production API URL is explicitly configured in env, use it
+    return envUrl
+  }
 
   if (typeof window !== 'undefined' && window.location && window.location.origin) {
     const origin = window.location.origin
+    // If running on Vercel or production domain, point to the live Render backend
+    if (origin.includes('vercel.app') || origin.includes('let-s-out-web')) {
+      return 'https://let-s-out.onrender.com/api/v1'
+    }
     if (origin.includes(':3000')) {
       return origin.replace(':3000', ':3001') + '/api/v1'
+    }
+    // If running in Capacitor native platform in production build, point to Render
+    const isCap = () => {
+      try { return !!(window as any).Capacitor?.isNativePlatform?.() } catch { return false }
+    }
+    if (isCap() && process.env.NODE_ENV === 'production') {
+      return 'https://let-s-out.onrender.com/api/v1'
     }
     return `${origin}/api/v1`
   }
 
-  return 'http://localhost:3001/api/v1'
+  return envUrl || 'http://localhost:3001/api/v1'
 }
 
 export const apiClient = axios.create({
