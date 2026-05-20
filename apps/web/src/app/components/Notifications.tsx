@@ -10,19 +10,19 @@ interface NotificationsProps {
 
 // Exact mapping of Prisma NotifType enum values
 const TYPE_CONFIG: Record<string, { icon: any; colorClass: string; label: string }> = {
-  EVENT_INVITE:    { icon: Calendar,       colorClass: 'bg-purple-50 text-[#9747FF]', label: 'Invitation' },
-  EVENT_UPDATE:    { icon: Calendar,       colorClass: 'bg-blue-50 text-blue-500',    label: 'Mise à jour événement' },
+  EVENT_INVITE:    { icon: Calendar,       colorClass: 'bg-orange-50 text-[#FF9F1C]', label: 'Invitation' },
+  EVENT_UPDATE:    { icon: Calendar,       colorClass: 'bg-orange-50 text-[#FF9F1C]',    label: 'Mise à jour événement' },
   EVENT_CANCELLED: { icon: Calendar,       colorClass: 'bg-red-50 text-red-500',      label: 'Événement annulé' },
   JOIN_REQUEST:    { icon: Users,          colorClass: 'bg-orange-50 text-[#FF9F1C]', label: 'Demande de participation' },
   JOIN_ACCEPTED:   { icon: CheckCircle,    colorClass: 'bg-green-50 text-green-500',  label: 'Participation acceptée' },
   NEW_MESSAGE:     { icon: MessageCircle,  colorClass: 'bg-orange-50 text-[#FF9F1C]', label: 'Nouveau message' },
-  FRIEND_REQUEST:  { icon: UserPlus,       colorClass: 'bg-blue-50 text-blue-500',    label: 'Demande d\'ami' },
+  FRIEND_REQUEST:  { icon: UserPlus,       colorClass: 'bg-orange-50 text-[#FF9F1C]',    label: 'Demande d\'ami' },
   FRIEND_ACCEPTED: { icon: Heart,          colorClass: 'bg-pink-50 text-pink-500',    label: 'Ami accepté' },
   PAYMENT_SUCCESS: { icon: DollarSign,     colorClass: 'bg-green-50 text-green-500',  label: 'Paiement réussi' },
   PAYMENT_FAILED:  { icon: AlertCircle,    colorClass: 'bg-red-50 text-red-500',      label: 'Paiement échoué' },
   SYSTEM:          { icon: Bell,           colorClass: 'bg-gray-100 text-gray-500',   label: 'Système' },
   // fallback for old/unknown types
-  default:         { icon: Bell,           colorClass: 'bg-purple-50 text-[#9747FF]', label: 'Notification' },
+  default:         { icon: Bell,           colorClass: 'bg-orange-50 text-[#FF9F1C]', label: 'Notification' },
 };
 
 function timeAgo(dateStr: string): string {
@@ -106,7 +106,7 @@ export function Notifications({ onBack }: NotificationsProps) {
             <button
               onClick={() => markAllReadMutation.mutate()}
               disabled={markAllReadMutation.isPending}
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#9747FF] px-3 py-1.5 bg-purple-50 rounded-full"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#FF9F1C] px-3 py-1.5 bg-orange-50 rounded-full"
             >
               {markAllReadMutation.isPending
                 ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -124,13 +124,13 @@ export function Notifications({ onBack }: NotificationsProps) {
               onClick={() => setActiveTab(tab)}
               className={`px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-colors border-b-2 ${
                 activeTab === tab
-                  ? 'text-[#9747FF] border-[#9747FF] bg-white'
+                  ? 'text-[#FF9F1C] border-[#FF9F1C] bg-white'
                   : 'text-gray-400 border-transparent'
               }`}
             >
               {tab === 'all' ? 'Toutes' : 'Non lues'}
               {tab === 'unread' && unreadCount > 0 && (
-                <span className="ml-1.5 bg-[#9747FF] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                <span className="ml-1.5 bg-[#FF9F1C] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
                   {unreadCount}
                 </span>
               )}
@@ -157,9 +157,9 @@ export function Notifications({ onBack }: NotificationsProps) {
           <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
             <div
               className="w-16 h-16 rounded-2xl mb-4 flex items-center justify-center"
-              style={{ background: 'rgba(151,71,255,0.08)' }}
+              style={{ background: 'rgba(255,159,28,0.08)' }}
             >
-              <Bell className="w-8 h-8" style={{ color: '#9747FF' }} />
+              <Bell className="w-8 h-8" style={{ color: '#FF9F1C' }} />
             </div>
             <h3 className="text-[15px] font-bold text-gray-900 mb-1">Aucune notification</h3>
             <p className="text-[13px] text-gray-400">
@@ -184,7 +184,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                   key={notif.id}
                   onClick={() => handleNotifPress(notif)}
                   className={`w-full flex items-start gap-3 p-4 rounded-2xl text-left transition-all active:scale-[0.98] shadow-sm ${
-                    notif.isRead ? 'bg-white' : 'bg-white border-l-4 border-[#9747FF]'
+                    notif.isRead ? 'bg-white' : 'bg-white border-l-4 border-[#FF9F1C]'
                   }`}
                 >
                   {/* Icon */}
@@ -204,7 +204,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                     </div>
                     <p className="text-[13px] text-gray-500 leading-snug line-clamp-2">{notif.body}</p>
                     {isNavigable && (
-                      <p className="text-[11px] text-[#9747FF] font-medium mt-1">
+                      <p className="text-[11px] text-[#FF9F1C] font-medium mt-1">
                         {notif.type === 'FRIEND_REQUEST' ? 'Appuyez pour répondre →' :
                          notif.type === 'PAYMENT_SUCCESS' ? 'Voir le reçu →' :
                          notif.type === 'NEW_MESSAGE' ? 'Ouvrir →' : 'Voir →'}
@@ -214,7 +214,7 @@ export function Notifications({ onBack }: NotificationsProps) {
 
                   {/* Unread dot */}
                   {!notif.isRead && (
-                    <div className="w-2.5 h-2.5 bg-[#9747FF] rounded-full flex-shrink-0 mt-1" />
+                    <div className="w-2.5 h-2.5 bg-[#FF9F1C] rounded-full flex-shrink-0 mt-1" />
                   )}
                 </button>
               );

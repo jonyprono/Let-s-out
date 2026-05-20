@@ -170,7 +170,7 @@ export function Profile({ onNavigate }: ProfileProps) {
         <div className="mx-4 mt-4 mb-4 bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50/50">
           {/* Cover gradient */}
           <div className="h-32 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-80" style={{ background: 'linear-gradient(135deg, #9747FF 0%, #FF9F1C 100%)' }} />
+            <div className="absolute inset-0 opacity-80" style={{ background: 'linear-gradient(135deg, #FF9F1C 0%, #FFB75E 100%)' }} />
             <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
             <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#FF9F1C]/20 rounded-full blur-2xl" />
@@ -187,7 +187,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                     className="w-full h-full object-cover"
                     fallback={
                       <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white"
-                        style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}>
+                        style={{ background: 'linear-gradient(135deg, #FF9F1C, #FFB75E)' }}>
                         {displayName.charAt(0).toUpperCase()}
                       </div>
                     }
@@ -198,7 +198,7 @@ export function Profile({ onNavigate }: ProfileProps) {
               {isOwnProfile && (
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="px-5 py-2.5 rounded-full text-sm font-bold text-[#9747FF] bg-purple-50 active:scale-95 transition-transform shadow-sm"
+                  className="px-5 py-2.5 rounded-full text-sm font-bold text-[#FF9F1C] bg-orange-50 active:scale-95 transition-transform shadow-sm"
                 >
                   Modifier le profil
                 </button>
@@ -219,9 +219,9 @@ export function Profile({ onNavigate }: ProfileProps) {
             {/* Stats row */}
             <div className="flex gap-2 pt-4 border-t border-gray-100/80">
               {[
-                { value: createdEvents.length, label: 'Événements', color: '#9747FF', tab: 'events' as Tab },
+                { value: createdEvents.length, label: 'Événements', color: '#FF9F1C', tab: 'events' as Tab },
                 { value: followers.length, label: 'Abonnés', color: '#FF9F1C', tab: 'followers' as Tab },
-                { value: following.length, label: 'Abonnements', color: '#9747FF', tab: 'following' as Tab },
+                { value: following.length, label: 'Abonnements', color: '#FF9F1C', tab: 'following' as Tab },
                 ...(isOwnProfile ? [{ value: friends.length, label: 'Amis', color: '#FF9F1C', tab: 'friends' as Tab }] : []),
               ].map(stat => (
                 <button
@@ -246,7 +246,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex-none px-4 py-2 rounded-full text-[12px] font-bold transition-all ${
                   activeTab === tab.key
-                    ? 'bg-white text-[#9747FF] shadow-sm ring-1 ring-gray-100/50'
+                    ? 'bg-white text-[#FF9F1C] shadow-sm ring-1 ring-gray-100/50'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -266,7 +266,7 @@ export function Profile({ onNavigate }: ProfileProps) {
           <div className="mx-4 space-y-4">
             {createdEvents.length === 0 ? (
               <div className="bg-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-purple-50 rounded-full flex items-center justify-center mb-4">
+                <div className="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-4">
                   <span className="text-2xl">📅</span>
                 </div>
                 <p className="text-gray-900 font-bold text-[15px]">Aucun événement créé</p>
@@ -275,7 +275,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                   <button
                     onClick={() => onNavigate('create-event')}
                     className="mt-6 px-6 py-3 rounded-full text-sm font-bold text-white shadow-md active:scale-95 transition-transform"
-                    style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}
+                    style={{ background: 'linear-gradient(135deg, #FF9F1C, #FFB75E)' }}
                   >
                     Créer un événement
                   </button>
@@ -331,7 +331,7 @@ export function Profile({ onNavigate }: ProfileProps) {
           <div className="mx-4 space-y-2">
             {followers.length === 0 ? (
               <div className="bg-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-purple-50 rounded-full flex items-center justify-center mb-4">
+                <div className="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-4">
                   <span className="text-2xl">👥</span>
                 </div>
                 <p className="text-gray-900 font-bold text-[15px]">Aucun abonné</p>
@@ -424,7 +424,7 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
           className="w-full h-full object-cover"
           fallback={
             <div className="w-full h-full flex items-center justify-center font-bold text-[#FFFFFF] text-lg"
-              style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}>
+              style={{ background: 'linear-gradient(135deg, #FF9F1C, #FFB75E)' }}>
               {name.charAt(0).toUpperCase()}
             </div>
           }
@@ -437,13 +437,13 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
         )}
       </div>
       {type === 'follower' && (
-        <div className="flex-shrink-0 p-2 rounded-full bg-purple-50">
-          <UserCheck className="w-4 h-4 text-[#9747FF]" />
+        <div className="flex-shrink-0 p-2 rounded-full bg-orange-50">
+          <UserCheck className="w-4 h-4 text-[#FF9F1C]" />
         </div>
       )}
       {type === 'following' && (
-        <div className="flex-shrink-0 p-2 rounded-full bg-purple-50">
-          <UserPlus className="w-4 h-4 text-[#9747FF]" />
+        <div className="flex-shrink-0 p-2 rounded-full bg-orange-50">
+          <UserPlus className="w-4 h-4 text-[#FF9F1C]" />
         </div>
       )}
       {type === 'friend' && (

@@ -23,24 +23,14 @@ const TIME_FILTERS = [
   { key: 'weekend', label: 'Ce week-end' },
 ];
 
-function getTimeFilter(key: string): { upcoming?: boolean; status?: string; date?: string; time?: string } {
+function getTimeFilter(key: string): { upcoming?: boolean; status?: string; date?: string; time?: string; ongoing?: string } {
   switch (key) {
-    case 'ongoing': return { status: 'PUBLISHED', date: 'today' };
+    case 'ongoing': return { status: 'PUBLISHED', ongoing: 'true' };
     case 'tonight': return { status: 'PUBLISHED', upcoming: true, date: 'today', time: 'evening' };
     case 'tomorrow': return { status: 'PUBLISHED', upcoming: true, date: 'tomorrow' };
     case 'weekend': return { status: 'PUBLISHED', upcoming: true, date: 'weekend' };
     default: return { status: 'PUBLISHED', upcoming: true };
   }
-}
-
-/** Filter events that are currently happening (startAt <= now < endAt) */
-function filterOngoing(events: Event[]): Event[] {
-  const now = Date.now();
-  return events.filter(e => {
-    const start = new Date(e.startAt).getTime();
-    const end = new Date(e.endAt || start + 4 * 3600000).getTime();
-    return start <= now && end >= now;
-  });
 }
 
 
@@ -133,7 +123,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const myOngoingEvents: any[] = (activity?.createdEvents || []).filter((e: any) => new Date(e.startAt) >= now);
 
   const rawEvents: Event[] = eventsData?.pages.flatMap(page => page.data) || [];
-  const events: Event[] = activeFilter === 'ongoing' ? filterOngoing(rawEvents) : rawEvents;
+  const events: Event[] = rawEvents;
   const recommendedEvents: Event[] = recommendedData?.data || events.slice(0, 5);
 
   // Split feed: first 3 as vertical, rest as "Les plus populaires" horizontal

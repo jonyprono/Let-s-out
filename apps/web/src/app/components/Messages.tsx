@@ -81,8 +81,8 @@ export function Messages(_props: MessagesProps) {
           <div>
             <h1 className="text-[24px] font-black tracking-tight text-gray-900">Messages</h1>
             {totalUnread > 0 && (
-              <p className="text-[13px] font-bold text-[#9747FF] mt-0.5 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#9747FF] animate-pulse" />
+              <p className="text-[13px] font-bold text-[#FF9F1C] mt-0.5 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#FF9F1C] animate-pulse" />
                 {totalUnread} message{totalUnread > 1 ? 's' : ''} non lu{totalUnread > 1 ? 's' : ''}
               </p>
             )}
@@ -96,15 +96,15 @@ export function Messages(_props: MessagesProps) {
             </button>
             <button
               onClick={() => setShowNewConv(true)}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95 bg-purple-50 shadow-sm"
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95 bg-orange-50 shadow-sm"
             >
-              <Plus className="w-6 h-6 text-[#9747FF]" />
+              <Plus className="w-6 h-6 text-[#FF9F1C]" />
             </button>
           </div>
         </div>
 
         {/* Search */}
-        <div className="bg-gray-50/80 backdrop-blur-sm rounded-full flex items-center gap-3 px-4 py-3 border border-gray-100 focus-within:ring-2 focus-within:ring-[#9747FF]/30 focus-within:border-[#9747FF]/30 focus-within:bg-white transition-all shadow-sm">
+        <div className="bg-gray-50/80 backdrop-blur-sm rounded-full flex items-center gap-3 px-4 py-3 border border-gray-100 focus-within:ring-2 focus-within:ring-[#FF9F1C]/30 focus-within:border-[#FF9F1C]/30 focus-within:bg-white transition-all shadow-sm">
           <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
@@ -170,8 +170,8 @@ export function Messages(_props: MessagesProps) {
             {/* Empty/No search results */}
             {filtered.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-                <div className="w-24 h-24 rounded-full mb-5 flex items-center justify-center bg-gradient-to-br from-purple-50 to-orange-50 shadow-sm border border-white">
-                  {searchQuery ? <Search className="w-10 h-10 text-[#9747FF]" /> : <MessageCircle className="w-10 h-10 text-[#FF9F1C]" />}
+                <div className="w-24 h-24 rounded-full mb-5 flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm border border-white">
+                  {searchQuery ? <Search className="w-10 h-10 text-[#FF9F1C]" /> : <MessageCircle className="w-10 h-10 text-[#FF9F1C]" />}
                 </div>
                 <h3 className="text-[17px] font-bold text-gray-900 mb-2">
                   {searchQuery ? 'Aucun résultat' : 'Aucune conversation'}
@@ -182,7 +182,7 @@ export function Messages(_props: MessagesProps) {
                 {!searchQuery && (
                   <button
                     onClick={() => setShowNewConv(true)}
-                    className="mt-6 px-6 py-3 bg-[#9747FF] text-white rounded-full font-bold text-[14px] shadow-lg shadow-[#9747FF]/30 active:scale-95 transition-transform"
+                    className="mt-6 px-6 py-3 bg-[#FF9F1C] text-white rounded-full font-bold text-[14px] shadow-lg shadow-[#FF9F1C]/30 active:scale-95 transition-transform"
                   >
                     Démarrer une discussion
                   </button>
@@ -206,7 +206,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
   return (
     <button
       onClick={onNavigate}
-      className={`w-full rounded-[24px] flex items-center gap-3 p-3 text-left transition-all active:scale-[0.98] border border-transparent ${hasUnread ? 'bg-white shadow-[0_4px_20px_rgb(151,71,255,0.1)] border-[#9747FF]/10 z-10 relative' : 'bg-white/60 hover:bg-white shadow-sm border-gray-100/50'}`}
+      className={`w-full rounded-[24px] flex items-center gap-3 p-3 text-left transition-all active:scale-[0.98] border border-transparent ${hasUnread ? 'bg-white shadow-[0_4px_20px_rgb(255,159,28,0.1)] border-[#FF9F1C]/10 z-10 relative' : 'bg-white/60 hover:bg-white shadow-sm border-gray-100/50'}`}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
@@ -215,11 +215,11 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
             src={conv.avatarUrl}
             alt={conv.name}
             className="w-full h-full object-cover"
-            fallback={<div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white" style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}>{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
+            fallback={<div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white bg-orange-400">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
           />
         </div>
         {conv.isGroup && (
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white shadow-sm" style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}>
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white shadow-sm bg-orange-400">
             <Users className="w-2.5 h-2.5 text-white" />
           </div>
         )}
@@ -234,20 +234,20 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
           <h3 className={`text-[15px] truncate pr-2 ${hasUnread ? 'font-black text-gray-900' : 'font-bold text-gray-800'}`}>
             {conv.name}
           </h3>
-          <span className={`text-[11px] whitespace-nowrap flex-shrink-0 font-bold ${hasUnread ? 'text-[#9747FF]' : 'text-gray-400'}`}>
+          <span className={`text-[11px] whitespace-nowrap flex-shrink-0 font-bold ${hasUnread ? 'text-[#FF9F1C]' : 'text-gray-400'}`}>
             {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            {!hasUnread && <CheckCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
+            {!hasUnread && <CheckCheck className="w-4 h-4 text-[#FF9F1C] flex-shrink-0" />}
             <p className={`text-[13px] truncate ${hasUnread ? 'text-gray-900 font-bold' : 'text-gray-500 font-medium'}`}>
               {conv.lastMsgPrefix && <span className="font-bold text-[#FF9F1C] mr-1">{conv.lastMsgPrefix}</span>}
               {conv.lastMsg}
             </p>
           </div>
           {hasUnread && (
-            <span className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-black text-white shadow-[0_2px_10px_rgba(151,71,255,0.4)]" style={{ background: 'linear-gradient(135deg, #9747FF, #b070ff)' }}>
+            <span className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-black text-white shadow-[0_2px_10px_rgba(255,159,28,0.4)] bg-[#FF9F1C]">
               {conv.unread > 9 ? '9+' : conv.unread}
             </span>
           )}

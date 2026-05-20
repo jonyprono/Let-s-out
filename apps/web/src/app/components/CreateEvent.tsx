@@ -653,140 +653,116 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {/* ── STEP 6: Rendu après publication ── */}
         {step === 6 && (
           <div className="space-y-4 min-h-full">
-            <h1 className="text-[24px] font-bold text-[#1A1A1A] leading-tight mb-4">{title || 'Titre de l\'événement'}</h1>
-            
-            <div className="bg-[#F9F9F9] mb-6 p-4 rounded-xl text-[#555555] text-[13px] leading-relaxed border border-[#E5E5E5]">
-              Cet événement n'est pas encore visible sur Let's Out.<br/>
-              Publiez-le pour le rendre accessible publiquement.<br/>
-              Ou ajoutez une cagnotte pour partager les frais.
+            <div className="flex items-center justify-center mb-6">
+              <div className="flex flex-col items-center">
+                <span className="text-[14px] font-bold text-[#FF9F1C] uppercase tracking-wider mb-1">Rendu après publication</span>
+                <div className="h-[2px] w-full bg-[#FF9F1C] rounded-full"></div>
+              </div>
             </div>
 
-            {/* Organisateurs Card */}
-            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
-               <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Organisateurs</h3>
-                 <button onClick={() => setStep(5)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
-               </div>
-               <div className="flex items-center gap-3 mb-3">
-                 {me?.profile?.avatarUrl ? (
-                    <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-9 h-9 rounded-full object-cover" />
-                 ) : (
-                   <div className="w-9 h-9 rounded-full bg-[#F5F5F5] flex items-center justify-center font-bold text-[14px]">
-                     {me?.profile?.displayName?.charAt(0) || 'M'}
-                   </div>
-                 )}
-                 <span className="text-[15px] text-[#1A1A1A] font-medium">{me?.profile?.displayName || 'Vous'}</span>
-               </div>
-               {selectedCoOrgs.map(org => (
-                 <div key={org.id} className="flex items-center gap-3 mt-3">
-                   {org.avatarUrl ? (
-                     <SafeImage src={org.avatarUrl} alt={org.name} className="w-9 h-9 rounded-full object-cover border border-[#E5E5E5]" />
-                   ) : (
-                     <div className="w-9 h-9 rounded-full bg-[#FFD99A] flex items-center justify-center text-[#1A1A1A] font-bold text-[14px] border border-[#E5E5E5]">
-                       {org.name.charAt(0).toUpperCase()}
-                     </div>
-                   )}
-                   <span className="text-[15px] text-[#1A1A1A] font-medium">{org.name}</span>
-                 </div>
-               ))}
-            </div>
+            {/* Event Card Preview */}
+            <div className="bg-white border border-[#E5E5E5] rounded-[24px] overflow-hidden shadow-sm">
+              {/* Cover */}
+              <div className="w-full h-48 bg-[#F9F9F9] relative">
+                {coverPreview ? (
+                  <SafeImage src={coverPreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                    <div className="text-4xl">{categories[0] === 'SOCIAL' ? '✨' : categories[0] === 'CULTURE' ? '🎭' : categories[0] === 'WELLNESS' ? '🧘' : categories[0] === 'TECH' ? '💻' : categories[0] === 'SCIENCE' ? '🔬' : categories[0] === 'TRAVEL' ? '✈️' : categories[0] === 'LIFESTYLE' ? '🍹' : '🗺️'}</div>
+                    <span className="text-[14px] text-[#888888] font-medium">Image par défaut</span>
+                  </div>
+                )}
+              </div>
 
-            {/* Informations Card */}
-            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
-               <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Informations</h3>
-                 <button onClick={() => setStep(1)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
-               </div>
-               <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-[#888888]">Nom</span>
-                 <span className="text-[14px] font-medium text-[#1A1A1A] truncate max-w-[180px]">{title || '—'}</span>
-               </div>
-               <div className="flex justify-between items-center">
-                 <span className="text-[14px] text-[#888888]">Catégories</span>
-                 <div className="flex gap-1">
-                   {categories.length > 0 ? categories.map(cat => (
-                     <span key={cat} className="text-[12px] font-medium text-[#1A1A1A] bg-[#F9F9F9] px-2.5 py-1 rounded-full">{CATEGORIES.find(c => c.value === cat)?.label}</span>
-                   )) : (
-                     <span className="text-[12px] font-medium text-[#888888] bg-[#F9F9F9] px-2.5 py-1 rounded-full">—</span>
-                   )}
-                 </div>
-               </div>
-            </div>
+              <div className="p-5 space-y-6">
+                {/* Title & Tags */}
+                <div>
+                  <h2 className="text-[22px] font-bold text-[#1A1A1A] leading-tight mb-3">{title || 'Titre de l\'événement'}</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map(cat => (
+                      <span key={cat} className="text-[12px] font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                        {CATEGORIES.find(c => c.value === cat)?.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Date & Lieu Card */}
-            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
-               <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Date & lieu</h3>
-                 <button onClick={() => setStep(2)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
-               </div>
-               <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-[#888888]">Date</span>
-                 <span className="text-[14px] font-medium text-[#1A1A1A] capitalize">{formattedDate || '—'}</span>
-               </div>
-               <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-[#888888]">Heure</span>
-                 <span className="text-[14px] font-medium text-[#1A1A1A]">{startTime ? `${startTime} – ${endTime} (GMT)` : '—'}</span>
-               </div>
-               <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-[#888888]">Ville</span>
-                 <span className="text-[14px] font-medium text-[#1A1A1A]">{city || '—'}</span>
-               </div>
-               <div className="flex justify-between items-center">
-                 <span className="text-[14px] text-[#888888]">Localisation</span>
-                 <span className="text-[14px] font-medium text-[#1A1A1A] truncate max-w-[150px]">{address || '—'}</span>
-               </div>
-            </div>
-
-            {/* Participation Card */}
-            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
-               <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Participation</h3>
-                 <button onClick={() => setStep(3)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
-               </div>
-               <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-[#888888]">Places</span>
-                 <span className="text-[14px] font-medium text-[#1A1A1A]">{maxPlaces || 'Illimitées'}</span>
-               </div>
-               <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-[#888888]">Ticket</span>
-                 <span className="text-[14px] font-medium text-[#1A1A1A]">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
-               </div>
-               <div className="flex justify-between items-center">
-                 <span className="text-[14px] text-[#888888]">Confidentialité</span>
-                 <span className="text-[14px] font-medium text-[#1A1A1A]">{isPrivate ? 'Privée' : 'Publique'}</span>
-               </div>
-            </div>
-
-            {/* Description Card */}
-            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
-               <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Description</h3>
-                 <button onClick={() => setStep(4)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
-               </div>
-               <p className="text-[14px] text-[#555555] line-clamp-3 leading-relaxed whitespace-pre-wrap">{description || 'Aucune description'}</p>
-               {description && description.length > 100 && (
-                 <span className="text-[14px] text-[#FF9F1C] underline mt-1 block font-medium cursor-pointer">Voir plus</span>
-               )}
-            </div>
-
-            {/* Couverture Card */}
-            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
-               <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Couverture</h3>
-                 <button onClick={() => setStep(4)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
-               </div>
-               <div className="w-full h-40 rounded-xl overflow-hidden bg-[#F9F9F9] border border-[#E5E5E5] relative">
-                  {coverPreview ? (
-                     <SafeImage src={coverPreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                      <div className="text-3xl">{categories[0] === 'SOCIAL' ? '✨' : categories[0] === 'CULTURE' ? '🎭' : categories[0] === 'WELLNESS' ? '🧘' : categories[0] === 'TECH' ? '💻' : categories[0] === 'SCIENCE' ? '🔬' : categories[0] === 'TRAVEL' ? '✈️' : categories[0] === 'LIFESTYLE' ? '🍹' : '🗺️'}</div>
-                      <span className="text-[13px] text-[#888888] font-medium">Image par défaut</span>
+                {/* Date & Location */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#FFF8F1] flex items-center justify-center shrink-0">
+                      <MapPin className="w-5 h-5 text-[#FF9F1C]" />
                     </div>
-                  )}
-               </div>
-            </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-[14px]">{city || 'Ville'}</p>
+                      <p className="text-[13px] text-gray-500">{address || 'Lieu non précisé'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#FFF8F1] flex items-center justify-center shrink-0">
+                      <Calendar className="w-5 h-5 text-[#FF9F1C]" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 text-[14px] capitalize">{formattedDate || 'Date non précisée'}</p>
+                      <p className="text-[13px] text-gray-500">{startTime ? `${startTime} – ${endTime} (GMT)` : '--:--'}</p>
+                    </div>
+                  </div>
+                </div>
 
+                {/* About */}
+                <div>
+                  <h3 className="text-[16px] font-bold text-gray-900 mb-2">À propos</h3>
+                  <p className="text-[14px] text-gray-600 leading-relaxed line-clamp-3 whitespace-pre-wrap">{description || 'Aucune description fournie.'}</p>
+                  <span className="text-[13px] text-gray-400 underline mt-1 block">Voir plus</span>
+                </div>
+
+                {/* Organizers */}
+                <div>
+                  <h3 className="text-[16px] font-bold text-gray-900 mb-3">Organisateurs</h3>
+                  <div className="bg-gray-50 rounded-[16px] p-3 flex items-center justify-between border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      {me?.profile?.avatarUrl ? (
+                         <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-10 h-10 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center font-bold text-[14px]">
+                          {me?.profile?.displayName?.charAt(0) || 'M'}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-[14px] font-bold text-gray-900">{me?.profile?.displayName || 'Vous'}</p>
+                        <p className="text-[12px] text-gray-500">{me?.profile?.followersCount || 0} followers • {me?.profile?.eventsCount || 0} événement</p>
+                      </div>
+                    </div>
+                    <button className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm">
+                      Contacter
+                    </button>
+                  </div>
+                </div>
+
+                {/* Participation */}
+                <div>
+                  <h3 className="text-[16px] font-bold text-gray-900 mb-3">Participation</h3>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[14px] text-gray-900 font-medium">Montant</span>
+                    <span className="text-[15px] font-bold text-blue-600">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
+                  </div>
+                </div>
+
+                {/* Participants */}
+                <div>
+                  <h3 className="text-[16px] font-bold text-gray-900 mb-3">Participants</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center -space-x-2">
+                      <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-200" />
+                      <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-300" />
+                      <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-400 flex items-center justify-center text-[10px] font-bold text-white">0/{maxPlaces || '∞'}</div>
+                    </div>
+                    <span className="text-[12px] px-3 py-1 rounded-full border border-gray-200 font-bold text-gray-700">Voir tous</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -809,25 +785,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </button>
             </>
           ) : (
-            <div className="w-full space-y-3">
+            <div className="w-full">
               <button
-                onClick={() => { setPoolStep(1); setShowPoolModal(true) }}
-                className="w-full py-[17px] rounded-full border border-[#E5E5E5] font-semibold text-[15px] text-[#1A1A1A] flex items-center justify-center gap-2 bg-white active:scale-95 transition-all"
-              >
-                <div className="flex items-center gap-1.5">
-                  <div className="w-5 h-5 flex items-center justify-center"><span className="text-[16px] leading-none">🪙</span></div>
-                  Ajouter cagnotte
-                </div>
-              </button>
-              <button
-                onClick={() => handleSubmit('PUBLISHED')}
+                onClick={() => handleSubmit('DRAFT')}
                 disabled={loading}
                 className={`w-full py-[17px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all ${
                   !loading ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'
                 }`}
               >
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                {loading ? 'Publication...' : 'Publier l\'événement'}
+                {loading ? 'Création...' : 'Créer l\'événement'}
               </button>
             </div>
           )}

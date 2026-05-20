@@ -65,7 +65,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
   // List events (with filters)
   app.get('/', async (req, reply) => {
-    const { category, city, status = 'PUBLISHED', limit = '20', offset = '0', search, upcoming, maxPrice, date, time } = req.query as any
+    const { category, city, status = 'PUBLISHED', limit = '20', offset = '0', search, upcoming, maxPrice, date, time, ongoing } = req.query as any
 
     let startDateBoundary: Date | undefined;
     let endDateBoundary: Date | undefined;
@@ -134,7 +134,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }),
     };
 
-    if (startDateBoundary || endDateBoundary) {
+    if (ongoing === 'true') {
+      whereClause.startAt = { lte: now };
+      whereClause.endAt = { gte: now };
+    } else if (startDateBoundary || endDateBoundary) {
       whereClause.startAt = {};
       if (startDateBoundary) whereClause.startAt.gte = startDateBoundary;
       if (endDateBoundary) whereClause.startAt.lt = endDateBoundary;
