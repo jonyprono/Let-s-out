@@ -5,12 +5,7 @@ import { useSendOtp, useRegister, useCheckTarget, useCheckOtp } from '@/features
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { useDiscoverGroups, chatApi } from '@/features/chat/api'
-import { useEvents } from '@/features/events/hooks/useEvents'
-import { eventsApi } from '@/features/events/api'
 import { apiClient } from '@/lib/api-client'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 
 declare global {
   interface Window { recaptchaVerifier: any; }
@@ -50,7 +45,7 @@ export function Signup({ onBack }: SignupProps) {
   const nav = useNavigate()
 
   // Steps:
-  // 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=groups, 8=events, 9=password
+  // 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=password
   const [step, setStep] = useState(1)
 
   // Step 1 – Phone
@@ -77,13 +72,7 @@ export function Signup({ onBack }: SignupProps) {
   // Step 6 – Interests
   const [interests, setInterests] = useState<string[]>([])
 
-  // Step 7 – Groups
-  const [joinedGroups, setJoinedGroups] = useState<string[]>([])
-
-  // Step 8 – Events
-  const [joinedEvents, setJoinedEvents] = useState<string[]>([])
-
-  // Step 9 – Password
+  // Step 7 – Password
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -100,11 +89,6 @@ export function Signup({ onBack }: SignupProps) {
   const { mutate: sendOtp, isPending: sendingOtp } = useSendOtp()
   const { mutate: register, isPending: registering } = useRegister()
   const { mutate: checkOtp, isPending: checkingOtp } = useCheckOtp()
-
-  const { data: groupsData, isLoading: loadingGroups } = useDiscoverGroups(10)
-  const { data: eventsData, isLoading: loadingEvents } = useEvents({ upcoming: true, limit: 10 })
-  const groups = groupsData || []
-  const events = eventsData?.data || []
 
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
 
@@ -173,7 +157,7 @@ export function Signup({ onBack }: SignupProps) {
           onError: () => toast.error('Code invalide ou expiré. Vérifiez et réessayez.'),
         })
       }
-    } else if (step === 9) {
+    } else if (step === 7) {
       // Final step: register
       const isFirebaseFlow = currentChannel === 'sms' && !!idToken
       register({
@@ -190,8 +174,6 @@ export function Signup({ onBack }: SignupProps) {
             if (birthday) profileData.birthdate = birthday
             if (city) profileData.city = city
             await apiClient.patch('/users/me/profile', profileData)
-            if (joinedGroups.length > 0) await Promise.allSettled(joinedGroups.map(id => chatApi.joinGroup(id)))
-            if (joinedEvents.length > 0) await Promise.allSettled(joinedEvents.map(id => eventsApi.join(id)))
           } catch (e) { console.error('Background updates error:', e) }
           finally { localStorage.setItem('letsout_onboarding_done', 'true'); nav('/home') }
         },
@@ -255,16 +237,14 @@ export function Signup({ onBack }: SignupProps) {
     if (step === 4) return false
     if (step === 5) return false
     if (step === 6) return interests.length === 0
-    if (step === 7) return false
-    if (step === 8) return false
-    if (step === 9) return !isPwdValid || !acceptedTerms || registering
+    if (step === 7) return !isPwdValid || !acceptedTerms || registering
     return false
   }
 
   const isLoading = sendingOtp || registering || checkingTarget || isFirebaseSending || checkingOtp || isFirebaseVerifying
 
   const buttonLabel = () => {
-    if (step === 9) return "Rejoindre Let's Out"
+    if (step === 7) return "Rejoindre Let's Out"
     return 'Suivant'
   }
 
@@ -481,93 +461,8 @@ export function Signup({ onBack }: SignupProps) {
           </div>
         )}
 
-        {/* ── STEP 7: GROUPS ── */}
+        {/* ── STEP 7: PASSWORD ── */}
         {step === 7 && (
-          <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Quelques groupes pour vous</h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
-              Basé sur vos centres d'intérêts, voici quelques groupes qui pourraient vous intéresser
-            </p>
-            {loadingGroups ? (
-              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[#888888]" /></div>
-            ) : (
-              <div className="space-y-3">
-                {groups.map(g => {
-                  const isJoined = joinedGroups.includes(g.id)
-                  return (
-                    <div key={g.id} className="bg-white border border-[#F0F0F0] rounded-2xl p-3 flex items-center gap-3 shadow-sm">
-                      {g.avatarUrl ? (
-                        <img src={g.avatarUrl} alt={g.name || 'Group'} className="w-14 h-14 bg-gray-100 rounded-xl shrink-0 object-cover" />
-                      ) : (
-                        <div className="w-14 h-14 bg-gray-100 rounded-xl shrink-0 flex items-center justify-center">
-                          <span className="text-[#888888] text-lg font-bold">{(g.name || 'G').charAt(0)}</span>
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-[15px] font-bold text-[#1A1A1A] truncate">{g.name}</h3>
-                        <p className="text-[12px] text-[#888888] truncate mt-0.5">{(g as any)._count?.members || 0} membres</p>
-                      </div>
-                      <button
-                        onClick={() => setJoinedGroups(prev => prev.includes(g.id) ? prev.filter(x => x !== g.id) : [...prev, g.id])}
-                        className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors shrink-0 ${isJoined ? 'bg-transparent border border-[#E5E5E5] text-[#888888]' : 'bg-[#FF9F1C] text-white border border-[#FF9F1C]'}`}
-                      >
-                        {isJoined ? 'Rejoint' : 'Rejoindre'}
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── STEP 8: EVENTS ── */}
-        {step === 8 && (
-          <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Événements à venir</h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
-              Voici quelques événements à venir qui pourraient vous intéresser.
-            </p>
-            {loadingEvents ? (
-              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[#888888]" /></div>
-            ) : events.length === 0 ? (
-              <p className="text-[#888888] text-sm text-center">Aucun événement à venir trouvé.</p>
-            ) : (
-              <div className="space-y-4">
-                {events.map(event => {
-                  const isJoined = joinedEvents.includes(event.id)
-                  let dateStr = ''
-                  try { dateStr = format(new Date(event.startAt), "EEE, d MMM • HH:mm", { locale: fr }) } catch {}
-                  return (
-                    <div key={event.id} className="bg-white rounded-2xl overflow-hidden border border-[#F0F0F0] shadow-sm">
-                      {event.coverUrl ? (
-                        <img src={event.coverUrl} className="h-32 w-full object-cover" alt="Cover" />
-                      ) : (
-                        <div className="h-32 bg-gray-100 w-full" />
-                      )}
-                      <div className="p-4">
-                        <h3 className="text-[15px] font-bold text-[#1A1A1A] mb-1">{event.title}</h3>
-                        <p className="text-[12px] text-[#888888] mb-3">{dateStr} {event.city ? `• ${event.city}` : ''}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[12px] text-[#888888]">{event.currentAttendees} Participants</span>
-                          <button
-                            onClick={() => setJoinedEvents(prev => prev.includes(event.id) ? prev.filter(x => x !== event.id) : [...prev, event.id])}
-                            className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors ${isJoined ? 'bg-transparent border border-[#E5E5E5] text-[#888888]' : 'bg-[#FF9F1C] text-white border border-[#FF9F1C]'}`}
-                          >
-                            {isJoined ? 'Participé' : 'Participer'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── STEP 9: PASSWORD ── */}
-        {step === 9 && (
           <div>
             <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Créez votre mot de passe</h1>
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
@@ -618,8 +513,8 @@ export function Signup({ onBack }: SignupProps) {
 
       {/* ── Bottom Area ─────────────────────────────────── */}
       <div className="px-6 pb-5 pt-3 shrink-0 bg-white">
-        {/* CGU — uniquement à l'étape 9 */}
-        {step === 9 && (
+        {/* CGU — uniquement à l'étape 7 */}
+        {step === 7 && (
           <label className="flex items-start gap-2.5 cursor-pointer mb-4"
             onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}>
             <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#FF9F1C] border-[#FF9F1C]' : 'border-[#CCCCCC] bg-white'}`}>
