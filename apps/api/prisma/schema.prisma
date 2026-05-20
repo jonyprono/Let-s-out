@@ -400,6 +400,11 @@ enum EventCategory {
   ART
   MUSIC
   OTHER
+  SOCIAL
+  TECH
+  SCIENCE
+  LIFESTYLE
+  TOURISM
 }
 
 enum BookingStatus {
