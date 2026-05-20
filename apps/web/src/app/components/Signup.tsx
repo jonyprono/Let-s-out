@@ -331,7 +331,7 @@ export function Signup({ onBack }: SignupProps) {
                 return (
                   <button key={ch} onClick={() => setCurrentChannel(val)}
                     className="flex-1 flex items-center justify-between px-4 py-3.5 border border-[#E5E5E5] rounded-xl bg-white transition-colors">
-                    <span className="text-[15px] font-medium text-[#1A1A1A]">{ch}</span>
+                    <span className="text-[15px] font-bold text-[#1A1A1A]">{ch}</span>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
                       {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                     </div>
@@ -521,7 +521,7 @@ export function Signup({ onBack }: SignupProps) {
             </div>
 
             {/* Validation rules */}
-            <div className="space-y-2 mb-6">
+            <div className="space-y-2 mb-5">
               {[
                 { ok: pwdLength, label: 'Au moins 6 caractères numériques' },
                 { ok: pwdMixed, label: 'Au moins 1 majuscule et 1 minuscule' },
@@ -535,23 +535,27 @@ export function Signup({ onBack }: SignupProps) {
                 </div>
               ))}
             </div>
-
-            {/* Terms checkbox */}
-            <label className="flex items-start gap-2.5 cursor-pointer" onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}>
-              <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#FF9F1C] border-[#FF9F1C]' : 'border-[#CCCCCC] bg-white'}`}>
-                {acceptedTerms && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-              </div>
-              <span className="text-[12px] text-[#555555] leading-relaxed">
-                Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
-                <span className="text-[#FF9F1C] font-semibold">Conditions d'Utilisation</span> de Let's Out
-              </span>
-            </label>
           </div>
         )}
       </div>
 
-      {/* ── Bottom Button ─────────────────────────────── */}
+      {/* ── Bottom Area ─────────────────────────────── */}
       <div className="px-6 pb-5 pt-3 shrink-0 bg-white">
+        {/* CGU checkbox — visible only at step 7 */}
+        {step === 7 && (
+          <label
+            className="flex items-start gap-2.5 cursor-pointer mb-4"
+            onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}
+          >
+            <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#FF9F1C] border-[#FF9F1C]' : 'border-[#CCCCCC] bg-white'}`}>
+              {acceptedTerms && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+            </div>
+            <span className="text-[12px] text-[#555555] leading-relaxed">
+              Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
+              <span className="text-[#FF9F1C] font-semibold">Conditions d'Utilisation</span> de Let's Out
+            </span>
+          </label>
+        )}
         <button
           onClick={handleNext}
           disabled={isNextDisabled()}
@@ -561,6 +565,7 @@ export function Signup({ onBack }: SignupProps) {
           <span>{step === 7 ? "Rejoindre Let's Out" : 'Suivant'}</span>
         </button>
       </div>
+
 
       {/* Home indicator */}
       <div className="h-6 flex items-center justify-center pb-1 shrink-0">

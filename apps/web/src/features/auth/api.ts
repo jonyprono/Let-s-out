@@ -37,6 +37,7 @@ export interface LoginPayload {
   target: string
   code?: string
   idToken?: string
+  password?: string
 }
 
 export interface ResetPasswordPayload {
@@ -76,6 +77,9 @@ export const authApi = {
 
   login: (payload: LoginPayload) =>
     apiClient.post<AuthResponse>('/auth/login', payload),
+
+  directLogin: (payload: { target: string; password: string }) =>
+    apiClient.post<AuthResponse>('/auth/login', { target: payload.target, password: payload.password }),
 
   refresh: () =>
     apiClient.post<{ accessToken: string }>('/auth/refresh'),

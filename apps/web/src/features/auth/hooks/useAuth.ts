@@ -74,6 +74,24 @@ export function useLogin() {
   })
 }
 
+export function useDirectLogin() {
+  const { setAccessToken, setRefreshToken, setUser } = useAuthStore()
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: authApi.directLogin,
+    onSuccess: ({ data }) => {
+      setAccessToken(data.accessToken)
+      if (data.refreshToken) setRefreshToken(data.refreshToken)
+      setUser(data.user)
+      navigate('/home')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || (error.message === 'Network Error' ? "Erreur réseau : serveur inaccessible" : 'Identifiants incorrects'))
+    }
+  })
+}
+
 export function useLogout() {
   const { logout } = useAuthStore()
   const navigate = useNavigate()

@@ -37,12 +37,13 @@ function validatePhone(code: string, phone: string) {
 }
 
 export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
+  // step: 1=phone, 2=otp(4 digits), 3=new password
   const [step, setStep] = useState(1)
   const [country, setCountry] = useState(COUNTRIES[0])
   const [phone, setPhone] = useState('')
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp'>('sms')
   const [showCountry, setShowCountry] = useState(false)
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [otp, setOtp] = useState(['', '', '', ''])
   const [countdown, setCountdown] = useState(0)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -71,7 +72,9 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
     if (step === 1) {
       if (!phone.trim()) return
       if (!validatePhone(country.code, phone)) {
-        return toast.error(country.code === '+229' ? "Au Bénin, le numéro doit faire 10 chiffres et commencer par 01." : "Le format de votre numéro de téléphone est incorrect.")
+        return toast.error(country.code === '+229'
+          ? 'Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.'
+          : 'Le format de votre numéro de téléphone est incorrect.')
       }
       checkTarget({ target: fullPhone }, {
         onSuccess: async ({ data }) => {
@@ -81,7 +84,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             if (currentChannel === 'sms') {
               try {
                 setIsFirebaseSending(true)
-                if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
+                if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
                 const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
                 setConfirmationResult(confirmation); setStep(2); setCountdown(59)
                 setTimeout(() => otpRefs.current[0]?.focus(), 100)
@@ -90,34 +93,34 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                 setConfirmationResult(null)
                 sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
                   onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-                  onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi du code")
+                  onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi du code"),
                 })
               } finally { setIsFirebaseSending(false) }
             } else {
               sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
                 onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-                onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi")
+                onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi"),
               })
             }
           }
         },
-        onError: () => toast.error("Erreur de vérification du numéro")
+        onError: () => toast.error('Erreur de vérification du numéro'),
       })
     } else if (step === 2) {
       const codeStr = otp.join('')
-      if (codeStr.length < 6) return
+      if (codeStr.length < 4) return
       if (currentChannel === 'sms' && confirmationResult) {
         setIsFirebaseVerifying(true)
         try {
           const result = await confirmationResult.confirm(codeStr)
           const token = await result.user.getIdToken()
           setIdToken(token); setStep(3)
-        } catch { toast.error("Code SMS invalide ou expiré") }
+        } catch { toast.error('Code SMS invalide ou expiré') }
         finally { setIsFirebaseVerifying(false) }
       } else {
         checkOtp({ target: fullPhone, code: codeStr }, {
           onSuccess: () => setStep(3),
-          onError: () => toast.error("Code invalide ou expiré. Vérifiez et réessayez."),
+          onError: () => toast.error('Code invalide ou expiré. Vérifiez et réessayez.'),
         })
       }
     } else if (step === 3) {
@@ -129,7 +132,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         newPassword: password,
       }, {
         onSuccess: () => { toast.success('Mot de passe réinitialisé avec succès !'); onComplete() },
-        onError: (e: any) => toast.error(e.response?.data?.error || "Erreur lors de la réinitialisation du mot de passe")
+        onError: (e: any) => toast.error(e.response?.data?.error || 'Erreur lors de la réinitialisation'),
       })
     }
   }
@@ -139,7 +142,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const handleOtpChange = (i: number, v: string) => {
     if (!/^\d*$/.test(v)) return
     const next = [...otp]; next[i] = v.slice(-1); setOtp(next)
-    if (v && i < 5) otpRefs.current[i + 1]?.focus()
+    if (v && i < 3) otpRefs.current[i + 1]?.focus()
   }
   const handleOtpKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus()
@@ -147,10 +150,10 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
   const handleResend = async () => {
     if (countdown > 0) return
-    setOtp(['', '', '', '', '', ''])
+    setOtp(['', '', '', ''])
     try {
       setIsFirebaseSending(true)
-      if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
+      if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
       const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
       setConfirmationResult(confirmation); setCountdown(59); setCurrentChannel('sms')
       toast.success('Code renvoyé par SMS'); setTimeout(() => otpRefs.current[0]?.focus(), 100)
@@ -172,36 +175,32 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
   const isNextDisabled = () => {
     if (step === 1) return !phone.trim() || sendingOtp || checkingTarget || isFirebaseSending
-    if (step === 2) return otp.join('').length < 6 || isFirebaseVerifying || checkingOtp
+    if (step === 2) return otp.join('').length < 4 || isFirebaseVerifying || checkingOtp
     if (step === 3) return !isPwdValid || resetting
     return false
   }
 
-  const titleMap: Record<number, string> = {
-    1: 'Réinitialiser votre mot de passe',
-    2: 'Réinitialiser votre mot de passe',
-    3: 'Réinitialiser votre mot de passe',
-  }
+  const isLoading = sendingOtp || checkingTarget || isFirebaseSending || isFirebaseVerifying || checkingOtp || resetting
 
   return (
     <div className="w-full h-full bg-white flex flex-col">
-      <div id="recaptcha-container"></div>
+      <div id="recaptcha-container-fp" />
 
-      {/* ── Header ─────────────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
         <div className="flex items-center justify-center relative mb-1">
           <button onClick={handlePrev} className="absolute left-0 w-8 h-8 flex items-center justify-center active:opacity-70">
-            <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" />
+            <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2.5} />
           </button>
-          <span className="text-[15px] font-semibold text-[#1A1A1A]">{titleMap[step]}</span>
+          <span className="text-[15px] font-semibold text-[#1A1A1A]">Réinitialiser votre mot de passe</span>
         </div>
         <div className="flex justify-center mt-1">
           <div className="w-10 h-[2.5px] bg-[#FF9F1C] rounded-full" />
         </div>
       </div>
 
-      {/* ── Content ─────────────────────────────────────────── */}
-      <div className="flex-1 px-6 pt-6 overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+      {/* ── Content ────────────────────────────────── */}
+      <div className="flex-1 px-6 pt-7 overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
 
         {/* STEP 1: PHONE */}
         {step === 1 && (
@@ -214,15 +213,17 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             </p>
 
             <label className="text-[13px] text-[#555555] font-medium mb-1.5 block">Numéro de téléphone</label>
-            <div className="flex gap-2 mb-5">
+            <div className="flex gap-2 mb-6">
               <div className="relative shrink-0">
                 <button
                   onClick={() => setShowCountry(!showCountry)}
                   className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] rounded-xl bg-white text-[15px] font-medium whitespace-nowrap"
                 >
                   <span>{country.flag}</span>
-                  <span className="text-[#1A1A1A]">({country.code.replace('+', '')})</span>
-                  <svg className="w-3 h-3 text-[#888888] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                  <span className="text-[#1A1A1A] text-[13px]">({country.code.replace('+', '')})</span>
+                  <svg className="w-3 h-3 text-[#888888] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </button>
                 {showCountry && (
                   <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5E5E5] rounded-xl shadow-lg z-10 w-48">
@@ -238,21 +239,20 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               <input
                 type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                 placeholder="01 97 00 00 00"
-                className="flex-1 min-w-0 px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A]"
+                className="flex-1 min-w-0 px-4 py-3.5 border-2 border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
               />
             </div>
 
             <label className="text-[13px] text-[#555555] font-medium mb-2 block">Recevoir le code par</label>
             <div className="flex gap-3">
-              {['SMS', 'Whatsapp'].map(ch => {
+              {(['SMS', 'Whatsapp'] as const).map(ch => {
                 const val = ch.toLowerCase() as 'sms' | 'whatsapp'
                 const isActive = currentChannel === val
                 return (
                   <button key={ch} onClick={() => setCurrentChannel(val)}
-                    className="flex-1 flex items-center justify-between px-4 py-3.5 border border-[#E5E5E5] rounded-xl bg-white transition-colors"
-                  >
-                    <span className="text-[15px] font-medium text-[#1A1A1A]">{ch}</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
+                    className="flex-1 flex items-center justify-between px-4 py-3.5 border border-[#E5E5E5] rounded-xl bg-white transition-colors">
+                    <span className="text-[15px] font-bold text-[#1A1A1A]">{ch}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
                       {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                     </div>
                   </button>
@@ -262,23 +262,25 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           </div>
         )}
 
-        {/* STEP 2: OTP */}
+        {/* STEP 2: OTP (4 digits) */}
         {step === 2 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Quel est le code reçu&nbsp;?</h1>
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+              Quel est le code reçu&nbsp;?
+            </h1>
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
-              Code à 6 chiffres envoyé par SMS au<br />
+              Code à 4 chiffres envoyé par <strong className="text-[#1A1A1A]">SMS</strong> au<br />
               <strong className="text-[#1A1A1A]">{maskPhone(fullPhone)}</strong>
             </p>
 
-            <div className="grid grid-cols-6 gap-2 mb-5 w-full">
+            <div className="grid grid-cols-4 gap-3 mb-5 w-full">
               {otp.map((d, i) => (
                 <input
                   key={i} ref={el => { otpRefs.current[i] = el }}
                   type="text" inputMode="numeric" maxLength={1} value={d}
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKey(i, e)}
-                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
+                  className={`aspect-square w-full text-center text-[22px] font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
                     ${d ? 'border-[#FF9F1C] text-[#1A1A1A]' : 'border-[#E5E5E5] text-[#1A1A1A]'}
                     focus:border-[#FF9F1C]`}
                 />
@@ -293,17 +295,21 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                 </svg>
                 Renvoyer le code
               </button>
-              {countdown > 0 && <span className="text-[13px] text-[#888888]">dans 00:{String(countdown).padStart(2, '0')}</span>}
+              {countdown > 0 && (
+                <span className="text-[13px] text-[#888888]">
+                  dans {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
+                </span>
+              )}
             </div>
           </div>
         )}
 
-        {/* STEP 3: PASSWORD */}
+        {/* STEP 3: NEW PASSWORD */}
         {step === 3 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Créez votre mot de passe</h1>
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Nouveau mot de passe</h1>
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
-              Définissez un mot de passe robuste et sécurisé de connexion à votre compte
+              Définissez un nouveau mot de passe robuste et sécurisé pour<br />protéger votre compte
             </p>
 
             <label className="text-[13px] text-[#555555] font-medium mb-1.5 block">Mot de passe</label>
@@ -331,7 +337,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             </div>
 
             {/* Validation rules */}
-            <div className="space-y-2 mb-5">
+            <div className="space-y-2">
               {[
                 { ok: pwdLength, label: 'Au moins 6 caractères numériques' },
                 { ok: pwdMixed, label: 'Au moins 1 majuscule et 1 minuscule' },
@@ -349,15 +355,15 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         )}
       </div>
 
-      {/* ── Bottom Button ─────────────────────────────────────────── */}
+      {/* ── Bottom Button ───────────────────────────── */}
       <div className="px-6 pb-5 pt-3 shrink-0 bg-white">
         <button
           onClick={handleNext}
           disabled={isNextDisabled()}
           className="w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-[#FF9F1C] text-white disabled:bg-[#FFD99A] disabled:text-white"
         >
-          {(sendingOtp || checkingTarget || isFirebaseSending || isFirebaseVerifying || checkingOtp || resetting) && <Loader2 className="w-5 h-5 animate-spin" />}
-          <span>Suivant</span>
+          {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+          <span>{step === 3 ? 'Réinitialiser' : 'Suivant'}</span>
         </button>
       </div>
 
