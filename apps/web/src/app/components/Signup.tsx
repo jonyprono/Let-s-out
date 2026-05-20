@@ -54,7 +54,7 @@ export function Signup({ onBack }: SignupProps) {
   const [phone, setPhone] = useState('')
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
   const [showCountry, setShowCountry] = useState(false)
-  const [otp, setOtp] = useState(['', '', '', ''])
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [countdown, setCountdown] = useState(0)
 
   const [password, setPassword] = useState('')
@@ -142,7 +142,7 @@ export function Signup({ onBack }: SignupProps) {
       })
     } else if (step === 2) {
       const codeStr = otp.join('')
-      if (codeStr.length < 4) return
+      if (codeStr.length < 6) return
       if (currentChannel === 'sms' && confirmationResult) {
         setIsFirebaseVerifying(true)
         try {
@@ -196,7 +196,7 @@ export function Signup({ onBack }: SignupProps) {
   const handleOtpChange = (i: number, v: string) => {
     if (!/^\d*$/.test(v)) return
     const next = [...otp]; next[i] = v.slice(-1); setOtp(next)
-    if (v && i < 3) otpRefs.current[i + 1]?.focus()
+    if (v && i < 5) otpRefs.current[i + 1]?.focus()
   }
   const handleOtpKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus()
@@ -204,7 +204,7 @@ export function Signup({ onBack }: SignupProps) {
 
   const handleResend = async () => {
     if (countdown > 0) return
-    setOtp(['', '', '', ''])
+    setOtp(['', '', '', '', '', ''])
     try {
       setIsFirebaseSending(true)
       if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
@@ -233,7 +233,7 @@ export function Signup({ onBack }: SignupProps) {
 
   const isNextDisabled = () => {
     if (step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
-    if (step === 2) return otp.join('').length < 4 || isFirebaseVerifying || checkingOtp
+    if (step === 2) return otp.join('').length < 6 || isFirebaseVerifying || checkingOtp
     if (step === 3) return !isPwdValid || !acceptedTerms
     if (step === 4) return !firstName.trim() || !lastName.trim()
     if (step === 5) return interests.length === 0
@@ -335,25 +335,25 @@ export function Signup({ onBack }: SignupProps) {
           </div>
         )}
 
-        {/* STEP 2: OTP (4 boxes as in designs) */}
+        {/* STEP 2: OTP */}
         {step === 2 && (
           <div>
             <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
               Quel est le code reçu&nbsp;?
             </h1>
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
-              Code à 4 chiffres envoyé par SMS au<br />
+              Code à 6 chiffres envoyé par <strong className="text-[#1A1A1A]">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
               <strong className="text-[#1A1A1A]">{maskPhone(fullPhone) || '+229 01 97 00 00 00'}</strong>
             </p>
 
-            <div className="grid grid-cols-4 gap-3 mb-5 w-full">
+            <div className="grid grid-cols-6 gap-2 mb-5 w-full">
               {otp.map((d, i) => (
                 <input
                   key={i} ref={el => { otpRefs.current[i] = el }}
                   type="text" inputMode="numeric" maxLength={1} value={d}
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKey(i, e)}
-                  className={`aspect-square w-full text-center text-[22px] font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
+                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
                     ${d ? 'border-[#FF9F1C] text-[#1A1A1A]' : 'border-[#E5E5E5] text-[#1A1A1A]'}
                     focus:border-[#FF9F1C]`}
                 />
@@ -366,9 +366,11 @@ export function Signup({ onBack }: SignupProps) {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Renvoyer le code
+                {currentChannel === 'whatsapp' ? "Je n'ai rien reçu, renvoyer par SMS" : "Renvoyer le code"}
               </button>
-              {countdown > 0 && <span className="text-[13px] text-[#888888]">dans 00:{String(countdown).padStart(2, '0')}</span>}
+              {countdown > 0 && (
+                <span className="text-[13px] text-[#888888]">dans {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}</span>
+              )}
             </div>
           </div>
         )}
