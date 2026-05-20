@@ -5,33 +5,39 @@ interface WelcomeProps {
 
 export function Welcome({ onLogin, onSignup }: WelcomeProps) {
   return (
-    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] dark:bg-[#FFFFFF] flex flex-col">
+    <div className="w-full h-full bg-white flex flex-col">
 
-
-      {/* Main Content */}
+      {/* Main Content — logo + text + buttons centered */}
       <div className="flex-1 flex flex-col items-center justify-center px-8">
-        {/* Illustration */}
+
+        {/* Logo */}
         <div className="mb-8 flex justify-center w-full">
-          <img src="/logoci.png" alt="Let's Out Logo" className="w-[180px] h-auto object-contain" />
+          <img src="/logoci.png" alt="Let's Out" className="w-[160px] h-auto object-contain" />
         </div>
 
-        <h1 className="text-2xl font-bold text-center mb-3 text-gray-900 dark:text-[#FFFFFF] dark:text-[#1A1A1A]">Connectez-vous</h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-10 leading-relaxed px-4">
-          Rejoignez des événements près de chez vous et vivez des expériences à plusieurs.
+        {/* Title */}
+        <h1 className="text-[26px] font-bold text-center text-[#1A1A1A] mb-2 leading-tight">
+          Connectez-vous
+        </h1>
+
+        {/* Subtitle */}
+        <p className="text-[13px] text-[#888888] text-center mb-10 leading-relaxed px-2">
+          Rejoignez des événements près de{'\u00a0'}vous et<br />vivez des expériences partagées.
         </p>
 
+        {/* CTA Buttons */}
         <div className="w-full space-y-3">
           <button
             id="welcome-login-btn"
             onClick={onLogin}
-            className="w-full bg-[#FF9F1C] text-[#FFFFFF] dark:text-[#1A1A1A] py-4 rounded-full font-semibold text-base"
+            className="w-full bg-[#FF9F1C] text-white py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:opacity-90 transition-opacity"
           >
             Se connecter
           </button>
           <button
             id="welcome-signup-btn"
             onClick={onSignup}
-            className="w-full bg-gray-100 dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-300 py-4 rounded-full font-semibold text-base"
+            className="w-full bg-white border border-gray-200 text-[#1A1A1A] py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:bg-gray-50 transition-colors"
           >
             S'inscrire
           </button>
@@ -39,17 +45,19 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
       </div>
 
       {/* Footer */}
-      <div className="px-8 pb-8 pt-4">
-        <p className="text-xs text-gray-400 dark:text-gray-500 dark:text-gray-400 text-center leading-relaxed">
+      <div className="px-8 pb-8 pt-2">
+        <p className="text-[11px] text-[#AAAAAA] text-center leading-relaxed">
           En continuant, vous acceptez nos{' '}
           <span className="text-[#FF9F1C]">Conditions d'utilisation</span>
           {' '}et notre{' '}
-          <span className="text-[#FF9F1C]">Politique de Confidentialité</span>
+          <span className="text-[#FF9F1C]">Politique<br />de Confidentialité</span>
         </p>
+      </div>
+
+      {/* Home indicator */}
+      <div className="h-6 flex items-center justify-center pb-1">
+        <div className="w-32 h-[4px] bg-[#1A1A1A] rounded-full" />
       </div>
     </div>
   )
 }
-
-
-

@@ -15,11 +15,11 @@ export function AppLayout() {
   return (
     <div
       id="app-layout-wrapper"
-      className="h-screen w-full bg-gray-100 flex items-center justify-center overflow-hidden"
+      className="h-screen w-full sm:bg-gray-100 sm:flex sm:items-center sm:justify-center overflow-hidden"
     >
       <div
         id="app-layout-inner"
-        className="w-full h-full sm:max-w-[430px] sm:h-screen sm:max-h-[932px] bg-white overflow-hidden relative flex flex-col shadow-2xl"
+        className="w-full h-full sm:max-w-[430px] sm:h-screen sm:max-h-[932px] bg-white overflow-hidden relative flex flex-col sm:shadow-2xl"
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         {/* Offline indicator — shown at the very top when no network */}
