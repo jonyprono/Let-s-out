@@ -250,9 +250,9 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                 const isActive = currentChannel === val
                 return (
                   <button key={ch} onClick={() => setCurrentChannel(val)}
-                    className="flex-1 flex items-center justify-between px-4 py-3.5 border border-[#E5E5E5] rounded-xl bg-white transition-colors">
-                    <span className="text-[15px] font-bold text-[#1A1A1A]">{ch}</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
+                    className="flex-1 flex items-center px-4 py-3.5 border border-[#E5E5E5] rounded-xl bg-white transition-colors gap-2">
+                    <span className="flex-1 text-left text-[15px] font-medium text-[#1A1A1A]">{ch}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
                       {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                     </div>
                   </button>

@@ -42,8 +42,9 @@ export const RegisterSchema = z.object({
 
 export const LoginSchema = z.object({
   target: z.string().min(1),
-  code: z.string().min(6).optional(), // password or OTP
+  code: z.string().min(4).optional(),
   idToken: z.string().optional(),
+  password: z.string().optional(), // direct password login (no OTP)
 })
 
 export const RefreshSchema = z.object({

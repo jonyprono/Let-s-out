@@ -242,14 +242,26 @@ export class AuthController {
     }
 
     let otpValid = false
+
     if (body.idToken) {
+      // Firebase SMS verification
       otpValid = await this.service.verifyFirebaseToken(body.idToken, body.target)
-    } else if (body.code) {
-      if (body.code === 'password' || body.code === '000000') {
-        otpValid = true // backdoor for development
-      } else {
-        otpValid = await this.service.verifyOtp(body.target, body.code)
+    } else if (body.password) {
+      // Direct password login (no OTP needed)
+      const userCheck = await this.service.findUserByTarget(body.target)
+      if (!userCheck || !userCheck.isActive) {
+        return reply.code(404).send({ error: 'Ce compte n\'existe pas.' })
       }
+      if (!userCheck.passwordHash) {
+        return reply.code(400).send({ error: 'Veuillez vous connecter avec la méthode utilisée lors de l\'inscription.' })
+      }
+      const passwordOk = await bcrypt.compare(body.password, userCheck.passwordHash)
+      if (!passwordOk) {
+        return reply.code(401).send({ error: 'Mot de passe incorrect.' })
+      }
+      otpValid = true
+    } else if (body.code) {
+      otpValid = await this.service.verifyOtp(body.target, body.code)
     }
 
     if (!otpValid) {
