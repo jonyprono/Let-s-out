@@ -346,14 +346,14 @@ export function Signup({ onBack }: SignupProps) {
               <strong className="text-[#1A1A1A]">{maskPhone(fullPhone) || '+229 01 97 00 00 00'}</strong>
             </p>
 
-            <div className="flex gap-3 mb-5 w-full">
+            <div className="grid grid-cols-4 gap-3 mb-5 w-full">
               {otp.map((d, i) => (
                 <input
                   key={i} ref={el => { otpRefs.current[i] = el }}
                   type="text" inputMode="numeric" maxLength={1} value={d}
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKey(i, e)}
-                  className={`flex-1 aspect-square text-center text-[22px] font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
+                  className={`aspect-square w-full text-center text-[22px] font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
                     ${d ? 'border-[#FF9F1C] text-[#1A1A1A]' : 'border-[#E5E5E5] text-[#1A1A1A]'}
                     focus:border-[#FF9F1C]`}
                 />
