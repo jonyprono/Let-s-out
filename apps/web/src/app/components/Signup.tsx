@@ -5,7 +5,12 @@ import { useSendOtp, useRegister, useCheckTarget, useCheckOtp } from '@/features
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import { useDiscoverGroups, chatApi } from '@/features/chat/api'
+import { useEvents } from '@/features/events/hooks/useEvents'
+import { eventsApi } from '@/features/events/api'
 import { apiClient } from '@/lib/api-client'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 
 declare global {
   interface Window { recaptchaVerifier: any; }
@@ -44,34 +49,41 @@ function validatePhone(code: string, phone: string) {
 export function Signup({ onBack }: SignupProps) {
   const nav = useNavigate()
 
-  // step: 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=password
+  // Steps:
+  // 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=groups, 8=events, 9=password
   const [step, setStep] = useState(1)
 
-  // Step 1
+  // Step 1 – Phone
   const [country, setCountry] = useState(COUNTRIES[0])
   const [phone, setPhone] = useState('')
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
   const [showCountry, setShowCountry] = useState(false)
 
-  // Step 2 - OTP (6 digits)
+  // Step 2 – OTP (6 digits)
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [countdown, setCountdown] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
-  // Step 3 - Name
+  // Step 3 – Name
   const [firstName, setFirstName] = useState('')
   const [pseudo, setPseudo] = useState('')
 
-  // Step 4 - Birthday
+  // Step 4 – Birthday
   const [birthday, setBirthday] = useState('')
 
-  // Step 5 - City
+  // Step 5 – City
   const [city, setCity] = useState('')
 
-  // Step 6 - Interests
+  // Step 6 – Interests
   const [interests, setInterests] = useState<string[]>([])
 
-  // Step 7 - Password
+  // Step 7 – Groups
+  const [joinedGroups, setJoinedGroups] = useState<string[]>([])
+
+  // Step 8 – Events
+  const [joinedEvents, setJoinedEvents] = useState<string[]>([])
+
+  // Step 9 – Password
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -89,24 +101,24 @@ export function Signup({ onBack }: SignupProps) {
   const { mutate: register, isPending: registering } = useRegister()
   const { mutate: checkOtp, isPending: checkingOtp } = useCheckOtp()
 
+  const { data: groupsData, isLoading: loadingGroups } = useDiscoverGroups(10)
+  const { data: eventsData, isLoading: loadingEvents } = useEvents({ upcoming: true, limit: 10 })
+  const groups = groupsData || []
+  const events = eventsData?.data || []
+
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
 
-  // Countdown timer
   useEffect(() => {
     if (countdown <= 0) return
     const t = setTimeout(() => setCountdown(c => c - 1), 1000)
     return () => clearTimeout(t)
   }, [countdown])
 
-  // ── Step navigation ────────────────────────────────────────────
+  // ── Navigation ─────────────────────────────────────────────────
   const handleNext = async () => {
-    // Step 1: send OTP
     if (step === 1) {
       if (!phone.trim()) return
-      if (!currentChannel) {
-        toast.error('Veuillez sélectionner SMS ou Whatsapp.')
-        return
-      }
+      if (!currentChannel) { toast.error('Veuillez sélectionner SMS ou Whatsapp.'); return }
       if (!validatePhone(country.code, phone)) {
         return toast.error(country.code === '+229'
           ? 'Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.'
@@ -124,8 +136,7 @@ export function Signup({ onBack }: SignupProps) {
                   window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
                 }
                 const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
-                setConfirmationResult(confirmation)
-                setStep(2); setCountdown(59)
+                setConfirmationResult(confirmation); setStep(2); setCountdown(59)
                 setTimeout(() => otpRefs.current[0]?.focus(), 100)
               } catch {
                 if (window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
@@ -145,9 +156,7 @@ export function Signup({ onBack }: SignupProps) {
         },
         onError: () => toast.error('Erreur de vérification du numéro'),
       })
-    }
-    // Step 2: verify OTP
-    else if (step === 2) {
+    } else if (step === 2) {
       const codeStr = otp.join('')
       if (codeStr.length < 6) return
       if (currentChannel === 'sms' && confirmationResult) {
@@ -164,9 +173,8 @@ export function Signup({ onBack }: SignupProps) {
           onError: () => toast.error('Code invalide ou expiré. Vérifiez et réessayez.'),
         })
       }
-    }
-    // Step 7: register
-    else if (step === 7) {
+    } else if (step === 9) {
+      // Final step: register
       const isFirebaseFlow = currentChannel === 'sms' && !!idToken
       register({
         target: fullPhone,
@@ -182,7 +190,9 @@ export function Signup({ onBack }: SignupProps) {
             if (birthday) profileData.birthdate = birthday
             if (city) profileData.city = city
             await apiClient.patch('/users/me/profile', profileData)
-          } catch (e) { console.error('Profile update error:', e) }
+            if (joinedGroups.length > 0) await Promise.allSettled(joinedGroups.map(id => chatApi.joinGroup(id)))
+            if (joinedEvents.length > 0) await Promise.allSettled(joinedEvents.map(id => eventsApi.join(id)))
+          } catch (e) { console.error('Background updates error:', e) }
           finally { localStorage.setItem('letsout_onboarding_done', 'true'); nav('/home') }
         },
         onError: (e: any) => {
@@ -193,19 +203,13 @@ export function Signup({ onBack }: SignupProps) {
           else toast.error("Erreur lors de l'inscription")
         },
       })
-    }
-    // All other steps
-    else {
+    } else {
       setStep(s => s + 1)
     }
   }
 
-  const handlePrev = () => {
-    if (step === 1) onBack()
-    else setStep(s => s - 1)
-  }
+  const handlePrev = () => { if (step === 1) onBack(); else setStep(s => s - 1) }
 
-  // OTP handlers
   const handleOtpChange = (i: number, v: string) => {
     if (!/^\d*$/.test(v)) return
     const next = [...otp]; next[i] = v.slice(-1); setOtp(next)
@@ -238,7 +242,6 @@ export function Signup({ onBack }: SignupProps) {
     setInterests(prev => prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest])
   }
 
-  // Password validation
   const pwdLength = password.length >= 6
   const pwdMixed = /[a-z]/.test(password) && /[A-Z]/.test(password)
   const pwdNumber = /[0-9]/.test(password)
@@ -249,26 +252,30 @@ export function Signup({ onBack }: SignupProps) {
     if (step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
     if (step === 2) return otp.join('').length < 6 || isFirebaseVerifying || checkingOtp
     if (step === 3) return !firstName.trim()
-    if (step === 4) return false // birthday optional
-    if (step === 5) return false // city optional
+    if (step === 4) return false
+    if (step === 5) return false
     if (step === 6) return interests.length === 0
-    if (step === 7) return !isPwdValid || !acceptedTerms || registering
+    if (step === 7) return false
+    if (step === 8) return false
+    if (step === 9) return !isPwdValid || !acceptedTerms || registering
     return false
   }
 
   const isLoading = sendingOtp || registering || checkingTarget || isFirebaseSending || checkingOtp || isFirebaseVerifying
 
+  const buttonLabel = () => {
+    if (step === 9) return "Rejoindre Let's Out"
+    return 'Suivant'
+  }
+
   return (
     <div className="w-full h-full bg-white flex flex-col">
       <div id="recaptcha-container" />
 
-      {/* ── Header ───────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
         <div className="flex items-center justify-center relative mb-1">
-          <button
-            onClick={handlePrev}
-            className="absolute left-0 w-8 h-8 flex items-center justify-center active:opacity-70"
-          >
+          <button onClick={handlePrev} className="absolute left-0 w-8 h-8 flex items-center justify-center active:opacity-70">
             <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2.5} />
           </button>
           <span className="text-[15px] font-semibold text-[#1A1A1A]">Inscription</span>
@@ -278,7 +285,7 @@ export function Signup({ onBack }: SignupProps) {
         </div>
       </div>
 
-      {/* ── Content ──────────────────────────────────── */}
+      {/* ── Content ────────────────────────────────────── */}
       <div className="flex-1 px-6 pt-7 overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
 
         {/* ── STEP 1: PHONE ── */}
@@ -293,7 +300,6 @@ export function Signup({ onBack }: SignupProps) {
 
             <label className="text-[13px] text-[#555555] font-medium mb-1.5 block">Numéro de téléphone</label>
             <div className="flex gap-2 mb-6">
-              {/* Country selector */}
               <div className="relative shrink-0">
                 <button
                   onClick={() => setShowCountry(!showCountry)}
@@ -393,16 +399,13 @@ export function Signup({ onBack }: SignupProps) {
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
               Ces informations aideront vos amis à vous reconnaître et ne<br />seront visibles que sur Let's Out.
             </p>
-
             <input
-              type="text" value={firstName}
-              onChange={e => setFirstName(e.target.value)}
+              type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
               placeholder="Nom complet"
               className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] mb-4 placeholder-[#BBBBBB]"
             />
             <input
-              type="text" value={pseudo}
-              onChange={e => setPseudo(e.target.value)}
+              type="text" value={pseudo} onChange={e => setPseudo(e.target.value)}
               placeholder="Pseudo"
               className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
             />
@@ -418,13 +421,10 @@ export function Signup({ onBack }: SignupProps) {
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
               Cette information restera privée et nous aidera à<br />vous faire les meilleures suggestions<br />d'événements possibles.
             </p>
-
             <div className="relative">
               <input
-                type="date" value={birthday}
-                onChange={e => setBirthday(e.target.value)}
-                className={`w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white pr-12 appearance-none
-                  ${birthday ? 'text-[#1A1A1A]' : 'text-[#BBBBBB]'}`}
+                type="date" value={birthday} onChange={e => setBirthday(e.target.value)}
+                className={`w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white pr-12 appearance-none ${birthday ? 'text-[#1A1A1A]' : 'text-[#BBBBBB]'}`}
                 style={{ colorScheme: 'light' }}
               />
               <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888] pointer-events-none" />
@@ -441,12 +441,10 @@ export function Signup({ onBack }: SignupProps) {
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
               Indiquez votre ville pour trouver des événements et<br />rencontrer des amis près de vous.
             </p>
-
             <div className="relative">
               <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" />
               <input
-                type="text" value={city}
-                onChange={e => setCity(e.target.value)}
+                type="text" value={city} onChange={e => setCity(e.target.value)}
                 placeholder="Sélectionnez une ville"
                 className="w-full pl-10 pr-10 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
               />
@@ -472,14 +470,9 @@ export function Signup({ onBack }: SignupProps) {
               {INTERESTS_LIST.map(interest => {
                 const isSelected = interests.includes(interest)
                 return (
-                  <button
-                    key={interest}
-                    onClick={() => toggleInterest(interest)}
+                  <button key={interest} onClick={() => toggleInterest(interest)}
                     className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all
-                      ${isSelected
-                        ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white'
-                        : 'bg-white border-[#E5E5E5] text-[#1A1A1A]'}`}
-                  >
+                      ${isSelected ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white' : 'bg-white border-[#E5E5E5] text-[#1A1A1A]'}`}>
                     {interest}
                   </button>
                 )
@@ -488,8 +481,93 @@ export function Signup({ onBack }: SignupProps) {
           </div>
         )}
 
-        {/* ── STEP 7: PASSWORD ── */}
+        {/* ── STEP 7: GROUPS ── */}
         {step === 7 && (
+          <div>
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Quelques groupes pour vous</h1>
+            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+              Basé sur vos centres d'intérêts, voici quelques groupes qui pourraient vous intéresser
+            </p>
+            {loadingGroups ? (
+              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[#888888]" /></div>
+            ) : (
+              <div className="space-y-3">
+                {groups.map(g => {
+                  const isJoined = joinedGroups.includes(g.id)
+                  return (
+                    <div key={g.id} className="bg-white border border-[#F0F0F0] rounded-2xl p-3 flex items-center gap-3 shadow-sm">
+                      {g.avatarUrl ? (
+                        <img src={g.avatarUrl} alt={g.name || 'Group'} className="w-14 h-14 bg-gray-100 rounded-xl shrink-0 object-cover" />
+                      ) : (
+                        <div className="w-14 h-14 bg-gray-100 rounded-xl shrink-0 flex items-center justify-center">
+                          <span className="text-[#888888] text-lg font-bold">{(g.name || 'G').charAt(0)}</span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-[15px] font-bold text-[#1A1A1A] truncate">{g.name}</h3>
+                        <p className="text-[12px] text-[#888888] truncate mt-0.5">{(g as any)._count?.members || 0} membres</p>
+                      </div>
+                      <button
+                        onClick={() => setJoinedGroups(prev => prev.includes(g.id) ? prev.filter(x => x !== g.id) : [...prev, g.id])}
+                        className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors shrink-0 ${isJoined ? 'bg-transparent border border-[#E5E5E5] text-[#888888]' : 'bg-[#FF9F1C] text-white border border-[#FF9F1C]'}`}
+                      >
+                        {isJoined ? 'Rejoint' : 'Rejoindre'}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── STEP 8: EVENTS ── */}
+        {step === 8 && (
+          <div>
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Événements à venir</h1>
+            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+              Voici quelques événements à venir qui pourraient vous intéresser.
+            </p>
+            {loadingEvents ? (
+              <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-[#888888]" /></div>
+            ) : events.length === 0 ? (
+              <p className="text-[#888888] text-sm text-center">Aucun événement à venir trouvé.</p>
+            ) : (
+              <div className="space-y-4">
+                {events.map(event => {
+                  const isJoined = joinedEvents.includes(event.id)
+                  let dateStr = ''
+                  try { dateStr = format(new Date(event.startAt), "EEE, d MMM • HH:mm", { locale: fr }) } catch {}
+                  return (
+                    <div key={event.id} className="bg-white rounded-2xl overflow-hidden border border-[#F0F0F0] shadow-sm">
+                      {event.coverUrl ? (
+                        <img src={event.coverUrl} className="h-32 w-full object-cover" alt="Cover" />
+                      ) : (
+                        <div className="h-32 bg-gray-100 w-full" />
+                      )}
+                      <div className="p-4">
+                        <h3 className="text-[15px] font-bold text-[#1A1A1A] mb-1">{event.title}</h3>
+                        <p className="text-[12px] text-[#888888] mb-3">{dateStr} {event.city ? `• ${event.city}` : ''}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[12px] text-[#888888]">{event.currentAttendees} Participants</span>
+                          <button
+                            onClick={() => setJoinedEvents(prev => prev.includes(event.id) ? prev.filter(x => x !== event.id) : [...prev, event.id])}
+                            className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-colors ${isJoined ? 'bg-transparent border border-[#E5E5E5] text-[#888888]' : 'bg-[#FF9F1C] text-white border border-[#FF9F1C]'}`}
+                          >
+                            {isJoined ? 'Participé' : 'Participer'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── STEP 9: PASSWORD ── */}
+        {step === 9 && (
           <div>
             <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Créez votre mot de passe</h1>
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
@@ -520,8 +598,7 @@ export function Signup({ onBack }: SignupProps) {
               </button>
             </div>
 
-            {/* Validation rules */}
-            <div className="space-y-2 mb-5">
+            <div className="space-y-2">
               {[
                 { ok: pwdLength, label: 'Au moins 6 caractères numériques' },
                 { ok: pwdMixed, label: 'Au moins 1 majuscule et 1 minuscule' },
@@ -539,14 +616,12 @@ export function Signup({ onBack }: SignupProps) {
         )}
       </div>
 
-      {/* ── Bottom Area ─────────────────────────────── */}
+      {/* ── Bottom Area ─────────────────────────────────── */}
       <div className="px-6 pb-5 pt-3 shrink-0 bg-white">
-        {/* CGU checkbox — visible only at step 7 */}
-        {step === 7 && (
-          <label
-            className="flex items-start gap-2.5 cursor-pointer mb-4"
-            onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}
-          >
+        {/* CGU — uniquement à l'étape 9 */}
+        {step === 9 && (
+          <label className="flex items-start gap-2.5 cursor-pointer mb-4"
+            onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}>
             <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#FF9F1C] border-[#FF9F1C]' : 'border-[#CCCCCC] bg-white'}`}>
               {acceptedTerms && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </div>
@@ -562,10 +637,9 @@ export function Signup({ onBack }: SignupProps) {
           className="w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-[#FF9F1C] text-white disabled:bg-[#FFD99A] disabled:text-white"
         >
           {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-          <span>{step === 7 ? "Rejoindre Let's Out" : 'Suivant'}</span>
+          <span>{buttonLabel()}</span>
         </button>
       </div>
-
 
       {/* Home indicator */}
       <div className="h-6 flex items-center justify-center pb-1 shrink-0">
