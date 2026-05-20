@@ -311,7 +311,7 @@ export function Signup({ onBack }: SignupProps) {
               <input
                 type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                 placeholder=""
-                className="flex-1 min-w-0 px-4 py-3.5 border border-[#E5E5E5] border-[1px] rounded-xl text-[15px] focus:outline-none focus:ring-0 focus:border-[#FF9F1C] focus:border-[1px] bg-white text-[#1A1A1A]"
+                className="flex-1 min-w-0 px-4 py-3.5 border border-[#E5E5E5] border-[2px] rounded-xl text-[15px] focus:outline-none focus:ring-0 focus:border-[#FF9F1C] focus:border-[1px] bg-white text-[#1A1A1A]"
               />
             </div>
 
