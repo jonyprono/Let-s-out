@@ -37,13 +37,13 @@ function validatePhone(code: string, phone: string) {
 }
 
 export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
-  // step: 1=phone, 2=otp(4 digits), 3=new password
+  // step: 1=phone, 2=otp(6 digits), 3=new password
   const [step, setStep] = useState(1)
   const [country, setCountry] = useState(COUNTRIES[0])
   const [phone, setPhone] = useState('')
-  const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp'>('sms')
+  const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
   const [showCountry, setShowCountry] = useState(false)
-  const [otp, setOtp] = useState(['', '', '', ''])
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [countdown, setCountdown] = useState(0)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -71,6 +71,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const handleNext = async () => {
     if (step === 1) {
       if (!phone.trim()) return
+      if (!currentChannel) { toast.error('Veuillez sélectionner SMS ou Whatsapp.'); return }
       if (!validatePhone(country.code, phone)) {
         return toast.error(country.code === '+229'
           ? 'Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.'
@@ -108,7 +109,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       })
     } else if (step === 2) {
       const codeStr = otp.join('')
-      if (codeStr.length < 4) return
+      if (codeStr.length < 6) return
       if (currentChannel === 'sms' && confirmationResult) {
         setIsFirebaseVerifying(true)
         try {
@@ -142,7 +143,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const handleOtpChange = (i: number, v: string) => {
     if (!/^\d*$/.test(v)) return
     const next = [...otp]; next[i] = v.slice(-1); setOtp(next)
-    if (v && i < 3) otpRefs.current[i + 1]?.focus()
+    if (v && i < 5) otpRefs.current[i + 1]?.focus()
   }
   const handleOtpKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus()
@@ -150,7 +151,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
   const handleResend = async () => {
     if (countdown > 0) return
-    setOtp(['', '', '', ''])
+    setOtp(['', '', '', '', '', ''])
     try {
       setIsFirebaseSending(true)
       if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
@@ -174,8 +175,8 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const isPwdValid = pwdLength && pwdMixed && pwdNumber && pwdMatch
 
   const isNextDisabled = () => {
-    if (step === 1) return !phone.trim() || sendingOtp || checkingTarget || isFirebaseSending
-    if (step === 2) return otp.join('').length < 4 || isFirebaseVerifying || checkingOtp
+    if (step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
+    if (step === 2) return otp.join('').length < 6 || isFirebaseVerifying || checkingOtp
     if (step === 3) return !isPwdValid || resetting
     return false
   }
@@ -262,25 +263,25 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           </div>
         )}
 
-        {/* STEP 2: OTP (4 digits) */}
+        {/* STEP 2: OTP (6 digits) */}
         {step === 2 && (
           <div>
             <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
               Quel est le code reçu&nbsp;?
             </h1>
             <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
-              Code à 4 chiffres envoyé par <strong className="text-[#1A1A1A]">SMS</strong> au<br />
+              Code à 6 chiffres envoyé par <strong className="text-[#1A1A1A]">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
               <strong className="text-[#1A1A1A]">{maskPhone(fullPhone)}</strong>
             </p>
 
-            <div className="grid grid-cols-4 gap-3 mb-5 w-full">
+            <div className="grid grid-cols-6 gap-2 mb-5 w-full">
               {otp.map((d, i) => (
                 <input
                   key={i} ref={el => { otpRefs.current[i] = el }}
                   type="text" inputMode="numeric" maxLength={1} value={d}
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKey(i, e)}
-                  className={`aspect-square w-full text-center text-[22px] font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
+                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
                     ${d ? 'border-[#FF9F1C] text-[#1A1A1A]' : 'border-[#E5E5E5] text-[#1A1A1A]'}
                     focus:border-[#FF9F1C]`}
                 />
