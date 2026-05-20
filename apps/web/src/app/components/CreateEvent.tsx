@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Megaphone, Map as MapIcon, Check, Edit3 } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3 } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
@@ -27,15 +27,14 @@ import { fr } from 'date-fns/locale'
 interface CreateEventProps { onBack: () => void }
 
 const CATEGORIES = [
-  { label: 'Sport', value: 'SPORT' },
-  { label: 'Culture & Art', value: 'CULTURE' },
-  { label: 'Gastronomie', value: 'FOOD' },
-  { label: 'Soirées', value: 'NIGHTLIFE' },
+  { label: 'Social', value: 'SOCIAL' },
+  { label: 'Art & Culture', value: 'CULTURE' },
+  { label: 'Bien-être & Santé', value: 'WELLNESS' },
+  { label: 'Technologie', value: 'TECH' },
+  { label: 'Science & Education', value: 'SCIENCE' },
   { label: 'Voyages', value: 'TRAVEL' },
-  { label: 'Gaming', value: 'GAMING' },
-  { label: 'Bien-être', value: 'WELLNESS' },
-  { label: 'Musique', value: 'MUSIC' },
-  { label: 'Autre', value: 'OTHER' },
+  { label: 'Lifestyle', value: 'LIFESTYLE' },
+  { label: 'Tourisme', value: 'TOURISM' },
 ]
 
 const TOTAL_STEPS = 6
@@ -258,13 +257,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   }
 
   // Recherche ville
-  const handleCitySearch = async (q: string) => {
+  const cityTimeoutRef = useRef<number | null>(null)
+  const handleCitySearch = (q: string) => {
     setCityInput(q)
     if (q.length < 2) { setCitySuggestions([]); return }
-    try {
-      const results = await searchCities(q)
-      setCitySuggestions(results)
-    } catch { setCitySuggestions([]) }
+    if (cityTimeoutRef.current) window.clearTimeout(cityTimeoutRef.current)
+    cityTimeoutRef.current = window.setTimeout(async () => {
+      try {
+        const results = await searchCities(q)
+        setCitySuggestions(results)
+      } catch { setCitySuggestions([]) }
+    }, 400)
   }
 
   const selectCity = (s: { label: string; lat: number|string; lon: number|string }) => {
@@ -366,8 +369,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
         {/* Progress bar */}
         {step < 6 && (
-          <div className="h-0.5 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-[#FF9F1C] rounded-full transition-all duration-300"
+          <div className="h-[2px] bg-[#F5F5F5] overflow-hidden">
+            <div className="h-full bg-[#FF9F1C] transition-all duration-300"
               style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
           </div>
         )}
@@ -375,28 +378,28 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       {/* Step content */}
       <div className={`flex-1 overflow-y-auto px-5 pt-6 pb-28 ${step === 6 ? 'bg-gray-50 pt-2 pb-40' : ''}`}>
-        <h2 className="text-[20px] font-bold text-[#FF9F1C] mb-1">{stepTitles[step - 1]}</h2>
-        <p className="text-[13px] text-gray-400 mb-6">{stepSubs[step - 1]}</p>
+        <h2 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5">{stepTitles[step - 1]}</h2>
+        <p className="text-[13px] text-[#888888] mb-7">{stepSubs[step - 1]}</p>
 
         {/* ── STEP 1: Informations ── */}
         {step === 1 && (
           <div className="space-y-6">
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Nom</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Nom</label>
               <input
                 value={title} onChange={e => setTitle(e.target.value)}
                 placeholder="Nom de l'événement..."
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C]"
+                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
               />
             </div>
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-3 block">Catégories</label>
-              <div className="flex flex-wrap gap-2">
+              <label className="text-[13px] font-medium text-[#555555] mb-3 block">Catégories</label>
+              <div className="flex flex-wrap gap-2.5">
                 {CATEGORIES.map(cat => {
                   const sel = categories.includes(cat.value)
                   return (
                     <button key={cat.value} onClick={() => toggleCategory(cat.value)}
-                      className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${sel ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]' : 'bg-white text-gray-700 border-gray-200'
+                      className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all ${sel ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]' : 'bg-[#F9F9F9] text-[#1A1A1A] border-transparent'
                         }`}>
                       {cat.label}
                     </button>
@@ -412,17 +415,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <div className="space-y-4">
             {/* Date */}
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Date</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Date</label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
                 {date ? (
-                  <div className="flex items-center w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[15px]">
-                    <span className="flex-1 text-gray-900">{formattedDate}</span>
-                    <button onClick={() => setDate('')}><X className="w-4 h-4 text-gray-400" /></button>
+                  <div className="flex items-center w-full pl-12 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] bg-white">
+                    <span className="flex-1 text-[#1A1A1A] font-medium">{formattedDate}</span>
+                    <button onClick={() => setDate('')} className="w-6 h-6 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                      <X className="w-3.5 h-3.5 text-[#888888]" />
+                    </button>
                   </div>
                 ) : (
                   <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                    className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-400 focus:outline-none focus:border-[#FF9F1C]"
+                    className="w-full pl-12 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-white"
                   />
                 )}
               </div>
@@ -430,27 +435,27 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* Heure */}
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Heure</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Heure</label>
               {startTime && endTime ? (
-                <div className="flex items-center w-full px-3 py-3 border border-gray-200 rounded-xl text-[15px]">
-                  <Clock className="w-4 h-4 text-gray-400 mr-2" />
-                  <span className="flex-1 text-gray-900">{startTime} h – {endTime} h</span>
-                  <button onClick={() => { setStartTime(''); setEndTime('') }}><X className="w-4 h-4 text-gray-400" /></button>
+                <div className="flex items-center w-full pl-4 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] bg-white">
+                  <Clock className="w-5 h-5 text-[#888888] mr-3" />
+                  <span className="flex-1 text-[#1A1A1A] font-medium">{startTime} h – {endTime} h</span>
+                  <button onClick={() => { setStartTime(''); setEndTime('') }} className="w-6 h-6 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                    <X className="w-3.5 h-3.5 text-[#888888]" />
+                  </button>
                 </div>
               ) : (
                 <div className="flex gap-2">
                   <div className="relative flex-1">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
                     <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)}
-                      placeholder="Début"
-                      className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:border-[#FF9F1C]"
+                      className="w-full pl-12 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A]"
                     />
                   </div>
                   <div className="relative flex-1">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
                     <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)}
-                      placeholder="Fin"
-                      className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] focus:outline-none focus:border-[#FF9F1C]"
+                      className="w-full pl-12 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A]"
                     />
                   </div>
                 </div>
@@ -459,26 +464,28 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* Ville avec autocomplete Nominatim */}
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Ville</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Ville</label>
               {city && !citySuggestions.length ? (
-                <div className="flex items-center w-full pl-3 pr-3 py-3 border border-gray-200 rounded-xl text-[15px]">
-                  <MapPin className="w-4 h-4 text-gray-400 mr-2" />
-                  <span className="flex-1 text-gray-900">{city}</span>
-                  <button onClick={() => { setCity(''); setCityInput('') }}><X className="w-4 h-4 text-gray-400" /></button>
+                <div className="flex items-center w-full pl-4 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] bg-white">
+                  <MapPin className="w-5 h-5 text-[#888888] mr-3" />
+                  <span className="flex-1 text-[#1A1A1A] font-medium">{city}</span>
+                  <button onClick={() => { setCity(''); setCityInput('') }} className="w-6 h-6 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                    <X className="w-3.5 h-3.5 text-[#888888]" />
+                  </button>
                 </div>
               ) : (
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
                   <input value={cityInput} onChange={e => handleCitySearch(e.target.value)}
                     placeholder="Sélectionnez une ville"
-                    className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-500 focus:outline-none focus:border-[#FF9F1C]"
+                    className="w-full pl-12 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-white"
                   />
                   {citySuggestions.length > 0 && (
-                    <div className="absolute z-20 top-full left-0 right-0 bg-white border border-gray-200 rounded-xl mt-1 shadow-lg overflow-hidden">
+                    <div className="absolute z-20 top-full left-0 right-0 bg-white border border-[#E5E5E5] rounded-xl mt-1 shadow-lg overflow-hidden">
                       {citySuggestions.map((s, i) => (
                         <button key={i} onClick={() => selectCity(s)}
-                          className="w-full text-left px-4 py-3 text-[13px] text-gray-700 hover:bg-gray-50 border-b border-gray-100 last:border-0 flex items-center gap-2">
-                          <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          className="w-full text-left px-4 py-3 text-[14px] text-[#1A1A1A] hover:bg-gray-50 border-b border-[#F5F5F5] last:border-0 flex items-center gap-3">
+                          <MapPin className="w-4 h-4 text-[#888888] flex-shrink-0" />
                           {s.label}
                         </button>
                       ))}
@@ -490,37 +497,32 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* Localisation / GPS */}
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Localisation</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Localisation</label>
               {address && !citySuggestions.length ? (
-                <div className="flex items-center w-full pl-3 pr-3 py-3 border border-gray-200 rounded-xl text-[15px]">
-                  <MapPin className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                  <span className="flex-1 text-gray-900 text-[13px] truncate">{address}</span>
-                  <button onClick={() => setAddress('')}><X className="w-4 h-4 text-gray-400" /></button>
+                <div className="flex items-center w-full pl-4 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] bg-white">
+                  <MapPin className="w-5 h-5 text-[#888888] mr-3 flex-shrink-0" />
+                  <span className="flex-1 text-[#1A1A1A] font-medium truncate">{address}</span>
+                  <button onClick={() => setAddress('')} className="w-6 h-6 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                    <X className="w-3.5 h-3.5 text-[#888888]" />
+                  </button>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <button onClick={handleGeolocate} disabled={geoLoading}
-                    className="flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 bg-white active:scale-95 transition-transform">
-                    {geoLoading
-                      ? <Loader2 className="w-4 h-4 text-[#FF9F1C] animate-spin" />
-                      : <Navigation className="w-4 h-4 text-gray-700" />}
-                    <span>{geoLoading ? 'Recherche...' : 'Ma position'}</span>
-                  </button>
-                  <button onClick={openMap}
-                    className="flex-[0.8] flex items-center justify-center gap-2 px-3 py-3 border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 bg-white active:scale-95 transition-transform">
-                    <MapIcon className="w-4 h-4 text-gray-700" />
-                    <span>Ouvrir la carte</span>
-                  </button>
-                </div>
-              )}
-              {/* Ou saisir manuellement */}
-              {!address && (
-                <div className="relative mt-2">
-                  <MapPin className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
                   <input value={address} onChange={e => setAddress(e.target.value)}
-                    placeholder="Ou saisir une adresse manuellement"
-                    className="w-full pl-9 pr-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-500 focus:outline-none focus:border-[#FF9F1C]"
+                    placeholder="Sélectionnez sur la carte"
+                    className="w-full pl-12 pr-24 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-white"
                   />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                    <button onClick={handleGeolocate} disabled={geoLoading} title="Ma position"
+                      className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F9F9F9] active:scale-95 transition-transform">
+                      {geoLoading ? <Loader2 className="w-4 h-4 text-[#FF9F1C] animate-spin" /> : <Navigation className="w-4 h-4 text-[#555555]" />}
+                    </button>
+                    <button onClick={openMap} title="Ouvrir la carte"
+                      className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F9F9F9] active:scale-95 transition-transform">
+                      <MapIcon className="w-4 h-4 text-[#555555]" />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -531,41 +533,39 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {step === 3 && (
           <div className="space-y-5">
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Nombre de places</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Nombre de places</label>
               <input type="number" min={1} value={maxPlaces} onChange={e => setMaxPlaces(e.target.value)}
                 placeholder="0"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C]"
+                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-white"
               />
             </div>
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Montant de participation</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Montant de participation</label>
               <div className="flex gap-2 items-center">
                 <input type="number" min={0} value={amount} onChange={e => setAmount(e.target.value)}
                   placeholder="0 (gratuit)"
-                  className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C]"
+                  className="flex-1 px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-white"
                 />
-                <div className="px-3 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-600 bg-gray-50 flex-shrink-0">
+                <div className="px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] text-[#555555] bg-white flex-shrink-0 flex items-center justify-center font-medium">
                   F CFA ▾
                 </div>
               </div>
             </div>
 
-
-
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-3 block">Confidentialité</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-3 block mt-2">Confidentialité</label>
               <div className="flex gap-6">
-                <label className="flex items-center gap-2 cursor-pointer" onClick={() => setIsPrivate(false)}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${!isPrivate ? 'border-[#FF9F1C]' : 'border-gray-300'}`}>
+                <label className="flex items-center gap-3 cursor-pointer" onClick={() => setIsPrivate(false)}>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${!isPrivate ? 'border-[#FF9F1C]' : 'border-[#E5E5E5]'}`}>
                     {!isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                   </div>
-                  <span className="text-[14px] text-gray-700">Public</span>
+                  <span className="text-[15px] text-[#1A1A1A]">Public</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer" onClick={() => setIsPrivate(true)}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${isPrivate ? 'border-[#FF9F1C]' : 'border-gray-300'}`}>
+                <label className="flex items-center gap-3 cursor-pointer" onClick={() => setIsPrivate(true)}>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isPrivate ? 'border-[#FF9F1C]' : 'border-[#E5E5E5]'}`}>
                     {isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                   </div>
-                  <span className="text-[14px] text-gray-700">Privé</span>
+                  <span className="text-[15px] text-[#1A1A1A]">Privé</span>
                 </label>
               </div>
             </div>
@@ -576,29 +576,31 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {step === 4 && (
           <div className="space-y-5">
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Description</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Description</label>
               <textarea value={description} onChange={e => setDescription(e.target.value)}
                 placeholder="À propos de votre événement..."
                 rows={6}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-[14px] resize-none focus:outline-none focus:border-[#FF9F1C]"
+                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] resize-none focus:outline-none focus:border-[#FF9F1C] bg-white"
               />
             </div>
             <div>
-              <label className="text-[13px] font-medium text-gray-700 mb-2 block">Couverture</label>
+              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Couverture</label>
               <button onClick={() => fileRef.current?.click()}
-                className="w-full h-40 border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 overflow-hidden relative bg-gray-50">
+                className="w-full h-40 border border-dashed border-[#E5E5E5] rounded-xl flex flex-col items-center justify-center gap-2 overflow-hidden relative bg-[#F9F9F9] active:scale-[0.99] transition-transform">
                 {coverPreview ? (
                   <>
                     <SafeImage src={coverPreview} alt="Aperçu couverture" className="absolute inset-0 w-full h-full object-cover" />
                     <button onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
-                      className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">
-                      <X className="w-4 h-4 text-white" />
+                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                      <X className="w-4 h-4 text-[#FF4444]" />
                     </button>
                   </>
                 ) : (
                   <>
-                    <ImageIcon className="w-8 h-8 text-gray-300" />
-                    <span className="text-[13px] text-gray-400">Sélectionner une image</span>
+                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm border border-[#E5E5E5] mb-1">
+                      <ImageIcon className="w-5 h-5 text-[#888888]" />
+                    </div>
+                    <span className="text-[13px] font-medium text-[#555555]">Sélectionner une image</span>
                   </>
                 )}
               </button>
@@ -610,33 +612,35 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {/* ── STEP 5: Organisation ── */}
         {step === 5 && (
           <div className="space-y-4">
-            <button onClick={() => setShowSearchModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 border border-gray-200 rounded-xl text-[14px] text-gray-400 bg-white">
-              <Search className="w-4 h-4 text-gray-400" />
-              Rechercher un ami
-            </button>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
+              <button onClick={() => setShowSearchModal(true)}
+                className="w-full text-left pl-12 pr-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] text-[#BBBBBB] bg-white focus:outline-none focus:border-[#FF9F1C]">
+                Rechercher un ami
+              </button>
+            </div>
 
             {selectedCoOrgs.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-3 mt-4">
                 {selectedCoOrgs.map(org => (
                   <div key={org.id} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
+                      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E5E5E5]">
                         <SafeImage 
                           src={org.avatarUrl} 
                           alt={org.name} 
                           className="w-full h-full object-cover" 
                           fallback={
-                            <div className="w-full h-full bg-orange-300 flex items-center justify-center text-white font-bold text-[13px]">
+                            <div className="w-full h-full bg-[#FFD99A] flex items-center justify-center text-[#1A1A1A] font-bold text-[14px]">
                               {org.name.charAt(0).toUpperCase()}
                             </div>
                           }
                         />
                       </div>
-                      <span className="text-[14px] font-medium text-gray-900">{org.name}</span>
+                      <span className="text-[15px] font-medium text-[#1A1A1A]">{org.name}</span>
                     </div>
                     <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
-                      className="text-[12px] font-bold text-gray-500 border border-gray-200 rounded-full px-3 py-1">
+                      className="text-[13px] font-semibold text-[#FF4444] border border-[#FF4444]/20 bg-[#FF4444]/5 rounded-full px-4 py-1.5 active:scale-95 transition-transform">
                       Retirer
                     </button>
                   </div>
@@ -649,135 +653,135 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {/* ── STEP 6: Rendu après publication ── */}
         {step === 6 && (
           <div className="space-y-4 min-h-full">
-            <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-4">{title || 'Titre de l\'événement'}</h1>
+            <h1 className="text-[24px] font-bold text-[#1A1A1A] leading-tight mb-4">{title || 'Titre de l\'événement'}</h1>
             
-            <div className="bg-[#EBF3FA] mb-6 p-4 rounded-xl text-gray-600 text-[13px] leading-relaxed">
+            <div className="bg-[#F9F9F9] mb-6 p-4 rounded-xl text-[#555555] text-[13px] leading-relaxed border border-[#E5E5E5]">
               Cet événement n'est pas encore visible sur Let's Out.<br/>
               Publiez-le pour le rendre accessible publiquement.<br/>
               Ou ajoutez une cagnotte pour partager les frais.
             </div>
 
             {/* Organisateurs Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
                <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-gray-900 text-[15px]">Organisateurs</h3>
-                 <button onClick={() => setStep(5)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Organisateurs</h3>
+                 <button onClick={() => setStep(5)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
                </div>
                <div className="flex items-center gap-3 mb-3">
                  {me?.profile?.avatarUrl ? (
-                    <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-8 h-8 rounded-full object-cover" />
+                    <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-9 h-9 rounded-full object-cover" />
                  ) : (
-                   <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm">
+                   <div className="w-9 h-9 rounded-full bg-[#F5F5F5] flex items-center justify-center font-bold text-[14px]">
                      {me?.profile?.displayName?.charAt(0) || 'M'}
                    </div>
                  )}
-                 <span className="text-[14px] text-gray-700 font-medium">{me?.profile?.displayName || 'Vous'}</span>
+                 <span className="text-[15px] text-[#1A1A1A] font-medium">{me?.profile?.displayName || 'Vous'}</span>
                </div>
                {selectedCoOrgs.map(org => (
                  <div key={org.id} className="flex items-center gap-3 mt-3">
                    {org.avatarUrl ? (
-                     <SafeImage src={org.avatarUrl} alt={org.name} className="w-8 h-8 rounded-full object-cover" />
+                     <SafeImage src={org.avatarUrl} alt={org.name} className="w-9 h-9 rounded-full object-cover border border-[#E5E5E5]" />
                    ) : (
-                     <div className="w-8 h-8 rounded-full bg-orange-300 flex items-center justify-center text-white font-bold text-sm">
+                     <div className="w-9 h-9 rounded-full bg-[#FFD99A] flex items-center justify-center text-[#1A1A1A] font-bold text-[14px] border border-[#E5E5E5]">
                        {org.name.charAt(0).toUpperCase()}
                      </div>
                    )}
-                   <span className="text-[14px] text-gray-700 font-medium">{org.name}</span>
+                   <span className="text-[15px] text-[#1A1A1A] font-medium">{org.name}</span>
                  </div>
                ))}
             </div>
 
             {/* Informations Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
                <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-gray-900 text-[15px]">Informations</h3>
-                 <button onClick={() => setStep(1)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Informations</h3>
+                 <button onClick={() => setStep(1)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
                </div>
                <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-gray-500">Nom</span>
-                 <span className="text-[14px] font-medium text-gray-900 truncate max-w-[180px]">{title || '—'}</span>
+                 <span className="text-[14px] text-[#888888]">Nom</span>
+                 <span className="text-[14px] font-medium text-[#1A1A1A] truncate max-w-[180px]">{title || '—'}</span>
                </div>
                <div className="flex justify-between items-center">
-                 <span className="text-[14px] text-gray-500">Catégories</span>
+                 <span className="text-[14px] text-[#888888]">Catégories</span>
                  <div className="flex gap-1">
                    {categories.length > 0 ? categories.map(cat => (
-                     <span key={cat} className="text-[12px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{CATEGORIES.find(c => c.value === cat)?.label}</span>
+                     <span key={cat} className="text-[12px] font-medium text-[#1A1A1A] bg-[#F9F9F9] px-2.5 py-1 rounded-full">{CATEGORIES.find(c => c.value === cat)?.label}</span>
                    )) : (
-                     <span className="text-[12px] font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">—</span>
+                     <span className="text-[12px] font-medium text-[#888888] bg-[#F9F9F9] px-2.5 py-1 rounded-full">—</span>
                    )}
                  </div>
                </div>
             </div>
 
             {/* Date & Lieu Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
                <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-gray-900 text-[15px]">Date & lieu</h3>
-                 <button onClick={() => setStep(2)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Date & lieu</h3>
+                 <button onClick={() => setStep(2)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
                </div>
                <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-gray-500">Date</span>
-                 <span className="text-[14px] font-medium text-gray-900 capitalize">{formattedDate || '—'}</span>
+                 <span className="text-[14px] text-[#888888]">Date</span>
+                 <span className="text-[14px] font-medium text-[#1A1A1A] capitalize">{formattedDate || '—'}</span>
                </div>
                <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-gray-500">Heure</span>
-                 <span className="text-[14px] font-medium text-gray-900">{startTime ? `${startTime} – ${endTime} (GMT)` : '—'}</span>
+                 <span className="text-[14px] text-[#888888]">Heure</span>
+                 <span className="text-[14px] font-medium text-[#1A1A1A]">{startTime ? `${startTime} – ${endTime} (GMT)` : '—'}</span>
                </div>
                <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-gray-500">Ville</span>
-                 <span className="text-[14px] font-medium text-gray-900">{city || '—'}</span>
+                 <span className="text-[14px] text-[#888888]">Ville</span>
+                 <span className="text-[14px] font-medium text-[#1A1A1A]">{city || '—'}</span>
                </div>
                <div className="flex justify-between items-center">
-                 <span className="text-[14px] text-gray-500">Localisation</span>
-                 <span className="text-[14px] font-medium text-gray-900 truncate max-w-[150px]">{address || '—'}</span>
+                 <span className="text-[14px] text-[#888888]">Localisation</span>
+                 <span className="text-[14px] font-medium text-[#1A1A1A] truncate max-w-[150px]">{address || '—'}</span>
                </div>
             </div>
 
             {/* Participation Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
                <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-gray-900 text-[15px]">Participation</h3>
-                 <button onClick={() => setStep(3)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Participation</h3>
+                 <button onClick={() => setStep(3)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
                </div>
                <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-gray-500">Places</span>
-                 <span className="text-[14px] font-medium text-gray-900">{maxPlaces || 'Illimitées'}</span>
+                 <span className="text-[14px] text-[#888888]">Places</span>
+                 <span className="text-[14px] font-medium text-[#1A1A1A]">{maxPlaces || 'Illimitées'}</span>
                </div>
                <div className="flex justify-between items-center mb-3">
-                 <span className="text-[14px] text-gray-500">Ticket</span>
-                 <span className="text-[14px] font-medium text-gray-900">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
+                 <span className="text-[14px] text-[#888888]">Ticket</span>
+                 <span className="text-[14px] font-medium text-[#1A1A1A]">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
                </div>
                <div className="flex justify-between items-center">
-                 <span className="text-[14px] text-gray-500">Confidentialité</span>
-                 <span className="text-[14px] font-medium text-gray-900">{isPrivate ? 'Privée' : 'Publique'}</span>
+                 <span className="text-[14px] text-[#888888]">Confidentialité</span>
+                 <span className="text-[14px] font-medium text-[#1A1A1A]">{isPrivate ? 'Privée' : 'Publique'}</span>
                </div>
             </div>
 
             {/* Description Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
                <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-gray-900 text-[15px]">Description</h3>
-                 <button onClick={() => setStep(4)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Description</h3>
+                 <button onClick={() => setStep(4)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
                </div>
-               <p className="text-[13px] text-gray-600 line-clamp-3 leading-relaxed whitespace-pre-wrap">{description || 'Aucune description'}</p>
+               <p className="text-[14px] text-[#555555] line-clamp-3 leading-relaxed whitespace-pre-wrap">{description || 'Aucune description'}</p>
                {description && description.length > 100 && (
-                 <span className="text-[13px] text-gray-400 underline mt-1 block">Voir plus</span>
+                 <span className="text-[14px] text-[#FF9F1C] underline mt-1 block font-medium cursor-pointer">Voir plus</span>
                )}
             </div>
 
             {/* Couverture Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-4 shadow-sm">
                <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-bold text-gray-900 text-[15px]">Couverture</h3>
-                 <button onClick={() => setStep(4)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
+                 <h3 className="font-bold text-[#1A1A1A] text-[15px]">Couverture</h3>
+                 <button onClick={() => setStep(4)} className="text-[12px] text-[#555555] flex items-center gap-1.5 px-3 py-1.5 bg-[#F9F9F9] rounded-full font-medium active:scale-95 transition-transform"><Edit3 className="w-3.5 h-3.5"/> Modifier</button>
                </div>
-               <div className="w-full h-40 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shadow-sm relative">
+               <div className="w-full h-40 rounded-xl overflow-hidden bg-[#F9F9F9] border border-[#E5E5E5] relative">
                   {coverPreview ? (
                      <SafeImage src={coverPreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                      <div className="text-3xl">{categories[0] === 'SPORT' ? '⚽️' : categories[0] === 'MUSIC' ? '🎸' : '✨'}</div>
-                      <span className="text-[12px] text-gray-400 font-medium">Image par défaut</span>
+                      <div className="text-3xl">{categories[0] === 'SOCIAL' ? '✨' : categories[0] === 'CULTURE' ? '🎭' : categories[0] === 'WELLNESS' ? '🧘' : categories[0] === 'TECH' ? '💻' : categories[0] === 'SCIENCE' ? '🔬' : categories[0] === 'TRAVEL' ? '✈️' : categories[0] === 'LIFESTYLE' ? '🍹' : '🗺️'}</div>
+                      <span className="text-[13px] text-[#888888] font-medium">Image par défaut</span>
                     </div>
                   )}
                </div>
@@ -794,21 +798,21 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <>
               {step > 1 && (
                 <button onClick={() => setStep(s => s - 1)}
-                  className="flex-1 py-4 rounded-full border border-gray-200 font-bold text-[15px] text-gray-700">
+                  className="flex-1 py-[17px] rounded-full border border-[#E5E5E5] font-semibold text-[15px] text-[#1A1A1A] bg-white transition-colors active:bg-gray-50">
                   Précédent
                 </button>
               )}
               <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
-                className={`flex-1 py-4 rounded-full font-bold text-[15px] text-white transition-all ${canNext() ? 'bg-[#FF9F1C]' : 'bg-[#FF9F1C]/30'
+                className={`flex-1 py-[17px] rounded-full font-semibold text-[15px] text-white transition-all ${canNext() ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'
                   }`}>
-                Suivant
+                {step === 1 ? 'Commencer' : 'Suivant'}
               </button>
             </>
           ) : (
             <div className="w-full space-y-3">
               <button
                 onClick={() => { setPoolStep(1); setShowPoolModal(true) }}
-                className="w-full py-4 rounded-full border border-gray-200 font-bold text-[15px] text-[#FF9F1C] flex items-center justify-center gap-2 bg-white active:scale-95 transition-transform"
+                className="w-full py-[17px] rounded-full border border-[#E5E5E5] font-semibold text-[15px] text-[#1A1A1A] flex items-center justify-center gap-2 bg-white active:scale-95 transition-all"
               >
                 <div className="flex items-center gap-1.5">
                   <div className="w-5 h-5 flex items-center justify-center"><span className="text-[16px] leading-none">🪙</span></div>
@@ -818,11 +822,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <button
                 onClick={() => handleSubmit('PUBLISHED')}
                 disabled={loading}
-                className={`w-full py-4 rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-transform ${
-                  !loading ? 'bg-[#FF9F1C]' : 'bg-[#FF9F1C]/50'
+                className={`w-full py-[17px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all ${
+                  !loading ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'
                 }`}
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Megaphone className="w-5 h-5" />}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
                 {loading ? 'Publication...' : 'Publier l\'événement'}
               </button>
             </div>
