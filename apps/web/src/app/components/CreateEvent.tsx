@@ -359,27 +359,29 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     <div className="w-full h-full bg-white flex flex-col">
 
       {/* Header */}
-      <div className={`px-5 pt-4 ${step === 6 ? 'pb-4 bg-gray-50' : 'pb-0'}`}>
+      <div className="px-5 pt-4 pb-0 bg-white">
         <div className="flex items-center justify-center relative mb-3">
           <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
-            className={`absolute left-0 w-8 h-8 flex items-center justify-center ${step === 6 ? 'bg-gray-100 rounded-full' : ''}`}>
-            <ChevronLeft className={`w-6 h-6 text-gray-800 ${step === 6 ? 'w-5 h-5' : ''}`} />
+            className="absolute left-0 w-8 h-8 flex items-center justify-center">
+            <ChevronLeft className="w-6 h-6 text-gray-800" />
           </button>
-          <span className="text-[15px] font-semibold text-gray-900">{step === 6 ? 'Détails événement' : 'Créer un événement'}</span>
+          <span className="text-[15px] font-semibold text-gray-900">Créer un événement</span>
         </div>
         {/* Progress bar */}
-        {step < 6 && (
-          <div className="h-[2px] bg-[#F5F5F5] overflow-hidden">
-            <div className="h-full bg-[#FF9F1C] transition-all duration-300"
-              style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
-          </div>
-        )}
+        <div className="h-[2px] bg-[#F5F5F5] overflow-hidden">
+          <div className="h-full bg-[#FF9F1C] transition-all duration-300"
+            style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
+        </div>
       </div>
 
       {/* Step content */}
-      <div className={`flex-1 overflow-y-auto px-5 pt-6 pb-28 ${step === 6 ? 'bg-gray-50 pt-2 pb-40' : ''}`}>
-        <h2 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5">{stepTitles[step - 1]}</h2>
-        <p className="text-[13px] text-[#888888] mb-7">{stepSubs[step - 1]}</p>
+      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-32 bg-white">
+        {step < 6 && (
+          <>
+            <h2 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5">{stepTitles[step - 1]}</h2>
+            <p className="text-[13px] text-[#888888] mb-7">{stepSubs[step - 1]}</p>
+          </>
+        )}
 
         {/* ── STEP 1: Informations ── */}
         {step === 1 && (
@@ -652,115 +654,166 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         {/* ── STEP 6: Rendu après publication ── */}
         {step === 6 && (
-          <div className="space-y-4 min-h-full">
-            <div className="flex items-center justify-center mb-6">
-              <div className="flex flex-col items-center">
-                <span className="text-[14px] font-bold text-[#FF9F1C] uppercase tracking-wider mb-1">Rendu après publication</span>
-                <div className="h-[2px] w-full bg-[#FF9F1C] rounded-full"></div>
+          <div className="space-y-0">
+            {/* Preview banner */}
+            <div className="bg-[#FFF8ED] border border-[#FFE4B2] rounded-xl px-4 py-3 mb-5 flex items-center gap-3">
+              <span className="text-[#FF9F1C] text-xl">👁</span>
+              <div>
+                <p className="text-[13px] font-bold text-[#FF9F1C]">Rendu après publication</p>
+                <p className="text-[11px] text-[#B87A00]">Voici comment votre événement apparaîtra publiquement.</p>
               </div>
             </div>
 
-            {/* Event Card Preview */}
-            <div className="bg-white border border-[#E5E5E5] rounded-[24px] overflow-hidden shadow-sm">
-              {/* Cover */}
-              <div className="w-full h-48 bg-[#F9F9F9] relative">
-                {coverPreview ? (
-                  <SafeImage src={coverPreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    <div className="text-4xl">{categories[0] === 'SOCIAL' ? '✨' : categories[0] === 'CULTURE' ? '🎭' : categories[0] === 'WELLNESS' ? '🧘' : categories[0] === 'TECH' ? '💻' : categories[0] === 'SCIENCE' ? '🔬' : categories[0] === 'TRAVEL' ? '✈️' : categories[0] === 'LIFESTYLE' ? '🍹' : '🗺️'}</div>
-                    <span className="text-[14px] text-[#888888] font-medium">Image par défaut</span>
-                  </div>
-                )}
+            {/* ── Cover image ── */}
+            <div className="w-full h-52 bg-[#F0F0F0] rounded-[20px] overflow-hidden relative mb-5">
+              {coverPreview ? (
+                <SafeImage src={coverPreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                  <div className="text-5xl">{categories[0] === 'SOCIAL' ? '✨' : categories[0] === 'CULTURE' ? '🎭' : categories[0] === 'WELLNESS' ? '🧘' : categories[0] === 'TECH' ? '💻' : categories[0] === 'SCIENCE' ? '🔬' : categories[0] === 'TRAVEL' ? '✈️' : categories[0] === 'LIFESTYLE' ? '🍹' : '🗺️'}</div>
+                  <span className="text-[13px] text-[#AAAAAA] font-medium">Image de couverture</span>
+                </div>
+              )}
+            </div>
+
+            {/* ── Title + Categories ── */}
+            <h2 className="text-[24px] font-bold text-[#1A1A1A] leading-tight mb-3">{title || 'Titre de l\'événement'}</h2>
+            <div className="flex flex-wrap gap-2 mb-5">
+              {categories.map(cat => (
+                <span key={cat} className="text-[12px] font-bold text-[#FF9F1C] bg-[#FFF0D9] px-3 py-1 rounded-full border border-[#FFD99A]">
+                  {CATEGORIES.find(c => c.value === cat)?.label}
+                </span>
+              ))}
+            </div>
+
+            {/* ── Location + Date ── */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#FFF8F1] flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin className="w-4 h-4 text-[#FF9F1C]" />
+                </div>
+                <div>
+                  <p className="font-bold text-[#1A1A1A] text-[14px]">{city || 'Ville non précisée'}</p>
+                  <p className="text-[13px] text-gray-500">{address || 'Lieu non précisé'}</p>
+                </div>
               </div>
-
-              <div className="p-5 space-y-6">
-                {/* Title & Tags */}
-                <div>
-                  <h2 className="text-[22px] font-bold text-[#1A1A1A] leading-tight mb-3">{title || 'Titre de l\'événement'}</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map(cat => (
-                      <span key={cat} className="text-[12px] font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                        {CATEGORIES.find(c => c.value === cat)?.label}
-                      </span>
-                    ))}
-                  </div>
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-[#FFF8F1] flex items-center justify-center shrink-0 mt-0.5">
+                  <Calendar className="w-4 h-4 text-[#FF9F1C]" />
                 </div>
+                <div>
+                  <p className="font-bold text-[#1A1A1A] text-[14px] capitalize">{formattedDate || 'Date non précisée'}</p>
+                  <p className="text-[13px] text-gray-500">{startTime ? `${startTime} h – ${endTime} h (GMT)` : '--:--'}</p>
+                </div>
+              </div>
+            </div>
 
-                {/* Date & Location */}
-                <div className="space-y-3">
+            {/* ── À propos ── */}
+            <div className="mb-6">
+              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-2">À propos</h3>
+              <p className="text-[14px] text-gray-600 leading-relaxed line-clamp-3 whitespace-pre-wrap">
+                {description || 'Aucune description fournie.'}
+              </p>
+              {description && description.length > 120 && (
+                <span className="text-[13px] text-gray-400 underline mt-1 block cursor-pointer">Voir plus</span>
+              )}
+            </div>
+
+            {/* ── Organisateurs ── */}
+            <div className="mb-6">
+              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Organisateurs</h3>
+              <div className="space-y-3">
+                {/* Main organizer */}
+                <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#FFF8F1] flex items-center justify-center shrink-0">
-                      <MapPin className="w-5 h-5 text-[#FF9F1C]" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-[14px]">{city || 'Ville'}</p>
-                      <p className="text-[13px] text-gray-500">{address || 'Lieu non précisé'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#FFF8F1] flex items-center justify-center shrink-0">
-                      <Calendar className="w-5 h-5 text-[#FF9F1C]" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-[14px] capitalize">{formattedDate || 'Date non précisée'}</p>
-                      <p className="text-[13px] text-gray-500">{startTime ? `${startTime} – ${endTime} (GMT)` : '--:--'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* About */}
-                <div>
-                  <h3 className="text-[16px] font-bold text-gray-900 mb-2">À propos</h3>
-                  <p className="text-[14px] text-gray-600 leading-relaxed line-clamp-3 whitespace-pre-wrap">{description || 'Aucune description fournie.'}</p>
-                  <span className="text-[13px] text-gray-400 underline mt-1 block">Voir plus</span>
-                </div>
-
-                {/* Organizers */}
-                <div>
-                  <h3 className="text-[16px] font-bold text-gray-900 mb-3">Organisateurs</h3>
-                  <div className="bg-gray-50 rounded-[16px] p-3 flex items-center justify-between border border-gray-100">
-                    <div className="flex items-center gap-3">
-                      {me?.profile?.avatarUrl ? (
-                         <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-10 h-10 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center font-bold text-[14px]">
-                          {me?.profile?.displayName?.charAt(0) || 'M'}
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-[14px] font-bold text-gray-900">{me?.profile?.displayName || 'Vous'}</p>
-                        <p className="text-[12px] text-gray-500">{me?.profile?.followersCount || 0} followers • {me?.profile?.eventsCount || 0} événement</p>
+                    {me?.profile?.avatarUrl ? (
+                      <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-12 h-12 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center font-bold text-[18px] text-white">
+                        {me?.profile?.displayName?.charAt(0) || 'M'}
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[15px] font-bold text-[#1A1A1A]">{me?.profile?.displayName || 'Vous'}</p>
+                        <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      </div>
+                      <p className="text-[12px] text-gray-500 mt-0.5 mb-2">{me?.profile?.followersCount || 0} followers • {me?.profile?.eventsCount || 0} événement</p>
+                      <div className="flex items-center gap-2">
+                        <button className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm">Contacter</button>
+                        <button className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm">Suivre</button>
                       </div>
                     </div>
-                    <button className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm">
-                      Contacter
-                    </button>
                   </div>
                 </div>
-
-                {/* Participation */}
-                <div>
-                  <h3 className="text-[16px] font-bold text-gray-900 mb-3">Participation</h3>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[14px] text-gray-900 font-medium">Montant</span>
-                    <span className="text-[15px] font-bold text-blue-600">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
-                  </div>
-                </div>
-
-                {/* Participants */}
-                <div>
-                  <h3 className="text-[16px] font-bold text-gray-900 mb-3">Participants</h3>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center -space-x-2">
-                      <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-200" />
-                      <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-300" />
-                      <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-400 flex items-center justify-center text-[10px] font-bold text-white">0/{maxPlaces || '∞'}</div>
+                {/* Co-organisateurs */}
+                {selectedCoOrgs.map(org => (
+                  <div key={org.id} className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden">
+                        <SafeImage src={org.avatarUrl} alt={org.name} className="w-full h-full object-cover"
+                          fallback={<div className="w-full h-full bg-orange-200 flex items-center justify-center font-bold text-white">{org.name.charAt(0)}</div>}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-[15px] font-bold text-[#1A1A1A]">{org.name}</p>
+                          <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Co-hôte</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <button className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm">Contacter</button>
+                          <button className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm">Suivre</button>
+                        </div>
+                      </div>
                     </div>
-                    <span className="text-[12px] px-3 py-1 rounded-full border border-gray-200 font-bold text-gray-700">Voir tous</span>
+                  </div>
+                ))}
+                {/* Let's Out Staff */}
+                <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#FFCA28] to-[#FF9F1C] flex items-center justify-center">
+                      <span className="text-white font-bold text-[13px]">LO</span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[15px] font-bold text-[#1A1A1A]">Let's Out Staff</p>
+                        <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                      </div>
+                      <p className="text-[12px] text-gray-500 mt-0.5 mb-2">2020 followers • 6 événements • 4.8 ★</p>
+                      <div className="flex items-center gap-2">
+                        <button className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm">Contacter</button>
+                        <button className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm">Suivre</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
+            {/* ── Participation ── */}
+            <div className="mb-6">
+              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Participation</h3>
+              <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100 flex items-center justify-between">
+                <span className="text-[14px] text-gray-700 font-medium">Montant</span>
+                <span className="text-[15px] font-bold text-blue-600">
+                  {amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}
+                </span>
+              </div>
+            </div>
+
+            {/* ── Participants ── */}
+            <div className="mb-2">
+              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Participants</h3>
+              <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {['#9747FF','#FF9F1C','#B070FF'].map((color, i) => (
+                      <div key={i} className="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center text-white text-[11px] font-bold" style={{ backgroundColor: color }} />
+                    ))}
+                  </div>
+                  <span className="text-[14px] font-bold text-gray-900">0/{maxPlaces || '∞'}</span>
+                </div>
+                <button className="px-4 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-700 shadow-sm">Voir tous</button>
               </div>
             </div>
           </div>
@@ -768,7 +821,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* Bottom nav */}
-      <div className={`absolute bottom-0 left-0 right-0 border-t border-gray-100 px-5 pt-4 pb-6 ${step === 6 ? 'bg-white' : 'bg-white'}`}>
+      <div className={`absolute bottom-0 left-0 right-0 border-t border-gray-100 px-5 pt-4 pb-6 bg-white`}>
         <div className="flex gap-3">
           {step < TOTAL_STEPS ? (
             <>
@@ -785,18 +838,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </button>
             </>
           ) : (
-            <div className="w-full">
-              <button
-                onClick={() => handleSubmit('DRAFT')}
-                disabled={loading}
-                className={`w-full py-[17px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all ${
-                  !loading ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'
-                }`}
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                {loading ? 'Création...' : 'Créer l\'événement'}
-              </button>
-            </div>
+            <button
+              onClick={() => handleSubmit('DRAFT')}
+              disabled={loading}
+              className={`flex-1 py-[17px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all ${
+                !loading ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'
+              }`}
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+              {loading ? 'Création...' : 'Créer l\'événement'}
+            </button>
           )}
         </div>
         {step < 6 && (

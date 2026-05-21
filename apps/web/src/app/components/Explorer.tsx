@@ -87,16 +87,15 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       // Resolve the date param: if custom date was picked, format as ISO date string
       let dateParam: string | undefined = undefined;
       if (appliedFilters.date === 'pick' && appliedFilters.customDate) {
-        // Backend expects 'today', 'tomorrow', 'week', 'weekend' or we pass it as-is.
-        // For custom date, we filter client-side (backend doesn't support arbitrary date)
-        dateParam = undefined;
+        // Backend now supports YYYY-MM-DD custom dates
+        dateParam = appliedFilters.customDate;
       } else if (appliedFilters.date !== 'all') {
         dateParam = appliedFilters.date;
       }
 
       return eventsApi.list({
         status: 'PUBLISHED',
-        category: apiCategory || (appliedFilters.categories.length > 0 ? appliedFilters.categories[0] : undefined),
+        category: apiCategory || (appliedFilters.categories.length > 0 ? appliedFilters.categories.join(',') : undefined),
         search: searchQuery || undefined,
         limit: 50,
         maxPrice: appliedFilters.budgetMax < 50000 ? appliedFilters.budgetMax : undefined,
@@ -106,20 +105,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     },
   });
 
-  // For custom date, filter client-side
-  const rawEvents: Event[] = eventsData?.data || [];
-  const events: Event[] = (() => {
-    if (appliedFilters.date === 'pick' && appliedFilters.customDate) {
-      const picked = new Date(appliedFilters.customDate);
-      const pickedStart = new Date(picked.getFullYear(), picked.getMonth(), picked.getDate());
-      const pickedEnd = new Date(pickedStart); pickedEnd.setDate(pickedEnd.getDate() + 1);
-      return rawEvents.filter(e => {
-        const t = new Date(e.startAt).getTime();
-        return t >= pickedStart.getTime() && t < pickedEnd.getTime();
-      });
-    }
-    return rawEvents;
-  })();
+  // Backend now handles custom date filtering
+  const events: Event[] = eventsData?.data || [];
 
   const handleMapGeolocate = async () => {
     setMapGeoLoading(true)

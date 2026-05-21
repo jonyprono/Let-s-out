@@ -95,6 +95,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
         startDateBoundary.setDate(diffToSat);
         endDateBoundary = new Date(startDateBoundary);
         endDateBoundary.setDate(endDateBoundary.getDate() + 2);
+      } else if (date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const parts = date.split('-');
+        startDateBoundary = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+        endDateBoundary = new Date(startDateBoundary);
+        endDateBoundary.setDate(endDateBoundary.getDate() + 1);
       }
     }
 
@@ -123,7 +128,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const whereClause: any = {
       status,
       isPrivate: false,
-      ...(category && { category }),
+      ...(category && { category: category.includes(',') ? { in: category.split(',') } : category }),
       ...(city && { city: { contains: city, mode: 'insensitive' } }),
       ...(maxPrice && { price: { lte: Number(maxPrice) } }),
       ...(search && {
