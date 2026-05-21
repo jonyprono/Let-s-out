@@ -60,8 +60,8 @@ export function LanguageModal({ onClose }: Props) {
 
         <button
           onClick={handleSave}
-          className="w-full py-4 text-white font-bold rounded-2xl shadow-lg shadow-purple-500/30 active:scale-[0.98] transition-transform"
-          style={{ background: 'linear-gradient(135deg, #9747FF 0%, #FF9F1C 100%)' }}
+          className="w-full py-4 text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform"
+          style={{ background: 'linear-gradient(135deg, #FF9F1C 0%, #FF9F1C 100%)' }}
         >
           {t('languageModal.save')}
         </button>

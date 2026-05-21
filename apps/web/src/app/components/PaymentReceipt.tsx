@@ -46,7 +46,7 @@ export function PaymentReceipt() {
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white">
-        <Loader2 className="w-8 h-8 animate-spin text-[#9747FF]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF9F1C]" />
       </div>
     )
   }
@@ -61,7 +61,7 @@ export function PaymentReceipt() {
         <p className="text-sm text-gray-400 mb-6">Ce reçu n'existe pas ou vous n'y avez pas accès.</p>
         <button
           onClick={() => navigate(-1)}
-          className="px-6 py-3 bg-[#9747FF] text-white rounded-full font-semibold"
+          className="px-6 py-3 bg-[#FF9F1C] text-white rounded-full font-semibold"
         >
           Retour
         </button>

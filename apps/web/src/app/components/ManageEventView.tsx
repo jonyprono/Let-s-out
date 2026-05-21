@@ -118,7 +118,7 @@ export function ManageEventView({
                   alt={organizerName}
                   className="w-9 h-9 rounded-full object-cover"
                   fallback={
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center text-white font-bold text-[13px]">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF9F1C] to-[#FFB75E] flex items-center justify-center text-white font-bold text-[13px]">
                       {organizerName.charAt(0).toUpperCase()}
                     </div>
                   }

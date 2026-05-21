@@ -23,7 +23,7 @@ interface SettingsProps {
 
 const colorClasses: Record<string, string> = {
   blue:   'bg-blue-50 dark:bg-blue-500/10 text-blue-500',
-  purple: 'bg-purple-50 dark:bg-purple-500/10 text-[#9747FF]',
+  purple: 'bg-orange-50 dark:bg-orange-50/10 text-[#FF9F1C]',
   orange: 'bg-orange-50 dark:bg-orange-500/10 text-[#FF9F1C]',
   green:  'bg-green-50 dark:bg-green-500/10 text-green-500',
   pink:   'bg-pink-50 dark:bg-pink-500/10 text-pink-500',
@@ -101,7 +101,7 @@ export function Settings({ onBack }: SettingsProps) {
                 <p className="text-[13px] text-gray-400 dark:text-gray-500 truncate">{username}</p>
               </div>
               <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold"
-                style={{ background: 'rgba(151,71,255,0.1)', color: '#9747FF' }}>
+                style={{ background: 'rgba(151,71,255,0.1)', color: '#FF9F1C' }}>
                 {t('settings.edit')}
               </div>
             </button>
@@ -126,7 +126,7 @@ export function Settings({ onBack }: SettingsProps) {
                 onClick={() => {
                   setNotifEnabled(!notifEnabled);
                 }}
-                className={`relative w-12 h-6 rounded-full transition-colors ${notifEnabled ? 'bg-[#9747FF]' : 'bg-gray-200'}`}
+                className={`relative w-12 h-6 rounded-full transition-colors ${notifEnabled ? 'bg-[#FF9F1C]' : 'bg-gray-200'}`}
               >
                 <div className={`absolute top-0.5 w-5 h-5 bg-white dark:bg-[#1A1A1A] rounded-full shadow transition-transform ${notifEnabled ? 'translate-x-6' : 'translate-x-0.5'}`} />
               </button>
@@ -145,7 +145,7 @@ export function Settings({ onBack }: SettingsProps) {
                 onClick={() => {
                   setTheme(darkMode ? 'light' : 'dark');
                 }}
-                className={`relative w-12 h-6 rounded-full transition-colors ${darkMode ? 'bg-[#9747FF]' : 'bg-gray-200'}`}
+                className={`relative w-12 h-6 rounded-full transition-colors ${darkMode ? 'bg-[#FF9F1C]' : 'bg-gray-200'}`}
               >
                 <div className={`absolute top-0.5 w-5 h-5 bg-white dark:bg-[#1A1A1A] rounded-full shadow transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-0.5'}`} />
               </button>

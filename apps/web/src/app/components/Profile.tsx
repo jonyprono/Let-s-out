@@ -170,10 +170,10 @@ export function Profile({ onNavigate }: ProfileProps) {
         <div className="mx-4 mt-4 mb-4 bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50/50">
           {/* Cover gradient */}
           <div className="h-32 relative overflow-hidden">
-            <div className="absolute inset-0 opacity-80" style={{ background: 'linear-gradient(135deg, #FF9F1C 0%, #FFB75E 100%)' }} />
-            <div className="absolute inset-0 bg-black/10 backdrop-blur-[2px]" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #FF9F1C 0%, #FFB75E 60%, #FFA040 100%)' }} />
+            <div className="absolute inset-0 bg-black/10" />
             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
-            <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#FF9F1C]/20 rounded-full blur-2xl" />
+            <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/30 rounded-full blur-2xl" />
           </div>
 
           <div className="px-5 pb-5">
@@ -315,11 +315,32 @@ export function Profile({ onNavigate }: ProfileProps) {
               </div>
             ) : (
               draftEvents.map((event: any) => (
-                <div key={event.id} className="relative opacity-80 transition-opacity hover:opacity-100">
-                  <div className="absolute top-3 left-3 z-10 bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase border border-white shadow-sm backdrop-blur-sm bg-white/90">
+                <div key={event.id} className="relative">
+                  {/* Draft badge */}
+                  <div className="absolute top-3 left-3 z-10 bg-white/95 backdrop-blur-sm text-[#FF9F1C] px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase border border-[#FF9F1C]/20 shadow-sm">
                     Brouillon
                   </div>
-                  <EventCard event={event} onNavigate={onNavigate} />
+                  {/* Manage button */}
+                  <div className="absolute top-3 right-3 z-10">
+                    <button
+                      onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
+                      className="flex items-center gap-1.5 bg-[#FF9F1C] text-white px-3 py-1.5 rounded-full text-[11px] font-black shadow-md active:scale-95 transition-transform"
+                    >
+                      <span>⚙</span> Gérer
+                    </button>
+                  </div>
+                  <div className="opacity-80 hover:opacity-100 transition-opacity">
+                    <EventCard event={event} onNavigate={onNavigate} />
+                  </div>
+                  {/* Bottom action bar */}
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
+                      className="flex-1 py-3 rounded-2xl border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[13px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                    >
+                      ✏️ Modifier & publier
+                    </button>
+                  </div>
                 </div>
               ))
             )}

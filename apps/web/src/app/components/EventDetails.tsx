@@ -110,7 +110,7 @@ function CoHostRow({ coHost, currentUser, onOpenProfile, onContactUser }: CoHost
               alt={coHostName} 
               className="w-full h-full object-cover"
               fallback={
-                <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center text-xl font-bold text-white">
+                <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#FF9F1C] flex items-center justify-center text-xl font-bold text-white">
                   {coHostName.charAt(0).toUpperCase()}
                 </div>
               }
@@ -412,7 +412,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   if (isLoading || bookingLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white">
-        <Loader2 className="w-8 h-8 animate-spin text-[#9747FF]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF9F1C]" />
       </div>
     )
   }
@@ -423,7 +423,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         <p className="text-gray-500 mb-4">Événement introuvable.</p>
         <button
           onClick={onBack}
-          className="px-5 py-2.5 bg-[#9747FF] text-white rounded-full text-sm font-semibold"
+          className="px-5 py-2.5 bg-[#FF9F1C] text-white rounded-full text-sm font-semibold"
         >
           Retour
         </button>
@@ -642,7 +642,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           alt={organizerName} 
                           className="w-full h-full object-cover"
                           fallback={
-                            <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center text-xl font-bold text-white">
+                            <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#FF9F1C] flex items-center justify-center text-xl font-bold text-white">
                               {organizerName.charAt(0).toUpperCase()}
                             </div>
                           }
@@ -715,7 +715,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                             alt={name} 
                             className="w-full h-full object-cover" 
                             fallback={
-                              <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center text-[16px] font-bold text-white">
+                              <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#FF9F1C] flex items-center justify-center text-[16px] font-bold text-white">
                                 {name.charAt(0).toUpperCase()}
                               </div>
                             }
@@ -1028,7 +1028,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             </button>
             
             <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-purple-100 text-[#9747FF] rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-orange-50 text-[#FF9F1C] rounded-full flex items-center justify-center mx-auto mb-3">
                 <Lock className="w-6 h-6" />
               </div>
               <h3 className="text-[18px] font-bold text-gray-900 mb-1">Événement privé</h3>
@@ -1072,7 +1072,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     };
                     copy();
                   }}
-                  className="w-10 h-10 bg-[#9747FF] text-white rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+                  className="w-10 h-10 bg-[#FF9F1C] text-white rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-transform"
                 >
                   {codeCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                 </button>
@@ -1141,7 +1141,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             
             <div className="flex-1 overflow-y-auto px-5 py-4 pb-24">
               {attendeesLoading ? (
-                <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-[#9747FF]" /></div>
+                <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-[#FF9F1C]" /></div>
               ) : attendeesData?.data?.length > 0 ? (
                 <div className="space-y-4">
                   {attendeesData.data.map((booking: any) => (
@@ -1156,7 +1156,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           alt={booking.user.profile.displayName} 
                           className="w-full h-full object-cover bg-gray-100" 
                           fallback={
-                            <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center text-xl font-bold text-white">
+                            <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#FF9F1C] flex items-center justify-center text-xl font-bold text-white">
                               {booking.user.profile.displayName.charAt(0).toUpperCase()}
                             </div>
                           }
@@ -1207,7 +1207,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           src={friend.avatarUrl}
                           alt={friend.displayName}
                           className="w-full h-full object-cover"
-                          fallback={<div className="w-full h-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}>{(friend.displayName || 'A').charAt(0)}</div>}
+                          fallback={<div className="w-full h-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}>{(friend.displayName || 'A').charAt(0)}</div>}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1232,7 +1232,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 ${
                           invitedUsers.has(friend.userId)
                             ? 'bg-green-100 text-green-600 border border-green-200'
-                            : 'bg-[#9747FF] text-white'
+                            : 'bg-[#FF9F1C] text-white'
                         } disabled:opacity-60`}
                       >
                         {invitingUsers.has(friend.userId) ? <Loader2 className="w-4 h-4 animate-spin" /> : invitedUsers.has(friend.userId) ? '✓ Invité' : 'Inviter'}
@@ -1272,7 +1272,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         src={booking.user.profile?.avatarUrl}
                         alt={booking.user.profile?.displayName}
                         className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                        fallback={<div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}>{(booking.user.profile?.displayName || 'A').charAt(0)}</div>}
+                        fallback={<div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}>{(booking.user.profile?.displayName || 'A').charAt(0)}</div>}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-gray-900 text-[14px]">{booking.user.profile?.displayName}</p>

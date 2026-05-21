@@ -53,7 +53,7 @@ export function FriendsList() {
               className="w-20 h-20 rounded-2xl mb-5 flex items-center justify-center"
               style={{ background: 'rgba(151,71,255,0.08)' }}
             >
-              <Users className="w-10 h-10" style={{ color: '#9747FF' }} />
+              <Users className="w-10 h-10" style={{ color: '#FF9F1C' }} />
             </div>
             <h3 className="text-[17px] font-bold text-gray-900 mb-2">Aucun ami pour le moment</h3>
             <p className="text-[13px] text-gray-400 leading-relaxed max-w-xs">
@@ -81,7 +81,7 @@ export function FriendsList() {
                       fallback={
                         <div
                           className="w-full h-full flex items-center justify-center text-white font-bold text-lg"
-                          style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}
+                          style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}
                         >
                           {displayName.charAt(0).toUpperCase()}
                         </div>
@@ -104,7 +104,7 @@ export function FriendsList() {
                       // Optional: Navigate to messages or create a chat with this user
                       toast.info("Fonctionnalité message à venir")
                     }}
-                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-gray-50 text-gray-400 hover:text-[#9747FF]"
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-gray-50 text-gray-400 hover:text-[#FF9F1C]"
                   >
                     <MessageCircle className="w-5 h-5" />
                   </button>

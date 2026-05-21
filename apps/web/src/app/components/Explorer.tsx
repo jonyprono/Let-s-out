@@ -379,8 +379,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         </div>
 
         <div className="flex-1 px-5 pt-8 flex flex-col items-center">
-          <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
-            <Lock className="w-8 h-8 text-[#9747FF]" />
+          <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
+            <Lock className="w-8 h-8 text-[#FF9F1C]" />
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">Événement Privé</h3>
           <p className="text-gray-500 text-center mb-10 text-[15px] leading-relaxed max-w-[280px]">
@@ -394,7 +394,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               placeholder="Ex: a1b2c3d4"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 text-center text-2xl tracking-widest font-mono font-bold text-gray-900 focus:outline-none focus:border-[#9747FF] focus:ring-2 focus:ring-purple-100 transition-all uppercase"
+              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 text-center text-2xl tracking-widest font-mono font-bold text-gray-900 focus:outline-none focus:border-[#FF9F1C] focus:ring-2 focus:ring-orange-200 transition-all uppercase"
             />
           </div>
 
@@ -426,7 +426,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             }}
             disabled={!joinCode || isJoining}
             className="w-full py-4 rounded-full font-bold text-white shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
-            style={{ background: 'linear-gradient(135deg, #9747FF, #FF9F1C)' }}
+            style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}
           >
             {isJoining ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Rejoindre l\'événement'}
           </button>
@@ -468,7 +468,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               }}
               className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-colors bg-white hover:bg-gray-50 active:bg-gray-100"
             >
-              <MapPin className={`w-4 h-4 ${viewMode === 'map' ? 'text-[#9747FF]' : 'text-gray-700'}`} />
+              <MapPin className={`w-4 h-4 ${viewMode === 'map' ? 'text-[#FF9F1C]' : 'text-gray-700'}`} />
             </button>
           </div>
 
@@ -536,7 +536,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         {viewMode === 'map' ? (
           <Suspense fallback={
             <div className="flex-1 flex items-center justify-center">
-              <Loader2 className="w-7 h-7 animate-spin text-[#9747FF]" />
+              <Loader2 className="w-7 h-7 animate-spin text-[#FF9F1C]" />
             </div>
           }>
             <LazyExplorerMap

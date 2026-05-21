@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3 } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, Target, Bell, BadgeCheck } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
@@ -97,6 +97,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [createdEventId, setCreatedEventId] = useState<string | null>(null)
+  const [publishing, setPublishing] = useState(false)
 
   // Friends search
   const { data: friendsData } = useQuery({
@@ -288,18 +290,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     return true
   }
 
-  const handleSubmit = async (targetStatus: 'PUBLISHED' | 'DRAFT' = 'PUBLISHED') => {
+  const handleSubmit = async () => {
     setLoading(true)
-    const editEventId = location.state?.editEventId
+    const editEventId = location.state?.editEventId || createdEventId
     try {
       let coverUrl: string | undefined
       if (coverFile) {
         const fd = new FormData(); fd.append('file', coverFile)
         const { data } = await apiClient.post('/chat/upload', fd)
         coverUrl = data.url
-      } else if (location.state?.eventData?.coverUrl) {
-        // Keep existing cover if no new file selected
-        coverUrl = location.state.eventData.coverUrl
+      } else if (coverPreview) {
+        coverUrl = coverPreview
       }
       const startAt = new Date(`${date}T${startTime}`).toISOString()
       const endAt = new Date(`${date}T${endTime}`).toISOString()
@@ -315,30 +316,40 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         price: amount ? parseFloat(amount) : 0, currency: 'XOF',
         isPrivate, coverUrl,
         poolTarget: enablePool && poolTarget ? parseFloat(poolTarget) : undefined,
-        status: targetStatus,
+        status: 'DRAFT',
         coHostIds: selectedCoOrgs.map(o => o.id)
       }
 
       let res
       if (editEventId) {
-        // Update existing draft
         res = await apiClient.patch(`/events/${editEventId}`, payload)
       } else {
-        // Create new event
         res = await apiClient.post('/events', payload)
       }
 
       localStorage.removeItem('create_event_draft')
-      toast.success(targetStatus === 'DRAFT' ? 'Brouillon enregistré !' : 'Événement publié avec succès !')
       const eventId = editEventId || res.data?.id
-      if (eventId) {
-        navigate(`/events/${eventId}`)
-      } else {
-        navigate('/home')
-      }
+      setCreatedEventId(eventId)
+      toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
+      setStep(7)
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Erreur lors de la création")
     } finally { setLoading(false) }
+  }
+
+  const handlePublish = async () => {
+    const eventId = createdEventId || location.state?.editEventId
+    if (!eventId) return
+    setPublishing(true)
+    try {
+      await apiClient.put(`/events/${eventId}/publish`)
+      toast.success('🎉 Événement publié avec succès !')
+      navigate(`/events/${eventId}`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || 'Erreur lors de la publication')
+    } finally {
+      setPublishing(false)
+    }
   }
 
   // ── Shared layout ──────────────────────────────────────────────────
@@ -361,11 +372,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       {/* Header */}
       <div className="px-5 pt-4 pb-0 bg-white">
         <div className="flex items-center justify-center relative mb-3">
-          <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
-            className="absolute left-0 w-8 h-8 flex items-center justify-center">
-            <ChevronLeft className="w-6 h-6 text-gray-800" />
-          </button>
-          <span className="text-[15px] font-semibold text-gray-900">Créer un événement</span>
+          {step < 7 && (
+            <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
+              className="absolute left-0 w-8 h-8 flex items-center justify-center">
+              <ChevronLeft className="w-6 h-6 text-gray-800" />
+            </button>
+          )}
+          <span className="text-[15px] font-semibold text-gray-900">
+            {step === 7 ? 'Détails événement' : 'Créer un événement'}
+          </span>
         </div>
         {/* Progress bar */}
         <div className="h-[2px] bg-[#F5F5F5] overflow-hidden">
@@ -729,7 +744,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     {me?.profile?.avatarUrl ? (
                       <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-12 h-12 rounded-full object-cover" />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF9F1C] to-[#9747FF] flex items-center justify-center font-bold text-[18px] text-white">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#FF9F1C] to-[#FFB75E] flex items-center justify-center font-bold text-[18px] text-white">
                         {me?.profile?.displayName?.charAt(0) || 'M'}
                       </div>
                     )}
@@ -807,7 +822,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
-                    {['#9747FF','#FF9F1C','#B070FF'].map((color, i) => (
+                    {['#FF9F1C','#FF9F1C','#B070FF'].map((color, i) => (
                       <div key={i} className="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center text-white text-[11px] font-bold" style={{ backgroundColor: color }} />
                     ))}
                   </div>
@@ -818,12 +833,179 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
           </div>
         )}
+
+        {/* ── STEP 7: Gestion du brouillon ── */}
+        {step === 7 && (
+          <div className="pb-8">
+            {/* Titre */}
+            <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-4">{title || 'Votre événement'}</h1>
+
+            {/* Info banner */}
+            <div className="bg-[#EBF3FA] mb-6 p-4 rounded-xl border border-blue-100">
+              <p className="text-gray-600 text-[13px] leading-relaxed">
+                Cet événement n'est pas encore visible sur Let's Out.<br />
+                Publiez-le pour le rendre accessible publiquement.<br />
+                Ou ajoutez une cagnotte pour partager les frais.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* Organisateurs */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-gray-900 text-[15px]">Organisateurs</h3>
+                  <button onClick={() => setStep(5)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
+                    <Edit3 className="w-3.5 h-3.5" /> Modifier
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    {me?.profile?.avatarUrl ? (
+                      <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-9 h-9 rounded-full object-cover" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF9F1C] to-[#FFB75E] flex items-center justify-center text-white font-bold text-[13px]">
+                        {me?.profile?.displayName?.charAt(0).toUpperCase() || 'M'}
+                      </div>
+                    )}
+                    <span className="text-[14px] text-gray-700 font-medium">{me?.profile?.displayName || 'Vous'}</span>
+                  </div>
+                  {selectedCoOrgs.map(org => (
+                    <div key={org.id} className="flex items-center gap-3 pl-2 border-l-2 border-gray-100">
+                      <SafeImage src={org.avatarUrl} alt={org.name} className="w-7 h-7 rounded-full object-cover"
+                        fallback={<div className="w-7 h-7 rounded-full bg-orange-200 flex items-center justify-center text-white font-bold text-[11px]">{org.name.charAt(0).toUpperCase()}</div>}
+                      />
+                      <span className="text-[13px] text-gray-600 font-medium flex items-center gap-1.5">
+                        {org.name}
+                        <span className="text-[9px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-bold">Co-hôte</span>
+                      </span>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FFCA28] to-[#FF9F1C] flex items-center justify-center">
+                      <span className="text-white font-bold text-[10px]">LO</span>
+                    </div>
+                    <span className="text-[14px] text-gray-700 font-medium flex items-center gap-1">
+                      Let's Out Staff <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-500" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Informations */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-gray-900 text-[15px]">Informations</h3>
+                  <button onClick={() => setStep(1)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
+                    <Edit3 className="w-3.5 h-3.5" /> Modifier
+                  </button>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[14px] text-gray-500">Nom</span>
+                  <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{title}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-gray-500">Catégories</span>
+                  <div className="flex flex-wrap gap-1.5 justify-end">
+                    {categories.map(cat => (
+                      <span key={cat} className="text-[12px] font-bold text-[#FF9F1C] bg-[#FFF0D9] px-3 py-1 rounded-full border border-[#FFD99A]">
+                        {CATEGORIES.find(c => c.value === cat)?.label || cat}
+                      </span>
+                    ))}
+                    {categories.length === 0 && <span className="text-[14px] text-gray-400">Non spécifié</span>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Date & lieu */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-gray-900 text-[15px]">Date & lieu</h3>
+                  <button onClick={() => setStep(2)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
+                    <Edit3 className="w-3.5 h-3.5" /> Modifier
+                  </button>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[14px] text-gray-500">Date</span>
+                  <span className="text-[14px] font-medium text-gray-900">{formattedDate || '—'}</span>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[14px] text-gray-500">Heure</span>
+                  <span className="text-[14px] font-medium text-gray-900">{startTime && endTime ? `${startTime} – ${endTime} (GMT)` : '—'}</span>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[14px] text-gray-500">Ville</span>
+                  <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{city || '—'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-gray-500">Localisation</span>
+                  <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{address || '—'}</span>
+                </div>
+              </div>
+
+              {/* Participation */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-gray-900 text-[15px]">Participation</h3>
+                  <button onClick={() => setStep(3)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
+                    <Edit3 className="w-3.5 h-3.5" /> Modifier
+                  </button>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[14px] text-gray-500">Places</span>
+                  <span className="text-[14px] font-medium text-gray-900">{maxPlaces || 'Illimitées'}</span>
+                </div>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[14px] text-gray-500">Ticket</span>
+                  <span className="text-[14px] font-medium text-[#FF9F1C] font-bold">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[14px] text-gray-500">Confidentialité</span>
+                  <span className="text-[14px] font-medium text-gray-900">{isPrivate ? 'Privée' : 'Publique'}</span>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-gray-900 text-[15px]">Description</h3>
+                  <button onClick={() => setStep(4)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
+                    <Edit3 className="w-3.5 h-3.5" /> Modifier
+                  </button>
+                </div>
+                <p className="text-[13px] text-gray-600 line-clamp-3">{description || 'Aucune description'}</p>
+                {description && description.length > 100 && (
+                  <span className="text-[13px] text-gray-400 underline mt-1 block cursor-pointer">Voir plus</span>
+                )}
+              </div>
+
+              {/* Couverture */}
+              <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-bold text-gray-900 text-[15px]">Couverture</h3>
+                  <button onClick={() => setStep(4)} className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
+                    <Edit3 className="w-3.5 h-3.5" /> Modifier
+                  </button>
+                </div>
+                {coverPreview ? (
+                  <div className="w-full h-36 rounded-xl overflow-hidden">
+                    <SafeImage src={coverPreview} alt="Couverture" className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-full h-36 rounded-xl bg-gray-100 flex flex-col items-center justify-center gap-2">
+                    <span className="text-3xl">🖼</span>
+                    <span className="text-[13px] text-gray-400">Aucune image</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom nav */}
       <div className="w-full shrink-0 border-t border-gray-100 px-5 pt-4 pb-6 bg-white">
         <div className="flex gap-3">
-          {step < TOTAL_STEPS ? (
+          {step < 6 ? (
             <>
               {step > 1 && (
                 <button onClick={() => setStep(s => s - 1)}
@@ -832,22 +1014,54 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </button>
               )}
               <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
-                className={`flex-1 py-[17px] rounded-full font-semibold text-[15px] text-white transition-all ${canNext() ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'
-                  }`}>
+                className={`flex-1 py-[17px] rounded-full font-semibold text-[15px] text-white transition-all ${canNext() ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'}`}>
                 {step === 1 ? 'Commencer' : 'Suivant'}
               </button>
             </>
+          ) : step === 6 ? (
+            <>
+              <button onClick={() => setStep(5)}
+                className="flex-1 py-[17px] rounded-full border border-[#E5E5E5] font-semibold text-[15px] text-[#1A1A1A] bg-white transition-colors active:bg-gray-50">
+                Précédent
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className={`flex-1 py-[17px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all ${
+                  !loading ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'
+                }`}
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                {loading ? 'Création...' : "Créer l'événement"}
+              </button>
+            </>
           ) : (
-            <button
-              onClick={() => handleSubmit('DRAFT')}
-              disabled={loading}
-              className={`flex-1 py-[17px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all ${
-                !loading ? 'bg-[#FF9F1C]' : 'bg-[#FFD99A]'
-              }`}
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-              {loading ? 'Création...' : 'Créer l\'événement'}
-            </button>
+            /* Step 7: publish actions */
+            <div className="w-full space-y-3">
+              <button
+                onClick={() => { setShowPoolModal(true) }}
+                className="w-full py-[15px] rounded-full border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[15px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              >
+                <Target className="w-5 h-5" />
+                Ajouter une cagnotte
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={publishing}
+                className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${
+                  publishing ? 'bg-[#FFD99A]' : 'bg-[#FF9F1C]'
+                }`}
+              >
+                {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Bell className="w-5 h-5" />}
+                {publishing ? 'Publication...' : "Publier l'événement"}
+              </button>
+              <button
+                onClick={() => navigate('/profile')}
+                className="w-full py-[13px] rounded-full border border-gray-200 text-gray-500 font-semibold text-[14px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              >
+                Retour au profil
+              </button>
+            </div>
           )}
         </div>
         {step < 6 && (

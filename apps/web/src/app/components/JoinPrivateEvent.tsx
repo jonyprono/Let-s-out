@@ -157,8 +157,8 @@ export function JoinPrivateEvent() {
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center -mt-10">
-        <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-6">
-          <QrCode className="w-10 h-10 text-[#9747FF]" />
+        <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-6">
+          <QrCode className="w-10 h-10 text-[#FF9F1C]" />
         </div>
         
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Rejoindre via code</h2>

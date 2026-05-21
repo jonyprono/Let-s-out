@@ -91,14 +91,14 @@ export function PaymentPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
         {status === 'loading' && (
           <>
-            <Loader2 className="w-10 h-10 text-[#9747FF] animate-spin" />
+            <Loader2 className="w-10 h-10 text-[#FF9F1C] animate-spin" />
             <p className="text-gray-500">Préparation du paiement...</p>
           </>
         )}
 
         {status === 'ready' && info && (
           <>
-            <div className="w-20 h-20 rounded-full bg-purple-50 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center">
               <span className="text-4xl">💳</span>
             </div>
             <h2 className="text-xl font-bold text-[#1A1A1A]">Paiement</h2>

@@ -177,7 +177,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Entrez votre prénom"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#9747FF]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
                 />
               </div>
 
@@ -188,7 +188,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Entrez votre nom"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#9747FF]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
                 />
               </div>
 
@@ -197,7 +197,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#9747FF] bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C] bg-white"
                 >
                   <option value="">Sélectionner</option>
                   <option value="homme">Homme</option>
@@ -212,7 +212,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   type="date"
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#9747FF]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
                 />
               </div>
             </div>
@@ -227,7 +227,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <button 
                 onClick={handleLocate}
                 disabled={isLocating}
-                className="flex items-center gap-2 text-sm font-medium text-[#9747FF] bg-purple-50 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+                className="flex items-center gap-2 text-sm font-medium text-[#FF9F1C] bg-orange-50 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
               >
                 {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
                 Me localiser
@@ -240,7 +240,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#9747FF] bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C] bg-white"
                 >
                   <option value="France">France</option>
                   <option value="Belgique">Belgique</option>
@@ -263,7 +263,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Paris, Lyon, Marseille..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#9747FF]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
                 />
               </div>
 
@@ -274,7 +274,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                   placeholder="Nom du quartier"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#9747FF]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
                 />
               </div>
             </div>
@@ -296,7 +296,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   onClick={() => toggleInterest(interest)}
                   className={`px-5 py-2.5 rounded-full border-2 text-sm transition-colors ${
                     selectedInterests.includes(interest)
-                      ? 'border-[#9747FF] bg-purple-50 text-[#9747FF]'
+                      ? 'border-[#FF9F1C] bg-orange-50 text-[#FF9F1C]'
                       : 'border-gray-300 text-gray-600'
                   }`}
                 >
@@ -322,7 +322,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 onClick={() => fileInputRef.current?.click()}
               >
                 {isUploadingPhoto ? (
-                  <Loader2 className="w-10 h-10 animate-spin text-[#9747FF]" />
+                  <Loader2 className="w-10 h-10 animate-spin text-[#FF9F1C]" />
                 ) : profilePicture ? (
                   <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -353,7 +353,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingPhoto}
-                className="text-[#9747FF] text-sm font-semibold bg-purple-50 px-4 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
+                className="text-[#FF9F1C] text-sm font-semibold bg-orange-50 px-4 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
               >
                 {isUploadingPhoto ? 'Upload en cours...' : profilePicture ? 'Changer la photo' : 'Choisir une photo'}
               </button>
@@ -383,7 +383,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div
               key={s}
               className={`flex-1 h-1 rounded-full ${
-                s <= step ? 'bg-[#9747FF]' : 'bg-gray-200'
+                s <= step ? 'bg-[#FF9F1C]' : 'bg-gray-200'
               }`}
             />
           ))}

@@ -63,7 +63,7 @@ export default function ExplorerMap({
                 <p className="text-[11px] text-gray-500">{format(new Date(event.startAt), 'EEE d MMM, HH:mm', { locale: fr })}</p>
                 <button
                   onClick={() => onNavigate('event-details', event.id)}
-                  className="mt-1 w-full bg-[#9747FF] text-white text-[11px] font-bold py-1.5 rounded-full"
+                  className="mt-1 w-full bg-[#FF9F1C] text-white text-[11px] font-bold py-1.5 rounded-full"
                 >
                   Voir les détails
                 </button>
@@ -76,7 +76,7 @@ export default function ExplorerMap({
       {/* Search overlay */}
       <div className="absolute top-4 left-4 right-4 z-[1000] flex flex-col gap-2">
         <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 flex items-center px-4 py-3">
-          <Search className="w-4 h-4 text-[#9747FF] mr-2 shrink-0" />
+          <Search className="w-4 h-4 text-[#FF9F1C] mr-2 shrink-0" />
           <input
             value={mapSearch}
             onChange={e => onMapSearch(e.target.value)}
@@ -93,8 +93,8 @@ export default function ExplorerMap({
           <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden max-h-48 overflow-y-auto divide-y divide-gray-100">
             {mapSearchResults.map((r, i) => (
               <button key={i} onClick={() => onSelectSearchResult(r)}
-                className="w-full text-left px-4 py-3 hover:bg-purple-50 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#9747FF] shrink-0" />
+                className="w-full text-left px-4 py-3 hover:bg-orange-50 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-[#FF9F1C] shrink-0" />
                 <div className="flex flex-col min-w-0">
                   <span className="text-[13px] font-semibold text-gray-900 truncate">{r.name || r.label.split(',')[0]}</span>
                   <span className="text-[11px] text-gray-400 truncate">{r.label}</span>
@@ -112,8 +112,8 @@ export default function ExplorerMap({
         className="absolute bottom-6 right-4 z-[1000] w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
       >
         {mapGeoLoading
-          ? <Loader2 className="w-5 h-5 animate-spin text-[#9747FF]" />
-          : <Navigation className="w-5 h-5 text-[#9747FF]" />}
+          ? <Loader2 className="w-5 h-5 animate-spin text-[#FF9F1C]" />
+          : <Navigation className="w-5 h-5 text-[#FF9F1C]" />}
       </button>
     </div>
   )
