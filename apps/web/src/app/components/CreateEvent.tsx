@@ -821,7 +821,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* Bottom nav */}
-      <div className={`absolute bottom-0 left-0 right-0 border-t border-gray-100 px-5 pt-4 pb-6 bg-white`}>
+      <div className="w-full shrink-0 border-t border-gray-100 px-5 pt-4 pb-6 bg-white">
         <div className="flex gap-3">
           {step < TOTAL_STEPS ? (
             <>
