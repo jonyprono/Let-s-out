@@ -1488,3 +1488,4 @@ export const COUNTRIES = [
     "flag": "🇿🇼"
   }
 ];
+export type Country = { name: string; cca2: string; code: string; flag: string };
