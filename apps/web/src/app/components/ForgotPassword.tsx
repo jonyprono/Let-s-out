@@ -14,14 +14,7 @@ interface ForgotPasswordProps {
   onComplete: () => void
 }
 
-const COUNTRIES = [
-  { flag: '🇧🇯', code: '+229', name: 'Bénin' },
-  { flag: '🇹🇬', code: '+228', name: 'Togo' },
-  { flag: '🇨🇮', code: '+225', name: "Côte d'Ivoire" },
-  { flag: '🇸🇳', code: '+221', name: 'Sénégal' },
-  { flag: '🇳🇬', code: '+234', name: 'Nigeria' },
-  { flag: '🇫🇷', code: '+33', name: 'France' },
-]
+import { COUNTRIES } from '@/lib/countries'
 
 function maskPhone(full: string) {
   if (full.length <= 7) return full

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { ChevronLeft, MapPin, Loader2, User, Camera } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { COUNTRIES } from '@/lib/countries';
 
 async function reverseGeocode(lat: number, lon: number) {
   const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'Accept-Language': 'fr' } });
@@ -242,15 +242,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   onChange={(e) => setCountry(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C] bg-white"
                 >
-                  <option value="France">France</option>
-                  <option value="Belgique">Belgique</option>
-                  <option value="Suisse">Suisse</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Bénin">Bénin</option>
-                  <option value="Togo">Togo</option>
-                  <option value="Côte d'Ivoire">Côte d'Ivoire</option>
-                  <option value="Sénégal">Sénégal</option>
-                  {!['France', 'Belgique', 'Suisse', 'Canada', 'Bénin', 'Togo', "Côte d'Ivoire", 'Sénégal'].includes(country) && country && (
+                  {COUNTRIES.map(c => (
+                    <option key={c.cca2} value={c.name}>{c.name}</option>
+                  ))}
+                  {!COUNTRIES.find(c => c.name === country) && country && (
                     <option value={country}>{country}</option>
                   )}
                 </select>

@@ -171,7 +171,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // Auto-save draft on change
   useEffect(() => {
     // Only save if at least title or category is started to avoid saving pure empty state
-    if (title || categories.length > 0 || city) {
+    // Do not save if we are on step 6 or 7 (preview or done)
+    if (step < 6 && (title || categories.length > 0 || city)) {
       const draft = { step, title, categories, date, startTime, endTime, city, address, lat, lon, maxPlaces, amount, isPrivate, enablePool, poolTarget, description }
       localStorage.setItem('create_event_draft', JSON.stringify(draft))
     }
@@ -370,7 +371,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     <div className="w-full h-full bg-white flex flex-col">
 
       {/* Header */}
-      <div className="px-5 pt-4 pb-0 bg-white">
+      <div className="px-5 pt-12 pb-0 bg-white">
         <div className="flex items-center justify-center relative mb-3">
           {step < 7 && (
             <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
