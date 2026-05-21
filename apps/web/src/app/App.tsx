@@ -2,8 +2,33 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { App as CapacitorApp } from '@capacitor/app'
+import { StatusBar, Style } from '@capacitor/status-bar'
+import { Capacitor } from '@capacitor/core'
 
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider, useTheme } from 'next-themes'
+
+function CapacitorThemeSync() {
+  const { resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const updateStatusBar = async () => {
+        try {
+          if (resolvedTheme === 'dark') {
+            await StatusBar.setStyle({ style: Style.Dark })
+          } else {
+            await StatusBar.setStyle({ style: Style.Light })
+          }
+        } catch (e) {
+          console.warn('Failed to update status bar style:', e)
+        }
+      }
+      updateStatusBar()
+    }
+  }, [resolvedTheme])
+
+  return null
+}
 import { Toaster } from 'sonner'
 import { queryClient } from '@/lib/query-client'
 import { useAuthStore } from '@/stores/auth.store'
@@ -80,6 +105,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light">
       <BrowserRouter>
+        <CapacitorThemeSync />
         <AppBootstrap />
         <CapacitorBackButton />
         <UserProfileProvider>

@@ -16,7 +16,8 @@ let package = Package(
         .package(name: "CapacitorBrowser", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+browser@8.0.3_@capacitor+core@8.3.1\node_modules\@capacitor\browser"),
         .package(name: "CapacitorGeolocation", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+geolocation@8.2.0_@capacitor+core@8.3.1\node_modules\@capacitor\geolocation"),
         .package(name: "CapacitorHaptics", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+haptics@8.0.2_@capacitor+core@8.3.1\node_modules\@capacitor\haptics"),
-        .package(name: "CapacitorPushNotifications", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+push-notifications@8.1.1_@capacitor+core@8.3.1\node_modules\@capacitor\push-notifications")
+        .package(name: "CapacitorPushNotifications", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+push-notifications@8.1.1_@capacitor+core@8.3.1\node_modules\@capacitor\push-notifications"),
+        .package(name: "CapacitorStatusBar", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+status-bar@8.0.2_@capacitor+core@8.3.1\node_modules\@capacitor\status-bar")
     ],
     targets: [
         .target(
@@ -28,7 +29,8 @@ let package = Package(
                 .product(name: "CapacitorBrowser", package: "CapacitorBrowser"),
                 .product(name: "CapacitorGeolocation", package: "CapacitorGeolocation"),
                 .product(name: "CapacitorHaptics", package: "CapacitorHaptics"),
-                .product(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications")
+                .product(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications"),
+                .product(name: "CapacitorStatusBar", package: "CapacitorStatusBar")
             ]
         )
     ]

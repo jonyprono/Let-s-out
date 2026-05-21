@@ -86,7 +86,7 @@ export function Notifications({ onBack }: NotificationsProps) {
     <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
 
       {/* Header */}
-      <div className="bg-white px-5 pt-4 pb-0 border-b border-gray-100">
+      <div className="bg-white px-5 pt-4 pt-safe-4 pb-0 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <button

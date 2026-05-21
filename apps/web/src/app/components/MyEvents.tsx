@@ -56,7 +56,7 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
     <div className="w-full h-full flex flex-col bg-white">
 
       {/* ── Header ── */}
-      <div className="px-5 pt-6 pb-4 flex-shrink-0 flex items-center justify-between">
+      <div className="px-5 pt-6 pt-safe-6 pb-4 flex-shrink-0 flex items-center justify-between">
         <h1 className="text-[24px] font-bold text-gray-900">Mes événements</h1>
         <button
           onClick={() => onNavigate('notifications')}

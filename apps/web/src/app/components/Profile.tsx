@@ -126,7 +126,7 @@ export function Profile({ onNavigate }: ProfileProps) {
     <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
 
       {/* Header */}
-      <div className="px-5 pt-4 pb-3 bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-20">
+      <div className="px-5 pt-4 pt-safe-4 pb-3 bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isOwnProfile && (

@@ -76,7 +76,7 @@ export function Messages(_props: MessagesProps) {
     <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
 
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md px-5 pt-4 pb-4 border-b border-gray-100/60 sticky top-0 z-20">
+      <div className="bg-white/80 backdrop-blur-md px-5 pt-4 pt-safe-4 pb-4 border-b border-gray-100/60 sticky top-0 z-20">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-[24px] font-black tracking-tight text-gray-900">Messages</h1>

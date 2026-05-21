@@ -54,7 +54,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       overlaysWebView: true,
-      style: 'DARK',
+      style: 'LIGHT',
       backgroundColor: '#00000000',
     },
     CapacitorHttp: {

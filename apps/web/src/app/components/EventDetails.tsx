@@ -491,7 +491,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       <div className="w-full h-full bg-white flex flex-col">
 
         {/* Floating header */}
-        <div className="absolute top-0 left-0 right-0 z-10 px-5 pt-4 pb-2 flex items-center justify-between">
+        <div className="absolute top-0 left-0 right-0 z-10 px-5 pt-4 pt-safe-4 pb-2 flex items-center justify-between">
           <button
             onClick={onBack}
             className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md relative z-10"

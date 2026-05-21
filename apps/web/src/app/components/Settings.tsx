@@ -60,7 +60,7 @@ export function Settings({ onBack }: SettingsProps) {
     <div className="w-full h-full flex flex-col" style={{ background: 'var(--background)' }}>
 
       {/* Header */}
-      <div className="bg-white dark:bg-[#1A1A1A] px-5 pt-4 pb-4 border-b border-gray-100 dark:border-[#2A2A2A]">
+      <div className="bg-white dark:bg-[#1A1A1A] px-5 pt-4 pt-safe-4 pb-4 border-b border-gray-100 dark:border-[#2A2A2A]">
         <div className="flex items-center gap-3">
           <button
             onClick={onBack}

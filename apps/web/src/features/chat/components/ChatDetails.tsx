@@ -159,7 +159,7 @@ export function ChatDetails() {
   return (
     <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" onClick={() => pickerMsgId && setPickerMsgId(null)}>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-[#1A1A1A] border-b border-gray-100 dark:border-[#333333]">
+      <div className="sticky top-0 z-10 bg-white dark:bg-[#1A1A1A] border-b border-gray-100 dark:border-[#333333] pt-safe-only">
         <div className="h-16 flex items-center px-4">
           <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-[#222222] rounded-full transition-colors">
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" />

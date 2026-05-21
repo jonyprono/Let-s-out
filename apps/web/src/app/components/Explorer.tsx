@@ -151,7 +151,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return (
       <div className="w-full h-full bg-white flex flex-col">
         {/* Header */}
-        <div className="px-5 pt-4 pb-3 border-b border-gray-100">
+        <div className="px-5 pt-4 pt-safe-4 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <button onClick={() => setScreen('list')} className="w-8 h-8 flex items-center justify-center">
               <ChevronLeft className="w-5 h-5 text-gray-700" />
@@ -301,7 +301,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   if (screen === 'search') {
     return (
       <div className="w-full h-full bg-white flex flex-col">
-        <div className="px-5 pt-4 pb-3 border-b border-gray-100">
+        <div className="px-5 pt-4 pt-safe-4 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => setScreen('list')} className="w-8 h-8 flex items-center justify-center">
               <ChevronLeft className="w-5 h-5 text-gray-700" />
@@ -371,7 +371,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   if (screen === 'join') {
     return (
       <div className="w-full h-full bg-[#F8F7FF] dark:bg-[#111111] flex flex-col z-50 absolute inset-0">
-        <div className="px-5 pt-4 pb-3 flex items-center gap-3">
+        <div className="px-5 pt-4 pt-safe-4 pb-3 flex items-center gap-3">
           <button onClick={() => setScreen('list')} className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
             <ChevronLeft className="w-6 h-6 text-gray-800" />
           </button>
@@ -440,7 +440,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className="w-full h-full bg-white flex flex-col">
 
         {/* Header & Search Bar */}
-        <div className="bg-white px-5 pt-4 pb-3 border-b border-gray-100">
+        <div className="bg-white px-5 pt-4 pt-safe-4 pb-3 border-b border-gray-100">
           <div className="flex items-center gap-3 mb-4">
             <div
               className="flex-1 bg-gray-50 rounded-full flex items-center px-4 py-2.5 cursor-text"
