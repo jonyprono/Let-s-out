@@ -62,21 +62,25 @@ export class AuthService {
       throw Object.assign(new Error('OTP_RATE_LIMIT'), { retryAfterMinutes: minutes })
     }
 
-    // Invalidate previous OTPs
-    await this.prisma.otpCode.updateMany({
-      where: { target, used: false },
-      data: { used: true },
+    // Look for an existing valid OTP
+    const existingOtp = await this.prisma.otpCode.findFirst({
+      where: { target, used: false, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' }
     })
 
-    const code = randomInt(100000, 999999).toString()
-    const expiresAt = addMinutes(new Date(), OTP_TTL_MINUTES)
-
-    await this.prisma.otpCode.create({
-      data: { target, code, expiresAt },
-    })
-
-    // Cache in Redis for fast lookup
-    await this.redis.setex(`otp:${target}`, OTP_TTL_MINUTES * 60, code)
+    let code: string;
+    if (existingOtp) {
+      code = existingOtp.code;
+      // Re-cache in Redis to be safe
+      await this.redis.setex(`otp:${target}`, OTP_TTL_MINUTES * 60, code)
+    } else {
+      code = randomInt(100000, 999999).toString()
+      const expiresAt = addMinutes(new Date(), OTP_TTL_MINUTES)
+      await this.prisma.otpCode.create({
+        data: { target, code, expiresAt },
+      })
+      await this.redis.setex(`otp:${target}`, OTP_TTL_MINUTES * 60, code)
+    }
 
     if (type === 'phone') {
       if (channel === 'whatsapp') {
