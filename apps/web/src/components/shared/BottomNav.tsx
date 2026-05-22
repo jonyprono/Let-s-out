@@ -75,12 +75,11 @@ export function BottomNav() {
 
   return (
     <nav
-      className="absolute bottom-0 left-0 right-0 bg-white flex items-end justify-around"
+      className="absolute bottom-0 left-0 right-0 bg-card dark:bg-[#1A1A1A] flex items-end justify-around border-t border-border dark:border-[#2A2A2A]"
       style={{
         height: 'calc(64px + env(safe-area-inset-bottom))',
         paddingBottom: 'env(safe-area-inset-bottom)',
-        borderTop: '1px solid #F3F4F6',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.2)',
         zIndex: 50,
       }}
     >
@@ -176,7 +175,7 @@ export function BottomNav() {
 
       {/* Home indicator pill */}
       <div
-        className="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-black/20 rounded-full"
+        className="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-foreground/20 rounded-full"
       />
     </nav>
   )

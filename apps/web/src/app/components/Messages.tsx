@@ -73,13 +73,13 @@ export function Messages(_props: MessagesProps) {
   const totalUnread = displayConversations.reduce((acc, c) => acc + (c.unread || 0), 0);
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
+    <div className="w-full h-full flex flex-col bg-background">
 
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md px-5 pt-4 pt-safe-4 pb-4 border-b border-gray-100/60 sticky top-0 z-20">
+      <div className="bg-card/95 backdrop-blur-md px-5 pt-4 pt-safe-4 pb-4 border-b border-border sticky top-0 z-20">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-[24px] font-black tracking-tight text-gray-900">Messages</h1>
+            <h1 className="text-[24px] font-black tracking-tight text-foreground">Messages</h1>
             {totalUnread > 0 && (
               <p className="text-[13px] font-bold text-[#FF9F1C] mt-0.5 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#FF9F1C] animate-pulse" />
@@ -104,14 +104,14 @@ export function Messages(_props: MessagesProps) {
         </div>
 
         {/* Search */}
-        <div className="bg-gray-50/80 backdrop-blur-sm rounded-full flex items-center gap-3 px-4 py-3 border border-gray-100 focus-within:ring-2 focus-within:ring-[#FF9F1C]/30 focus-within:border-[#FF9F1C]/30 focus-within:bg-white transition-all shadow-sm">
+        <div className="bg-muted/80 backdrop-blur-sm rounded-full flex items-center gap-3 px-4 py-3 border border-border focus-within:ring-2 focus-within:ring-[#FF9F1C]/30 focus-within:border-[#FF9F1C]/30 focus-within:bg-card transition-all shadow-sm">
           <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Rechercher une conversation..."
-            className="flex-1 bg-transparent outline-none text-[14px] text-gray-900 placeholder-gray-400 font-medium"
+            className="flex-1 bg-transparent outline-none text-[14px] text-foreground placeholder:text-muted-foreground font-medium"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
@@ -206,7 +206,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
   return (
     <button
       onClick={onNavigate}
-      className={`w-full rounded-[24px] flex items-center gap-3 p-3 text-left transition-all active:scale-[0.98] border border-transparent ${hasUnread ? 'bg-white shadow-[0_4px_20px_rgb(255,159,28,0.1)] border-[#FF9F1C]/10 z-10 relative' : 'bg-white/60 hover:bg-white shadow-sm border-gray-100/50'}`}
+      className={`w-full rounded-[24px] flex items-center gap-3 p-3 text-left transition-all active:scale-[0.98] border border-transparent ${hasUnread ? 'bg-card shadow-[0_4px_20px_rgb(255,159,28,0.1)] border-[#FF9F1C]/10 z-10 relative' : 'bg-card/80 hover:bg-card shadow-sm border-border/50'}`}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
@@ -231,7 +231,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
       {/* Content */}
       <div className="flex-1 min-w-0 py-1">
         <div className="flex items-center justify-between mb-1">
-          <h3 className={`text-[15px] truncate pr-2 ${hasUnread ? 'font-black text-gray-900' : 'font-bold text-gray-800'}`}>
+          <h3 className={`text-[15px] truncate pr-2 text-foreground ${hasUnread ? 'font-black' : 'font-bold'}`}>
             {conv.name}
           </h3>
           <span className={`text-[11px] whitespace-nowrap flex-shrink-0 font-bold ${hasUnread ? 'text-[#FF9F1C]' : 'text-gray-400'}`}>
@@ -241,7 +241,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
             {!hasUnread && <CheckCheck className="w-4 h-4 text-[#FF9F1C] flex-shrink-0" />}
-            <p className={`text-[13px] truncate ${hasUnread ? 'text-gray-900 font-bold' : 'text-gray-500 font-medium'}`}>
+            <p className={`text-[13px] truncate ${hasUnread ? 'text-foreground font-bold' : 'text-muted-foreground font-medium'}`}>
               {conv.lastMsgPrefix && <span className="font-bold text-[#FF9F1C] mr-1">{conv.lastMsgPrefix}</span>}
               {conv.lastMsg}
             </p>

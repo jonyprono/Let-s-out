@@ -53,7 +53,7 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
   const isCurrentLoading = isLoading;
 
   return (
-    <div className="w-full h-full flex flex-col bg-white">
+    <div className="w-full h-full flex flex-col bg-background">
 
       {/* ── Header ── */}
       <div className="px-5 pt-6 pt-safe-6 pb-4 flex-shrink-0 flex items-center justify-between">

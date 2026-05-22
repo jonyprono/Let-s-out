@@ -123,10 +123,10 @@ export function Profile({ onNavigate }: ProfileProps) {
 
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
+    <div className="w-full h-full flex flex-col bg-background">
 
       {/* Header */}
-      <div className="px-5 pt-12 pb-3 bg-white/80 backdrop-blur-md border-b border-gray-100 sticky top-0 z-20">
+      <div className="px-5 pt-12 pb-3 bg-card/95 backdrop-blur-md border-b border-border sticky top-0 z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isOwnProfile && (
@@ -139,7 +139,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 </svg>
               </button>
             )}
-            <h1 className="text-xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-foreground">
               {isOwnProfile ? 'Mon Profil' : (displayProfile?.displayName || username || 'Profil')}
             </h1>
           </div>

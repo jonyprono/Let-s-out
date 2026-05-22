@@ -161,7 +161,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-white">
+    <div className="w-full h-full flex flex-col bg-background">
 
       {/* ── Header ── */}
       <div className="px-5 pt-5 pt-safe-5 pb-3 flex-shrink-0">

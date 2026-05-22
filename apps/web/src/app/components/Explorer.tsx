@@ -175,7 +175,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   // ── FILTER SCREEN ─────────────────────────────────────────────────────────
   if (screen === 'filter') {
     return (
-      <div className="w-full h-full bg-white flex flex-col">
+      <div className="w-full h-full bg-background flex flex-col">
         {/* Header */}
         <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between">
@@ -326,7 +326,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   // ── SEARCH SCREEN ─────────────────────────────────────────────────────────
   if (screen === 'search') {
     return (
-      <div className="w-full h-full bg-white flex flex-col">
+      <div className="w-full h-full bg-background flex flex-col">
         <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => setScreen('list')} className="w-8 h-8 flex items-center justify-center">
@@ -453,7 +453,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
   // ── MAIN LIST SCREEN ───────────────────────────────────────────────────────
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div className="w-full h-full bg-background flex flex-col">
 
         {/* Header & Search Bar */}
         <div className="bg-white px-5 pt-safe-6 pb-3 border-b border-gray-100">

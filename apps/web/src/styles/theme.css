@@ -42,25 +42,27 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* Palette premium (app connectée + auth) */
+  --background: #111111;
+  --foreground: #f5f5f5;
+  --card: #1a1a1a;
+  --card-foreground: #f5f5f5;
+  --popover: #1a1a1a;
+  --popover-foreground: #f5f5f5;
+  --primary: #f5f5f5;
+  --primary-foreground: #1a1a1a;
+  --secondary: #222222;
+  --secondary-foreground: #f5f5f5;
+  --muted: #222222;
+  --muted-foreground: #a3a3a3;
+  --accent: #242424;
+  --accent-foreground: #f5f5f5;
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --border: #2a2a2a;
+  --input: #242424;
+  --input-background: #242424;
+  --ring: #444444;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --chart-1: oklch(0.488 0.243 264.376);
@@ -78,14 +80,84 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
-/* Ensure inputs are legible in dark mode */
-.dark input, .dark textarea {
-  color: #FFFFFF;
-  background-color: #2A2A2A;
+/* Inputs — parcours auth uniquement (évite de casser les champs sur fond clair) */
+.dark .auth-flow input:not([type="checkbox"]):not([type="radio"]),
+.dark .auth-flow textarea {
+  color: #ffffff;
+  background-color: #242424;
 }
 
-.dark input::placeholder, .dark textarea::placeholder {
+.dark .auth-flow input::placeholder,
+.dark .auth-flow textarea::placeholder {
   color: #888888;
+}
+
+/**
+ * App authentifiée : pont pour les écrans encore en bg-white / text-gray-900 hardcodés.
+ * N'affecte PAS le parcours auth (hors #app-layout-inner).
+ */
+.dark #app-layout-inner {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.dark #app-layout-inner [class~="bg-white"],
+.dark #app-layout-inner [class*="bg-white/"] {
+  background-color: var(--card) !important;
+}
+
+.dark #app-layout-inner [class~="bg-gray-50"],
+.dark #app-layout-inner [class*="bg-gray-50/"],
+.dark #app-layout-inner [class~="bg-gray-100"] {
+  background-color: var(--muted) !important;
+}
+
+.dark #app-layout-inner [class*="F8F7FF"] {
+  background-color: var(--background) !important;
+}
+
+.dark #app-layout-inner .text-gray-900,
+.dark #app-layout-inner .text-gray-800,
+.dark #app-layout-inner .text-gray-700,
+.dark #app-layout-inner [class*="1A1A1A"] {
+  color: var(--foreground) !important;
+}
+
+.dark #app-layout-inner .text-gray-600,
+.dark #app-layout-inner .text-gray-500,
+.dark #app-layout-inner .text-gray-400 {
+  color: var(--muted-foreground) !important;
+}
+
+.dark #app-layout-inner [class~="border-gray-100"],
+.dark #app-layout-inner [class*="E5E5E5"],
+.dark #app-layout-inner [class*="F5F5F5"],
+.dark #app-layout-inner [class*="F3F4F6"] {
+  border-color: var(--border) !important;
+}
+
+.dark #app-layout-inner input:not([type="checkbox"]):not([type="radio"]):not(.bg-transparent),
+.dark #app-layout-inner textarea,
+.dark #app-layout-inner select {
+  background-color: var(--input) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.dark #app-layout-inner input.bg-transparent,
+.dark #app-layout-inner input[class*="bg-transparent"] {
+  background-color: transparent !important;
+}
+
+.dark #app-layout-inner input::placeholder,
+.dark #app-layout-inner textarea::placeholder {
+  color: var(--muted-foreground) !important;
+}
+
+/* Boutons orange : le texte blanc doit rester blanc */
+.dark #app-layout-inner .text-white,
+.dark #app-layout-inner [class~="text-white"] {
+  color: #ffffff !important;
 }
 
 /* Parcours auth : texte toujours lisible via variables sémantiques */

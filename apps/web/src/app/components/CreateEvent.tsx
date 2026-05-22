@@ -382,10 +382,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     : ''
 
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div className="w-full h-full bg-background flex flex-col">
 
       {/* Header */}
-      <div className="px-5 pt-safe-6 pb-0 bg-white">
+      <div className="px-5 pt-safe-6 pb-0 bg-background">
         <div className="flex items-center justify-center relative mb-3">
           {step < 7 && (
             <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
@@ -405,7 +405,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-32 bg-white">
+      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-32 bg-background">
         {step < 6 && (
           <>
             <h2 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5">{stepTitles[step - 1]}</h2>
