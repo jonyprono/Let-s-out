@@ -383,6 +383,43 @@ export class AuthController {
       data: { passwordHash }
     })
 
-    return reply.send({ success: true, message: 'Mot de passe mis à jour avec succès' })
+  async adminLogin(req: FastifyRequest, reply: FastifyReply) {
+    const { password } = req.body as { password?: string }
+    
+    // Mot de passe prédéfini (peut être mis dans process.env plus tard)
+    if (password !== 'admin123') {
+      return reply.code(401).send({ error: 'Mot de passe incorrect' })
+    }
+
+    const adminUser = await this.app.prisma.user.findFirst({
+      where: { role: 'ADMIN' },
+      include: { profile: true }
+    })
+
+    if (!adminUser) {
+      return reply.code(404).send({ error: 'Aucun compte administrateur trouvé en base' })
+    }
+
+    // Update last seen
+    await this.app.prisma.user.update({
+      where: { id: adminUser.id },
+      data: { lastSeenAt: new Date() },
+    })
+
+    const accessToken = this.app.jwt.sign({ sub: adminUser.id, role: adminUser.role })
+    const refreshToken = await this.service.createRefreshToken(adminUser.id, {
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+    })
+
+    reply.setCookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: false, // secure: true in prod
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60,
+    })
+
+    return reply.send({ accessToken, refreshToken, user: { ...adminUser, passwordHash: undefined } })
   }
 }

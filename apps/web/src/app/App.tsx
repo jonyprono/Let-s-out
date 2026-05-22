@@ -64,6 +64,7 @@ import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
 import { AdminLayout } from '@/app/layouts/AdminLayout'
 import { AdminRoute } from '@/app/components/admin/AdminRoute'
+import { AdminLoginPage } from '@/app/components/admin/AdminLoginPage'
 import { AdminDashboardPage } from '@/app/components/admin/AdminDashboardPage'
 import { AdminKycListPage } from '@/app/components/admin/AdminKycListPage'
 import { AdminKycDetailPage } from '@/app/components/admin/AdminKycDetailPage'
@@ -127,7 +128,8 @@ export default function App() {
           {/* Onboarding — accessible to authenticated users after signup */}
           <Route path="/onboarding" element={<Onboarding />} />
 
-          {/* Administration KYC — rôle ADMIN uniquement */}
+          {/* Administration KYC */}
+          <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route
             path="/admin"
             element={

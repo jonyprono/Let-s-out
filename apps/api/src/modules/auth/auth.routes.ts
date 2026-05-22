@@ -69,4 +69,9 @@ export default async function authRoutes(app: FastifyInstance) {
   app.post('/reset-password', {
     handler: ctrl.resetPassword.bind(ctrl),
   })
+
+  // Admin login (bypasses standard flow)
+  app.post('/admin-login', {
+    handler: ctrl.adminLogin.bind(ctrl),
+  })
 }

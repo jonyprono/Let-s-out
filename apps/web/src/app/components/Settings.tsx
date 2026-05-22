@@ -231,6 +231,28 @@ export function Settings({ onBack }: SettingsProps) {
           </div>
         </div>
 
+        {/* ── Administration ──────────────────────────────────────────────── */}
+        {user?.role === 'ADMIN' && (
+          <div>
+            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">Administration</p>
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
+              <button 
+                onClick={() => navigate('/admin')}
+                className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-red-50 dark:bg-red-500/10 text-red-500`}>
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">Dashboard Admin</p>
+                  <p className="text-[12px] text-gray-400 dark:text-gray-500">Gérer les KYC, événements, etc.</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-300" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── À propos & Support ──────────────────────────────────────────── */}
         <div>
           <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">{t('settings.about')}</p>
