@@ -53,6 +53,11 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
       const compressed = await compressImage(file)
       const url = await chatApi.uploadMedia(compressed)
       setAvatarUrl(url)
+      
+      // Auto-save the avatar immediately so it's persisted even if they don't click Save
+      await usersApi.updateProfile({ avatarUrl: url })
+      await refreshUser()
+      toast.success('Photo de profil mise à jour !')
     } catch (error) {
       console.error('Failed to upload avatar', error)
       toast.error("Erreur lors de l'envoi de l'image.")

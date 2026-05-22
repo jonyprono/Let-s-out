@@ -47,6 +47,8 @@ export interface Event {
     }
   }[]
   joinCode?: string
+  poolTarget?: number
+  poolCollected?: number
   poolReleased?: boolean
   _count?: { bookings: number }
 }

@@ -198,7 +198,7 @@ async function handleConfirmedBooking(
       : []),
   ])
 
-  // Add to event group chat
+  // Add to event group chat and send system message
   const conv = await app.prisma.conversation.findUnique({ where: { eventId } })
   if (conv) {
     await app.prisma.conversationMember.upsert({
@@ -206,6 +206,21 @@ async function handleConfirmedBooking(
       create: { conversationId: conv.id, userId },
       update: {},
     })
+
+    // Send system message to the event chat
+    const payer = await app.prisma.profile.findUnique({ where: { userId }, select: { displayName: true } })
+    const payerName = payer?.displayName || 'Quelqu\'un'
+    const systemMsg = isNewParticipant
+      ? `🎉 ${payerName} a rejoint l'événement !`
+      : `💰 ${payerName} a contribué ${amount.toLocaleString()} F CFA à la cagnotte !`
+    await app.prisma.message.create({
+      data: {
+        conversationId: conv.id,
+        senderId: userId,
+        content: systemMsg,
+        type: 'SYSTEM',
+      },
+    }).catch(() => {}) // fire-and-forget, don't fail payment if chat message fails
   }
 
   const event = await app.prisma.event.findUnique({

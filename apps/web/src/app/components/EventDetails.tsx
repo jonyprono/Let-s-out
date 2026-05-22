@@ -339,32 +339,15 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const handleContribute = () => {
     hapticFeedback.impact()
     if (!user) { toast.error("Connectez-vous pour contribuer."); return }
-    if (!hasJoined && event?.price === 0) { toast.info("Rejoignez d'abord l'événement."); return }
-    // Pre-fill amount if pool mode is 'fixe'
-    const poolMode = (event as any)?.pool?.mode
-    const poolMinAmount = (event as any)?.pool?.minAmount
-    if (poolMode === 'fixe' && poolMinAmount) {
-      setContributeAmount(String(poolMinAmount))
-    } else {
-      setContributeAmount('')
-    }
+    // Reset amount and open modal — no pool mode/minAmount stored on event model currently
+    setContributeAmount('')
     setShowContributeModal(true)
   }
 
   const handleConfirmContribute = () => {
     const amount = parseInt(contributeAmount)
-    const poolMode = (event as any)?.pool?.mode
-    const poolMinAmount = (event as any)?.pool?.minAmount
     if (isNaN(amount) || amount <= 0) {
       toast.error("Veuillez entrer un montant valide (supérieur à 0)")
-      return
-    }
-    if (poolMode === 'minimum' && poolMinAmount && amount < Number(poolMinAmount)) {
-      toast.error(`Le montant minimum est de ${Number(poolMinAmount).toLocaleString()} F CFA`)
-      return
-    }
-    if (poolMode === 'fixe' && poolMinAmount && amount !== Number(poolMinAmount)) {
-      toast.error(`Le montant doit être exactement de ${Number(poolMinAmount).toLocaleString()} F CFA`)
       return
     }
     setShowContributeModal(false)
@@ -463,8 +446,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const transactionFee = 50
   const amountToPay = event.price || 0
   const netToPay = amountToPay + transactionFee
-  const hasPool = !!((event as any).poolTarget && (event as any).poolTarget > 0)
-  const cagnoteBudget: number = (event as any).poolTarget || 0
+  const hasPool = !!(event.poolTarget && event.poolTarget > 0)
+  const cagnoteBudget: number = event.poolTarget || 0
   const cagnoteCollected = event.price > 0 ? event.price * attendeeCount : 0
   const cagnoteRemaining = Math.max(cagnoteBudget - cagnoteCollected, 0)
   const cagnoteProgress = cagnoteBudget > 0 ? Math.min(Math.round((cagnoteCollected / cagnoteBudget) * 100), 100) : 0
@@ -849,7 +832,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               </button>
             </div>
 
-            <div className="px-5 pb-8">
+            <div className="px-5" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
 
               {isCreator && event.status === 'DRAFT' && (
                 <div className="bg-[#EBF3FA] mt-4 mb-6 p-4 rounded-xl text-gray-500 text-[13px] leading-relaxed">
@@ -891,7 +874,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Type</span>
-                  <span className="font-bold text-gray-900">Cagnotte</span>
+                  <span className="font-bold text-gray-900">{hasPool ? 'Cagnotte' : 'Standard'}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Frais de transaction</span>
@@ -945,7 +928,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   <X className="w-4 h-4 text-gray-500" />
                 </button>
               </div>
-              <div className="px-5 pt-4 pb-8">
+              <div className="px-5 pt-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
                 {isFixed && poolMinAmount ? (
                   <div className="mb-4 p-3 bg-orange-50 rounded-xl border border-orange-100">
                     <p className="text-[13px] text-[#FF9F1C] font-medium">
