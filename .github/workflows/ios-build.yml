@@ -1,0 +1,59 @@
+name: Build iOS
+
+on:
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  build-ios:
+    name: Build iOS App (Unsigned)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: '9'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Web App
+        run: pnpm --filter @letsout/web build
+
+      - name: Sync Capacitor
+        run: pnpm --filter @letsout/web exec cap sync ios
+
+      - name: Build iOS App
+        run: |
+          cd apps/web/ios/App
+          # Build the workspace without code signing
+          xcodebuild build \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath derived_data \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package into IPA
+        run: |
+          cd apps/web/ios/App/derived_data/Build/Products/Debug-iphoneos
+          mkdir Payload
+          cp -r App.app Payload/
+          zip -r letsout-ios.ipa Payload
+          
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: letsout-ios-app
+          path: apps/web/ios/App/derived_data/Build/Products/Debug-iphoneos/letsout-ios.ipa
+          retention-days: 7
