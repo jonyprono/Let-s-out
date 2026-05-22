@@ -177,16 +177,16 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const isLoading = sendingOtp || checkingTarget || isFirebaseSending || isFirebaseVerifying || checkingOtp || resetting
 
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div className="w-full h-full bg-white dark:bg-[#151515] flex flex-col transition-colors">
       <div id="recaptcha-container-fp" />
 
       {/* ── Header ─────────────────────────────────── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
         <div className="flex items-center justify-center relative mb-1">
           <button onClick={handlePrev} className="absolute left-0 w-8 h-8 flex items-center justify-center active:opacity-70">
-            <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2.5} />
+            <ChevronLeft className="w-5 h-5 text-[#1A1A1A] dark:text-white" strokeWidth={2.5} />
           </button>
-          <span className="text-[15px] font-semibold text-[#1A1A1A]">Réinitialiser votre mot de passe</span>
+          <span className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white">Réinitialiser votre mot de passe</span>
         </div>
         <div className="flex justify-center mt-1">
           <div className="w-10 h-[2.5px] bg-[#FF9F1C] rounded-full" />
@@ -199,32 +199,32 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {/* STEP 1: PHONE */}
         {step === 1 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
               Entrez votre numéro de téléphone
             </h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Entrez le numéro de téléphone lié à votre compte pour recevoir un code et réinitialiser votre mot de passe.
             </p>
 
-            <label className="text-[13px] text-[#555555] font-medium mb-1.5 block">Numéro de téléphone</label>
+            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-1.5 block">Numéro de téléphone</label>
             <div className="flex gap-2 mb-6">
               <div className="relative shrink-0">
                 <button
                   onClick={() => setShowCountry(!showCountry)}
-                  className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] rounded-xl bg-white text-[15px] font-medium whitespace-nowrap"
+                  className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl bg-white dark:bg-[#242424] text-[15px] font-medium whitespace-nowrap"
                 >
                   <span>{country.flag}</span>
-                  <span className="text-[#1A1A1A] text-[13px]">({country.code.replace('+', '')})</span>
+                  <span className="text-[#1A1A1A] dark:text-white text-[13px]">({country.code.replace('+', '')})</span>
                   <svg className="w-3 h-3 text-[#888888] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 {showCountry && (
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5E5E5] rounded-xl shadow-lg z-10 w-48">
+                  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#181818] border border-[#E5E5E5] dark:border-white/20 rounded-xl shadow-lg z-10 w-56 max-h-[52vh] overflow-y-auto overscroll-contain py-1">
                     {COUNTRIES.map(c => (
                       <button key={c.code} onClick={() => { setCountry(c); setShowCountry(false) }}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-sm text-left">
-                        <span>{c.flag}</span><span className="text-[#1A1A1A]">{c.name}</span>
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/10 text-sm text-left">
+                        <span>{c.flag}</span><span className="text-[#1A1A1A] dark:text-gray-100">{c.name}</span>
                       </button>
                     ))}
                   </div>
@@ -233,11 +233,11 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               <input
                 type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                 placeholder="01 97 00 00 00"
-                className="flex-1 min-w-0 px-4 py-3.5 border-2 border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
+                className="flex-1 min-w-0 px-4 py-3.5 border-2 border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-[#1A1A1A] dark:text-white placeholder-[#BBBBBB]"
               />
             </div>
 
-            <label className="text-[13px] text-[#555555] font-medium mb-2 block">Recevoir le code par</label>
+            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-2 block">Recevoir le code par</label>
             <div className="flex gap-3">
               {(['SMS', 'Whatsapp'] as const).map(ch => {
                 const val = ch.toLowerCase() as 'sms' | 'whatsapp'
@@ -259,10 +259,10 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {/* STEP 2: OTP (6 digits) */}
         {step === 2 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
               Quel est le code reçu&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Code à 6 chiffres envoyé par <strong className="text-[#1A1A1A]">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
               <strong className="text-[#1A1A1A]">{maskPhone(fullPhone)}</strong>
             </p>
@@ -301,8 +301,8 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {/* STEP 3: NEW PASSWORD */}
         {step === 3 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Nouveau mot de passe</h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">Nouveau mot de passe</h1>
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Définissez un nouveau mot de passe robuste et sécurisé pour<br />protéger votre compte
             </p>
 
@@ -350,7 +350,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       </div>
 
       {/* ── Bottom Button ───────────────────────────── */}
-      <div className="px-6 pb-5 pt-3 shrink-0 bg-white">
+      <div className="px-6 pb-5 pt-3 shrink-0 bg-white dark:bg-[#151515]">
         <button
           onClick={handleNext}
           disabled={isNextDisabled()}
@@ -363,7 +363,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
       {/* Home indicator */}
       <div className="h-6 flex items-center justify-center pb-1 shrink-0">
-        <div className="w-32 h-[4px] bg-[#1A1A1A] rounded-full" />
+        <div className="w-32 h-[4px] bg-[#1A1A1A] dark:bg-white rounded-full" />
       </div>
     </div>
   )

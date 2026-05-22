@@ -5,7 +5,7 @@ interface WelcomeProps {
 
 export function Welcome({ onLogin, onSignup }: WelcomeProps) {
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div className="w-full h-full bg-white dark:bg-[#151515] flex flex-col transition-colors">
 
       {/* Main Content — logo + text + buttons centered */}
       <div className="flex-1 flex flex-col items-center justify-center px-8">
@@ -16,12 +16,12 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
         </div>
 
         {/* Title */}
-        <h1 className="text-[26px] font-bold text-center text-[#1A1A1A] mb-2 leading-tight">
+        <h1 className="text-[26px] font-bold text-center text-[#1A1A1A] dark:text-white mb-2 leading-tight">
           Connectez-vous
         </h1>
 
         {/* Subtitle */}
-        <p className="text-[13px] text-[#888888] text-center mb-10 leading-relaxed px-2">
+        <p className="text-[13px] text-[#888888] dark:text-gray-300 text-center mb-10 leading-relaxed px-2">
           Rejoignez des événements près de{'\u00a0'}vous et<br />vivez des expériences partagées.
         </p>
 
@@ -37,7 +37,7 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
           <button
             id="welcome-signup-btn"
             onClick={onSignup}
-            className="w-full bg-white border border-gray-200 text-[#1A1A1A] py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:bg-gray-50 transition-colors"
+            className="w-full bg-white dark:bg-[#242424] border border-gray-200 dark:border-white/10 text-[#1A1A1A] dark:text-white py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:bg-gray-50 dark:active:bg-white/10 transition-colors"
           >
             S'inscrire
           </button>
@@ -46,7 +46,7 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
 
       {/* Footer */}
       <div className="px-8 pb-8 pt-2">
-        <p className="text-[11px] text-[#AAAAAA] text-center leading-relaxed">
+        <p className="text-[11px] text-[#AAAAAA] dark:text-gray-300 text-center leading-relaxed">
           En continuant, vous acceptez nos{' '}
           <span className="text-[#FF9F1C]">Conditions d'utilisation</span>
           {' '}et notre{' '}
@@ -56,7 +56,7 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
 
       {/* Home indicator */}
       <div className="h-6 flex items-center justify-center pb-1">
-        <div className="w-32 h-[4px] bg-[#1A1A1A] rounded-full" />
+        <div className="w-32 h-[4px] bg-[#1A1A1A] dark:bg-white rounded-full" />
       </div>
     </div>
   )

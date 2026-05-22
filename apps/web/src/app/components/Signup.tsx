@@ -242,16 +242,16 @@ export function Signup({ onBack }: SignupProps) {
   }
 
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div className="w-full h-full bg-white dark:bg-[#151515] flex flex-col transition-colors">
       <div id="recaptcha-container" />
 
       {/* ── Header ─────────────────────────────────────── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
         <div className="flex items-center justify-center relative mb-1">
           <button onClick={handlePrev} className="absolute left-0 w-8 h-8 flex items-center justify-center active:opacity-70">
-            <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2.5} />
+            <ChevronLeft className="w-5 h-5 text-[#1A1A1A] dark:text-white" strokeWidth={2.5} />
           </button>
-          <span className="text-[15px] font-semibold text-[#1A1A1A]">Inscription</span>
+          <span className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white">Inscription</span>
         </div>
         <div className="flex justify-center mt-1">
           <div className="w-10 h-[2.5px] bg-[#FF9F1C] rounded-full" />
@@ -264,32 +264,32 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 1: PHONE ── */}
         {step === 1 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
               Quel est votre numéro de<br />téléphone&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Vous recevrez un code de vérification<br />pour confirmer votre numéro
             </p>
 
-            <label className="text-[13px] text-[#555555] font-medium mb-1.5 block">Numéro de téléphone</label>
+            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-1.5 block">Numéro de téléphone</label>
             <div className="flex gap-2 mb-6">
               <div className="relative shrink-0">
                 <button
                   onClick={() => setShowCountry(!showCountry)}
-                  className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] rounded-xl bg-white text-[15px] font-medium whitespace-nowrap"
+                  className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl bg-white dark:bg-[#242424] text-[15px] font-medium whitespace-nowrap"
                 >
                   <span>{country.flag}</span>
-                  <span className="text-[#1A1A1A] text-[13px]">({country.code.replace('+', '')})</span>
+                  <span className="text-[#1A1A1A] dark:text-white text-[13px]">({country.code.replace('+', '')})</span>
                   <svg className="w-3 h-3 text-[#888888] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 {showCountry && (
-                  <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5E5E5] rounded-xl shadow-lg z-10 w-48">
+                  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#181818] border border-[#E5E5E5] dark:border-white/20 rounded-xl shadow-lg z-10 w-56 max-h-[52vh] overflow-y-auto overscroll-contain py-1">
                     {COUNTRIES.map(c => (
                       <button key={c.code} onClick={() => { setCountry(c); setShowCountry(false) }}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-sm text-left">
-                        <span>{c.flag}</span><span className="text-[#1A1A1A]">{c.name}</span>
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/10 text-sm text-left">
+                        <span>{c.flag}</span><span className="text-[#1A1A1A] dark:text-gray-100">{c.name}</span>
                       </button>
                     ))}
                   </div>
@@ -298,11 +298,11 @@ export function Signup({ onBack }: SignupProps) {
               <input
                 type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                 placeholder="01 97 00 00 00"
-                className="flex-1 min-w-0 px-4 py-3.5 border-2 border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
+                className="flex-1 min-w-0 px-4 py-3.5 border-2 border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-[#1A1A1A] dark:text-white placeholder-[#BBBBBB]"
               />
             </div>
 
-            <label className="text-[13px] text-[#555555] font-medium mb-2 block">Recevoir le code par</label>
+            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-2 block">Recevoir le code par</label>
             <div className="flex gap-3">
               {(['SMS', 'Whatsapp'] as const).map(ch => {
                 const val = ch.toLowerCase() as 'sms' | 'whatsapp'
@@ -324,10 +324,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 2: OTP (6 digits) ── */}
         {step === 2 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
               Quel est le code reçu&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Code à 6 chiffres envoyé par <strong className="text-[#1A1A1A]">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
               <strong className="text-[#1A1A1A]">{maskPhone(fullPhone) || '+229 01 97 00 00 00'}</strong>
             </p>
@@ -366,21 +366,21 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 3: NAME ── */}
         {step === 3 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
               Quel est votre nom&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Ces informations aideront vos amis à vous reconnaître et ne<br />seront visibles que sur Let's Out.
             </p>
             <input
               type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
               placeholder="Nom complet"
-              className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] mb-4 placeholder-[#BBBBBB]"
+              className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-[#1A1A1A] dark:text-white mb-4 placeholder-[#BBBBBB]"
             />
             <input
               type="text" value={pseudo} onChange={e => setPseudo(e.target.value)}
               placeholder="Pseudo"
-              className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
+              className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-[#1A1A1A] dark:text-white placeholder-[#BBBBBB]"
             />
           </div>
         )}
@@ -388,10 +388,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 4: BIRTHDAY ── */}
         {step === 4 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
               Et votre date d'anniversaire&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Cette information restera privée et nous aidera à<br />vous faire les meilleures suggestions<br />d'événements possibles.
             </p>
             <div className="relative">
@@ -408,10 +408,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 5: CITY ── */}
         {step === 5 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
               Dans quelle ville habitez-vous&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Indiquez votre ville pour trouver des événements et<br />rencontrer des amis près de vous.
             </p>
             <div className="relative">
@@ -433,10 +433,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 6: INTERESTS ── */}
         {step === 6 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
               Quels sont vos centres d'intérêts&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Indiquez au moins un centre d'intérêt afin d'obtenir<br />les meilleures recommandations d'activités pour<br />vous.
             </p>
             <div className="flex flex-wrap gap-2.5">
@@ -457,8 +457,8 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 7: PASSWORD ── */}
         {step === 7 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5 leading-tight">Créez votre mot de passe</h1>
-            <p className="text-[13px] text-[#888888] mb-7 leading-relaxed">
+            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">Créez votre mot de passe</h1>
+            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
               Définissez un mot de passe robuste et sécurisé de<br />connexion à votre compte
             </p>
 
@@ -505,7 +505,7 @@ export function Signup({ onBack }: SignupProps) {
       </div>
 
       {/* ── Bottom Area ─────────────────────────────────── */}
-      <div className="px-6 pb-5 pt-3 shrink-0 bg-white">
+      <div className="px-6 pb-5 pt-3 shrink-0 bg-white dark:bg-[#151515]">
         {/* CGU — uniquement à l'étape 7 */}
         {step === 7 && (
           <label className="flex items-start gap-2.5 cursor-pointer mb-4"
@@ -531,7 +531,7 @@ export function Signup({ onBack }: SignupProps) {
 
       {/* Home indicator */}
       <div className="h-6 flex items-center justify-center pb-1 shrink-0">
-        <div className="w-32 h-[4px] bg-[#1A1A1A] rounded-full" />
+        <div className="w-32 h-[4px] bg-[#1A1A1A] dark:bg-white rounded-full" />
       </div>
     </div>
   )
