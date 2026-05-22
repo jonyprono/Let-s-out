@@ -15,6 +15,17 @@ interface SignupProps { onBack: () => void }
 
 import { COUNTRIES, Country } from '@/lib/countries'
 import { CountryPicker } from '@/components/shared/CountryPicker'
+import {
+  authShell,
+  authTitle,
+  authHeader,
+  authSubtitle,
+  authLabel,
+  authInput,
+  authInputFlex,
+  authChannelBtn,
+  authChannelLabel,
+} from '@/lib/auth-ui'
 
 const INTERESTS_LIST = [
   'Social', 'Art & Culture', 'Bien-être & Santé',
@@ -242,16 +253,16 @@ export function Signup({ onBack }: SignupProps) {
   }
 
   return (
-    <div className="w-full h-full bg-white dark:bg-[#151515] flex flex-col transition-colors">
+    <div className={authShell}>
       <div id="recaptcha-container" />
 
       {/* ── Header ─────────────────────────────────────── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
         <div className="flex items-center justify-center relative mb-1">
           <button onClick={handlePrev} className="absolute left-0 w-8 h-8 flex items-center justify-center active:opacity-70">
-            <ChevronLeft className="w-5 h-5 text-[#1A1A1A] dark:text-white" strokeWidth={2.5} />
+            <ChevronLeft className="w-5 h-5 text-foreground" strokeWidth={2.5} />
           </button>
-          <span className="text-[15px] font-semibold text-[#1A1A1A] dark:text-white">Inscription</span>
+          <span className={authHeader}>Inscription</span>
         </div>
         <div className="flex justify-center mt-1">
           <div className="w-10 h-[2.5px] bg-[#FF9F1C] rounded-full" />
@@ -264,32 +275,32 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 1: PHONE ── */}
         {step === 1 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
+            <h1 className={`${authTitle} mb-1.5`}>
               Quel est votre numéro de<br />téléphone&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
+            <p className={`${authSubtitle} mb-7`}>
               Vous recevrez un code de vérification<br />pour confirmer votre numéro
             </p>
 
-            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-1.5 block">Numéro de téléphone</label>
+            <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
             <div className="flex gap-2 mb-6">
               <CountryPicker value={country} onChange={setCountry} />
               <input
                 type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                 placeholder="01 97 00 00 00"
-                className="flex-1 min-w-0 px-4 py-3.5 border-2 border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className={`${authInputFlex} border-2`}
               />
             </div>
 
-            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-2 block">Recevoir le code par</label>
+            <label className={`${authLabel} mb-2 block`}>Recevoir le code par</label>
             <div className="flex gap-3">
               {(['SMS', 'Whatsapp'] as const).map(ch => {
                 const val = ch.toLowerCase() as 'sms' | 'whatsapp'
                 const isActive = currentChannel === val
                 return (
-                  <button key={ch} onClick={() => setCurrentChannel(val)}
-                    className="flex-1 flex items-center px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl bg-white dark:bg-[#242424] transition-colors gap-2">
-                    <span className="flex-1 text-left text-[15px] font-medium text-gray-900 dark:text-white">{ch}</span>
+                  <button key={ch} type="button" onClick={() => setCurrentChannel(val)}
+                    className={authChannelBtn}>
+                    <span className={authChannelLabel}>{ch}</span>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
                       {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                     </div>
@@ -303,12 +314,12 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 2: OTP (6 digits) ── */}
         {step === 2 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
+            <h1 className={`${authTitle} mb-1.5`}>
               Quel est le code reçu&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
-              Code à 6 chiffres envoyé par <strong className="text-gray-900 dark:text-white">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
-              <strong className="text-gray-900 dark:text-white">{maskPhone(fullPhone) || '+229 01 97 00 00 00'}</strong>
+            <p className={`${authSubtitle} mb-7`}>
+              Code à 6 chiffres envoyé par <strong className="text-foreground">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
+              <strong className="text-foreground">{maskPhone(fullPhone) || '+229 01 97 00 00 00'}</strong>
             </p>
 
             <div className="grid grid-cols-6 gap-2 mb-5 w-full">
@@ -318,8 +329,8 @@ export function Signup({ onBack }: SignupProps) {
                   type="text" inputMode="numeric" maxLength={1} value={d}
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKey(i, e)}
-                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white dark:bg-[#242424] text-gray-900 dark:text-white
-                    ${d ? 'border-[#FF9F1C]' : 'border-[#E5E5E5] dark:border-white/20'}
+                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-card text-foreground
+                    ${d ? 'border-[#FF9F1C]' : 'border-border'}
                     focus:border-[#FF9F1C]`}
                 />
               ))}
@@ -327,14 +338,14 @@ export function Signup({ onBack }: SignupProps) {
 
             <div className="flex items-center gap-2">
               <button onClick={handleResend} disabled={countdown > 0}
-                className="flex items-center gap-1.5 text-[13px] text-[#666666] disabled:opacity-50">
+                className="flex items-center gap-1.5 text-[13px] text-muted-foreground disabled:opacity-50">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Renvoyer le code
               </button>
               {countdown > 0 && (
-                <span className="text-[13px] text-[#888888]">
+                <span className="text-[13px] text-muted-foreground">
                   dans {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
                 </span>
               )}
@@ -345,21 +356,21 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 3: NAME ── */}
         {step === 3 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
+            <h1 className={`${authTitle} mb-1.5`}>
               Quel est votre nom&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
+            <p className={`${authSubtitle} mb-7`}>
               Ces informations aideront vos amis à vous reconnaître et ne<br />seront visibles que sur Let's Out.
             </p>
             <input
               type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
               placeholder="Nom complet"
-              className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-[#1A1A1A] dark:text-white mb-4 placeholder-[#BBBBBB]"
+              className={`${authInput} mb-4`}
             />
             <input
               type="text" value={pseudo} onChange={e => setPseudo(e.target.value)}
               placeholder="Pseudo"
-              className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-[#1A1A1A] dark:text-white placeholder-[#BBBBBB]"
+              className={authInput}
             />
           </div>
         )}
@@ -367,16 +378,16 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 4: BIRTHDAY ── */}
         {step === 4 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
+            <h1 className={`${authTitle} mb-1.5`}>
               Et votre date d'anniversaire&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
+            <p className={`${authSubtitle} mb-7`}>
               Cette information restera privée et nous aidera à<br />vous faire les meilleures suggestions<br />d'événements possibles.
             </p>
             <div className="relative">
               <input
                 type="date" value={birthday} onChange={e => setBirthday(e.target.value)}
-                className={`w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] pr-12 appearance-none text-gray-900 dark:text-white ${birthday ? '' : 'text-[#BBBBBB] dark:text-gray-500'}`}
+                className={`${authInput} pr-12 appearance-none ${birthday ? '' : 'text-muted-foreground'}`}
               />
               <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888] pointer-events-none" />
             </div>
@@ -386,10 +397,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 5: CITY ── */}
         {step === 5 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
+            <h1 className={`${authTitle} mb-1.5`}>
               Dans quelle ville habitez-vous&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
+            <p className={`${authSubtitle} mb-7`}>
               Indiquez votre ville pour trouver des événements et<br />rencontrer des amis près de vous.
             </p>
             <div className="relative">
@@ -397,7 +408,7 @@ export function Signup({ onBack }: SignupProps) {
               <input
                 type="text" value={city} onChange={e => setCity(e.target.value)}
                 placeholder="Sélectionnez une ville"
-                className="w-full pl-10 pr-10 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className={`${authInput} pl-10 pr-10`}
               />
               {city && (
                 <button onClick={() => setCity('')} className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -411,10 +422,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 6: INTERESTS ── */}
         {step === 6 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">
+            <h1 className={`${authTitle} mb-1.5`}>
               Quels sont vos centres d'intérêts&nbsp;?
             </h1>
-            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
+            <p className={`${authSubtitle} mb-7`}>
               Indiquez au moins un centre d'intérêt afin d'obtenir<br />les meilleures recommandations d'activités pour<br />vous.
             </p>
             <div className="flex flex-wrap gap-2.5">
@@ -423,7 +434,7 @@ export function Signup({ onBack }: SignupProps) {
                 return (
                   <button key={interest} onClick={() => toggleInterest(interest)}
                     className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all
-                      ${isSelected ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white' : 'bg-white dark:bg-[#242424] border-[#E5E5E5] dark:border-white/20 text-gray-900 dark:text-white'}`}>
+                      ${isSelected ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white' : 'bg-card border-border text-foreground'}`}>
                     {interest}
                   </button>
                 )
@@ -435,31 +446,31 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 7: PASSWORD ── */}
         {step === 7 && (
           <div>
-            <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1.5 leading-tight">Créez votre mot de passe</h1>
-            <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
+            <h1 className={`${authTitle} mb-1.5`}>Créez votre mot de passe</h1>
+            <p className={`${authSubtitle} mb-7`}>
               Définissez un mot de passe robuste et sécurisé de<br />connexion à votre compte
             </p>
 
-            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-1.5 block">Mot de passe</label>
+            <label className={`${authLabel} mb-1.5 block`}>Mot de passe</label>
             <div className="relative mb-5">
               <input
                 type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] pr-12 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className={`${authInput} pr-12`}
               />
-              <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888]">
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
-            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-1.5 block">Confirmer mot de passe</label>
+            <label className={`${authLabel} mb-1.5 block`}>Confirmer mot de passe</label>
             <div className="relative mb-5">
               <input
                 type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] pr-12 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                className={`${authInput} pr-12`}
               />
-              <button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888]">
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
@@ -483,7 +494,7 @@ export function Signup({ onBack }: SignupProps) {
       </div>
 
       {/* ── Bottom Area ─────────────────────────────────── */}
-      <div className="px-6 pb-5 pt-3 shrink-0 bg-white dark:bg-[#151515]">
+      <div className="px-6 pb-5 pt-3 shrink-0 bg-background">
         {/* CGU — uniquement à l'étape 7 */}
         {step === 7 && (
           <label className="flex items-start gap-2.5 cursor-pointer mb-4"
@@ -491,7 +502,7 @@ export function Signup({ onBack }: SignupProps) {
             <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#FF9F1C] border-[#FF9F1C]' : 'border-[#CCCCCC] bg-white'}`}>
               {acceptedTerms && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </div>
-            <span className="text-[12px] text-[#555555] dark:text-gray-300 leading-relaxed">
+            <span className="text-[12px] text-muted-foreground leading-relaxed">
               Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
               <span className="text-[#FF9F1C] font-semibold">Conditions d'Utilisation</span> de Let's Out
             </span>
@@ -500,7 +511,7 @@ export function Signup({ onBack }: SignupProps) {
         <button
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-[#FF9F1C] text-white disabled:bg-[#FFD99A] disabled:text-white"
+          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-[#FF9F1C] text-white disabled:bg-[#FFD99A] disabled:text-white"
         >
           {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
           <span>{buttonLabel()}</span>
@@ -509,7 +520,7 @@ export function Signup({ onBack }: SignupProps) {
 
       {/* Home indicator */}
       <div className="h-6 flex items-center justify-center pb-1 shrink-0">
-        <div className="w-32 h-[4px] bg-[#1A1A1A] dark:bg-white rounded-full" />
+        <div className="w-32 h-[4px] bg-foreground rounded-full opacity-80" />
       </div>
     </div>
   )
