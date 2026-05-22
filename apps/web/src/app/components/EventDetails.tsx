@@ -33,7 +33,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { ManageEventView } from '@/app/components/ManageEventView'
 import { hapticFeedback } from '@/lib/haptics'
-import { shareLink } from '@/lib/utils'
+
 import { useFavoritesStore } from '@/stores/favorites.store'
 
 
@@ -341,8 +341,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     if (!user) { toast.error("Connectez-vous pour contribuer."); return }
     if (!hasJoined && event?.price === 0) { toast.info("Rejoignez d'abord l'événement."); return }
     // Pre-fill amount if pool mode is 'fixe'
-    const poolMode = event?.pool?.mode
-    const poolMinAmount = event?.pool?.minAmount
+    const poolMode = (event as any)?.pool?.mode
+    const poolMinAmount = (event as any)?.pool?.minAmount
     if (poolMode === 'fixe' && poolMinAmount) {
       setContributeAmount(String(poolMinAmount))
     } else {
@@ -353,8 +353,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const handleConfirmContribute = () => {
     const amount = parseInt(contributeAmount)
-    const poolMode = event?.pool?.mode
-    const poolMinAmount = event?.pool?.minAmount
+    const poolMode = (event as any)?.pool?.mode
+    const poolMinAmount = (event as any)?.pool?.minAmount
     if (isNaN(amount) || amount <= 0) {
       toast.error("Veuillez entrer un montant valide (supérieur à 0)")
       return
@@ -918,8 +918,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
       {/* Contribute Modal */}
       {showContributeModal && (() => {
-        const poolMode = event?.pool?.mode
-        const poolMinAmount = event?.pool?.minAmount
+        const poolMode = (event as any)?.pool?.mode
+        const poolMinAmount = (event as any)?.pool?.minAmount
         const isFixed = poolMode === 'fixe'
         const isMinimum = poolMode === 'minimum'
         return (

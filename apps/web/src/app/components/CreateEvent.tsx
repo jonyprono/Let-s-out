@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, HandCoins, Megaphone, BadgeCheck, PiggyBank, Send } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, BadgeCheck, PiggyBank, Send } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
