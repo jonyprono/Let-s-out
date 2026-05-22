@@ -62,8 +62,15 @@ model Profile {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   gender         String?
-  kycStatus      String?   @default("pending") // pending | verified | rejected
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kycStatus         String?   @default("pending") // pending | verified | rejected
+  kycIdFront        String?
+  kycIdBack         String?
+  kycSelfie         String?
+  kycSelfieWithId   String?
+  kycRejectedReason String?
+  kycSubmittedAt    DateTime?
+  kycReviewedAt     DateTime?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
 }

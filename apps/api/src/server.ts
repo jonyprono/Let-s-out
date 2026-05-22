@@ -41,6 +41,7 @@ async function bootstrap() {
   await app.register(import('./modules/chat/upload.routes'), { prefix: '/api/v1/chat' })
   await app.register(import('./modules/notifications/notifications.routes'), { prefix: '/api/v1/notifications' })
   await app.register(import('./modules/payments/payments.routes'), { prefix: '/api/v1/payments' })
+  await app.register(import('./modules/admin/admin.routes'), { prefix: '/api/v1/admin' })
 
   // ── Health ─────────────────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }))

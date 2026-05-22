@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { CategoryChip } from '@/components/shared/CategoryChip'
 import { toast } from 'sonner'
 import { searchPlaces, searchCities, reverseGeocode, getCurrentPosition } from '@/lib/geo'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -417,26 +418,24 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {step === 1 && (
           <div className="space-y-6">
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Nom</label>
+              <label className="text-[13px] font-medium text-muted-foreground mb-2 block">Nom</label>
               <input
                 value={title} onChange={e => setTitle(e.target.value)}
                 placeholder="Nom de l'événement..."
-                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
+                className="w-full px-4 py-3.5 border border-border rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-card text-foreground placeholder:text-muted-foreground"
               />
             </div>
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-3 block">Catégories</label>
+              <label className="text-[13px] font-medium text-muted-foreground mb-3 block">Catégories</label>
               <div className="flex flex-wrap gap-2.5">
-                {CATEGORIES.map(cat => {
-                  const sel = categories.includes(cat.value)
-                  return (
-                    <button key={cat.value} onClick={() => toggleCategory(cat.value)}
-                      className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all ${sel ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]' : 'bg-[#F9F9F9] text-[#1A1A1A] border-transparent'
-                        }`}>
-                      {cat.label}
-                    </button>
-                  )
-                })}
+                {CATEGORIES.map(cat => (
+                  <CategoryChip
+                    key={cat.value}
+                    label={cat.label}
+                    selected={categories.includes(cat.value)}
+                    onClick={() => toggleCategory(cat.value)}
+                  />
+                ))}
               </div>
             </div>
           </div>

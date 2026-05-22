@@ -15,6 +15,7 @@ interface SignupProps { onBack: () => void }
 
 import { COUNTRIES, Country } from '@/lib/countries'
 import { CountryPicker } from '@/components/shared/CountryPicker'
+import { CategoryChip } from '@/components/shared/CategoryChip'
 import {
   authShell,
   authTitle,
@@ -429,16 +430,14 @@ export function Signup({ onBack }: SignupProps) {
               Indiquez au moins un centre d'intérêt afin d'obtenir<br />les meilleures recommandations d'activités pour<br />vous.
             </p>
             <div className="flex flex-wrap gap-2.5">
-              {INTERESTS_LIST.map(interest => {
-                const isSelected = interests.includes(interest)
-                return (
-                  <button key={interest} onClick={() => toggleInterest(interest)}
-                    className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all
-                      ${isSelected ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white' : 'bg-card border-border text-foreground'}`}>
-                    {interest}
-                  </button>
-                )
-              })}
+              {INTERESTS_LIST.map(interest => (
+                <CategoryChip
+                  key={interest}
+                  label={interest}
+                  selected={interests.includes(interest)}
+                  onClick={() => toggleInterest(interest)}
+                />
+              ))}
             </div>
           </div>
         )}

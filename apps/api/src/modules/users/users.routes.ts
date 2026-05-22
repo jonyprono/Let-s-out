@@ -129,7 +129,16 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     const profile = await app.prisma.profile.update({
       where: { userId: sub },
-      data: { kycStatus: 'pending' },
+      data: {
+        kycStatus: 'pending',
+        kycSubmittedAt: new Date(),
+        kycReviewedAt: null,
+        kycRejectedReason: null,
+        kycIdFront: saved.idFront ?? undefined,
+        kycIdBack: saved.idBack ?? undefined,
+        kycSelfie: saved.selfie ?? undefined,
+        kycSelfieWithId: saved.selfieWithId ?? undefined,
+      },
     })
 
     return reply.send({ success: true, kycStatus: profile.kycStatus, documents: saved })
