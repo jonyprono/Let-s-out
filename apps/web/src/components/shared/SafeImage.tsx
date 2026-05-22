@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ── Computed once at module load — never re-calculated per render ─────────────
 const API_BASE = (() => {
@@ -20,9 +20,26 @@ interface SafeImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>,
   priority?: boolean
 }
 
+function resolveImageSrc(src: string): string {
+  const normalizedSrc = src.replace(/\\/g, '/')
+  const fixedSrc = normalizedSrc
+    .replace(/http:\/\/localhost:\d+/g, API_BASE)
+    .replace(/http:\/\/127\.0\.0\.1:\d+/g, API_BASE)
+
+  return (!fixedSrc.startsWith('http') && !fixedSrc.startsWith('data:') && !fixedSrc.startsWith('blob:'))
+    ? `${API_BASE}${fixedSrc.startsWith('/') ? '' : '/'}${fixedSrc}`
+    : fixedSrc
+}
+
 export function SafeImage({ src, alt, className, fallback, onError, onLoad, style, priority, ...rest }: SafeImageProps) {
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
+
+  // Reset state when src changes (e.g. after avatar update)
+  useEffect(() => {
+    setError(false)
+    setLoaded(false)
+  }, [src])
 
   if (!src) {
     return (
@@ -40,14 +57,7 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
     )
   }
 
-  const normalizedSrc = src.replace(/\\/g, '/')
-  const fixedSrc = normalizedSrc
-    .replace(/http:\/\/localhost:\d+/g, API_BASE)
-    .replace(/http:\/\/127\.0\.0\.1:\d+/g, API_BASE)
-
-  const resolvedSrc = (!fixedSrc.startsWith('http') && !fixedSrc.startsWith('data:') && !fixedSrc.startsWith('blob:'))
-    ? `${API_BASE}${fixedSrc.startsWith('/') ? '' : '/'}${fixedSrc}`
-    : fixedSrc
+  const resolvedSrc = resolveImageSrc(src)
 
   return (
     <div className={`relative overflow-hidden ${className ?? ''}`} style={style}>

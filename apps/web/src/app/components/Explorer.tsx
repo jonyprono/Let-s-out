@@ -27,7 +27,7 @@ const CATEGORIES_FILTER = [
 
 const DATE_FILTERS = [
   { key: 'all', label: 'Toutes les dates' },
-  { key: 'today', label: 'Aujourd\'hui' },
+  { key: 'today', label: "Aujourd'hui" },
   { key: 'tomorrow', label: 'Demain' },
   { key: 'week', label: 'Cette semaine' },
   { key: 'weekend', label: 'Ce week-end' },
@@ -103,6 +103,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         // "En cours" = events happening today
         dateParam = 'today';
       }
+      // No date filter when "all" is selected — fetch everything
 
       return eventsApi.list({
         status: 'PUBLISHED',
@@ -114,6 +115,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         time: appliedFilters.time !== 'all' ? appliedFilters.time : undefined,
       }).then((r) => r.data);
     },
+    // Always fetch — no conditions that would prevent initial load
+    staleTime: 30_000, // 30s cache to avoid redundant refetches
   });
 
   // Backend now handles custom date filtering
@@ -423,7 +426,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               if (!joinCode) return;
               setIsJoining(true);
               try {
-                // We'll just call the API directly here for simplicity
                 const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1'}/events/join-by-code/${joinCode}`, {
                   method: 'POST',
                   headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -433,7 +435,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 if (res.ok) {
                   setScreen('list');
                   setJoinCode('');
-                  // If it's payment required, navigate to pay. Or just navigate to event details and let it handle it.
                   onNavigate('event-details', data.eventId || data.id);
                 } else {
                   alert(data.message || data.error || 'Erreur lors de la tentative.');
@@ -448,7 +449,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             className="w-full py-4 rounded-full font-bold text-white shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
             style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}
           >
-            {isJoining ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Rejoindre l\'événement'}
+            {isJoining ? <Loader2 className="w-6 h-6 animate-spin" /> : "Rejoindre l'événement"}
           </button>
         </div>
       </div>
