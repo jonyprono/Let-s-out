@@ -144,6 +144,22 @@ export default async function usersRoutes(app: FastifyInstance) {
     return reply.send({ success: true, kycStatus: profile.kycStatus, documents: saved })
   })
 
+  // Get current KYC status for the authenticated user
+  app.get('/me/kyc-status', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const profile = await app.prisma.profile.findUnique({
+      where: { userId: sub },
+      select: {
+        kycStatus: true,
+        kycSubmittedAt: true,
+        kycReviewedAt: true,
+        kycRejectedReason: true,
+      },
+    })
+    if (!profile) return reply.code(404).send({ error: 'Profile not found' })
+    return reply.send(profile)
+  })
+
   // Update password
   app.patch('/me/password', async (req, reply) => {
     const { sub } = req.user as { sub: string }

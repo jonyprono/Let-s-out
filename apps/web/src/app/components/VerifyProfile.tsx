@@ -1,13 +1,15 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft, Camera, Upload, CheckCircle2, Loader2, Shield, AlertCircle } from 'lucide-react'
+import { ChevronLeft, Camera, Upload, CheckCircle2, Loader2, Shield, AlertCircle, Clock, BadgeCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
+import { useAuthStore } from '@/stores/auth.store'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type KycStep = 1 | 2 | 3 | 4
 type UploadStatus = 'idle' | 'uploading' | 'done' | 'error'
+type KycStatus = 'pending' | 'verified' | 'rejected' | null
 
 interface StepConfig {
   id: KycStep
@@ -15,6 +17,67 @@ interface StepConfig {
   subtitle: string
   instruction: string
   capture: 'environment' | 'user'
+}
+
+// ── KYC Status Screen ──────────────────────────────────────────────────────────
+
+function KycPendingScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col items-center justify-center px-6 text-center">
+      <div className="w-24 h-24 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mb-6">
+        <Clock className="w-12 h-12 text-amber-500" />
+      </div>
+      <h1 className="text-[22px] font-bold text-gray-900 dark:text-white mb-3">
+        Vérification en cours
+      </h1>
+      <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs mb-2">
+        Votre dossier KYC a été soumis et est en cours d'examen par notre équipe.
+      </p>
+      <p className="text-[13px] text-gray-400 dark:text-gray-500 leading-relaxed max-w-xs">
+        Vous recevrez une notification dès que votre identité sera validée (généralement sous 24–48 h).
+      </p>
+      <div className="flex items-center gap-2 mt-6 px-4 py-3 bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-100 dark:border-amber-500/20 max-w-xs w-full">
+        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+        <p className="text-[12px] text-amber-700 dark:text-amber-400 text-left font-medium">
+          Aucune action requise de votre part.
+        </p>
+      </div>
+      <button
+        onClick={onBack}
+        className="mt-8 px-8 py-3.5 rounded-2xl font-bold text-[15px] text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-[#2A2A2A] active:scale-[0.98] transition-transform"
+      >
+        Retour
+      </button>
+    </div>
+  )
+}
+
+function KycVerifiedScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col items-center justify-center px-6 text-center">
+      <div className="w-24 h-24 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center mb-6">
+        <BadgeCheck className="w-14 h-14 text-[#10B981]" />
+      </div>
+      <h1 className="text-[22px] font-bold text-gray-900 dark:text-white mb-3">
+        Identité vérifiée ✓
+      </h1>
+      <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs mb-2">
+        Votre profil est officiellement vérifié. Le badge vérifié est actif sur votre compte.
+      </p>
+      <div className="flex items-center gap-2 mt-4 px-4 py-3 bg-green-50 dark:bg-green-500/10 rounded-xl border border-green-100 dark:border-green-500/20 max-w-xs w-full">
+        <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+        <p className="text-[12px] text-green-700 dark:text-green-400 text-left font-medium">
+          Votre badge vérifié est visible par les autres utilisateurs.
+        </p>
+      </div>
+      <button
+        onClick={onBack}
+        className="mt-8 px-8 py-3.5 rounded-2xl font-bold text-[15px] text-white bg-[#10B981] active:scale-[0.98] transition-transform"
+      >
+        Retour
+      </button>
+    </div>
+  )
 }
 
 // ── Illustration components ────────────────────────────────────────────────────
@@ -35,7 +98,7 @@ function IdFrontIllustration({ captured }: { captured: boolean }) {
               <div className="h-1.5 bg-gray-200 rounded-full w-2/3" />
             </div>
           </div>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400">Recto de votre pièce d'identité</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500">Recto de votre pièce d'identité</p>
         </>
       )}
     </div>
@@ -58,7 +121,7 @@ function IdBackIllustration({ captured }: { captured: boolean }) {
             </div>
             <div className="w-8 h-5 bg-gray-100 dark:bg-[#2A2A2A] rounded border border-gray-200 dark:border-[#333333] absolute top-1 left-1.5" />
           </div>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400">Verso de votre pièce d'identité</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500">Verso de votre pièce d'identité</p>
         </>
       )}
     </div>
@@ -80,7 +143,7 @@ function SelfieIllustration({ captured }: { captured: boolean }) {
             </div>
             <div className="w-20 h-8 bg-[#FFE8D6] rounded-t-full absolute -bottom-4 left-1/2 -translate-x-1/2" />
           </div>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-4">Votre visage bien éclairé</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-4">Votre visage bien éclairé</p>
         </>
       )}
     </div>
@@ -110,7 +173,7 @@ function SelfieWithIdIllustration({ captured }: { captured: boolean }) {
               </div>
             </div>
           </div>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-2">Vous tenant votre pièce d'identité</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2">Vous tenant votre pièce d'identité</p>
         </>
       )}
     </div>
@@ -154,12 +217,34 @@ const STEPS: StepConfig[] = [
 
 export function VerifyProfile() {
   const navigate = useNavigate()
+  const user = useAuthStore(s => s.user)
+  const refreshUser = useAuthStore(s => s.refreshUser)
+
   const [step, setStep] = useState<KycStep>(1)
   const [previews, setPreviews] = useState<Record<KycStep, string | null>>({ 1: null, 2: null, 3: null, 4: null })
   const [files, setFiles] = useState<Record<KycStep, File | null>>({ 1: null, 2: null, 3: null, 4: null })
   const [submitStatus, setSubmitStatus] = useState<UploadStatus>('idle')
   const [isComplete, setIsComplete] = useState(false)
+  const [kycStatusChecked, setKycStatusChecked] = useState(false)
+  const [kycStatus, setKycStatus] = useState<KycStatus>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // ── Vérifier le statut KYC actuel via API ───────────────────────────────
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const { data } = await apiClient.get('/users/me/kyc-status')
+        setKycStatus(data.kycStatus ?? null)
+      } catch {
+        // Si l'endpoint n'existe pas, fall back sur le profil local
+        const localStatus = (user?.profile as any)?.kycStatus ?? null
+        setKycStatus(localStatus)
+      } finally {
+        setKycStatusChecked(true)
+      }
+    }
+    checkStatus()
+  }, [user])
 
   const currentStep = STEPS[step - 1]
   const totalSteps = STEPS.length
@@ -170,7 +255,6 @@ export function VerifyProfile() {
     const url = URL.createObjectURL(file)
     setPreviews(prev => ({ ...prev, [step]: url }))
     setFiles(prev => ({ ...prev, [step]: file }))
-    // reset file input for re-capture
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -195,8 +279,8 @@ export function VerifyProfile() {
       if (files[3]) fd.append('selfie', files[3])
       if (files[4]) fd.append('selfieWithId', files[4])
 
-      // Upload to the same endpoint used for images; adapt if a dedicated KYC route exists
       await apiClient.post('/users/me/kyc', fd)
+      await refreshUser().catch(() => {})
       setIsComplete(true)
     } catch {
       toast.error('Erreur lors de l\'envoi des documents. Réessayez.')
@@ -207,7 +291,26 @@ export function VerifyProfile() {
     }
   }
 
-  // ── Success screen ──────────────────────────────────────────────────────────
+  // ── Loading ──────────────────────────────────────────────────────────────
+  if (!kycStatusChecked) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#1A1A1A]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF9F1C]" />
+      </div>
+    )
+  }
+
+  // ── KYC déjà en attente ──────────────────────────────────────────────────
+  if (kycStatus === 'pending' && !isComplete) {
+    return <KycPendingScreen onBack={() => navigate(-1)} />
+  }
+
+  // ── KYC déjà vérifié ────────────────────────────────────────────────────
+  if (kycStatus === 'verified') {
+    return <KycVerifiedScreen onBack={() => navigate(-1)} />
+  }
+
+  // ── Success screen ───────────────────────────────────────────────────────
   if (isComplete) {
     return (
       <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col items-center justify-center px-6 text-center">
@@ -237,7 +340,7 @@ export function VerifyProfile() {
     )
   }
 
-  // ── KYC wizard ─────────────────────────────────────────────────────────────
+  // ── KYC wizard ─────────────────────────────────────────────────────────
   return (
     <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col">
 
@@ -258,10 +361,20 @@ export function VerifyProfile() {
             onClick={() => step === 1 ? navigate(-1) : setStep(s => (s - 1) as KycStep)}
             className="absolute left-0 w-8 h-8 flex items-center justify-center"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-800" />
+            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-white" />
           </button>
           <span className="text-[15px] font-semibold text-gray-900 dark:text-[#FFFFFF]">Vérification d'identité</span>
         </div>
+
+        {/* Rejected banner */}
+        {kycStatus === 'rejected' && (
+          <div className="flex items-start gap-2 mb-3 px-3 py-2.5 bg-red-50 dark:bg-red-500/10 rounded-xl border border-red-100 dark:border-red-500/20">
+            <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-[12px] text-red-700 dark:text-red-400 font-medium leading-relaxed">
+              Votre précédente vérification a été refusée. Veuillez soumettre un nouveau dossier.
+            </p>
+          </div>
+        )}
 
         {/* Progress bar */}
         <div className="h-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full overflow-hidden">
@@ -270,16 +383,16 @@ export function VerifyProfile() {
             style={{ width: `${(step / totalSteps) * 100}%` }}
           />
         </div>
-        <p className="text-[11px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-1.5 text-right">Étape {step}/{totalSteps}</p>
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 text-right">Étape {step}/{totalSteps}</p>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 pb-32">
 
         {/* KYC badge */}
-        <div className="flex items-center gap-2 mb-5 px-3 py-2 bg-blue-50 rounded-xl border border-blue-100">
+        <div className="flex items-center gap-2 mb-5 px-3 py-2 bg-blue-50 dark:bg-blue-500/10 rounded-xl border border-blue-100 dark:border-blue-500/20">
           <Shield className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          <p className="text-[12px] text-blue-600 font-medium">
+          <p className="text-[12px] text-blue-600 dark:text-blue-400 font-medium">
             Vos données sont chiffrées et utilisées uniquement pour la vérification.
           </p>
         </div>
@@ -305,16 +418,15 @@ export function VerifyProfile() {
         )}
 
         {/* Instruction tip */}
-        <div className="flex items-start gap-2 mb-6 p-3 bg-[#FFF8F1] rounded-xl border border-orange-100">
+        <div className="flex items-start gap-2 mb-6 p-3 bg-[#FFF8F1] dark:bg-[#FF9F1C]/5 rounded-xl border border-orange-100 dark:border-[#FF9F1C]/20">
           <AlertCircle className="w-4 h-4 text-[#FF9F1C] mt-0.5 flex-shrink-0" />
-          <p className="text-[12px] text-gray-600 leading-relaxed">{currentStep.instruction}</p>
+          <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed">{currentStep.instruction}</p>
         </div>
 
         {/* Capture buttons */}
         <div className="flex gap-3">
           <button
             onClick={() => {
-              // Camera capture
               if (fileInputRef.current) {
                 fileInputRef.current.removeAttribute('capture')
                 fileInputRef.current.setAttribute('capture', currentStep.capture)
@@ -323,7 +435,7 @@ export function VerifyProfile() {
             }}
             className="flex-1 flex flex-col items-center gap-2 px-4 py-4 border border-gray-200 dark:border-[#333333] rounded-2xl bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
           >
-            <div className="w-10 h-10 rounded-full bg-[#FFF8F1] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[#FFF8F1] dark:bg-[#FF9F1C]/10 flex items-center justify-center">
               <Camera className="w-5 h-5 text-[#FF9F1C]" />
             </div>
             <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">
@@ -333,7 +445,6 @@ export function VerifyProfile() {
 
           <button
             onClick={() => {
-              // Gallery pick — remove capture attribute
               if (fileInputRef.current) {
                 fileInputRef.current.removeAttribute('capture')
                 fileInputRef.current.click()
@@ -395,7 +506,7 @@ export function VerifyProfile() {
                   ? 'w-6 h-2 bg-[#FF9F1C]'
                   : previews[s.id]
                   ? 'w-2 h-2 bg-[#10B981]'
-                  : 'w-2 h-2 bg-gray-200'
+                  : 'w-2 h-2 bg-gray-200 dark:bg-[#2A2A2A]'
               }`}
             />
           ))}
@@ -404,5 +515,3 @@ export function VerifyProfile() {
     </div>
   )
 }
-
-

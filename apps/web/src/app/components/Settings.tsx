@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ChevronLeft, ChevronRight, Globe, Lock, Bell, Shield, HelpCircle,
-  LogOut, User, Moon, Smartphone, ExternalLink, Loader2,
+  LogOut, User, Moon, Smartphone, ExternalLink, Loader2, Clock,
+  CheckCircle2, XCircle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { useNavigate } from 'react-router';
 import { BadgeCheck } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
@@ -42,10 +44,18 @@ export function Settings({ onBack }: SettingsProps) {
   const [showPassModal, setShowPassModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'rejected' | null>(null);
 
   const { notifEnabled, setNotifEnabled, language } = useSettingsStore();
   const { theme, setTheme } = useTheme();
   const { mutate: doLogout, isPending: loggingOut } = useLogout();
+
+  // Fetch KYC status
+  useEffect(() => {
+    apiClient.get('/users/me/kyc-status')
+      .then(r => setKycStatus(r.data.kycStatus ?? null))
+      .catch(() => setKycStatus((profile as any)?.kycStatus ?? null))
+  }, [profile]);
   
   const darkMode = theme === 'dark';
 
@@ -219,14 +229,38 @@ export function Settings({ onBack }: SettingsProps) {
               onClick={() => navigate('/verify-profile')}
               className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.blue}`}>
-                <BadgeCheck className="w-5 h-5" />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                kycStatus === 'verified'
+                  ? 'bg-green-50 dark:bg-green-500/10 text-green-500'
+                  : kycStatus === 'pending'
+                  ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-500'
+                  : kycStatus === 'rejected'
+                  ? 'bg-red-50 dark:bg-red-500/10 text-red-500'
+                  : colorClasses.blue
+              }`}>
+                {kycStatus === 'verified' ? <CheckCircle2 className="w-5 h-5" /> :
+                 kycStatus === 'pending'  ? <Clock className="w-5 h-5" /> :
+                 kycStatus === 'rejected' ? <XCircle className="w-5 h-5" /> :
+                 <BadgeCheck className="w-5 h-5" />}
               </div>
               <div className="flex-1 text-left">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">Vérification du profil</p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500">Obtenir le badge vérifié</p>
+                <p className={`text-[12px] font-medium ${
+                  kycStatus === 'verified'
+                    ? 'text-green-500'
+                    : kycStatus === 'pending'
+                    ? 'text-amber-500'
+                    : kycStatus === 'rejected'
+                    ? 'text-red-500'
+                    : 'text-gray-400 dark:text-gray-500'
+                }`}>
+                  {kycStatus === 'verified' ? '✓ Profil vérifié'
+                   : kycStatus === 'pending' ? '⏳ Vérification en cours'
+                   : kycStatus === 'rejected' ? '✗ Dossier refusé — resoumettre'
+                   : 'Obtenir le badge vérifié'}
+                </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300" />
+              {kycStatus !== 'verified' && kycStatus !== 'pending' && <ChevronRight className="w-5 h-5 text-gray-300" />}
             </button>
           </div>
         </div>
