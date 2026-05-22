@@ -340,13 +340,31 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     hapticFeedback.impact()
     if (!user) { toast.error("Connectez-vous pour contribuer."); return }
     if (!hasJoined && event?.price === 0) { toast.info("Rejoignez d'abord l'événement."); return }
+    // Pre-fill amount if pool mode is 'fixe'
+    const poolMode = event?.pool?.mode
+    const poolMinAmount = event?.pool?.minAmount
+    if (poolMode === 'fixe' && poolMinAmount) {
+      setContributeAmount(String(poolMinAmount))
+    } else {
+      setContributeAmount('')
+    }
     setShowContributeModal(true)
   }
 
   const handleConfirmContribute = () => {
     const amount = parseInt(contributeAmount)
+    const poolMode = event?.pool?.mode
+    const poolMinAmount = event?.pool?.minAmount
     if (isNaN(amount) || amount <= 0) {
-      toast.error("Veuillez entrer un montant valide")
+      toast.error("Veuillez entrer un montant valide (supérieur à 0)")
+      return
+    }
+    if (poolMode === 'minimum' && poolMinAmount && amount < Number(poolMinAmount)) {
+      toast.error(`Le montant minimum est de ${Number(poolMinAmount).toLocaleString()} F CFA`)
+      return
+    }
+    if (poolMode === 'fixe' && poolMinAmount && amount !== Number(poolMinAmount)) {
+      toast.error(`Le montant doit être exactement de ${Number(poolMinAmount).toLocaleString()} F CFA`)
       return
     }
     setShowContributeModal(false)
@@ -356,11 +374,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const handleShare = async () => {
     if (!event) return;
     hapticFeedback.impact();
-    await shareLink(
-      event.title,
-      `Découvrez "${event.title}" sur Let's Out !`,
-      `${window.location.origin}/events/${event.id}`
-    );
+    // Open invite friends modal first; fallback to native share if no friends
+    setShowInviteModal(true);
   };
 
   const handleFavorite = () => {
@@ -902,49 +917,82 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       )}
 
       {/* Contribute Modal */}
-      {showContributeModal && (
-        <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
-          <div className="w-full bg-white rounded-t-[20px] shadow-2xl animate-in slide-in-from-bottom duration-300">
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-gray-200 rounded-full" />
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-[15px] font-semibold text-gray-900">Contribuer à la cagnotte</span>
-              <button
-                onClick={() => setShowContributeModal(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center"
-              >
-                <span className="text-gray-500 text-[14px] font-bold leading-none">✕</span>
-              </button>
-            </div>
-            <div className="px-5 pb-8">
-              <p className="text-[13px] text-gray-500 mb-5">
-                Saisissez le montant de votre choix pour soutenir cet événement.
-              </p>
-              <div className="flex gap-2 items-center mb-6">
-                <input 
-                  type="number" 
-                  min={1} 
-                  autoFocus
-                  value={contributeAmount} 
-                  onChange={e => setContributeAmount(e.target.value)}
-                  placeholder="Ex: 5000"
-                  className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-[16px] font-semibold focus:outline-none focus:border-[#FF9F1C]"
-                />
-                <div className="px-3 py-3 border border-gray-200 rounded-xl text-[14px] font-bold text-gray-600 bg-gray-50">
-                  F CFA
-                </div>
+      {showContributeModal && (() => {
+        const poolMode = event?.pool?.mode
+        const poolMinAmount = event?.pool?.minAmount
+        const isFixed = poolMode === 'fixe'
+        const isMinimum = poolMode === 'minimum'
+        return (
+          <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
+            <div className="w-full bg-white rounded-t-[32px] shadow-2xl animate-in slide-in-from-bottom duration-300">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 bg-gray-200 rounded-full" />
               </div>
-              <button
-                onClick={handleConfirmContribute}
-                className="w-full bg-[#FF9F1C] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform"
-              >
-                Procéder au paiement
-              </button>
+              <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
+                <div>
+                  <span className="text-[16px] font-bold text-gray-900">Contribuer à la cagnotte</span>
+                  {isFixed && (
+                    <span className="ml-2 text-[11px] bg-orange-50 text-[#FF9F1C] font-bold px-2 py-0.5 rounded-full border border-orange-100">Montant fixe</span>
+                  )}
+                  {isMinimum && (
+                    <span className="ml-2 text-[11px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full border border-blue-100">Montant minimum</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowContributeModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+              <div className="px-5 pt-4 pb-8">
+                {isFixed && poolMinAmount ? (
+                  <div className="mb-4 p-3 bg-orange-50 rounded-xl border border-orange-100">
+                    <p className="text-[13px] text-[#FF9F1C] font-medium">
+                      🔒 Montant fixe — le montant de contribution est défini par l'organisateur et ne peut pas être modifié.
+                    </p>
+                  </div>
+                ) : isMinimum && poolMinAmount ? (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <p className="text-[13px] text-blue-600 font-medium">
+                      📌 Montant minimum : <strong>{Number(poolMinAmount).toLocaleString()} F CFA</strong>. Vous pouvez contribuer plus.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-gray-500 mb-4">
+                    🎁 Saisissez le montant de votre choix pour soutenir cet événement.
+                  </p>
+                )}
+                <div className="flex gap-2 items-center mb-6">
+                  <input
+                    type="number"
+                    min={isMinimum && poolMinAmount ? Number(poolMinAmount) : 1}
+                    autoFocus
+                    readOnly={isFixed}
+                    value={contributeAmount}
+                    onChange={e => !isFixed && setContributeAmount(e.target.value)}
+                    placeholder={isMinimum && poolMinAmount ? `Min. ${Number(poolMinAmount).toLocaleString()}` : 'Ex: 5000'}
+                    className={`flex-1 px-4 py-3.5 border rounded-xl text-[16px] font-semibold focus:outline-none transition-colors ${
+                      isFixed
+                        ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'border-gray-200 focus:border-[#FF9F1C] text-gray-900'
+                    }`}
+                  />
+                  <div className="px-3 py-3.5 border border-gray-200 rounded-xl text-[14px] font-bold text-gray-600 bg-gray-50">
+                    F CFA
+                  </div>
+                </div>
+                <button
+                  onClick={handleConfirmContribute}
+                  className="w-full bg-[#FF9F1C] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform shadow-md"
+                >
+                  Procéder au paiement
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
       {/* QR Code Modal for Private Events */}
       {showQRModal && event?.joinCode && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center px-5 animate-in fade-in duration-200">
@@ -1111,32 +1159,39 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* Invite Friends Modal */}
       {showInviteModal && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[70%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="w-full h-[75%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
             </div>
             <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
-              <h3 className="text-[18px] font-bold text-gray-900">Inviter des amis</h3>
+              <div>
+                <h3 className="text-[18px] font-bold text-gray-900">Partager l'événement</h3>
+                <p className="text-[12px] text-gray-400 mt-0.5">Invitez vos amis ou partagez le lien</p>
+              </div>
               <button onClick={() => setShowInviteModal(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-gray-500 font-bold leading-none">✕</span>
+                <X className="w-4 h-4 text-gray-500" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4 pb-24">
+            <div className="flex-1 overflow-y-auto px-5 py-4" style={{ scrollbarWidth: 'none' }}>
               {friends.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-gray-500 text-[14px]">Aucun ami à inviter.</p>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span className="text-2xl">👥</span>
+                  </div>
+                  <p className="text-gray-700 font-bold text-[15px]">Aucun ami à inviter</p>
                   <p className="text-gray-400 text-[13px] mt-1">Ajoutez des amis depuis votre profil.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
+                  <p className="text-[12px] font-bold text-gray-400 uppercase tracking-wide mb-2">Vos amis</p>
                   {friends.map((friend: any) => (
-                    <div key={friend.userId} className="flex items-center gap-3">
+                    <div key={friend.userId} className="flex items-center gap-3 py-1">
                       <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                         <SafeImage
                           src={friend.avatarUrl}
                           alt={friend.displayName}
                           className="w-full h-full object-cover"
-                          fallback={<div className="w-full h-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}>{(friend.displayName || 'A').charAt(0)}</div>}
+                          fallback={<div className="w-full h-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #FF9F1C, #FFB75E)' }}>{(friend.displayName || 'A').charAt(0)}</div>}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1161,7 +1216,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 ${
                           invitedUsers.has(friend.userId)
                             ? 'bg-green-100 text-green-600 border border-green-200'
-                            : 'bg-[#FF9F1C] text-white'
+                            : 'bg-[#FF9F1C] text-white shadow-sm'
                         } disabled:opacity-60`}
                       >
                         {invitingUsers.has(friend.userId) ? <Loader2 className="w-4 h-4 animate-spin" /> : invitedUsers.has(friend.userId) ? '✓ Invité' : 'Inviter'}
@@ -1170,6 +1225,31 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   ))}
                 </div>
               )}
+            </div>
+            {/* Footer: native share link */}
+            <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
+              <button
+                onClick={async () => {
+                  if (!event) return
+                  const url = `${window.location.origin}/events/${event.id}`
+                  if (navigator.share) {
+                    try {
+                      await navigator.share({ title: event.title, text: `Découvrez "${event.title}" sur Let's Out !`, url })
+                    } catch { /* user dismissed */ }
+                  } else {
+                    try {
+                      await navigator.clipboard.writeText(url)
+                      toast.success('Lien copié !')
+                    } catch {
+                      toast.error('Impossible de copier le lien')
+                    }
+                  }
+                }}
+                className="w-full py-3.5 rounded-full border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              >
+                <Share2 className="w-4 h-4" />
+                Partager le lien
+              </button>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BadgeCheck, Edit3, Loader2, Target, Bell } from 'lucide-react'
+import { BadgeCheck, Edit3, Loader2, HandCoins, Bell, Megaphone } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { useNavigate } from 'react-router'
 import { apiClient } from '@/lib/api-client'
@@ -217,7 +217,7 @@ export function ManageEventView({
           onClick={handleAddPool}
           className="w-full py-[15px] rounded-full border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[15px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
         >
-          <Target className="w-5 h-5" />
+          <HandCoins className="w-5 h-5" />
           Ajouter cagnotte
         </button>
         {/* Publier l'événement */}
@@ -231,7 +231,7 @@ export function ManageEventView({
           {publishing ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <Bell className="w-5 h-5" />
+            <Megaphone className="w-5 h-5" />
           )}
           {publishing ? 'Publication...' : 'Publier l\'événement'}
         </button>

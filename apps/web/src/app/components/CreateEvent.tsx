@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, Target, Bell, BadgeCheck } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, HandCoins, Megaphone, BadgeCheck, PiggyBank, Send } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
@@ -371,7 +371,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     <div className="w-full h-full bg-white flex flex-col">
 
       {/* Header */}
-      <div className="px-5 pt-12 pb-0 bg-white">
+      <div className="px-5 pt-16 pb-0 bg-white">
         <div className="flex items-center justify-center relative mb-3">
           {step < 7 && (
             <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
@@ -1043,7 +1043,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 onClick={() => { setShowPoolModal(true) }}
                 className="w-full py-[15px] rounded-full border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[15px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
               >
-                <Target className="w-5 h-5" />
+              <PiggyBank className="w-5 h-5" />
                 Ajouter une cagnotte
               </button>
               <button
@@ -1053,7 +1053,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   publishing ? 'bg-[#FFD99A]' : 'bg-[#FF9F1C]'
                 }`}
               >
-                {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Bell className="w-5 h-5" />}
+                {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                 {publishing ? 'Publication...' : "Publier l'événement"}
               </button>
               <button
@@ -1076,7 +1076,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       {showPoolModal && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col">
           {/* Header */}
-          <div className="px-5 pt-4 pb-0 flex-shrink-0">
+          <div className="px-5 pt-16 pb-0 flex-shrink-0">
             <div className="flex items-center justify-center relative mb-3">
               <button
                 onClick={() => {
@@ -1341,7 +1341,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       {/* ── Search co-organizer modal ── */}
       {showSearchModal && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col">
-          <div className="px-5 pt-5 pb-3">
+          <div className="px-5 pt-16 pb-3">
             <div className="flex items-center justify-center relative mb-4">
               <button onClick={() => setShowSearchModal(false)} className="absolute left-0">
                 <ChevronLeft className="w-6 h-6 text-gray-800" />
@@ -1430,7 +1430,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       {/* ── Interactive Map Modal ── */}
       {showMapModal && (
         <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="absolute top-0 left-0 right-0 z-[110] bg-white/90 backdrop-blur-md px-5 pt-12 pb-4 shadow-sm border-b border-gray-100 flex items-center justify-between">
+          <div className="absolute top-0 left-0 right-0 z-[110] bg-white/90 backdrop-blur-md px-5 pt-16 pb-4 shadow-sm border-b border-gray-100 flex items-center justify-between">
             <button onClick={() => setShowMapModal(false)} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full active:scale-95 transition-transform">
               <ChevronLeft className="w-6 h-6 text-gray-800" />
             </button>

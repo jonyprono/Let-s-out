@@ -86,7 +86,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   return (
     <div className="absolute inset-0 z-[60] flex flex-col bg-white dark:bg-[#1A1A1A]">
       {/* Header */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100 bg-white dark:bg-[#1A1A1A]">
+      <div className="px-4 pt-16 pb-3 flex items-center justify-between border-b border-gray-100 bg-white dark:bg-[#1A1A1A]">
         <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2A2A2A] text-gray-900 dark:text-[#FFFFFF]">
           <X className="w-6 h-6" />
         </button>

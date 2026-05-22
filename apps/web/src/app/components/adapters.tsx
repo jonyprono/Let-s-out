@@ -203,13 +203,14 @@ export function Profile() {
   return (
     <Suspense fallback={<PageLoader />}>
       <ProfileBase
-        onNavigate={(screen: string) => {
+        onNavigate={(screen: string, id?: string) => {
           const map: Record<string, string> = {
             'home': '/home', 'explorer': '/explorer', 'messages': '/messages',
             'create-event': '/events/create', 'settings': '/settings',
             'welcome': '/welcome', 'friends': '/friends'
           }
-          if (map[screen]) nav(map[screen])
+          if (screen === 'event-details' && id) nav(`/events/${id}`)
+          else if (map[screen]) nav(map[screen])
         }}
       />
     </Suspense>
