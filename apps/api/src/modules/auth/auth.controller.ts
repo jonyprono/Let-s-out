@@ -383,6 +383,9 @@ export class AuthController {
       data: { passwordHash }
     })
 
+    return reply.send({ success: true, message: 'Mot de passe mis à jour avec succès' })
+  }
+
   async adminLogin(req: FastifyRequest, reply: FastifyReply) {
     const { password } = req.body as { password?: string }
     
