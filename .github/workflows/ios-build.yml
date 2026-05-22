@@ -35,7 +35,7 @@ jobs:
           cd apps/web/ios/App
           # Build the workspace without code signing
           xcodebuild build \
-            -workspace App.xcworkspace \
+            -project App.xcodeproj \
             -scheme App \
             -configuration Debug \
             -sdk iphoneos \
