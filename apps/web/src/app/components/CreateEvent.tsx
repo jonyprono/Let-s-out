@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, BadgeCheck, PiggyBank, Send } from 'lucide-react'
+import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, BadgeCheck } from 'lucide-react'
+import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
@@ -1054,19 +1055,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="w-full space-y-3">
               <button
                 onClick={() => { setShowPoolModal(true) }}
-                className="w-full py-[15px] rounded-full border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[15px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                className="w-full py-[15px] rounded-full border border-gray-200 text-[#FF9F1C] font-bold text-[15px] bg-white flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform"
               >
-              <PiggyBank className="w-5 h-5" />
-                Ajouter une cagnotte
+                <CagnotteAddIcon className="w-5 h-5 text-[#FF9F1C]" />
+                Ajouter cagnotte
               </button>
               <button
                 onClick={handlePublish}
                 disabled={publishing}
-                className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${
+                className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all ${
                   publishing ? 'bg-[#FFD99A]' : 'bg-[#FF9F1C]'
                 }`}
               >
-                {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <PublishEventIcon className="w-5 h-5 text-white" />}
                 {publishing ? 'Publication...' : "Publier l'événement"}
               </button>
               <button

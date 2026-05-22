@@ -9,7 +9,12 @@ export function AppLayout() {
   const isEventDetails = location.pathname.startsWith('/events/') && location.pathname !== '/events/create'
   const isCreateEvent = location.pathname === '/events/create'
   
-  const hideBottomNav = isChatDetails || isEventDetails || isCreateEvent
+  const hideBottomNav =
+    isChatDetails ||
+    isEventDetails ||
+    isCreateEvent ||
+    location.pathname === '/verify-profile' ||
+    location.pathname.endsWith('/pay')
 
   return (
     <div id="app-layout-wrapper" className="h-screen w-full bg-gray-100 flex items-center justify-center overflow-hidden">

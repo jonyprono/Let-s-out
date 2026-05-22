@@ -17,6 +17,7 @@ import { PushNotifications } from '@capacitor/push-notifications'
 
 export function AppBootstrap() {
   const accessToken = useAuthStore((s) => s.accessToken)
+  const isLoggingOut = useAuthStore((s) => s.isLoggingOut)
   const refreshUser = useAuthStore((s) => s.refreshUser)
   const navigate = useNavigate()
 
@@ -29,7 +30,7 @@ export function AppBootstrap() {
       });
     }
 
-    if (accessToken && isOnline()) {
+    if (accessToken && !isLoggingOut && isOnline()) {
       // Fire-and-forget: don't block the UI if this fails
       refreshUser().catch(() => {
         console.warn('[AppBootstrap] Could not refresh user — using cached data')

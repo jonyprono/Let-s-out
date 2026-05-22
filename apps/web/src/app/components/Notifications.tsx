@@ -1,29 +1,38 @@
 import { useNavigate } from 'react-router';
-import { ChevronLeft, Heart, MessageCircle, UserPlus, Calendar, DollarSign, Bell, Check, Loader2, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Heart, MessageCircle, UserPlus, Calendar, DollarSign, Bell, Check, Loader2, Users, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/features/notifications/api';
+import {
+  groupNotificationsByType,
+  getNotificationsForType,
+  filterActiveNotifications,
+  NOTIFICATION_TTL_MS,
+} from '@/lib/notifications-group';
 
 interface NotificationsProps {
   onBack: () => void;
 }
 
-// Exact mapping of Prisma NotifType enum values
-const TYPE_CONFIG: Record<string, { icon: any; colorClass: string; label: string }> = {
+const TYPE_CONFIG: Record<string, { icon: typeof Bell; colorClass: string; label: string }> = {
   EVENT_INVITE:    { icon: Calendar,       colorClass: 'bg-orange-50 text-[#FF9F1C]', label: 'Invitation' },
   EVENT_UPDATE:    { icon: Calendar,       colorClass: 'bg-orange-50 text-[#FF9F1C]',    label: 'Mise à jour événement' },
   EVENT_CANCELLED: { icon: Calendar,       colorClass: 'bg-red-50 text-red-500',      label: 'Événement annulé' },
   JOIN_REQUEST:    { icon: Users,          colorClass: 'bg-orange-50 text-[#FF9F1C]', label: 'Demande de participation' },
   JOIN_ACCEPTED:   { icon: CheckCircle,    colorClass: 'bg-green-50 text-green-500',  label: 'Participation acceptée' },
   NEW_MESSAGE:     { icon: MessageCircle,  colorClass: 'bg-orange-50 text-[#FF9F1C]', label: 'Nouveau message' },
-  FRIEND_REQUEST:  { icon: UserPlus,       colorClass: 'bg-orange-50 text-[#FF9F1C]',    label: 'Demande d\'ami' },
+  FRIEND_REQUEST:  { icon: UserPlus,       colorClass: 'bg-orange-50 text-[#FF9F1C]',    label: "Demande d'ami" },
   FRIEND_ACCEPTED: { icon: Heart,          colorClass: 'bg-pink-50 text-pink-500',    label: 'Ami accepté' },
   PAYMENT_SUCCESS: { icon: DollarSign,     colorClass: 'bg-green-50 text-green-500',  label: 'Paiement réussi' },
   PAYMENT_FAILED:  { icon: AlertCircle,    colorClass: 'bg-red-50 text-red-500',      label: 'Paiement échoué' },
   SYSTEM:          { icon: Bell,           colorClass: 'bg-gray-100 text-gray-500',   label: 'Système' },
-  // fallback for old/unknown types
   default:         { icon: Bell,           colorClass: 'bg-orange-50 text-[#FF9F1C]', label: 'Notification' },
 };
+
+const TYPE_LABELS = Object.fromEntries(
+  Object.entries(TYPE_CONFIG).map(([k, v]) => [k, v.label]),
+) as Record<string, string>
 
 function timeAgo(dateStr: string): string {
   const now = new Date();
@@ -38,30 +47,40 @@ function timeAgo(dateStr: string): string {
   return format(date, 'd MMM', { locale: fr });
 }
 
-import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/features/notifications/api';
-
 export function Notifications({ onBack }: NotificationsProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+  const [selectedType, setSelectedType] = useState<string | null>(null);
 
-  const { data, isLoading } = useNotifications(50, activeTab === 'unread');
-  const notifications = data?.data ?? [];
-  const unreadCount = data?.unreadCount ?? 0;
+  const { data, isLoading } = useNotifications(100, false);
+  const allNotifications = data?.data ?? [];
+  const activeNotifications = useMemo(
+    () => filterActiveNotifications(allNotifications),
+    [allNotifications],
+  );
+  const unreadCount = activeNotifications.filter((n) => !n.isRead).length;
+
+  const groups = useMemo(
+    () => groupNotificationsByType(activeNotifications, { ...TYPE_LABELS, default: 'Notification' }),
+    [activeNotifications],
+  );
+
+  const typeNotifications = selectedType
+    ? getNotificationsForType(activeNotifications, selectedType)
+    : [];
 
   const markReadMutation = useMarkNotificationAsRead();
   const markAllReadMutation = useMarkAllNotificationsAsRead();
 
-  /** Navigate to the relevant screen based on notification type */
-  const handleNotifPress = (notif: typeof notifications[number]) => {
+  const handleNotifPress = (notif: (typeof activeNotifications)[number]) => {
     if (!notif.isRead) markReadMutation.mutate(notif.id);
 
-    const d = notif.data as any;
+    const d = notif.data as Record<string, string> | undefined;
     switch (notif.type) {
       case 'FRIEND_REQUEST':
         navigate('/friend-requests');
         break;
       case 'FRIEND_ACCEPTED':
-        if (d?.receiverId) navigate(`/profile`);
+        navigate('/profile');
         break;
       case 'EVENT_INVITE':
       case 'EVENT_UPDATE':
@@ -82,22 +101,28 @@ export function Notifications({ onBack }: NotificationsProps) {
     }
   };
 
+  const selectedCfg = selectedType ? (TYPE_CONFIG[selectedType] ?? TYPE_CONFIG.default) : null;
+
   return (
     <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
 
-      {/* Header */}
-      <div className="bg-white px-5 pt-4 pt-safe-4 pb-0 border-b border-gray-100">
+      <div className="bg-white dark:bg-[#1A1A1A] px-5 pt-4 pt-safe-4 pb-0 border-b border-gray-100 dark:border-[#2A2A2A]">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
-              onClick={onBack}
-              className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center"
+              onClick={() => {
+                if (selectedType) setSelectedType(null);
+                else onBack();
+              }}
+              className="w-9 h-9 bg-gray-100 dark:bg-[#2A2A2A] rounded-full flex items-center justify-center flex-shrink-0"
             >
-              <ChevronLeft className="w-5 h-5 text-gray-700" />
+              <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
             </button>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
-              {unreadCount > 0 && (
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">
+                {selectedType && selectedCfg ? selectedCfg.label : 'Notifications'}
+              </h1>
+              {unreadCount > 0 && !selectedType && (
                 <p className="text-xs text-gray-400">{unreadCount} non lu{unreadCount > 1 ? 'es' : ''}</p>
               )}
             </div>
@@ -106,7 +131,7 @@ export function Notifications({ onBack }: NotificationsProps) {
             <button
               onClick={() => markAllReadMutation.mutate()}
               disabled={markAllReadMutation.isPending}
-              className="flex items-center gap-1.5 text-xs font-semibold text-[#FF9F1C] px-3 py-1.5 bg-orange-50 rounded-full"
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#FF9F1C] px-3 py-1.5 bg-orange-50 rounded-full flex-shrink-0"
             >
               {markAllReadMutation.isPending
                 ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -116,30 +141,13 @@ export function Notifications({ onBack }: NotificationsProps) {
           )}
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1">
-          {(['all', 'unread'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2.5 text-sm font-semibold rounded-t-xl transition-colors border-b-2 ${
-                activeTab === tab
-                  ? 'text-[#FF9F1C] border-[#FF9F1C] bg-white'
-                  : 'text-gray-400 border-transparent'
-              }`}
-            >
-              {tab === 'all' ? 'Toutes' : 'Non lues'}
-              {tab === 'unread' && unreadCount > 0 && (
-                <span className="ml-1.5 bg-[#FF9F1C] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        {!selectedType && (
+          <p className="text-[11px] text-gray-400 pb-3 px-1">
+            Les notifications de plus de {Math.round(NOTIFICATION_TTL_MS / (24 * 60 * 60 * 1000))} jours sont masquées.
+          </p>
+        )}
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto pb-6" style={{ scrollbarWidth: 'none' }}>
         {isLoading ? (
           <div className="flex flex-col gap-3 p-5">
@@ -153,7 +161,47 @@ export function Notifications({ onBack }: NotificationsProps) {
               </div>
             ))}
           </div>
-        ) : notifications.length === 0 ? (
+        ) : selectedType ? (
+          typeNotifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
+              <p className="text-[13px] text-gray-400">Aucune notification dans cette catégorie.</p>
+            </div>
+          ) : (
+            <div className="p-4 space-y-2">
+              {typeNotifications.map((notif) => {
+                const cfg = TYPE_CONFIG[notif.type] ?? TYPE_CONFIG.default;
+                const Icon = cfg.icon;
+                return (
+                  <button
+                    key={notif.id}
+                    onClick={() => handleNotifPress(notif)}
+                    className={`w-full flex items-start gap-3 p-4 rounded-2xl text-left transition-all active:scale-[0.98] shadow-sm ${
+                      notif.isRead ? 'bg-white dark:bg-[#1A1A1A]' : 'bg-white dark:bg-[#1A1A1A] border-l-4 border-[#FF9F1C]'
+                    }`}
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${cfg.colorClass}`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-0.5">
+                        <p className={`text-[14px] leading-snug ${notif.isRead ? 'text-gray-700' : 'font-semibold text-gray-900 dark:text-white'}`}>
+                          {notif.title}
+                        </p>
+                        <span className="text-[11px] text-gray-400 whitespace-nowrap flex-shrink-0 mt-0.5">
+                          {timeAgo(notif.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-[13px] text-gray-500 leading-snug line-clamp-2">{notif.body}</p>
+                    </div>
+                    {!notif.isRead && (
+                      <div className="w-2.5 h-2.5 bg-[#FF9F1C] rounded-full flex-shrink-0 mt-1" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )
+        ) : groups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
             <div
               className="w-16 h-16 rounded-2xl mb-4 flex items-center justify-center"
@@ -161,61 +209,38 @@ export function Notifications({ onBack }: NotificationsProps) {
             >
               <Bell className="w-8 h-8" style={{ color: '#FF9F1C' }} />
             </div>
-            <h3 className="text-[15px] font-bold text-gray-900 mb-1">Aucune notification</h3>
-            <p className="text-[13px] text-gray-400">
-              {activeTab === 'unread' ? 'Vous avez tout lu !' : 'Vos notifications apparaîtront ici.'}
-            </p>
+            <h3 className="text-[15px] font-bold text-gray-900 dark:text-white mb-1">Aucune notification</h3>
+            <p className="text-[13px] text-gray-400">Vos notifications récentes apparaîtront ici.</p>
           </div>
         ) : (
           <div className="p-4 space-y-2">
-            {notifications.map((notif) => {
-              const cfg = TYPE_CONFIG[notif.type] ?? TYPE_CONFIG.default;
+            {groups.map((group) => {
+              const cfg = TYPE_CONFIG[group.type] ?? TYPE_CONFIG.default;
               const Icon = cfg.icon;
-              // Detect if this notification is navigable
-              const isNavigable = [
-                'FRIEND_REQUEST', 'FRIEND_ACCEPTED',
-                'EVENT_INVITE', 'EVENT_UPDATE', 'EVENT_CANCELLED',
-                'JOIN_REQUEST', 'JOIN_ACCEPTED',
-                'PAYMENT_SUCCESS', 'NEW_MESSAGE',
-              ].includes(notif.type);
-
               return (
                 <button
-                  key={notif.id}
-                  onClick={() => handleNotifPress(notif)}
-                  className={`w-full flex items-start gap-3 p-4 rounded-2xl text-left transition-all active:scale-[0.98] shadow-sm ${
-                    notif.isRead ? 'bg-white' : 'bg-white border-l-4 border-[#FF9F1C]'
-                  }`}
+                  key={group.type}
+                  onClick={() => setSelectedType(group.type)}
+                  className="w-full flex items-center gap-3 p-4 rounded-2xl bg-white dark:bg-[#1A1A1A] text-left shadow-sm active:scale-[0.98] transition-transform"
                 >
-                  {/* Icon */}
-                  <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${cfg.colorClass}`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${cfg.colorClass}`}>
                     <Icon className="w-5 h-5" />
                   </div>
-
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-0.5">
-                      <p className={`text-[14px] leading-snug ${notif.isRead ? 'text-gray-700' : 'font-semibold text-gray-900'}`}>
-                        {notif.title}
-                      </p>
-                      <span className="text-[11px] text-gray-400 whitespace-nowrap flex-shrink-0 mt-0.5">
-                        {timeAgo(notif.createdAt)}
-                      </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[15px] font-bold text-gray-900 dark:text-white">{group.label}</p>
+                      {group.unreadCount > 0 && (
+                        <span className="bg-[#FF9F1C] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          {group.unreadCount}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-[13px] text-gray-500 leading-snug line-clamp-2">{notif.body}</p>
-                    {isNavigable && (
-                      <p className="text-[11px] text-[#FF9F1C] font-medium mt-1">
-                        {notif.type === 'FRIEND_REQUEST' ? 'Appuyez pour répondre →' :
-                         notif.type === 'PAYMENT_SUCCESS' ? 'Voir le reçu →' :
-                         notif.type === 'NEW_MESSAGE' ? 'Ouvrir →' : 'Voir →'}
-                      </p>
-                    )}
+                    <p className="text-[13px] text-gray-500 truncate mt-0.5">{group.latestTitle}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      {group.count} notification{group.count > 1 ? 's' : ''} · {timeAgo(group.latestAt)}
+                    </p>
                   </div>
-
-                  {/* Unread dot */}
-                  {!notif.isRead && (
-                    <div className="w-2.5 h-2.5 bg-[#FF9F1C] rounded-full flex-shrink-0 mt-1" />
-                  )}
+                  <ChevronRight className="w-5 h-5 text-gray-300 flex-shrink-0" />
                 </button>
               );
             })}
@@ -225,4 +250,3 @@ export function Notifications({ onBack }: NotificationsProps) {
     </div>
   );
 }
-

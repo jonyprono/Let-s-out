@@ -95,7 +95,7 @@ const silentEndpoints = ['/notifications', '/auth/me', '/auth/refresh']
 const isSilent = (url?: string) => silentEndpoints.some(e => url?.includes(e))
 
 // Auth endpoints that should NOT trigger 401 refresh logic
-const authEndpoints = ['/auth/login', '/auth/register', '/auth/check-', '/auth/verify-', '/auth/send-']
+const authEndpoints = ['/auth/login', '/auth/register', '/auth/check-', '/auth/verify-', '/auth/send-', '/auth/logout', '/auth/refresh']
 const isAuthEndpoint = (url?: string) => authEndpoints.some(e => url?.includes(e))
 
 apiClient.interceptors.response.use(
@@ -105,6 +105,12 @@ apiClient.interceptors.response.use(
 
     // ── 401: try to refresh token ──────────────────────────────────────────
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint(original.url)) {
+      const authState = useAuthStore.getState()
+      // Ne pas rétablir la session après une déconnexion volontaire
+      if (authState.isLoggingOut || !authState.accessToken) {
+        return Promise.reject(error)
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -136,7 +142,9 @@ apiClient.interceptors.response.use(
       } catch (err) {
         processQueue(err, null)
         useAuthStore.getState().logout()
-        window.location.href = '/login'
+        if (!useAuthStore.getState().isLoggingOut) {
+          window.location.href = '/welcome'
+        }
         return Promise.reject(err)
       } finally {
         isRefreshing = false

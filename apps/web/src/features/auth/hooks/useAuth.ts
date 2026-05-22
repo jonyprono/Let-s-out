@@ -93,21 +93,24 @@ export function useDirectLogin() {
 }
 
 export function useLogout() {
-  const { logout } = useAuthStore()
+  const { logout, setLoggingOut } = useAuthStore()
   const navigate = useNavigate()
   const qc = useQueryClient()
 
   return useMutation({
-    mutationFn: authApi.logout,
-    onMutate: () => {
-      // Clear local state immediately for a fast UX
-      qc.clear()
-      logout()
-      navigate('/welcome', { replace: true })
+    mutationFn: async () => {
+      setLoggingOut(true)
+      try {
+        await authApi.logout()
+      } catch {
+        // Même si l'API échoue, on déconnecte localement
+      }
     },
     onSettled: () => {
-      // Just to be sure we also clear state if there's any lag
+      qc.clear()
       logout()
+      setLoggingOut(false)
+      navigate('/welcome', { replace: true })
     },
   })
 }

@@ -30,10 +30,12 @@ interface AuthState {
   refreshToken: string | null // Store refresh token for mobile fallback
   user: AuthUser | null
   isLoading: boolean
+  isLoggingOut: boolean
   // Actions
   setAccessToken: (token: string) => void
   setRefreshToken: (token: string) => void
   setUser: (user: AuthUser) => void
+  setLoggingOut: (value: boolean) => void
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -45,6 +47,7 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: null,
       user: null,
       isLoading: false,
+      isLoggingOut: false,
 
       setAccessToken: (token) => set({ accessToken: token }),
 
@@ -52,10 +55,10 @@ export const useAuthStore = create<AuthState>()(
 
       setUser: (user) => set({ user }),
 
+      setLoggingOut: (value) => set({ isLoggingOut: value }),
+
       logout: () => {
-        set({ accessToken: null, refreshToken: null, user: null })
-        // Fire and forget — backend revokes cookie
-        apiClient.post('/auth/logout').catch(() => {})
+        set({ accessToken: null, refreshToken: null, user: null, isLoggingOut: false })
       },
 
       refreshUser: async () => {

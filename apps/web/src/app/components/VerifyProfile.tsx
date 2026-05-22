@@ -252,7 +252,7 @@ export function VerifyProfile() {
       />
 
       {/* Header */}
-      <div className="px-5 pt-5 pb-3 flex-shrink-0">
+      <div className="px-5 pt-safe-4 pb-3 flex-shrink-0">
         <div className="flex items-center justify-center relative mb-4">
           <button
             onClick={() => step === 1 ? navigate(-1) : setStep(s => (s - 1) as KycStep)}
@@ -363,7 +363,10 @@ export function VerifyProfile() {
       </div>
 
       {/* Bottom CTA */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-[#333333] px-5 py-4">
+      <div
+        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-[#333333] px-5 pt-4"
+        style={{ paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
+      >
         <button
           onClick={handleNext}
           disabled={!previews[step] || submitStatus === 'uploading'}

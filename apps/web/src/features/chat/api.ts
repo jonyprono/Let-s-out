@@ -126,10 +126,16 @@ export function useConversation(conversationId: string) {
   })
 }
 
+function sortMessagesChronological(messages: Message[]): Message[] {
+  return [...messages].sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+  )
+}
+
 export function useConversationMessages(conversationId: string) {
   return useQuery({
     queryKey: ['chat', 'messages', conversationId],
-    queryFn: () => chatApi.getMessages(conversationId),
+    queryFn: () => chatApi.getMessages(conversationId).then(sortMessagesChronological),
     enabled: !!conversationId,
   })
 }
