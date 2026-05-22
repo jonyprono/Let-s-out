@@ -14,6 +14,7 @@ import { apiClient } from '@/lib/api-client'
 import { shareLink } from '@/lib/utils'
 import { ContributeModal } from '@/components/shared/ContributeModal'
 import { toast } from 'sonner'
+import { resolveContributionAmount, computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 
 const REACTION_EMOJIS = ['❤️', '😂', '👍', '😮', '😢', '🙏']
 
@@ -40,7 +41,8 @@ export function ChatDetails() {
     queryKey: ['events', conversation?.eventId],
     queryFn: () => conversation?.eventId ? eventsApi.getById(conversation.eventId).then((r) => r.data) : Promise.resolve(null),
     enabled: !!conversation?.eventId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 5_000,
+    refetchOnWindowFocus: true,
   })
   const { mutate: sendMsg } = useSendMessage(id!)
 
@@ -211,7 +213,7 @@ export function ChatDetails() {
           )}
         </div>
 
-        {event && event.poolTarget && event.poolTarget > 0 && (
+        {event && hasActivePool(event) && (
           <div className="flex items-center justify-between px-4 pb-4">
             <div className="flex-1 mr-4">
               <p className="text-[13px] font-bold text-gray-900 dark:text-[#FFFFFF] mb-1.5">Cagnotte en cours</p>
@@ -219,14 +221,10 @@ export function ChatDetails() {
                 <div className="flex-1 h-1.5 bg-gray-100 dark:bg-[#333333] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full bg-[#FF9F1C]"
-                    style={{
-                      width: `${Math.min(Math.round(((event.poolCollected ?? 0) / event.poolTarget) * 100), 100)}%`,
-                    }}
+                    style={{ width: `${computePoolStats(event).progress}%` }}
                   />
                 </div>
-                <span className="text-[12px] font-bold text-[#FF9F1C]">
-                  {Math.min(Math.round(((event.poolCollected ?? 0) / event.poolTarget) * 100), 100)}%
-                </span>
+                <span className="text-[12px] font-bold text-[#FF9F1C]">{computePoolStats(event).progress}%</span>
               </div>
             </div>
             <button
@@ -478,13 +476,18 @@ export function ChatDetails() {
         </button>
       </div>
 
-      {showContributeModal && event && event.poolTarget && event.poolTarget > 0 && (
+      {showContributeModal && event && hasActivePool(event) && (
         <ContributeModal
           event={event}
           onClose={() => setShowContributeModal(false)}
           onConfirm={(amount) => {
+            const resolved = resolveContributionAmount(event, amount)
+            if ('error' in resolved) {
+              toast.error(resolved.error)
+              return
+            }
             setShowContributeModal(false)
-            navigate(`/events/${event.id}/pay?amount=${amount}`)
+            navigate(`/events/${event.id}/pay?amount=${resolved.amount}&type=contribution`)
           }}
         />
       )}

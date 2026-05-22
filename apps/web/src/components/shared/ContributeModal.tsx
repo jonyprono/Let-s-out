@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Event } from '@/features/events/api'
+import {
+  getPoolMode,
+  getFixedContributionAmount,
+  validateContributionAmount,
+  getInitialContributionInput,
+  POOL_MODE_LABELS,
+} from '@/lib/pool-contribution'
 
 interface ContributeModalProps {
   event: Event
@@ -10,36 +17,26 @@ interface ContributeModalProps {
 }
 
 export function ContributeModal({ event, onClose, onConfirm }: ContributeModalProps) {
-  const poolMode = event.poolMode || 'libre'
-  const poolMinAmount = event.poolMinAmount
-  const isFixed = poolMode === 'fixe'
-  const isMinimum = poolMode === 'minimum'
+  const mode = getPoolMode(event)
+  const isFixed = mode === 'fixe'
+  const isMinimum = mode === 'minimum'
+  const fixedAmount = getFixedContributionAmount(event)
+  const minAmount = event.poolMinAmount
 
-  const [amount, setAmount] = useState('')
+  const [amount, setAmount] = useState(() => getInitialContributionInput(event))
 
   useEffect(() => {
-    if (isFixed && poolMinAmount) {
-      setAmount(String(poolMinAmount))
-    } else {
-      setAmount('')
-    }
-  }, [event.id, isFixed, poolMinAmount])
+    setAmount(getInitialContributionInput(event))
+  }, [event.id, event.poolMode, event.poolMinAmount])
 
   const handleConfirm = () => {
-    const value = parseInt(amount, 10)
-    if (isNaN(value) || value <= 0) {
-      toast.error('Veuillez entrer un montant valide (supérieur à 0)')
+    const parsed = isFixed && fixedAmount ? fixedAmount : parseInt(amount, 10)
+    const result = validateContributionAmount(event, parsed)
+    if (!result.valid) {
+      toast.error(result.error)
       return
     }
-    if (isFixed && poolMinAmount && value !== poolMinAmount) {
-      toast.error(`Le montant fixe est de ${Number(poolMinAmount).toLocaleString()} F CFA`)
-      return
-    }
-    if (isMinimum && poolMinAmount && value < poolMinAmount) {
-      toast.error(`Le montant minimum est de ${Number(poolMinAmount).toLocaleString()} F CFA`)
-      return
-    }
-    onConfirm(value)
+    onConfirm(parsed)
   }
 
   return (
@@ -49,33 +46,31 @@ export function ContributeModal({ event, onClose, onConfirm }: ContributeModalPr
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50 pt-safe-2">
-          <div>
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[16px] font-bold text-gray-900">Contribuer à la cagnotte</span>
-            {isFixed && (
-              <span className="ml-2 text-[11px] bg-orange-50 text-[#FF9F1C] font-bold px-2 py-0.5 rounded-full border border-orange-100">Montant fixe</span>
-            )}
-            {isMinimum && (
-              <span className="ml-2 text-[11px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full border border-blue-100">Montant minimum</span>
-            )}
+            <span className="text-[11px] bg-gray-100 text-gray-600 font-bold px-2 py-0.5 rounded-full">
+              {POOL_MODE_LABELS[mode]}
+            </span>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center touch-sm"
           >
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
         <div className="px-5 pt-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
-          {isFixed && poolMinAmount ? (
+          {isFixed && fixedAmount ? (
             <div className="mb-4 p-3 bg-orange-50 rounded-xl border border-orange-100">
               <p className="text-[13px] text-[#FF9F1C] font-medium">
-                Montant fixe — {Number(poolMinAmount).toLocaleString()} F CFA (non modifiable).
+                Montant fixe — vous allez payer{' '}
+                <strong>{fixedAmount.toLocaleString('fr-FR')} F CFA</strong> (non modifiable).
               </p>
             </div>
-          ) : isMinimum && poolMinAmount ? (
+          ) : isMinimum && minAmount ? (
             <div className="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
               <p className="text-[13px] text-blue-600 font-medium">
-                Montant minimum : <strong>{Number(poolMinAmount).toLocaleString()} F CFA</strong>. Vous pouvez contribuer plus.
+                Montant minimum : <strong>{Number(minAmount).toLocaleString('fr-FR')} F CFA</strong>. Vous pouvez contribuer plus.
               </p>
             </div>
           ) : (
@@ -83,30 +78,39 @@ export function ContributeModal({ event, onClose, onConfirm }: ContributeModalPr
               Saisissez le montant de votre choix pour soutenir cet événement.
             </p>
           )}
-          <div className="flex gap-2 items-center mb-6">
-            <input
-              type="number"
-              min={isMinimum && poolMinAmount ? Number(poolMinAmount) : 1}
-              autoFocus
-              readOnly={isFixed}
-              value={amount}
-              onChange={e => !isFixed && setAmount(e.target.value)}
-              placeholder={isMinimum && poolMinAmount ? `Min. ${Number(poolMinAmount).toLocaleString()}` : 'Ex: 5000'}
-              className={`flex-1 px-4 py-3.5 border rounded-xl text-[16px] font-semibold focus:outline-none transition-colors ${
-                isFixed
-                  ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'border-gray-200 focus:border-[#FF9F1C] text-gray-900'
-              }`}
-            />
-            <div className="px-3 py-3.5 border border-gray-200 rounded-xl text-[14px] font-bold text-gray-600 bg-gray-50">
-              F CFA
+
+          {isFixed && fixedAmount ? (
+            <div className="flex gap-2 items-center mb-6">
+              <div className="flex-1 px-4 py-3.5 border border-gray-200 rounded-xl text-[16px] font-bold text-gray-900 bg-gray-50 text-center">
+                {fixedAmount.toLocaleString('fr-FR')}
+              </div>
+              <div className="px-3 py-3.5 border border-gray-200 rounded-xl text-[14px] font-bold text-gray-600 bg-gray-50">
+                F CFA
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex gap-2 items-center mb-6">
+              <input
+                type="number"
+                inputMode="numeric"
+                min={isMinimum && minAmount ? Number(minAmount) : 1}
+                autoFocus
+                value={amount}
+                onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder={isMinimum && minAmount ? `Min. ${Number(minAmount).toLocaleString('fr-FR')}` : 'Ex: 5000'}
+                className="flex-1 px-4 py-3.5 border border-gray-200 rounded-xl text-[16px] font-semibold focus:outline-none focus:border-[#FF9F1C] text-gray-900 transition-colors"
+              />
+              <div className="px-3 py-3.5 border border-gray-200 rounded-xl text-[14px] font-bold text-gray-600 bg-gray-50">
+                F CFA
+              </div>
+            </div>
+          )}
+
           <button
             onClick={handleConfirm}
             className="w-full bg-[#FF9F1C] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform shadow-md"
           >
-            Procéder au paiement
+            {isFixed ? `Payer ${(fixedAmount ?? 0).toLocaleString('fr-FR')} F CFA` : 'Procéder au paiement'}
           </button>
         </div>
       </div>

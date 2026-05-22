@@ -1,0 +1,104 @@
+import { X, Briefcase } from 'lucide-react'
+import type { Event } from '@/features/events/api'
+import {
+  computePoolStats,
+  getPoolMode,
+  getFixedContributionAmount,
+  POOL_MODE_LABELS,
+} from '@/lib/pool-contribution'
+
+interface PoolManagementModalProps {
+  event: Event
+  isCreator?: boolean
+  onClose: () => void
+  onReleaseFunds?: () => void
+}
+
+export function PoolManagementModal({
+  event,
+  isCreator,
+  onClose,
+  onReleaseFunds,
+}: PoolManagementModalProps) {
+  const { budget, collected, remaining, progress } = computePoolStats(event)
+  const mode = getPoolMode(event)
+  const fixedAmount = getFixedContributionAmount(event)
+
+  return (
+    <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
+      <div className="w-full bg-white rounded-t-[24px] shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        </div>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 flex-shrink-0 pt-safe-2">
+          <span className="text-[16px] font-bold text-gray-900">Gestion de la cagnotte</span>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center touch-sm"
+          >
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
+          <div className="rounded-[16px] bg-gray-50 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-[15px] text-gray-900 font-medium">Objectif</span>
+              <span className="text-[15px] font-bold text-blue-600">{budget.toLocaleString('fr-FR')} F CFA</span>
+            </div>
+            <div className="border-t border-dashed border-gray-200" />
+            <div className="flex items-center justify-between">
+              <span className="text-[15px] text-gray-600 font-medium">Progression</span>
+              <span className="px-2 py-0.5 bg-[#FF9F1C] text-white text-[12px] font-bold rounded-md">{progress}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
+              <div className="h-full rounded-full bg-[#FF9F1C]" style={{ width: `${progress}%` }} />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[15px] text-gray-600 font-medium">Collecté</span>
+              <span className="text-[15px] font-bold text-[#10B981]">{collected.toLocaleString('fr-FR')} F</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[15px] text-gray-600 font-medium">Restant</span>
+              <span className="text-[15px] font-bold text-[#FF9F1C]">{remaining.toLocaleString('fr-FR')} F</span>
+            </div>
+          </div>
+
+          <div className="rounded-[16px] border border-gray-100 p-4 space-y-2">
+            <p className="text-[13px] font-semibold text-gray-500 uppercase tracking-wide">Mode de contribution</p>
+            <p className="text-[15px] font-bold text-gray-900">{POOL_MODE_LABELS[mode]}</p>
+            {mode === 'minimum' && event.poolMinAmount ? (
+              <p className="text-[13px] text-gray-500">
+                Minimum : <strong>{Number(event.poolMinAmount).toLocaleString('fr-FR')} F CFA</strong>
+              </p>
+            ) : null}
+            {mode === 'fixe' && fixedAmount ? (
+              <p className="text-[13px] text-gray-500">
+                Montant par contribution : <strong>{fixedAmount.toLocaleString('fr-FR')} F CFA</strong>
+              </p>
+            ) : null}
+            {mode === 'libre' ? (
+              <p className="text-[13px] text-gray-500">Chaque participant choisit le montant de sa contribution.</p>
+            ) : null}
+          </div>
+
+          {event.poolReleased && (
+            <p className="text-[13px] text-center text-gray-500 bg-gray-50 rounded-xl py-3 px-4">
+              Les fonds de cette cagnotte ont été débloqués par l&apos;organisateur.
+            </p>
+          )}
+
+          {isCreator && onReleaseFunds && !event.poolReleased && (
+            <button
+              onClick={onReleaseFunds}
+              className="w-full py-3.5 border border-[#FF9F1C] text-[#FF9F1C] rounded-[12px] text-[14px] font-bold flex justify-center items-center gap-2 bg-white active:scale-95 transition-transform"
+            >
+              <Briefcase className="w-4 h-4" />
+              Débloquer les fonds
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -32,6 +32,13 @@ import { apiClient } from '@/lib/api-client'
 import { QRCodeSVG } from 'qrcode.react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { ContributeModal } from '@/components/shared/ContributeModal'
+import { PoolManagementModal } from '@/components/shared/PoolManagementModal'
+import {
+  computePoolStats,
+  hasPaidParticipation,
+  hasActivePool,
+  resolveContributionAmount,
+} from '@/lib/pool-contribution'
 import { ManageEventView } from '@/app/components/ManageEventView'
 import { hapticFeedback } from '@/lib/haptics'
 
@@ -162,6 +169,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const [showProfileVerificationModal, setShowProfileVerificationModal] = useState(false)
   const [showReleaseModal, setShowReleaseModal] = useState(false)
+  const [showPoolManagementModal, setShowPoolManagementModal] = useState(false)
 
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const favorite = isFavorite(id || '')
@@ -171,6 +179,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     queryKey: ['events', id],
     queryFn: () => eventsApi.getById(id!).then((r) => r.data),
     enabled: !!id,
+    refetchOnWindowFocus: true,
+    staleTime: 5_000,
   })
 
 
@@ -347,8 +357,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   }
 
   const handleConfirmContribute = (amount: number) => {
+    if (!event) return
+    const resolved = resolveContributionAmount(event, amount)
+    if ('error' in resolved) {
+      toast.error(resolved.error)
+      return
+    }
     setShowContributeModal(false)
-    navigate(`/events/${id}/pay?amount=${amount}`)
+    navigate(`/events/${id}/pay?amount=${resolved.amount}&type=contribution`)
   }
 
   const handleShare = async () => {
@@ -442,11 +458,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const transactionFee = 50
   const amountToPay = event.price || 0
   const netToPay = amountToPay + transactionFee
-  const hasPool = !!(event.poolTarget && event.poolTarget > 0)
-  const cagnoteBudget: number = event.poolTarget || 0
-  const cagnoteCollected = event.poolCollected ?? 0
-  const cagnoteRemaining = Math.max(cagnoteBudget - cagnoteCollected, 0)
-  const cagnoteProgress = cagnoteBudget > 0 ? Math.min(Math.round((cagnoteCollected / cagnoteBudget) * 100), 100) : 0
+  const hasPool = hasActivePool(event)
+  const { budget: cagnoteBudget, collected: cagnoteCollected, remaining: cagnoteRemaining, progress: cagnoteProgress } = computePoolStats(event)
+  const participationPaid = hasPaidParticipation(event, myBookingData ?? null)
+  const showPoolActions = hasPool && participationPaid
 
   return (
     <>
@@ -729,34 +744,50 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     <span className="text-[15px] font-bold text-[#FF9F1C]">{cagnoteRemaining.toLocaleString()} F</span>
                   </div>
                   
-                  {hasJoined ? (
+                  {showPoolActions ? (
                     <div className="flex gap-3">
                       {isCreator ? (
-                        <button 
-                          onClick={() => setShowReleaseModal(true)}
-                          disabled={event.poolReleased}
-                          className={`flex-1 py-3.5 border rounded-[12px] text-[14px] font-bold flex justify-center items-center gap-2 shadow-sm transition-transform ${event.poolReleased ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-white border-[#FF9F1C] text-[#FF9F1C] active:scale-95'}`}
+                        <button
+                          onClick={() => setShowPoolManagementModal(true)}
+                          className="flex-1 py-3.5 bg-white border border-gray-200 rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
                         >
-                          <Briefcase className="w-4 h-4" />
-                          {event.poolReleased ? 'Fonds débloqués' : 'Débloquer fonds'}
+                          <Briefcase className="w-4 h-4 text-gray-600" />
+                          Voir la gestion
                         </button>
                       ) : (
-                        <button className="flex-1 py-3.5 bg-white border border-gray-200 rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform">
+                        <button
+                          onClick={() => setShowPoolManagementModal(true)}
+                          className="flex-1 py-3.5 bg-white border border-gray-200 rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
+                        >
                           <Briefcase className="w-4 h-4 text-gray-600" />
                           Voir la gestion
                         </button>
                       )}
-                      <button onClick={handleContribute} className="flex-1 py-3.5 bg-white border border-gray-200 rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform">
+                      <button
+                        onClick={handleContribute}
+                        className="flex-1 py-3.5 bg-white border border-gray-200 rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
+                      >
                         <HandCoins className="w-4 h-4 text-gray-600" />
                         Contribuer
                       </button>
                     </div>
-                  ) : (
-                    <button onClick={handleContribute} className="w-full py-3.5 bg-white border border-gray-200 rounded-[32px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform">
+                  ) : hasPool ? (
+                    <button
+                      onClick={() => {
+                        if (!participationPaid) {
+                          toast.info("Rejoignez l'événement et payez votre participation avant de contribuer à la cagnotte.")
+                          if (!hasJoined) setShowJoinModal(true)
+                          else if (event.price > 0) navigate(`/events/${id}/pay`)
+                          return
+                        }
+                        handleContribute()
+                      }}
+                      className="w-full py-3.5 bg-white border border-gray-200 rounded-[32px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
+                    >
                       <HandCoins className="w-4 h-4 text-gray-600" />
                       Contribuer
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             )}
@@ -900,6 +931,15 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           event={event}
           onClose={() => setShowContributeModal(false)}
           onConfirm={handleConfirmContribute}
+        />
+      )}
+
+      {showPoolManagementModal && event && (
+        <PoolManagementModal
+          event={event}
+          isCreator={isCreator}
+          onClose={() => setShowPoolManagementModal(false)}
+          onReleaseFunds={isCreator ? () => { setShowPoolManagementModal(false); setShowReleaseModal(true) } : undefined}
         />
       )}
       {/* QR Code Modal for Private Events */}
