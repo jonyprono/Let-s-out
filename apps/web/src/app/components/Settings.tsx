@@ -141,14 +141,20 @@ export function Settings({ onBack }: SettingsProps) {
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.darkMode')}</p>
                 <p className="text-[12px] text-gray-400 dark:text-gray-500">{t('settings.darkModeDesc')}</p>
               </div>
-              <button
-                onClick={() => {
-                  setTheme(darkMode ? 'light' : 'dark');
-                }}
-                className={`relative w-12 h-6 rounded-full transition-colors ${darkMode ? 'bg-[#FF9F1C]' : 'bg-gray-200'}`}
-              >
-                <div className={`absolute top-0.5 w-5 h-5 bg-white dark:bg-[#1A1A1A] rounded-full shadow transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-0.5'}`} />
-              </button>
+              <div className="flex items-center bg-gray-100 dark:bg-[#2A2A2A] rounded-full p-1 shadow-inner">
+                <button
+                  onClick={() => setTheme('light')}
+                  className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${!darkMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Clair
+                </button>
+                <button
+                  onClick={() => setTheme('dark')}
+                  className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${darkMode ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  Sombre
+                </button>
+              </div>
             </div>
 
             {/* Language */}

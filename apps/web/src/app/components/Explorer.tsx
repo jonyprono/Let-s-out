@@ -1,4 +1,5 @@
 import { useState, lazy, Suspense } from 'react';
+import { useLocation } from 'react-router';
 import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
@@ -54,12 +55,19 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 // Base category list for search tab
-const BROWSE_CATEGORIES = ['Tous', 'SPORT', 'CULTURE', 'FOOD', 'NIGHTLIFE', 'TRAVEL', 'GAMING', 'WELLNESS', 'MUSIC', 'OTHER'];
+const BROWSE_CATEGORIES = ['Tous', 'EN_COURS', 'SPORT', 'CULTURE', 'FOOD', 'NIGHTLIFE', 'TRAVEL', 'GAMING', 'WELLNESS', 'MUSIC', 'OTHER'];
+const CATEGORY_CHIP_LABELS: Record<string, string> = { 'Tous': 'Tous', 'EN_COURS': '🔴 En cours', ...Object.fromEntries(Object.entries({
+  SPORT: 'Sport', CULTURE: 'Culture & Art', FOOD: 'Gastronomie', NIGHTLIFE: 'Soirées',
+  TRAVEL: 'Voyages', GAMING: 'Gaming', WELLNESS: 'Bien-être', MUSIC: 'Musique', OTHER: 'Autre'
+})) };
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
 
 export function Explorer({ onNavigate }: ExplorerProps) {
-  const [screen, setScreen] = useState<Screen>('list');
+  const location = useLocation();
+  const [screen, setScreen] = useState<Screen>(() => {
+    return location.search.includes('screen=filter') ? 'filter' : 'list';
+  });
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,18 +87,21 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [mapSearch, setMapSearch] = useState('')
   const [mapSearchResults, setMapSearchResults] = useState<GeoPlace[]>([])
 
-  const apiCategory = selectedCategory === 'Tous' ? undefined : selectedCategory;
+  const isEnCours = selectedCategory === 'EN_COURS';
+  const apiCategory = (selectedCategory === 'Tous' || isEnCours) ? undefined : selectedCategory;
 
   const { data: eventsData, isLoading } = useQuery({
-    queryKey: ['events', 'explorer', apiCategory, searchQuery, appliedFilters],
+    queryKey: ['events', 'explorer', apiCategory, searchQuery, appliedFilters, isEnCours],
     queryFn: () => {
       // Resolve the date param: if custom date was picked, format as ISO date string
       let dateParam: string | undefined = undefined;
       if (appliedFilters.date === 'pick' && appliedFilters.customDate) {
-        // Backend now supports YYYY-MM-DD custom dates
         dateParam = appliedFilters.customDate;
       } else if (appliedFilters.date !== 'all') {
         dateParam = appliedFilters.date;
+      } else if (isEnCours) {
+        // "En cours" = events happening today
+        dateParam = 'today';
       }
 
       return eventsApi.list({
@@ -106,7 +117,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   });
 
   // Backend now handles custom date filtering
-  const events: Event[] = eventsData?.data || [];
+  // If "En cours" is selected, additionally filter client-side to events that have started
+  const allFetchedEvents: Event[] = eventsData?.data || [];
+  const events: Event[] = isEnCours
+    ? allFetchedEvents.filter(e => {
+        const now = new Date();
+        const start = new Date(e.startAt);
+        const end = e.endAt ? new Date(e.endAt) : new Date(start.getTime() + 4 * 60 * 60 * 1000); // assume 4h duration
+        return start <= now && now <= end;
+      })
+    : allFetchedEvents;
 
   const handleMapGeolocate = async () => {
     setMapGeoLoading(true)
@@ -483,11 +503,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               }}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
                 selectedCategory === category
-                  ? 'bg-[#FF9F1C] text-white'
+                  ? category === 'EN_COURS'
+                    ? 'bg-red-500 text-white'
+                    : 'bg-[#FF9F1C] text-white'
                   : 'bg-gray-100 text-gray-600'
               }`}
             >
-              {category === 'Tous' ? 'Tous' : (CATEGORY_LABELS[category] || category)}
+              {CATEGORY_CHIP_LABELS[category] || CATEGORY_LABELS[category] || category}
             </button>
           ))}
         </div>

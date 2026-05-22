@@ -133,6 +133,7 @@ export function Home() {
         onNavigate={(screen: string, id?: string) => {
           const map: Record<string, string> = {
             'explorer': '/explorer',
+            'explorer-filter': '/explorer?screen=filter',
             'create-event': '/events/create',
             'messages': '/messages',
             'notifications': '/notifications',
@@ -173,7 +174,14 @@ export function MyEvents() {
     <Suspense fallback={<PageLoader />}>
       <MyEventsBase
         onNavigate={(screen: string, id?: string) => {
+          const map: Record<string, string> = {
+            'notifications': '/notifications',
+            'explorer': '/explorer',
+            'messages': '/messages',
+            'profile': '/profile',
+          }
           if (screen === 'event-details' && id) nav(`/events/${id}`)
+          else if (map[screen]) nav(map[screen])
         }}
       />
     </Suspense>

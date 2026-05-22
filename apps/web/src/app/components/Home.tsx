@@ -72,7 +72,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 // ── Main Home component ────────────────────────────────────────────────────────
 export function Home({ userData, onNavigate }: HomeProps) {
-  const [activeFilter, setActiveFilter] = useState('tonight');
+  const [activeFilter, setActiveFilter] = useState('');
   const [showPermissions, setShowPermissions] = useState(false);
   const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
   const qc = useQueryClient();
@@ -190,7 +190,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
             <span className="text-sm text-gray-400">Concerts à proximité...</span>
           </button>
           <button
-            onClick={() => onNavigate('explorer')}
+            onClick={() => onNavigate('explorer-filter')}
             className="w-11 h-11 flex items-center justify-center bg-gray-100 rounded-full flex-shrink-0"
           >
             <SlidersHorizontal className="w-4 h-4 text-gray-600" />

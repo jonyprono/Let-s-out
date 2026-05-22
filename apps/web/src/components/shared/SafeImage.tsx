@@ -17,10 +17,12 @@ interface SafeImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>,
   src?: string | null
   alt: string
   fallback?: React.ReactNode
+  priority?: boolean
 }
 
-export function SafeImage({ src, alt, className, fallback, onError, style, ...rest }: SafeImageProps) {
+export function SafeImage({ src, alt, className, fallback, onError, onLoad, style, priority, ...rest }: SafeImageProps) {
   const [error, setError] = useState(false)
+  const [loaded, setLoaded] = useState(false)
 
   if (!src) {
     return (
@@ -48,18 +50,35 @@ export function SafeImage({ src, alt, className, fallback, onError, style, ...re
     : fixedSrc
 
   return (
-    <img
-      src={resolvedSrc}
-      alt={alt}
-      className={className}
-      style={style}
-      loading={rest.loading ?? 'lazy'}
-      decoding={rest.decoding ?? 'async'}
-      onError={(e) => {
-        setError(true)
-        onError?.(e)
-      }}
-      {...rest}
-    />
+    <div className={`relative overflow-hidden ${className ?? ''}`} style={style}>
+      {/* Shimmer skeleton shown while image is loading */}
+      {!loaded && (
+        <div
+          className="absolute inset-0 bg-gray-200"
+          style={{
+            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 1.4s infinite',
+          }}
+        />
+      )}
+      <img
+        src={resolvedSrc}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+        loading={priority ? 'eager' : (rest.loading ?? 'eager')}
+        decoding={priority ? 'sync' : (rest.decoding ?? 'auto')}
+        fetchPriority={priority ? 'high' : 'auto'}
+        onLoad={(e) => {
+          setLoaded(true)
+          onLoad?.(e)
+        }}
+        onError={(e) => {
+          setError(true)
+          onError?.(e)
+        }}
+        {...rest}
+      />
+    </div>
   )
 }

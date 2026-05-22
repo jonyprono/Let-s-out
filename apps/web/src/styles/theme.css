@@ -91,6 +91,16 @@
   --color-gray-900: #FFFFFF;
 }
 
+/* Ensure inputs are legible in dark mode */
+.dark input, .dark textarea {
+  color: #FFFFFF;
+  background-color: #2A2A2A;
+}
+
+.dark input::placeholder, .dark textarea::placeholder {
+  color: #888888;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

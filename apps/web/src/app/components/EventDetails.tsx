@@ -563,48 +563,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   <MapPin className="w-5 h-5 text-[#FF9F1C]" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900 text-base">{event.address || event.city || 'Lieu non précisé'}</p>
-                  <p className="text-sm text-gray-500 mb-3">Localisation</p>
-                  
-                  {/* Interactive Leaflet Map */}
-                  {(event.address || event.city) && (
-                    <div className="mt-2">
-                      <div className="w-full h-40 rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-gray-100 relative z-0">
-                        {event.latitude || geocodedLat ? (
-                          <MapContainer 
-                            center={[event.latitude || geocodedLat!, event.longitude || geocodedLng!]} 
-                            zoom={15} 
-                            style={{ height: '100%', width: '100%' }}
-                            zoomControl={false}
-                            attributionControl={false}
-                          >
-                            <TileLayer
-                              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                            />
-                            <Marker position={[event.latitude || geocodedLat!, event.longitude || geocodedLng!]} icon={getIcon()} />
-                          </MapContainer>
-                        ) : (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                            <MapPin className="w-6 h-6 text-gray-400" />
-                            <span className="text-xs text-gray-400">{event.address || event.city}</span>
-                          </div>
-                        )}
-                      </div>
-                      <button 
-                        onClick={async () => {
-                          const lat: number = (event.latitude || geocodedLat) as number
-                          const lng = event.longitude || geocodedLng
-                          const url = lat && lng 
-                            ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}` 
-                            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${event.address || ''} ${event.city || ''}`.trim())}`;
-                          await Browser.open({ url });
-                        }}
-                        className="mt-2 w-full py-2.5 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-gray-700 active:scale-[0.98] transition-transform shadow-sm"
-                      >
-                        <MapPin className="w-4 h-4 text-gray-500" />
-                        Y aller (Navigation)
-                      </button>
-                    </div>
+                  <p className="font-semibold text-gray-900 text-base">{event.city || event.address || 'Lieu non précisé'}</p>
+                  {event.address && event.city && (
+                    <p className="text-sm text-gray-500 mb-3">{event.address}</p>
                   )}
                 </div>
               </div>
