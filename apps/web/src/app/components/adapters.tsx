@@ -109,6 +109,7 @@ export function Onboarding() {
               city: data.city || undefined,
               country: data.country || undefined,
               interests: data.interests?.length ? data.interests : undefined,
+              avatarUrl: data.profilePicture || undefined,
             })
             await refreshUser()
           } catch (e) {

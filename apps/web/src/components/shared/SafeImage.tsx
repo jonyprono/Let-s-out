@@ -18,6 +18,8 @@ interface SafeImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>,
   alt: string
   fallback?: React.ReactNode
   priority?: boolean
+  /** Appended as query param to bust cache after profile updates */
+  cacheKey?: string | number | null
 }
 
 function resolveImageSrc(src: string): string {
@@ -31,7 +33,7 @@ function resolveImageSrc(src: string): string {
     : fixedSrc
 }
 
-export function SafeImage({ src, alt, className, fallback, onError, onLoad, style, priority, ...rest }: SafeImageProps) {
+export function SafeImage({ src, alt, className, fallback, onError, onLoad, style, priority, cacheKey, ...rest }: SafeImageProps) {
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
@@ -39,7 +41,7 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
   useEffect(() => {
     setError(false)
     setLoaded(false)
-  }, [src])
+  }, [src, cacheKey])
 
   if (!src) {
     return (
@@ -57,7 +59,11 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
     )
   }
 
-  const resolvedSrc = resolveImageSrc(src)
+  let resolvedSrc = resolveImageSrc(src)
+  if (cacheKey != null && cacheKey !== '') {
+    const sep = resolvedSrc.includes('?') ? '&' : '?'
+    resolvedSrc = `${resolvedSrc}${sep}v=${cacheKey}`
+  }
 
   return (
     <div className={`relative overflow-hidden ${className ?? ''}`} style={style}>

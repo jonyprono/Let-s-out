@@ -16,6 +16,7 @@ export interface AuthUser {
     bio?: string
     avatarUrl?: string
     coverUrl?: string
+    updatedAt?: string
     city?: string
     isPublic?: boolean
     interests: string[]
@@ -61,7 +62,17 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true })
         try {
           const { data } = await apiClient.get<AuthUser>('/auth/me')
-          set({ user: data })
+          set((state) => ({
+            user: {
+              ...data,
+              profile: data.profile
+                ? {
+                    ...data.profile,
+                    avatarUrl: data.profile.avatarUrl ?? state.user?.profile?.avatarUrl,
+                  }
+                : state.user?.profile,
+            },
+          }))
         } catch {
           set({ accessToken: null, refreshToken: null, user: null })
         } finally {

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router';
 import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
+import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { getCurrentPosition, searchPlaces, type GeoPlace } from '@/lib/geo';
 import { EventCard } from '@/components/shared/EventCard';
@@ -116,7 +117,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       }).then((r) => r.data);
     },
     // Always fetch — no conditions that would prevent initial load
-    staleTime: 30_000, // 30s cache to avoid redundant refetches
+    staleTime: 30_000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
   });
 
   // Backend now handles custom date filtering
@@ -174,7 +177,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return (
       <div className="w-full h-full bg-white flex flex-col">
         {/* Header */}
-        <div className="px-5 pt-16 pb-3 border-b border-gray-100">
+        <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <button onClick={() => setScreen('list')} className="w-8 h-8 flex items-center justify-center">
               <ChevronLeft className="w-5 h-5 text-gray-700" />
@@ -324,7 +327,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   if (screen === 'search') {
     return (
       <div className="w-full h-full bg-white flex flex-col">
-        <div className="px-5 pt-16 pb-3 border-b border-gray-100">
+        <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => setScreen('list')} className="w-8 h-8 flex items-center justify-center">
               <ChevronLeft className="w-5 h-5 text-gray-700" />
@@ -394,7 +397,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   if (screen === 'join') {
     return (
       <div className="w-full h-full bg-[#F8F7FF] dark:bg-[#111111] flex flex-col z-50 absolute inset-0">
-        <div className="px-5 pt-16 pb-3 flex items-center gap-3">
+        <div className="px-5 pt-safe-6 pb-3 flex items-center gap-3">
           <button onClick={() => setScreen('list')} className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
             <ChevronLeft className="w-6 h-6 text-gray-800" />
           </button>
@@ -423,24 +426,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
           <button
             onClick={async () => {
-              if (!joinCode) return;
+              if (!joinCode.trim()) return;
               setIsJoining(true);
               try {
-                const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1'}/events/join-by-code/${joinCode}`, {
-                  method: 'POST',
-                  headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                });
-                const data = await res.json();
-                
-                if (res.ok) {
-                  setScreen('list');
-                  setJoinCode('');
-                  onNavigate('event-details', data.eventId || data.id);
-                } else {
-                  alert(data.message || data.error || 'Erreur lors de la tentative.');
-                }
-              } catch (e) {
-                alert('Erreur réseau.');
+                const code = joinCode.trim().toUpperCase();
+                const { data } = await apiClient.post(`/events/join-by-code/${code}`);
+                setScreen('list');
+                setJoinCode('');
+                onNavigate('event-details', data.event?.id || data.eventId || data.id);
+              } catch (e: any) {
+                alert(e?.response?.data?.error || e?.response?.data?.message || 'Code invalide ou événement introuvable.');
               } finally {
                 setIsJoining(false);
               }
@@ -461,7 +456,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className="w-full h-full bg-white flex flex-col">
 
         {/* Header & Search Bar */}
-        <div className="bg-white px-5 pt-16 pb-3 border-b border-gray-100">
+        <div className="bg-white px-5 pt-safe-6 pb-3 border-b border-gray-100">
           <div className="flex items-center gap-3 mb-4">
             <div
               className="flex-1 bg-gray-50 rounded-full flex items-center px-4 py-2.5 cursor-text"
@@ -487,9 +482,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 hapticFeedback.impact()
                 setViewMode(viewMode === 'list' ? 'map' : 'list')
               }}
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-colors bg-white hover:bg-gray-50 active:bg-gray-100"
+              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-colors bg-white hover:bg-gray-50 active:bg-gray-100 touch-sm"
             >
               <MapPin className={`w-4 h-4 ${viewMode === 'map' ? 'text-[#FF9F1C]' : 'text-gray-700'}`} />
+            </button>
+            <button
+              onClick={() => { hapticFeedback.impact(); setScreen('join') }}
+              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-colors bg-white hover:bg-gray-50 active:bg-gray-100 touch-sm"
+              title="Rejoindre un événement privé"
+            >
+              <Lock className="w-4 h-4 text-gray-700" />
             </button>
           </div>
 

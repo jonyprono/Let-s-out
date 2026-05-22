@@ -9,13 +9,29 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, title: true, price: true, currency: true, status: true, maxAttendees: true, currentAttendees: true },
+      select: {
+        id: true, title: true, price: true, currency: true, status: true,
+        maxAttendees: true, currentAttendees: true,
+        poolTarget: true, poolMode: true, poolMinAmount: true,
+      },
     })
     if (!event) return reply.code(404).send({ error: 'Événement introuvable' })
     if (event.status !== 'PUBLISHED') return reply.code(400).send({ error: 'Événement non disponible' })
     
     const finalAmount = customAmount !== undefined ? customAmount : event.price;
     if (finalAmount <= 0) return reply.code(400).send({ error: 'Le montant doit être supérieur à 0' })
+
+    // Validate contribution amount against pool mode when paying a custom amount
+    if (customAmount !== undefined && event.poolTarget && event.poolTarget > 0) {
+      const mode = event.poolMode || 'libre'
+      const min = event.poolMinAmount ?? 0
+      if (mode === 'fixe' && min > 0 && finalAmount !== min) {
+        return reply.code(400).send({ error: `Le montant fixe est de ${min} F CFA` })
+      }
+      if (mode === 'minimum' && min > 0 && finalAmount < min) {
+        return reply.code(400).send({ error: `Le montant minimum est de ${min} F CFA` })
+      }
+    }
     if (event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
       return reply.code(400).send({ error: 'Événement complet' })
     }
@@ -135,10 +151,24 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     const { sub } = req.user as { sub: string }
     const { eventId, amount: customAmount } = req.body as { eventId: string; amount?: number }
 
-    const event = await app.prisma.event.findUnique({ where: { id: eventId } })
+    const event = await app.prisma.event.findUnique({
+      where: { id: eventId },
+      select: { id: true, price: true, poolTarget: true, poolMode: true, poolMinAmount: true },
+    })
     if (!event) return reply.code(404).send({ error: 'Not found' })
-    
+
     const finalAmount = customAmount !== undefined ? customAmount : event.price;
+    if (finalAmount <= 0) return reply.code(400).send({ error: 'Le montant doit être supérieur à 0' })
+    if (customAmount !== undefined && event.poolTarget && event.poolTarget > 0) {
+      const mode = event.poolMode || 'libre'
+      const min = event.poolMinAmount ?? 0
+      if (mode === 'fixe' && min > 0 && finalAmount !== min) {
+        return reply.code(400).send({ error: `Le montant fixe est de ${min} F CFA` })
+      }
+      if (mode === 'minimum' && min > 0 && finalAmount < min) {
+        return reply.code(400).send({ error: `Le montant minimum est de ${min} F CFA` })
+      }
+    }
 
     await handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount })
     const booking = await app.prisma.booking.findUnique({ where: { userId_eventId: { userId: sub, eventId } } })
@@ -187,6 +217,12 @@ async function handleConfirmedBooking(
   })
   const isNewParticipant = !existingBooking
 
+  const eventForPool = await app.prisma.event.findUnique({
+    where: { id: eventId },
+    select: { poolTarget: true },
+  })
+  const isPoolContribution = !isNewParticipant && !!(eventForPool?.poolTarget && eventForPool.poolTarget > 0)
+
   const [booking] = await app.prisma.$transaction([
     app.prisma.booking.upsert({
       where: { userId_eventId: { userId, eventId } },
@@ -195,6 +231,9 @@ async function handleConfirmedBooking(
     }),
     ...(isNewParticipant
       ? [app.prisma.event.update({ where: { id: eventId }, data: { currentAttendees: { increment: 1 } } })]
+      : []),
+    ...(isPoolContribution
+      ? [app.prisma.event.update({ where: { id: eventId }, data: { poolCollected: { increment: amount } } })]
       : []),
   ])
 

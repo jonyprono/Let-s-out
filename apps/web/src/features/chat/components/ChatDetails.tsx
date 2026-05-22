@@ -12,6 +12,8 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { apiClient } from '@/lib/api-client'
 import { shareLink } from '@/lib/utils'
+import { ContributeModal } from '@/components/shared/ContributeModal'
+import { toast } from 'sonner'
 
 const REACTION_EMOJIS = ['❤️', '😂', '👍', '😮', '😢', '🙏']
 
@@ -65,6 +67,7 @@ export function ChatDetails() {
   const [inputText, setInputText] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [showEventInfo, setShowEventInfo] = useState(false)
+  const [showContributeModal, setShowContributeModal] = useState(false)
   const [pickerMsgId, setPickerMsgId] = useState<string | null>(null)
   const [typingUser, setTypingUser] = useState<string | null>(null)
   const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
@@ -208,20 +211,27 @@ export function ChatDetails() {
           )}
         </div>
 
-        {event && (
+        {event && event.poolTarget && event.poolTarget > 0 && (
           <div className="flex items-center justify-between px-4 pb-4">
             <div className="flex-1 mr-4">
               <p className="text-[13px] font-bold text-gray-900 dark:text-[#FFFFFF] mb-1.5">Cagnotte en cours</p>
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-1.5 bg-gray-100 dark:bg-[#333333] rounded-full overflow-hidden">
-                  <div className="h-full rounded-full bg-[#FF9F1C]" style={{ width: `${event.maxAttendees ? Math.min(Math.round((event.currentAttendees / event.maxAttendees) * 100), 100) : 0}%` }} />
+                  <div
+                    className="h-full rounded-full bg-[#FF9F1C]"
+                    style={{
+                      width: `${Math.min(Math.round(((event.poolCollected ?? 0) / event.poolTarget) * 100), 100)}%`,
+                    }}
+                  />
                 </div>
-                <span className="text-[12px] font-bold text-[#FF9F1C]">{event.maxAttendees ? Math.min(Math.round((event.currentAttendees / event.maxAttendees) * 100), 100) : 0}%</span>
+                <span className="text-[12px] font-bold text-[#FF9F1C]">
+                  {Math.min(Math.round(((event.poolCollected ?? 0) / event.poolTarget) * 100), 100)}%
+                </span>
               </div>
             </div>
             <button
-              onClick={() => navigate(`/events/${event.id}`)}
-              className="rounded-full border-[1.5px] border-[#FF9F1C] text-[#FF9F1C] px-4 py-1.5 text-[12px] font-bold active:scale-95 transition-transform"
+              onClick={() => setShowContributeModal(true)}
+              className="rounded-full border-[1.5px] border-[#FF9F1C] text-[#FF9F1C] px-4 py-1.5 text-[12px] font-bold active:scale-95 transition-transform touch-sm"
             >
               Contribuer
             </button>
@@ -248,7 +258,8 @@ export function ChatDetails() {
           </div>
         ) : (
           messages.map((msg, index) => {
-            const isMe = msg.senderId === user?.id
+            const isSystem = msg.type === 'SYSTEM'
+            const isMe = !isSystem && msg.senderId === user?.id
             const senderName = msg.sender?.profile?.displayName ?? 'Inconnu'
             const senderAvatar = msg.sender?.profile?.avatarUrl ?? null
             const showSenderInfo = isGroup && !isMe
@@ -268,6 +279,27 @@ export function ChatDetails() {
             const isLastMsg = index === messages.length - 1
 
             const grouped = groupReactions(msg.reactions ?? [])
+
+            if (isSystem) {
+              return (
+                <div key={msg.id}>
+                  {showDateSep && (
+                    <div className="flex items-center gap-3 my-4">
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
+                      <span className="text-xs text-gray-400 dark:text-gray-500 font-medium capitalize px-2">
+                        {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
+                      </span>
+                      <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
+                    </div>
+                  )}
+                  <div className="flex justify-center my-2 px-4">
+                    <p className="text-[13px] text-center text-gray-500 dark:text-gray-400 bg-gray-100/90 dark:bg-[#2A2A2A] px-4 py-2 rounded-full max-w-[90%] leading-snug">
+                      {msg.content}
+                    </p>
+                  </div>
+                </div>
+              )
+            }
 
             return (
               <div key={msg.id}>
@@ -445,6 +477,17 @@ export function ChatDetails() {
           <Send className="w-4 h-4 ml-0.5" />
         </button>
       </div>
+
+      {showContributeModal && event && event.poolTarget && event.poolTarget > 0 && (
+        <ContributeModal
+          event={event}
+          onClose={() => setShowContributeModal(false)}
+          onConfirm={(amount) => {
+            setShowContributeModal(false)
+            navigate(`/events/${event.id}/pay?amount=${amount}`)
+          }}
+        />
+      )}
 
       {/* Event Info Modal */}
       {showEventInfo && event && (

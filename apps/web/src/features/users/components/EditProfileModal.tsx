@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { X, Loader2, Camera, User } from 'lucide-react'
 import { usersApi } from '@/features/users/api'
 import { chatApi } from '@/features/chat/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { invalidateAvatarQueries } from '@/lib/avatar-cache'
 
 interface EditProfileModalProps {
   onClose: () => void
@@ -12,6 +14,7 @@ interface EditProfileModalProps {
 
 export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const { user, refreshUser } = useAuthStore()
+  const qc = useQueryClient()
   const profile = user?.profile
 
   const [displayName, setDisplayName] = useState(profile?.displayName || '')
@@ -19,6 +22,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const [bio, setBio] = useState(profile?.bio || '')
   const [interestsText, setInterestsText] = useState(profile?.interests?.join(', ') || '')
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || '')
+  const avatarCacheKey = (profile as { updatedAt?: string })?.updatedAt || avatarUrl
   
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -57,6 +61,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
       // Auto-save the avatar immediately so it's persisted even if they don't click Save
       await usersApi.updateProfile({ avatarUrl: url })
       await refreshUser()
+      invalidateAvatarQueries(qc)
       toast.success('Photo de profil mise à jour !')
     } catch (error) {
       console.error('Failed to upload avatar', error)
@@ -78,6 +83,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         avatarUrl
       })
       await refreshUser()
+      invalidateAvatarQueries(qc)
       toast.success('Profil mis à jour avec succès')
       onClose()
     } catch (e) {
@@ -91,7 +97,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   return (
     <div className="absolute inset-0 z-[60] flex flex-col bg-white dark:bg-[#1A1A1A]">
       {/* Header */}
-      <div className="px-4 pt-16 pb-3 flex items-center justify-between border-b border-gray-100 bg-white dark:bg-[#1A1A1A]">
+      <div className="px-4 pt-safe-6 pb-3 flex items-center justify-between border-b border-gray-100 bg-white dark:bg-[#1A1A1A]">
         <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2A2A2A] text-gray-900 dark:text-[#FFFFFF]">
           <X className="w-6 h-6" />
         </button>
@@ -114,6 +120,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             <div className={`w-24 h-24 rounded-full overflow-hidden shadow-sm bg-gray-100 dark:bg-[#333333] ${isUploading ? 'opacity-50' : ''}`}>
               <SafeImage
                 src={avatarUrl || null}
+                cacheKey={avatarCacheKey}
                 alt="Avatar"
                 className="w-full h-full object-cover"
                 fallback={

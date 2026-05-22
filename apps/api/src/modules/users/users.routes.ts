@@ -1,6 +1,10 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
+import fs from 'fs'
+import path from 'path'
+import { pipeline } from 'stream/promises'
+import { v4 as uuidv4 } from 'uuid'
 import { createAndSendNotification } from '../notifications/notifications.routes'
 
 export default async function usersRoutes(app: FastifyInstance) {
@@ -101,6 +105,34 @@ export default async function usersRoutes(app: FastifyInstance) {
       },
     })
     return reply.send(profile)
+  })
+
+  // Submit KYC documents (multipart)
+  app.post('/me/kyc', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const uploadsDir = path.join(process.cwd(), 'uploads', 'kyc', sub)
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
+
+    const saved: Record<string, string> = {}
+    for await (const part of req.parts()) {
+      if (part.type !== 'file') continue
+      const ext = path.extname(part.filename) || '.jpg'
+      const filename = `${part.fieldname}-${uuidv4()}${ext}`
+      const saveTo = path.join(uploadsDir, filename)
+      await pipeline(part.file, fs.createWriteStream(saveTo))
+      saved[part.fieldname] = `/uploads/kyc/${sub}/${filename}`
+    }
+
+    if (Object.keys(saved).length === 0) {
+      return reply.code(400).send({ error: 'Aucun document fourni' })
+    }
+
+    const profile = await app.prisma.profile.update({
+      where: { userId: sub },
+      data: { kycStatus: 'pending' },
+    })
+
+    return reply.send({ success: true, kycStatus: profile.kycStatus, documents: saved })
   })
 
   // Update password

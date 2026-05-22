@@ -183,6 +183,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 <div className="w-24 h-24 rounded-full ring-4 ring-white/90 backdrop-blur-md shadow-lg overflow-hidden bg-white">
                   <SafeImage
                     src={displayProfile?.avatarUrl}
+                    cacheKey={(displayProfile as { updatedAt?: string })?.updatedAt || displayProfile?.avatarUrl}
                     alt="Avatar"
                     className="w-full h-full object-cover"
                     fallback={

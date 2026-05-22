@@ -317,6 +317,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         price: amount ? parseFloat(amount) : 0, currency: 'XOF',
         isPrivate, coverUrl,
         poolTarget: enablePool && poolTarget ? parseFloat(poolTarget) : undefined,
+        poolMode: enablePool && poolTarget ? poolMode : undefined,
+        poolMinAmount: enablePool && poolMinAmount ? parseFloat(poolMinAmount) : undefined,
         status: 'DRAFT',
         coHostIds: selectedCoOrgs.map(o => o.id)
       }
@@ -338,11 +340,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     } finally { setLoading(false) }
   }
 
+  const savePoolToEvent = async () => {
+    const eventId = createdEventId || location.state?.editEventId
+    if (!eventId || !enablePool || !poolTarget) return
+    await apiClient.patch(`/events/${eventId}`, {
+      poolTarget: parseFloat(poolTarget),
+      poolMode,
+      poolMinAmount: poolMinAmount ? parseFloat(poolMinAmount) : undefined,
+    })
+  }
+
   const handlePublish = async () => {
     const eventId = createdEventId || location.state?.editEventId
     if (!eventId) return
     setPublishing(true)
     try {
+      if (enablePool && poolTarget) await savePoolToEvent()
       await apiClient.put(`/events/${eventId}/publish`)
       toast.success('🎉 Événement publié avec succès !')
       navigate(`/events/${eventId}`)
@@ -371,7 +384,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     <div className="w-full h-full bg-white flex flex-col">
 
       {/* Header */}
-      <div className="px-5 pt-16 pb-0 bg-white">
+      <div className="px-5 pt-safe-6 pb-0 bg-white">
         <div className="flex items-center justify-center relative mb-3">
           {step < 7 && (
             <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
@@ -1076,7 +1089,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       {showPoolModal && (
         <div className="absolute inset-0 z-50 bg-white flex flex-col">
           {/* Header */}
-          <div className="px-5 pt-16 pb-0 flex-shrink-0">
+          <div className="px-5 pt-safe-6 pb-0 flex-shrink-0">
             <div className="flex items-center justify-center relative mb-3">
               <button
                 onClick={() => {
@@ -1305,15 +1318,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   if (poolStep === 3 && poolMode === 'libre') {
                     setEnablePool(true)
                     setShowPoolModal(false)
-                    toast.success('Cagnotte configurée !')
+                    savePoolToEvent().then(() => toast.success('Cagnotte configurée !')).catch(() => toast.error('Erreur lors de l\'enregistrement de la cagnotte'))
                   } else {
                     setPoolStep(s => s + 1)
                   }
                 } else {
-                  // Confirmer
                   setEnablePool(true)
                   setShowPoolModal(false)
-                  toast.success('Cagnotte configurée !')
+                  savePoolToEvent().then(() => toast.success('Cagnotte configurée !')).catch(() => toast.error('Erreur lors de l\'enregistrement de la cagnotte'))
                 }
               }}
               disabled={

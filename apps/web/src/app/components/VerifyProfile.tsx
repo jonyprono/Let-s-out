@@ -199,10 +199,9 @@ export function VerifyProfile() {
       await apiClient.post('/users/me/kyc', fd)
       setIsComplete(true)
     } catch {
-      // If the KYC endpoint doesn't exist yet, show success anyway (graceful degradation)
-      setIsComplete(true)
-      // toast.error('Erreur lors de l\'envoi. Réessayez.')
-      // setSubmitStatus('error')
+      toast.error('Erreur lors de l\'envoi des documents. Réessayez.')
+      setSubmitStatus('error')
+      return
     } finally {
       setSubmitStatus('done')
     }

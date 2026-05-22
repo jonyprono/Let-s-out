@@ -31,6 +31,7 @@ import { usersApi } from '@/features/users/api'
 import { apiClient } from '@/lib/api-client'
 import { QRCodeSVG } from 'qrcode.react'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { ContributeModal } from '@/components/shared/ContributeModal'
 import { ManageEventView } from '@/app/components/ManageEventView'
 import { hapticFeedback } from '@/lib/haptics'
 
@@ -150,7 +151,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [isFollowing, setIsFollowing] = useState(false)
   const [showContributeModal, setShowContributeModal] = useState(false)
-  const [contributeAmount, setContributeAmount] = useState('')
   const [showQRModal, setShowQRModal] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
@@ -339,17 +339,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const handleContribute = () => {
     hapticFeedback.impact()
     if (!user) { toast.error("Connectez-vous pour contribuer."); return }
-    // Reset amount and open modal — no pool mode/minAmount stored on event model currently
-    setContributeAmount('')
+    if (!event?.poolTarget || event.poolTarget <= 0) {
+      toast.error("Cet événement n'a pas de cagnotte active.")
+      return
+    }
     setShowContributeModal(true)
   }
 
-  const handleConfirmContribute = () => {
-    const amount = parseInt(contributeAmount)
-    if (isNaN(amount) || amount <= 0) {
-      toast.error("Veuillez entrer un montant valide (supérieur à 0)")
-      return
-    }
+  const handleConfirmContribute = (amount: number) => {
     setShowContributeModal(false)
     navigate(`/events/${id}/pay?amount=${amount}`)
   }
@@ -435,8 +432,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const isFull = maxAttendees ? attendeeCount >= maxAttendees : false
 
   const organizerName = event.creator?.profile?.displayName || 'Organisateur'
-  const organizerAvatar = event.creator?.profile?.avatarUrl ||
-    'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'
+  const organizerAvatar = event.creator?.profile?.avatarUrl ?? null
   const organizerFollowers = event.creator?.profile?.followersCount || 0
   const organizerEvents = event.creator?.profile?.eventsCount || 0
 
@@ -448,7 +444,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const netToPay = amountToPay + transactionFee
   const hasPool = !!(event.poolTarget && event.poolTarget > 0)
   const cagnoteBudget: number = event.poolTarget || 0
-  const cagnoteCollected = event.price > 0 ? event.price * attendeeCount : 0
+  const cagnoteCollected = event.poolCollected ?? 0
   const cagnoteRemaining = Math.max(cagnoteBudget - cagnoteCollected, 0)
   const cagnoteProgress = cagnoteBudget > 0 ? Math.min(Math.round((cagnoteCollected / cagnoteBudget) * 100), 100) : 0
 
@@ -769,7 +765,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         </div>
 
         {/* Bottom Actions */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-4 pb-8 flex items-center justify-between gap-4 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]">
+        <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-4 flex items-center justify-between gap-4 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
           {isCreator && event.status === 'DRAFT' ? (
             <div className="flex flex-col gap-3 w-full">
               <button 
@@ -899,87 +895,17 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         </div>
       )}
 
-      {/* Contribute Modal */}
-      {showContributeModal && (() => {
-        const poolMode = (event as any)?.pool?.mode
-        const poolMinAmount = (event as any)?.pool?.minAmount
-        const isFixed = poolMode === 'fixe'
-        const isMinimum = poolMode === 'minimum'
-        return (
-          <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
-            <div className="w-full bg-white rounded-t-[32px] shadow-2xl animate-in slide-in-from-bottom duration-300">
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 bg-gray-200 rounded-full" />
-              </div>
-              <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
-                <div>
-                  <span className="text-[16px] font-bold text-gray-900">Contribuer à la cagnotte</span>
-                  {isFixed && (
-                    <span className="ml-2 text-[11px] bg-orange-50 text-[#FF9F1C] font-bold px-2 py-0.5 rounded-full border border-orange-100">Montant fixe</span>
-                  )}
-                  {isMinimum && (
-                    <span className="ml-2 text-[11px] bg-blue-50 text-blue-600 font-bold px-2 py-0.5 rounded-full border border-blue-100">Montant minimum</span>
-                  )}
-                </div>
-                <button
-                  onClick={() => setShowContributeModal(false)}
-                  className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center"
-                >
-                  <X className="w-4 h-4 text-gray-500" />
-                </button>
-              </div>
-              <div className="px-5 pt-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
-                {isFixed && poolMinAmount ? (
-                  <div className="mb-4 p-3 bg-orange-50 rounded-xl border border-orange-100">
-                    <p className="text-[13px] text-[#FF9F1C] font-medium">
-                      🔒 Montant fixe — le montant de contribution est défini par l'organisateur et ne peut pas être modifié.
-                    </p>
-                  </div>
-                ) : isMinimum && poolMinAmount ? (
-                  <div className="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="text-[13px] text-blue-600 font-medium">
-                      📌 Montant minimum : <strong>{Number(poolMinAmount).toLocaleString()} F CFA</strong>. Vous pouvez contribuer plus.
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-[13px] text-gray-500 mb-4">
-                    🎁 Saisissez le montant de votre choix pour soutenir cet événement.
-                  </p>
-                )}
-                <div className="flex gap-2 items-center mb-6">
-                  <input
-                    type="number"
-                    min={isMinimum && poolMinAmount ? Number(poolMinAmount) : 1}
-                    autoFocus
-                    readOnly={isFixed}
-                    value={contributeAmount}
-                    onChange={e => !isFixed && setContributeAmount(e.target.value)}
-                    placeholder={isMinimum && poolMinAmount ? `Min. ${Number(poolMinAmount).toLocaleString()}` : 'Ex: 5000'}
-                    className={`flex-1 px-4 py-3.5 border rounded-xl text-[16px] font-semibold focus:outline-none transition-colors ${
-                      isFixed
-                        ? 'bg-gray-50 border-gray-200 text-gray-500 cursor-not-allowed'
-                        : 'border-gray-200 focus:border-[#FF9F1C] text-gray-900'
-                    }`}
-                  />
-                  <div className="px-3 py-3.5 border border-gray-200 rounded-xl text-[14px] font-bold text-gray-600 bg-gray-50">
-                    F CFA
-                  </div>
-                </div>
-                <button
-                  onClick={handleConfirmContribute}
-                  className="w-full bg-[#FF9F1C] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform shadow-md"
-                >
-                  Procéder au paiement
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      })()}
+      {showContributeModal && event && (
+        <ContributeModal
+          event={event}
+          onClose={() => setShowContributeModal(false)}
+          onConfirm={handleConfirmContribute}
+        />
+      )}
       {/* QR Code Modal for Private Events */}
-      {showQRModal && event?.joinCode && (
-        <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center px-5 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative">
+      {showQRModal && event && (
+        <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center px-5 pt-safe-4 pb-safe-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative mt-safe-2">
             <button
               onClick={() => setShowQRModal(false)}
               className="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
@@ -999,12 +925,16 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
             <div className="bg-gray-50 p-6 rounded-2xl flex flex-col items-center justify-center border border-gray-100 mb-6">
               <div className="bg-white p-3 rounded-xl shadow-sm mb-4">
-                <QRCodeSVG value={event.joinCode} size={160} level="M" />
+                {event.joinCode ? (
+                  <QRCodeSVG value={event.joinCode} size={160} level="M" />
+                ) : (
+                  <div className="w-[160px] h-[160px] flex items-center justify-center text-gray-400 text-sm">Code indisponible</div>
+                )}
               </div>
               
               <div className="flex items-center gap-3">
                 <span className="text-[28px] font-mono font-bold text-gray-800 tracking-widest bg-gray-200/50 px-4 py-2 rounded-xl">
-                  {event.joinCode}
+                  {event.joinCode || '—'}
                 </span>
                 <button 
                   onClick={() => {

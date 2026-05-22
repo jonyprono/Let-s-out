@@ -48,6 +48,8 @@ export interface Event {
   }[]
   joinCode?: string
   poolTarget?: number
+  poolMode?: 'libre' | 'minimum' | 'fixe'
+  poolMinAmount?: number
   poolCollected?: number
   poolReleased?: boolean
   _count?: { bookings: number }

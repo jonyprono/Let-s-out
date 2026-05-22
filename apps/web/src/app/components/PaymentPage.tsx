@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { Loader2, ChevronLeft, CheckCircle, XCircle } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { chatApi } from '@/features/chat/api'
@@ -9,6 +10,7 @@ export function PaymentPage() {
   const { id: eventId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const qc = useQueryClient()
   const customAmount = searchParams.get('amount') ? Number(searchParams.get('amount')) : undefined
   const [status, setStatus] = useState<'loading' | 'ready' | 'success' | 'error'>('loading')
   const [info, setInfo] = useState<{ description: string; amount: number; devMode: boolean } | null>(null)
@@ -41,6 +43,8 @@ export function PaymentPage() {
                   toast.error('Paiement annulé')
                 } else {
                   setStatus('success')
+                  qc.invalidateQueries({ queryKey: ['chat'] })
+                  qc.invalidateQueries({ queryKey: ['events', eventId] })
                   toast.success("Paiement réussi ! Vous participez à l'événement 🎉")
                 }
               },
@@ -63,6 +67,8 @@ export function PaymentPage() {
       if (customAmount) payload.amount = customAmount
       await apiClient.post('/payments/dev/confirm-booking', payload)
       setStatus('success')
+      qc.invalidateQueries({ queryKey: ['chat'] })
+      qc.invalidateQueries({ queryKey: ['events', eventId] })
       toast.success('Réservation confirmée (mode dev) 🎉')
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Erreur')
@@ -81,7 +87,7 @@ export function PaymentPage() {
 
   return (
     <div className="w-full h-full bg-white flex flex-col">
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+      <div className="px-6 pt-safe-4 pb-4 border-b border-gray-100 flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full">
           <ChevronLeft className="w-5 h-5 text-gray-700" />
         </button>

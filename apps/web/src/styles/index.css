@@ -102,3 +102,9 @@ body.barcode-scanner-active #app-layout-inner {
 .pt-safe-only {
   padding-top: env(safe-area-inset-top) !important;
 }
+.pb-safe-4 {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
+}
+.mt-safe-2 {
+  margin-top: calc(0.5rem + env(safe-area-inset-top)) !important;
+}

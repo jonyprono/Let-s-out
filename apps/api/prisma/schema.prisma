@@ -62,6 +62,7 @@ model Profile {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   gender         String?
+  kycStatus      String?   @default("pending") // pending | verified | rejected
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
@@ -134,6 +135,8 @@ model Event {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   poolTarget       Float?
+  poolMode         String?       // libre | minimum | fixe
+  poolMinAmount    Float?
   joinCode         String?       @unique
   poolCollected    Float         @default(0)
   poolReleased     Boolean       @default(false)

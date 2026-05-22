@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { ChevronLeft, MapPin, Loader2, User, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { COUNTRIES } from '@/lib/countries';
+import { useAuthStore } from '@/stores/auth.store';
 
 async function reverseGeocode(lat: number, lon: number) {
   const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'Accept-Language': 'fr' } });
@@ -24,6 +25,7 @@ const interests = [
 ];
 
 export function Onboarding({ onComplete }: OnboardingProps) {
+  const accessToken = useAuthStore((s) => s.accessToken);
   const [step, setStep] = useState(1);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -97,15 +99,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         `${apiBase}/api/v1/chat/upload`,
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
           body: formData,
         }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
-      const baseUrl = apiBase
-      const fullUrl = data.url.startsWith('http') ? data.url : `${baseUrl}${data.url}`;
-      setProfilePicture(fullUrl);
+      // Store relative path — SafeImage resolves against API base on any device
+      setProfilePicture(data.url);
       toast.success('Photo ajoutée !');
     } catch (e: any) {
       toast.error(e.message || 'Erreur lors de l\'upload');
