@@ -448,7 +448,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const isFull = maxAttendees ? attendeeCount >= maxAttendees : false
 
   const organizerName = event.creator?.profile?.displayName || 'Organisateur'
-  const organizerAvatar = event.creator?.profile?.avatarUrl ?? null
+  const organizerAvatar = event.creator?.profile?.avatarUrl
   const organizerFollowers = event.creator?.profile?.followersCount || 0
   const organizerEvents = event.creator?.profile?.eventsCount || 0
 
