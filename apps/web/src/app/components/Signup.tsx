@@ -13,7 +13,8 @@ declare global {
 
 interface SignupProps { onBack: () => void }
 
-import { COUNTRIES } from '@/lib/countries'
+import { COUNTRIES, Country } from '@/lib/countries'
+import { CountryPicker } from '@/components/shared/CountryPicker'
 
 const INTERESTS_LIST = [
   'Social', 'Art & Culture', 'Bien-être & Santé',
@@ -42,10 +43,9 @@ export function Signup({ onBack }: SignupProps) {
   const [step, setStep] = useState(1)
 
   // Step 1 – Phone
-  const [country, setCountry] = useState(COUNTRIES[0])
+  const [country, setCountry] = useState<Country>(COUNTRIES[0])
   const [phone, setPhone] = useState('')
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
-  const [showCountry, setShowCountry] = useState(false)
 
   // Step 2 – OTP (6 digits)
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
@@ -273,32 +273,11 @@ export function Signup({ onBack }: SignupProps) {
 
             <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-1.5 block">Numéro de téléphone</label>
             <div className="flex gap-2 mb-6">
-              <div className="relative shrink-0">
-                <button
-                  onClick={() => setShowCountry(!showCountry)}
-                  className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl bg-white dark:bg-[#242424] text-[15px] font-medium whitespace-nowrap"
-                >
-                  <span>{country.flag}</span>
-                  <span className="text-[#1A1A1A] dark:text-white text-[13px]">({country.code.replace('+', '')})</span>
-                  <svg className="w-3 h-3 text-[#888888] ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {showCountry && (
-                  <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#181818] border border-[#E5E5E5] dark:border-white/20 rounded-xl shadow-lg z-10 w-56 max-h-[52vh] overflow-y-auto overscroll-contain py-1">
-                    {COUNTRIES.map(c => (
-                      <button key={c.code} onClick={() => { setCountry(c); setShowCountry(false) }}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/10 text-sm text-left">
-                        <span>{c.flag}</span><span className="text-[#1A1A1A] dark:text-gray-100">{c.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <CountryPicker value={country} onChange={setCountry} />
               <input
                 type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                 placeholder="01 97 00 00 00"
-                className="flex-1 min-w-0 px-4 py-3.5 border-2 border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-[#1A1A1A] dark:text-white placeholder-[#BBBBBB]"
+                className="flex-1 min-w-0 px-4 py-3.5 border-2 border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
             </div>
 
@@ -309,8 +288,8 @@ export function Signup({ onBack }: SignupProps) {
                 const isActive = currentChannel === val
                 return (
                   <button key={ch} onClick={() => setCurrentChannel(val)}
-                    className="flex-1 flex items-center px-4 py-3.5 border border-[#E5E5E5] rounded-xl bg-white transition-colors gap-2">
-                    <span className="flex-1 text-left text-[15px] font-medium text-[#1A1A1A]">{ch}</span>
+                    className="flex-1 flex items-center px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl bg-white dark:bg-[#242424] transition-colors gap-2">
+                    <span className="flex-1 text-left text-[15px] font-medium text-gray-900 dark:text-white">{ch}</span>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
                       {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                     </div>
@@ -328,8 +307,8 @@ export function Signup({ onBack }: SignupProps) {
               Quel est le code reçu&nbsp;?
             </h1>
             <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-7 leading-relaxed">
-              Code à 6 chiffres envoyé par <strong className="text-[#1A1A1A]">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
-              <strong className="text-[#1A1A1A]">{maskPhone(fullPhone) || '+229 01 97 00 00 00'}</strong>
+              Code à 6 chiffres envoyé par <strong className="text-gray-900 dark:text-white">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
+              <strong className="text-gray-900 dark:text-white">{maskPhone(fullPhone) || '+229 01 97 00 00 00'}</strong>
             </p>
 
             <div className="grid grid-cols-6 gap-2 mb-5 w-full">
@@ -339,8 +318,8 @@ export function Signup({ onBack }: SignupProps) {
                   type="text" inputMode="numeric" maxLength={1} value={d}
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKey(i, e)}
-                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white
-                    ${d ? 'border-[#FF9F1C] text-[#1A1A1A]' : 'border-[#E5E5E5] text-[#1A1A1A]'}
+                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white dark:bg-[#242424] text-gray-900 dark:text-white
+                    ${d ? 'border-[#FF9F1C]' : 'border-[#E5E5E5] dark:border-white/20'}
                     focus:border-[#FF9F1C]`}
                 />
               ))}
@@ -397,8 +376,7 @@ export function Signup({ onBack }: SignupProps) {
             <div className="relative">
               <input
                 type="date" value={birthday} onChange={e => setBirthday(e.target.value)}
-                className={`w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white pr-12 appearance-none ${birthday ? 'text-[#1A1A1A]' : 'text-[#BBBBBB]'}`}
-                style={{ colorScheme: 'light' }}
+                className={`w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] pr-12 appearance-none text-gray-900 dark:text-white ${birthday ? '' : 'text-[#BBBBBB] dark:text-gray-500'}`}
               />
               <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888] pointer-events-none" />
             </div>
@@ -419,7 +397,7 @@ export function Signup({ onBack }: SignupProps) {
               <input
                 type="text" value={city} onChange={e => setCity(e.target.value)}
                 placeholder="Sélectionnez une ville"
-                className="w-full pl-10 pr-10 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white text-[#1A1A1A] placeholder-[#BBBBBB]"
+                className="w-full pl-10 pr-10 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
               {city && (
                 <button onClick={() => setCity('')} className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -445,7 +423,7 @@ export function Signup({ onBack }: SignupProps) {
                 return (
                   <button key={interest} onClick={() => toggleInterest(interest)}
                     className={`px-4 py-2 rounded-full text-[13px] font-medium border transition-all
-                      ${isSelected ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white' : 'bg-white border-[#E5E5E5] text-[#1A1A1A]'}`}>
+                      ${isSelected ? 'bg-[#FF9F1C] border-[#FF9F1C] text-white' : 'bg-white dark:bg-[#242424] border-[#E5E5E5] dark:border-white/20 text-gray-900 dark:text-white'}`}>
                     {interest}
                   </button>
                 )
@@ -462,24 +440,24 @@ export function Signup({ onBack }: SignupProps) {
               Définissez un mot de passe robuste et sécurisé de<br />connexion à votre compte
             </p>
 
-            <label className="text-[13px] text-[#555555] font-medium mb-1.5 block">Mot de passe</label>
+            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-1.5 block">Mot de passe</label>
             <div className="relative mb-5">
               <input
                 type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white pr-12 text-[#1A1A1A]"
+                className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] pr-12 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
               <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888]">
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
 
-            <label className="text-[13px] text-[#555555] font-medium mb-1.5 block">Confirmer mot de passe</label>
+            <label className="text-[13px] text-[#555555] dark:text-gray-200 font-medium mb-1.5 block">Confirmer mot de passe</label>
             <div className="relative mb-5">
               <input
                 type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white pr-12 text-[#1A1A1A]"
+                className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] pr-12 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
               <button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888]">
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -513,7 +491,7 @@ export function Signup({ onBack }: SignupProps) {
             <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#FF9F1C] border-[#FF9F1C]' : 'border-[#CCCCCC] bg-white'}`}>
               {acceptedTerms && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
             </div>
-            <span className="text-[12px] text-[#555555] leading-relaxed">
+            <span className="text-[12px] text-[#555555] dark:text-gray-300 leading-relaxed">
               Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
               <span className="text-[#FF9F1C] font-semibold">Conditions d'Utilisation</span> de Let's Out
             </span>

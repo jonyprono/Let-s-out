@@ -1,4 +1,4 @@
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark, .dark *));
 
 :root {
   --font-size: 16px;
@@ -99,6 +99,16 @@
 
 .dark input::placeholder, .dark textarea::placeholder {
   color: #888888;
+}
+
+/* Texte codé en dur #1A1A1A — lisible en mode sombre */
+.dark [class*="1A1A1A"]:not([class*="FF9F1C"]):not([class*="text-white"]):not([class*="text-\[#FF"]) {
+  color: #f5f5f5;
+}
+
+.dark strong[class*="1A1A1A"],
+.dark strong:not([class*="FF9F1C"]) {
+  color: #f5f5f5;
 }
 
 @theme inline {

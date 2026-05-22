@@ -37,7 +37,7 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
           <button
             id="welcome-signup-btn"
             onClick={onSignup}
-            className="w-full bg-white dark:bg-[#242424] border border-gray-200 dark:border-white/10 text-[#1A1A1A] dark:text-white py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:bg-gray-50 dark:active:bg-white/10 transition-colors"
+            className="w-full bg-white dark:bg-[#242424] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:bg-gray-50 dark:active:bg-white/10 transition-colors"
           >
             S'inscrire
           </button>

@@ -7,6 +7,8 @@ interface CountryPickerProps {
   onChange: (country: Country) => void
 }
 
+const LIST_MAX_HEIGHT = 'min(16rem, calc(100dvh - 14rem))'
+
 export function CountryPicker({ value, onChange }: CountryPickerProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -20,7 +22,6 @@ export function CountryPicker({ value, onChange }: CountryPickerProps) {
       )
     : COUNTRIES
 
-  // Focus search input when dropdown opens
   useEffect(() => {
     if (open) {
       setTimeout(() => searchRef.current?.focus(), 80)
@@ -29,7 +30,6 @@ export function CountryPicker({ value, onChange }: CountryPickerProps) {
     }
   }, [open])
 
-  // Close when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -46,58 +46,61 @@ export function CountryPicker({ value, onChange }: CountryPickerProps) {
   }
 
   return (
-    <div className="relative shrink-0" ref={containerRef}>
-      {/* Trigger button */}
+    <div className="relative shrink-0 z-30" ref={containerRef}>
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] rounded-xl bg-white text-[15px] font-medium whitespace-nowrap active:bg-gray-50 transition-colors"
+        className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl bg-white dark:bg-[#242424] text-[15px] font-medium whitespace-nowrap active:bg-gray-50 dark:active:bg-white/10 transition-colors"
       >
         <span className="text-lg leading-none">{value.flag}</span>
-        <span className="text-[#1A1A1A] text-[13px] ml-0.5">({value.code.replace('+', '')})</span>
-        <ChevronDown className={`w-3 h-3 text-[#888888] ml-0.5 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
+        <span className="text-gray-900 dark:text-white text-[13px] ml-0.5">
+          ({value.code.replace('+', '')})
+        </span>
+        <ChevronDown className={`w-3 h-3 text-gray-500 ml-0.5 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Dropdown */}
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-[#E5E5E5] rounded-2xl shadow-2xl z-50 w-72 overflow-hidden"
-          style={{ maxHeight: '60vh' }}
+        <div
+          className="absolute top-full left-0 mt-1 bg-white dark:bg-[#181818] border border-[#E5E5E5] dark:border-white/20 rounded-2xl shadow-2xl z-50 w-[min(18rem,calc(100vw-3rem))] overflow-hidden flex flex-col"
+          style={{ maxHeight: LIST_MAX_HEIGHT }}
         >
-          {/* Search bar */}
-          <div className="px-3 py-2.5 border-b border-[#F0F0F0] sticky top-0 bg-white">
-            <div className="flex items-center gap-2 bg-[#F5F5F5] rounded-xl px-3 py-2">
-              <Search className="w-4 h-4 text-[#888888] shrink-0" />
+          <div className="px-3 py-2.5 border-b border-[#F0F0F0] dark:border-white/10 shrink-0 bg-white dark:bg-[#181818]">
+            <div className="flex items-center gap-2 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-xl px-3 py-2">
+              <Search className="w-4 h-4 text-gray-500 shrink-0" />
               <input
                 ref={searchRef}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Rechercher un pays..."
-                className="flex-1 bg-transparent text-[13px] text-[#1A1A1A] outline-none placeholder-[#AAAAAA]"
+                className="flex-1 bg-transparent text-[13px] text-gray-900 dark:text-white outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="shrink-0">
-                  <X className="w-3.5 h-3.5 text-[#AAAAAA]" />
+                <button type="button" onClick={() => setSearch('')} className="shrink-0 touch-sm">
+                  <X className="w-3.5 h-3.5 text-gray-400" />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Country list */}
-          <div className="overflow-y-auto" style={{ maxHeight: 'calc(60vh - 60px)', scrollbarWidth: 'none' }}>
+          <div
+            className="overflow-y-auto overscroll-contain flex-1 min-h-0"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
             {filtered.length === 0 ? (
-              <div className="py-8 text-center text-[13px] text-[#AAAAAA]">Aucun pays trouvé</div>
+              <div className="py-8 text-center text-[13px] text-gray-400">Aucun pays trouvé</div>
             ) : (
               filtered.map((c, i) => (
                 <button
-                  key={`${c.code}-${i}`}
+                  key={`${c.code}-${c.name}-${i}`}
+                  type="button"
                   onClick={() => select(c)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[#FFF8F0] active:bg-[#FFF0DC] text-left transition-colors border-b border-[#F5F5F5] last:border-0 ${
-                    value.code === c.code && value.name === c.name ? 'bg-[#FFF8F0]' : ''
+                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[#FFF8F0] dark:hover:bg-white/10 active:bg-[#FFF0DC] text-left transition-colors border-b border-[#F5F5F5] dark:border-white/5 last:border-0 ${
+                    value.code === c.code && value.name === c.name ? 'bg-[#FFF8F0] dark:bg-white/10' : ''
                   }`}
                 >
-                  <span className="text-xl leading-none w-7 text-center">{c.flag}</span>
-                  <span className="flex-1 text-[14px] text-[#1A1A1A] font-medium truncate">{c.name}</span>
-                  <span className="text-[12px] text-[#888888] shrink-0">{c.code}</span>
+                  <span className="text-xl leading-none w-7 text-center shrink-0">{c.flag}</span>
+                  <span className="flex-1 text-[14px] text-gray-900 dark:text-white font-medium truncate">{c.name}</span>
+                  <span className="text-[12px] text-gray-500 dark:text-gray-300 shrink-0">{c.code}</span>
                 </button>
               ))
             )}

@@ -16,7 +16,7 @@ import { PrivacyModal } from '@/features/users/components/PrivacyModal';
 import { EditPhoneModal } from '@/features/users/components/EditPhoneModal';
 import { useLogout } from '@/features/auth/hooks/useAuth';
 import { useSettingsStore } from '@/stores/settings.store';
-import { SettingsToggle, ThemeSegment } from '@/components/shared/SettingsToggle';
+import { PreferenceSegment } from '@/components/shared/SettingsToggle';
 
 interface SettingsProps {
   onBack: () => void;
@@ -123,10 +123,12 @@ export function Settings({ onBack }: SettingsProps) {
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.notifications')}</p>
                 <p className="text-[12px] text-gray-400 dark:text-gray-500">{t('settings.notificationsDesc')}</p>
               </div>
-              <SettingsToggle
-                enabled={notifEnabled}
-                onChange={setNotifEnabled}
-                aria-label="Activer les notifications"
+              <PreferenceSegment
+                leftLabel="Non"
+                rightLabel="Oui"
+                activeRight={notifEnabled}
+                onSelectLeft={() => setNotifEnabled(false)}
+                onSelectRight={() => setNotifEnabled(true)}
               />
             </div>
 
@@ -139,10 +141,12 @@ export function Settings({ onBack }: SettingsProps) {
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.darkMode')}</p>
                 <p className="text-[12px] text-gray-400 dark:text-gray-500">{t('settings.darkModeDesc')}</p>
               </div>
-              <ThemeSegment
-                isDark={darkMode}
-                onLight={() => setTheme('light')}
-                onDark={() => setTheme('dark')}
+              <PreferenceSegment
+                leftLabel="Clair"
+                rightLabel="Sombre"
+                activeRight={darkMode}
+                onSelectLeft={() => setTheme('light')}
+                onSelectRight={() => setTheme('dark')}
               />
             </div>
 

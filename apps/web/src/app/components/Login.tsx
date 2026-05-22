@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { Loader2, Eye, EyeOff, ChevronDown } from 'lucide-react'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { useDirectLogin } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
+import { COUNTRIES, Country } from '@/lib/countries'
+import { CountryPicker } from '@/components/shared/CountryPicker'
 
 interface LoginProps {
   onSignup: () => void
   onForgotPassword: () => void
 }
-
-import { COUNTRIES } from '@/lib/countries'
 
 function validatePhone(code: string, phone: string) {
   const cleanPhone = phone.replace(/\s+/g, '')
@@ -19,9 +19,8 @@ function validatePhone(code: string, phone: string) {
 }
 
 export function Login({ onSignup, onForgotPassword }: LoginProps) {
-  const [country, setCountry] = useState(COUNTRIES[0])
+  const [country, setCountry] = useState<Country>(COUNTRIES[0])
   const [phone, setPhone] = useState('')
-  const [showCountry, setShowCountry] = useState(false)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
@@ -42,47 +41,23 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   return (
     <div className="w-full h-full bg-white dark:bg-[#151515] flex flex-col transition-colors">
 
-      {/* Content */}
       <div className="flex-1 px-6 pt-10 flex flex-col overflow-y-auto pb-4">
-        <h1 className="text-[22px] font-bold text-[#1A1A1A] dark:text-white mb-1">Connectez-vous</h1>
+        <h1 className="text-[22px] font-bold text-gray-900 dark:text-white mb-1">Connectez-vous</h1>
         <p className="text-[13px] text-[#888888] dark:text-gray-300 mb-8">Entrez vos identifiants pour vous connecter</p>
 
-        {/* Phone */}
         <label className="text-[13px] text-[#666666] dark:text-gray-200 font-medium mb-1.5 block">Numéro de téléphone</label>
         <div className="flex gap-2 mb-5">
-          <div className="relative shrink-0">
-            <button
-              onClick={() => setShowCountry(v => !v)}
-              className="flex items-center gap-1 px-3 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl bg-white dark:bg-[#242424] text-[15px] font-medium whitespace-nowrap"
-            >
-              <span>{country.flag}</span>
-              <span className="text-[#1A1A1A] dark:text-white text-[13px]">({country.code.replace('+', '')})</span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#888888] ml-0.5" />
-            </button>
-            {showCountry && (
-              <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#181818] border border-[#E5E5E5] dark:border-white/20 rounded-xl shadow-lg z-10 w-56 max-h-[52vh] overflow-y-auto overscroll-contain py-1">
-                {COUNTRIES.map(c => (
-                  <button key={c.code} onClick={() => { setCountry(c); setShowCountry(false) }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-white/10 text-sm text-left">
-                    <span>{c.flag}</span>
-                    <span className="text-[#1A1A1A] dark:text-gray-100">{c.name}</span>
-                    <span className="ml-auto text-[#888888] dark:text-gray-300">{c.code}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <CountryPicker value={country} onChange={setCountry} />
           <input
             type="tel"
             value={phone}
             onChange={e => setPhone(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             placeholder="XX XX XX XX"
-            className="flex-1 min-w-0 px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-[#1A1A1A] dark:text-white placeholder-[#BBBBBB]"
+            className="flex-1 min-w-0 px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
         </div>
 
-        {/* Password */}
         <label className="text-[13px] text-[#666666] dark:text-gray-200 font-medium mb-1.5 block">Mot de passe</label>
         <div className="relative mb-2">
           <input
@@ -91,9 +66,9 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             onChange={e => setPassword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
             placeholder="••••••••"
-            className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] pr-12 text-[#1A1A1A] dark:text-white placeholder-[#BBBBBB]"
+            className="w-full px-4 py-3.5 border border-[#E5E5E5] dark:border-white/20 rounded-xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-white dark:bg-[#242424] pr-12 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
           />
-          <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888]">
+          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#888888]">
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         </div>
@@ -104,7 +79,6 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </button>
         </div>
 
-        {/* Submit */}
         <button
           id="login-send-btn"
           onClick={handleLogin}
@@ -115,16 +89,16 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           <span>Se connecter</span>
         </button>
 
-        {/* Signup link */}
         <p className="text-center text-[13px] text-[#888888] dark:text-gray-300">
-          Si vous n'avez pas encore de compte{' '}
-          <button onClick={onSignup} className="text-[#FF9F1C] font-semibold">Inscrivez-vous</button>
+          Si vous n&apos;avez pas encore de compte{' '}
+          <button type="button" onClick={onSignup} className="text-[#FF9F1C] font-semibold">
+            Inscrivez-vous
+          </button>
         </p>
       </div>
 
-      {/* Home indicator */}
       <div className="h-6 flex items-center justify-center pb-1 shrink-0">
-        <div className="w-32 h-[4px] bg-[#1A1A1A] dark:bg-white rounded-full" />
+        <div className="w-32 h-[4px] bg-gray-900 dark:bg-white rounded-full" />
       </div>
     </div>
   )
