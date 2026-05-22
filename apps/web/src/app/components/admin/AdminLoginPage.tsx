@@ -10,7 +10,9 @@ export function AdminLoginPage() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   
-  const setAuth = useAuthStore(s => s.setAuth)
+  const setAccessToken = useAuthStore(s => s.setAccessToken)
+  const setRefreshToken = useAuthStore(s => s.setRefreshToken)
+  const setUser = useAuthStore(s => s.setUser)
   const user = useAuthStore(s => s.user)
   const token = useAuthStore(s => s.accessToken)
 
@@ -30,7 +32,9 @@ export function AdminLoginPage() {
       const res = await apiClient.post('/auth/admin-login', { password })
       const { accessToken, refreshToken, user: authUser } = res.data
       
-      setAuth(accessToken, refreshToken, authUser)
+      setAccessToken(accessToken)
+      setRefreshToken(refreshToken)
+      setUser(authUser)
       navigate('/admin', { replace: true })
     } catch (err: any) {
       setError(err.response?.data?.error || 'Mot de passe incorrect')
