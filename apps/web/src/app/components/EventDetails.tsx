@@ -26,36 +26,17 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { Browser } from '@capacitor/browser'
 import { fr } from 'date-fns/locale'
 import { usersApi } from '@/features/users/api'
 import { apiClient } from '@/lib/api-client'
 import { QRCodeSVG } from 'qrcode.react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { ManageEventView } from '@/app/components/ManageEventView'
-import { MapContainer, TileLayer, Marker } from 'react-leaflet'
-import { Icon } from 'leaflet'
-import { searchPlaces } from '@/lib/geo'
 import { hapticFeedback } from '@/lib/haptics'
 import { shareLink } from '@/lib/utils'
 import { useFavoritesStore } from '@/stores/favorites.store'
 
-// Fix Leaflet default icon issues by initializing lazily
-let customIcon: Icon | undefined;
-const getIcon = () => {
-  if (!customIcon) {
-    customIcon = new Icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
-    })
-  }
-  return customIcon;
-}
+
 
 interface CoHostRowProps {
   coHost: any
@@ -178,8 +159,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const [showPendingModal, setShowPendingModal] = useState(false)
   const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set())
   const [invitedUsers, setInvitedUsers] = useState<Set<string>>(new Set())
-  const [geocodedLat, setGeocodedLat] = useState<number | null>(null)
-  const [geocodedLng, setGeocodedLng] = useState<number | null>(null)
+
   const [showProfileVerificationModal, setShowProfileVerificationModal] = useState(false)
   const [showReleaseModal, setShowReleaseModal] = useState(false)
 
@@ -193,19 +173,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     enabled: !!id,
   })
 
-  useEffect(() => {
-    if (event && !event.latitude && (event.city || event.address)) {
-      const q = `${event.address ? event.address + ' ' : ''}${event.city || ''}`
-      searchPlaces(q)
-        .then(results => {
-          if (results.length > 0) {
-            setGeocodedLat(results[0].lat)
-            setGeocodedLng(results[0].lon)
-          }
-        })
-        .catch(err => console.error('[EventDetails] Geocoding error:', err))
-    }
-  }, [event])
+
 
   // Fetch the current user's booking to know if they already joined
   const { data: myBookingData, isLoading: bookingLoading } = useQuery({
