@@ -61,7 +61,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             value={phone}
             onChange={e => setPhone(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
-            placeholder="XX XX XX XX"
+            placeholder=" "
             className={authInputFlex}
           />
         </div>
