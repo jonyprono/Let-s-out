@@ -116,7 +116,7 @@ export function Signup({ onBack }: SignupProps) {
       checkTarget({ target: fullPhone }, {
         onSuccess: async ({ data }) => {
           if (data.exists) {
-            toast.error('Ce numéro est déjà inscrit. Veuillez vous connecter.')
+            toast.error('Numéro ou mot de passe incorrect. Veuillez vous connecter.')
           } else {
             if (currentChannel === 'sms') {
               try {
@@ -184,7 +184,7 @@ export function Signup({ onBack }: SignupProps) {
         },
         onError: (e: any) => {
           const msg = e.response?.data?.error || ''
-          if (msg.includes('exists') || msg.includes('USER_ALREADY_EXISTS')) toast.error('Ce numéro est déjà utilisé')
+          if (msg.includes('exists') || msg.includes('USER_ALREADY_EXISTS')) toast.error('Numéro de téléphone ou mot de passe incorrect. Veuillez vous connecter.')
           else if (msg.includes('OTP') || msg.includes('code') || msg.includes('expiré')) { toast.error('Code expiré. Veuillez recommencer.'); setStep(1) }
           else if (e.message === 'Network Error') toast.error('Erreur réseau : serveur inaccessible')
           else toast.error("Erreur lors de l'inscription")
@@ -288,7 +288,7 @@ export function Signup({ onBack }: SignupProps) {
               <CountryPicker value={country} onChange={setCountry} />
               <input
                 type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                placeholder="01 97 00 00 00"
+                placeholder=""
                 className={`${authInputFlex} border-2`}
               />
             </div>
