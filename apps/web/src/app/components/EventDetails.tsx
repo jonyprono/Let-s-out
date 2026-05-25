@@ -87,8 +87,8 @@ function CoHostRow({ coHost, currentUser, onOpenProfile, onContactUser }: CoHost
   }
 
   return (
-    <div className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100">
-      <div className="flex items-start gap-3">
+    <div className="flex flex-col p-200 rounded-2xl bg-gray-50 border border-gray-100">
+      <div className="flex items-start gap-150">
         <div 
           className="cursor-pointer flex-shrink-0"
           onClick={() => onOpenProfile(coHost.id, { displayName: coHostName, avatarUrl: coHostAvatar })}
@@ -99,7 +99,7 @@ function CoHostRow({ coHost, currentUser, onOpenProfile, onContactUser }: CoHost
               alt={coHostName} 
               className="w-full h-full object-cover"
               fallback={
-                <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#FF9F1C] flex items-center justify-center text-xl font-bold text-white">
+                <div className="w-full h-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--action-primary)] flex items-center justify-center text-xl font-bold text-white">
                   {coHostName.charAt(0).toUpperCase()}
                 </div>
               }
@@ -112,27 +112,27 @@ function CoHostRow({ coHost, currentUser, onOpenProfile, onContactUser }: CoHost
             <p className="text-[15px] font-bold text-gray-900">{coHostName}</p>
             <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Co-hôte</span>
           </div>
-          <p className="text-[12px] text-gray-500 mt-0.5 mb-2">
+          <p className="text-[12px] text-text-secondary mt-0.5 mb-2">
             {coHostFollowers + (isFollowing ? 1 : 0)} followers • {coHostEvents} événement{coHostEvents > 1 ? 's' : ''}
           </p>
           
           {isThisCoHostMe ? (
-            <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Vous</span>
+            <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-150 py-1 rounded-full">Vous</span>
           ) : (
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => onContactUser(coHost.id)} 
-                className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform"
+                className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform"
               >
                 Contacter
               </button>
               <button 
                 onClick={handleFollow} 
                 disabled={loading}
-                className={`px-3 py-1 rounded-full border text-[11px] font-bold shadow-sm active:scale-95 transition-all ${
+                className={`px-150 py-1 rounded-full border text-[11px] font-bold shadow-sm active:scale-95 transition-all ${
                   isFollowing 
                     ? 'bg-blue-50 text-blue-600 border-blue-200' 
-                    : 'bg-white border-gray-200 text-gray-700'
+                    : 'bg-background-white border-border-primary text-gray-700'
                 }`}
               >
                 {isFollowing ? 'Suivi' : 'Suivre'}
@@ -390,19 +390,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   if (isLoading || bookingLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-white">
-        <Loader2 className="w-8 h-8 animate-spin text-[#FF9F1C]" />
+      <div className="w-full h-full flex items-center justify-center bg-background-white">
+        <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
       </div>
     )
   }
 
   if (error || !event) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-white px-8 text-center">
-        <p className="text-gray-500 mb-4">Événement introuvable.</p>
+      <div className="w-full h-full flex flex-col items-center justify-center bg-background-white px-8 text-center">
+        <p className="text-text-secondary mb-200">Événement introuvable.</p>
         <button
           onClick={onBack}
-          className="px-5 py-2.5 bg-[#FF9F1C] text-white rounded-full text-sm font-semibold"
+          className="px-5 py-2.5 bg-action-primary active:bg-action-primary-hover text-white rounded-full text-sm font-semibold"
         >
           Retour
         </button>
@@ -465,35 +465,35 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   return (
     <>
-      <div className="w-full h-full bg-white flex flex-col">
+      <div className="w-full h-full bg-background-white flex flex-col">
 
         {/* Floating header */}
         <div className="absolute top-0 left-0 right-0 z-10 px-5 pt-4 pt-safe-4 pb-2 flex items-center justify-between">
           <button
             onClick={onBack}
-            className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md relative z-10"
+            className="w-10 h-10 bg-background-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md relative z-10"
           >
             <ChevronLeft className="w-6 h-6 text-gray-800" />
           </button>
           
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none mt-2">
-            <span className="text-[15px] font-bold text-gray-900 bg-white/80 backdrop-blur-md px-4 py-1.5 rounded-full">Détails événement</span>
+            <span className="text-[15px] font-bold text-gray-900 bg-background-white/80 backdrop-blur-md px-200 py-1.5 rounded-full">Détails événement</span>
           </div>
 
           <div className="flex items-center gap-2 relative z-10 mt-1">
             {event.isPrivate && event.creatorId === user?.id && (
               <button 
                 onClick={() => setShowQRModal(true)}
-                className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md"
+                className="w-10 h-10 bg-background-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md"
               >
                 <QrCode className="w-5 h-5 text-gray-700" />
               </button>
             )}
-            <button onClick={handleShare} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
+            <button onClick={handleShare} className="w-10 h-10 bg-background-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
               <Share2 className="w-5 h-5 text-gray-700" />
             </button>
-            <button onClick={handleFavorite} className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
-              <Star className={`w-5 h-5 ${favorite ? 'text-[#FF9F1C] fill-[#FF9F1C]' : 'text-gray-700'}`} />
+            <button onClick={handleFavorite} className="w-10 h-10 bg-background-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
+              <Star className={`w-5 h-5 ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-700'}`} />
             </button>
           </div>
         </div>
@@ -501,7 +501,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto pb-28">
 
-          <div className="px-4 pt-4">
+          <div className="px-200 pt-4">
             <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative shadow-sm">
               <SafeImage src={coverUrl} alt={event.title} className="w-full h-full object-cover opacity-90" />
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
@@ -521,28 +521,28 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           <div className="px-5 py-5">
             {/* Title and Badge */}
             <h1 className="mt-2 text-3xl font-bold text-gray-900 leading-tight">{event.title}</h1>
-            <div className="mt-3 flex items-center">
-              <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-md text-xs font-semibold">{event.category || 'Conférence'}</span>
+            <div className="mt-150 flex items-center">
+              <span className="px-150 py-1 bg-blue-100 text-blue-600 rounded-md text-xs font-semibold">{event.category || 'Conférence'}</span>
             </div>
 
-            <div className="mt-6 space-y-4 text-sm text-gray-600">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#FFF8F1] flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-[#FF9F1C]" />
+            <div className="mt-6 space-y-200 text-sm text-text-secondary">
+              <div className="flex items-center gap-150">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-brand-orange-50)] flex items-center justify-center">
+                  <Calendar className="w-5 h-5 text-action-primary" />
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-base">{formattedDate}</p>
-                  <p className="text-sm text-gray-500">{formattedStart} – {formattedEnd} GMT</p>
+                  <p className="text-sm text-text-secondary">{formattedStart} – {formattedEnd} GMT</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#FFF8F1] flex items-center justify-center shrink-0">
-                  <MapPin className="w-5 h-5 text-[#FF9F1C]" />
+              <div className="flex items-start gap-150">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-brand-orange-50)] flex items-center justify-center shrink-0">
+                  <MapPin className="w-5 h-5 text-action-primary" />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900 text-base">{event.city || event.address || 'Lieu non précisé'}</p>
                   {event.address && event.city && (
-                    <p className="text-sm text-gray-500 mb-3">{event.address}</p>
+                    <p className="text-sm text-text-secondary mb-150">{event.address}</p>
                   )}
                 </div>
               </div>
@@ -551,12 +551,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {event.description && (
               <div className="mt-8">
                 <p className="text-[17px] font-bold text-gray-900 mb-2">À propos</p>
-                <p className="text-[14px] text-gray-600 leading-relaxed">
+                <p className="text-[14px] text-text-secondary leading-relaxed">
                   {isDescriptionExpanded ? event.description : `${event.description.substring(0, 120)}${event.description.length > 120 ? '...' : ''}`}
                   {event.description.length > 120 && (
                     <span 
                       onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                      className="text-gray-500 underline text-[13px] font-medium cursor-pointer ml-1 block mt-1"
+                      className="text-text-secondary underline text-[13px] font-medium cursor-pointer ml-1 block mt-1"
                     >
                       {isDescriptionExpanded ? 'Voir moins' : 'Voir plus'}
                     </span>
@@ -566,10 +566,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             )}
 
             <div className="mt-8">
-              <p className="text-[17px] font-bold text-gray-900 mb-4">Organisateurs</p>
-              <div className="space-y-3">
-                <div className="flex flex-col p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                  <div className="flex items-start gap-3">
+              <p className="text-[17px] font-bold text-gray-900 mb-200">Organisateurs</p>
+              <div className="space-y-150">
+                <div className="flex flex-col p-200 rounded-2xl bg-gray-50 border border-gray-100">
+                  <div className="flex items-start gap-150">
                     <div 
                       className="cursor-pointer flex-shrink-0"
                       onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}
@@ -580,7 +580,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           alt={organizerName} 
                           className="w-full h-full object-cover"
                           fallback={
-                            <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#FF9F1C] flex items-center justify-center text-xl font-bold text-white">
+                            <div className="w-full h-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--action-primary)] flex items-center justify-center text-xl font-bold text-white">
                               {organizerName.charAt(0).toUpperCase()}
                             </div>
                           }
@@ -593,18 +593,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         <p className="text-[15px] font-bold text-gray-900">{organizerName}</p>
                         <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                       </div>
-                      <p className="text-[12px] text-gray-500 mt-0.5 mb-2">
+                      <p className="text-[12px] text-text-secondary mt-0.5 mb-2">
                         {organizerFollowers} followers • {organizerEvents} événement{organizerEvents > 1 ? 's' : ''}
                       </p>
                       
                       {user?.id === event.creator.id ? (
-                        <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Vous</span>
+                        <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-150 py-1 rounded-full">Vous</span>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <button onClick={handleContact} className="px-3 py-1 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform">
+                          <button onClick={handleContact} className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform">
                             Contacter
                           </button>
-                          <button onClick={handleFollow} className={`px-3 py-1 rounded-full border text-[11px] font-bold shadow-sm active:scale-95 transition-all ${isFollowing ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white border-gray-200 text-gray-700'}`}>
+                          <button onClick={handleFollow} className={`px-150 py-1 rounded-full border text-[11px] font-bold shadow-sm active:scale-95 transition-all ${isFollowing ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-background-white border-border-primary text-gray-700'}`}>
                             {isFollowing ? 'Suivi' : 'Suivre'}
                           </button>
                         </div>
@@ -636,11 +636,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             </div>
 
             <div className="mt-8">
-              <p className="text-[17px] font-bold text-gray-900 mb-4">Participants</p>
+              <p className="text-[17px] font-bold text-gray-900 mb-200">Participants</p>
               
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center -space-x-3">
+              <div className="flex items-center justify-between mb-200">
+                <div className="flex items-center gap-150">
+                  <div className="flex items-center -space-x-150">
                     {[...Array(Math.min(attendeeCount, 3)).keys()].map((index) => {
                       const attendee = attendeesData?.data?.[index]
                       const avatar = attendee?.user?.profile?.avatarUrl
@@ -653,7 +653,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                             alt={name} 
                             className="w-full h-full object-cover" 
                             fallback={
-                              <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#FF9F1C] flex items-center justify-center text-[16px] font-bold text-white">
+                              <div className="w-full h-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--action-primary)] flex items-center justify-center text-[16px] font-bold text-white">
                                 {name.charAt(0).toUpperCase()}
                               </div>
                             }
@@ -669,23 +669,23 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 </div>
 
                 {hasJoined ? (
-                  <div className="px-3 py-1 bg-green-500 text-white text-[11px] font-bold rounded-full shadow-sm">Vous participez !</div>
+                  <div className="px-150 py-1 bg-green-500 text-white text-[11px] font-bold rounded-full shadow-sm">Vous participez !</div>
                 ) : (
-                  <button onClick={() => setShowParticipantsModal(true)} className="px-4 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform">Voir tous</button>
+                  <button onClick={() => setShowParticipantsModal(true)} className="px-200 py-1.5 rounded-full border border-border-primary bg-background-white text-[12px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform">Voir tous</button>
                 )}
               </div>
 
               {hasJoined && (
-                <div className="flex gap-3">
-                  <button onClick={() => setShowParticipantsModal(true)} className="flex-1 py-3 bg-white border border-gray-200 rounded-full text-[13px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-[0.98] transition-transform">
-                    <Users className="w-4 h-4 text-gray-600" />
+                <div className="flex gap-150">
+                  <button onClick={() => setShowParticipantsModal(true)} className="flex-1 py-150 bg-background-white border border-border-primary rounded-full text-[13px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-[0.98] transition-transform">
+                    <Users className="w-4 h-4 text-text-secondary" />
                     Voir les participants
                   </button>
                   <button
                     onClick={() => setShowInviteModal(true)}
-                    className="flex-1 py-3 bg-white border border-gray-200 rounded-full text-[13px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-[0.98] transition-transform"
+                    className="flex-1 py-150 bg-background-white border border-border-primary rounded-full text-[13px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-[0.98] transition-transform"
                   >
-                    <Share2 className="w-4 h-4 text-gray-600" />
+                    <Share2 className="w-4 h-4 text-text-secondary" />
                     Inviter des amis
                   </button>
                 </div>
@@ -693,7 +693,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               {isOrganizer && event.requiresApproval && (
                 <button
                   onClick={() => setShowPendingModal(true)}
-                  className="w-full mt-3 py-3 rounded-full bg-orange-50 border border-orange-200 text-[13px] font-bold text-orange-600 flex justify-center items-center gap-2 active:scale-[0.98] transition-transform"
+                  className="w-full mt-150 py-150 rounded-full bg-brand-orange-50 border border-orange-200 text-[13px] font-bold text-orange-600 flex justify-center items-center gap-2 active:scale-[0.98] transition-transform"
                 >
                   <Users className="w-4 h-4" />
                   Gérer les demandes en attente
@@ -702,8 +702,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             </div>
 
             <div className="mt-8">
-              <p className="text-[17px] font-bold text-gray-900 mb-4">Participation</p>
-              <div className="rounded-[16px] bg-gray-50 p-4 flex items-center justify-between border border-transparent">
+              <p className="text-[17px] font-bold text-gray-900 mb-200">Participation</p>
+              <div className="rounded-[16px] bg-gray-50 p-200 flex items-center justify-between border border-transparent">
                 <span className="text-[15px] text-gray-900 font-medium">Montant</span>
                 <div className="flex items-center gap-2">
                   <span className="text-[15px] font-bold text-blue-600">{amountToPay.toLocaleString()} F CFA</span>
@@ -715,59 +715,59 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {/* Cagnotte — shown only if the event has a pool target */}
             {hasPool && (
               <div className="mt-8">
-                <p className="text-[17px] font-bold text-gray-900 mb-4">Cagnotte</p>
+                <p className="text-[17px] font-bold text-gray-900 mb-200">Cagnotte</p>
 
-                <div className="rounded-[16px] bg-gray-50 p-4">
-                  <div className="flex items-center justify-between mb-4">
+                <div className="rounded-[16px] bg-gray-50 p-200">
+                  <div className="flex items-center justify-between mb-200">
                     <span className="text-[15px] text-gray-900 font-medium">Objectif</span>
                     <span className="text-[15px] font-bold text-blue-600">{cagnoteBudget.toLocaleString()} F CFA</span>
                   </div>
                   
-                  <div className="border-t border-dashed border-gray-200 mb-4" />
+                  <div className="border-t border-dashed border-border-primary mb-200" />
 
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[15px] text-gray-600 font-medium">Progression</span>
-                    <span className="px-2 py-0.5 bg-[#FF9F1C] text-white text-[12px] font-bold rounded-md">{cagnoteProgress}%</span>
+                  <div className="flex items-center justify-between mb-150">
+                    <span className="text-[15px] text-text-secondary font-medium">Progression</span>
+                    <span className="px-2 py-0.5 bg-action-primary active:bg-action-primary-hover text-white text-[12px] font-bold rounded-md">{cagnoteProgress}%</span>
                   </div>
                   
                   <div className="h-2 rounded-full bg-gray-200 overflow-hidden mb-5">
-                    <div className="h-full rounded-full bg-[#FF9F1C]" style={{ width: `${cagnoteProgress}%` }} />
+                    <div className="h-full rounded-full bg-action-primary active:bg-action-primary-hover" style={{ width: `${cagnoteProgress}%` }} />
                   </div>
 
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[15px] text-gray-600 font-medium">Collecté</span>
+                  <div className="flex items-center justify-between mb-150">
+                    <span className="text-[15px] text-text-secondary font-medium">Collecté</span>
                     <span className="text-[15px] font-bold text-[#10B981]">{cagnoteCollected.toLocaleString()} F</span>
                   </div>
 
                   <div className="flex items-center justify-between mb-5">
-                    <span className="text-[15px] text-gray-600 font-medium">Restant</span>
-                    <span className="text-[15px] font-bold text-[#FF9F1C]">{cagnoteRemaining.toLocaleString()} F</span>
+                    <span className="text-[15px] text-text-secondary font-medium">Restant</span>
+                    <span className="text-[15px] font-bold text-action-primary">{cagnoteRemaining.toLocaleString()} F</span>
                   </div>
                   
                   {showPoolActions ? (
-                    <div className="flex gap-3">
+                    <div className="flex gap-150">
                       {isCreator ? (
                         <button
                           onClick={() => setShowPoolManagementModal(true)}
-                          className="flex-1 py-3.5 bg-white border border-gray-200 rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
+                          className="flex-1 py-150.5 bg-background-white border border-border-primary rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
                         >
-                          <Briefcase className="w-4 h-4 text-gray-600" />
+                          <Briefcase className="w-4 h-4 text-text-secondary" />
                           Voir la gestion
                         </button>
                       ) : (
                         <button
                           onClick={() => setShowPoolManagementModal(true)}
-                          className="flex-1 py-3.5 bg-white border border-gray-200 rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
+                          className="flex-1 py-150.5 bg-background-white border border-border-primary rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
                         >
-                          <Briefcase className="w-4 h-4 text-gray-600" />
+                          <Briefcase className="w-4 h-4 text-text-secondary" />
                           Voir la gestion
                         </button>
                       )}
                       <button
                         onClick={handleContribute}
-                        className="flex-1 py-3.5 bg-white border border-gray-200 rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
+                        className="flex-1 py-150.5 bg-background-white border border-border-primary rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
                       >
-                        <HandCoins className="w-4 h-4 text-gray-600" />
+                        <HandCoins className="w-4 h-4 text-text-secondary" />
                         Contribuer
                       </button>
                     </div>
@@ -782,9 +782,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         }
                         handleContribute()
                       }}
-                      className="w-full py-3.5 bg-white border border-gray-200 rounded-[32px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
+                      className="w-full py-150.5 bg-background-white border border-border-primary rounded-[32px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
                     >
-                      <HandCoins className="w-4 h-4 text-gray-600" />
+                      <HandCoins className="w-4 h-4 text-text-secondary" />
                       Contribuer
                     </button>
                   ) : null}
@@ -796,18 +796,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         </div>
 
         {/* Bottom Actions */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-5 pt-4 flex items-center justify-between gap-4 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
+        <div className="absolute bottom-0 left-0 right-0 bg-background-white border-t border-gray-100 px-5 pt-4 flex items-center justify-between gap-200 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
           {isCreator && event.status === 'DRAFT' ? (
-            <div className="flex flex-col gap-3 w-full">
+            <div className="flex flex-col gap-150 w-full">
               <button 
                 onClick={() => {
                   setShowProfileVerificationModal(true);
                 }}
-                className="w-full py-3.5 bg-white border border-[#FF9F1C] rounded-[16px] text-[15px] font-bold text-[#FF9F1C] flex justify-center items-center gap-2 active:scale-95 transition-transform"
+                className="w-full py-150.5 bg-background-white border border-action-primary rounded-[16px] text-[15px] font-bold text-action-primary flex justify-center items-center gap-2 active:scale-95 transition-transform"
               >
                 <HandCoins className="w-5 h-5" /> Ajouter cagnotte
               </button>
-              <button onClick={handlePublish} className="w-full py-3.5 bg-[#FF9F1C] rounded-[16px] text-[15px] font-bold text-white flex justify-center items-center gap-2 active:scale-95 transition-transform">
+              <button onClick={handlePublish} className="w-full py-150.5 bg-action-primary active:bg-action-primary-hover rounded-[16px] text-[15px] font-bold text-white flex justify-center items-center gap-2 active:scale-95 transition-transform">
                 <Megaphone className="w-5 h-5" /> Publier l'événement
               </button>
             </div>
@@ -821,7 +821,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <button
                 onClick={handleJoin}
                 disabled={joinMutation.isPending || isFull}
-                className="flex-1 py-4 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 disabled:opacity-60 bg-[#FF9F1C] shadow-md shadow-orange-500/20"
+                className="flex-1 py-200 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 disabled:opacity-60 bg-action-primary active:bg-action-primary-hover shadow-md shadow-orange-500/20"
               >
                 {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : isFull ? 'Complet' : event.requiresApproval ? 'Demander à participer' : 'Rejoindre l’événement'}
               </button>
@@ -829,7 +829,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           ) : (
             <button
               onClick={goToChat}
-              className="w-full flex items-center justify-center gap-2 py-4 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 bg-[#FF9F1C] shadow-md shadow-orange-500/20"
+              className="w-full flex items-center justify-center gap-2 py-200 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 bg-action-primary active:bg-action-primary-hover shadow-md shadow-orange-500/20"
             >
               <MessageCircle className="w-5 h-5" />
               Accéder au chat
@@ -841,7 +841,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* Join confirmation modal */}
       {showJoinModal && event && (
         <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
-          <div className="w-full bg-white rounded-t-[20px] shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="w-full bg-background-white rounded-t-[20px] shadow-2xl animate-in slide-in-from-bottom duration-300">
 
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1">
@@ -849,20 +849,20 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             </div>
 
             {/* Header row */}
-            <div className="flex items-center justify-between px-5 py-3">
+            <div className="flex items-center justify-between px-5 py-150">
               <span className="text-[15px] font-semibold text-gray-900">Rejoindre cet événement ?</span>
               <button
                 onClick={() => setShowJoinModal(false)}
                 className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center"
               >
-                <span className="text-gray-500 text-[14px] font-bold leading-none">✕</span>
+                <span className="text-text-secondary text-[14px] font-bold leading-none">✕</span>
               </button>
             </div>
 
             <div className="px-5" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
 
               {isCreator && event.status === 'DRAFT' && (
-                <div className="bg-[#EBF3FA] mt-4 mb-6 p-4 rounded-xl text-gray-500 text-[13px] leading-relaxed">
+                <div className="bg-[#EBF3FA] mt-200 mb-6 p-200 rounded-xl text-text-secondary text-[13px] leading-relaxed">
                   Cet événement n'est pas encore visible sur Let's Out.<br/>
                   Publiez-le pour le rendre accessible publiquement.<br/>
                   Ou ajoutez une cagnotte pour partager les frais.
@@ -872,21 +872,21 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               {/* Event info */}
               <div className="mb-5">
                 <h2 className="text-[22px] font-bold text-gray-900 leading-tight">{event.title}</h2>
-                <p className="text-[13px] text-gray-500 mt-1">
+                <p className="text-[13px] text-text-secondary mt-1">
                   {formattedDate} • {formattedStart} GMT
                 </p>
                 {(event.address || event.city) && (
-                  <p className="text-[13px] text-gray-500 mt-0.5">
+                  <p className="text-[13px] text-text-secondary mt-0.5">
                     {event.address || event.city} • {event.city || ''}
                   </p>
                 )}
               </div>
 
               {/* Thin divider */}
-              <div className="border-t border-gray-200 mb-5" />
+              <div className="border-t border-border-primary mb-5" />
 
               {/* Description */}
-              <p className="text-[13px] text-gray-500 leading-relaxed mb-5">
+              <p className="text-[13px] text-text-secondary leading-relaxed mb-5">
                 {event.price > 0
                   ? `Confirmez votre participation. Un paiement de ${amountToPay.toLocaleString()} F CFA + ${transactionFee} F de frais est requis.`
                   : 'Confirmez votre participation à cet événement. C\'est gratuit !'
@@ -894,21 +894,21 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               </p>
 
               {/* Summary table — no background, clean rows */}
-              <div className="space-y-3 mb-8 text-[14px]">
+              <div className="space-y-150 mb-8 text-[14px]">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Participation</span>
+                  <span className="text-text-secondary">Participation</span>
                   <span className="font-bold text-gray-900">{amountToPay.toLocaleString()} F</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Type</span>
+                  <span className="text-text-secondary">Type</span>
                   <span className="font-bold text-gray-900">{hasPool ? 'Cagnotte' : 'Standard'}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Frais de transaction</span>
+                  <span className="text-text-secondary">Frais de transaction</span>
                   <span className="font-bold text-gray-900">{transactionFee.toLocaleString()} F</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Net à payer</span>
+                  <span className="text-text-secondary">Net à payer</span>
                   <span className="font-bold text-gray-900">{netToPay.toLocaleString()} F</span>
                 </div>
               </div>
@@ -916,7 +916,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               {/* CTA button */}
               <button
                 onClick={handleConfirmJoin}
-                className="w-full bg-[#FF9F1C] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform"
+                className="w-full bg-action-primary active:bg-action-primary-hover text-white py-200 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform"
               >
                 Procéder au paiement
               </button>
@@ -945,26 +945,26 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* QR Code Modal for Private Events */}
       {showQRModal && event && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center px-5 pt-safe-4 pb-safe-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative mt-safe-2">
+          <div className="w-full max-w-sm bg-background-white rounded-3xl p-6 shadow-2xl relative mt-safe-2">
             <button
               onClick={() => setShowQRModal(false)}
               className="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
             >
-              <span className="text-gray-500 font-bold leading-none">✕</span>
+              <span className="text-text-secondary font-bold leading-none">✕</span>
             </button>
             
             <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-orange-50 text-[#FF9F1C] rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 bg-brand-orange-50 text-action-primary rounded-full flex items-center justify-center mx-auto mb-150">
                 <Lock className="w-6 h-6" />
               </div>
               <h3 className="text-[18px] font-bold text-gray-900 mb-1">Événement privé</h3>
-              <p className="text-[14px] text-gray-500 leading-tight">
+              <p className="text-[14px] text-text-secondary leading-tight">
                 Scannez ce QR code pour rejoindre l'événement ou utilisez le code.
               </p>
             </div>
 
             <div className="bg-gray-50 p-6 rounded-2xl flex flex-col items-center justify-center border border-gray-100 mb-6">
-              <div className="bg-white p-3 rounded-xl shadow-sm mb-4">
+              <div className="bg-background-white p-150 rounded-xl shadow-sm mb-200">
                 {event.joinCode ? (
                   <QRCodeSVG value={event.joinCode} size={160} level="M" />
                 ) : (
@@ -972,8 +972,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 )}
               </div>
               
-              <div className="flex items-center gap-3">
-                <span className="text-[28px] font-mono font-bold text-gray-800 tracking-widest bg-gray-200/50 px-4 py-2 rounded-xl">
+              <div className="flex items-center gap-150">
+                <span className="text-[28px] font-mono font-bold text-gray-800 tracking-widest bg-gray-200/50 px-200 py-2 rounded-xl">
                   {event.joinCode || '—'}
                 </span>
                 <button 
@@ -1002,7 +1002,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     };
                     copy();
                   }}
-                  className="w-10 h-10 bg-[#FF9F1C] text-white rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+                  className="w-10 h-10 bg-action-primary active:bg-action-primary-hover text-white rounded-xl flex items-center justify-center shadow-sm active:scale-95 transition-transform"
                 >
                   {codeCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                 </button>
@@ -1011,7 +1011,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
             <button
               onClick={() => setShowQRModal(false)}
-              className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-bold text-[15px]"
+              className="w-full py-150.5 bg-gray-900 text-white rounded-xl font-bold text-[15px]"
             >
               Fermer
             </button>
@@ -1022,21 +1022,21 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* Release Pool Modal */}
       {showReleaseModal && event && (
         <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
-          <div className="w-full bg-white rounded-t-[20px] shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="w-full bg-background-white rounded-t-[20px] shadow-2xl animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
-            <div className="flex items-center justify-between px-5 py-3">
+            <div className="flex items-center justify-between px-5 py-150">
               <span className="text-[15px] font-semibold text-gray-900">Débloquer les fonds</span>
               <button
                 onClick={() => setShowReleaseModal(false)}
                 className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center"
               >
-                <span className="text-gray-500 text-[14px] font-bold leading-none">✕</span>
+                <span className="text-text-secondary text-[14px] font-bold leading-none">✕</span>
               </button>
             </div>
             <div className="px-5 pb-8">
-              <p className="text-[13px] text-gray-500 mb-5 leading-relaxed">
+              <p className="text-[13px] text-text-secondary mb-5 leading-relaxed">
                 Vous êtes sur le point de débloquer la somme de <strong className="text-gray-900">{cagnoteCollected.toLocaleString()} F CFA</strong> vers votre portefeuille.
                 Cette action est définitive.
               </p>
@@ -1044,7 +1044,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <button
                 onClick={() => releasePoolMutation.mutate()}
                 disabled={releasePoolMutation.isPending}
-                className="w-full bg-[#10B981] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-50 flex justify-center items-center gap-2"
+                className="w-full bg-[#10B981] text-white py-200 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-50 flex justify-center items-center gap-2"
               >
                 {releasePoolMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Briefcase className="w-5 h-5" />}
                 Confirmer le transfert
@@ -1058,26 +1058,26 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* Participants Modal */}
       {showParticipantsModal && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[75%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="w-full h-[75%] bg-background-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
             </div>
-            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
+            <div className="px-5 py-150 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
               <h3 className="text-[18px] font-bold text-gray-900">Participants ({attendeeCount})</h3>
               <button onClick={() => setShowParticipantsModal(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-gray-500 font-bold leading-none">✕</span>
+                <span className="text-text-secondary font-bold leading-none">✕</span>
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto px-5 py-4 pb-24">
+            <div className="flex-1 overflow-y-auto px-5 py-200 pb-24">
               {attendeesLoading ? (
-                <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-[#FF9F1C]" /></div>
+                <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-action-primary" /></div>
               ) : attendeesData?.data?.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-200">
                   {attendeesData.data.map((booking: any) => (
                     <button 
                       key={booking.id} 
-                      className="w-full flex items-center gap-3 active:bg-gray-50 p-2 rounded-xl transition-colors text-left"
+                      className="w-full flex items-center gap-150 active:bg-gray-50 p-2 rounded-xl transition-colors text-left"
                       onClick={() => openUserProfile(booking.user.id, { displayName: booking.user.profile.displayName, avatarUrl: booking.user.profile.avatarUrl })}
                     >
                       <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
@@ -1086,7 +1086,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           alt={booking.user.profile.displayName} 
                           className="w-full h-full object-cover bg-gray-100" 
                           fallback={
-                            <div className="w-full h-full bg-gradient-to-br from-[#FF9F1C] to-[#FF9F1C] flex items-center justify-center text-xl font-bold text-white">
+                            <div className="w-full h-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--action-primary)] flex items-center justify-center text-xl font-bold text-white">
                               {booking.user.profile.displayName.charAt(0).toUpperCase()}
                             </div>
                           }
@@ -1094,13 +1094,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-gray-900 text-[15px] truncate">{booking.user.profile.displayName}</p>
-                        <p className="text-[13px] text-gray-500 truncate">@{booking.user.profile.username}</p>
+                        <p className="text-[13px] text-text-secondary truncate">@{booking.user.profile.username}</p>
                       </div>
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-10 text-gray-500 text-[14px]">
+                <div className="text-center py-10 text-text-secondary text-[14px]">
                   Aucun participant pour le moment. Soyez le premier !
                 </div>
               )}
@@ -1112,39 +1112,39 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* Invite Friends Modal */}
       {showInviteModal && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[75%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="w-full h-[75%] bg-background-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
             </div>
-            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
+            <div className="px-5 py-150 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
               <div>
                 <h3 className="text-[18px] font-bold text-gray-900">Partager l'événement</h3>
                 <p className="text-[12px] text-gray-400 mt-0.5">Invitez vos amis ou partagez le lien</p>
               </div>
               <button onClick={() => setShowInviteModal(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-text-secondary" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex-1 overflow-y-auto px-5 py-200" style={{ scrollbarWidth: 'none' }}>
               {friends.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <div className="w-16 h-16 bg-brand-orange-50 rounded-full flex items-center justify-center mx-auto mb-150">
                     <span className="text-2xl">👥</span>
                   </div>
                   <p className="text-gray-700 font-bold text-[15px]">Aucun ami à inviter</p>
                   <p className="text-gray-400 text-[13px] mt-1">Ajoutez des amis depuis votre profil.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-150">
                   <p className="text-[12px] font-bold text-gray-400 uppercase tracking-wide mb-2">Vos amis</p>
                   {friends.map((friend: any) => (
-                    <div key={friend.userId} className="flex items-center gap-3 py-1">
+                    <div key={friend.userId} className="flex items-center gap-150 py-1">
                       <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                         <SafeImage
                           src={friend.avatarUrl}
                           alt={friend.displayName}
                           className="w-full h-full object-cover"
-                          fallback={<div className="w-full h-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #FF9F1C, #FFB75E)' }}>{(friend.displayName || 'A').charAt(0)}</div>}
+                          fallback={<div className="w-full h-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>{(friend.displayName || 'A').charAt(0)}</div>}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1166,10 +1166,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           }
                         }}
                         disabled={invitingUsers.has(friend.userId) || invitedUsers.has(friend.userId)}
-                        className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 ${
+                        className={`px-200 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 ${
                           invitedUsers.has(friend.userId)
                             ? 'bg-green-100 text-green-600 border border-green-200'
-                            : 'bg-[#FF9F1C] text-white shadow-sm'
+                            : 'bg-action-primary active:bg-action-primary-hover text-white shadow-sm'
                         } disabled:opacity-60`}
                       >
                         {invitingUsers.has(friend.userId) ? <Loader2 className="w-4 h-4 animate-spin" /> : invitedUsers.has(friend.userId) ? '✓ Invité' : 'Inviter'}
@@ -1180,7 +1180,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               )}
             </div>
             {/* Footer: native share link */}
-            <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
+            <div className="px-5 py-200 border-t border-gray-100 flex-shrink-0">
               <button
                 onClick={async () => {
                   if (!event) return
@@ -1198,7 +1198,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     }
                   }
                 }}
-                className="w-full py-3.5 rounded-full border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                className="w-full py-150.5 rounded-full border-2 border-action-primary text-action-primary font-bold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
               >
                 <Share2 className="w-4 h-4" />
                 Partager le lien
@@ -1211,34 +1211,34 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* Pending Bookings Modal (Organizer) */}
       {showPendingModal && isOrganizer && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[70%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="w-full h-[70%] bg-background-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
             </div>
-            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
+            <div className="px-5 py-150 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
               <h3 className="text-[18px] font-bold text-gray-900">Demandes en attente</h3>
               <button onClick={() => setShowPendingModal(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-gray-500 font-bold leading-none">✕</span>
+                <span className="text-text-secondary font-bold leading-none">✕</span>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-4 pb-24">
+            <div className="flex-1 overflow-y-auto px-5 py-200 pb-24">
               {!pendingBookingsData?.data || pendingBookingsData.data.length === 0 ? (
                 <div className="text-center py-10">
-                  <p className="text-gray-500 text-[14px]">Aucune demande en attente.</p>
+                  <p className="text-text-secondary text-[14px]">Aucune demande en attente.</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-150">
                   {pendingBookingsData.data.map((booking: any) => (
-                    <div key={booking.id} className="bg-orange-50 rounded-2xl p-4 flex items-center gap-3">
+                    <div key={booking.id} className="bg-brand-orange-50 rounded-2xl p-200 flex items-center gap-150">
                       <SafeImage
                         src={booking.user.profile?.avatarUrl}
                         alt={booking.user.profile?.displayName}
                         className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                        fallback={<div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}>{(booking.user.profile?.displayName || 'A').charAt(0)}</div>}
+                        fallback={<div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--action-primary))' }}>{(booking.user.profile?.displayName || 'A').charAt(0)}</div>}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-gray-900 text-[14px]">{booking.user.profile?.displayName}</p>
-                        <p className="text-gray-500 text-[12px]">@{booking.user.profile?.username}</p>
+                        <p className="text-text-secondary text-[12px]">@{booking.user.profile?.username}</p>
                         {booking.user.profile?.bio && <p className="text-gray-400 text-[11px] mt-0.5 truncate">{booking.user.profile.bio}</p>}
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
@@ -1278,22 +1278,22 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {showProfileVerificationModal && (
         <>
           <div className="fixed inset-0 bg-black/40 z-50 transition-opacity" onClick={() => setShowProfileVerificationModal(false)} />
-          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-[32px] z-50 p-6 pt-8 pb-10 shadow-2xl animate-in slide-in-from-bottom-full duration-300">
+          <div className="fixed bottom-0 left-0 right-0 bg-background-white rounded-t-[32px] z-50 p-6 pt-8 pb-10 shadow-2xl animate-in slide-in-from-bottom-full duration-300">
             <button 
               onClick={() => setShowProfileVerificationModal(false)}
               className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"
             >
-              <X className="w-4 h-4 text-gray-500" />
+              <X className="w-4 h-4 text-text-secondary" />
             </button>
             
-            <p className="text-[14px] font-bold text-gray-500 mb-6 uppercase tracking-wider">Vérification de profil requise</p>
+            <p className="text-[14px] font-bold text-text-secondary mb-6 uppercase tracking-wider">Vérification de profil requise</p>
             
             <div className="flex flex-col items-center justify-center text-center">
-              <div className="w-20 h-20 mb-4">
+              <div className="w-20 h-20 mb-200">
                 <BadgeCheck className="w-full h-full fill-blue-600 text-white" />
               </div>
-              <h2 className="text-[20px] font-bold text-gray-900 mb-3">Vérifiez votre profil</h2>
-              <p className="text-[14px] text-gray-500 mb-8 max-w-[280px] leading-relaxed">
+              <h2 className="text-[20px] font-bold text-gray-900 mb-150">Vérifiez votre profil</h2>
+              <p className="text-[14px] text-text-secondary mb-8 max-w-[280px] leading-relaxed">
                 Vous devez avoir un profil vérifié pour ajouter une cagnotte à votre événement. Vérifiez votre profil pour continuer.
               </p>
               
@@ -1302,7 +1302,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   setShowProfileVerificationModal(false)
                   navigate('/verify-profile')
                 }}
-                className="w-full py-4 bg-[#FF9F1C] rounded-full text-[15px] font-bold text-white active:scale-95 transition-transform"
+                className="w-full py-200 bg-action-primary active:bg-action-primary-hover rounded-full text-[15px] font-bold text-white active:scale-95 transition-transform"
               >
                 Procéder à la vérification
               </button>

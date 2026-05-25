@@ -112,7 +112,7 @@ export function Profile({ onNavigate }: ProfileProps) {
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-[#F8F7FF] dark:bg-[#111111]">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-150">
           <div className="w-14 h-14 rounded-2xl bg-gray-100 animate-pulse" />
           <div className="h-4 w-32 bg-gray-100 rounded-lg animate-pulse" />
           <div className="h-3 w-24 bg-gray-100 rounded-lg animate-pulse" />
@@ -134,7 +134,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 onClick={() => navigate(-1)}
                 className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
@@ -149,7 +149,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 onClick={() => onNavigate('settings')}
                 className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center active:scale-95 transition-transform"
               >
-                <Settings className="w-5 h-5 text-gray-600" />
+                <Settings className="w-5 h-5 text-text-secondary" />
               </button>
             )}
             {isOwnProfile && (
@@ -167,20 +167,20 @@ export function Profile({ onNavigate }: ProfileProps) {
       <div className="flex-1 overflow-y-auto pb-8" style={{ scrollbarWidth: 'none' }}>
 
         {/* Profile Card */}
-        <div className="mx-4 mt-4 mb-4 bg-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50/50">
+        <div className="mx-200 mt-200 mb-200 bg-background-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50/50">
           {/* Cover gradient */}
           <div className="h-32 relative overflow-hidden">
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #FF9F1C 0%, #FFB75E 60%, #FFA040 100%)' }} />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--action-primary) 0%, var(--color-brand-orange-400) 60%, #FFA040 100%)' }} />
             <div className="absolute inset-0 bg-black/10" />
-            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/20 rounded-full blur-2xl" />
-            <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/30 rounded-full blur-2xl" />
+            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-background-white/20 rounded-full blur-2xl" />
+            <div className="absolute -top-10 -left-10 w-32 h-32 bg-background-white/30 rounded-full blur-2xl" />
           </div>
 
           <div className="px-5 pb-5">
             {/* Avatar + edit */}
-            <div className="flex items-end justify-between -mt-12 mb-4 relative z-10">
+            <div className="flex items-end justify-between -mt-12 mb-200 relative z-10">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full ring-4 ring-white/90 backdrop-blur-md shadow-lg overflow-hidden bg-white">
+                <div className="w-24 h-24 rounded-full ring-4 ring-white/90 backdrop-blur-md shadow-lg overflow-hidden bg-background-white">
                   <SafeImage
                     src={displayProfile?.avatarUrl}
                     cacheKey={(displayProfile as { updatedAt?: string })?.updatedAt || displayProfile?.avatarUrl}
@@ -188,7 +188,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                     className="w-full h-full object-cover"
                     fallback={
                       <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white"
-                        style={{ background: 'linear-gradient(135deg, #FF9F1C, #FFB75E)' }}>
+                        style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>
                         {displayName.charAt(0).toUpperCase()}
                       </div>
                     }
@@ -199,7 +199,7 @@ export function Profile({ onNavigate }: ProfileProps) {
               {isOwnProfile && (
                 <button
                   onClick={() => setShowEditModal(true)}
-                  className="px-5 py-2.5 rounded-full text-sm font-bold text-[#FF9F1C] bg-orange-50 active:scale-95 transition-transform shadow-sm"
+                  className="px-5 py-2.5 rounded-full text-sm font-bold text-action-primary bg-brand-orange-50 active:scale-95 transition-transform shadow-sm"
                 >
                   Modifier le profil
                 </button>
@@ -209,21 +209,21 @@ export function Profile({ onNavigate }: ProfileProps) {
             {/* Name, location, bio */}
             <h2 className="text-[22px] font-bold text-gray-900 mb-1 leading-tight">{displayName}</h2>
             {city && (
-              <div className="flex items-center gap-1.5 text-[13px] text-gray-500 mb-2.5 font-medium">
-                <MapPin className="w-4 h-4 text-[#FF9F1C]" />
+              <div className="flex items-center gap-1.5 text-[13px] text-text-secondary mb-2.5 font-medium">
+                <MapPin className="w-4 h-4 text-action-primary" />
                 <span>{city}</span>
                 {memberSince && <><span className="mx-1.5 text-gray-300">•</span><span>Membre depuis {memberSince}</span></>}
               </div>
             )}
-            {bio && <p className="text-[14px] text-gray-600 leading-relaxed mb-5">{bio}</p>}
+            {bio && <p className="text-[14px] text-text-secondary leading-relaxed mb-5">{bio}</p>}
 
             {/* Stats row */}
             <div className="flex gap-2 pt-4 border-t border-gray-100/80">
               {[
-                { value: createdEvents.length, label: 'Événements', color: '#FF9F1C', tab: 'events' as Tab },
-                { value: followers.length, label: 'Abonnés', color: '#FF9F1C', tab: 'followers' as Tab },
-                { value: following.length, label: 'Abonnements', color: '#FF9F1C', tab: 'following' as Tab },
-                ...(isOwnProfile ? [{ value: friends.length, label: 'Amis', color: '#FF9F1C', tab: 'friends' as Tab }] : []),
+                { value: createdEvents.length, label: 'Événements', color: 'var(--action-primary)', tab: 'events' as Tab },
+                { value: followers.length, label: 'Abonnés', color: 'var(--action-primary)', tab: 'followers' as Tab },
+                { value: following.length, label: 'Abonnements', color: 'var(--action-primary)', tab: 'following' as Tab },
+                ...(isOwnProfile ? [{ value: friends.length, label: 'Amis', color: 'var(--action-primary)', tab: 'friends' as Tab }] : []),
               ].map(stat => (
                 <button
                   key={stat.label}
@@ -231,7 +231,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                   className={`flex-1 text-center py-2.5 rounded-[16px] transition-all active:scale-95 ${activeTab === stat.tab ? 'bg-gray-50/80 ring-1 ring-gray-100 shadow-sm' : 'hover:bg-gray-50/50'}`}
                 >
                   <p className="text-[19px] font-black tracking-tight" style={{ color: stat.color }}>{stat.value}</p>
-                  <p className="text-[11px] font-semibold text-gray-500 mt-0.5 leading-tight">{stat.label}</p>
+                  <p className="text-[11px] font-semibold text-text-secondary mt-0.5 leading-tight">{stat.label}</p>
                 </button>
               ))}
             </div>
@@ -239,21 +239,21 @@ export function Profile({ onNavigate }: ProfileProps) {
         </div>
 
         {/* Tabs navigation */}
-        <div className="overflow-x-auto hide-scrollbar mx-4 mb-5 pb-2 -mt-1 pt-1">
-          <div className="flex bg-white/60 backdrop-blur-sm rounded-full p-1.5 gap-1 shadow-sm border border-gray-100/50 min-w-max">
+        <div className="overflow-x-auto hide-scrollbar mx-200 mb-5 pb-2 -mt-1 pt-1">
+          <div className="flex bg-background-white/60 backdrop-blur-sm rounded-full p-1.5 gap-1 shadow-sm border border-gray-100/50 min-w-max">
             {TABS.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex-none px-4 py-2 rounded-full text-[12px] font-bold transition-all ${
+                className={`flex-none px-200 py-2 rounded-full text-[12px] font-bold transition-all ${
                   activeTab === tab.key
-                    ? 'bg-white text-[#FF9F1C] shadow-sm ring-1 ring-gray-100/50'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-background-white text-action-primary shadow-sm ring-1 ring-gray-100/50'
+                    : 'text-text-secondary hover:text-gray-700'
                 }`}
               >
                 {tab.label}
                 {tab.count > 0 && (
-                  <span className={`ml-1.5 text-[10px] ${activeTab === tab.key ? 'text-[#FF9F1C]' : 'text-gray-400'}`}>
+                  <span className={`ml-1.5 text-[10px] ${activeTab === tab.key ? 'text-action-primary' : 'text-gray-400'}`}>
                     {tab.count}
                   </span>
                 )}
@@ -264,19 +264,19 @@ export function Profile({ onNavigate }: ProfileProps) {
 
         {/* TAB: Events créés */}
         {activeTab === 'events' && (
-          <div className="mx-4 space-y-4">
+          <div className="mx-200 space-y-200">
             {createdEvents.length === 0 ? (
-              <div className="bg-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-4">
+              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
+                <div className="w-16 h-16 mx-auto bg-brand-orange-50 rounded-full flex items-center justify-center mb-200">
                   <span className="text-2xl">📅</span>
                 </div>
                 <p className="text-gray-900 font-bold text-[15px]">Aucun événement créé</p>
-                <p className="text-sm text-gray-500 mt-1">Vos événements créés apparaîtront ici</p>
+                <p className="text-sm text-text-secondary mt-1">Vos événements créés apparaîtront ici</p>
                 {isOwnProfile && (
                   <button
                     onClick={() => onNavigate('create-event')}
-                    className="mt-6 px-6 py-3 rounded-full text-sm font-bold text-white shadow-md active:scale-95 transition-transform"
-                    style={{ background: 'linear-gradient(135deg, #FF9F1C, #FFB75E)' }}
+                    className="mt-6 px-6 py-150 rounded-full text-sm font-bold text-white shadow-md active:scale-95 transition-transform"
+                    style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}
                   >
                     Créer un événement
                   </button>
@@ -291,7 +291,7 @@ export function Profile({ onNavigate }: ProfileProps) {
             {/* Participated events */}
             {pastEvents.length > 0 && (
               <>
-                <div className="flex items-center gap-2 mt-8 mb-4">
+                <div className="flex items-center gap-2 mt-8 mb-200">
                   <div className="w-1 h-4 bg-gray-300 rounded-full" />
                   <p className="text-[13px] font-bold text-gray-400 uppercase tracking-wide">Participations passées</p>
                 </div>
@@ -305,27 +305,27 @@ export function Profile({ onNavigate }: ProfileProps) {
 
         {/* TAB: Brouillons */}
         {activeTab === 'drafts' && isOwnProfile && (
-          <div className="mx-4 space-y-4">
+          <div className="mx-200 space-y-200">
             {draftEvents.length === 0 ? (
-              <div className="bg-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-4">
+              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
+                <div className="w-16 h-16 mx-auto bg-brand-orange-50 rounded-full flex items-center justify-center mb-200">
                   <span className="text-2xl">📝</span>
                 </div>
                 <p className="text-gray-900 font-bold text-[15px]">Aucun brouillon</p>
-                <p className="text-sm text-gray-500 mt-1">Vos événements en attente apparaîtront ici</p>
+                <p className="text-sm text-text-secondary mt-1">Vos événements en attente apparaîtront ici</p>
               </div>
             ) : (
               draftEvents.map((event: any) => (
                 <div key={event.id} className="relative">
                   {/* Draft badge */}
-                  <div className="absolute top-3 left-3 z-10 bg-white/95 backdrop-blur-sm text-[#FF9F1C] px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase border border-[#FF9F1C]/20 shadow-sm">
+                  <div className="absolute top-3 left-3 z-10 bg-background-white/95 backdrop-blur-sm text-action-primary px-150 py-1 rounded-full text-[11px] font-black tracking-wide uppercase border border-action-primary/20 shadow-sm">
                     Brouillon
                   </div>
                   {/* Manage button */}
                   <div className="absolute top-3 right-3 z-10">
                     <button
                       onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
-                      className="flex items-center gap-1.5 bg-[#FF9F1C] text-white px-3 py-1.5 rounded-full text-[11px] font-black shadow-md active:scale-95 transition-transform"
+                      className="flex items-center gap-1.5 bg-action-primary active:bg-action-primary-hover text-white px-150 py-1.5 rounded-full text-[11px] font-black shadow-md active:scale-95 transition-transform"
                     >
                       <span>⚙</span> Gérer
                     </button>
@@ -337,7 +337,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                   <div className="mt-2 flex gap-2">
                     <button
                       onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
-                      className="flex-1 py-3 rounded-2xl border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[13px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                      className="flex-1 py-150 rounded-2xl border-2 border-action-primary text-action-primary font-bold text-[13px] bg-background-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
                     >
                       ✏️ Modifier & publier
                     </button>
@@ -350,14 +350,14 @@ export function Profile({ onNavigate }: ProfileProps) {
 
         {/* TAB: Followers */}
         {activeTab === 'followers' && (
-          <div className="mx-4 space-y-2">
+          <div className="mx-200 space-y-2">
             {followers.length === 0 ? (
-              <div className="bg-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-orange-50 rounded-full flex items-center justify-center mb-4">
+              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
+                <div className="w-16 h-16 mx-auto bg-brand-orange-50 rounded-full flex items-center justify-center mb-200">
                   <span className="text-2xl">👥</span>
                 </div>
                 <p className="text-gray-900 font-bold text-[15px]">Aucun abonné</p>
-                <p className="text-sm text-gray-500 mt-1">Personne ne vous suit encore</p>
+                <p className="text-sm text-text-secondary mt-1">Personne ne vous suit encore</p>
               </div>
             ) : (
               followers.map((f: any) => (
@@ -369,14 +369,14 @@ export function Profile({ onNavigate }: ProfileProps) {
 
         {/* TAB: Following */}
         {activeTab === 'following' && (
-          <div className="mx-4 space-y-2">
+          <div className="mx-200 space-y-2">
             {following.length === 0 ? (
-              <div className="bg-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-pink-50 rounded-full flex items-center justify-center mb-4">
+              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
+                <div className="w-16 h-16 mx-auto bg-pink-50 rounded-full flex items-center justify-center mb-200">
                   <span className="text-2xl">🔍</span>
                 </div>
                 <p className="text-gray-900 font-bold text-[15px]">Vous ne suivez personne</p>
-                <p className="text-sm text-gray-500 mt-1">Explorez des profils pour les suivre</p>
+                <p className="text-sm text-text-secondary mt-1">Explorez des profils pour les suivre</p>
               </div>
             ) : (
               following.map((f: any) => (
@@ -388,30 +388,30 @@ export function Profile({ onNavigate }: ProfileProps) {
 
         {/* TAB: Friends */}
         {activeTab === 'friends' && isOwnProfile && (
-          <div className="mx-4 space-y-2">
+          <div className="mx-200 space-y-2">
             <button
               onClick={() => navigate('/friend-requests')}
-              className="w-full bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm mb-4 active:scale-[0.98] transition-transform border border-gray-100"
+              className="w-full bg-background-white rounded-2xl p-200 flex items-center justify-between shadow-sm mb-200 active:scale-[0.98] transition-transform border border-gray-100"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
+              <div className="flex items-center gap-150">
+                <div className="w-10 h-10 rounded-full bg-brand-orange-50 flex items-center justify-center">
                   <UserPlus className="w-5 h-5 text-orange-500" />
                 </div>
                 <div className="text-left">
                   <p className="font-bold text-[15px] text-gray-900">Demandes d'amis</p>
-                  <p className="text-[13px] text-gray-500">Gérer les demandes en attente</p>
+                  <p className="text-[13px] text-text-secondary">Gérer les demandes en attente</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-300" />
             </button>
 
             {friends.length === 0 ? (
-              <div className="bg-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-4">
+              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
+                <div className="w-16 h-16 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-200">
                   <span className="text-2xl">🤝</span>
                 </div>
                 <p className="text-gray-900 font-bold text-[15px]">Aucun ami</p>
-                <p className="text-sm text-gray-500 mt-1">Envoyez des demandes d'amis pour commencer</p>
+                <p className="text-sm text-text-secondary mt-1">Envoyez des demandes d'amis pour commencer</p>
               </div>
             ) : (
               friends.map((f: any) => (
@@ -437,7 +437,7 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
   return (
     <div 
       onClick={() => openUserProfile(user?.userId || user?.id, { displayName: name, avatarUrl: avatar })}
-      className="bg-white rounded-2xl p-3 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer border border-gray-50/50 hover:border-gray-100"
+      className="bg-background-white rounded-2xl p-150 flex items-center gap-150 shadow-sm active:scale-[0.98] transition-transform cursor-pointer border border-gray-50/50 hover:border-gray-100"
     >
       <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 shadow-sm ring-2 ring-white">
         <SafeImage
@@ -446,7 +446,7 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
           className="w-full h-full object-cover"
           fallback={
             <div className="w-full h-full flex items-center justify-center font-bold text-[#FFFFFF] text-lg"
-              style={{ background: 'linear-gradient(135deg, #FF9F1C, #FFB75E)' }}>
+              style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>
               {name.charAt(0).toUpperCase()}
             </div>
           }
@@ -455,22 +455,22 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
       <div className="flex-1 min-w-0">
         <p className="font-bold text-gray-900 text-[15px] truncate">{name}</p>
         {user?.username && (
-          <p className="text-[13px] text-gray-500 truncate">@{user.username}</p>
+          <p className="text-[13px] text-text-secondary truncate">@{user.username}</p>
         )}
       </div>
       {type === 'follower' && (
-        <div className="flex-shrink-0 p-2 rounded-full bg-orange-50">
-          <UserCheck className="w-4 h-4 text-[#FF9F1C]" />
+        <div className="flex-shrink-0 p-2 rounded-full bg-brand-orange-50">
+          <UserCheck className="w-4 h-4 text-action-primary" />
         </div>
       )}
       {type === 'following' && (
-        <div className="flex-shrink-0 p-2 rounded-full bg-orange-50">
-          <UserPlus className="w-4 h-4 text-[#FF9F1C]" />
+        <div className="flex-shrink-0 p-2 rounded-full bg-brand-orange-50">
+          <UserPlus className="w-4 h-4 text-action-primary" />
         </div>
       )}
       {type === 'friend' && (
-        <div className="flex-shrink-0 p-2 rounded-full bg-orange-50">
-          <UserCheck className="w-4 h-4 text-[#FF9F1C]" />
+        <div className="flex-shrink-0 p-2 rounded-full bg-brand-orange-50">
+          <UserCheck className="w-4 h-4 text-action-primary" />
         </div>
       )}
     </div>

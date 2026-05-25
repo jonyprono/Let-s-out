@@ -32,7 +32,7 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
             id="welcome-login-btn"
             type="button"
             onClick={onLogin}
-            className="auth-primary-btn w-full bg-[#FF9F1C] text-white py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:opacity-90 transition-opacity"
+            className="auth-primary-btn w-full bg-action-primary hover:bg-action-primary-hover text-text-inverse py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-all"
           >
             Se connecter
           </button>
@@ -48,11 +48,11 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
       </div>
 
       <div className="px-8 pb-8 pt-2">
-        <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+        <p className="text-[11px] text-text-secondary text-center leading-relaxed">
           En continuant, vous acceptez nos{' '}
-          <span className="text-[#FF9F1C]">Conditions d&apos;utilisation</span>
+          <span className="text-action-primary">Conditions d&apos;utilisation</span>
           {' '}et notre{' '}
-          <span className="text-[#FF9F1C]">Politique<br />de Confidentialité</span>
+          <span className="text-action-primary">Politique<br />de Confidentialité</span>
         </p>
       </div>
 

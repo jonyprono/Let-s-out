@@ -59,7 +59,7 @@ export const EventCard = memo(function EventCard({
   const attendees: any[] = (event as any).bookings || [];
   const count = event.currentAttendees ?? 0;
   const max = event.maxAttendees;
-  const colors = ['#9747FF', '#FF9F1C', '#B070FF', '#FFAE42'];
+  const colors = ['#9747FF', 'var(--action-primary)', '#B070FF', 'var(--color-brand-orange-400)'];
 
   const fallbackCopyTextToClipboard = (text: string) => {
     const textArea = document.createElement("textarea");
@@ -132,8 +132,8 @@ export const EventCard = memo(function EventCard({
   return (
     <button
       onClick={() => { hapticFeedback.impact(); onNavigate('event-details', event.id); }}
-      className={`flex flex-col bg-white rounded-2xl overflow-hidden text-left shadow-sm border border-gray-100 active:scale-[0.98] transition-transform relative ${
-        horizontal ? 'flex-shrink-0 w-[280px]' : 'w-full mb-4'
+      className={`flex flex-col bg-background-white rounded-2xl overflow-hidden text-left shadow-sm border border-gray-100 active:scale-[0.98] transition-transform relative ${
+        horizontal ? 'flex-shrink-0 w-[280px]' : 'w-full mb-200'
       }`}
     >
       {/* Image + Actions */}
@@ -155,15 +155,15 @@ export const EventCard = memo(function EventCard({
         <div className="absolute top-3 right-3 flex gap-2 z-10">
           <button
             onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+            className="w-9 h-9 rounded-full bg-background-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm active:scale-95 transition-transform"
           >
             <Share2 className="w-4 h-4 text-gray-700" />
           </button>
           <button
             onClick={handleFavorite}
-            className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+            className="w-9 h-9 rounded-full bg-background-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm active:scale-95 transition-transform"
           >
-            <Star className={`w-4 h-4 ${favorite ? 'text-[#FF9F1C] fill-[#FF9F1C]' : 'text-gray-700'}`} />
+            <Star className={`w-4 h-4 ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-700'}`} />
           </button>
         </div>
         
@@ -172,14 +172,14 @@ export const EventCard = memo(function EventCard({
           event.creatorId === user?.id ? (
             <button
               onClick={(e) => { e.stopPropagation(); setShowQRModal(true); }}
-              className="absolute top-3 left-3 bg-gray-900/90 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-transform z-10"
+              className="absolute top-3 left-3 bg-gray-900/90 backdrop-blur-md px-150 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-transform z-10"
             >
-              <QrCode className="w-3.5 h-3.5 text-[#FF9F1C]" />
+              <QrCode className="w-3.5 h-3.5 text-action-primary" />
               <span className="text-[11px] font-bold text-white uppercase tracking-wider">Privé</span>
             </button>
           ) : (
             <div className="absolute top-3 left-3 bg-gray-900/80 backdrop-blur-md px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm z-10">
-              <Lock className="w-3 h-3 text-[#FF9F1C]" />
+              <Lock className="w-3 h-3 text-action-primary" />
               <span className="text-[10px] font-bold text-white uppercase tracking-wider">Privé</span>
             </div>
           )
@@ -187,12 +187,12 @@ export const EventCard = memo(function EventCard({
       </div>
 
       {/* Info */}
-      <div className="p-3 w-full">
+      <div className="p-150 w-full">
         <h3 className="text-base font-bold text-gray-900 leading-tight mb-1 truncate flex items-center gap-1.5">
           {event.title}
         </h3>
-        <p className="text-[12px] text-gray-500 mb-0.5">{dateStr}</p>
-        {location && <p className="text-[12px] text-gray-500 mb-4 truncate">{location}</p>}
+        <p className="text-[12px] text-text-secondary mb-0.5">{dateStr}</p>
+        {location && <p className="text-[12px] text-text-secondary mb-200 truncate">{location}</p>}
 
         <div className="flex items-center justify-between mt-auto">
           <div className="flex items-center gap-2">
@@ -217,16 +217,16 @@ export const EventCard = memo(function EventCard({
               </div>
             )}
             {/* Participant count */}
-            <span className="text-[13px] text-gray-500 font-medium">
+            <span className="text-[13px] text-text-secondary font-medium">
               {max ? `${count}/${max} Participants` : `${count} Participants`}
             </span>
           </div>
 
           {/* Price badge */}
           {badge ?? (
-            <span className={`px-3 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap ${
+            <span className={`px-150 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap ${
               event.price === 0
-                ? 'bg-[#E6F9F1] text-[#00A859]'
+                ? 'bg-[var(--color-functional-green-positive)/10] text-[var(--color-functional-green-positive)]'
                 : 'bg-[#EBF5FF] text-[#007AFF]'
             }`}>
               {price}
@@ -242,21 +242,21 @@ export const EventCard = memo(function EventCard({
             className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
             onClick={(e) => { e.stopPropagation(); setShowQRModal(false); }} 
           />
-          <div className="bg-white rounded-[32px] p-8 w-full max-w-sm relative z-10 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
+          <div className="bg-background-white rounded-[32px] p-8 w-full max-w-sm relative z-10 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
             <button 
               onClick={(e) => { e.stopPropagation(); setShowQRModal(false); }}
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"
             >
-              <X className="w-4 h-4 text-gray-500" />
+              <X className="w-4 h-4 text-text-secondary" />
             </button>
-            <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center mb-4 mt-2">
-              <QrCode className="w-8 h-8 text-[#FF9F1C]" />
+            <div className="w-16 h-16 rounded-full bg-brand-orange-50 flex items-center justify-center mb-200 mt-2">
+              <QrCode className="w-8 h-8 text-action-primary" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Inviter à l'événement</h3>
-            <p className="text-sm text-gray-500 mb-8 max-w-[240px]">
+            <p className="text-sm text-text-secondary mb-8 max-w-[240px]">
               Faites scanner ce code QR pour permettre à vos proches de rejoindre l'événement privé.
             </p>
-            <div className="p-4 bg-white rounded-3xl border border-gray-100 shadow-sm mb-4">
+            <div className="p-200 bg-background-white rounded-3xl border border-gray-100 shadow-sm mb-200">
               {isLoadingEvent ? (
                 <div className="w-[180px] h-[180px] bg-gray-50 flex flex-col items-center justify-center text-gray-400">
                   <Loader2 className="w-8 h-8 animate-spin text-[#9747FF] mb-2" />

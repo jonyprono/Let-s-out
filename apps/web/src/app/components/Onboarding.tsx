@@ -142,7 +142,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div className="w-full h-full bg-background-default flex flex-col">
       {/* Status Bar */}
       <div className="h-11 flex items-center justify-between px-6">
         <span className="text-sm">9:41</span>
@@ -152,8 +152,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       </div>
 
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100">
-        <div className="flex items-center gap-4">
+      <div className="px-6 py-200 border-b border-gray-100">
+        <div className="flex items-center gap-200">
           {step > 1 && (
             <button onClick={() => setStep(step - 1)}>
               <ChevronLeft className="w-6 h-6" />
@@ -170,35 +170,35 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           <div>
             <h2 className="text-xl mb-6">Informations personnelles</h2>
 
-            <div className="space-y-4">
+            <div className="space-y-200">
               <div>
-                <label className="text-sm text-gray-600 mb-2 block">Prénom</label>
+                <label className="text-sm text-text-secondary mb-2 block">Prénom</label>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Entrez votre prénom"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
+                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-gray-600 mb-2 block">Nom</label>
+                <label className="text-sm text-text-secondary mb-2 block">Nom</label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Entrez votre nom"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
+                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-gray-600 mb-2 block">Sexe</label>
+                <label className="text-sm text-text-secondary mb-2 block">Sexe</label>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C] bg-white"
+                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary bg-background-white"
                 >
                   <option value="">Sélectionner</option>
                   <option value="homme">Homme</option>
@@ -208,12 +208,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
 
               <div>
-                <label className="text-sm text-gray-600 mb-2 block">Date de naissance</label>
+                <label className="text-sm text-text-secondary mb-2 block">Date de naissance</label>
                 <input
                   type="date"
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
+                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
                 />
               </div>
             </div>
@@ -228,20 +228,20 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <button 
                 onClick={handleLocate}
                 disabled={isLocating}
-                className="flex items-center gap-2 text-sm font-medium text-[#FF9F1C] bg-orange-50 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+                className="flex items-center gap-2 text-sm font-medium text-action-primary bg-brand-orange-50 px-150 py-1.5 rounded-full active:scale-95 transition-transform"
               >
                 {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
                 Me localiser
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-200">
               <div>
-                <label className="text-sm text-gray-600 mb-2 block">Pays</label>
+                <label className="text-sm text-text-secondary mb-2 block">Pays</label>
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C] bg-white"
+                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary bg-background-white"
                 >
                   {COUNTRIES.map(c => (
                     <option key={c.cca2} value={c.name}>{c.name}</option>
@@ -253,24 +253,24 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
 
               <div>
-                <label className="text-sm text-gray-600 mb-2 block">Ville</label>
+                <label className="text-sm text-text-secondary mb-2 block">Ville</label>
                 <input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Paris, Lyon, Marseille..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
+                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
                 />
               </div>
 
               <div>
-                <label className="text-sm text-gray-600 mb-2 block">Quartier</label>
+                <label className="text-sm text-text-secondary mb-2 block">Quartier</label>
                 <input
                   type="text"
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                   placeholder="Nom du quartier"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#FF9F1C]"
+                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
                 />
               </div>
             </div>
@@ -281,7 +281,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {step === 3 && (
           <div>
             <h2 className="text-xl mb-2">Vos centres d'intérêt</h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-text-secondary mb-6">
               Sélectionnez au moins 3 centres d'intérêt
             </p>
 
@@ -292,8 +292,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   onClick={() => toggleInterest(interest)}
                   className={`px-5 py-2.5 rounded-full border-2 text-sm transition-colors ${
                     selectedInterests.includes(interest)
-                      ? 'border-[#FF9F1C] bg-orange-50 text-[#FF9F1C]'
-                      : 'border-gray-300 text-gray-600'
+                      ? 'border-action-primary bg-brand-orange-50 text-action-primary'
+                      : 'border-border-primary text-text-secondary'
                   }`}
                 >
                   {interest}
@@ -307,18 +307,18 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {step === 4 && (
           <div>
             <h2 className="text-xl mb-2">Photo de profil</h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-text-secondary mb-6">
               Ajoutez une photo pour que les autres vous reconnaissent
             </p>
 
             <div className="flex flex-col items-center">
               {/* Avatar preview */}
               <div
-                className="w-40 h-40 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center mb-4 overflow-hidden relative cursor-pointer active:scale-95 transition-transform"
+                className="w-40 h-40 rounded-full bg-gray-100 border-2 border-dashed border-border-primary flex items-center justify-center mb-200 overflow-hidden relative cursor-pointer active:scale-95 transition-transform"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {isUploadingPhoto ? (
-                  <Loader2 className="w-10 h-10 animate-spin text-[#FF9F1C]" />
+                  <Loader2 className="w-10 h-10 animate-spin text-action-primary" />
                 ) : profilePicture ? (
                   <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
@@ -349,7 +349,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingPhoto}
-                className="text-[#FF9F1C] text-sm font-semibold bg-orange-50 px-4 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
+                className="text-action-primary text-sm font-semibold bg-brand-orange-50 px-200 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
               >
                 {isUploadingPhoto ? 'Upload en cours...' : profilePicture ? 'Changer la photo' : 'Choisir une photo'}
               </button>
@@ -366,7 +366,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <button
           onClick={handleNext}
           disabled={step === 3 && selectedInterests.length < 3}
-          className="w-full bg-[#FF9F1C] text-white py-3.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-action-primary active:bg-action-primary-hover text-white py-150.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {step === 4 ? 'Terminer' : 'Suivant'}
         </button>
@@ -379,7 +379,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div
               key={s}
               className={`flex-1 h-1 rounded-full ${
-                s <= step ? 'bg-[#FF9F1C]' : 'bg-gray-200'
+                s <= step ? 'bg-action-primary active:bg-action-primary-hover' : 'bg-gray-200'
               }`}
             />
           ))}

@@ -82,7 +82,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         <div className="text-right mb-8">
-          <button type="button" onClick={onForgotPassword} className="text-[13px] text-[#FF9F1C] font-medium">
+          <button type="button" onClick={onForgotPassword} className="text-[13px] text-action-primary hover:text-action-primary-hover font-medium">
             Mot de passe oublié?
           </button>
         </div>
@@ -92,15 +92,15 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           type="button"
           onClick={handleLogin}
           disabled={!phone.trim() || !password || logging}
-          className="auth-primary-btn w-full bg-[#FF9F1C] text-white py-[17px] rounded-full font-semibold text-[15px] mb-6 flex items-center justify-center gap-2 disabled:bg-[#FFD99A] disabled:text-white active:opacity-90 transition-all"
+          className="auth-primary-btn w-full bg-action-primary hover:bg-action-primary-hover text-text-inverse py-[17px] rounded-full font-semibold text-[15px] mb-6 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all"
         >
           {logging ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           <span>Se connecter</span>
         </button>
 
-        <p className="text-center text-[13px] text-muted-foreground">
+        <p className="text-center text-[13px] text-text-secondary">
           Si vous n&apos;avez pas encore de compte{' '}
-          <button type="button" onClick={onSignup} className="text-[#FF9F1C] font-semibold">
+          <button type="button" onClick={onSignup} className="text-action-primary hover:text-action-primary-hover font-semibold">
             Inscrivez-vous
           </button>
         </p>

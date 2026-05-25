@@ -266,7 +266,7 @@ export function Signup({ onBack }: SignupProps) {
           <span className={authHeader}>Inscription</span>
         </div>
         <div className="flex justify-center mt-1">
-          <div className="w-10 h-[2.5px] bg-[#FF9F1C] rounded-full" />
+          <div className="w-10 h-[2.5px] bg-action-primary rounded-full" />
         </div>
       </div>
 
@@ -302,8 +302,8 @@ export function Signup({ onBack }: SignupProps) {
                   <button key={ch} type="button" onClick={() => setCurrentChannel(val)}
                     className={authChannelBtn}>
                     <span className={authChannelLabel}>{ch}</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
-                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-action-primary' : 'border-border-primary'}`}>
+                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                     </div>
                   </button>
                 )
@@ -331,8 +331,8 @@ export function Signup({ onBack }: SignupProps) {
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKey(i, e)}
                   className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-card text-foreground
-                    ${d ? 'border-[#FF9F1C]' : 'border-border'}
-                    focus:border-[#FF9F1C]`}
+                    ${d ? 'border-action-primary' : 'border-border-primary'}
+                    focus:border-action-primary`}
                 />
               ))}
             </div>
@@ -498,19 +498,19 @@ export function Signup({ onBack }: SignupProps) {
         {step === 7 && (
           <label className="flex items-start gap-2.5 cursor-pointer mb-4"
             onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}>
-            <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#FF9F1C] border-[#FF9F1C]' : 'border-[#CCCCCC] bg-white'}`}>
-              {acceptedTerms && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+            <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-action-primary border-action-primary' : 'border-border-primary bg-background-white'}`}>
+              {acceptedTerms && <Check className="w-3 h-3 text-text-inverse" strokeWidth={3} />}
             </div>
-            <span className="text-[12px] text-muted-foreground leading-relaxed">
+            <span className="text-[12px] text-text-secondary leading-relaxed">
               Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
-              <span className="text-[#FF9F1C] font-semibold">Conditions d'Utilisation</span> de Let's Out
+              <span className="text-action-primary font-semibold">Conditions d'Utilisation</span> de Let's Out
             </span>
           </label>
         )}
         <button
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-[#FF9F1C] text-white disabled:bg-[#FFD99A] disabled:text-white"
+          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-action-primary hover:bg-action-primary-hover text-text-inverse disabled:opacity-50"
         >
           {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
           <span>{buttonLabel()}</span>

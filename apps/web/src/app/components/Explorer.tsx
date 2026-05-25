@@ -187,19 +187,19 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-6" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex-1 overflow-y-auto px-5 py-200 space-y-6" style={{ scrollbarWidth: 'none' }}>
           {/* Date */}
           <div>
-            <h3 className="text-[14px] font-bold text-gray-900 mb-3">Date</h3>
+            <h3 className="text-[14px] font-bold text-gray-900 mb-150">Date</h3>
             <div className="flex flex-wrap gap-2">
               {DATE_FILTERS.map(f => (
                 <button
                   key={f.key}
                   onClick={() => setFilterDate(f.key)}
-                  className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
+                  className={`px-150.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
                     filterDate === f.key
-                      ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
-                      : 'bg-white text-gray-600 border-gray-200'
+                      ? 'bg-action-primary active:bg-action-primary-hover text-white border-action-primary'
+                      : 'bg-background-white text-text-secondary border-border-primary'
                   }`}
                 >
                   {f.label}
@@ -212,23 +212,23 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 type="date"
                 value={filterCustomDate}
                 onChange={e => setFilterCustomDate(e.target.value)}
-                className="mt-3 w-full border border-gray-200 rounded-xl px-3 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-[#FF9F1C]"
+                className="mt-150 w-full border border-border-primary rounded-xl px-150 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-action-primary"
               />
             )}
           </div>
 
           {/* Moment */}
           <div>
-            <h3 className="text-[14px] font-bold text-gray-900 mb-3">Moment</h3>
+            <h3 className="text-[14px] font-bold text-gray-900 mb-150">Moment</h3>
             <div className="flex flex-wrap gap-2">
               {TIME_FILTERS.map(f => (
                 <button
                   key={f.key}
                   onClick={() => setFilterTime(f.key)}
-                  className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
+                  className={`px-150.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
                     filterTime === f.key
-                      ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
-                      : 'bg-white text-gray-600 border-gray-200'
+                      ? 'bg-action-primary active:bg-action-primary-hover text-white border-action-primary'
+                      : 'bg-background-white text-text-secondary border-border-primary'
                   }`}
                 >
                   {f.label}
@@ -239,7 +239,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
           {/* Catégorie */}
           <div>
-            <h3 className="text-[14px] font-bold text-gray-900 mb-3">Catégorie</h3>
+            <h3 className="text-[14px] font-bold text-gray-900 mb-150">Catégorie</h3>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES_FILTER.map(cat => {
                 const selected = filterCategories.includes(cat.key);
@@ -247,10 +247,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   <button
                     key={cat.key}
                     onClick={() => toggleFilterCategory(cat.key)}
-                    className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all flex items-center gap-1 ${
+                    className={`px-150.5 py-1.5 rounded-full text-[13px] font-medium border transition-all flex items-center gap-1 ${
                       selected
-                        ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
-                        : 'bg-white text-gray-600 border-gray-200'
+                        ? 'bg-action-primary active:bg-action-primary-hover text-white border-action-primary'
+                        : 'bg-background-white text-text-secondary border-border-primary'
                     }`}
                   >
                     {selected && <Check className="w-3 h-3" />}
@@ -263,9 +263,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
           {/* Budget */}
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-150">
               <h3 className="text-[14px] font-bold text-gray-900">Budget</h3>
-              <span className="text-[13px] text-gray-500">
+              <span className="text-[13px] text-text-secondary">
                 0 – {filterBudgetMax === 50000 ? '50 000' : filterBudgetMax.toLocaleString('fr-FR')} F CFA
               </span>
             </div>
@@ -278,16 +278,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               onChange={e => setFilterBudgetMax(Number(e.target.value))}
               className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, #FF9F1C 0%, #FF9F1C ${(filterBudgetMax / 50000) * 100}%, #e5e7eb ${(filterBudgetMax / 50000) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, var(--action-primary) 0%, var(--action-primary) ${(filterBudgetMax / 50000) * 100}%, #e5e7eb ${(filterBudgetMax / 50000) * 100}%, #e5e7eb 100%)`
               }}
             />
           </div>
 
           {/* Distance */}
           <div>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-150">
               <h3 className="text-[14px] font-bold text-gray-900">Distance</h3>
-              <span className="text-[13px] text-gray-500">N'importe quelle distance</span>
+              <span className="text-[13px] text-text-secondary">N'importe quelle distance</span>
             </div>
             <input
               type="range"
@@ -296,22 +296,22 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               step={1}
               defaultValue={100}
               className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-              style={{ background: 'linear-gradient(to right, #FF9F1C 0%, #FF9F1C 100%, #e5e7eb 100%, #e5e7eb 100%)' }}
+              style={{ background: 'linear-gradient(to right, var(--action-primary) 0%, var(--action-primary) 100%, #e5e7eb 100%, #e5e7eb 100%)' }}
             />
           </div>
         </div>
 
         {/* Footer buttons */}
-        <div className="border-t border-gray-100 px-5 py-4 flex gap-3">
+        <div className="border-t border-gray-100 px-5 py-200 flex gap-150">
           <button
             onClick={resetFilters}
-            className="flex-1 py-3.5 rounded-full border border-gray-200 text-[14px] font-bold text-gray-700"
+            className="flex-1 py-150.5 rounded-full border border-border-primary text-[14px] font-bold text-gray-700"
           >
             Réinitialiser
           </button>
           <button
             onClick={applyFilters}
-            className="flex-[2] py-3.5 rounded-full bg-[#FF9F1C] text-[14px] font-bold text-white"
+            className="flex-[2] py-150.5 rounded-full bg-action-primary active:bg-action-primary-hover text-[14px] font-bold text-white"
           >
             Appliquer les filtres
           </button>
@@ -328,7 +328,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return (
       <div className="w-full h-full bg-background flex flex-col">
         <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-200">
             <button onClick={() => setScreen('list')} className="w-8 h-8 flex items-center justify-center">
               <ChevronLeft className="w-5 h-5 text-gray-700" />
             </button>
@@ -337,8 +337,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Location search */}
-          <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5 mb-3">
-            <MapPin className="w-4 h-4 text-[#FF9F1C] flex-shrink-0" />
+          <div className="flex items-center gap-2 border border-border-primary rounded-xl px-150 py-2.5 mb-150">
+            <MapPin className="w-4 h-4 text-action-primary flex-shrink-0" />
             <input
               autoFocus
               placeholder="Ville, quartier..."
@@ -348,7 +348,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Event keyword search */}
-          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5">
+          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-150 py-2.5">
             <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <input
               value={searchQuery}
@@ -362,11 +362,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         <div className="flex-1 overflow-y-auto px-5 pt-4">
           {searchQuery.length < 2 ? (
             <div className="space-y-2">
-              <p className="text-[12px] font-semibold text-gray-400 uppercase tracking-wide mb-4">Suggestions</p>
+              <p className="text-[12px] font-semibold text-gray-400 uppercase tracking-wide mb-200">Suggestions</p>
               {['Position actuelle', 'Cotonou, BJ', 'Abomey-Calavi, BJ', 'Porto-Novo, BJ', 'Bohicon, BJ'].map(loc => (
                 <button
                   key={loc}
-                  className="w-full flex items-center gap-3 py-2.5"
+                  className="w-full flex items-center gap-150 py-2.5"
                   onClick={() => setSearchQuery(loc)}
                 >
                   <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -379,7 +379,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               {events.filter(e => e.title.toLowerCase().includes(searchQuery.toLowerCase())).map(event => (
                 <button
                   key={event.id}
-                  className="w-full flex items-center gap-3 py-2.5"
+                  className="w-full flex items-center gap-150 py-2.5"
                   onClick={() => onNavigate('event-details', event.id)}
                 >
                   <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -397,30 +397,30 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   if (screen === 'join') {
     return (
       <div className="w-full h-full bg-[#F8F7FF] dark:bg-[#111111] flex flex-col z-50 absolute inset-0">
-        <div className="px-5 pt-safe-6 pb-3 flex items-center gap-3">
-          <button onClick={() => setScreen('list')} className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+        <div className="px-5 pt-safe-6 pb-3 flex items-center gap-150">
+          <button onClick={() => setScreen('list')} className="w-10 h-10 rounded-full bg-background-white flex items-center justify-center shadow-sm">
             <ChevronLeft className="w-6 h-6 text-gray-800" />
           </button>
           <h2 className="text-xl font-bold text-gray-900">Rejoindre</h2>
         </div>
 
         <div className="flex-1 px-5 pt-8 flex flex-col items-center">
-          <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
-            <Lock className="w-8 h-8 text-[#FF9F1C]" />
+          <div className="w-16 h-16 bg-brand-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
+            <Lock className="w-8 h-8 text-action-primary" />
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">Événement Privé</h3>
-          <p className="text-gray-500 text-center mb-10 text-[15px] leading-relaxed max-w-[280px]">
+          <p className="text-text-secondary text-center mb-10 text-[15px] leading-relaxed max-w-[280px]">
             Entrez le code d'accès partagé par l'organisateur pour rejoindre cet événement.
           </p>
 
-          <div className="w-full bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
-            <label className="block text-sm font-bold text-gray-700 mb-3">Code d'accès</label>
+          <div className="w-full bg-background-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+            <label className="block text-sm font-bold text-gray-700 mb-150">Code d'accès</label>
             <input
               type="text"
               placeholder="Ex: a1b2c3d4"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 text-center text-2xl tracking-widest font-mono font-bold text-gray-900 focus:outline-none focus:border-[#FF9F1C] focus:ring-2 focus:ring-orange-200 transition-all uppercase"
+              className="w-full bg-gray-50 border border-border-primary rounded-2xl px-5 py-200 text-center text-2xl tracking-widest font-mono font-bold text-gray-900 focus:outline-none focus:border-action-primary focus:ring-2 focus:ring-orange-200 transition-all uppercase"
             />
           </div>
 
@@ -441,8 +441,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               }
             }}
             disabled={!joinCode || isJoining}
-            className="w-full py-4 rounded-full font-bold text-white shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
-            style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}
+            className="w-full py-200 rounded-full font-bold text-white shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--action-primary))' }}
           >
             {isJoining ? <Loader2 className="w-6 h-6 animate-spin" /> : "Rejoindre l'événement"}
           </button>
@@ -456,10 +456,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className="w-full h-full bg-background flex flex-col">
 
         {/* Header & Search Bar */}
-        <div className="bg-white px-5 pt-safe-6 pb-3 border-b border-gray-100">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="bg-background-white px-5 pt-safe-6 pb-3 border-b border-gray-100">
+          <div className="flex items-center gap-150 mb-200">
             <div
-              className="flex-1 bg-gray-50 rounded-full flex items-center px-4 py-2.5 cursor-text"
+              className="flex-1 bg-gray-50 rounded-full flex items-center px-200 py-2.5 cursor-text"
               onClick={() => {
                 hapticFeedback.impact()
                 setScreen('search')
@@ -473,7 +473,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 hapticFeedback.impact()
                 setScreen('filter')
               }}
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-colors hover:bg-gray-50 active:bg-gray-100"
+              className="w-10 h-10 rounded-full border border-border-primary flex items-center justify-center transition-colors hover:bg-gray-50 active:bg-gray-100"
             >
               <SlidersHorizontal className="w-4 h-4 text-gray-700" />
             </button>
@@ -482,13 +482,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 hapticFeedback.impact()
                 setViewMode(viewMode === 'list' ? 'map' : 'list')
               }}
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-colors bg-white hover:bg-gray-50 active:bg-gray-100 touch-sm"
+              className="w-10 h-10 rounded-full border border-border-primary flex items-center justify-center transition-colors bg-background-white hover:bg-gray-50 active:bg-gray-100 touch-sm"
             >
-              <MapPin className={`w-4 h-4 ${viewMode === 'map' ? 'text-[#FF9F1C]' : 'text-gray-700'}`} />
+              <MapPin className={`w-4 h-4 ${viewMode === 'map' ? 'text-action-primary' : 'text-gray-700'}`} />
             </button>
             <button
               onClick={() => { hapticFeedback.impact(); setScreen('join') }}
-              className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center transition-colors bg-white hover:bg-gray-50 active:bg-gray-100 touch-sm"
+              className="w-10 h-10 rounded-full border border-border-primary flex items-center justify-center transition-colors bg-background-white hover:bg-gray-50 active:bg-gray-100 touch-sm"
               title="Rejoindre un événement privé"
             >
               <Lock className="w-4 h-4 text-gray-700" />
@@ -504,12 +504,12 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 hapticFeedback.impact()
                 setSelectedCategory(category)
               }}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
+              className={`px-200 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
                 selectedCategory === category
                   ? category === 'EN_COURS'
                     ? 'bg-red-500 text-white'
-                    : 'bg-[#FF9F1C] text-white'
-                  : 'bg-gray-100 text-gray-600'
+                    : 'bg-action-primary active:bg-action-primary-hover text-white'
+                  : 'bg-gray-100 text-text-secondary'
               }`}
             >
               {CATEGORY_CHIP_LABELS[category] || CATEGORY_LABELS[category] || category}
@@ -521,26 +521,26 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       {/* Applied filters badge */}
       {(appliedFilters.date !== 'all' || appliedFilters.time !== 'all' || appliedFilters.categories.length > 0 || appliedFilters.budgetMax < 50000) && (
         <div className="px-5 pb-2 pt-2 flex flex-wrap items-center gap-2">
-          <span className="text-[12px] text-[#FF9F1C] font-semibold">Filtres actifs :</span>
+          <span className="text-[12px] text-action-primary font-semibold">Filtres actifs :</span>
           {appliedFilters.date !== 'all' && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-50 text-[#FF9F1C] font-medium">
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-orange-50 text-action-primary font-medium">
               {appliedFilters.date === 'pick' && appliedFilters.customDate
                 ? new Date(appliedFilters.customDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
                 : DATE_FILTERS.find(f => f.key === appliedFilters.date)?.label ?? appliedFilters.date}
             </span>
           )}
           {appliedFilters.time !== 'all' && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-50 text-[#FF9F1C] font-medium">
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-orange-50 text-action-primary font-medium">
               {TIME_FILTERS.find(f => f.key === appliedFilters.time)?.label ?? appliedFilters.time}
             </span>
           )}
           {appliedFilters.categories.map(c => (
-            <span key={c} className="text-[11px] px-2 py-0.5 rounded-full bg-orange-50 text-[#FF9F1C] font-medium">
+            <span key={c} className="text-[11px] px-2 py-0.5 rounded-full bg-brand-orange-50 text-action-primary font-medium">
               {CATEGORIES_FILTER.find(cf => cf.key === c)?.label ?? c}
             </span>
           ))}
           {appliedFilters.budgetMax < 50000 && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-orange-50 text-[#FF9F1C] font-medium">
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-orange-50 text-action-primary font-medium">
               ≤ {appliedFilters.budgetMax.toLocaleString('fr-FR')} F
             </span>
           )}
@@ -550,7 +550,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               setFilterBudgetMax(50000); setFilterCustomDate('');
               setAppliedFilters({ date: 'all', time: 'all', categories: [], budgetMax: 50000, customDate: '' });
             }}
-            className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium"
+            className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-text-secondary font-medium"
           >
             × Tout effacer
           </button>
@@ -561,7 +561,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         {viewMode === 'map' ? (
           <Suspense fallback={
             <div className="flex-1 flex items-center justify-center">
-              <Loader2 className="w-7 h-7 animate-spin text-[#FF9F1C]" />
+              <Loader2 className="w-7 h-7 animate-spin text-action-primary" />
             </div>
           }>
             <LazyExplorerMap
@@ -578,11 +578,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             />
           </Suspense>
         ) : (
-          <div className="flex-1 overflow-y-auto px-5 pt-4 space-y-4 pb-20">
+          <div className="flex-1 overflow-y-auto px-5 pt-4 space-y-200 pb-20">
             {isLoading ? (
               // ── Skeleton loaders — prevent layout shift ──────────────────
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white border border-gray-100 rounded-3xl p-3 flex gap-4 shadow-sm animate-pulse">
+                <div key={i} className="bg-background-white border border-gray-100 rounded-3xl p-150 flex gap-200 shadow-sm animate-pulse">
                   <div className="w-24 h-24 rounded-2xl bg-gray-200 flex-shrink-0" />
                   <div className="flex-1 flex flex-col justify-center gap-2">
                     <div className="h-3 bg-gray-200 rounded-full w-2/3" />
@@ -593,7 +593,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               ))
             ) : events.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-gray-500">Aucun événement trouvé.</p>
+                <p className="text-text-secondary">Aucun événement trouvé.</p>
               </div>
             ) : (
               events.map((event: Event) => (

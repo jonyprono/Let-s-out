@@ -26,11 +26,11 @@ interface SettingsProps {
 
 const colorClasses: Record<string, string> = {
   blue:   'bg-blue-50 dark:bg-blue-500/10 text-blue-500',
-  purple: 'bg-orange-50 dark:bg-orange-50/10 text-[#FF9F1C]',
-  orange: 'bg-orange-50 dark:bg-orange-500/10 text-[#FF9F1C]',
+  purple: 'bg-brand-orange-50 dark:bg-brand-orange-50/10 text-action-primary',
+  orange: 'bg-brand-orange-50 dark:bg-brand-orange-500/10 text-action-primary',
   green:  'bg-green-50 dark:bg-green-500/10 text-green-500',
   pink:   'bg-pink-50 dark:bg-pink-500/10 text-pink-500',
-  gray:   'bg-gray-100 dark:bg-[#2A2A2A] text-gray-500 dark:text-gray-400 dark:text-gray-500',
+  gray:   'bg-gray-100 dark:bg-[#2A2A2A] text-text-secondary dark:text-gray-400 dark:text-text-secondary',
 };
 
 export function Settings({ onBack }: SettingsProps) {
@@ -71,8 +71,8 @@ export function Settings({ onBack }: SettingsProps) {
     <div className="w-full h-full flex flex-col" style={{ background: 'var(--background)' }}>
 
       {/* Header */}
-      <div className="bg-white dark:bg-[#1A1A1A] px-5 pt-4 pt-safe-4 pb-4 border-b border-gray-100 dark:border-[#2A2A2A]">
-        <div className="flex items-center gap-3">
+      <div className="bg-background-white dark:bg-[#1A1A1A] px-5 pt-4 pt-safe-4 pb-4 border-b border-gray-100 dark:border-[#2A2A2A]">
+        <div className="flex items-center gap-150">
           <button
             onClick={onBack}
             className="w-9 h-9 bg-gray-100 dark:bg-[#2A2A2A] rounded-full flex items-center justify-center"
@@ -88,11 +88,11 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── Compte ─────────────────────────────────────────────────────── */}
         <div>
-          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">{t('settings.account')}</p>
-          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
+          <p className="text-xs font-semibold text-gray-400 dark:text-text-secondary uppercase tracking-wide mb-2 px-1">{t('settings.account')}</p>
+          <div className="bg-background-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
             <button
               onClick={() => setShowEditModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               {/* Avatar */}
               <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#2A2A2A] flex-shrink-0">
@@ -102,17 +102,17 @@ export function Settings({ onBack }: SettingsProps) {
                   className="w-full h-full object-cover"
                   fallback={
                     <div className="w-full h-full flex items-center justify-center">
-                      <User className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                      <User className="w-6 h-6 text-gray-400 dark:text-text-secondary" />
                     </div>
                   }
                 />
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className="text-[15px] font-semibold text-gray-900 dark:text-[#FFFFFF] truncate">{displayName}</p>
-                <p className="text-[13px] text-gray-400 dark:text-gray-500 truncate">{username}</p>
+                <p className="text-[13px] text-gray-400 dark:text-text-secondary truncate">{username}</p>
               </div>
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold"
-                style={{ background: 'rgba(151,71,255,0.1)', color: '#FF9F1C' }}>
+              <div className="flex items-center gap-1 px-150 py-1.5 rounded-full text-xs font-semibold"
+                style={{ background: 'rgba(151,71,255,0.1)', color: 'var(--action-primary)' }}>
                 {t('settings.edit')}
               </div>
             </button>
@@ -121,17 +121,17 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── Préférences ─────────────────────────────────────────────────── */}
         <div>
-          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">{t('settings.preferences')}</p>
-          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
+          <p className="text-xs font-semibold text-gray-400 dark:text-text-secondary uppercase tracking-wide mb-2 px-1">{t('settings.preferences')}</p>
+          <div className="bg-background-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
 
             {/* Notifications toggle */}
-            <div className="flex items-center gap-3 px-4 py-4">
+            <div className="flex items-center gap-150 px-200 py-200">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.orange}`}>
                 <Bell className="w-5 h-5" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.notifications')}</p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500">{t('settings.notificationsDesc')}</p>
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">{t('settings.notificationsDesc')}</p>
               </div>
               <PreferenceSegment
                 leftLabel="Non"
@@ -143,13 +143,13 @@ export function Settings({ onBack }: SettingsProps) {
             </div>
 
             {/* Dark mode toggle */}
-            <div className="flex items-center gap-3 px-4 py-4">
+            <div className="flex items-center gap-150 px-200 py-200">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.gray}`}>
                 <Moon className="w-5 h-5" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.darkMode')}</p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500">{t('settings.darkModeDesc')}</p>
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">{t('settings.darkModeDesc')}</p>
               </div>
               <PreferenceSegment
                 leftLabel="Clair"
@@ -163,14 +163,14 @@ export function Settings({ onBack }: SettingsProps) {
             {/* Language */}
             <button 
               onClick={() => setShowLangModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.blue}`}>
                 <Globe className="w-5 h-5" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.language')}</p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500">
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">
                   {language === 'fr' ? 'Français' : 'English'}
                 </p>
               </div>
@@ -181,53 +181,53 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── Sécurité & Confidentialité ─────────────────────────────────── */}
         <div>
-          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">{t('settings.security')}</p>
-          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
+          <p className="text-xs font-semibold text-gray-400 dark:text-text-secondary uppercase tracking-wide mb-2 px-1">{t('settings.security')}</p>
+          <div className="bg-background-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
             <button 
               onClick={() => setShowPassModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.purple}`}>
                 <Lock className="w-5 h-5" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.password')}</p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500">{t('settings.passwordDesc')}</p>
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">{t('settings.passwordDesc')}</p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-300" />
             </button>
 
             <button 
               onClick={() => setShowPrivacyModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.green}`}>
                 <Shield className="w-5 h-5" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.privacy')}</p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500">{t('settings.privacyDesc')}</p>
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">{t('settings.privacyDesc')}</p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-300" />
             </button>
 
             <button 
               onClick={() => setShowPhoneModal(true)}
-              className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.gray}`}>
                 <Smartphone className="w-5 h-5" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.phone')}</p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500">{user?.phone || t('settings.notProvided')}</p>
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">{user?.phone || t('settings.notProvided')}</p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-300" />
             </button>
 
             <button 
               onClick={() => navigate('/verify-profile')}
-              className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 kycStatus === 'verified'
@@ -252,7 +252,7 @@ export function Settings({ onBack }: SettingsProps) {
                     ? 'text-amber-500'
                     : kycStatus === 'rejected'
                     ? 'text-red-500'
-                    : 'text-gray-400 dark:text-gray-500'
+                    : 'text-gray-400 dark:text-text-secondary'
                 }`}>
                   {kycStatus === 'verified' ? '✓ Profil vérifié'
                    : kycStatus === 'pending' ? '⏳ Vérification en cours'
@@ -268,18 +268,18 @@ export function Settings({ onBack }: SettingsProps) {
         {/* ── Administration ──────────────────────────────────────────────── */}
         {user?.role === 'ADMIN' && (
           <div>
-            <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">Administration</p>
-            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
+            <p className="text-xs font-semibold text-gray-400 dark:text-text-secondary uppercase tracking-wide mb-2 px-1">Administration</p>
+            <div className="bg-background-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
               <button 
                 onClick={() => navigate('/admin')}
-                className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+                className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
               >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-red-50 dark:bg-red-500/10 text-red-500`}>
                   <Shield className="w-5 h-5" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">Dashboard Admin</p>
-                  <p className="text-[12px] text-gray-400 dark:text-gray-500">Gérer les KYC, événements, etc.</p>
+                  <p className="text-[12px] text-gray-400 dark:text-text-secondary">Gérer les KYC, événements, etc.</p>
                 </div>
                 <ChevronRight className="w-5 h-5 text-gray-300" />
               </button>
@@ -289,30 +289,30 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── À propos & Support ──────────────────────────────────────────── */}
         <div>
-          <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2 px-1">{t('settings.about')}</p>
-          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
+          <p className="text-xs font-semibold text-gray-400 dark:text-text-secondary uppercase tracking-wide mb-2 px-1">{t('settings.about')}</p>
+          <div className="bg-background-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-50 dark:divide-[#2A2A2A]">
             <button
               onClick={() => window.open('mailto:support@letsout.app', '_blank')}
-              className="w-full flex items-center gap-3 px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.pink}`}>
                 <HelpCircle className="w-5 h-5" />
               </div>
               <div className="flex-1 text-left">
                 <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.support')}</p>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500">support@letsout.app</p>
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">support@letsout.app</p>
               </div>
               <ExternalLink className="w-4 h-4 text-gray-300" />
             </button>
 
-            <button className="w-full flex items-center justify-between px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors">
+            <button className="w-full flex items-center justify-between px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors">
               <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.version')}</p>
-              <span className="text-[13px] text-gray-400 dark:text-gray-500 font-medium">1.0.0</span>
+              <span className="text-[13px] text-gray-400 dark:text-text-secondary font-medium">1.0.0</span>
             </button>
 
             <button
               onClick={() => window.open('/terms', '_blank')}
-              className="w-full flex items-center justify-between px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center justify-between px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.terms')}</p>
               <ChevronRight className="w-5 h-5 text-gray-300" />
@@ -320,7 +320,7 @@ export function Settings({ onBack }: SettingsProps) {
 
             <button
               onClick={() => window.open('/privacy', '_blank')}
-              className="w-full flex items-center justify-between px-4 py-4 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="w-full flex items-center justify-between px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">{t('settings.privacyPolicy')}</p>
               <ChevronRight className="w-5 h-5 text-gray-300" />
@@ -332,7 +332,7 @@ export function Settings({ onBack }: SettingsProps) {
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-semibold text-red-500 bg-red-50 dark:bg-red-500/10 active:scale-[0.98] transition-all disabled:opacity-60"
+          className="w-full flex items-center justify-center gap-2 py-200 rounded-2xl font-semibold text-red-500 bg-red-50 dark:bg-red-500/10 active:scale-[0.98] transition-all disabled:opacity-60"
         >
           {loggingOut ? (
             <Loader2 className="w-5 h-5 animate-spin" />

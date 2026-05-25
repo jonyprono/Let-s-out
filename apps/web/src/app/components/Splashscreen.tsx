@@ -64,10 +64,10 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
   const current = onboardingScreens[currentIndex]
 
   return (
-    <div className="w-full h-full bg-[#F2F2F7] flex flex-col relative overflow-hidden">
+    <div className="w-full h-full bg-background-default flex flex-col relative overflow-hidden">
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8 relative z-10">
+      <div className="flex-1 flex flex-col items-center justify-center px-200 relative z-10">
         <AnimatePresence mode="wait">
           {current.type === 'logo' ? (
             <motion.div
@@ -94,7 +94,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               className="flex flex-col items-center w-full"
             >
               {/* Image card with rounded corners */}
-              <div className="w-full h-[220px] mb-8 rounded-[28px] overflow-hidden shadow-sm">
+              <div className="w-full h-[220px] mb-300 rounded-[28px] overflow-hidden shadow-sm">
                 <img
                   src={current.image}
                   alt={current.title}
@@ -103,20 +103,20 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               </div>
 
               {/* Dots indicator */}
-              <div className="flex items-center justify-center gap-1.5 mb-7">
+              <div className="flex items-center justify-center gap-100 mb-250">
                 {onboardingScreens.slice(1).map((screen, index) => {
                   const isActive = currentIndex === index + 1
                   return (
                     <div
                       key={screen.id}
-                      className={`h-[3px] rounded-full transition-all duration-300 ${isActive ? 'w-5 bg-[#FF9F1C]' : 'w-5 bg-[#D9D9D9]'}`}
+                      className={`h-[3px] rounded-full transition-all duration-300 ${isActive ? 'w-5 bg-action-primary' : 'w-5 bg-neutral-gray-300'}`}
                     />
                   )
                 })}
               </div>
 
-              <h2 className="text-[24px] font-bold text-[#1A1A1A] mb-3 text-center">{current.title}</h2>
-              <p className="text-[#888888] text-[13px] text-center max-w-[260px] leading-relaxed">
+              <h2 className="text-[24px] font-bold text-[#1A1A1A] mb-150 text-center">{current.title}</h2>
+              <p className="text-text-secondary text-[13px] text-center max-w-[260px] leading-relaxed">
                 {current.description}
               </p>
             </motion.div>
@@ -126,28 +126,28 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* Footer Navigation */}
       {currentIndex > 0 && (
-        <div className="px-6 pb-10 z-10 flex items-center justify-center relative">
-          <div className="flex gap-3 w-full max-w-[300px] justify-center items-center">
+        <div className="px-200 pb-400 z-10 flex items-center justify-center relative">
+          <div className="flex gap-150 w-full max-w-[300px] justify-center items-center">
             {currentIndex > 1 && (
               <button
                 onClick={handlePrev}
-                className="w-[52px] h-[52px] rounded-full bg-white border border-gray-200 flex items-center justify-center active:scale-[0.96] transition-transform shrink-0 shadow-sm"
+                className="w-[52px] h-[52px] rounded-full bg-background-white border border-border-primary flex items-center justify-center active:scale-[0.96] transition-transform shrink-0 shadow-sm"
               >
-                <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" />
+                <ChevronLeft className="w-5 h-5 text-foreground" />
               </button>
             )}
 
             {currentIndex < onboardingScreens.length - 1 ? (
               <button
                 onClick={handleNext}
-                className="w-[52px] h-[52px] rounded-full bg-[#FF9F1C] flex items-center justify-center active:scale-[0.96] transition-transform shadow-md"
+                className="w-[52px] h-[52px] rounded-full bg-action-primary active:bg-action-primary-hover flex items-center justify-center active:scale-[0.96] transition-transform shadow-md"
               >
-                <ChevronRight className="w-5 h-5 text-white" />
+                <ChevronRight className="w-5 h-5 text-text-inverse" />
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="flex-1 h-[52px] rounded-full bg-[#FF9F1C] text-white font-bold text-[15px] flex items-center justify-center active:scale-[0.98] transition-transform shadow-md"
+                className="flex-1 h-[52px] rounded-full bg-action-primary active:bg-action-primary-hover text-text-inverse font-bold text-[15px] flex items-center justify-center active:scale-[0.98] transition-transform shadow-md"
               >
                 Commencer
               </button>
@@ -158,7 +158,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* Home Indicator */}
       <div className="h-6 flex items-center justify-center pb-1">
-        <div className="w-32 h-[4px] bg-black rounded-full" />
+        <div className="w-32 h-[4px] bg-foreground rounded-full" />
       </div>
     </div>
   )
