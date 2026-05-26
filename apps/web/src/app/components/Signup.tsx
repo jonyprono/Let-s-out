@@ -392,20 +392,52 @@ export function Signup({ onBack }: SignupProps) {
         {step === 4 && (
           <div>
             <h1 className={`${authTitle} mb-1.5`}>
-              Et votre date d'anniversaire&nbsp;?
+              Et votre date d’anniversaire ?
             </h1>
             <p className={`${authSubtitle} mb-7`}>
-              Cette information restera privée et nous aidera à<br />vous faire les meilleures suggestions<br />d'événements possibles.
+              Cette information restera privée et nous aidera à{' '}
+              vous faire les meilleures suggestions d’événements possibles.
             </p>
+
+            {/* Champ date stylisé — affiche la valeur formatée ou le placeholder */}
             <div className="relative">
+              {/* Input natif invisible — déclenché par le bouton visible */}
               <input
-                type="date" value={birthday} onChange={e => setBirthday(e.target.value)}
-                className={`${authInput} pr-12 appearance-none ${birthday ? '' : 'text-neutral-gray-400'}`}
+                type="date"
+                id="birthday-native"
+                value={birthday}
+                onChange={e => setBirthday(e.target.value)}
+                className="sr-only"
               />
-              <Calendar
-                width={20} height={20} strokeWidth={1.2}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500 pointer-events-none"
-              />
+              {/* Bouton visible pixel-perfect Figma */}
+              <button
+                type="button"
+                onClick={() => document.getElementById('birthday-native')?.showPicker?.()}
+                className={`${authInput} w-full flex items-center justify-between text-left`}
+                style={{ cursor: 'pointer' }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--font-poppins)',
+                    fontWeight: birthday ? 500 : 400,
+                    fontSize: '14px',
+                    color: birthday ? 'var(--foreground)' : 'var(--neutral-gray-400)',
+                  }}
+                >
+                  {birthday
+                    ? new Date(birthday + 'T00:00:00').toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                      })
+                    : 'Sélectionnez une date'
+                  }
+                </span>
+                <Calendar
+                  width={20} height={20} strokeWidth={1.2}
+                  className="text-neutral-gray-500 shrink-0"
+                />
+              </button>
             </div>
           </div>
         )}
@@ -414,23 +446,32 @@ export function Signup({ onBack }: SignupProps) {
         {step === 5 && (
           <div>
             <h1 className={`${authTitle} mb-1.5`}>
-              Dans quelle ville habitez-vous&nbsp;?
+              Dans quelle ville habitez-vous ?
             </h1>
             <p className={`${authSubtitle} mb-7`}>
-              Indiquez votre ville pour trouver des événements et<br />rencontrer des amis près de vous.
+              Indiquez votre ville pour trouver des événements et rencontrer des amis près de vous.
             </p>
             <div className="relative">
               <MapPin
                 width={20} height={20} strokeWidth={1.2}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-gray-500"
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-gray-400 pointer-events-none"
               />
               <input
                 type="text" value={city} onChange={e => setCity(e.target.value)}
                 placeholder="Sélectionnez une ville"
-                className={`${authInput} pl-10 pr-10`}
+                className={`${authInput} pl-12 pr-10`}
+                style={{
+                  fontFamily: 'var(--font-poppins)',
+                  fontWeight: city ? 500 : 400,
+                  fontSize: '14px',
+                }}
               />
               {city && (
-                <button onClick={() => setCity('')} className="absolute right-4 top-1/2 -translate-y-1/2">
+                <button
+                  type="button"
+                  onClick={() => setCity('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
+                >
                   <Xmark width={16} height={16} strokeWidth={1.4} className="text-neutral-gray-500" />
                 </button>
               )}
