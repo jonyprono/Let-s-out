@@ -405,28 +405,32 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* Step content */}
-      <div className="flex-1 overflow-y-auto px-5 pt-6 pb-32 bg-background">
+      <div className="flex-1 overflow-y-auto px-5 pt-8 pb-32 bg-background">
         {step < 6 && (
-          <>
-            <h2 className="text-[22px] font-bold text-[#1A1A1A] mb-1.5">{stepTitles[step - 1]}</h2>
-            <p className="text-[13px] text-[#888888] mb-7">{stepSubs[step - 1]}</p>
-          </>
+          <div className="mb-8">
+            <h2 className="text-[24px] font-bold text-[#1A1A1A] mb-1.5">
+              {step === 1 ? 'Informations' : stepTitles[step - 1]}
+            </h2>
+            <p className="text-[14px] text-[#555555]">
+              {step === 1 ? 'Indiquez les informations essentielles de votre événement.' : stepSubs[step - 1]}
+            </p>
+          </div>
         )}
 
         {/* ── STEP 1: Informations ── */}
         {step === 1 && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Nom</label>
+              <label className="text-[13px] font-bold text-[#1A1A1A] mb-2 block">Nom</label>
               <input
                 value={title} onChange={e => setTitle(e.target.value)}
                 placeholder="Nom de l'événement..."
-                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] font-medium text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] font-medium text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-transparent"
               />
             </div>
             <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-3 block">Catégories</label>
-              <div className="flex flex-wrap gap-2">
+              <label className="text-[13px] font-bold text-[#1A1A1A] mb-3 block">Catégories</label>
+              <div className="flex flex-wrap gap-2.5">
                 {CATEGORIES.map(cat => (
                   <CategoryChip
                     key={cat.value}
@@ -1065,17 +1069,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* Bottom nav */}
-      <div className="w-full shrink-0 border-t border-gray-100 px-5 pt-4 pb-6 bg-background-white">
-        <div className="flex gap-150">
+      <div className="w-full shrink-0 px-5 pt-4 pb-8 bg-background-white">
+        <div className="flex gap-4">
           {step < 6 ? (
             <>
-              <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
-                className="flex-1 py-[17px] rounded-full border border-[#E5E5E5] font-semibold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
-                Précédent
-              </button>
+              {step > 1 && (
+                <button onClick={() => setStep(s => s - 1)}
+                  className="flex-1 py-[17px] rounded-full border border-[#E5E5E5] font-semibold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
+                  Précédent
+                </button>
+              )}
               <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
                 className={`flex-1 py-[17px] rounded-full font-semibold text-[15px] transition-all ${canNext() ? 'bg-[#FF9F1C] text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFF2E0] text-white cursor-not-allowed'}`}>
-                {step === 1 && !canNext() ? 'Commencer' : 'Suivant'}
+                {step === 1 ? 'Commencer' : 'Suivant'}
               </button>
             </>
           ) : step === 6 ? (
