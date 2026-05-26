@@ -70,13 +70,16 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
   const activeSlide = currentIndex - 1
 
   return (
-    <div className="w-full h-full bg-background-default flex flex-col relative overflow-hidden">
+    <div
+      className="w-full h-full flex flex-col relative overflow-hidden"
+      style={{ backgroundColor: 'var(--background-white)' }}
+    >
 
       {/* ── Contenu principal ───────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center px-[1rem] relative z-10">
         <AnimatePresence mode="wait">
 
-          {/* ── ÉCRAN 0 : Logo centré ─────────────────────────── */}
+          {/* ── ÉCRAN 0 : Logo centré sur fond blanc ──────────── */}
           {current.type === 'logo' && (
             <motion.div
               key="logo"
@@ -84,15 +87,26 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.88 }}
               transition={{ duration: 0.45, ease: 'easeOut' }}
-              className="flex flex-col items-center justify-center w-full gap-[0.75rem]"
+              className="flex flex-col items-center justify-center w-full gap-0"
             >
+              {/* Logo Let's Out (image PNG avec icône + texte) */}
               <img
                 src="/logo.png"
                 alt="Let's Out"
-                className="w-[200px] h-auto object-contain"
+                className="w-[220px] h-auto object-contain"
               />
-              {/* Slogan */}
-              <p className="text-[14px] font-medium text-text-secondary tracking-wide">
+              {/* Slogan "Connect & Enjoy" — Poppins Regular, blue */}
+              <p
+                style={{
+                  fontFamily: 'var(--font-poppins)',
+                  fontWeight: 400,
+                  fontSize: '14px',
+                  lineHeight: '20px',
+                  letterSpacing: '0.02em',
+                  color: '#007BFF',
+                  marginTop: '4px',
+                }}
+              >
                 Connect &amp; Enjoy
               </p>
             </motion.div>
@@ -117,19 +131,18 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                 />
               </div>
 
-              {/* ── Stepper : 3 barres horizontales ─────────── */}
-              {/* Barre active = orange, inactives = neutral-gray-200 */}
-              <div className="flex items-center justify-center gap-[0.375rem] mb-[1.5rem]">
+              {/* ── Stepper : 3 segments égaux ───────────────── */}
+              {/* Actif = orange, inactifs = neutral-gray-200, hauteur 3px, même largeur */}
+              <div className="flex items-center gap-[6px] mb-[1.5rem] w-full px-[0.5rem]">
                 {SLIDES.map((_, idx) => (
                   <div
                     key={idx}
-                    className="h-[3px] rounded-full transition-all duration-300"
+                    className="flex-1 h-[3px] rounded-full transition-all duration-300"
                     style={{
-                      width: idx === activeSlide ? '2rem' : '1.25rem',
                       backgroundColor:
                         idx === activeSlide
-                          ? 'var(--action-primary)'
-                          : 'var(--neutral-gray-300)',
+                          ? 'var(--action-primary)'       /* orange */
+                          : 'var(--neutral-gray-200)',    /* très clair */
                     }}
                   />
                 ))}
