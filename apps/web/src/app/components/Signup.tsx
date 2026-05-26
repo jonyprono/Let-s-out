@@ -655,7 +655,7 @@ export function Signup({ onBack }: SignupProps) {
               ].map(({ ok, label }) => (
                 <div key={label} className="flex items-center gap-2">
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${ok ? 'bg-[#34C759]' : 'bg-neutral-gray-200'}`}>
-                    <Check width={10} height={10} strokeWidth={2} className="text-white" />
+                    {ok && <Check width={10} height={10} strokeWidth={2} className="text-white" />}
                   </div>
                   <span className={`text-[12px] ${ok ? 'text-[#34C759]' : 'text-neutral-gray-500'}`}>{label}</span>
                 </div>
@@ -671,7 +671,7 @@ export function Signup({ onBack }: SignupProps) {
         {step === 7 && (
           <label className="flex items-start gap-2.5 cursor-pointer mb-4"
             onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}>
-          <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-action-primary border-action-primary' : 'border-border-primary bg-background-white'}`}>
+          <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#34C759] border-[#34C759]' : 'border-border-primary bg-background-white'}`}>
               {acceptedTerms && <Check width={12} height={12} strokeWidth={2.5} className="text-text-inverse" />}
             </div>
             <span className="text-[12px] text-text-secondary leading-relaxed">
@@ -683,7 +683,7 @@ export function Signup({ onBack }: SignupProps) {
         <button
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-action-primary hover:bg-action-primary-hover text-text-inverse disabled:opacity-50"
+          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-action-primary hover:bg-action-primary-hover text-text-inverse disabled:opacity-40"
         >
           {isLoading && <Refresh width={20} height={20} strokeWidth={1.4} className="animate-spin" />}
           <span>{buttonLabel()}</span>
