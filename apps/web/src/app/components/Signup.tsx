@@ -628,8 +628,8 @@ export function Signup({ onBack }: SignupProps) {
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
                 {showPassword
-                  ? <EyeClosed width={20} height={20} strokeWidth={1.2} />
-                  : <Eye width={20} height={20} strokeWidth={1.2} />}
+                  ? <Eye width={20} height={20} strokeWidth={1.2} />
+                  : <EyeClosed width={20} height={20} strokeWidth={1.2} />}
               </button>
             </div>
 
@@ -642,8 +642,8 @@ export function Signup({ onBack }: SignupProps) {
               />
               <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
                 {showConfirmPassword
-                  ? <EyeClosed width={20} height={20} strokeWidth={1.2} />
-                  : <Eye width={20} height={20} strokeWidth={1.2} />}
+                  ? <Eye width={20} height={20} strokeWidth={1.2} />
+                  : <EyeClosed width={20} height={20} strokeWidth={1.2} />}
               </button>
             </div>
 
