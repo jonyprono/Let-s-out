@@ -86,7 +86,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         <div className="text-right mb-8">
-          <button type="button" onClick={onForgotPassword} className="text-[13px] text-action-primary hover:text-action-primary-hover font-medium">
+          <button type="button" onClick={onForgotPassword} className="text-[13px] text-action-primary hover:text-action-primary-hover font-medium underline underline-offset-2">
             Mot de passe oublié?
           </button>
         </div>
@@ -101,13 +101,17 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           {logging ? <Refresh width={16} height={16} strokeWidth={1.4} className="animate-spin" /> : null}
           <span>Se connecter</span>
         </button>
+      </div>
 
-        <p className="text-center text-[13px] text-text-secondary">
-          Si vous n&apos;avez pas encore de compte{' '}
-          <button type="button" onClick={onSignup} className="text-action-primary hover:text-action-primary-hover font-semibold">
-            Inscrivez-vous
-          </button>
-        </p>
+      <div className="shrink-0 bg-background pb-5 mt-auto">
+        <div className="mx-6 border-t border-neutral-gray-200 pt-5">
+          <p className="text-center text-[13px] text-text-secondary">
+            Si vous n&apos;avez pas encore de compte<br />
+            <button type="button" onClick={onSignup} className="text-action-primary hover:text-action-primary-hover font-semibold underline underline-offset-2 mt-1">
+              Inscrivez-vous
+            </button>
+          </p>
+        </div>
       </div>
 
       <div className="h-6 flex items-center justify-center pb-1 shrink-0">
