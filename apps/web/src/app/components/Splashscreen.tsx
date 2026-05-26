@@ -152,49 +152,63 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
       {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
         <div className="px-[1rem] pb-[2rem] z-10">
-          <div className="flex gap-[0.75rem] items-center justify-end">
-            {/* Bouton Retour — visible depuis slide 2 */}
-            {currentIndex > 1 && (
-              <button
-                onClick={handlePrev}
-                aria-label="Précédent"
-                className="w-[52px] h-[52px] shrink-0 rounded-full bg-background-white border border-border-primary flex items-center justify-center active:scale-[0.95] transition-transform"
-              >
-                {/* Iconoir — Large 24px, stroke 1.4 */}
-                <NavArrowLeft
-                  width={24}
-                  height={24}
-                  strokeWidth={1.4}
-                  className="text-foreground"
-                />
-              </button>
-            )}
 
-            {/* Bouton Suivant / Commencer */}
-            {currentIndex < onboardingScreens.length - 1 ? (
-              /* Slides 1 & 2 : petit bouton orange 52×52 avec icône seule */
+          {/* ── SLIDE 1 : bouton suivant seul, aligné à droite ── */}
+          {currentIndex === 1 && (
+            <div className="flex justify-end">
               <button
                 onClick={handleNext}
                 aria-label="Suivant"
-                className="w-[52px] h-[52px] shrink-0 rounded-full bg-action-primary flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
+                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center gap-[8px] active:scale-[0.97] transition-transform"
               >
-                <NavArrowRight
-                  width={24}
-                  height={24}
-                  strokeWidth={1.4}
-                  className="text-text-inverse"
-                />
+                <NavArrowRight width={20} height={20} strokeWidth={1.4} className="text-text-inverse" />
               </button>
-            ) : (
-              /* Slide 3 : grand bouton plein largeur "Commencer" */
+            </div>
+          )}
+
+          {/* ── SLIDE 2 : retour gauche + suivant droite ── */}
+          {currentIndex === 2 && (
+            <div className="flex items-center justify-between">
+              {/* Retour — pill gris clair */}
+              <button
+                onClick={handlePrev}
+                aria-label="Précédent"
+                className="h-[40px] px-[24px] rounded-[24px] bg-neutral-gray-100 flex items-center justify-center gap-[8px] active:scale-[0.95] transition-transform"
+              >
+                <NavArrowLeft width={20} height={20} strokeWidth={1.4} className="text-foreground" />
+              </button>
+              {/* Suivant — pill orange */}
               <button
                 onClick={handleNext}
-                className="flex-1 h-[52px] rounded-full bg-action-primary text-text-inverse font-semibold text-[15px] tracking-wide flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
+                aria-label="Suivant"
+                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center gap-[8px] active:scale-[0.97] transition-transform"
+              >
+                <NavArrowRight width={20} height={20} strokeWidth={1.4} className="text-text-inverse" />
+              </button>
+            </div>
+          )}
+
+          {/* ── SLIDE 3 (dernière) : retour + Commencer flex-1 ── */}
+          {currentIndex === onboardingScreens.length - 1 && (
+            <div className="flex items-center gap-[8px]">
+              {/* Retour — pill gris clair */}
+              <button
+                onClick={handlePrev}
+                aria-label="Précédent"
+                className="h-[40px] px-[24px] rounded-[24px] bg-neutral-gray-100 flex items-center justify-center gap-[8px] shrink-0 active:scale-[0.95] transition-transform"
+              >
+                <NavArrowLeft width={20} height={20} strokeWidth={1.4} className="text-foreground" />
+              </button>
+              {/* Commencer — pill orange pleine largeur */}
+              <button
+                onClick={handleNext}
+                className="flex-1 h-[40px] rounded-[24px] bg-action-primary text-text-inverse font-semibold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform"
               >
                 Commencer
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
         </div>
       )}
 
