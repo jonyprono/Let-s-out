@@ -236,6 +236,21 @@ export function Signup({ onBack }: SignupProps) {
           else toast.error("Erreur lors de l'inscription")
         },
       })
+    } else if (step === 4) {
+      if (birthday) {
+        const birthDate = new Date(birthday)
+        const today = new Date()
+        let age = today.getFullYear() - birthDate.getFullYear()
+        const m = today.getMonth() - birthDate.getMonth()
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--
+        }
+        if (age < 18) {
+          toast.error("Erreur lors de l'inscription ,vous n'avez pas encore 18 ans")
+          return
+        }
+      }
+      setStep(s => s + 1)
     } else {
       setStep(s => s + 1)
     }
@@ -671,7 +686,7 @@ export function Signup({ onBack }: SignupProps) {
         {step === 7 && (
           <label className="flex items-start gap-2.5 cursor-pointer mb-4"
             onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}>
-          <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-[#34C759] border-[#34C759]' : 'border-border-primary bg-background-white'}`}>
+          <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-action-primary border-action-primary' : 'border-border-primary bg-background-white'}`}>
               {acceptedTerms && <Check width={12} height={12} strokeWidth={2.5} className="text-text-inverse" />}
             </div>
             <span className="text-[12px] text-text-secondary leading-relaxed">
