@@ -68,6 +68,13 @@ export const authInputFlex =
   'flex-1 min-w-0 h-[52px] px-200 border border-border-primary rounded-[12px] text-[15px] font-normal bg-background-white text-foreground placeholder:text-neutral-gray-400 focus:outline-none focus:border-action-primary transition-colors'
 
 /**
+ * Input téléphone en flex — comme authInputFlex mais SANS text-[15px] ni font-normal
+ * pour que la classe CSS `auth-phone-input` (Poppins 14px Medium) s'applique sans conflit.
+ */
+export const authPhoneInputFlex =
+  'flex-1 min-w-0 h-[52px] px-200 border border-border-primary rounded-[12px] bg-background-white text-foreground focus:outline-none focus:border-action-primary transition-colors'
+
+/**
  * BOUTON PRINCIPAL — filled orange pill
  * brand/orange/500, texte blanc, h-[52px], rounded-full
  */

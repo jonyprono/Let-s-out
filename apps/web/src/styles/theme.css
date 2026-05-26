@@ -1,3 +1,30 @@
+/* ── Phone input typography — Poppins Medium 14/20px, ls -2% ─── */
+.auth-phone-input {
+  font-family: var(--font-poppins);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+.auth-phone-input::placeholder {
+  font-family: var(--font-poppins);
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 0;
+  color: var(--neutral-gray-400);
+}
+
+/* CountryPicker trigger — même police Poppins */
+.auth-country-btn {
+  font-family: var(--font-poppins);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--foreground);
+}
+
 @custom-variant dark (&:is(.dark, .dark *));
 
 :root {
@@ -86,6 +113,9 @@
   --text-inverse: var(--white);
   --text-secondary: var(--neutral-gray-600);
   --border-primary: var(--neutral-gray-300);
+
+  /* Font family tokens */
+  --font-poppins: 'Poppins', sans-serif;
 
   /* Fallback aliases to bridge existing theme usages */
   --background: var(--brand-orange-50);

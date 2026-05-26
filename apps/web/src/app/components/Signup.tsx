@@ -16,6 +16,7 @@ interface SignupProps { onBack: () => void }
 import { COUNTRIES, Country } from '@/lib/countries'
 import { CountryPicker } from '@/components/shared/CountryPicker'
 import { CategoryChip } from '@/components/shared/CategoryChip'
+import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import {
   authShell,
   authTitle,
@@ -23,7 +24,7 @@ import {
   authSubtitle,
   authLabel,
   authInput,
-  authInputFlex,
+  authPhoneInputFlex,
   authChannelBtn,
   authChannelLabel,
 } from '@/lib/auth-ui'
@@ -56,7 +57,7 @@ export function Signup({ onBack }: SignupProps) {
 
   // Step 1 – Phone
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
-  const [phone, setPhone] = useState('')
+  const { displayValue: phoneDisplay, rawValue: phone, handleChange: handlePhoneChange, reset: resetPhone } = usePhoneFormatter()
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
 
   // Step 2 – OTP (6 digits)
@@ -293,11 +294,14 @@ export function Signup({ onBack }: SignupProps) {
 
             <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
             <div className="flex gap-2 mb-6">
-              <CountryPicker value={country} onChange={setCountry} />
+              <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone() }} />
               <input
-                type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                placeholder=""
-                className={`${authInputFlex} border-2`}
+                type="tel"
+                inputMode="numeric"
+                value={phoneDisplay}
+                onChange={handlePhoneChange}
+                placeholder="01 00 00 00 00"
+                className={`auth-phone-input ${authPhoneInputFlex}`}
               />
             </div>
 

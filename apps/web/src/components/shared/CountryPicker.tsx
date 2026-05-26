@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, Search, X } from 'lucide-react'
+import { NavArrowDown, Search, Xmark } from 'iconoir-react'
 import { COUNTRIES, Country } from '@/lib/countries'
 
 interface CountryPickerProps {
@@ -45,62 +45,79 @@ export function CountryPicker({ value, onChange }: CountryPickerProps) {
     setOpen(false)
   }
 
+  /* ── Libellé affiché : "BJ (229)" — format exact Figma ── */
+  const cca2  = value.cca2  || ''
+  const dialCode = value.code.replace('+', '')
+
   return (
     <div className="relative shrink-0 z-30" ref={containerRef}>
+      {/* ── Trigger ───────────────────────────────────────── */}
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-1 px-3 py-3.5 border border-border rounded-xl bg-card text-[15px] font-medium whitespace-nowrap text-foreground active:opacity-80 transition-colors"
+        className="auth-country-btn flex items-center gap-[6px] h-[52px] px-[12px] border border-border-primary rounded-[12px] bg-background-white whitespace-nowrap active:opacity-80 transition-colors"
+        style={{ minWidth: 96 }}
       >
-        <span className="text-lg leading-none">{value.flag}</span>
-        <span className="text-[13px] ml-0.5 text-foreground">
-          ({value.code.replace('+', '')})
+        {/* Drapeau */}
+        <span className="text-[18px] leading-none">{value.flag}</span>
+        {/* Code pays + indicatif — "BJ (229)" */}
+        <span className="auth-country-btn">
+          {cca2}&nbsp;({dialCode})
         </span>
-        <ChevronDown className={`w-3 h-3 text-muted-foreground ml-0.5 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
+        {/* Flèche Iconoir — Small 16px stroke 1 */}
+        <NavArrowDown
+          width={16}
+          height={16}
+          strokeWidth={1}
+          className={`text-neutral-gray-500 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+        />
       </button>
 
+      {/* ── Dropdown ─────────────────────────────────────── */}
       {open && (
         <div
-          className="absolute top-full left-0 mt-1 bg-card border border-border rounded-2xl shadow-2xl z-50 w-[min(18rem,calc(100vw-3rem))] overflow-hidden flex flex-col text-foreground"
+          className="absolute top-full left-0 mt-1 bg-card border border-border-primary rounded-2xl shadow-2xl z-50 w-[min(18rem,calc(100vw-3rem))] overflow-hidden flex flex-col text-foreground"
           style={{ maxHeight: LIST_MAX_HEIGHT }}
         >
-          <div className="px-3 py-2.5 border-b border-border shrink-0 bg-card">
-            <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2">
-              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+          {/* Barre de recherche */}
+          <div className="px-3 py-2.5 border-b border-border-primary shrink-0 bg-card">
+            <div className="flex items-center gap-2 bg-neutral-gray-100 rounded-xl px-3 py-2">
+              <Search width={16} height={16} strokeWidth={1} className="text-neutral-gray-400 shrink-0" />
               <input
                 ref={searchRef}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Rechercher un pays..."
-                className="flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-neutral-gray-400"
               />
               {search && (
-                <button type="button" onClick={() => setSearch('')} className="shrink-0 touch-sm">
-                  <X className="w-3.5 h-3.5 text-muted-foreground" />
+                <button type="button" onClick={() => setSearch('')} className="shrink-0">
+                  <Xmark width={14} height={14} strokeWidth={1.4} className="text-neutral-gray-400" />
                 </button>
               )}
             </div>
           </div>
 
+          {/* Liste des pays */}
           <div
             className="overflow-y-auto overscroll-contain flex-1 min-h-0"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {filtered.length === 0 ? (
-              <div className="py-8 text-center text-[13px] text-muted-foreground">Aucun pays trouvé</div>
+              <div className="py-8 text-center text-[13px] text-neutral-gray-400">Aucun pays trouvé</div>
             ) : (
               filtered.map((c, i) => (
                 <button
                   key={`${c.code}-${c.name}-${i}`}
                   type="button"
                   onClick={() => select(c)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-accent active:bg-accent/80 text-left transition-colors border-b border-border last:border-0 ${
-                    value.code === c.code && value.name === c.name ? 'bg-accent' : ''
+                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-neutral-gray-100 active:bg-neutral-gray-200 text-left transition-colors border-b border-neutral-gray-200 last:border-0 ${
+                    value.code === c.code && value.name === c.name ? 'bg-neutral-gray-100' : ''
                   }`}
                 >
                   <span className="text-xl leading-none w-7 text-center shrink-0">{c.flag}</span>
                   <span className="flex-1 text-[14px] text-foreground font-medium truncate">{c.name}</span>
-                  <span className="text-[12px] text-muted-foreground shrink-0">{c.code}</span>
+                  <span className="text-[12px] text-neutral-gray-400 shrink-0">{c.code}</span>
                 </button>
               ))
             )}

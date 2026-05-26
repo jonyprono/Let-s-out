@@ -4,12 +4,13 @@ import { useDirectLogin } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { COUNTRIES, Country } from '@/lib/countries'
 import { CountryPicker } from '@/components/shared/CountryPicker'
+import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import {
   authShell,
   authTitle,
   authSubtitle,
   authLabel,
-  authInputFlex,
+  authPhoneInputFlex,
   authInput,
 } from '@/lib/auth-ui'
 
@@ -28,7 +29,7 @@ function validatePhone(code: string, phone: string) {
 
 export function Login({ onSignup, onForgotPassword }: LoginProps) {
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
-  const [phone, setPhone] = useState('')
+  const { displayValue, rawValue: phone, handleChange: handlePhoneChange, reset: resetPhone } = usePhoneFormatter()
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
@@ -55,14 +56,15 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
         <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
         <div className="flex gap-2 mb-5">
-          <CountryPicker value={country} onChange={setCountry} />
+          <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone() }} />
           <input
             type="tel"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
+            inputMode="numeric"
+            value={displayValue}
+            onChange={handlePhoneChange}
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
-            placeholder=" "
-            className={authInputFlex}
+            placeholder="01 00 00 00 00"
+            className={`auth-phone-input ${authPhoneInputFlex}`}
           />
         </div>
 
