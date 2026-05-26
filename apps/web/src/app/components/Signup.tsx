@@ -70,7 +70,8 @@ export function Signup({ onBack }: SignupProps) {
   const [pseudo, setPseudo] = useState('')
 
   // Step 4 – Birthday
-  const [birthday, setBirthday] = useState('')
+  const [birthday, setBirthday] = useState('')        // ISO date YYYY-MM-DD (soumission)
+  const [birthdayText, setBirthdayText] = useState('') // texte visible dans l'input
 
   // Step 5 – City
   const [city, setCity] = useState('')
@@ -395,44 +396,54 @@ export function Signup({ onBack }: SignupProps) {
               Et votre date d’anniversaire ?
             </h1>
             <p className={`${authSubtitle} mb-7`}>
-              Cette information restera privée et nous aidera à{' '}
-              vous faire les meilleures suggestions d’événements possibles.
+              Cette information restera privée et nous aidera à vous faire les meilleures suggestions d’événements possibles.
             </p>
 
-            {/* Champ date stylisé — affiche la valeur formatée ou le placeholder */}
             <div className="relative">
-              {/* Input natif invisible — déclenché par le bouton visible */}
+              {/* Input texte visible — l'utilisateur peut taper sa date */}
+              <input
+                type="text"
+                value={birthdayText}
+                onChange={e => {
+                  setBirthdayText(e.target.value)
+                  // Tentative de parsing JJ/MM/AAAA -> ISO
+                  const match = e.target.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+                  if (match) {
+                    setBirthday(`${match[3]}-${match[2]}-${match[1]}`)
+                  } else {
+                    setBirthday('')
+                  }
+                }}
+                placeholder="Sélectionnez une date"
+                className={`${authInput} pr-12`}
+              />
+
+              {/* Input date natif invisible — pour le calendar picker */}
               <input
                 type="date"
                 id="birthday-native"
                 value={birthday}
-                onChange={e => setBirthday(e.target.value)}
+                onChange={e => {
+                  setBirthday(e.target.value)
+                  if (e.target.value) {
+                    const d = new Date(e.target.value + 'T00:00:00')
+                    setBirthdayText(
+                      d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+                    )
+                  }
+                }}
                 className="sr-only"
               />
-              {/* Bouton visible pixel-perfect Figma */}
+
+              {/* Icône calendrier — absolument à droite, ouvre le picker natif */}
               <button
                 type="button"
-                onClick={() => (document.getElementById('birthday-native') as HTMLInputElement)?.showPicker?.()}
-                className={`${authInput} w-full flex items-center justify-between text-left`}
-                style={{ cursor: 'pointer' }}
+                onClick={() =>
+                  (document.getElementById('birthday-native') as HTMLInputElement)?.showPicker?.()
+                }
+                className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
+                aria-label="Choisir une date"
               >
-                <span
-                  style={{
-                    fontFamily: 'var(--font-poppins)',
-                    fontWeight: birthday ? 500 : 400,
-                    fontSize: '14px',
-                    color: birthday ? 'var(--foreground)' : 'var(--neutral-gray-400)',
-                  }}
-                >
-                  {birthday
-                    ? new Date(birthday + 'T00:00:00').toLocaleDateString('fr-FR', {
-                        day: '2-digit',
-                        month: 'long',
-                        year: 'numeric',
-                      })
-                    : 'Sélectionnez une date'
-                  }
-                </span>
                 <Calendar
                   width={20} height={20} strokeWidth={1.2}
                   className="text-neutral-gray-500 shrink-0"
