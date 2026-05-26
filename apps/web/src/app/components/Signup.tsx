@@ -412,7 +412,7 @@ export function Signup({ onBack }: SignupProps) {
               {/* Bouton visible pixel-perfect Figma */}
               <button
                 type="button"
-                onClick={() => document.getElementById('birthday-native')?.showPicker?.()}
+                onClick={() => (document.getElementById('birthday-native') as HTMLInputElement)?.showPicker?.()}
                 className={`${authInput} w-full flex items-center justify-between text-left`}
                 style={{ cursor: 'pointer' }}
               >
