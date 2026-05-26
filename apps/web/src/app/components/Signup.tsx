@@ -75,6 +75,9 @@ export function Signup({ onBack }: SignupProps) {
 
   // Step 5 – City
   const [city, setCity] = useState('')
+  const [citySuggestions, setCitySuggestions] = useState<{ label: string }[]>([])
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false)
+  const [citySearching, setCitySearching] = useState(false)
 
   // Step 6 – Interests
   const [interests, setInterests] = useState<string[]>([])
@@ -104,6 +107,47 @@ export function Signup({ onBack }: SignupProps) {
     const t = setTimeout(() => setCountdown(c => c - 1), 1000)
     return () => clearTimeout(t)
   }, [countdown])
+
+  /* ── City autocomplete — Nominatim (OpenStreetMap) ── */
+  useEffect(() => {
+    if (!city || city.length < 2) {
+      setCitySuggestions([])
+      setShowCitySuggestions(false)
+      return
+    }
+    const timer = setTimeout(async () => {
+      setCitySearching(true)
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=7&addressdetails=1&featuretype=city`,
+          { headers: { 'Accept-Language': 'fr', 'User-Agent': 'LetsOutApp/1.0' } }
+        )
+        const data = await res.json()
+        const seen = new Set<string>()
+        const results = (data as any[])
+          .map((item: any) => {
+            const name =
+              item.address?.city ||
+              item.address?.town ||
+              item.address?.village ||
+              item.address?.municipality ||
+              item.name
+            const cc = (item.address?.country_code ?? '').toUpperCase()
+            return name ? `${name}, ${cc}` : null
+          })
+          .filter((v): v is string => !!v && !seen.has(v) && !!seen.add(v))
+          .slice(0, 5)
+          .map(label => ({ label }))
+        setCitySuggestions(results)
+        setShowCitySuggestions(results.length > 0)
+      } catch {
+        setCitySuggestions([])
+      } finally {
+        setCitySearching(false)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [city])
 
   // ── Navigation ─────────────────────────────────────────────────
   const handleNext = async () => {
@@ -446,7 +490,7 @@ export function Signup({ onBack }: SignupProps) {
               >
                 <Calendar
                   width={20} height={20} strokeWidth={1.2}
-                  className="text-neutral-gray-500 shrink-0"
+                  className="text-neutral-gray-400"
                 />
               </button>
             </div>
@@ -455,6 +499,7 @@ export function Signup({ onBack }: SignupProps) {
 
         {/* ── STEP 5: CITY ── */}
         {step === 5 && (
+
           <div>
             <h1 className={`${authTitle} mb-1.5`}>
               Dans quelle ville habitez-vous ?
@@ -462,33 +507,87 @@ export function Signup({ onBack }: SignupProps) {
             <p className={`${authSubtitle} mb-7`}>
               Indiquez votre ville pour trouver des événements et rencontrer des amis près de vous.
             </p>
+
+            {/* Champ de recherche + dropdown autocomplete */}
             <div className="relative">
+              {/* Icône MapPin — absolue gauche */}
               <MapPin
                 width={20} height={20} strokeWidth={1.2}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-gray-400 pointer-events-none"
+                className="absolute left-4 top-[26px] -translate-y-1/2 text-neutral-gray-400 pointer-events-none z-10"
               />
+
+              {/* Input texte */}
               <input
-                type="text" value={city} onChange={e => setCity(e.target.value)}
+                type="text"
+                value={city}
+                onChange={e => {
+                  setCity(e.target.value)
+                  if (!e.target.value) {
+                    setCitySuggestions([])
+                    setShowCitySuggestions(false)
+                  }
+                }}
+                onFocus={() => citySuggestions.length > 0 && setShowCitySuggestions(true)}
                 placeholder="Sélectionnez une ville"
-                className={`${authInput} pl-12 pr-10`}
+                autoComplete="off"
+                className={`${authInput} pl-12 ${city ? 'pr-10' : ''}`}
                 style={{
                   fontFamily: 'var(--font-poppins)',
                   fontWeight: city ? 500 : 400,
                   fontSize: '14px',
                 }}
               />
+
+              {/* Icône × pour effacer */}
               {city && (
                 <button
                   type="button"
-                  onClick={() => setCity('')}
+                  onClick={() => {
+                    setCity('')
+                    setCitySuggestions([])
+                    setShowCitySuggestions(false)
+                  }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
                 >
                   <Xmark width={16} height={16} strokeWidth={1.4} className="text-neutral-gray-500" />
                 </button>
               )}
+
+              {/* Dropdown suggestions */}
+              {showCitySuggestions && citySuggestions.length > 0 && (
+                <div
+                  className="absolute top-full left-0 right-0 mt-1 rounded-[16px] border border-border-primary shadow-lg z-50 overflow-hidden"
+                  style={{ backgroundColor: 'var(--background-white)' }}
+                >
+                  {citySearching && (
+                    <div className="px-4 py-3 text-[13px] text-neutral-gray-400">Recherche...</div>
+                  )}
+                  {citySuggestions.map((s, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onMouseDown={() => {
+                        setCity(s.label)
+                        setCitySuggestions([])
+                        setShowCitySuggestions(false)
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors"
+                      style={{ borderBottom: idx < citySuggestions.length - 1 ? '1px solid var(--border-primary)' : 'none' }}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--neutral-gray-50)')}
+                      onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      <MapPin width={16} height={16} strokeWidth={1.2} className="text-neutral-gray-400 shrink-0" />
+                      <span style={{ fontFamily: 'var(--font-poppins)', fontSize: '14px', color: 'var(--foreground)' }}>
+                        {s.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
+
 
         {/* ── STEP 6: INTERESTS ── */}
         {step === 6 && (
