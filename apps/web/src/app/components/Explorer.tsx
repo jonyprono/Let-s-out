@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router';
 import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -93,6 +93,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [mapGeoLoading, setMapGeoLoading] = useState(false)
   const [mapSearch, setMapSearch] = useState('')
   const [mapSearchResults, setMapSearchResults] = useState<GeoPlace[]>([])
+
+  // Keyword event suggestions
+  const [keywordSuggestions, setKeywordSuggestions] = useState<Event[]>([]);
 
   const isEnCours = selectedCategory === 'EN_COURS';
   const apiCategory = (selectedCategory === 'Tous' || isEnCours) ? undefined : selectedCategory;
@@ -194,6 +197,23 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     setFilterCustomDate('');
     setFilterDistance(100);
   };
+
+  // Keyword search: query events API when user types in the keyword field
+  useEffect(() => {
+    if (searchQuery.length < 1) {
+      setKeywordSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await eventsApi.list({ search: searchQuery, status: 'PUBLISHED', limit: 8 });
+        setKeywordSuggestions(res.data?.data || res.data || []);
+      } catch {
+        setKeywordSuggestions([]);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // ── FILTER SCREEN ─────────────────────────────────────────────────────────
   if (screen === 'filter') {
@@ -455,16 +475,34 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </div>
           ) : (
             <div className="space-y-1">
-              {['oktoberfest', 'okc', 'oktoberfest cotonou'].map((suggestion, idx) => (
-                <button
-                  key={idx}
-                  className="w-full flex items-center gap-3 py-3"
-                  onClick={() => setSearchQuery(suggestion)}
-                >
-                  <div className="w-6 flex justify-center"><Search className="w-5 h-5 text-gray-400" /></div>
-                  <span className="text-[15px] text-gray-900">{suggestion}</span>
-                </button>
-              ))}
+              {searchQuery.length > 0 && keywordSuggestions.length > 0 ? (
+                keywordSuggestions.map((evt) => (
+                  <button
+                    key={evt.id}
+                    className="w-full flex items-center gap-3 py-3"
+                    onClick={() => {
+                      setSearchQuery(evt.title);
+                      setScreen('list');
+                    }}
+                  >
+                    {evt.coverUrl ? (
+                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                        <img src={evt.coverUrl} alt={evt.title} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-6 flex justify-center flex-shrink-0"><Search className="w-5 h-5 text-gray-400" /></div>
+                    )}
+                    <div className="flex flex-col items-start truncate">
+                      <span className="text-[15px] text-gray-900 truncate">{evt.title}</span>
+                      {evt.city && <span className="text-[12px] text-gray-400 truncate">{evt.city}</span>}
+                    </div>
+                  </button>
+                ))
+              ) : searchQuery.length > 0 ? (
+                <div className="py-8 text-center text-gray-400 text-sm">Aucun événement trouvé</div>
+              ) : (
+                <div className="py-8 text-center text-gray-400 text-sm">Tapez pour rechercher un événement</div>
+              )}
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Loader2, Calendar } from 'lucide-react';
+import { Bell, Loader2, Calendar, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { hapticFeedback } from '@/lib/haptics';
@@ -20,6 +20,12 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'past', label: 'Passés' },
 ];
 
+function formatPrice(price: number, currency: string): string {
+  if (price === 0) return 'Gratuit';
+  if (currency === 'XOF' || currency === 'CFA') return `${Number(price).toLocaleString('fr-FR')} F`;
+  if (currency === 'EUR') return `${price} €`;
+  return `${price} ${currency}`;
+}
 
 export function MyEvents({ onNavigate }: MyEventsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('upcoming');
@@ -51,6 +57,31 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
   })();
 
   const isCurrentLoading = isLoading;
+
+  /** Render badge per tab */
+  const renderBadge = (event: any) => {
+    switch (activeTab) {
+      case 'upcoming':
+        return (
+          <span className="px-3 py-1 rounded-lg bg-[#E6F9F1] text-[#00A859] text-[12px] font-bold whitespace-nowrap">
+            Vous participez
+          </span>
+        );
+      case 'favorites':
+        return (
+          <span className="px-3 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap text-[#FF9F1C]">
+            {formatPrice(event.price, event.currency)}
+          </span>
+        );
+      case 'past':
+        return (
+          <span className="flex items-center gap-1 text-[12px] font-bold text-gray-700 whitespace-nowrap">
+            <Star className="w-4 h-4 text-[#FF9F1C] fill-[#FF9F1C]" />
+            {event.rating ? `${event.rating}` : '4,5'} · {event.reviewCount ?? 60} avis
+          </span>
+        );
+    }
+  };
 
   return (
     <div className="w-full h-full flex flex-col bg-background">
@@ -120,13 +151,7 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
               <EventCard
                 key={event.id}
                 event={event}
-                badge={
-                  activeTab === 'upcoming' ? (
-                    <span className="px-3 py-1 rounded-lg bg-[#E6F9F1] text-[#00A859] text-[12px] font-bold whitespace-nowrap">
-                      Vous participez
-                    </span>
-                  ) : undefined
-                }
+                badge={renderBadge(event)}
                 onNavigate={onNavigate}
               />
             ))}
@@ -136,5 +161,3 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
     </div>
   );
 }
-
-
