@@ -17,14 +17,14 @@ export function CategoryChip({ label, selected = false, onClick, disabled }: Cat
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'px-4 py-2 rounded-full text-[13px] font-medium border transition-all duration-200 touch-sm',
+        'px-4 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-200 touch-sm',
         'active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none',
         selected
-          ? 'bg-action-primary text-white border-action-primary'
+          ? 'bg-[#FF9F1C] text-white shadow-sm'
           : [
-              'bg-transparent text-foreground border-neutral-gray-300',
-              'hover:border-action-primary/50',
-              'active:bg-neutral-gray-100',
+              'bg-[#F5F5F5] text-[#555555]',
+              'hover:bg-[#EEEEEE]',
+              'active:bg-[#E0E0E0]',
             ],
       )}
     >

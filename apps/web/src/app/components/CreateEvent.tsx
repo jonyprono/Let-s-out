@@ -96,7 +96,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
   // Step 5
   const [coOrgSearch, setCoOrgSearch] = useState('')
-  const [showSearchModal, setShowSearchModal] = useState(false)
   const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [createdEventId, setCreatedEventId] = useState<string | null>(null)
@@ -109,7 +108,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       const res = await apiClient.get('/users/me/friends', { params: { search: coOrgSearch || undefined, limit: 20 } })
       return res.data
     },
-    enabled: showSearchModal,
+    enabled: step === 5,
     staleTime: 30000,
   })
   const friends: any[] = Array.isArray(friendsData) ? friendsData : (friendsData?.data ?? [])
@@ -386,23 +385,23 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     <div className="w-full h-full bg-background flex flex-col">
 
       {/* Header */}
-      <div className="px-5 pt-safe-6 pb-0 bg-background">
-        <div className="flex items-center justify-center relative mb-150">
+      <div className="px-5 pt-safe-6 pb-4 bg-background">
+        <div className="flex items-center justify-center relative">
           {step < 7 && (
             <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
-              className="absolute left-0 w-8 h-8 flex items-center justify-center">
-              <ChevronLeft className="w-6 h-6 text-gray-800" />
+              className="absolute left-0 w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center transition-transform active:scale-95">
+              <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" />
             </button>
           )}
-          <span className="text-[15px] font-semibold text-gray-900">
+          <span className="text-[15px] font-bold text-[#1A1A1A]">
             {step === 7 ? 'Détails événement' : 'Créer un événement'}
           </span>
         </div>
-        {/* Progress bar */}
-        <div className="h-[2px] bg-[#F5F5F5] overflow-hidden">
-          <div className="h-full bg-action-primary active:bg-action-primary-hover transition-all duration-300"
-            style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
-        </div>
+      </div>
+      {/* Ligne orange de séparation / progression */}
+      <div className="mx-5 h-[2px] bg-[#FFF2E0] rounded-full overflow-hidden shrink-0">
+        <div className="h-full bg-[#FF9F1C] transition-all duration-300 rounded-full"
+          style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
       </div>
 
       {/* Step content */}
@@ -418,16 +417,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {step === 1 && (
           <div className="space-y-6">
             <div>
-              <label className="text-[13px] font-medium text-muted-foreground mb-2 block">Nom</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Nom</label>
               <input
                 value={title} onChange={e => setTitle(e.target.value)}
                 placeholder="Nom de l'événement..."
-                className="w-full px-200 py-150.5 border border-border rounded-xl text-[15px] focus:outline-none focus:border-action-primary bg-card text-foreground placeholder:text-muted-foreground"
+                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] font-medium text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
               />
             </div>
             <div>
-              <label className="text-[13px] font-medium text-muted-foreground mb-150 block">Catégories</label>
-              <div className="flex flex-wrap gap-2.5">
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-3 block">Catégories</label>
+              <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map(cat => (
                   <CategoryChip
                     key={cat.value}
@@ -443,22 +442,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         {/* ── STEP 2: Date & lieu ── */}
         {step === 2 && (
-          <div className="space-y-200">
+          <div className="space-y-4">
             {/* Date */}
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Date</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Date</label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                 {date ? (
-                  <div className="flex items-center w-full pl-12 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] bg-background-white">
+                  <div className="flex items-center w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] bg-background-white">
                     <span className="flex-1 text-[#1A1A1A] font-medium">{formattedDate}</span>
-                    <button onClick={() => setDate('')} className="w-6 h-6 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                    <button onClick={() => setDate('')} className="w-6 h-6 rounded-full bg-[#F5F5F5] flex items-center justify-center">
                       <X className="w-3.5 h-3.5 text-[#888888]" />
                     </button>
                   </div>
                 ) : (
                   <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                    className="w-full pl-12 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                    className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
                   />
                 )}
               </div>
@@ -466,56 +465,56 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* Heure */}
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Heure</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Heure</label>
               {startTime && endTime ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] bg-background-white">
-                  <Clock className="w-5 h-5 text-[#888888] mr-3" />
+                <div className="flex items-center w-full pl-4 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] bg-background-white">
+                  <Clock className="w-[18px] h-[18px] text-[#BBBBBB] mr-3" />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{startTime} h – {endTime} h</span>
-                  <button onClick={() => { setStartTime(''); setEndTime('') }} className="w-6 h-6 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                  <button onClick={() => { setStartTime(''); setEndTime('') }} className="w-6 h-6 rounded-full bg-[#F5F5F5] flex items-center justify-center">
                     <X className="w-3.5 h-3.5 text-[#888888]" />
                   </button>
                 </div>
               ) : (
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <div className="relative flex-1">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                     <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)}
-                      className="w-full pl-12 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
+                      className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-background-white text-[#1A1A1A]"
                     />
                   </div>
                   <div className="relative flex-1">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                     <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)}
-                      className="w-full pl-12 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
+                      className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-background-white text-[#1A1A1A]"
                     />
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Ville avec autocomplete Nominatim */}
+            {/* Ville */}
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Ville</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Ville</label>
               {city && !citySuggestions.length ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] bg-background-white">
-                  <MapPin className="w-5 h-5 text-[#888888] mr-3" />
+                <div className="flex items-center w-full pl-4 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] bg-background-white">
+                  <MapPin className="w-[18px] h-[18px] text-[#BBBBBB] mr-3" />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{city}</span>
-                  <button onClick={() => { setCity(''); setCityInput('') }} className="w-6 h-6 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                  <button onClick={() => { setCity(''); setCityInput('') }} className="w-6 h-6 rounded-full bg-[#F5F5F5] flex items-center justify-center">
                     <X className="w-3.5 h-3.5 text-[#888888]" />
                   </button>
                 </div>
               ) : (
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                   <input value={cityInput} onChange={e => handleCitySearch(e.target.value)}
                     placeholder="Sélectionnez une ville"
-                    className="w-full pl-12 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                    className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
                   />
                   {citySuggestions.length > 0 && (
-                    <div className="absolute z-20 top-full left-0 right-0 bg-background-white border border-border-primary rounded-xl mt-1 shadow-lg overflow-hidden">
+                    <div className="absolute z-20 top-full left-0 right-0 bg-background-white border border-[#E5E5E5] rounded-2xl mt-1 shadow-lg overflow-hidden">
                       {citySuggestions.map((s, i) => (
                         <button key={i} onClick={() => selectCity(s)}
-                          className="w-full text-left px-200 py-150 text-[14px] text-[#1A1A1A] hover:bg-gray-50 border-b border-[#F5F5F5] last:border-0 flex items-center gap-150">
+                          className="w-full text-left px-4 py-3 text-[14px] text-[#1A1A1A] hover:bg-gray-50 border-b border-[#F5F5F5] last:border-0 flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-[#888888] flex-shrink-0" />
                           {s.label}
                         </button>
@@ -526,31 +525,31 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               )}
             </div>
 
-            {/* Localisation / GPS */}
+            {/* Localisation */}
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Localisation</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Localisation</label>
               {address && !citySuggestions.length ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] bg-background-white">
-                  <MapPin className="w-5 h-5 text-[#888888] mr-3 flex-shrink-0" />
+                <div className="flex items-center w-full pl-4 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] bg-background-white">
+                  <MapPin className="w-[18px] h-[18px] text-[#BBBBBB] mr-3 flex-shrink-0" />
                   <span className="flex-1 text-[#1A1A1A] font-medium truncate">{address}</span>
-                  <button onClick={() => setAddress('')} className="w-6 h-6 rounded-full bg-[#F9F9F9] flex items-center justify-center">
+                  <button onClick={() => setAddress('')} className="w-6 h-6 rounded-full bg-[#F5F5F5] flex items-center justify-center">
                     <X className="w-3.5 h-3.5 text-[#888888]" />
                   </button>
                 </div>
               ) : (
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                   <input value={address} onChange={e => setAddress(e.target.value)}
                     placeholder="Sélectionnez sur la carte"
-                    className="w-full pl-12 pr-24 py-150.5 border border-border-primary rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                    className="w-full pl-11 pr-24 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <button onClick={handleGeolocate} disabled={geoLoading} title="Ma position"
-                      className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F9F9F9] active:scale-95 transition-transform">
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#F9F9F9] active:scale-95 transition-transform">
                       {geoLoading ? <Loader2 className="w-4 h-4 text-action-primary animate-spin" /> : <Navigation className="w-4 h-4 text-[#555555]" />}
                     </button>
                     <button onClick={openMap} title="Ouvrir la carte"
-                      className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#F9F9F9] active:scale-95 transition-transform">
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#F9F9F9] active:scale-95 transition-transform">
                       <MapIcon className="w-4 h-4 text-[#555555]" />
                     </button>
                   </div>
@@ -562,42 +561,48 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         {/* ── STEP 3: Participation ── */}
         {step === 3 && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Nombre de places</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Nombre de places</label>
               <input type="number" min={1} value={maxPlaces} onChange={e => setMaxPlaces(e.target.value)}
                 placeholder="0"
-                className="w-full px-200 py-150.5 border border-border-primary rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
               />
             </div>
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Montant de participation</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Montant</label>
               <div className="flex gap-2 items-center">
                 <input type="number" min={0} value={amount} onChange={e => setAmount(e.target.value)}
-                  placeholder="0 (gratuit)"
-                  className="flex-1 px-200 py-150.5 border border-border-primary rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                  placeholder="0"
+                  className="flex-1 px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
                 />
-                <div className="px-200 py-150.5 border border-border-primary rounded-xl text-[15px] text-[#555555] bg-background-white flex-shrink-0 flex items-center justify-center font-medium">
-                  F CFA ▾
+                <div className="px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#555555] bg-background-white flex-shrink-0 flex items-center justify-center font-medium">
+                  F CFA <ChevronLeft className="w-4 h-4 ml-1 -rotate-90 text-[#BBBBBB]" />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-150 block mt-2">Confidentialité</label>
-              <div className="flex gap-6">
-                <label className="flex items-center gap-150 cursor-pointer" onClick={() => setIsPrivate(false)}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${!isPrivate ? 'border-action-primary' : 'border-border-primary'}`}>
-                    {!isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-action-primary active:bg-action-primary-hover" />}
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block mt-2">Confidentialité</label>
+              <div className="flex gap-4">
+                <button
+                  className={`flex-1 flex items-center justify-between px-4 py-[14px] border rounded-2xl transition-colors ${!isPrivate ? 'border-[#FF9F1C] bg-background-white' : 'border-[#E5E5E5] bg-background-white'}`}
+                  onClick={() => setIsPrivate(false)}
+                >
+                  <span className="text-[15px] font-medium text-[#1A1A1A]">Public</span>
+                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${!isPrivate ? 'border-[#FF9F1C]' : 'border-[#E5E5E5]'}`}>
+                    {!isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                   </div>
-                  <span className="text-[15px] text-[#1A1A1A]">Public</span>
-                </label>
-                <label className="flex items-center gap-150 cursor-pointer" onClick={() => setIsPrivate(true)}>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isPrivate ? 'border-action-primary' : 'border-border-primary'}`}>
-                    {isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-action-primary active:bg-action-primary-hover" />}
+                </button>
+                <button
+                  className={`flex-1 flex items-center justify-between px-4 py-[14px] border rounded-2xl transition-colors ${isPrivate ? 'border-[#FF9F1C] bg-background-white' : 'border-[#E5E5E5] bg-background-white'}`}
+                  onClick={() => setIsPrivate(true)}
+                >
+                  <span className="text-[15px] font-medium text-[#1A1A1A]">Privé</span>
+                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${isPrivate ? 'border-[#FF9F1C]' : 'border-[#E5E5E5]'}`}>
+                    {isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
                   </div>
-                  <span className="text-[15px] text-[#1A1A1A]">Privé</span>
-                </label>
+                </button>
               </div>
             </div>
           </div>
@@ -605,33 +610,33 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         {/* ── STEP 4: Présentation ── */}
         {step === 4 && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Description</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Description</label>
               <textarea value={description} onChange={e => setDescription(e.target.value)}
                 placeholder="À propos de votre événement..."
                 rows={6}
-                className="w-full px-200 py-150.5 border border-border-primary rounded-xl text-[15px] text-[#1A1A1A] placeholder-[#BBBBBB] resize-none focus:outline-none focus:border-action-primary bg-background-white"
+                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] resize-none focus:outline-none focus:border-[#FF9F1C] bg-background-white"
               />
             </div>
             <div>
-              <label className="text-[13px] font-medium text-[#555555] mb-2 block">Couverture</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Couverture</label>
               <button onClick={() => fileRef.current?.click()}
-                className="w-full h-40 border border-dashed border-border-primary rounded-xl flex flex-col items-center justify-center gap-2 overflow-hidden relative bg-[#F9F9F9] active:scale-[0.99] transition-transform">
+                className="w-full h-44 border border-[#E5E5E5] rounded-2xl flex flex-col items-center justify-center overflow-hidden relative bg-background-white active:scale-[0.99] transition-transform">
                 {coverPreview ? (
                   <>
                     <SafeImage src={coverPreview} alt="Aperçu couverture" className="absolute inset-0 w-full h-full object-cover" />
                     <button onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
-                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-[#FFEBEB] transition-colors">
                       <X className="w-4 h-4 text-[#FF4444]" />
                     </button>
                   </>
                 ) : (
                   <>
-                    <div className="w-10 h-10 rounded-full bg-background-white flex items-center justify-center shadow-sm border border-border-primary mb-1">
-                      <ImageIcon className="w-5 h-5 text-[#888888]" />
+                    <div className="mb-2">
+                      <ImageIcon className="w-6 h-6 text-[#BBBBBB]" strokeWidth={1.5} />
                     </div>
-                    <span className="text-[13px] font-medium text-[#555555]">Sélectionner une image</span>
+                    <span className="text-[13px] font-medium text-[#BBBBBB]">Sélectionner une image</span>
                   </>
                 )}
               </button>
@@ -642,40 +647,83 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         {/* ── STEP 5: Organisation ── */}
         {step === 5 && (
-          <div className="space-y-200">
+          <div className="space-y-6">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888]" />
-              <button onClick={() => setShowSearchModal(true)}
-                className="w-full text-left pl-12 pr-4 py-150.5 border border-border-primary rounded-xl text-[15px] text-[#BBBBBB] bg-background-white focus:outline-none focus:border-action-primary">
-                Rechercher un ami
-              </button>
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
+              <input 
+                autoFocus 
+                value={coOrgSearch} 
+                onChange={e => setCoOrgSearch(e.target.value)}
+                placeholder="Rechercher un ami"
+                className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+              />
             </div>
 
+            {/* Selected */}
             {selectedCoOrgs.length > 0 && (
-              <div className="space-y-150 mt-200">
-                {selectedCoOrgs.map(org => (
-                  <div key={org.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-150">
-                      <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-border-primary">
-                        <SafeImage 
-                          src={org.avatarUrl} 
-                          alt={org.name} 
-                          className="w-full h-full object-cover" 
-                          fallback={
-                            <div className="w-full h-full bg-action-primary/50 flex items-center justify-center text-[#1A1A1A] font-bold text-[14px]">
-                              {org.name.charAt(0).toUpperCase()}
-                            </div>
-                          }
-                        />
+              <div>
+                <p className="text-[13px] font-semibold text-[#1A1A1A] mb-3">Sélectionnés</p>
+                <div className="space-y-3">
+                  {selectedCoOrgs.map(org => (
+                    <div key={org.id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E5E5E5]">
+                          <SafeImage 
+                            src={org.avatarUrl} 
+                            alt={org.name} 
+                            className="w-full h-full object-cover" 
+                            fallback={
+                              <div className="w-full h-full bg-[#FFF2E0] flex items-center justify-center text-[#FF9F1C] font-bold text-[14px]">
+                                {org.name.charAt(0).toUpperCase()}
+                              </div>
+                            }
+                          />
+                        </div>
+                        <span className="text-[15px] font-medium text-[#1A1A1A] flex items-center gap-1">
+                          {org.name}
+                          <BadgeCheck className="w-4 h-4 text-blue-500" />
+                        </span>
                       </div>
-                      <span className="text-[15px] font-medium text-[#1A1A1A]">{org.name}</span>
+                      <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
+                        className="text-[12px] font-semibold text-[#888888] active:scale-95 transition-transform">
+                        Retirer
+                      </button>
                     </div>
-                    <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
-                      className="text-[13px] font-semibold text-[#FF4444] border border-[#FF4444]/20 bg-[#FF4444]/5 rounded-full px-200 py-1.5 active:scale-95 transition-transform">
-                      Retirer
-                    </button>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Results */}
+            {friends.length > 0 && (
+              <div>
+                <p className="text-[13px] font-semibold text-[#1A1A1A] mb-3">Recherche</p>
+                <div className="space-y-3">
+                  {friends.filter(f => !selectedCoOrgs.find(o => o.id === (f.userId || f.id))).map((f: any) => {
+                    const name = f.displayName || f.username || 'Utilisateur'
+                    const uid = f.userId || f.id
+                    return (
+                      <div key={uid} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {f.avatarUrl ? (
+                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E5E5E5]">
+                              <SafeImage src={f.avatarUrl} alt={name} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-orange-300 flex items-center justify-center text-white font-bold text-[14px] shrink-0 border border-[#E5E5E5]">
+                              {name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <span className="text-[15px] font-medium text-[#1A1A1A]">{name}</span>
+                        </div>
+                        <button onClick={() => setSelectedCoOrgs(p => [...p, { id: uid, name, avatarUrl: f.avatarUrl }])}
+                          className="text-[12px] font-semibold text-[#888888] active:scale-95 transition-transform">
+                          Ajouter
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -1021,15 +1069,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="flex gap-150">
           {step < 6 ? (
             <>
-              {step > 1 && (
-                <button onClick={() => setStep(s => s - 1)}
-                  className="flex-1 py-[17px] rounded-full border border-border-primary font-semibold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
-                  Précédent
-                </button>
-              )}
+              <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
+                className="flex-1 py-[17px] rounded-full border border-[#E5E5E5] font-semibold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
+                Précédent
+              </button>
               <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
-                className={`flex-1 py-[17px] rounded-full font-semibold text-[15px] text-white transition-all ${canNext() ? 'bg-action-primary active:bg-action-primary-hover' : 'bg-action-primary/50'}`}>
-                {step === 1 ? 'Commencer' : 'Suivant'}
+                className={`flex-1 py-[17px] rounded-full font-semibold text-[15px] transition-all ${canNext() ? 'bg-[#FF9F1C] text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFF2E0] text-white cursor-not-allowed'}`}>
+                {step === 1 && !canNext() ? 'Commencer' : 'Suivant'}
               </button>
             </>
           ) : step === 6 ? (
@@ -1350,94 +1396,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
       )}
 
-      {/* ── Search co-organizer modal ── */}
-      {showSearchModal && (
-        <div className="absolute inset-0 z-50 bg-background-white flex flex-col">
-          <div className="px-5 pt-16 pb-3">
-            <div className="flex items-center justify-center relative mb-200">
-              <button onClick={() => setShowSearchModal(false)} className="absolute left-0">
-                <ChevronLeft className="w-6 h-6 text-gray-800" />
-              </button>
-              <span className="text-[15px] font-semibold text-gray-900">Rechercher un ami</span>
-            </div>
-            <div className="flex items-center gap-2 border border-action-primary rounded-xl px-150 py-2.5">
-              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <input autoFocus value={coOrgSearch} onChange={e => setCoOrgSearch(e.target.value)}
-                placeholder="Le|" className="flex-1 text-[14px] outline-none text-gray-900" />
-            </div>
-          </div>
 
-          <div className="flex-1 overflow-y-auto px-5">
-            {/* Selected */}
-            {selectedCoOrgs.length > 0 && (
-              <div className="mb-200">
-                <p className="text-[12px] font-semibold text-text-secondary uppercase tracking-wide mb-150">Sélectionnés</p>
-                {selectedCoOrgs.map(org => (
-                  <div key={org.id} className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-150">
-                      <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
-                        <SafeImage 
-                          src={org.avatarUrl} 
-                          alt={org.name} 
-                          className="w-full h-full object-cover" 
-                          fallback={
-                            <div className="w-full h-full bg-orange-400 flex items-center justify-center text-white font-bold text-sm">
-                              {org.name.charAt(0).toUpperCase()}
-                            </div>
-                          }
-                        />
-                      </div>
-                      <span className="text-[14px] font-medium text-gray-900">{org.name}</span>
-                    </div>
-                    <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
-                      className="text-[12px] font-bold text-text-secondary border border-border-primary rounded-full px-150 py-1">
-                      Retirer
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Results */}
-            {friends.length > 0 && (
-              <div>
-                <p className="text-[12px] font-semibold text-text-secondary uppercase tracking-wide mb-150">Recherche</p>
-                {friends.filter(f => !selectedCoOrgs.find(o => o.id === (f.userId || f.id))).map((f: any) => {
-                  const name = f.displayName || f.username || 'Utilisateur'
-                  const uid = f.userId || f.id
-                  return (
-                    <div key={uid} className="flex items-center justify-between py-2">
-                      <div className="flex items-center gap-150">
-                        {f.avatarUrl ? (
-                          <div className="w-9 h-9 rounded-full overflow-hidden shrink-0">
-                            <SafeImage src={f.avatarUrl} alt={name} className="w-full h-full object-cover" />
-                          </div>
-                        ) : (
-                          <div className="w-9 h-9 rounded-full bg-orange-300 flex items-center justify-center text-white font-bold text-sm shrink-0">
-                            {name.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                        <span className="text-[14px] font-medium text-gray-900">{name}</span>
-                      </div>
-                      <button onClick={() => setSelectedCoOrgs(p => [...p, { id: uid, name, avatarUrl: f.avatarUrl }])}
-                        className="text-[12px] font-bold text-action-primary border border-action-primary/30 rounded-full px-150 py-1">
-                        Ajouter
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="px-5 py-200 border-t border-gray-100">
-            <button onClick={() => setShowSearchModal(false)}
-              className="w-full py-200 rounded-full bg-action-primary active:bg-action-primary-hover font-bold text-[15px] text-white">
-              Confirmer la sélection
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* ── Interactive Map Modal ── */}
       {showMapModal && (
