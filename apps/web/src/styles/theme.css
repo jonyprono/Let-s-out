@@ -323,21 +323,27 @@
   --color-text-secondary: var(--text-secondary);
   --color-border-primary: var(--border-primary);
 
-  /* STRICT SPACING SCALE */
-  --spacing-0: 0px;
-  --spacing-025: 2px;
-  --spacing-050: 4px;
-  --spacing-075: 6px;
-  --spacing-100: 8px;
-  --spacing-150: 12px;
-  --spacing-200: 16px;
-  --spacing-250: 20px;
-  --spacing-300: 24px;
-  --spacing-400: 32px;
-  --spacing-500: 40px;
-  --spacing-600: 48px;
-  --spacing-800: 64px;
-  --spacing-1000: 80px;
+  /* ── STRICT SPACING SCALE (base 8px unit, exact rem values) ── */
+  --spacing-0:    0rem;
+  --spacing-025:  0.125rem;   /* 2px  */
+  --spacing-050:  0.25rem;    /* 4px  */
+  --spacing-075:  0.375rem;   /* 6px  */
+  --spacing-100:  0.5rem;     /* 8px  */
+  --spacing-150:  0.75rem;    /* 12px */
+  --spacing-200:  1rem;       /* 16px — Marge & Gutter clés */
+  --spacing-250:  1.25rem;    /* 20px */
+  --spacing-300:  1.5rem;     /* 24px */
+  --spacing-400:  2rem;       /* 32px */
+  --spacing-500:  2.5rem;     /* 40px */
+  --spacing-600:  3rem;       /* 48px */
+  --spacing-800:  4rem;       /* 64px */
+  --spacing-1000: 5rem;       /* 80px */
+
+  /* ── AUTH INPUT UNIFORM HEIGHT ── */
+  --input-height: 3.25rem;    /* 52px — uniform for all auth inputs */
+  --input-radius: 0.75rem;    /* 12px — uniform border-radius */
+  --btn-height:   3.25rem;    /* 52px — uniform button height */
+  --btn-radius:   6.25rem;    /* 100px — full pill */
 }
 
 @layer base {

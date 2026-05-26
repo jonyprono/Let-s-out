@@ -1,32 +1,38 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { NavArrowLeft, NavArrowRight } from 'iconoir-react'
 
+/* ─────────────────────────────────────────────────────────────────
+   Données des écrans onboarding
+   Écran 0  → Logo + slogan (auto-advance 2.5s)
+   Écrans 1-3 → Carrousel avec Stepper 3 barres
+───────────────────────────────────────────────────────────────── */
 const onboardingScreens = [
-  {
-    id: 0,
-    type: 'logo',
-    image: '/logo.png',
-  },
+  { id: 0, type: 'logo' as const,    image: '/logo.png' },
   {
     id: 1,
+    type: 'slide' as const,
     title: 'Découvrez',
     description: 'Créez ou rejoignez des sorties, événements, ou activités locales près de chez vous',
     image: '/splash1.png',
   },
   {
     id: 2,
+    type: 'slide' as const,
     title: 'Partagez',
-    description: 'Financez ensemble vos sorties en groupe via des cagnottes pour et partagez les frais pour mieux en profiter',
+    description: 'Financez ensemble vos sorties en groupe via des cagnottes et partagez les frais pour mieux en profiter',
     image: '/splash2.png',
   },
   {
     id: 3,
+    type: 'slide' as const,
     title: 'Socialisez',
     description: 'Faites de nouvelles rencontres inoubliables et de nouveaux amis autour d\'intérêts communs',
     image: '/splash3.png',
   },
 ]
+
+const SLIDES = onboardingScreens.filter(s => s.type === 'slide')
 
 interface SplashscreenProps {
   onComplete: () => void
@@ -36,7 +42,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [autoPlayDone, setAutoPlayDone] = useState(false)
 
-  // Auto-advance from logo to first screen after 2.5s
+  /* Auto-advance depuis le logo vers la slide 1 après 2.5s */
   useEffect(() => {
     if (currentIndex === 0 && !autoPlayDone) {
       const timer = setTimeout(() => {
@@ -56,45 +62,54 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
   }
 
   const handlePrev = () => {
-    if (currentIndex > 1) {
-      setCurrentIndex(currentIndex - 1)
-    }
+    if (currentIndex > 1) setCurrentIndex(currentIndex - 1)
   }
 
   const current = onboardingScreens[currentIndex]
+  /* Index de la slide active pour le Stepper (0-based parmi les slides) */
+  const activeSlide = currentIndex - 1
 
   return (
     <div className="w-full h-full bg-background-default flex flex-col relative overflow-hidden">
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-200 relative z-10">
+      {/* ── Contenu principal ───────────────────────────────────── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-[1rem] relative z-10">
         <AnimatePresence mode="wait">
-          {current.type === 'logo' ? (
+
+          {/* ── ÉCRAN 0 : Logo centré ─────────────────────────── */}
+          {current.type === 'logo' && (
             <motion.div
               key="logo"
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.88 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="flex flex-col items-center w-full justify-center"
+              exit={{ opacity: 0, scale: 0.88 }}
+              transition={{ duration: 0.45, ease: 'easeOut' }}
+              className="flex flex-col items-center justify-center w-full gap-[0.75rem]"
             >
               <img
-                src={current.image}
+                src="/logo.png"
                 alt="Let's Out"
-                className="w-full max-w-[260px] h-auto object-contain"
+                className="w-[200px] h-auto object-contain"
               />
+              {/* Slogan */}
+              <p className="text-[14px] font-medium text-text-secondary tracking-wide">
+                Connect &amp; Enjoy
+              </p>
             </motion.div>
-          ) : (
+          )}
+
+          {/* ── ÉCRANS 1-3 : Carrousel ───────────────────────── */}
+          {current.type === 'slide' && (
             <motion.div
               key={current.id}
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.28, ease: 'easeOut' }}
               className="flex flex-col items-center w-full"
             >
-              {/* Image card with rounded corners */}
-              <div className="w-full h-[220px] mb-300 rounded-[28px] overflow-hidden shadow-sm">
+              {/* Image à bords très arrondis — Figma radius 28px */}
+              <div className="w-full h-[230px] rounded-[28px] overflow-hidden shadow-sm mb-[1.5rem]">
                 <img
                   src={current.image}
                   alt={current.title}
@@ -102,52 +117,83 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                 />
               </div>
 
-              {/* Dots indicator */}
-              <div className="flex items-center justify-center gap-100 mb-250">
-                {onboardingScreens.slice(1).map((screen, index) => {
-                  const isActive = currentIndex === index + 1
-                  return (
-                    <div
-                      key={screen.id}
-                      className={`h-[3px] rounded-full transition-all duration-300 ${isActive ? 'w-5 bg-action-primary' : 'w-5 bg-neutral-gray-300'}`}
-                    />
-                  )
-                })}
+              {/* ── Stepper : 3 barres horizontales ─────────── */}
+              {/* Barre active = orange, inactives = neutral-gray-200 */}
+              <div className="flex items-center justify-center gap-[0.375rem] mb-[1.5rem]">
+                {SLIDES.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="h-[3px] rounded-full transition-all duration-300"
+                    style={{
+                      width: idx === activeSlide ? '2rem' : '1.25rem',
+                      backgroundColor:
+                        idx === activeSlide
+                          ? 'var(--action-primary)'
+                          : 'var(--neutral-gray-300)',
+                    }}
+                  />
+                ))}
               </div>
 
-              <h2 className="text-[24px] font-bold text-[#1A1A1A] mb-150 text-center">{current.title}</h2>
-              <p className="text-text-secondary text-[13px] text-center max-w-[260px] leading-relaxed">
+              {/* Titre fort */}
+              <h2 className="text-[26px] font-bold text-foreground mb-[0.5rem] text-center leading-tight">
+                {current.title}
+              </h2>
+              {/* Description courte centrée */}
+              <p className="text-text-secondary text-[14px] text-center max-w-[272px] leading-[1.6]">
                 {current.description}
               </p>
             </motion.div>
           )}
+
         </AnimatePresence>
       </div>
 
-      {/* Footer Navigation */}
+      {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="px-200 pb-400 z-10 flex items-center justify-center relative">
-          <div className="flex gap-150 w-full max-w-[300px] justify-center items-center">
+        <div className="px-[1rem] pb-[2rem] z-10">
+          <div className="flex gap-[0.75rem] items-center">
+            {/* Bouton Retour — visible depuis slide 2 */}
             {currentIndex > 1 && (
               <button
                 onClick={handlePrev}
-                className="w-[52px] h-[52px] rounded-full bg-background-white border border-border-primary flex items-center justify-center active:scale-[0.96] transition-transform shrink-0 shadow-sm"
+                aria-label="Précédent"
+                className="w-[52px] h-[52px] shrink-0 rounded-full bg-background-white border border-border-primary flex items-center justify-center active:scale-[0.95] transition-transform shadow-sm"
               >
-                <ChevronLeft className="w-5 h-5 text-foreground" />
+                {/* Iconoir — Large 24px, stroke 1.4 */}
+                <NavArrowLeft
+                  width={24}
+                  height={24}
+                  strokeWidth={1.4}
+                  className="text-foreground"
+                />
               </button>
             )}
 
+            {/* Bouton Suivant / Commencer */}
             {currentIndex < onboardingScreens.length - 1 ? (
               <button
                 onClick={handleNext}
-                className="w-[52px] h-[52px] rounded-full bg-action-primary active:bg-action-primary-hover flex items-center justify-center active:scale-[0.96] transition-transform shadow-md"
+                aria-label="Suivant"
+                className={`h-[52px] rounded-full bg-action-primary text-text-inverse font-semibold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform shadow-md
+                  ${currentIndex > 1 ? 'flex-1' : 'w-[52px]'}`}
               >
-                <ChevronRight className="w-5 h-5 text-text-inverse" />
+                {currentIndex > 1 ? (
+                  'Suivant'
+                ) : (
+                  /* Icône seule sur la première slide */
+                  <NavArrowRight
+                    width={24}
+                    height={24}
+                    strokeWidth={1.4}
+                    className="text-text-inverse"
+                  />
+                )}
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="flex-1 h-[52px] rounded-full bg-action-primary active:bg-action-primary-hover text-text-inverse font-bold text-[15px] flex items-center justify-center active:scale-[0.98] transition-transform shadow-md"
+                className="flex-1 h-[52px] rounded-full bg-action-primary text-text-inverse font-bold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
               >
                 Commencer
               </button>
@@ -156,9 +202,9 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
         </div>
       )}
 
-      {/* Home Indicator */}
-      <div className="h-6 flex items-center justify-center pb-1">
-        <div className="w-32 h-[4px] bg-foreground rounded-full" />
+      {/* ── Home Indicator iOS ──────────────────────────────────── */}
+      <div className="h-[22px] flex items-center justify-center pb-[4px]">
+        <div className="w-[128px] h-[4px] bg-foreground rounded-full opacity-20" />
       </div>
     </div>
   )

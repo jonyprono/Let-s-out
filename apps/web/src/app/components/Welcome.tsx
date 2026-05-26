@@ -1,9 +1,4 @@
-import {
-  authShell,
-  authTitleLg,
-  authSubtitle,
-  authGhostBtn,
-} from '@/lib/auth-ui'
+import { authPrimaryBtn, authSecondaryBtn } from '@/lib/auth-ui'
 
 interface WelcomeProps {
   onLogin: () => void
@@ -12,52 +7,69 @@ interface WelcomeProps {
 
 export function Welcome({ onLogin, onSignup }: WelcomeProps) {
   return (
-    <div className={authShell}>
+    <div className="auth-flow w-full h-full bg-background-default flex flex-col overflow-hidden">
 
-      <div className="flex-1 flex flex-col items-center justify-center px-8">
-        <div className="mb-8 flex justify-center w-full">
-          <img src="/logoci.png" alt="Let's Out" className="w-[160px] h-auto object-contain" />
+      {/* ── Zone logo — flex-1 pour centrer verticalement ───── */}
+      <div className="flex-1 flex flex-col items-center justify-center px-[1rem]">
+        {/* Logo */}
+        <div className="mb-[2rem] flex justify-center w-full">
+          <img
+            src="/logoci.png"
+            alt="Let's Out"
+            className="w-[180px] h-auto object-contain"
+          />
         </div>
 
-        <h1 className={`${authTitleLg} mb-2`}>
+        {/* Titre */}
+        <h1 className="text-[26px] font-bold text-center text-foreground leading-tight mb-[0.5rem]">
           Connectez-vous
         </h1>
 
-        <p className={`${authSubtitle} text-center mb-10 px-2`}>
-          Rejoignez des événements près de{'\u00a0'}vous et<br />vivez des expériences partagées.
+        {/* Sous-titre */}
+        <p className="text-[14px] text-text-secondary text-center leading-relaxed mb-[2rem] max-w-[272px]">
+          Rejoignez des événements près de&nbsp;vous et<br />
+          vivez des expériences partagées.
         </p>
 
-        <div className="w-full space-y-3">
+        {/* Boutons — largeur pleine, marges latérales 16px */}
+        <div className="w-full flex flex-col gap-[0.75rem]">
           <button
             id="welcome-login-btn"
             type="button"
             onClick={onLogin}
-            className="auth-primary-btn w-full bg-action-primary hover:bg-action-primary-hover text-text-inverse py-[17px] rounded-full font-semibold text-[15px] tracking-wide active:scale-[0.98] transition-all"
+            className={authPrimaryBtn}
           >
             Se connecter
           </button>
+
           <button
             id="welcome-signup-btn"
             type="button"
             onClick={onSignup}
-            className={authGhostBtn}
+            className={authSecondaryBtn}
           >
             S&apos;inscrire
           </button>
         </div>
       </div>
 
-      <div className="px-8 pb-8 pt-2">
+      {/* ── Mentions légales bas de page ──────────────────────── */}
+      <div className="px-[1rem] pb-[1.5rem] pt-[0.5rem]">
         <p className="text-[11px] text-text-secondary text-center leading-relaxed">
           En continuant, vous acceptez nos{' '}
-          <span className="text-action-primary">Conditions d&apos;utilisation</span>
-          {' '}et notre{' '}
-          <span className="text-action-primary">Politique<br />de Confidentialité</span>
+          <span className="text-action-primary font-semibold">
+            Conditions d&apos;utilisation
+          </span>{' '}
+          et notre{' '}
+          <span className="text-action-primary font-semibold">
+            Politique de Confidentialité
+          </span>
         </p>
       </div>
 
-      <div className="h-6 flex items-center justify-center pb-1">
-        <div className="w-32 h-[4px] bg-foreground rounded-full opacity-80" />
+      {/* ── Home Indicator ─────────────────────────────────────── */}
+      <div className="h-[22px] flex items-center justify-center pb-[4px]">
+        <div className="w-[128px] h-[4px] bg-foreground rounded-full opacity-20" />
       </div>
     </div>
   )

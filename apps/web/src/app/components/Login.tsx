@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeClosed, Refresh } from 'iconoir-react'
 import { useDirectLogin } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { COUNTRIES, Country } from '@/lib/countries'
@@ -76,8 +76,10 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             placeholder="••••••••"
             className={`${authInput} pr-12`}
           />
-          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
+            {showPassword
+              ? <EyeClosed width={20} height={20} strokeWidth={1.2} />
+              : <Eye width={20} height={20} strokeWidth={1.2} />}
           </button>
         </div>
 
@@ -94,7 +96,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           disabled={!phone.trim() || !password || logging}
           className="auth-primary-btn w-full bg-action-primary hover:bg-action-primary-hover text-text-inverse py-[17px] rounded-full font-semibold text-[15px] mb-6 flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition-all"
         >
-          {logging ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+          {logging ? <Refresh width={16} height={16} strokeWidth={1.4} className="animate-spin" /> : null}
           <span>Se connecter</span>
         </button>
 

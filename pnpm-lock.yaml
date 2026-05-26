@@ -267,6 +267,9 @@ importers:
       i18next:
         specifier: ^26.0.10
         version: 26.0.10(typescript@5.9.3)
+      iconoir-react:
+        specifier: ^7.11.0
+        version: 7.11.0(react@18.3.1)
       input-otp:
         specifier: 1.4.2
         version: 1.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3174,6 +3177,11 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  iconoir-react@7.11.0:
+    resolution: {integrity: sha512-uvTKtnHYwbbTsmQ6HCcliYd50WK0GbjP497RwdISxKzfS01x4cK1Mn/F2mT/t2roSaJQ0I+KnHxMcyvmNMXWsQ==}
+    peerDependencies:
+      react: 18 || 19
 
   idb@7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
@@ -7505,6 +7513,10 @@ snapshots:
   i18next@26.0.10(typescript@5.9.3):
     optionalDependencies:
       typescript: 5.9.3
+
+  iconoir-react@7.11.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
 
   idb@7.1.1: {}
 

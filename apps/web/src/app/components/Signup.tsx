@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft, Eye, EyeOff, Loader2, Check, MapPin, X, Calendar } from 'lucide-react'
+import { NavArrowLeft, Eye, EyeClosed, Check, MapPin, Xmark, Calendar, Refresh } from 'iconoir-react'
 import { useSendOtp, useRegister, useCheckTarget, useCheckOtp } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
@@ -258,15 +258,23 @@ export function Signup({ onBack }: SignupProps) {
       <div id="recaptcha-container" />
 
       {/* ── Header ─────────────────────────────────────── */}
-      <div className="px-5 pt-4 pb-0 shrink-0">
-        <div className="flex items-center justify-center relative mb-1">
-          <button onClick={handlePrev} className="absolute left-0 w-8 h-8 flex items-center justify-center active:opacity-70">
-            <ChevronLeft className="w-5 h-5 text-foreground" strokeWidth={2.5} />
+      <div className="px-[1rem] pt-4 pb-0 shrink-0">
+        {/* Barre de progression pleine largeur — orange, animée */}
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-neutral-gray-200 z-20">
+          <div
+            className="h-full bg-action-primary rounded-r-full transition-all duration-500 ease-out"
+            style={{ width: `${(step / 7) * 100}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-center relative mb-3 mt-1">
+          <button
+            onClick={handlePrev}
+            aria-label="Retour"
+            className="absolute left-0 w-9 h-9 flex items-center justify-center active:opacity-70 rounded-full"
+          >
+            <NavArrowLeft width={24} height={24} strokeWidth={1.4} className="text-foreground" />
           </button>
           <span className={authHeader}>Inscription</span>
-        </div>
-        <div className="flex justify-center mt-1">
-          <div className="w-10 h-[2.5px] bg-action-primary rounded-full" />
         </div>
       </div>
 
@@ -388,9 +396,12 @@ export function Signup({ onBack }: SignupProps) {
             <div className="relative">
               <input
                 type="date" value={birthday} onChange={e => setBirthday(e.target.value)}
-                className={`${authInput} pr-12 appearance-none ${birthday ? '' : 'text-muted-foreground'}`}
+                className={`${authInput} pr-12 appearance-none ${birthday ? '' : 'text-neutral-gray-400'}`}
               />
-              <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#888888] pointer-events-none" />
+              <Calendar
+                width={20} height={20} strokeWidth={1.2}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500 pointer-events-none"
+              />
             </div>
           </div>
         )}
@@ -405,7 +416,10 @@ export function Signup({ onBack }: SignupProps) {
               Indiquez votre ville pour trouver des événements et<br />rencontrer des amis près de vous.
             </p>
             <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" />
+              <MapPin
+                width={20} height={20} strokeWidth={1.2}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-gray-500"
+              />
               <input
                 type="text" value={city} onChange={e => setCity(e.target.value)}
                 placeholder="Sélectionnez une ville"
@@ -413,7 +427,7 @@ export function Signup({ onBack }: SignupProps) {
               />
               {city && (
                 <button onClick={() => setCity('')} className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <X className="w-4 h-4 text-[#888888]" />
+                  <Xmark width={16} height={16} strokeWidth={1.4} className="text-neutral-gray-500" />
                 </button>
               )}
             </div>
@@ -457,8 +471,10 @@ export function Signup({ onBack }: SignupProps) {
                 placeholder="••••••••"
                 className={`${authInput} pr-12`}
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
+                {showPassword
+                  ? <EyeClosed width={20} height={20} strokeWidth={1.2} />
+                  : <Eye width={20} height={20} strokeWidth={1.2} />}
               </button>
             </div>
 
@@ -469,8 +485,10 @@ export function Signup({ onBack }: SignupProps) {
                 placeholder="••••••••"
                 className={`${authInput} pr-12`}
               />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
+                {showConfirmPassword
+                  ? <EyeClosed width={20} height={20} strokeWidth={1.2} />
+                  : <Eye width={20} height={20} strokeWidth={1.2} />}
               </button>
             </div>
 
@@ -481,10 +499,10 @@ export function Signup({ onBack }: SignupProps) {
                 { ok: pwdNumber, label: 'Au moins 1 chiffre' },
               ].map(({ ok, label }) => (
                 <div key={label} className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${ok ? 'bg-[#34C759]' : 'bg-[#E5E5E5]'}`}>
-                    <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${ok ? 'bg-[#34C759]' : 'bg-neutral-gray-200'}`}>
+                    <Check width={10} height={10} strokeWidth={2} className="text-white" />
                   </div>
-                  <span className={`text-[12px] ${ok ? 'text-[#34C759]' : 'text-[#888888]'}`}>{label}</span>
+                  <span className={`text-[12px] ${ok ? 'text-[#34C759]' : 'text-neutral-gray-500'}`}>{label}</span>
                 </div>
               ))}
             </div>
@@ -498,8 +516,8 @@ export function Signup({ onBack }: SignupProps) {
         {step === 7 && (
           <label className="flex items-start gap-2.5 cursor-pointer mb-4"
             onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}>
-            <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-action-primary border-action-primary' : 'border-border-primary bg-background-white'}`}>
-              {acceptedTerms && <Check className="w-3 h-3 text-text-inverse" strokeWidth={3} />}
+          <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-action-primary border-action-primary' : 'border-border-primary bg-background-white'}`}>
+              {acceptedTerms && <Check width={12} height={12} strokeWidth={2.5} className="text-text-inverse" />}
             </div>
             <span className="text-[12px] text-text-secondary leading-relaxed">
               Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
@@ -512,7 +530,7 @@ export function Signup({ onBack }: SignupProps) {
           disabled={isNextDisabled()}
           className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-action-primary hover:bg-action-primary-hover text-text-inverse disabled:opacity-50"
         >
-          {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+          {isLoading && <Refresh width={20} height={20} strokeWidth={1.4} className="animate-spin" />}
           <span>{buttonLabel()}</span>
         </button>
       </div>
