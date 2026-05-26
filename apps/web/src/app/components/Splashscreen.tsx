@@ -139,8 +139,8 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               <h2 className="text-[26px] font-bold text-foreground mb-[0.5rem] text-center leading-tight">
                 {current.title}
               </h2>
-              {/* Description courte centrée */}
-              <p className="text-text-secondary text-[14px] text-center max-w-[272px] leading-[1.6]">
+              {/* Description courte — Poppins Regular 12px / lh 18px / text-secondary */}
+              <p className="splash-description max-w-[271px]">
                 {current.description}
               </p>
             </motion.div>

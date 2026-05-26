@@ -25,6 +25,17 @@
   color: var(--foreground);
 }
 
+/* Description des slides onboarding — Poppins Regular 12/18px */
+.splash-description {
+  font-family: var(--font-poppins);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
 @custom-variant dark (&:is(.dark, .dark *));
 
 :root {
