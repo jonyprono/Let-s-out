@@ -1,12 +1,12 @@
 import { useNavigate, useLocation } from 'react-router'
-import { Search, MessageCircle, User } from 'lucide-react'
+import { Search, Message, User } from 'iconoir-react'
 import { useConversations } from '@/features/chat/api'
 
 // Custom icon: groupe d'événements (3 silhouettes)
 function EventsIcon({ active }: { active: boolean }) {
-  const color = active ? '#FF9F1C' : '#9CA3AF'
+  const color = active ? '#FF9F1C' : 'currentColor'
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}>
       {/* Personne du milieu */}
       <circle cx="12" cy="7" r="2.5" fill={color} />
       <path d="M7 19c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none" />
@@ -39,26 +39,19 @@ function DiamondPlusIcon() {
   )
 }
 
-type LucideTab = {
+type NavTab = {
   path: string
-  icon: typeof Search | typeof MessageCircle | typeof User
+  icon?: any
   label: string
-  isCustom?: false
+  isCustom?: boolean
 }
-type CustomTab = {
-  path: string
-  icon?: undefined
-  label: string
-  isCustom: true
-}
-type NavTab = LucideTab | CustomTab
 
 const leftTabs: NavTab[] = [
   { path: '/home',      icon: Search,        label: 'Explorer' },
   { path: '/my-events', isCustom: true,      label: 'Evénements' },
 ]
 const rightTabs: NavTab[] = [
-  { path: '/messages',  icon: MessageCircle, label: 'Messages' },
+  { path: '/messages',  icon: Message,       label: 'Messages' },
   { path: '/profile',   icon: User,          label: 'Profil' },
 ]
 
@@ -79,7 +72,7 @@ export function BottomNav() {
       style={{
         height: 'calc(64px + env(safe-area-inset-bottom))',
         paddingBottom: 'env(safe-area-inset-bottom)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.2)',
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.05)',
         zIndex: 50,
       }}
     >
@@ -98,15 +91,16 @@ export function BottomNav() {
               {tab.isCustom
                 ? <EventsIcon active={active} />
                 : <tab.icon
-                    size={22}
-                    strokeWidth={active ? 2.5 : 1.8}
-                    style={{ color: active ? '#FF9F1C' : '#9CA3AF' }}
+                    width={22}
+                    height={22}
+                    strokeWidth={active ? 2 : 1.6}
+                    style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}
                   />
               }
             </div>
             <span
-              className="text-[10px] font-semibold leading-none"
-              style={{ color: active ? '#FF9F1C' : '#9CA3AF' }}
+              className="text-[10px] font-semibold leading-none mt-1"
+              style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}
             >
               {tab.label}
             </span>
@@ -140,7 +134,7 @@ export function BottomNav() {
       {/* ── Right tabs ── */}
       {rightTabs.map((tab) => {
         const active = isActive(tab.path)
-        const IconComp = (tab as LucideTab).icon
+        const IconComp = tab.icon
         return (
           <button
             key={tab.path}
@@ -151,9 +145,10 @@ export function BottomNav() {
           >
             <div className="flex items-center justify-center w-6 h-6 relative">
               <IconComp
-                size={22}
-                strokeWidth={active ? 2.5 : 1.8}
-                style={{ color: active ? '#FF9F1C' : '#9CA3AF' }}
+                width={22}
+                height={22}
+                strokeWidth={active ? 2 : 1.6}
+                style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}
               />
               {tab.path === '/messages' && totalUnread > 0 && (
                 <span
@@ -164,8 +159,8 @@ export function BottomNav() {
               )}
             </div>
             <span
-              className="text-[10px] font-semibold leading-none"
-              style={{ color: active ? '#FF9F1C' : '#9CA3AF' }}
+              className="text-[10px] font-semibold leading-none mt-1"
+              style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}
             >
               {tab.label}
             </span>
@@ -180,3 +175,4 @@ export function BottomNav() {
     </nav>
   )
 }
+

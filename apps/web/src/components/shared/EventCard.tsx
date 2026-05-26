@@ -155,15 +155,15 @@ export const EventCard = memo(function EventCard({
         <div className="absolute top-3 right-3 flex gap-2 z-10">
           <button
             onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-background-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+            className="w-9 h-9 rounded-full bg-gray-200/60 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
           >
-            <Share2 className="w-4 h-4 text-gray-700" />
+            <Share2 className="w-4 h-4 text-gray-800" />
           </button>
           <button
             onClick={handleFavorite}
-            className="w-9 h-9 rounded-full bg-background-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+            className="w-9 h-9 rounded-full bg-gray-200/60 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
           >
-            <Star className={`w-4 h-4 ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-700'}`} />
+            <Star className={`w-4 h-4 ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-800'}`} />
           </button>
         </div>
         
