@@ -152,13 +152,13 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
       {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
         <div className="px-[1rem] pb-[2rem] z-10">
-          <div className="flex gap-[0.75rem] items-center">
+          <div className="flex gap-[0.75rem] items-center justify-end">
             {/* Bouton Retour — visible depuis slide 2 */}
             {currentIndex > 1 && (
               <button
                 onClick={handlePrev}
                 aria-label="Précédent"
-                className="w-[52px] h-[52px] shrink-0 rounded-full bg-background-white border border-border-primary flex items-center justify-center active:scale-[0.95] transition-transform shadow-sm"
+                className="w-[52px] h-[52px] shrink-0 rounded-full bg-background-white border border-border-primary flex items-center justify-center active:scale-[0.95] transition-transform"
               >
                 {/* Iconoir — Large 24px, stroke 1.4 */}
                 <NavArrowLeft
@@ -172,28 +172,24 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
             {/* Bouton Suivant / Commencer */}
             {currentIndex < onboardingScreens.length - 1 ? (
+              /* Slides 1 & 2 : petit bouton orange 52×52 avec icône seule */
               <button
                 onClick={handleNext}
                 aria-label="Suivant"
-                className={`h-[52px] rounded-full bg-action-primary text-text-inverse font-semibold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform shadow-md
-                  ${currentIndex > 1 ? 'flex-1' : 'w-[52px]'}`}
+                className="w-[52px] h-[52px] shrink-0 rounded-full bg-action-primary flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
               >
-                {currentIndex > 1 ? (
-                  'Suivant'
-                ) : (
-                  /* Icône seule sur la première slide */
-                  <NavArrowRight
-                    width={24}
-                    height={24}
-                    strokeWidth={1.4}
-                    className="text-text-inverse"
-                  />
-                )}
+                <NavArrowRight
+                  width={24}
+                  height={24}
+                  strokeWidth={1.4}
+                  className="text-text-inverse"
+                />
               </button>
             ) : (
+              /* Slide 3 : grand bouton plein largeur "Commencer" */
               <button
                 onClick={handleNext}
-                className="flex-1 h-[52px] rounded-full bg-action-primary text-text-inverse font-bold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
+                className="flex-1 h-[52px] rounded-full bg-action-primary text-text-inverse font-semibold text-[15px] tracking-wide flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
               >
                 Commencer
               </button>
