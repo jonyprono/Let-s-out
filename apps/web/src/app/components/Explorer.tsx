@@ -85,7 +85,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
   const [filterBudgetMax, setFilterBudgetMax] = useState(50000);
   const [filterCustomDate, setFilterCustomDate] = useState('');
-  const [appliedFilters, setAppliedFilters] = useState({ date: 'all', time: 'all', categories: [] as string[], budgetMax: 50000, customDate: '' });
+  const [filterDistance, setFilterDistance] = useState(100);
+  const [appliedFilters, setAppliedFilters] = useState({ date: 'all', time: 'all', categories: [] as string[], budgetMax: 10000, customDate: '', distance: 100 });
 
   // Map state
   const [mapCenter, setMapCenter] = useState<[number, number]>([6.36536, 2.41833])
@@ -116,7 +117,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         category: apiCategory || (appliedFilters.categories.length > 0 ? appliedFilters.categories.join(',') : undefined),
         search: searchQuery || undefined,
         limit: 50,
-        maxPrice: appliedFilters.budgetMax < 50000 ? appliedFilters.budgetMax : undefined,
+        maxPrice: appliedFilters.budgetMax < 10000 ? appliedFilters.budgetMax : undefined,
         date: dateParam,
         time: appliedFilters.time !== 'all' ? appliedFilters.time : undefined,
       }).then((r) => r.data);
@@ -129,15 +130,31 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
   // Backend now handles custom date filtering
   // If "En cours" is selected, additionally filter client-side to events that have started
+  // Also filter by distance client-side if a specific distance is selected
   const allFetchedEvents: Event[] = eventsData?.data || [];
-  const events: Event[] = isEnCours
-    ? allFetchedEvents.filter(e => {
-        const now = new Date();
-        const start = new Date(e.startAt);
-        const end = e.endAt ? new Date(e.endAt) : new Date(start.getTime() + 4 * 60 * 60 * 1000); // assume 4h duration
-        return start <= now && now <= end;
-      })
-    : allFetchedEvents;
+  const events: Event[] = allFetchedEvents.filter(e => {
+    // 1. En cours
+    if (isEnCours) {
+      const now = new Date();
+      const start = new Date(e.startAt);
+      const end = e.endAt ? new Date(e.endAt) : new Date(start.getTime() + 4 * 60 * 60 * 1000); // assume 4h duration
+      if (!(start <= now && now <= end)) return false;
+    }
+    // 2. Distance
+    if (appliedFilters.distance < 100 && e.latitude && e.longitude && mapCenter[0] && mapCenter[1]) {
+      // Haversine formula
+      const R = 6371; // km
+      const dLat = (e.latitude - mapCenter[0]) * Math.PI / 180;
+      const dLon = (e.longitude - mapCenter[1]) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(mapCenter[0] * Math.PI / 180) * Math.cos(e.latitude * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+      if (distance > appliedFilters.distance) return false;
+    }
+    return true;
+  });
 
   const handleMapGeolocate = async () => {
     setMapGeoLoading(true)
@@ -165,7 +182,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   };
 
   const applyFilters = () => {
-    setAppliedFilters({ date: filterDate, time: filterTime, categories: filterCategories, budgetMax: filterBudgetMax, customDate: filterCustomDate });
+    setAppliedFilters({ date: filterDate, time: filterTime, categories: filterCategories, budgetMax: filterBudgetMax, customDate: filterCustomDate, distance: filterDistance });
     setScreen('list');
   };
 
@@ -173,8 +190,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     setFilterDate('all');
     setFilterTime('all');
     setFilterCategories([]);
-    setFilterBudgetMax(50000);
+    setFilterBudgetMax(10000);
     setFilterCustomDate('');
+    setFilterDistance(100);
   };
 
   // ── FILTER SCREEN ─────────────────────────────────────────────────────────
@@ -266,41 +284,44 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Budget */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[15px] font-bold text-gray-900">Budget</h3>
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                0 - {filterBudgetMax === 50000 ? '10 000' : filterBudgetMax.toLocaleString('fr-FR')} F CFA
+          <div className="border-b border-gray-100 pb-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[17px] font-bold text-gray-900">Budget</h3>
+              <span className="text-[13px] font-bold text-gray-700">
+                0 - {filterBudgetMax === 10000 ? '10 000' : filterBudgetMax.toLocaleString('fr-FR')} F CFA
               </span>
             </div>
             <input
               type="range"
               min={0}
-              max={50000}
+              max={10000}
               step={500}
               value={filterBudgetMax}
               onChange={e => setFilterBudgetMax(Number(e.target.value))}
-              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+              className="w-full h-1.5 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[22px] [&::-webkit-slider-thumb]:h-[22px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-200 [&::-webkit-slider-thumb]:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
               style={{
-                background: `linear-gradient(to right, #FF9F1C 0%, #FF9F1C ${(filterBudgetMax / 50000) * 100}%, #f3f4f6 ${(filterBudgetMax / 50000) * 100}%, #f3f4f6 100%)`
+                background: `linear-gradient(to right, #FF9F1C 0%, #FF9F1C ${(filterBudgetMax / 10000) * 100}%, #f3f4f6 ${(filterBudgetMax / 10000) * 100}%, #f3f4f6 100%)`
               }}
             />
           </div>
 
           {/* Distance */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[15px] font-bold text-gray-900">Distance</h3>
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">N'importe quelle distance</span>
+          <div className="border-b border-gray-100 pb-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[17px] font-bold text-gray-900">Distance</h3>
+              <span className="text-[13px] font-bold text-gray-700">
+                {filterDistance === 100 ? "N'importe quelle distance" : `${filterDistance} km`}
+              </span>
             </div>
             <input
               type="range"
               min={1}
               max={100}
               step={1}
-              defaultValue={100}
-              className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-              style={{ background: 'linear-gradient(to right, #FF9F1C 0%, #FF9F1C 100%, #f3f4f6 100%, #f3f4f6 100%)' }}
+              value={filterDistance}
+              onChange={e => setFilterDistance(Number(e.target.value))}
+              className="w-full h-1.5 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[22px] [&::-webkit-slider-thumb]:h-[22px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-200 [&::-webkit-slider-thumb]:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+              style={{ background: `linear-gradient(to right, #FF9F1C 0%, #FF9F1C ${(filterDistance / 100) * 100}%, #f3f4f6 ${(filterDistance / 100) * 100}%, #f3f4f6 100%)` }}
             />
           </div>
         </div>
@@ -605,8 +626,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <button
             onClick={() => {
               setFilterDate('all'); setFilterTime('all'); setFilterCategories([]);
-              setFilterBudgetMax(50000); setFilterCustomDate('');
-              setAppliedFilters({ date: 'all', time: 'all', categories: [], budgetMax: 50000, customDate: '' });
+              setFilterBudgetMax(10000); setFilterCustomDate(''); setFilterDistance(100);
+              setAppliedFilters({ date: 'all', time: 'all', categories: [], budgetMax: 10000, customDate: '', distance: 100 });
             }}
             className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-text-secondary font-medium"
           >
