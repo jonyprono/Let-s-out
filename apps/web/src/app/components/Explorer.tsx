@@ -15,19 +15,23 @@ interface ExplorerProps {
 }
 
 const CATEGORIES_FILTER = [
-  { key: 'SPORT', label: 'Sport' },
-  { key: 'CULTURE', label: 'Culture & Art' },
-  { key: 'FOOD', label: 'Gastronomie' },
+  { key: 'SPORT', label: 'Sports' },
+  { key: 'CONFERENCE', label: 'Conférences' },
+  { key: 'CONCERT', label: 'Concerts' },
+  { key: 'FESTIVAL', label: 'Festivals' },
   { key: 'NIGHTLIFE', label: 'Soirées' },
-  { key: 'TRAVEL', label: 'Voyages' },
-  { key: 'GAMING', label: 'Gaming' },
-  { key: 'WELLNESS', label: 'Bien-être' },
-  { key: 'MUSIC', label: 'Musique' },
-  { key: 'OTHER', label: 'Autre' },
+  { key: 'THEATER', label: 'Théâtre' },
+  { key: 'CINEMA', label: 'Cinéma' },
+  { key: 'WORKSHOP', label: 'Formations' },
+  { key: 'FOOD', label: 'Gastronomie' },
+  { key: 'LIFESTYLE', label: 'Lifestyle' },
+  { key: 'FASHION', label: 'Mode' },
+  { key: 'HEALTH', label: 'Santé' },
+  { key: 'SCIENCE', label: 'Science' },
 ];
 
 const DATE_FILTERS = [
-  { key: 'all', label: 'Toutes les dates' },
+  { key: 'soon', label: 'Bientôt' },
   { key: 'today', label: "Aujourd'hui" },
   { key: 'tomorrow', label: 'Demain' },
   { key: 'week', label: 'Cette semaine' },
@@ -72,6 +76,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearchInput, setActiveSearchInput] = useState<'location'|'keyword'>('location');
   const [selectedCategory, setSelectedCategory] = useState('Tous');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
@@ -190,16 +195,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         <div className="flex-1 overflow-y-auto px-5 py-200 space-y-6" style={{ scrollbarWidth: 'none' }}>
           {/* Date */}
           <div>
-            <h3 className="text-[14px] font-bold text-gray-900 mb-150">Date</h3>
+            <h3 className="text-[15px] font-bold text-gray-900 mb-3">Date</h3>
             <div className="flex flex-wrap gap-2">
               {DATE_FILTERS.map(f => (
                 <button
                   key={f.key}
                   onClick={() => setFilterDate(f.key)}
-                  className={`px-150.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
+                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
                     filterDate === f.key
-                      ? 'bg-action-primary active:bg-action-primary-hover text-white border-action-primary'
-                      : 'bg-background-white text-text-secondary border-border-primary'
+                      ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
+                      : 'bg-white text-gray-700 border-gray-200'
                   }`}
                 >
                   {f.label}
@@ -212,23 +217,23 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 type="date"
                 value={filterCustomDate}
                 onChange={e => setFilterCustomDate(e.target.value)}
-                className="mt-150 w-full border border-border-primary rounded-xl px-150 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-action-primary"
+                className="mt-3 w-full border border-gray-200 rounded-xl px-4 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-[#FF9F1C]"
               />
             )}
           </div>
 
           {/* Moment */}
           <div>
-            <h3 className="text-[14px] font-bold text-gray-900 mb-150">Moment</h3>
+            <h3 className="text-[15px] font-bold text-gray-900 mb-3">Moment</h3>
             <div className="flex flex-wrap gap-2">
               {TIME_FILTERS.map(f => (
                 <button
                   key={f.key}
                   onClick={() => setFilterTime(f.key)}
-                  className={`px-150.5 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
+                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
                     filterTime === f.key
-                      ? 'bg-action-primary active:bg-action-primary-hover text-white border-action-primary'
-                      : 'bg-background-white text-text-secondary border-border-primary'
+                      ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
+                      : 'bg-white text-gray-700 border-gray-200'
                   }`}
                 >
                   {f.label}
@@ -239,7 +244,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
           {/* Catégorie */}
           <div>
-            <h3 className="text-[14px] font-bold text-gray-900 mb-150">Catégorie</h3>
+            <h3 className="text-[15px] font-bold text-gray-900 mb-3">Catégorie</h3>
             <div className="flex flex-wrap gap-2">
               {CATEGORIES_FILTER.map(cat => {
                 const selected = filterCategories.includes(cat.key);
@@ -247,13 +252,12 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   <button
                     key={cat.key}
                     onClick={() => toggleFilterCategory(cat.key)}
-                    className={`px-150.5 py-1.5 rounded-full text-[13px] font-medium border transition-all flex items-center gap-1 ${
+                    className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all flex items-center gap-1 ${
                       selected
-                        ? 'bg-action-primary active:bg-action-primary-hover text-white border-action-primary'
-                        : 'bg-background-white text-text-secondary border-border-primary'
+                        ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
+                        : 'bg-white text-gray-700 border-gray-200'
                     }`}
                   >
-                    {selected && <Check className="w-3 h-3" />}
                     {cat.label}
                   </button>
                 );
@@ -263,10 +267,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
           {/* Budget */}
           <div>
-            <div className="flex items-center justify-between mb-150">
-              <h3 className="text-[14px] font-bold text-gray-900">Budget</h3>
-              <span className="text-[13px] text-text-secondary">
-                0 – {filterBudgetMax === 50000 ? '50 000' : filterBudgetMax.toLocaleString('fr-FR')} F CFA
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[15px] font-bold text-gray-900">Budget</h3>
+              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
+                0 - {filterBudgetMax === 50000 ? '10 000' : filterBudgetMax.toLocaleString('fr-FR')} F CFA
               </span>
             </div>
             <input
@@ -278,16 +282,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               onChange={e => setFilterBudgetMax(Number(e.target.value))}
               className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, var(--action-primary) 0%, var(--action-primary) ${(filterBudgetMax / 50000) * 100}%, #e5e7eb ${(filterBudgetMax / 50000) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, #FF9F1C 0%, #FF9F1C ${(filterBudgetMax / 50000) * 100}%, #f3f4f6 ${(filterBudgetMax / 50000) * 100}%, #f3f4f6 100%)`
               }}
             />
           </div>
 
           {/* Distance */}
           <div>
-            <div className="flex items-center justify-between mb-150">
-              <h3 className="text-[14px] font-bold text-gray-900">Distance</h3>
-              <span className="text-[13px] text-text-secondary">N'importe quelle distance</span>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[15px] font-bold text-gray-900">Distance</h3>
+              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">N'importe quelle distance</span>
             </div>
             <input
               type="range"
@@ -296,22 +300,22 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               step={1}
               defaultValue={100}
               className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
-              style={{ background: 'linear-gradient(to right, var(--action-primary) 0%, var(--action-primary) 100%, #e5e7eb 100%, #e5e7eb 100%)' }}
+              style={{ background: 'linear-gradient(to right, #FF9F1C 0%, #FF9F1C 100%, #f3f4f6 100%, #f3f4f6 100%)' }}
             />
           </div>
         </div>
 
         {/* Footer buttons */}
-        <div className="border-t border-gray-100 px-5 py-200 flex gap-150">
+        <div className="px-5 py-6 flex gap-4">
           <button
             onClick={resetFilters}
-            className="flex-1 py-150.5 rounded-full border border-border-primary text-[14px] font-bold text-gray-700"
+            className="px-6 py-3.5 rounded-full bg-gray-100 text-[14px] font-bold text-gray-800"
           >
             Réinitialiser
           </button>
           <button
             onClick={applyFilters}
-            className="flex-[2] py-150.5 rounded-full bg-action-primary active:bg-action-primary-hover text-[14px] font-bold text-white"
+            className="flex-1 py-3.5 rounded-full bg-[#FF9F1C] active:bg-[#FF8C00] text-[14px] font-bold text-white shadow-md shadow-[#FF9F1C]/20"
           >
             Appliquer les filtres
           </button>
@@ -337,53 +341,65 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Location search */}
-          <div className="flex items-center gap-2 border border-border-primary rounded-xl px-150 py-2.5 mb-150">
-            <MapPin className="w-4 h-4 text-action-primary flex-shrink-0" />
+          <div className={`flex items-center gap-2 border rounded-full px-4 py-2.5 mb-3 transition-colors ${activeSearchInput === 'location' ? 'border-[#FF9F1C]' : 'border-gray-200'}`}>
+            <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0" />
             <input
               autoFocus
-              placeholder="Ville, quartier..."
-              className="flex-1 text-[14px] outline-none"
+              onFocus={() => setActiveSearchInput('location')}
+              placeholder="Abomey-Calavi, BJ"
+              className="flex-1 text-[15px] outline-none text-gray-900 placeholder:text-gray-400"
             />
-            <button><X className="w-4 h-4 text-gray-400" /></button>
+            {activeSearchInput === 'location' && (
+              <button><X className="w-4 h-4 text-gray-400" /></button>
+            )}
           </div>
 
           {/* Event keyword search */}
-          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-150 py-2.5">
-            <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <div className={`flex items-center gap-2 border rounded-full px-4 py-2.5 transition-colors ${activeSearchInput === 'keyword' ? 'border-[#FF9F1C]' : 'border-gray-200'}`}>
+            <Search className="w-5 h-5 text-gray-500 flex-shrink-0" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
+              onFocus={() => setActiveSearchInput('keyword')}
               placeholder="Concert, sortie, fête..."
-              className="flex-1 text-[14px] outline-none bg-transparent"
+              className="flex-1 text-[15px] outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
             />
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pt-4">
-          {searchQuery.length < 2 ? (
-            <div className="space-y-2">
-              <p className="text-[12px] font-semibold text-gray-400 uppercase tracking-wide mb-200">Suggestions</p>
-              {['Position actuelle', 'Cotonou, BJ', 'Abomey-Calavi, BJ', 'Porto-Novo, BJ', 'Bohicon, BJ'].map(loc => (
+          {activeSearchInput === 'location' ? (
+            <div className="space-y-1">
+              <button className="w-full flex items-center justify-between py-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 flex justify-center"><MapPin className="w-5 h-5 text-gray-400" /></div>
+                  <span className="text-[15px] text-gray-900">Abomey-Calavi, BJ (Position actuelle)</span>
+                </div>
+                <div className="w-5 h-5 rounded-full bg-[#FF9F1C] flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white stroke-[3]" />
+                </div>
+              </button>
+              {['Abomey, BJ', 'Abomey-Calavi, BJ'].map((loc, idx) => (
                 <button
-                  key={loc}
-                  className="w-full flex items-center gap-150 py-2.5"
-                  onClick={() => setSearchQuery(loc)}
+                  key={idx}
+                  className="w-full flex items-center gap-3 py-3"
+                  onClick={() => setActiveSearchInput('keyword')}
                 >
-                  <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <span className="text-[14px] text-gray-700">{loc}</span>
+                  <div className="w-6 flex justify-center"><MapPin className="w-5 h-5 text-gray-400" /></div>
+                  <span className="text-[15px] text-gray-900">{loc}</span>
                 </button>
               ))}
             </div>
           ) : (
-            <div className="space-y-2">
-              {events.filter(e => e.title.toLowerCase().includes(searchQuery.toLowerCase())).map(event => (
+            <div className="space-y-1">
+              {['oktoberfest', 'okc', 'oktoberfest cotonou'].map((suggestion, idx) => (
                 <button
-                  key={event.id}
-                  className="w-full flex items-center gap-150 py-2.5"
-                  onClick={() => onNavigate('event-details', event.id)}
+                  key={idx}
+                  className="w-full flex items-center gap-3 py-3"
+                  onClick={() => setSearchQuery(suggestion)}
                 >
-                  <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  <span className="text-[14px] text-gray-700">{event.title}</span>
+                  <div className="w-6 flex justify-center"><Search className="w-5 h-5 text-gray-400" /></div>
+                  <span className="text-[15px] text-gray-900">{suggestion}</span>
                 </button>
               ))}
             </div>

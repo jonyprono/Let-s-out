@@ -23,18 +23,21 @@ function EventsIcon({ active }: { active: boolean }) {
 // Custom icon: diamant central (bouton +)
 function DiamondPlusIcon() {
   return (
-    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-      {/* Diamond shape */}
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      {/* Outline Diamond shape */}
       <path
-        d="M13 3L23 13L13 23L3 13L13 3Z"
+        d="M12 2.5L21.5 12L12 21.5L2.5 12L12 2.5Z"
         stroke="white"
-        strokeWidth="1.8"
+        strokeWidth="1.5"
         strokeLinejoin="round"
-        fill="rgba(255,255,255,0.15)"
       />
       {/* Plus sign inside */}
-      <line x1="13" y1="9" x2="13" y2="17" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      <line x1="9" y1="13" x2="17" y2="13" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M12 8V16M8 12H16"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -118,13 +121,11 @@ export function BottomNav() {
         <div
           className="flex items-center justify-center"
           style={{
-            width: 52,
-            height: 52,
-            borderRadius: 16,
-            background: 'linear-gradient(145deg, #FF9F1C, #FF8C00)',
-            boxShadow: '0 4px 16px rgba(255, 159, 28, 0.45)',
-            marginBottom: 2,
-            marginTop: -8,
+            width: 46,
+            height: 46,
+            borderRadius: 14,
+            backgroundColor: '#FF9F1C',
+            marginBottom: 10,
           }}
         >
           <DiamondPlusIcon />
