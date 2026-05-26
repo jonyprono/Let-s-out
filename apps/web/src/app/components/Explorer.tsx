@@ -1,6 +1,6 @@
 import { useState, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router';
-import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock } from 'lucide-react';
+import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { apiClient } from '@/lib/api-client';
@@ -345,12 +345,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0" />
             <input
               autoFocus
+              value={mapSearch}
+              onChange={(e) => handleMapSearch(e.target.value)}
               onFocus={() => setActiveSearchInput('location')}
-              placeholder="Abomey-Calavi, BJ"
+              placeholder="Saisissez une ville..."
               className="flex-1 text-[15px] outline-none text-gray-900 placeholder:text-gray-400"
             />
-            {activeSearchInput === 'location' && (
-              <button><X className="w-4 h-4 text-gray-400" /></button>
+            {mapSearch && (
+              <button onClick={() => { handleMapSearch(''); setActiveSearchInput('location'); }}>
+                <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
+                  <X className="w-3 h-3 text-gray-500" />
+                </div>
+              </button>
             )}
           </div>
 
@@ -370,25 +376,61 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         <div className="flex-1 overflow-y-auto px-5 pt-4">
           {activeSearchInput === 'location' ? (
             <div className="space-y-1">
-              <button className="w-full flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-6 flex justify-center"><MapPin className="w-5 h-5 text-gray-400" /></div>
-                  <span className="text-[15px] text-gray-900">Abomey-Calavi, BJ (Position actuelle)</span>
-                </div>
-                <div className="w-5 h-5 rounded-full bg-[#FF9F1C] flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white stroke-[3]" />
-                </div>
+              <button className="w-full flex items-center gap-3 py-3" onClick={handleMapGeolocate}>
+                <div className="w-6 flex justify-center"><Target className="w-5 h-5 text-gray-400" /></div>
+                <span className="text-[15px] text-gray-900">Position actuelle</span>
               </button>
-              {['Abomey, BJ', 'Abomey-Calavi, BJ'].map((loc, idx) => (
-                <button
-                  key={idx}
-                  className="w-full flex items-center gap-3 py-3"
-                  onClick={() => setActiveSearchInput('keyword')}
-                >
-                  <div className="w-6 flex justify-center"><MapPin className="w-5 h-5 text-gray-400" /></div>
-                  <span className="text-[15px] text-gray-900">{loc}</span>
-                </button>
-              ))}
+              
+              {mapSearch.length > 0 ? (
+                mapSearchResults.map((loc, idx) => {
+                  const isSelected = mapSearch === loc.label;
+                  return (
+                    <button
+                      key={idx}
+                      className="w-full flex items-center justify-between py-3"
+                      onClick={() => {
+                        handleMapSearch(loc.label);
+                        setMapCenter([loc.lat, loc.lon]);
+                        setActiveSearchInput('keyword');
+                      }}
+                    >
+                      <div className="flex items-center gap-3 truncate">
+                        <div className="w-6 flex justify-center flex-shrink-0"><MapPin className="w-5 h-5 text-gray-400" /></div>
+                        <span className="text-[15px] text-gray-900 truncate">{loc.label}</span>
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-[#FF9F1C] flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 text-white stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              ) : (
+                ['Abomey, BJ', 'Abomey-Calavi, BJ'].map((loc, idx) => {
+                  const isSelected = mapSearch === loc;
+                  return (
+                    <button
+                      key={idx}
+                      className="w-full flex items-center justify-between py-3"
+                      onClick={() => {
+                        handleMapSearch(loc);
+                        setActiveSearchInput('keyword');
+                      }}
+                    >
+                      <div className="flex items-center gap-3 truncate">
+                        <div className="w-6 flex justify-center flex-shrink-0"><MapPin className="w-5 h-5 text-gray-400" /></div>
+                        <span className="text-[15px] text-gray-900 truncate">{loc}</span>
+                      </div>
+                      {isSelected && (
+                        <div className="w-5 h-5 rounded-full bg-[#FF9F1C] flex items-center justify-center flex-shrink-0">
+                          <Check className="w-3 h-3 text-white stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              )}
             </div>
           ) : (
             <div className="space-y-1">
