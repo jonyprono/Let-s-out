@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router'
-import { Search, Message, User } from 'iconoir-react'
+import { Search, User } from 'iconoir-react'
+import { MessageCircle } from 'lucide-react'
 import { useConversations } from '@/features/chat/api'
 
 // Custom icon: groupe d'événements (3 silhouettes)
@@ -54,7 +55,7 @@ const leftTabs: NavTab[] = [
   { path: '/my-events', isCustom: true,      label: 'Evénements' },
 ]
 const rightTabs: NavTab[] = [
-  { path: '/messages',  icon: Message,       label: 'Messages' },
+  { path: '/messages',  icon: MessageCircle, label: 'Messages' },
   { path: '/profile',   icon: User,          label: 'Profil' },
 ]
 
