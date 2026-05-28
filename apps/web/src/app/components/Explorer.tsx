@@ -417,8 +417,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         <div className="flex-1 overflow-y-auto px-5 pt-4">
           {activeSearchInput === 'location' ? (
             <div className="space-y-1">
-              <button className="w-full flex items-center gap-3 py-3" onClick={handleMapGeolocate}>
-                <div className="w-6 flex justify-center"><Target className="w-5 h-5 text-gray-400" /></div>
+              <button className="w-full flex items-center gap-2 px-4 py-3" onClick={handleMapGeolocate}>
+                <Target className="w-5 h-5 text-gray-400 flex-shrink-0" />
                 <span className="text-[15px] text-gray-900">Position actuelle</span>
               </button>
               
@@ -428,15 +428,15 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   return (
                     <button
                       key={idx}
-                      className="w-full flex items-center justify-between py-3"
+                      className="w-full flex items-center justify-between px-4 py-3"
                       onClick={() => {
                         handleMapSearch(loc.label);
                         setMapCenter([loc.lat, loc.lon]);
                         setActiveSearchInput('keyword');
                       }}
                     >
-                      <div className="flex items-center gap-3 truncate">
-                        <div className="w-6 flex justify-center flex-shrink-0"><MapPin className="w-5 h-5 text-gray-400" /></div>
+                      <div className="flex items-center gap-2 truncate">
+                        <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
                         <span className="text-[15px] text-gray-900 truncate">{loc.label}</span>
                       </div>
                       {isSelected && (
@@ -453,14 +453,14 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   return (
                     <button
                       key={idx}
-                      className="w-full flex items-center justify-between py-3"
+                      className="w-full flex items-center justify-between px-4 py-3"
                       onClick={() => {
                         handleMapSearch(loc);
                         setActiveSearchInput('keyword');
                       }}
                     >
-                      <div className="flex items-center gap-3 truncate">
-                        <div className="w-6 flex justify-center flex-shrink-0"><MapPin className="w-5 h-5 text-gray-400" /></div>
+                      <div className="flex items-center gap-2 truncate">
+                        <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
                         <span className="text-[15px] text-gray-900 truncate">{loc}</span>
                       </div>
                       {isSelected && (
@@ -479,7 +479,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 keywordSuggestions.map((evt) => (
                   <button
                     key={evt.id}
-                    className="w-full flex items-center gap-3 py-3"
+                    className="w-full flex items-center gap-2 px-4 py-3"
                     onClick={() => {
                       setSearchQuery(evt.title);
                       setScreen('list');
@@ -490,7 +490,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         <img src={evt.coverUrl} alt={evt.title} className="w-full h-full object-cover" />
                       </div>
                     ) : (
-                      <div className="w-6 flex justify-center flex-shrink-0"><Search className="w-5 h-5 text-gray-400" /></div>
+                      <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
                     )}
                     <div className="flex flex-col items-start truncate">
                       <span className="text-[15px] text-gray-900 truncate">{evt.title}</span>
