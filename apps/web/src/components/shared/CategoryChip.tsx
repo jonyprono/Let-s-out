@@ -22,8 +22,8 @@ export function CategoryChip({ label, selected = false, onClick, disabled }: Cat
         selected
           ? 'bg-action-primary text-white shadow-sm'
           : [
-              'bg-[#F5F5F5] text-[#555555]',
-              'hover:bg-[#EEEEEE]',
+              'bg-[#F4F4F5] text-[#71717A]',
+              'hover:bg-gray-200 hover:text-gray-900',
               'active:bg-[#E0E0E0]',
             ],
       )}

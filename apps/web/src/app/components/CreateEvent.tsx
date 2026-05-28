@@ -389,7 +389,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="flex items-center justify-center relative">
           {step < 7 && (
             <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
-              className="absolute left-0 w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center transition-transform active:scale-95">
+              className="absolute left-0 w-8 h-8 rounded-full bg-[#F4F4F5] flex items-center justify-center transition-transform active:scale-95">
               <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" />
             </button>
           )}
@@ -425,7 +425,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <input
                 value={title} onChange={e => setTitle(e.target.value)}
                 placeholder="Nom de l'événement..."
-                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] font-medium text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-transparent"
+                className="w-full px-4 py-4 border border-[#E4E4E7] rounded-xl text-[15px] font-medium text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-transparent"
               />
             </div>
             <div>
@@ -451,17 +451,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div>
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Date</label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
                 {date ? (
-                  <div className="flex items-center w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] bg-background-white">
+                  <div className="flex items-center w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
                     <span className="flex-1 text-[#1A1A1A] font-medium">{formattedDate}</span>
-                    <button onClick={() => setDate('')} className="w-6 h-6 rounded-full bg-[#F5F5F5] flex items-center justify-center">
-                      <X className="w-3.5 h-3.5 text-[#888888]" />
+                    <button onClick={() => setDate('')} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
+                      <X className="w-3.5 h-3.5 text-[#71717A]" />
                     </button>
                   </div>
                 ) : (
                   <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                    className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                    className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
                   />
                 )}
               </div>
@@ -471,25 +471,25 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div>
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Heure</label>
               {startTime && endTime ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] bg-background-white">
-                  <Clock className="w-[18px] h-[18px] text-[#BBBBBB] mr-3" />
+                <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
+                  <Clock className="w-[18px] h-[18px] text-[#71717A] mr-3" />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{startTime} h – {endTime} h</span>
-                  <button onClick={() => { setStartTime(''); setEndTime('') }} className="w-6 h-6 rounded-full bg-[#F5F5F5] flex items-center justify-center">
-                    <X className="w-3.5 h-3.5 text-[#888888]" />
+                  <button onClick={() => { setStartTime(''); setEndTime('') }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
+                    <X className="w-3.5 h-3.5 text-[#71717A]" />
                   </button>
                 </div>
               ) : (
                 <div className="flex gap-3">
                   <div className="relative flex-1">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
                     <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)}
-                      className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
+                      className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
                     />
                   </div>
                   <div className="relative flex-1">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
                     <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)}
-                      className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
+                      className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
                     />
                   </div>
                 </div>
@@ -500,26 +500,26 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div>
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Ville</label>
               {city && !citySuggestions.length ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] bg-background-white">
-                  <MapPin className="w-[18px] h-[18px] text-[#BBBBBB] mr-3" />
+                <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
+                  <MapPin className="w-[18px] h-[18px] text-[#71717A] mr-3" />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{city}</span>
-                  <button onClick={() => { setCity(''); setCityInput('') }} className="w-6 h-6 rounded-full bg-[#F5F5F5] flex items-center justify-center">
-                    <X className="w-3.5 h-3.5 text-[#888888]" />
+                  <button onClick={() => { setCity(''); setCityInput('') }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
+                    <X className="w-3.5 h-3.5 text-[#71717A]" />
                   </button>
                 </div>
               ) : (
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
                   <input value={cityInput} onChange={e => handleCitySearch(e.target.value)}
                     placeholder="Sélectionnez une ville"
-                    className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                    className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
                   />
                   {citySuggestions.length > 0 && (
-                    <div className="absolute z-20 top-full left-0 right-0 bg-background-white border border-[#E5E5E5] rounded-2xl mt-1 shadow-lg overflow-hidden">
+                    <div className="absolute z-20 top-full left-0 right-0 bg-background-white border border-[#E4E4E7] rounded-2xl mt-1 shadow-lg overflow-hidden">
                       {citySuggestions.map((s, i) => (
                         <button key={i} onClick={() => selectCity(s)}
                           className="w-full text-left px-4 py-3 text-[14px] text-[#1A1A1A] hover:bg-gray-50 border-b border-[#F5F5F5] last:border-0 flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-[#888888] flex-shrink-0" />
+                          <MapPin className="w-4 h-4 text-[#71717A] flex-shrink-0" />
                           {s.label}
                         </button>
                       ))}
@@ -533,19 +533,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div>
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Localisation</label>
               {address && !citySuggestions.length ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] bg-background-white">
-                  <MapPin className="w-[18px] h-[18px] text-[#BBBBBB] mr-3 flex-shrink-0" />
+                <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
+                  <MapPin className="w-[18px] h-[18px] text-[#71717A] mr-3 flex-shrink-0" />
                   <span className="flex-1 text-[#1A1A1A] font-medium truncate">{address}</span>
-                  <button onClick={() => setAddress('')} className="w-6 h-6 rounded-full bg-[#F5F5F5] flex items-center justify-center">
-                    <X className="w-3.5 h-3.5 text-[#888888]" />
+                  <button onClick={() => setAddress('')} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
+                    <X className="w-3.5 h-3.5 text-[#71717A]" />
                   </button>
                 </div>
               ) : (
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
                   <input value={address} onChange={e => setAddress(e.target.value)}
                     placeholder="Sélectionnez sur la carte"
-                    className="w-full pl-11 pr-24 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                    className="w-full pl-11 pr-24 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <button onClick={handleGeolocate} disabled={geoLoading} title="Ma position"
@@ -570,7 +570,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Nombre de places</label>
               <input type="number" min={1} value={maxPlaces} onChange={e => setMaxPlaces(e.target.value)}
                 placeholder="0"
-                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                className="w-full px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
               />
             </div>
             <div>
@@ -578,10 +578,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <div className="flex gap-2 items-center">
                 <input type="number" min={0} value={amount} onChange={e => setAmount(e.target.value)}
                   placeholder="0"
-                  className="flex-1 px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                  className="flex-1 px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
                 />
-                <div className="px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#555555] bg-background-white flex-shrink-0 flex items-center justify-center font-medium">
-                  F CFA <ChevronLeft className="w-4 h-4 ml-1 -rotate-90 text-[#BBBBBB]" />
+                <div className="px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#555555] bg-background-white flex-shrink-0 flex items-center justify-center font-medium">
+                  F CFA <ChevronLeft className="w-4 h-4 ml-1 -rotate-90 text-[#71717A]" />
                 </div>
               </div>
             </div>
@@ -590,20 +590,20 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block mt-2">Confidentialité</label>
               <div className="flex gap-4">
                 <button
-                  className={`flex-1 flex items-center justify-between px-4 py-[14px] border rounded-2xl transition-colors ${!isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E5E5E5] bg-background-white'}`}
+                  className={`flex-1 flex items-center justify-between px-4 py-4 border rounded-2xl transition-colors ${!isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
                   onClick={() => setIsPrivate(false)}
                 >
                   <span className="text-[15px] font-medium text-[#1A1A1A]">Public</span>
-                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${!isPrivate ? 'border-action-primary' : 'border-[#E5E5E5]'}`}>
+                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${!isPrivate ? 'border-action-primary' : 'border-[#E4E4E7]'}`}>
                     {!isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                   </div>
                 </button>
                 <button
-                  className={`flex-1 flex items-center justify-between px-4 py-[14px] border rounded-2xl transition-colors ${isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E5E5E5] bg-background-white'}`}
+                  className={`flex-1 flex items-center justify-between px-4 py-4 border rounded-2xl transition-colors ${isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
                   onClick={() => setIsPrivate(true)}
                 >
                   <span className="text-[15px] font-medium text-[#1A1A1A]">Privé</span>
-                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${isPrivate ? 'border-action-primary' : 'border-[#E5E5E5]'}`}>
+                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${isPrivate ? 'border-action-primary' : 'border-[#E4E4E7]'}`}>
                     {isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                   </div>
                 </button>
@@ -620,13 +620,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <textarea value={description} onChange={e => setDescription(e.target.value)}
                 placeholder="À propos de votre événement..."
                 rows={6}
-                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] resize-none focus:outline-none focus:border-action-primary bg-background-white"
+                className="w-full px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] resize-none focus:outline-none focus:border-action-primary bg-background-white"
               />
             </div>
             <div>
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Couverture</label>
               <button onClick={() => fileRef.current?.click()}
-                className="w-full h-44 border border-[#E5E5E5] rounded-2xl flex flex-col items-center justify-center overflow-hidden relative bg-background-white active:scale-[0.99] transition-transform">
+                className="w-full h-44 border border-[#E4E4E7] rounded-2xl flex flex-col items-center justify-center overflow-hidden relative bg-background-white active:scale-[0.99] transition-transform">
                 {coverPreview ? (
                   <>
                     <SafeImage src={coverPreview} alt="Aperçu couverture" className="absolute inset-0 w-full h-full object-cover" />
@@ -638,9 +638,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 ) : (
                   <>
                     <div className="mb-2">
-                      <ImageIcon className="w-6 h-6 text-[#BBBBBB]" strokeWidth={1.5} />
+                      <ImageIcon className="w-6 h-6 text-[#71717A]" strokeWidth={1.5} />
                     </div>
-                    <span className="text-[13px] font-medium text-[#BBBBBB]">Sélectionner une image</span>
+                    <span className="text-[13px] font-medium text-[#71717A]">Sélectionner une image</span>
                   </>
                 )}
               </button>
@@ -653,13 +653,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {step === 5 && (
           <div className="space-y-6">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
               <input 
                 autoFocus 
                 value={coOrgSearch} 
                 onChange={e => setCoOrgSearch(e.target.value)}
                 placeholder="Rechercher un ami"
-                className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
+                className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
               />
             </div>
 
@@ -671,7 +671,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   {selectedCoOrgs.map(org => (
                     <div key={org.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E5E5E5]">
+                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E4E4E7]">
                           <SafeImage 
                             src={org.avatarUrl} 
                             alt={org.name} 
@@ -689,7 +689,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                         </span>
                       </div>
                       <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
-                        className="text-[12px] font-semibold text-[#888888] active:scale-95 transition-transform">
+                        className="text-[12px] font-semibold text-[#71717A] active:scale-95 transition-transform">
                         Retirer
                       </button>
                     </div>
@@ -710,18 +710,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       <div key={uid} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           {f.avatarUrl ? (
-                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E5E5E5]">
+                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E4E4E7]">
                               <SafeImage src={f.avatarUrl} alt={name} className="w-full h-full object-cover" />
                             </div>
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-orange-300 flex items-center justify-center text-white font-bold text-[14px] shrink-0 border border-[#E5E5E5]">
+                            <div className="w-10 h-10 rounded-full bg-orange-300 flex items-center justify-center text-white font-bold text-[14px] shrink-0 border border-[#E4E4E7]">
                               {name.charAt(0).toUpperCase()}
                             </div>
                           )}
                           <span className="text-[15px] font-medium text-[#1A1A1A]">{name}</span>
                         </div>
                         <button onClick={() => setSelectedCoOrgs(p => [...p, { id: uid, name, avatarUrl: f.avatarUrl }])}
-                          className="text-[12px] font-semibold text-[#888888] active:scale-95 transition-transform">
+                          className="text-[12px] font-semibold text-[#71717A] active:scale-95 transition-transform">
                           Ajouter
                         </button>
                       </div>
@@ -761,7 +761,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <h2 className="text-[24px] font-bold text-[#1A1A1A] leading-tight mb-150">{title || 'Titre de l\'événement'}</h2>
             <div className="flex flex-wrap gap-2 mb-5">
               {categories.map(cat => (
-                <span key={cat} className="text-[12px] font-bold text-action-primary bg-[var(--color-brand-orange-50)] px-150 py-1 rounded-full border border-[var(--color-brand-orange-200)]">
+                <span key={cat} className="text-[12px] font-bold text-[#007AFF] bg-[#EBF5FF] px-2 py-1 rounded-full">
                   {CATEGORIES.find(c => c.value === cat)?.label}
                 </span>
               ))}
@@ -973,7 +973,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <span className="text-[14px] text-text-secondary">Catégories</span>
                   <div className="flex flex-wrap gap-1.5 justify-end">
                     {categories.map(cat => (
-                      <span key={cat} className="text-[12px] font-bold text-action-primary bg-[var(--color-brand-orange-50)] px-150 py-1 rounded-full border border-[var(--color-brand-orange-200)]">
+                      <span key={cat} className="text-[12px] font-bold text-[#007AFF] bg-[#EBF5FF] px-2 py-1 rounded-full">
                         {CATEGORIES.find(c => c.value === cat)?.label || cat}
                       </span>
                     ))}
@@ -1074,17 +1074,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {step < 6 ? (
             <>
               {step === 1 && !canNext() ? (
-                <button disabled className="flex-1 py-[17px] rounded-full font-bold text-[15px] bg-brand-orange-100 text-white cursor-not-allowed transition-all">
+                <button disabled className="flex-1 py-[17px] rounded-full font-bold text-[15px] bg-[#FFEEDB] text-white cursor-not-allowed transition-all">
                   Commencer
                 </button>
               ) : (
                 <>
                   <button onClick={() => step === 1 ? onBack() : setStep(s => s - 1)}
-                    className="flex-1 py-[17px] rounded-full border border-[#E5E5E5] font-bold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
+                    className="flex-1 py-[17px] rounded-full border border-[#E4E4E7] font-bold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
                     Précédent
                   </button>
                   <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
-                    className={`flex-1 py-[17px] rounded-full font-bold text-[15px] transition-all ${canNext() ? 'bg-action-primary text-white shadow-sm active:scale-[0.98]' : 'bg-brand-orange-100 text-white cursor-not-allowed'}`}>
+                    className={`flex-1 py-[17px] rounded-full font-bold text-[15px] transition-all ${canNext() ? 'bg-action-primary text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFEEDB] text-white cursor-not-allowed'}`}>
                     Suivant
                   </button>
                 </>
