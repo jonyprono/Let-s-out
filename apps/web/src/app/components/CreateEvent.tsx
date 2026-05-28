@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, Clock, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, BadgeCheck } from 'lucide-react'
+import { ChevronLeft, Calendar, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, BadgeCheck } from 'lucide-react'
+import { Calendar as IconoirCalendar, Clock as IconoirClock, MapPin as IconoirMapPin, Xmark } from 'iconoir-react'
 import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
@@ -451,12 +452,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div>
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Date</label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
+                <IconoirCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
                 {date ? (
                   <div className="flex items-center w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
                     <span className="flex-1 text-[#1A1A1A] font-medium">{formattedDate}</span>
                     <button onClick={() => setDate('')} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                      <X className="w-3.5 h-3.5 text-[#71717A]" />
+                      <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                     </button>
                   </div>
                 ) : (
@@ -472,22 +473,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Heure</label>
               {startTime && endTime ? (
                 <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
-                  <Clock className="w-[18px] h-[18px] text-[#71717A] mr-3" />
+                  <IconoirClock className="w-[20px] h-[20px] text-[#71717A] mr-3" strokeWidth={1.5} />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{startTime} h – {endTime} h</span>
                   <button onClick={() => { setStartTime(''); setEndTime('') }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <X className="w-3.5 h-3.5 text-[#71717A]" />
+                    <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                   </button>
                 </div>
               ) : (
                 <div className="flex gap-3">
                   <div className="relative flex-1">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
+                    <IconoirClock className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
                     <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)}
                       className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
                     />
                   </div>
                   <div className="relative flex-1">
-                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
+                    <IconoirClock className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
                     <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)}
                       className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
                     />
@@ -501,15 +502,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Ville</label>
               {city && !citySuggestions.length ? (
                 <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
-                  <MapPin className="w-[18px] h-[18px] text-[#71717A] mr-3" />
+                  <IconoirMapPin className="w-[20px] h-[20px] text-[#71717A] mr-3" strokeWidth={1.5} />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{city}</span>
                   <button onClick={() => { setCity(''); setCityInput('') }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <X className="w-3.5 h-3.5 text-[#71717A]" />
+                    <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                   </button>
                 </div>
               ) : (
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
+                  <IconoirMapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
                   <input value={cityInput} onChange={e => handleCitySearch(e.target.value)}
                     placeholder="Sélectionnez une ville"
                     className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
@@ -534,15 +535,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Localisation</label>
               {address && !citySuggestions.length ? (
                 <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
-                  <MapPin className="w-[18px] h-[18px] text-[#71717A] mr-3 flex-shrink-0" />
+                  <IconoirMapPin className="w-[20px] h-[20px] text-[#71717A] mr-3 flex-shrink-0" strokeWidth={1.5} />
                   <span className="flex-1 text-[#1A1A1A] font-medium truncate">{address}</span>
                   <button onClick={() => setAddress('')} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <X className="w-3.5 h-3.5 text-[#71717A]" />
+                    <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                   </button>
                 </div>
               ) : (
                 <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
+                  <IconoirMapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
                   <input value={address} onChange={e => setAddress(e.target.value)}
                     placeholder="Sélectionnez sur la carte"
                     className="w-full pl-11 pr-24 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
