@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, MapPin, Search, X, Loader2, Image as ImageIcon, Navigation, Map as MapIcon, Check, Edit3, BadgeCheck } from 'lucide-react'
+import { ChevronLeft, Calendar, MapPin, Search, X, Loader2, Image as ImageIcon, Check, Edit3, BadgeCheck } from 'lucide-react'
 import { Calendar as IconoirCalendar, Clock as IconoirClock, MapPin as IconoirMapPin, Xmark } from 'iconoir-react'
 import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
@@ -9,7 +9,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { CategoryChip } from '@/components/shared/CategoryChip'
 import { toast } from 'sonner'
-import { searchPlaces, searchCities, reverseGeocode, getCurrentPosition } from '@/lib/geo'
+import { searchPlaces, searchCities, reverseGeocode } from '@/lib/geo'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 
@@ -57,11 +57,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [date, setDate] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
+  const [isEditingTime, setIsEditingTime] = useState(false)
   const [city, setCity] = useState('')
   const [address, setAddress] = useState('')
   const [cityInput, setCityInput] = useState('')
   const [citySuggestions, setCitySuggestions] = useState<{label:string;lat:number|string;lon:number|string}[]>([])
-  const [geoLoading, setGeoLoading] = useState(false)
+  // const [geoLoading, setGeoLoading] = useState(false)
   const [lat, setLat] = useState<number|null>(null)
   const [lon, setLon] = useState<number|null>(null)
   
@@ -189,45 +190,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   }
 
   // Géolocalisation GPS native (Capacitor) — via geo.ts (double fallback)
-  const handleGeolocate = async () => {
-    setGeoLoading(true)
-    try {
-      const pos = await getCurrentPosition()
-      const result = await reverseGeocode(pos.coords.latitude, pos.coords.longitude)
-      setCity(result.city)
-      setAddress(result.address)
-      if (result.city) setCityInput(result.city)
-      setLat(result.lat)
-      setLon(result.lon)
-      setCitySuggestions([])
-      setMapCenter([pos.coords.latitude, pos.coords.longitude])
-      toast.success('Position trouvée !')
-    } catch (e: any) {
-      console.error('[GPS]', e)
-      if (e?.message === 'PERMISSION_DENIED') {
-        toast.error('Permission GPS refusée. Autorisez l\'accès à la localisation dans vos paramètres.')
-      } else {
-        toast.error('Impossible de récupérer votre position. Vérifiez que le GPS est activé.')
-      }
-    } finally {
-      setGeoLoading(false)
-    }
-  }
+  // const handleGeolocate = async () => {
+  //   // ... (commented out to match exact Figma design which removed geo buttons)
+  // }
 
   // Handle map interaction
-  const openMap = () => {
-    if (lat && lon) {
-      setMapCenter([lat, lon])
-      setTempLat(lat)
-      setTempLon(lon)
-    } else {
-      setTempLat(mapCenter[0])
-      setTempLon(mapCenter[1])
-    }
-    setMapSearchQuery('')
-    setMapSearchSuggestions([])
-    setShowMapModal(true)
-  }
+  // const openMap = () => {
+  //   // ... (commented out to match exact Figma design)
+  // }
 
   const handleMapSearch = async (q: string) => {
     setMapSearchQuery(q)
@@ -461,8 +431,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     </button>
                   </div>
                 ) : (
-                  <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                    className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
+                  <input
+                    type="text"
+                    onFocus={(e) => (e.target.type = 'date')}
+                    onBlur={(e) => {
+                      if (!e.target.value) e.target.type = 'text'
+                    }}
+                    value={date}
+                    onChange={e => setDate(e.target.value)}
+                    placeholder="Sélectionnez une date"
+                    className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:opacity-0"
                   />
                 )}
               </div>
@@ -475,15 +453,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
                   <IconoirClock className="w-[20px] h-[20px] text-[#71717A] mr-3" strokeWidth={1.5} />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{startTime} h – {endTime} h</span>
-                  <button onClick={() => { setStartTime(''); setEndTime('') }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
+                  <button onClick={() => { setStartTime(''); setEndTime(''); setIsEditingTime(false); }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
                     <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                   </button>
                 </div>
-              ) : (
+              ) : isEditingTime ? (
                 <div className="flex gap-3">
                   <div className="relative flex-1">
                     <IconoirClock className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
-                    <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)}
+                    <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} autoFocus
                       className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
                     />
                   </div>
@@ -494,6 +472,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     />
                   </div>
                 </div>
+              ) : (
+                <button type="button" onClick={() => setIsEditingTime(true)} className="relative flex items-center w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#71717A] bg-background-white text-left focus:outline-none focus:border-action-primary">
+                  <IconoirClock className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
+                  Choisissez une heure
+                </button>
               )}
             </div>
 
@@ -546,18 +529,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <IconoirMapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
                   <input value={address} onChange={e => setAddress(e.target.value)}
                     placeholder="Sélectionnez sur la carte"
-                    className="w-full pl-11 pr-24 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
+                    className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                    <button onClick={handleGeolocate} disabled={geoLoading} title="Ma position"
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#F9F9F9] active:scale-95 transition-transform">
-                      {geoLoading ? <Loader2 className="w-4 h-4 text-action-primary animate-spin" /> : <Navigation className="w-4 h-4 text-[#555555]" />}
-                    </button>
-                    <button onClick={openMap} title="Ouvrir la carte"
-                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#F9F9F9] active:scale-95 transition-transform">
-                      <MapIcon className="w-4 h-4 text-[#555555]" />
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
