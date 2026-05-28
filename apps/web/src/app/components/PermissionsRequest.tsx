@@ -83,7 +83,7 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
         {step === 1 ? (
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
-              <Bell className="w-8 h-8 text-[#FF9F1C]" />
+              <Bell className="w-8 h-8 text-action-primary" />
             </div>
             <h2 className="text-[20px] font-bold text-gray-900 mb-2">Restez informé</h2>
             <p className="text-[14px] text-gray-500 mb-8 leading-relaxed">
@@ -92,7 +92,7 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
             <button
               onClick={requestPush}
               disabled={loading}
-              className="w-full bg-[#FF9F1C] text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform"
+              className="w-full bg-action-primary text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform"
             >
               {loading ? 'Activation...' : 'Activer les notifications'}
             </button>
@@ -100,7 +100,7 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
         ) : (
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-[#FFF4E5] rounded-full flex items-center justify-center mb-4">
-              <MapPin className="w-8 h-8 text-[#FF9F1C]" />
+              <MapPin className="w-8 h-8 text-action-primary" />
             </div>
             <h2 className="text-[20px] font-bold text-gray-900 mb-2">Autour de vous</h2>
             <p className="text-[14px] text-gray-500 mb-8 leading-relaxed">
@@ -109,7 +109,7 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
             <button
               onClick={requestGeo}
               disabled={loading}
-              className="w-full bg-[#FF9F1C] text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform"
+              className="w-full bg-action-primary text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform"
             >
               {loading ? 'Activation...' : 'Activer la localisation'}
             </button>

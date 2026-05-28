@@ -36,32 +36,32 @@ export function LanguageModal({ onClose }: Props) {
           <button
             onClick={() => setSelected('fr')}
             className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
-              selected === 'fr' ? 'border-[#FF9F1C] bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333333] hover:border-gray-200 dark:hover:border-[#444444]'
+              selected === 'fr' ? 'border-action-primary bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333333] hover:border-gray-200 dark:hover:border-[#444444]'
             }`}
           >
-            <span className={`font-semibold ${selected === 'fr' ? 'text-[#FF9F1C]' : 'text-gray-700 dark:text-gray-300'}`}>
+            <span className={`font-semibold ${selected === 'fr' ? 'text-action-primary' : 'text-gray-700 dark:text-gray-300'}`}>
               {t('languageModal.french')}
             </span>
-            {selected === 'fr' && <Check size={20} className="text-[#FF9F1C]" />}
+            {selected === 'fr' && <Check size={20} className="text-action-primary" />}
           </button>
 
           <button
             onClick={() => setSelected('en')}
             className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
-              selected === 'en' ? 'border-[#FF9F1C] bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333333] hover:border-gray-200 dark:hover:border-[#444444]'
+              selected === 'en' ? 'border-action-primary bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333333] hover:border-gray-200 dark:hover:border-[#444444]'
             }`}
           >
-            <span className={`font-semibold ${selected === 'en' ? 'text-[#FF9F1C]' : 'text-gray-700 dark:text-gray-300'}`}>
+            <span className={`font-semibold ${selected === 'en' ? 'text-action-primary' : 'text-gray-700 dark:text-gray-300'}`}>
               {t('languageModal.english')}
             </span>
-            {selected === 'en' && <Check size={20} className="text-[#FF9F1C]" />}
+            {selected === 'en' && <Check size={20} className="text-action-primary" />}
           </button>
         </div>
 
         <button
           onClick={handleSave}
           className="w-full py-4 text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform"
-          style={{ background: 'linear-gradient(135deg, #FF9F1C 0%, #FF9F1C 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #FF7A00 0%, #FF7A00 100%)' }}
         >
           {t('languageModal.save')}
         </button>

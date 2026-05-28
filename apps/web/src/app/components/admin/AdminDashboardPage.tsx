@@ -55,14 +55,14 @@ export function AdminDashboardPage() {
           <StatCard label="En attente" value={data?.pending ?? 0} icon={Clock} accent="bg-amber-500/20 text-amber-400" />
           <StatCard label="Approuvées" value={data?.approved ?? 0} icon={CheckCircle2} accent="bg-emerald-500/20 text-emerald-400" />
           <StatCard label="Rejetées" value={data?.rejected ?? 0} icon={XCircle} accent="bg-red-500/20 text-red-400" />
-          <StatCard label="Total dossiers" value={data?.total ?? 0} icon={ShieldCheck} accent="bg-[#FF9F1C]/20 text-[#FF9F1C]" />
+          <StatCard label="Total dossiers" value={data?.total ?? 0} icon={ShieldCheck} accent="bg-action-primary/20 text-action-primary" />
         </div>
       )}
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
           <h2 className="font-semibold">Activité récente</h2>
-          <Link to="/admin/kyc" className="text-sm text-[#FF9F1C] font-medium flex items-center gap-1 hover:underline">
+          <Link to="/admin/kyc" className="text-sm text-action-primary font-medium flex items-center gap-1 hover:underline">
             Voir tout <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -76,7 +76,7 @@ export function AdminDashboardPage() {
               to={`/admin/kyc/${row.userId}`}
               className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.04] transition-colors"
             >
-              <div className="w-10 h-10 rounded-full bg-[#FF9F1C]/20 flex items-center justify-center text-[#FF9F1C] font-bold shrink-0">
+              <div className="w-10 h-10 rounded-full bg-action-primary/20 flex items-center justify-center text-action-primary font-bold shrink-0">
                 {row.displayName.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">

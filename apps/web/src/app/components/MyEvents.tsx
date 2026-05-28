@@ -69,14 +69,14 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
         );
       case 'favorites':
         return (
-          <span className="px-3 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap text-[#FF9F1C]">
+          <span className="px-3 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap text-action-primary">
             {formatPrice(event.price, event.currency)}
           </span>
         );
       case 'past':
         return (
           <span className="flex items-center gap-1 text-[12px] font-bold text-gray-700 whitespace-nowrap">
-            <Star className="w-4 h-4 text-[#FF9F1C] fill-[#FF9F1C]" />
+            <Star className="w-4 h-4 text-action-primary fill-action-primary" />
             {event.rating ? `${event.rating}` : '4,5'} · {event.reviewCount ?? 60} avis
           </span>
         );
@@ -95,7 +95,7 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
         >
           <Bell className="w-6 h-6 text-gray-700" strokeWidth={1.8} />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-[#FF9F1C] text-white text-[10px] font-bold flex items-center justify-center px-1">
+            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-action-primary text-white text-[10px] font-bold flex items-center justify-center px-1">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -110,7 +110,7 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
             onClick={() => { hapticFeedback.impact(); setActiveTab(tab.key); }}
             className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
               activeTab === tab.key
-                ? 'bg-[#FF9F1C] text-white'
+                ? 'bg-action-primary text-white'
                 : 'text-gray-500 bg-transparent'
             }`}
           >
@@ -123,7 +123,7 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
       <div className="flex-1 overflow-y-auto px-5 pb-28" style={{ scrollbarWidth: 'none' }}>
         {isCurrentLoading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-[#FF9F1C]" />
+            <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
           </div>
         ) : currentList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -139,7 +139,7 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
             {activeTab === 'upcoming' && (
               <button
                 onClick={() => onNavigate('explorer')}
-                className="mt-6 px-6 py-3 bg-[#FF9F1C] text-white rounded-full font-bold text-sm"
+                className="mt-6 px-6 py-3 bg-action-primary text-white rounded-full font-bold text-sm"
               >
                 Explorer les événements
               </button>

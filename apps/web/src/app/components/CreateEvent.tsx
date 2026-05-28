@@ -399,8 +399,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
       </div>
       {/* Ligne orange de séparation / progression */}
-      <div className="mx-5 h-[2px] bg-[#FFF2E0] rounded-full overflow-hidden shrink-0">
-        <div className="h-full bg-[#FF9F1C] transition-all duration-300 rounded-full"
+      <div className="mx-5 h-[2px] bg-brand-orange-100 rounded-full overflow-hidden shrink-0">
+        <div className="h-full bg-action-primary transition-all duration-300 rounded-full"
           style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
       </div>
 
@@ -425,7 +425,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <input
                 value={title} onChange={e => setTitle(e.target.value)}
                 placeholder="Nom de l'événement..."
-                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] font-medium text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-transparent"
+                className="w-full px-4 py-3.5 border border-[#E5E5E5] rounded-xl text-[15px] font-medium text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-transparent"
               />
             </div>
             <div>
@@ -461,7 +461,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   </div>
                 ) : (
                   <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                    className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+                    className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
                   />
                 )}
               </div>
@@ -483,13 +483,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <div className="relative flex-1">
                     <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                     <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)}
-                      className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-background-white text-[#1A1A1A]"
+                      className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
                     />
                   </div>
                   <div className="relative flex-1">
                     <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                     <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)}
-                      className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] focus:outline-none focus:border-[#FF9F1C] bg-background-white text-[#1A1A1A]"
+                      className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
                     />
                   </div>
                 </div>
@@ -512,7 +512,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                   <input value={cityInput} onChange={e => handleCitySearch(e.target.value)}
                     placeholder="Sélectionnez une ville"
-                    className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+                    className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
                   />
                   {citySuggestions.length > 0 && (
                     <div className="absolute z-20 top-full left-0 right-0 bg-background-white border border-[#E5E5E5] rounded-2xl mt-1 shadow-lg overflow-hidden">
@@ -545,7 +545,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#BBBBBB]" />
                   <input value={address} onChange={e => setAddress(e.target.value)}
                     placeholder="Sélectionnez sur la carte"
-                    className="w-full pl-11 pr-24 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+                    className="w-full pl-11 pr-24 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                     <button onClick={handleGeolocate} disabled={geoLoading} title="Ma position"
@@ -570,7 +570,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Nombre de places</label>
               <input type="number" min={1} value={maxPlaces} onChange={e => setMaxPlaces(e.target.value)}
                 placeholder="0"
-                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
               />
             </div>
             <div>
@@ -578,7 +578,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <div className="flex gap-2 items-center">
                 <input type="number" min={0} value={amount} onChange={e => setAmount(e.target.value)}
                   placeholder="0"
-                  className="flex-1 px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+                  className="flex-1 px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
                 />
                 <div className="px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#555555] bg-background-white flex-shrink-0 flex items-center justify-center font-medium">
                   F CFA <ChevronLeft className="w-4 h-4 ml-1 -rotate-90 text-[#BBBBBB]" />
@@ -590,21 +590,21 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block mt-2">Confidentialité</label>
               <div className="flex gap-4">
                 <button
-                  className={`flex-1 flex items-center justify-between px-4 py-[14px] border rounded-2xl transition-colors ${!isPrivate ? 'border-[#FF9F1C] bg-background-white' : 'border-[#E5E5E5] bg-background-white'}`}
+                  className={`flex-1 flex items-center justify-between px-4 py-[14px] border rounded-2xl transition-colors ${!isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E5E5E5] bg-background-white'}`}
                   onClick={() => setIsPrivate(false)}
                 >
                   <span className="text-[15px] font-medium text-[#1A1A1A]">Public</span>
-                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${!isPrivate ? 'border-[#FF9F1C]' : 'border-[#E5E5E5]'}`}>
-                    {!isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
+                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${!isPrivate ? 'border-action-primary' : 'border-[#E5E5E5]'}`}>
+                    {!isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                   </div>
                 </button>
                 <button
-                  className={`flex-1 flex items-center justify-between px-4 py-[14px] border rounded-2xl transition-colors ${isPrivate ? 'border-[#FF9F1C] bg-background-white' : 'border-[#E5E5E5] bg-background-white'}`}
+                  className={`flex-1 flex items-center justify-between px-4 py-[14px] border rounded-2xl transition-colors ${isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E5E5E5] bg-background-white'}`}
                   onClick={() => setIsPrivate(true)}
                 >
                   <span className="text-[15px] font-medium text-[#1A1A1A]">Privé</span>
-                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${isPrivate ? 'border-[#FF9F1C]' : 'border-[#E5E5E5]'}`}>
-                    {isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
+                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${isPrivate ? 'border-action-primary' : 'border-[#E5E5E5]'}`}>
+                    {isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                   </div>
                 </button>
               </div>
@@ -620,7 +620,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <textarea value={description} onChange={e => setDescription(e.target.value)}
                 placeholder="À propos de votre événement..."
                 rows={6}
-                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] resize-none focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+                className="w-full px-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] resize-none focus:outline-none focus:border-action-primary bg-background-white"
               />
             </div>
             <div>
@@ -659,7 +659,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 value={coOrgSearch} 
                 onChange={e => setCoOrgSearch(e.target.value)}
                 placeholder="Rechercher un ami"
-                className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-[#FF9F1C] bg-background-white"
+                className="w-full pl-11 pr-4 py-[14px] border border-[#E5E5E5] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#BBBBBB] focus:outline-none focus:border-action-primary bg-background-white"
               />
             </div>
 
@@ -677,7 +677,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                             alt={org.name} 
                             className="w-full h-full object-cover" 
                             fallback={
-                              <div className="w-full h-full bg-[#FFF2E0] flex items-center justify-center text-[#FF9F1C] font-bold text-[14px]">
+                              <div className="w-full h-full bg-brand-orange-100 flex items-center justify-center text-action-primary font-bold text-[14px]">
                                 {org.name.charAt(0).toUpperCase()}
                               </div>
                             }
@@ -1074,7 +1074,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {step < 6 ? (
             <>
               {step === 1 && !canNext() ? (
-                <button disabled className="flex-1 py-[17px] rounded-full font-bold text-[15px] bg-[#FFF2E0] text-white cursor-not-allowed transition-all">
+                <button disabled className="flex-1 py-[17px] rounded-full font-bold text-[15px] bg-brand-orange-100 text-white cursor-not-allowed transition-all">
                   Commencer
                 </button>
               ) : (
@@ -1084,7 +1084,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     Précédent
                   </button>
                   <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
-                    className={`flex-1 py-[17px] rounded-full font-bold text-[15px] transition-all ${canNext() ? 'bg-[#FF9F1C] text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFF2E0] text-white cursor-not-allowed'}`}>
+                    className={`flex-1 py-[17px] rounded-full font-bold text-[15px] transition-all ${canNext() ? 'bg-action-primary text-white shadow-sm active:scale-[0.98]' : 'bg-brand-orange-100 text-white cursor-not-allowed'}`}>
                     Suivant
                   </button>
                 </>

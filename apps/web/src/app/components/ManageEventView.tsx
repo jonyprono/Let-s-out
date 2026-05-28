@@ -26,7 +26,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 // ── Pill badge for categories ─────────────────────────────────────────────────
 function CategoryPill({ cat }: { cat: string }) {
   return (
-    <span className="text-[12px] font-bold text-[#FF9F1C] bg-[#FFF0D9] px-3 py-1 rounded-full border border-[#FFD99A]">
+    <span className="text-[12px] font-bold text-action-primary bg-[#FFF0D9] px-3 py-1 rounded-full border border-[#FFD99A]">
       {CATEGORY_LABELS[cat] || cat}
     </span>
   )
@@ -118,7 +118,7 @@ export function ManageEventView({
                   alt={organizerName}
                   className="w-9 h-9 rounded-full object-cover"
                   fallback={
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF9F1C] to-[#FFB75E] flex items-center justify-center text-white font-bold text-[13px]">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF7A00] to-[#FFB75E] flex items-center justify-center text-white font-bold text-[13px]">
                       {organizerName.charAt(0).toUpperCase()}
                     </div>
                   }
@@ -149,7 +149,7 @@ export function ManageEventView({
               })}
               {/* Let's Out Staff */}
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FFCA28] to-[#FF9F1C] flex items-center justify-center">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FFCA28] to-[#FF7A00] flex items-center justify-center">
                   <span className="text-white font-bold text-[10px]">LO</span>
                 </div>
                 <span className="text-[14px] text-gray-700 font-medium flex items-center gap-1">
@@ -215,7 +215,7 @@ export function ManageEventView({
         {/* Ajouter cagnotte */}
         <button
           onClick={handleAddPool}
-          className="w-full py-[15px] rounded-full border-2 border-[#FF9F1C] text-[#FF9F1C] font-bold text-[15px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+          className="w-full py-[15px] rounded-full border-2 border-action-primary text-action-primary font-bold text-[15px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
         >
           <PiggyBank className="w-5 h-5" />
           Ajouter cagnotte
@@ -225,7 +225,7 @@ export function ManageEventView({
           onClick={handlePublish}
           disabled={publishing}
           className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${
-            publishing ? 'bg-[#FFD99A]' : 'bg-[#FF9F1C]'
+            publishing ? 'bg-[#FFD99A]' : 'bg-action-primary'
           }`}
         >
           {publishing ? (

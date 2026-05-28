@@ -111,7 +111,7 @@ export function FriendRequests() {
               className="w-20 h-20 rounded-2xl mb-5 flex items-center justify-center"
               style={{ background: 'rgba(151,71,255,0.08)' }}
             >
-              <Users className="w-10 h-10" style={{ color: '#FF9F1C' }} />
+              <Users className="w-10 h-10" style={{ color: '#FF7A00' }} />
             </div>
             <h3 className="text-[17px] font-bold text-gray-900 mb-2">Aucune demande en attente</h3>
             <p className="text-[13px] text-gray-400 leading-relaxed max-w-xs">
@@ -147,7 +147,7 @@ export function FriendRequests() {
                   ) : (
                     <div
                       className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xl"
-                      style={{ background: 'linear-gradient(135deg, #FF9F1C, #FF9F1C)' }}
+                      style={{ background: 'linear-gradient(135deg, #FF7A00, #FF7A00)' }}
                     >
                       {displayName.charAt(0).toUpperCase()}
                     </div>
@@ -169,7 +169,7 @@ export function FriendRequests() {
                   {/* Actions */}
                   <div className="flex gap-2 flex-shrink-0">
                     {isProcessing ? (
-                      <Loader2 className="w-5 h-5 animate-spin text-[#FF9F1C]" />
+                      <Loader2 className="w-5 h-5 animate-spin text-action-primary" />
                     ) : (
                       <>
                         <button
@@ -178,7 +178,7 @@ export function FriendRequests() {
                           style={{ background: 'rgba(151,71,255,0.1)' }}
                           title="Accepter"
                         >
-                          <Check className="w-5 h-5" style={{ color: '#FF9F1C' }} />
+                          <Check className="w-5 h-5" style={{ color: '#FF7A00' }} />
                         </button>
                         <button
                           onClick={() => {

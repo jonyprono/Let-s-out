@@ -91,7 +91,7 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
                     className={`shrink-0 px-4 py-2 rounded-full text-[13px] font-bold flex items-center gap-1.5 transition-colors ${
                       isSent 
                         ? 'bg-gray-100 text-gray-500' 
-                        : 'bg-[#FF9F1C] text-white hover:bg-[#F09214]'
+                        : 'bg-action-primary text-white hover:bg-[#F09214]'
                     }`}
                   >
                     {isSent ? (

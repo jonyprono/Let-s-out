@@ -61,7 +61,7 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
                 <Star 
                   className={`w-10 h-10 transition-colors ${
                     star <= (hoverRating || rating) 
-                      ? 'fill-[#FF9F1C] text-[#FF9F1C]' 
+                      ? 'fill-action-primary text-action-primary' 
                       : 'text-gray-300'
                   }`} 
                 />
@@ -75,14 +75,14 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
               onChange={e => setComment(e.target.value)}
               placeholder="Racontez votre expérience (optionnel)..."
               rows={4}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] resize-none focus:outline-none focus:border-[#FF9F1C]"
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] resize-none focus:outline-none focus:border-action-primary"
             />
           </div>
 
           <button
             onClick={() => submitMutation.mutate()}
             disabled={rating === 0 || submitMutation.isPending}
-            className="w-full bg-[#FF9F1C] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center mt-2 mb-8"
+            className="w-full bg-action-primary text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center mt-2 mb-8"
           >
             {submitMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Envoyer mon avis'}
           </button>

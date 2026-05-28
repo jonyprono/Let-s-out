@@ -49,10 +49,10 @@ export function PoolManagementModal({
             <div className="border-t border-dashed border-gray-200" />
             <div className="flex items-center justify-between">
               <span className="text-[15px] text-gray-600 font-medium">Progression</span>
-              <span className="px-2 py-0.5 bg-[#FF9F1C] text-white text-[12px] font-bold rounded-md">{progress}%</span>
+              <span className="px-2 py-0.5 bg-action-primary text-white text-[12px] font-bold rounded-md">{progress}%</span>
             </div>
             <div className="h-2 rounded-full bg-gray-200 overflow-hidden">
-              <div className="h-full rounded-full bg-[#FF9F1C]" style={{ width: `${progress}%` }} />
+              <div className="h-full rounded-full bg-action-primary" style={{ width: `${progress}%` }} />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[15px] text-gray-600 font-medium">Collecté</span>
@@ -60,7 +60,7 @@ export function PoolManagementModal({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[15px] text-gray-600 font-medium">Restant</span>
-              <span className="text-[15px] font-bold text-[#FF9F1C]">{remaining.toLocaleString('fr-FR')} F</span>
+              <span className="text-[15px] font-bold text-action-primary">{remaining.toLocaleString('fr-FR')} F</span>
             </div>
           </div>
 
@@ -91,7 +91,7 @@ export function PoolManagementModal({
           {isCreator && onReleaseFunds && !event.poolReleased && (
             <button
               onClick={onReleaseFunds}
-              className="w-full py-3.5 border border-[#FF9F1C] text-[#FF9F1C] rounded-[12px] text-[14px] font-bold flex justify-center items-center gap-2 bg-white active:scale-95 transition-transform"
+              className="w-full py-3.5 border border-action-primary text-action-primary rounded-[12px] text-[14px] font-bold flex justify-center items-center gap-2 bg-white active:scale-95 transition-transform"
             >
               <Briefcase className="w-4 h-4" />
               Débloquer les fonds

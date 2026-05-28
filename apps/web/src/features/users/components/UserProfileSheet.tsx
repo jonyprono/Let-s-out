@@ -195,7 +195,7 @@ export function UserProfileSheet({ userId, username, preview, onClose }: UserPro
                 <button
                   onClick={() => sendFriendMutation.mutate()}
                   disabled={sendFriendMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-[#FF9F1C] text-white font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-action-primary text-white font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
                 >
                   {sendFriendMutation.isPending
                     ? <Loader2 className="w-4 h-4 animate-spin" />

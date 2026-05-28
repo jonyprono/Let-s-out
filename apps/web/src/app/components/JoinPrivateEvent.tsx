@@ -129,11 +129,11 @@ export function JoinPrivateEvent() {
         
         {/* Scanner overlay hole */}
         <div className="flex-1 border-[40px] border-black/50 relative">
-          <div className="absolute inset-0 border-2 border-[#FF9F1C] shadow-[0_0_0_4000px_rgba(0,0,0,0.5)]">
-            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-[#FF9F1C] -ml-[2px] -mt-[2px]" />
-            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-[#FF9F1C] -mr-[2px] -mt-[2px]" />
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-[#FF9F1C] -ml-[2px] -mb-[2px]" />
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#FF9F1C] -mr-[2px] -mb-[2px]" />
+          <div className="absolute inset-0 border-2 border-action-primary shadow-[0_0_0_4000px_rgba(0,0,0,0.5)]">
+            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-action-primary -ml-[2px] -mt-[2px]" />
+            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-action-primary -mr-[2px] -mt-[2px]" />
+            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-action-primary -ml-[2px] -mb-[2px]" />
+            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-action-primary -mr-[2px] -mb-[2px]" />
           </div>
         </div>
 
@@ -158,7 +158,7 @@ export function JoinPrivateEvent() {
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center -mt-10">
         <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-6">
-          <QrCode className="w-10 h-10 text-[#FF9F1C]" />
+          <QrCode className="w-10 h-10 text-action-primary" />
         </div>
         
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Rejoindre via code</h2>
@@ -172,13 +172,13 @@ export function JoinPrivateEvent() {
             placeholder="Ex: A1B2C3D4E5"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-center text-xl font-mono tracking-widest font-bold focus:outline-none focus:border-[#FF9F1C] uppercase"
+            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-center text-xl font-mono tracking-widest font-bold focus:outline-none focus:border-action-primary uppercase"
           />
           
           <button
             onClick={() => handleJoin()}
             disabled={isLoading || !code.trim()}
-            className="w-full py-4 bg-[#FF9F1C] text-white rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-50"
+            className="w-full py-4 bg-action-primary text-white rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-50"
           >
             {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Rejoindre l\'événement'}
           </button>

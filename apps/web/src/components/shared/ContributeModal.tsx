@@ -62,7 +62,7 @@ export function ContributeModal({ event, onClose, onConfirm }: ContributeModalPr
         <div className="px-5 pt-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
           {isFixed && fixedAmount ? (
             <div className="mb-4 p-3 bg-orange-50 rounded-xl border border-orange-100">
-              <p className="text-[13px] text-[#FF9F1C] font-medium">
+              <p className="text-[13px] text-action-primary font-medium">
                 Montant fixe — vous allez payer{' '}
                 <strong>{fixedAmount.toLocaleString('fr-FR')} F CFA</strong> (non modifiable).
               </p>
@@ -98,7 +98,7 @@ export function ContributeModal({ event, onClose, onConfirm }: ContributeModalPr
                 value={amount}
                 onChange={e => setAmount(e.target.value.replace(/[^0-9]/g, ''))}
                 placeholder={isMinimum && minAmount ? `Min. ${Number(minAmount).toLocaleString('fr-FR')}` : 'Ex: 5000'}
-                className="flex-1 px-4 py-3.5 border border-gray-200 rounded-xl text-[16px] font-semibold focus:outline-none focus:border-[#FF9F1C] text-gray-900 transition-colors"
+                className="flex-1 px-4 py-3.5 border border-gray-200 rounded-xl text-[16px] font-semibold focus:outline-none focus:border-action-primary text-gray-900 transition-colors"
               />
               <div className="px-3 py-3.5 border border-gray-200 rounded-xl text-[14px] font-bold text-gray-600 bg-gray-50">
                 F CFA
@@ -108,7 +108,7 @@ export function ContributeModal({ event, onClose, onConfirm }: ContributeModalPr
 
           <button
             onClick={handleConfirm}
-            className="w-full bg-[#FF9F1C] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform shadow-md"
+            className="w-full bg-action-primary text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform shadow-md"
           >
             {isFixed ? `Payer ${(fixedAmount ?? 0).toLocaleString('fr-FR')} F CFA` : 'Procéder au paiement'}
           </button>

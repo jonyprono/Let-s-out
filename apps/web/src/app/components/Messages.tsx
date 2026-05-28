@@ -81,8 +81,8 @@ export function Messages(_props: MessagesProps) {
           <div>
             <h1 className="text-[24px] font-black tracking-tight text-foreground">Messages</h1>
             {totalUnread > 0 && (
-              <p className="text-[13px] font-bold text-[#FF9F1C] mt-0.5 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#FF9F1C] animate-pulse" />
+              <p className="text-[13px] font-bold text-action-primary mt-0.5 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-action-primary animate-pulse" />
                 {totalUnread} message{totalUnread > 1 ? 's' : ''} non lu{totalUnread > 1 ? 's' : ''}
               </p>
             )}
@@ -98,13 +98,13 @@ export function Messages(_props: MessagesProps) {
               onClick={() => setShowNewConv(true)}
               className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95 bg-orange-50 shadow-sm"
             >
-              <Plus className="w-6 h-6 text-[#FF9F1C]" />
+              <Plus className="w-6 h-6 text-action-primary" />
             </button>
           </div>
         </div>
 
         {/* Search */}
-        <div className="bg-muted/80 backdrop-blur-sm rounded-full flex items-center gap-3 px-4 py-3 border border-border focus-within:ring-2 focus-within:ring-[#FF9F1C]/30 focus-within:border-[#FF9F1C]/30 focus-within:bg-card transition-all shadow-sm">
+        <div className="bg-muted/80 backdrop-blur-sm rounded-full flex items-center gap-3 px-4 py-3 border border-border focus-within:ring-2 focus-within:ring-[#FF7A00]/30 focus-within:border-action-primary/30 focus-within:bg-card transition-all shadow-sm">
           <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
           <input
             type="text"
@@ -171,7 +171,7 @@ export function Messages(_props: MessagesProps) {
             {filtered.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
                 <div className="w-24 h-24 rounded-full mb-5 flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm border border-white">
-                  {searchQuery ? <Search className="w-10 h-10 text-[#FF9F1C]" /> : <MessageCircle className="w-10 h-10 text-[#FF9F1C]" />}
+                  {searchQuery ? <Search className="w-10 h-10 text-action-primary" /> : <MessageCircle className="w-10 h-10 text-action-primary" />}
                 </div>
                 <h3 className="text-[17px] font-bold text-gray-900 mb-2">
                   {searchQuery ? 'Aucun résultat' : 'Aucune conversation'}
@@ -182,7 +182,7 @@ export function Messages(_props: MessagesProps) {
                 {!searchQuery && (
                   <button
                     onClick={() => setShowNewConv(true)}
-                    className="mt-6 px-6 py-3 bg-[#FF9F1C] text-white rounded-full font-bold text-[14px] shadow-lg shadow-[#FF9F1C]/30 active:scale-95 transition-transform"
+                    className="mt-6 px-6 py-3 bg-action-primary text-white rounded-full font-bold text-[14px] shadow-lg shadow-action-primary/30 active:scale-95 transition-transform"
                   >
                     Démarrer une discussion
                   </button>
@@ -206,7 +206,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
   return (
     <button
       onClick={onNavigate}
-      className={`w-full rounded-[24px] flex items-center gap-3 p-3 text-left transition-all active:scale-[0.98] border border-transparent ${hasUnread ? 'bg-card shadow-[0_4px_20px_rgb(255,159,28,0.1)] border-[#FF9F1C]/10 z-10 relative' : 'bg-card/80 hover:bg-card shadow-sm border-border/50'}`}
+      className={`w-full rounded-[24px] flex items-center gap-3 p-3 text-left transition-all active:scale-[0.98] border border-transparent ${hasUnread ? 'bg-card shadow-[0_4px_20px_rgb(255,159,28,0.1)] border-action-primary/10 z-10 relative' : 'bg-card/80 hover:bg-card shadow-sm border-border/50'}`}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
@@ -234,20 +234,20 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
           <h3 className={`text-[15px] truncate pr-2 text-foreground ${hasUnread ? 'font-black' : 'font-bold'}`}>
             {conv.name}
           </h3>
-          <span className={`text-[11px] whitespace-nowrap flex-shrink-0 font-bold ${hasUnread ? 'text-[#FF9F1C]' : 'text-gray-400'}`}>
+          <span className={`text-[11px] whitespace-nowrap flex-shrink-0 font-bold ${hasUnread ? 'text-action-primary' : 'text-gray-400'}`}>
             {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            {!hasUnread && <CheckCheck className="w-4 h-4 text-[#FF9F1C] flex-shrink-0" />}
+            {!hasUnread && <CheckCheck className="w-4 h-4 text-action-primary flex-shrink-0" />}
             <p className={`text-[13px] truncate ${hasUnread ? 'text-foreground font-bold' : 'text-muted-foreground font-medium'}`}>
-              {conv.lastMsgPrefix && <span className="font-bold text-[#FF9F1C] mr-1">{conv.lastMsgPrefix}</span>}
+              {conv.lastMsgPrefix && <span className="font-bold text-action-primary mr-1">{conv.lastMsgPrefix}</span>}
               {conv.lastMsg}
             </p>
           </div>
           {hasUnread && (
-            <span className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-black text-white shadow-[0_2px_10px_rgba(255,159,28,0.4)] bg-[#FF9F1C]">
+            <span className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-black text-white shadow-[0_2px_10px_rgba(255,159,28,0.4)] bg-action-primary">
               {conv.unread > 9 ? '9+' : conv.unread}
             </span>
           )}

@@ -8,7 +8,7 @@ interface ParticipantAvatarsProps {
 
 export function ParticipantAvatars({ count, max, attendees = [] }: ParticipantAvatarsProps) {
   const displayCount = Math.min(count, 3)
-  const colors = ['#FF9F1C', '#9747FF', '#10B981']
+  const colors = ['#FF7A00', '#9747FF', '#10B981']
 
   return (
     <div className="flex items-center gap-2">

@@ -197,11 +197,11 @@ export function ChatDetails() {
             <div className="min-w-0">
               <h2 className="font-bold text-gray-900 dark:text-[#FFFFFF] text-[16px] truncate">{conversationTitle}</h2>
               {typingUser ? (
-                <p className="text-[12px] text-[#FF9F1C] font-medium animate-pulse">{typingUser} est en train d'écrire...</p>
+                <p className="text-[12px] text-action-primary font-medium animate-pulse">{typingUser} est en train d'écrire...</p>
               ) : isGroup ? (
                 <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400">{memberCount} membre{memberCount !== 1 ? 's' : ''}</p>
               ) : (
-                <p className="text-[12px] font-medium text-[#FF9F1C]">Voir le profil →</p>
+                <p className="text-[12px] font-medium text-action-primary">Voir le profil →</p>
               )}
             </div>
           </button>
@@ -220,16 +220,16 @@ export function ChatDetails() {
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-1.5 bg-gray-100 dark:bg-[#333333] rounded-full overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-[#FF9F1C]"
+                    className="h-full rounded-full bg-action-primary"
                     style={{ width: `${computePoolStats(event).progress}%` }}
                   />
                 </div>
-                <span className="text-[12px] font-bold text-[#FF9F1C]">{computePoolStats(event).progress}%</span>
+                <span className="text-[12px] font-bold text-action-primary">{computePoolStats(event).progress}%</span>
               </div>
             </div>
             <button
               onClick={() => setShowContributeModal(true)}
-              className="rounded-full border-[1.5px] border-[#FF9F1C] text-[#FF9F1C] px-4 py-1.5 text-[12px] font-bold active:scale-95 transition-transform touch-sm"
+              className="rounded-full border-[1.5px] border-action-primary text-action-primary px-4 py-1.5 text-[12px] font-bold active:scale-95 transition-transform touch-sm"
             >
               Contribuer
             </button>
@@ -338,7 +338,7 @@ export function ChatDetails() {
                   >
                     {showSenderInfo && isFirstInGroup && (
                       <button
-                        className="text-[11px] font-semibold text-[#FF9F1C] mb-0.5 ml-1 active:opacity-70"
+                        className="text-[11px] font-semibold text-action-primary mb-0.5 ml-1 active:opacity-70"
                         onClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
                       >
                         {senderName}
@@ -389,7 +389,7 @@ export function ChatDetails() {
                             </div>
                           </div>
                         ) : null}
-                        <div className={`px-2 py-1 ${isMe ? 'bg-[#FF9F1C]' : 'bg-gray-100 dark:bg-[#2A2A2A]'}`}>
+                        <div className={`px-2 py-1 ${isMe ? 'bg-action-primary' : 'bg-gray-100 dark:bg-[#2A2A2A]'}`}>
                           <span className={`text-[10px] block text-right ${isMe ? 'text-orange-300' : 'text-gray-400 dark:text-gray-500'}`}>
                             {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                           </span>
@@ -399,7 +399,7 @@ export function ChatDetails() {
                       <div
                         className={`rounded-2xl px-4 py-2.5 shadow-sm ${
                           isMe
-                            ? `bg-[#FF9F1C] text-white ${isLastInGroup ? 'rounded-tr-sm' : ''}`
+                            ? `bg-action-primary text-white ${isLastInGroup ? 'rounded-tr-sm' : ''}`
                             : `bg-white dark:bg-[#2A2A2A] border border-gray-100 dark:border-[#333333] text-gray-900 dark:text-gray-100 ${isLastInGroup ? 'rounded-tl-sm' : ''}`
                         }`}
                       >
@@ -469,7 +469,7 @@ export function ChatDetails() {
           onClick={handleSendText}
           disabled={!inputText.trim() && !isUploading}
           className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
-            inputText.trim() ? 'bg-[#FF9F1C] text-white shadow-md shadow-orange-400/20' : 'bg-gray-100 dark:bg-[#222222] text-gray-400 dark:text-gray-500'
+            inputText.trim() ? 'bg-action-primary text-white shadow-md shadow-orange-400/20' : 'bg-gray-100 dark:bg-[#222222] text-gray-400 dark:text-gray-500'
           }`}
         >
           <Send className="w-4 h-4 ml-0.5" />

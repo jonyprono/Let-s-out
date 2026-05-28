@@ -5,9 +5,9 @@ import { useConversations } from '@/features/chat/api'
 
 // Custom icon: groupe d'événements (3 silhouettes)
 function EventsIcon({ active }: { active: boolean }) {
-  const color = active ? '#FF9F1C' : 'currentColor'
+  const color = active ? '#FF7A00' : 'currentColor'
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}>
       {/* Personne du milieu */}
       <circle cx="12" cy="7" r="2.5" fill={color} />
       <path d="M7 19c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none" />
@@ -98,13 +98,13 @@ export function BottomNav() {
                     width={22}
                     height={22}
                     strokeWidth={active ? 2 : 1.6}
-                    style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}
+                    style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}
                   />
               }
             </div>
             <span
               className="text-[10px] font-semibold leading-none mt-1"
-              style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}
+              style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}
             >
               {tab.label}
             </span>
@@ -125,7 +125,7 @@ export function BottomNav() {
             width: 46,
             height: 46,
             borderRadius: 14,
-            backgroundColor: '#FF9F1C',
+            backgroundColor: '#FF7A00',
             marginBottom: 10,
           }}
         >
@@ -150,7 +150,7 @@ export function BottomNav() {
                 width={22}
                 height={22}
                 strokeWidth={active ? 2 : 1.6}
-                style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}
+                style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}
               />
               {tab.path === '/messages' && totalUnread > 0 && (
                 <span
@@ -162,7 +162,7 @@ export function BottomNav() {
             </div>
             <span
               className="text-[10px] font-semibold leading-none mt-1"
-              style={{ color: active ? '#FF9F1C' : 'var(--neutral-gray-600)' }}
+              style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}
             >
               {tab.label}
             </span>

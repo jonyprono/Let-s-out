@@ -200,7 +200,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           <span className={authHeader}>Réinitialiser votre mot de passe</span>
         </div>
         <div className="flex justify-center mt-1">
-          <div className="w-10 h-[2.5px] bg-[#FF9F1C] rounded-full" />
+          <div className="w-10 h-[2.5px] bg-action-primary rounded-full" />
         </div>
       </div>
 
@@ -236,8 +236,8 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                   <button key={ch} type="button" onClick={() => setCurrentChannel(val)}
                     className={authChannelBtn}>
                     <span className={authChannelLabel}>{ch}</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-[#FF9F1C]' : 'border-[#CCCCCC]'}`}>
-                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-[#FF9F1C]" />}
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-action-primary' : 'border-[#CCCCCC]'}`}>
+                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                     </div>
                   </button>
                 )
@@ -265,8 +265,8 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKey(i, e)}
                   className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-card text-foreground
-                    ${d ? 'border-[#FF9F1C]' : 'border-border'}
-                    focus:border-[#FF9F1C]`}
+                    ${d ? 'border-action-primary' : 'border-border'}
+                    focus:border-action-primary`}
                 />
               ))}
             </div>
@@ -345,7 +345,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           type="button"
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-[#FF9F1C] text-white disabled:bg-[#FFD99A] disabled:text-white"
+          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-action-primary text-white disabled:bg-[#FFD99A] disabled:text-white"
         >
           {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
           <span>{step === 3 ? 'Réinitialiser' : 'Suivant'}</span>

@@ -167,7 +167,7 @@ export function PaymentPage() {
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
         {(status === 'loading' || eventLoading) && (
           <>
-            <Loader2 className="w-10 h-10 text-[#FF9F1C] animate-spin" />
+            <Loader2 className="w-10 h-10 text-action-primary animate-spin" />
             <p className="text-gray-500">Préparation du paiement...</p>
           </>
         )}
@@ -181,7 +181,7 @@ export function PaymentPage() {
               {info.isContribution ? 'Contribution à la cagnotte' : 'Paiement'}
             </h2>
             <p className="text-gray-500 text-sm">{info.description}</p>
-            <p className="text-2xl font-bold text-[#FF9F1C]">{info.amount.toLocaleString('fr-FR')} F CFA</p>
+            <p className="text-2xl font-bold text-action-primary">{info.amount.toLocaleString('fr-FR')} F CFA</p>
             {event && isContribution && (
               <p className="text-xs text-gray-400">
                 Mode : {event.poolMode === 'fixe' ? 'montant fixe' : event.poolMode === 'minimum' ? 'montant minimum' : 'montant libre'}
@@ -194,7 +194,7 @@ export function PaymentPage() {
                 </div>
                 <button
                   onClick={handleDevConfirm}
-                  className="w-full bg-[#FF9F1C] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98]"
+                  className="w-full bg-action-primary text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98]"
                 >
                   Confirmer le paiement (DEV)
                 </button>

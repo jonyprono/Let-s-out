@@ -139,7 +139,7 @@ function SelfieIllustration({ captured }: { captured: boolean }) {
         <>
           <div className="relative">
             <div className="w-16 h-16 rounded-full bg-[#FFE8D6] flex items-center justify-center">
-              <div className="w-10 h-10 rounded-full bg-[#FF9F1C]/30" />
+              <div className="w-10 h-10 rounded-full bg-action-primary/30" />
             </div>
             <div className="w-20 h-8 bg-[#FFE8D6] rounded-t-full absolute -bottom-4 left-1/2 -translate-x-1/2" />
           </div>
@@ -162,7 +162,7 @@ function SelfieWithIdIllustration({ captured }: { captured: boolean }) {
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-14 h-14 rounded-full bg-[#FFE8D6] flex items-center justify-center">
-                <div className="w-9 h-9 rounded-full bg-[#FF9F1C]/30" />
+                <div className="w-9 h-9 rounded-full bg-action-primary/30" />
               </div>
               <div className="w-18 h-7 bg-[#FFE8D6] rounded-t-full absolute -bottom-3 left-1/2 -translate-x-1/2" />
             </div>
@@ -295,7 +295,7 @@ export function VerifyProfile() {
   if (!kycStatusChecked) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#1A1A1A]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#FF9F1C]" />
+        <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
       </div>
     )
   }
@@ -331,7 +331,7 @@ export function VerifyProfile() {
           </button>
           <button
             onClick={() => navigate('/home')}
-            className="flex-[1.2] py-4 rounded-full font-bold text-[15px] text-white bg-[#FF9F1C]"
+            className="flex-[1.2] py-4 rounded-full font-bold text-[15px] text-white bg-action-primary"
           >
             Accueil
           </button>
@@ -379,7 +379,7 @@ export function VerifyProfile() {
         {/* Progress bar */}
         <div className="h-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full overflow-hidden">
           <div
-            className="h-full bg-[#FF9F1C] rounded-full transition-all duration-500"
+            className="h-full bg-action-primary rounded-full transition-all duration-500"
             style={{ width: `${(step / totalSteps) * 100}%` }}
           />
         </div>
@@ -418,8 +418,8 @@ export function VerifyProfile() {
         )}
 
         {/* Instruction tip */}
-        <div className="flex items-start gap-2 mb-6 p-3 bg-[#FFF8F1] dark:bg-[#FF9F1C]/5 rounded-xl border border-orange-100 dark:border-[#FF9F1C]/20">
-          <AlertCircle className="w-4 h-4 text-[#FF9F1C] mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-2 mb-6 p-3 bg-[#FFF8F1] dark:bg-action-primary/5 rounded-xl border border-orange-100 dark:border-action-primary/20">
+          <AlertCircle className="w-4 h-4 text-action-primary mt-0.5 flex-shrink-0" />
           <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed">{currentStep.instruction}</p>
         </div>
 
@@ -435,8 +435,8 @@ export function VerifyProfile() {
             }}
             className="flex-1 flex flex-col items-center gap-2 px-4 py-4 border border-gray-200 dark:border-[#333333] rounded-2xl bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
           >
-            <div className="w-10 h-10 rounded-full bg-[#FFF8F1] dark:bg-[#FF9F1C]/10 flex items-center justify-center">
-              <Camera className="w-5 h-5 text-[#FF9F1C]" />
+            <div className="w-10 h-10 rounded-full bg-[#FFF8F1] dark:bg-action-primary/10 flex items-center justify-center">
+              <Camera className="w-5 h-5 text-action-primary" />
             </div>
             <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">
               {step === 3 || step === 4 ? 'Caméra avant' : 'Photographier'}
@@ -483,8 +483,8 @@ export function VerifyProfile() {
           disabled={!previews[step] || submitStatus === 'uploading'}
           className={`w-full py-4 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 flex items-center justify-center gap-2 ${
             previews[step] && submitStatus !== 'uploading'
-              ? 'bg-[#FF9F1C] shadow-md shadow-orange-200'
-              : 'bg-[#FF9F1C]/30'
+              ? 'bg-action-primary shadow-md shadow-orange-200'
+              : 'bg-action-primary/30'
           }`}
         >
           {submitStatus === 'uploading' ? (
@@ -503,7 +503,7 @@ export function VerifyProfile() {
               key={s.id}
               className={`rounded-full transition-all ${
                 s.id === step
-                  ? 'w-6 h-2 bg-[#FF9F1C]'
+                  ? 'w-6 h-2 bg-action-primary'
                   : previews[s.id]
                   ? 'w-2 h-2 bg-[#10B981]'
                   : 'w-2 h-2 bg-gray-200 dark:bg-[#2A2A2A]'

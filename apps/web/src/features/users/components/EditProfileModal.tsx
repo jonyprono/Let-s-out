@@ -105,7 +105,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         <button 
           onClick={handleSave}
           disabled={isSaving}
-          className="text-[15px] font-bold text-[#FF9F1C] disabled:opacity-50"
+          className="text-[15px] font-bold text-action-primary disabled:opacity-50"
         >
           {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer'}
         </button>
@@ -132,13 +132,13 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             </div>
             {isUploading && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-[#FF9F1C]" />
+                <Loader2 className="w-6 h-6 animate-spin text-action-primary" />
               </div>
             )}
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="absolute bottom-0 right-0 w-8 h-8 bg-[#FF9F1C] rounded-full border-2 border-white flex items-center justify-center text-white shadow-md hover:bg-[#8338ec] transition-colors"
+              className="absolute bottom-0 right-0 w-8 h-8 bg-action-primary rounded-full border-2 border-white flex items-center justify-center text-white shadow-md hover:bg-[#8338ec] transition-colors"
             >
               <Camera className="w-4 h-4" />
             </button>
@@ -161,7 +161,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="John Doe"
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-[#FF9F1C]/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
+            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
           />
         </div>
 
@@ -173,7 +173,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="Paris"
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-[#FF9F1C]/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
+            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
           />
         </div>
 
@@ -185,7 +185,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             onChange={(e) => setBio(e.target.value)}
             rows={4}
             placeholder="Passionné(e) de sorties..."
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-[#FF9F1C]/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors resize-none"
+            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors resize-none"
           />
         </div>
 
@@ -197,7 +197,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             value={interestsText}
             onChange={(e) => setInterestsText(e.target.value)}
             placeholder="Sport, Cinéma, Musique..."
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-[#FF9F1C]/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
+            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
           />
           <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-1">Séparez vos intérêts par des virgules.</p>
         </div>

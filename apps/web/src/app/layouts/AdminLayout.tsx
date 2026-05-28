@@ -25,11 +25,11 @@ export function AdminLayout() {
       <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-white/10 bg-[#111113] h-full">
         {/* Brand */}
         <div className="px-6 py-5 border-b border-white/10 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#FF9F1C]/15 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5 text-[#FF9F1C]" />
+          <div className="w-9 h-9 rounded-xl bg-action-primary/15 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-action-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#FF9F1C]">Let&apos;s Out</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-action-primary">Let&apos;s Out</p>
             <p className="text-sm font-bold leading-tight truncate">Administration</p>
           </div>
         </div>
@@ -51,7 +51,7 @@ export function AdminLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-[#FF9F1C]/15 text-[#FF9F1C] shadow-inner'
+                    ? 'bg-action-primary/15 text-action-primary shadow-inner'
                     : 'text-white/50 hover:bg-white/[0.06] hover:text-white'
                 }`
               }
@@ -114,7 +114,7 @@ export function AdminLayout() {
               end={item.end}
               className={({ isActive }) =>
                 `shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${
-                  isActive ? 'bg-[#FF9F1C] text-black' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                  isActive ? 'bg-action-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
                 }`
               }
             >

@@ -241,7 +241,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onClick={() => setFilterDate(f.key)}
                   className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
                     filterDate === f.key
-                      ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
+                      ? 'bg-action-primary text-white border-action-primary'
                       : 'bg-white text-gray-700 border-gray-200'
                   }`}
                 >
@@ -255,7 +255,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 type="date"
                 value={filterCustomDate}
                 onChange={e => setFilterCustomDate(e.target.value)}
-                className="mt-3 w-full border border-gray-200 rounded-xl px-4 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-[#FF9F1C]"
+                className="mt-3 w-full border border-gray-200 rounded-xl px-4 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-action-primary"
               />
             )}
           </div>
@@ -270,7 +270,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onClick={() => setFilterTime(f.key)}
                   className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
                     filterTime === f.key
-                      ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
+                      ? 'bg-action-primary text-white border-action-primary'
                       : 'bg-white text-gray-700 border-gray-200'
                   }`}
                 >
@@ -292,7 +292,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     onClick={() => toggleFilterCategory(cat.key)}
                     className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all flex items-center gap-1 ${
                       selected
-                        ? 'bg-[#FF9F1C] text-white border-[#FF9F1C]'
+                        ? 'bg-action-primary text-white border-action-primary'
                         : 'bg-white text-gray-700 border-gray-200'
                     }`}
                   >
@@ -320,7 +320,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               onChange={e => setFilterBudgetMax(Number(e.target.value))}
               className="w-full h-1.5 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[22px] [&::-webkit-slider-thumb]:h-[22px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-200 [&::-webkit-slider-thumb]:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
               style={{
-                background: `linear-gradient(to right, #FF9F1C 0%, #FF9F1C ${(filterBudgetMax / 10000) * 100}%, #f3f4f6 ${(filterBudgetMax / 10000) * 100}%, #f3f4f6 100%)`
+                background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${(filterBudgetMax / 10000) * 100}%, #f3f4f6 ${(filterBudgetMax / 10000) * 100}%, #f3f4f6 100%)`
               }}
             />
           </div>
@@ -341,7 +341,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               value={filterDistance}
               onChange={e => setFilterDistance(Number(e.target.value))}
               className="w-full h-1.5 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[22px] [&::-webkit-slider-thumb]:h-[22px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-200 [&::-webkit-slider-thumb]:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
-              style={{ background: `linear-gradient(to right, #FF9F1C 0%, #FF9F1C ${(filterDistance / 100) * 100}%, #f3f4f6 ${(filterDistance / 100) * 100}%, #f3f4f6 100%)` }}
+              style={{ background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${(filterDistance / 100) * 100}%, #f3f4f6 ${(filterDistance / 100) * 100}%, #f3f4f6 100%)` }}
             />
           </div>
         </div>
@@ -356,7 +356,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </button>
           <button
             onClick={applyFilters}
-            className="flex-1 py-3.5 rounded-full bg-[#FF9F1C] active:bg-[#FF8C00] text-[14px] font-bold text-white shadow-md shadow-[#FF9F1C]/20"
+            className="flex-1 py-3.5 rounded-full bg-action-primary active:bg-[#FF8C00] text-[14px] font-bold text-white shadow-md shadow-action-primary/20"
           >
             Appliquer les filtres
           </button>
@@ -382,7 +382,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Location search */}
-          <div className={`flex items-center gap-2 border rounded-full px-4 py-2.5 mb-3 transition-colors ${activeSearchInput === 'location' ? 'border-[#FF9F1C]' : 'border-gray-200'}`}>
+          <div className={`flex items-center gap-2 border rounded-full px-4 py-2.5 mb-3 transition-colors ${activeSearchInput === 'location' ? 'border-action-primary' : 'border-gray-200'}`}>
             <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0" />
             <input
               autoFocus
@@ -402,7 +402,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Event keyword search */}
-          <div className={`flex items-center gap-2 border rounded-full px-4 py-2.5 transition-colors ${activeSearchInput === 'keyword' ? 'border-[#FF9F1C]' : 'border-gray-200'}`}>
+          <div className={`flex items-center gap-2 border rounded-full px-4 py-2.5 transition-colors ${activeSearchInput === 'keyword' ? 'border-action-primary' : 'border-gray-200'}`}>
             <Search className="w-5 h-5 text-gray-500 flex-shrink-0" />
             <input
               value={searchQuery}
@@ -440,7 +440,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         <span className="text-[15px] text-gray-900 truncate">{loc.label}</span>
                       </div>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-[#FF9F1C] flex items-center justify-center flex-shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-action-primary flex items-center justify-center flex-shrink-0">
                           <Check className="w-3 h-3 text-white stroke-[3]" />
                         </div>
                       )}
@@ -464,7 +464,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         <span className="text-[15px] text-gray-900 truncate">{loc}</span>
                       </div>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-[#FF9F1C] flex items-center justify-center flex-shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-action-primary flex items-center justify-center flex-shrink-0">
                           <Check className="w-3 h-3 text-white stroke-[3]" />
                         </div>
                       )}

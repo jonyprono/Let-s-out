@@ -50,7 +50,7 @@ export function ChangePasswordModal({ onClose }: Props) {
                 type={showOld ? 'text' : 'password'}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] font-medium outline-none focus:border-[#FF9F1C] focus:bg-white dark:bg-[#1A1A1A] transition-all"
+                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] font-medium outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
                 placeholder="••••••••"
               />
               <button
@@ -72,7 +72,7 @@ export function ChangePasswordModal({ onClose }: Props) {
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] font-medium outline-none focus:border-[#FF9F1C] focus:bg-white dark:bg-[#1A1A1A] transition-all"
+                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] font-medium outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
                 placeholder="••••••••"
               />
               <button
@@ -90,7 +90,7 @@ export function ChangePasswordModal({ onClose }: Props) {
           onClick={handleSave}
           disabled={isLoading || !oldPassword || newPassword.length < 6}
           className="w-full py-4 flex items-center justify-center text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #FF9F1C 0%, #FF9F1C 100%)' }}
+          style={{ background: 'linear-gradient(135deg, #FF7A00 0%, #FF7A00 100%)' }}
         >
           {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('changePasswordModal.save')}
         </button>

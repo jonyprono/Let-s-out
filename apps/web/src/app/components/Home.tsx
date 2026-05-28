@@ -173,7 +173,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
           >
             <Bell className="w-6 h-6 text-gray-700" strokeWidth={1.8} />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-[#FF9F1C] text-white text-[10px] font-bold flex items-center justify-center px-1">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-action-primary text-white text-[10px] font-bold flex items-center justify-center px-1">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
@@ -199,7 +199,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
             onClick={() => onNavigate('scan-qr')}
             className="w-11 h-11 flex items-center justify-center bg-[#FFF8F1] rounded-full flex-shrink-0 ml-1"
           >
-            <QrCode className="w-4 h-4 text-[#FF9F1C]" />
+            <QrCode className="w-4 h-4 text-action-primary" />
           </button>
         </div>
 
@@ -236,7 +236,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
             {isOffline && rawEvents.length === 0 && !showSpinner && (
               <div className="flex flex-col items-center justify-center py-20 px-8 text-center gap-4">
                 <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center">
-                  <WifiOff className="w-8 h-8 text-[#FF9F1C]" />
+                  <WifiOff className="w-8 h-8 text-action-primary" />
                 </div>
                 <div>
                   <p className="font-bold text-gray-800 text-base mb-1">Vous êtes hors ligne</p>

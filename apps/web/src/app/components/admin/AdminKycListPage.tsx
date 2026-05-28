@@ -48,7 +48,7 @@ export function AdminKycListPage() {
             type="button"
             onClick={() => { setStatus(f.key); setPage(1) }}
             className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-              status === f.key ? 'bg-[#FF9F1C] text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'
+              status === f.key ? 'bg-action-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'
             }`}
           >
             {f.label}
@@ -62,7 +62,7 @@ export function AdminKycListPage() {
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1) }}
           placeholder="Rechercher nom, téléphone, email..."
-          className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-sm outline-none focus:border-[#FF9F1C]/50 placeholder:text-white/30"
+          className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-sm outline-none focus:border-action-primary/50 placeholder:text-white/30"
         />
       </div>
 
@@ -89,7 +89,7 @@ export function AdminKycListPage() {
               <tr key={row.userId} className="hover:bg-white/[0.03] transition-colors">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#FF9F1C]/20 text-[#FF9F1C] font-bold flex items-center justify-center text-sm">
+                    <div className="w-9 h-9 rounded-full bg-action-primary/20 text-action-primary font-bold flex items-center justify-center text-sm">
                       {row.displayName.charAt(0)}
                     </div>
                     <div>
@@ -104,7 +104,7 @@ export function AdminKycListPage() {
                 </td>
                 <td className="px-5 py-4"><KycStatusBadge status={row.kycStatus} /></td>
                 <td className="px-5 py-4 text-right">
-                  <Link to={`/admin/kyc/${row.userId}`} className="inline-flex items-center gap-1 text-[#FF9F1C] font-medium text-xs">
+                  <Link to={`/admin/kyc/${row.userId}`} className="inline-flex items-center gap-1 text-action-primary font-medium text-xs">
                     Ouvrir <ChevronRight className="w-4 h-4" />
                   </Link>
                 </td>
@@ -124,7 +124,7 @@ export function AdminKycListPage() {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-[#FF9F1C]/20 text-[#FF9F1C] font-bold flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-action-primary/20 text-action-primary font-bold flex items-center justify-center shrink-0">
                   {row.displayName.charAt(0)}
                 </div>
                 <div className="min-w-0">

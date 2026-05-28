@@ -65,7 +65,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
         <button 
           onClick={handleCreate}
           disabled={selectedFriends.length === 0 || isCreating}
-          className="text-[15px] font-bold text-[#FF9F1C] disabled:opacity-50"
+          className="text-[15px] font-bold text-action-primary disabled:opacity-50"
         >
           {isCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Créer'}
         </button>
@@ -108,16 +108,16 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
             const friend = friends?.find(f => f.userId === id)
             if (!friend) return null
             return (
-              <div key={id} className="flex items-center gap-1.5 bg-[#FF9F1C]/10 pl-1.5 pr-2.5 py-1.5 rounded-full flex-shrink-0 border border-[#FF9F1C]/20">
+              <div key={id} className="flex items-center gap-1.5 bg-action-primary/10 pl-1.5 pr-2.5 py-1.5 rounded-full flex-shrink-0 border border-action-primary/20">
                 {friend.avatarUrl ? (
                   <img src={friend.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
                 ) : (
-                  <div className="w-5 h-5 rounded-full bg-[#FF9F1C] flex items-center justify-center text-[10px] text-white font-bold">
+                  <div className="w-5 h-5 rounded-full bg-action-primary flex items-center justify-center text-[10px] text-white font-bold">
                     {friend.displayName[0]}
                   </div>
                 )}
-                <span className="text-[13px] font-medium text-[#FF9F1C]">{friend.displayName.split(' ')[0]}</span>
-                <button onClick={() => toggleFriend(id)} className="ml-0.5"><X className="w-3.5 h-3.5 text-[#FF9F1C]" /></button>
+                <span className="text-[13px] font-medium text-action-primary">{friend.displayName.split(' ')[0]}</span>
+                <button onClick={() => toggleFriend(id)} className="ml-0.5"><X className="w-3.5 h-3.5 text-action-primary" /></button>
               </div>
             )
           })}
@@ -153,7 +153,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
                     <h4 className="text-[15px] font-bold text-gray-900 truncate">{friend.displayName}</h4>
                     <p className="text-[13px] text-gray-500 truncate">@{friend.username}</p>
                   </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#FF9F1C] border-[#FF9F1C]' : 'border-gray-300'}`}>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-action-primary border-action-primary' : 'border-gray-300'}`}>
                     {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
                   </div>
                 </button>

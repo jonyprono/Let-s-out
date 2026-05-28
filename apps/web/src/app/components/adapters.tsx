@@ -7,7 +7,7 @@ import { apiClient } from '@/lib/api-client'
 function PageLoader() {
   return (
     <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#111]">
-      <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF9F1C] animate-spin" />
+      <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF7A00] animate-spin" />
     </div>
   )
 }
