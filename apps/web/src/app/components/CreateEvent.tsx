@@ -32,7 +32,7 @@ const CATEGORIES = [
   { label: 'Social', value: 'SOCIAL' },
   { label: 'Art & Culture', value: 'CULTURE' },
   { label: 'Bien-être & Santé', value: 'WELLNESS' },
-  { label: 'Technologie', value: 'TECH' },
+  { label: 'Techonologie', value: 'TECH' },
   { label: 'Science & Education', value: 'SCIENCE' },
   { label: 'Voyages', value: 'TRAVEL' },
   { label: 'Lifestyle', value: 'LIFESTYLE' },
@@ -1073,16 +1073,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="flex gap-4">
           {step < 6 ? (
             <>
-              {step > 1 && (
-                <button onClick={() => setStep(s => s - 1)}
-                  className="flex-1 py-[17px] rounded-full border border-[#E5E5E5] font-semibold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
-                  Précédent
+              {step === 1 && !canNext() ? (
+                <button disabled className="flex-1 py-[17px] rounded-full font-bold text-[15px] bg-[#FFF2E0] text-white cursor-not-allowed transition-all">
+                  Commencer
                 </button>
+              ) : (
+                <>
+                  <button onClick={() => step === 1 ? onBack() : setStep(s => s - 1)}
+                    className="flex-1 py-[17px] rounded-full border border-[#E5E5E5] font-bold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
+                    Précédent
+                  </button>
+                  <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
+                    className={`flex-1 py-[17px] rounded-full font-bold text-[15px] transition-all ${canNext() ? 'bg-[#FF9F1C] text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFF2E0] text-white cursor-not-allowed'}`}>
+                    Suivant
+                  </button>
+                </>
               )}
-              <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
-                className={`flex-1 py-[17px] rounded-full font-semibold text-[15px] transition-all ${canNext() ? 'bg-[#FF9F1C] text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFF2E0] text-white cursor-not-allowed'}`}>
-                {step === 1 ? 'Commencer' : 'Suivant'}
-              </button>
             </>
           ) : step === 6 ? (
             <>
