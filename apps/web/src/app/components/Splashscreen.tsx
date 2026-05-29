@@ -89,10 +89,10 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               transition={{ duration: 0.45, ease: 'easeOut' }}
               className="flex flex-col items-center justify-center w-full"
             >
-              {/* Logo Let's Out (image PNG avec icône + texte) */}
+              {/* Logo Lets Out (image PNG avec icône + texte) */}
               <img
                 src="/logo.png"
-                alt="Let's Out"
+                alt="Lets Out"
                 className="w-[220px] h-auto object-contain"
               />
             </motion.div>
