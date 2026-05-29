@@ -1048,21 +1048,21 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       {/* Bottom nav */}
       <div className="w-full shrink-0 px-5 pt-4 pb-8 bg-background-white">
-        <div className="flex gap-4">
+        <div className="flex" style={{ gap: '4px' }}>
           {step < 6 ? (
             <>
               {step === 1 && !canNext() ? (
-                <button disabled className="flex-1 py-[17px] rounded-full font-bold text-[15px] bg-[#FFEEDB] text-white cursor-not-allowed transition-all">
+                <button disabled className="flex-1 h-[48px] flex items-center justify-center rounded-full font-bold text-[15px] bg-[#FFEEDB] text-white cursor-not-allowed transition-all">
                   Commencer
                 </button>
               ) : (
                 <>
                   <button onClick={() => step === 1 ? onBack() : setStep(s => s - 1)}
-                    className="flex-1 py-[17px] rounded-full border border-[#E4E4E7] font-bold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
+                    className="flex-1 h-[48px] flex items-center justify-center rounded-full border border-[#E4E4E7] font-bold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
                     Précédent
                   </button>
                   <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
-                    className={`flex-1 py-[17px] rounded-full font-bold text-[15px] transition-all ${canNext() ? 'bg-action-primary text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFEEDB] text-white cursor-not-allowed'}`}>
+                    className={`flex-1 h-[48px] flex items-center justify-center rounded-full font-bold text-[15px] transition-all ${canNext() ? 'bg-action-primary text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFEEDB] text-white cursor-not-allowed'}`}>
                     Suivant
                   </button>
                 </>
@@ -1071,13 +1071,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           ) : step === 6 ? (
             <>
               <button onClick={() => setStep(5)}
-                className="flex-1 py-[17px] rounded-full border border-border-primary font-semibold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
+                className="flex-1 h-[48px] flex items-center justify-center rounded-full border border-border-primary font-semibold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
                 Précédent
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className={`flex-1 py-[17px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all ${
+                className={`flex-1 h-[48px] flex items-center justify-center rounded-full font-bold text-[15px] text-white gap-2 active:scale-95 transition-all ${
                   !loading ? 'bg-action-primary active:bg-action-primary-hover' : 'bg-action-primary/50'
                 }`}
               >
