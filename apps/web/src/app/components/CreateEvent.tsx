@@ -567,22 +567,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <div
                   role="button"
                   tabIndex={0}
-                  className={`flex-1 h-[48px] flex items-center justify-between px-[14px] py-[12px] rounded-[12px] border transition-colors cursor-pointer ${privacy === 'PUBLIC' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
+                  className={`flex-1 h-[48px] flex items-center px-[14px] py-[12px] rounded-[12px] border transition-colors cursor-pointer ${privacy === 'PUBLIC' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
                   onClick={() => setPrivacy('PUBLIC')}
                 >
-                  <span className="text-[15px] font-medium text-[#1A1A1A]">Public</span>
-                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors ${privacy === 'PUBLIC' ? 'border-[2px] border-action-primary' : 'border border-[#E4E4E7]'}`}>
+                  <span className="flex-1 text-left text-[15px] font-medium text-[#1A1A1A]">Public</span>
+                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors shrink-0 ${privacy === 'PUBLIC' ? 'border-[2px] border-action-primary' : 'border border-[#E4E4E7]'}`}>
                     {privacy === 'PUBLIC' && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                   </div>
                 </div>
                 <div
                   role="button"
                   tabIndex={0}
-                  className={`flex-1 h-[48px] flex items-center justify-between px-[14px] py-[12px] rounded-[12px] border transition-colors cursor-pointer ${privacy === 'PRIVATE' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
+                  className={`flex-1 h-[48px] flex items-center px-[14px] py-[12px] rounded-[12px] border transition-colors cursor-pointer ${privacy === 'PRIVATE' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
                   onClick={() => setPrivacy('PRIVATE')}
                 >
-                  <span className="text-[15px] font-medium text-[#1A1A1A]">Privé</span>
-                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors ${privacy === 'PRIVATE' ? 'border-[2px] border-action-primary' : 'border border-[#E4E4E7]'}`}>
+                  <span className="flex-1 text-left text-[15px] font-medium text-[#1A1A1A]">Privé</span>
+                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors shrink-0 ${privacy === 'PRIVATE' ? 'border-[2px] border-action-primary' : 'border border-[#E4E4E7]'}`}>
                     {privacy === 'PRIVATE' && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                   </div>
                 </div>
