@@ -1,24 +1,12 @@
 import { useNavigate, useLocation } from 'react-router'
-import { Search, User } from 'iconoir-react'
+import { Search, User, Group } from 'iconoir-react'
 import { MessageCircle } from 'lucide-react'
 import { useConversations } from '@/features/chat/api'
 
 // Custom icon: groupe d'événements (3 silhouettes)
 function EventsIcon({ active }: { active: boolean }) {
-  const color = active ? '#FF7A00' : 'currentColor'
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}>
-      {/* Personne du milieu */}
-      <circle cx="12" cy="7" r="2.5" fill={color} />
-      <path d="M7 19c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke={color} strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      {/* Personne de gauche */}
-      <circle cx="6" cy="8" r="2" fill={color} opacity="0.6" />
-      <path d="M2 19c0-2.21 1.79-4 4-4" stroke={color} strokeWidth="1.6" strokeLinecap="round" fill="none" opacity="0.6" />
-      {/* Personne de droite */}
-      <circle cx="18" cy="8" r="2" fill={color} opacity="0.6" />
-      <path d="M22 19c0-2.21-1.79-4-4-4" stroke={color} strokeWidth="1.6" strokeLinecap="round" fill="none" opacity="0.6" />
-    </svg>
-  )
+  const color = active ? '#FF7A00' : '#4A4A4A'
+  return <Group width={24} height={24} strokeWidth={2} style={{ color }} />
 }
 
 // Custom icon: diamant central (bouton +)
@@ -103,8 +91,8 @@ export function BottomNav() {
               }
             </div>
             <span
-              className="text-[10px] font-semibold leading-none mt-1"
-              style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}
+              className="text-[11px] font-medium leading-none mt-1"
+              style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
             >
               {tab.label}
             </span>
