@@ -34,6 +34,8 @@ import { queryClient } from '@/lib/query-client'
 import { useAuthStore } from '@/stores/auth.store'
 import { AppLayout } from '@/app/layouts/AppLayout'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
+import { PrivacyPolicy } from '@/app/components/PrivacyPolicy'
+import { TermsOfService } from '@/app/components/TermsOfService'
 
 // All screens via adapter bridge (prop-based → React Router)
 import {
@@ -127,6 +129,10 @@ export default function App() {
 
           {/* Onboarding — accessible to authenticated users after signup */}
           <Route path="/onboarding" element={<Onboarding />} />
+
+          {/* Legal routes */}
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
 
           {/* Administration KYC */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
