@@ -563,14 +563,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             <div>
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Confidentialité</label>
-              <div className="flex gap-4">
+              <div className="flex gap-3">
                 <button
                   className={`flex-1 flex items-center justify-between px-4 py-4 border rounded-2xl transition-colors ${privacy === 'PUBLIC' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
                   onClick={() => setPrivacy('PUBLIC')}
                 >
                   <span className="text-[15px] font-medium text-[#1A1A1A]">Public</span>
-                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors ${privacy === 'PUBLIC' ? 'border-2 border-action-primary' : 'border border-[#E4E4E7]'}`}>
-                    {privacy === 'PUBLIC' && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors border-2 ${privacy === 'PUBLIC' ? 'border-action-primary' : 'border-[#E4E4E7]'}`}>
+                    {privacy === 'PUBLIC' && <div className="w-3 h-3 rounded-full bg-action-primary" />}
                   </div>
                 </button>
                 <button
@@ -578,8 +578,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   onClick={() => setPrivacy('PRIVATE')}
                 >
                   <span className="text-[15px] font-medium text-[#1A1A1A]">Privé</span>
-                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors ${privacy === 'PRIVATE' ? 'border-2 border-action-primary' : 'border border-[#E4E4E7]'}`}>
-                    {privacy === 'PRIVATE' && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors border-2 ${privacy === 'PRIVATE' ? 'border-action-primary' : 'border-[#E4E4E7]'}`}>
+                    {privacy === 'PRIVATE' && <div className="w-3 h-3 rounded-full bg-action-primary" />}
                   </div>
                 </button>
               </div>
