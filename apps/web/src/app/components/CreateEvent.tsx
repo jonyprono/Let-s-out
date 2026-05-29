@@ -79,7 +79,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // Step 3
   const [maxPlaces, setMaxPlaces] = useState('')
   const [amount, setAmount] = useState('')
-  const [isPrivate, setIsPrivate] = useState(false)
+  const [privacy, setPrivacy] = useState<'PUBLIC' | 'PRIVATE' | null>(null)
   const [enablePool, setEnablePool] = useState(false)
   const [poolTarget, setPoolTarget] = useState('')
   // Cagnotte modal
@@ -139,7 +139,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (eventData.longitude) setLon(eventData.longitude)
       if (eventData.maxAttendees) setMaxPlaces(String(eventData.maxAttendees))
       if (eventData.price !== undefined) setAmount(String(eventData.price))
-      if (eventData.isPrivate !== undefined) setIsPrivate(eventData.isPrivate)
+      if (eventData.isPrivate !== undefined) setPrivacy(eventData.isPrivate ? 'PRIVATE' : 'PUBLIC')
       if (eventData.description) setDescription(eventData.description)
       if (eventData.coverUrl) setCoverPreview(eventData.coverUrl)
     } else {
@@ -159,7 +159,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           if (draft.lon) setLon(draft.lon)
           if (draft.maxPlaces) setMaxPlaces(draft.maxPlaces)
           if (draft.amount) setAmount(draft.amount)
-          if (draft.isPrivate !== undefined) setIsPrivate(draft.isPrivate)
+          if (draft.privacy !== undefined) setPrivacy(draft.privacy)
           if (draft.enablePool !== undefined) setEnablePool(draft.enablePool)
           if (draft.poolTarget) setPoolTarget(draft.poolTarget)
           if (draft.description) setDescription(draft.description)
@@ -176,10 +176,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     // Only save if at least title or category is started to avoid saving pure empty state
     // Do not save if we are on step 6 or 7 (preview or done)
     if (step < 6 && (title || categories.length > 0 || city)) {
-      const draft = { step, title, categories, date, startTime, endTime, city, address, lat, lon, maxPlaces, amount, isPrivate, enablePool, poolTarget, description }
+      const draft = { step, title, categories, date, startTime, endTime, city, address, lat, lon, maxPlaces, amount, privacy, enablePool, poolTarget, description }
       localStorage.setItem('create_event_draft', JSON.stringify(draft))
     }
-  }, [step, title, categories, date, startTime, endTime, city, address, lat, lon, maxPlaces, amount, isPrivate, description])
+  }, [step, title, categories, date, startTime, endTime, city, address, lat, lon, maxPlaces, amount, privacy, description])
 
   const toggleCategory = (val: string) =>
     setCategories(prev => prev.includes(val) ? prev.filter(c => c !== val) : [...prev, val])
@@ -286,8 +286,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         latitude: lat ?? undefined,
         longitude: lon ?? undefined,
         maxAttendees: maxPlaces ? parseInt(maxPlaces) : undefined,
-        price: amount ? parseFloat(amount) : 0, currency: 'XOF',
-        isPrivate, coverUrl,
+        price: amount ? parseFloat(amount) : undefined,
+        isPrivate: privacy === 'PRIVATE',
+        coverUrl,
         poolTarget: enablePool && poolTarget ? parseFloat(poolTarget) : undefined,
         poolMode: enablePool && poolTarget ? poolMode : undefined,
         poolMinAmount: enablePool && poolMinAmount ? parseFloat(poolMinAmount) : undefined,
@@ -339,7 +340,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   }
 
   // ── Shared layout ──────────────────────────────────────────────────
-  const stepTitles = ['Informations', 'Date & lieu', 'Participation', 'Présentation', 'Organisation']
+  const stepTitles = ['Informations', 'Date & lieu', 'Participation', 'Personnalisation', 'Organisation']
   const stepSubs = [
     "Indiquez les informations essentielles de votre événement",
     "Indiquez quand et où l'événement aura lieu",
@@ -564,21 +565,21 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Confidentialité</label>
               <div className="flex gap-4">
                 <button
-                  className={`flex-1 flex items-center justify-between px-4 py-4 border rounded-2xl transition-colors ${!isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
-                  onClick={() => setIsPrivate(false)}
+                  className={`flex-1 flex items-center justify-between px-4 py-4 border rounded-2xl transition-colors ${privacy === 'PUBLIC' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
+                  onClick={() => setPrivacy('PUBLIC')}
                 >
                   <span className="text-[15px] font-medium text-[#1A1A1A]">Public</span>
-                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${!isPrivate ? 'border-action-primary' : 'border-[#E4E4E7]'}`}>
-                    {!isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
+                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors ${privacy === 'PUBLIC' ? 'border-2 border-action-primary' : 'border border-[#E4E4E7]'}`}>
+                    {privacy === 'PUBLIC' && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                   </div>
                 </button>
                 <button
-                  className={`flex-1 flex items-center justify-between px-4 py-4 border rounded-2xl transition-colors ${isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
-                  onClick={() => setIsPrivate(true)}
+                  className={`flex-1 flex items-center justify-between px-4 py-4 border rounded-2xl transition-colors ${privacy === 'PRIVATE' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
+                  onClick={() => setPrivacy('PRIVATE')}
                 >
                   <span className="text-[15px] font-medium text-[#1A1A1A]">Privé</span>
-                  <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-colors ${isPrivate ? 'border-action-primary' : 'border-[#E4E4E7]'}`}>
-                    {isPrivate && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
+                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors ${privacy === 'PRIVATE' ? 'border-2 border-action-primary' : 'border border-[#E4E4E7]'}`}>
+                    {privacy === 'PRIVATE' && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
                   </div>
                 </button>
               </div>
@@ -999,8 +1000,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <span className="text-[14px] font-medium text-action-primary font-bold">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-text-secondary">Confidentialité</span>
-                  <span className="text-[14px] font-medium text-gray-900">{isPrivate ? 'Privée' : 'Publique'}</span>
+                  <span className="text-[14px] font-medium text-gray-900">{privacy === 'PRIVATE' ? 'Privée' : 'Publique'}</span>
                 </div>
               </div>
 
