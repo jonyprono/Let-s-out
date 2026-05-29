@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, MapPin, Search, X, Loader2, Image as ImageIcon, Check, Edit3, BadgeCheck } from 'lucide-react'
-import { Calendar as IconoirCalendar, Clock as IconoirClock, MapPin as IconoirMapPin, Xmark } from 'iconoir-react'
+import { ChevronLeft, Calendar, MapPin, Search, X, Loader2, Check, Edit3, BadgeCheck } from 'lucide-react'
+import { Calendar as IconoirCalendar, Clock as IconoirClock, MapPin as IconoirMapPin, Xmark, NavArrowDown, MediaImagePlus } from 'iconoir-react'
 import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
@@ -555,13 +555,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   className="flex-1 px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
                 />
                 <div className="px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#555555] bg-background-white flex-shrink-0 flex items-center justify-center font-medium">
-                  F CFA <ChevronLeft className="w-4 h-4 ml-1 -rotate-90 text-[#71717A]" />
+                  F CFA <NavArrowDown className="w-4 h-4 ml-1 text-[#71717A]" strokeWidth={1.5} />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block mt-2">Confidentialité</label>
+              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Confidentialité</label>
               <div className="flex gap-4">
                 <button
                   className={`flex-1 flex items-center justify-between px-4 py-4 border rounded-2xl transition-colors ${!isPrivate ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
@@ -612,7 +612,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 ) : (
                   <>
                     <div className="mb-2">
-                      <ImageIcon className="w-6 h-6 text-[#71717A]" strokeWidth={1.5} />
+                      <MediaImagePlus className="w-[24px] h-[24px] text-[#71717A]" strokeWidth={1.5} />
                     </div>
                     <span className="text-[13px] font-medium text-[#71717A]">Sélectionner une image</span>
                   </>
