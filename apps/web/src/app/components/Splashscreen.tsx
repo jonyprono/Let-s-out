@@ -108,11 +108,10 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               transition={{ duration: 0.28, ease: 'easeOut' }}
               className="flex flex-col items-center w-full"
             >
-              {/* Image — fond blanc, marges généreuses, coins arrondis asymétriques stricts */}
+              {/* Wrapper shadow — séparé du clip pour éviter le débordement */}
               <div
-                className="w-full flex items-center justify-center mb-7"
+                className="w-full mb-7"
                 style={{
-                  backgroundColor: '#FFFFFF',
                   paddingLeft: '1.25rem',
                   paddingRight: '1.25rem',
                   paddingTop: '1rem',
@@ -120,17 +119,30 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                 }}
               >
                 <div
-                  className="w-full overflow-hidden"
                   style={{
+                    position: 'relative',
+                    width: '100%',
                     aspectRatio: '16 / 9',
                     borderRadius: '70px 70px 70px 20px',
-                    boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
+                    overflow: 'hidden',
+                    isolation: 'isolate',
+                    transform: 'translateZ(0)', /* Force GPU layer — fix Safari border-radius bleed */
+                    WebkitMaskImage: 'radial-gradient(white, white)', /* Fix Safari overflow:hidden */
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.10)',
                   }}
                 >
                   <img
                     src={current.image}
                     alt={current.title}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center',
+                      display: 'block',
+                    }}
                   />
                 </div>
               </div>
