@@ -167,9 +167,9 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               <button
                 onClick={handleNext}
                 aria-label="Suivant"
-                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center gap-[8px] active:scale-[0.97] transition-transform"
+                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center active:scale-95 transition-transform"
               >
-                <NavArrowRight width={20} height={20} strokeWidth={1.4} className="text-text-inverse" />
+                <NavArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />
               </button>
             </div>
           )}
@@ -189,9 +189,9 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               <button
                 onClick={handleNext}
                 aria-label="Suivant"
-                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center gap-[8px] active:scale-[0.97] transition-transform"
+                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center active:scale-95 transition-transform"
               >
-                <NavArrowRight width={20} height={20} strokeWidth={1.4} className="text-text-inverse" />
+                <NavArrowRight className="w-5 h-5 text-white" strokeWidth={2.5} />
               </button>
             </div>
           )}
