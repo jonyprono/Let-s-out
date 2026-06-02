@@ -113,7 +113,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
             >
               {/* Image avec format paysage (environ 21:9) et bordures asymétriques */}
               <div
-                className="w-full aspect-[2.2/1] overflow-hidden mb-[2rem]"
+                className="w-full aspect-[2.2/1] overflow-hidden"
                 style={{
                   borderRadius: '40px 40px 12px 40px',
                   boxShadow: '0 12px 32px rgba(0, 0, 0, 0.08)',
@@ -127,6 +127,21 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                   className="w-full h-full object-cover object-center"
                   style={{ borderRadius: '40px 40px 12px 40px' }} // Fallback for robust clipping
                 />
+              </div>
+
+              {/* ── Stepper : pilule orange + petits points gris ─────────── */}
+              <div className="flex items-center justify-center gap-[8px] my-[1.5rem] w-full">
+                {SLIDES.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-full transition-all duration-300 flex-shrink-0"
+                    style={{
+                      width: idx === activeSlide ? '28px' : '8px',
+                      height: '8px',
+                      backgroundColor: idx === activeSlide ? '#FF7A00' : '#E5E7EB',
+                    }}
+                  />
+                ))}
               </div>
 
               {/* Titre fort */}
@@ -143,55 +158,66 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
         </AnimatePresence>
       </div>
 
-      {/* ── Navigation bas de page (Footer partagé : Stepper + Boutons) ── */}
+      {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="relative flex items-center justify-center w-full px-[1.5rem] pb-[2.5rem] mt-auto z-10 h-[50px]">
-          
-          {/* Bouton Précédent (gauche) */}
-          {currentIndex > 1 && (
-            <button
-              onClick={handlePrev}
-              aria-label="Précédent"
-              className="absolute left-[1.5rem] w-[40px] h-[40px] rounded-full bg-neutral-gray-100 flex items-center justify-center active:scale-[0.95] transition-transform"
-            >
-              <NavArrowLeft width={20} height={20} strokeWidth={1.8} className="text-foreground" />
-            </button>
-          )}
+        <div className="px-[1rem] pb-[2rem] z-10">
 
-          {/* Stepper (Pagination centrée) */}
-          <div className="flex items-center justify-center gap-[8px]">
-            {SLIDES.map((_, idx) => (
-              <div
-                key={idx}
-                className="rounded-full transition-all duration-300 flex-shrink-0"
-                style={{
-                  width: idx === activeSlide ? '28px' : '8px',
-                  height: '8px',
-                  backgroundColor: idx === activeSlide ? '#FF7A00' : '#E5E7EB',
-                }}
-              />
-            ))}
-          </div>
-
-          {/* Bouton Suivant / Commencer (droite absolue) */}
-          <div className="absolute right-[1.5rem]">
-            {currentIndex < onboardingScreens.length - 1 ? (
+          {/* ── SLIDE 1 : bouton suivant seul, aligné à droite ── */}
+          {currentIndex === 1 && (
+            <div className="flex justify-end">
               <button
                 onClick={handleNext}
                 aria-label="Suivant"
-                className="w-[44px] h-[44px] rounded-full bg-[#FF7A00] flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
+                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center gap-[8px] active:scale-[0.97] transition-transform"
               >
-                <NavArrowRight width={24} height={24} strokeWidth={2} className="text-white" />
+                <NavArrowRight width={20} height={20} strokeWidth={1.4} className="text-text-inverse" />
               </button>
-            ) : (
+            </div>
+          )}
+
+          {/* ── SLIDE 2 : retour gauche + suivant droite ── */}
+          {currentIndex === 2 && (
+            <div className="flex items-center justify-between">
+              {/* Retour — pill gris clair */}
+              <button
+                onClick={handlePrev}
+                aria-label="Précédent"
+                className="h-[40px] px-[24px] rounded-[24px] bg-neutral-gray-100 flex items-center justify-center gap-[8px] active:scale-[0.95] transition-transform"
+              >
+                <NavArrowLeft width={20} height={20} strokeWidth={1.4} className="text-foreground" />
+              </button>
+              {/* Suivant — pill orange */}
               <button
                 onClick={handleNext}
-                className="h-[44px] px-[24px] rounded-[22px] bg-[#FF7A00] text-white font-semibold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
+                aria-label="Suivant"
+                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center gap-[8px] active:scale-[0.97] transition-transform"
+              >
+                <NavArrowRight width={20} height={20} strokeWidth={1.4} className="text-text-inverse" />
+              </button>
+            </div>
+          )}
+
+          {/* ── SLIDE 3 (dernière) : retour + Commencer flex-1 ── */}
+          {currentIndex === onboardingScreens.length - 1 && (
+            <div className="flex items-center gap-[8px]">
+              {/* Retour — pill gris clair */}
+              <button
+                onClick={handlePrev}
+                aria-label="Précédent"
+                className="h-[40px] px-[24px] rounded-[24px] bg-neutral-gray-100 flex items-center justify-center gap-[8px] shrink-0 active:scale-[0.95] transition-transform"
+              >
+                <NavArrowLeft width={20} height={20} strokeWidth={1.4} className="text-foreground" />
+              </button>
+              {/* Commencer — pill orange pleine largeur */}
+              <button
+                onClick={handleNext}
+                className="flex-1 h-[40px] rounded-[24px] bg-action-primary text-text-inverse font-semibold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform"
               >
                 Commencer
               </button>
-            )}
-          </div>
+            </div>
+          )}
+
         </div>
       )}
 
