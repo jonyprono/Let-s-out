@@ -51,7 +51,7 @@ export function EditPhoneModal({ onClose }: Props) {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-12 py-4 text-[15px] font-medium outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
+                className="auth-phone-input w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-12 py-4 text-[15px] outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
                 placeholder="+33 6 12 34 56 78"
               />
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400" size={20} />

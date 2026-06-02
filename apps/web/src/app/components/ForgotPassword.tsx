@@ -24,7 +24,7 @@ import {
   authSubtitle,
   authLabel,
   authInput,
-  authInputFlex,
+  authPhoneInputFlex,
   authChannelBtn,
   authChannelLabel,
 } from '@/lib/auth-ui'
@@ -221,7 +221,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               <input
                 type="tel" inputMode="numeric" value={phoneDisplay} onChange={handlePhoneChange}
                 placeholder="01 97 00 00 00"
-                className={`${authInputFlex}`}
+                className={`auth-phone-input ${authPhoneInputFlex}`}
               />
             </div>
 
