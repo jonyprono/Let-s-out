@@ -211,12 +211,12 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             <h1 className={`${authTitle} mb-1.5`}>
               Entrez votre numéro de téléphone
             </h1>
-            <p className={`${authSubtitle} mb-7`}>
+            <p className={`${authSubtitle} mb-[36px]`}>
               Entrez le numéro de téléphone lié à votre compte pour recevoir un code et réinitialiser votre mot de passe.
             </p>
 
             <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-[36px]">
               <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone() }} />
               <input
                 type="tel" inputMode="numeric" value={phoneDisplay} onChange={handlePhoneChange}

@@ -348,12 +348,12 @@ export function Signup({ onBack }: SignupProps) {
             <h1 className={`${authTitle} mb-1.5`}>
               Quel est votre numéro de<br />téléphone&nbsp;?
             </h1>
-            <p className={`${authSubtitle} mb-7`}>
+            <p className={`${authSubtitle} mb-[36px]`}>
               Vous recevrez un code de vérification<br />pour confirmer votre numéro
             </p>
 
             <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-[36px]">
               <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone() }} />
               <input
                 type="tel"
