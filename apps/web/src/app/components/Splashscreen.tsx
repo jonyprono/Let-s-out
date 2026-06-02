@@ -116,29 +116,29 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                 className="w-full aspect-[2.2/1] overflow-hidden"
                 style={{
                   borderRadius: '40px 40px 12px 40px',
-                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.08)'
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.08)',
+                  transform: 'translateZ(0)', // Force Safari clipping
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)' // Ultimate Safari overflow fix
                 }}
               >
                 <img
                   src={current.image}
                   alt={current.title}
                   className="w-full h-full object-cover object-center"
+                  style={{ borderRadius: '40px 40px 12px 40px' }} // Fallback for robust clipping
                 />
               </div>
 
               {/* ── Stepper : pilule orange + petits points gris ─────────── */}
-              <div className="flex items-center justify-center gap-[8px] my-[1.5rem]">
+              <div className="flex items-center justify-center gap-[8px] my-[1.5rem] w-full">
                 {SLIDES.map((_, idx) => (
                   <div
                     key={idx}
-                    className="rounded-full transition-all duration-300"
+                    className="rounded-full transition-all duration-300 flex-shrink-0"
                     style={{
                       width: idx === activeSlide ? '28px' : '8px',
                       height: '8px',
-                      backgroundColor:
-                        idx === activeSlide
-                          ? '#FF7A00'
-                          : '#E5E7EB',
+                      backgroundColor: idx === activeSlide ? '#FF7A00' : '#E5E7EB',
                     }}
                   />
                 ))}
