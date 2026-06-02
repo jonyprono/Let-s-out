@@ -15,15 +15,13 @@ const onboardingScreens = [
     title: 'Découvrez',
     description: 'Créez ou rejoignez des sorties, événements, ou activités locales près de chez vous',
     image: '/splash1.png',
-    rotation: -4,
   },
   {
     id: 2,
     type: 'slide' as const,
     title: 'Partagez',
-    description: 'Financez ensemble vos sorties en groupe via des cagnottes et partagez les frais pour mieux en profiter',
+    description: 'Financez ensemble vos sorties en groupe via des cagnottes pour et partagez les frais pour mieux en profiter',
     image: '/splash2.png',
-    rotation: 4,
   },
   {
     id: 3,
@@ -31,7 +29,6 @@ const onboardingScreens = [
     title: 'Socialisez',
     description: "Faites de nouvelles rencontres inoubliables et de nouveaux amis autour d'intérêts communs",
     image: '/splash3.png',
-    rotation: 0,
   },
 ]
 
@@ -109,15 +106,14 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.28, ease: 'easeOut' }}
-              className="flex flex-col items-center w-full"
+              className="flex flex-col items-center w-full px-2"
             >
-              {/* Image — format paysage, coins arrondis uniformes, clip strict */}
+              {/* Image — format paysage strict, coins arrondis asymétriques, clip strict */}
               <div
-                className="w-full mb-[1.5rem]"
+                className="w-full overflow-hidden mb-6"
                 style={{
-                  aspectRatio: '16 / 9',
-                  clipPath: 'inset(0 round 24px)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+                  aspectRatio: '2.3 / 1',
+                  borderRadius: '32px 32px 8px 32px',
                 }}
               >
                 <img
@@ -127,28 +123,27 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                 />
               </div>
 
-              {/* ── Stepper : pilule orange active + petits cercles gris ── */}
-              <div className="flex items-center justify-center gap-[8px] mb-[1.5rem]">
-                {SLIDES.map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="rounded-full flex-shrink-0"
-                    style={{
-                      width: idx === activeSlide ? '28px' : '8px',
-                      height: '8px',
-                      backgroundColor: idx === activeSlide ? '#FF7A00' : '#E0E0E0',
-                      transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1), background-color 0.35s ease',
-                    }}
-                  />
-                ))}
+              {/* Pagination Dots */}
+              <div className="flex items-center justify-center gap-2 mb-8">
+                {SLIDES.map((_, idx) => {
+                  const isActive = idx === activeSlide;
+                  return (
+                    <div
+                      key={idx}
+                      className={`rounded-full flex-shrink-0 transition-all duration-300 ${
+                        isActive ? 'w-6 h-1.5 bg-[#FF7A00]' : 'w-1.5 h-1.5 bg-[#E0E0E0]'
+                      }`}
+                    />
+                  );
+                })}
               </div>
 
               {/* Titre fort */}
-              <h2 className="text-[26px] font-bold text-foreground mb-[0.5rem] text-center leading-tight">
+              <h2 className="text-[24px] font-bold text-foreground mb-3 text-center tracking-tight font-sans">
                 {current.title}
               </h2>
-              {/* Description courte — Poppins Regular 12px / lh 18px / text-secondary */}
-              <p className="splash-description max-w-[271px]">
+              {/* Description courte — light, text-center */}
+              <p className="text-[14px] text-text-secondary text-center leading-relaxed font-light px-2 max-w-[300px]">
                 {current.description}
               </p>
             </motion.div>
