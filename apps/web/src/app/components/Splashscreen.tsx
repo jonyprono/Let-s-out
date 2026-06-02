@@ -111,31 +111,35 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               transition={{ duration: 0.28, ease: 'easeOut' }}
               className="flex flex-col items-center w-full"
             >
-              {/* Image à bords très arrondis — Figma radius 28px */}
+              {/* Image — format paysage, bords asymétriques, clip strict */}
               <div
-                className="w-full h-[230px] rounded-[28px] overflow-hidden shadow-sm mb-[1.5rem]"
-                style={{ transform: current.rotation ? `rotate(${current.rotation}deg)` : undefined }}
+                className="w-full h-[220px] overflow-hidden mb-[1.5rem]"
+                style={{
+                  borderRadius: '36px 36px 36px 10px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+                  /* Safari overflow fix — translateZ crée un nouveau contexte de rendu */
+                  transform: 'translateZ(0)',
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+                }}
               >
                 <img
                   src={current.image}
                   alt={current.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
                 />
               </div>
 
-              {/* ── Stepper : 3 barres horizontales ─────────── */}
-              {/* Barre active = orange, inactives = neutral-gray-300 */}
-              <div className="flex items-center justify-center gap-[0.375rem] mb-[1.5rem]">
+              {/* ── Stepper : pilule orange active + petits cercles gris ── */}
+              <div className="flex items-center justify-center gap-[8px] mb-[1.5rem]">
                 {SLIDES.map((_, idx) => (
                   <div
                     key={idx}
-                    className="h-[3px] rounded-full transition-all duration-300"
+                    className="rounded-full flex-shrink-0"
                     style={{
-                      width: idx === activeSlide ? '2rem' : '1.25rem',
-                      backgroundColor:
-                        idx === activeSlide
-                          ? 'var(--action-primary)'
-                          : 'var(--neutral-gray-300)',
+                      width: idx === activeSlide ? '28px' : '8px',
+                      height: '8px',
+                      backgroundColor: idx === activeSlide ? '#FF7A00' : '#E0E0E0',
+                      transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1), background-color 0.35s ease',
                     }}
                   />
                 ))}
