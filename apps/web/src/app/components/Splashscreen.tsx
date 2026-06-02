@@ -113,13 +113,10 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
             >
               {/* Image — format paysage, bords asymétriques, clip strict */}
               <div
-                className="w-full h-[220px] overflow-hidden mb-[1.5rem]"
+                className="w-full h-[220px] mb-[1.5rem]"
                 style={{
-                  borderRadius: '36px 36px 36px 10px',
+                  clipPath: 'inset(0 round 36px 36px 10px 36px)',
                   boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-                  /* Safari overflow fix — translateZ crée un nouveau contexte de rendu */
-                  transform: 'translateZ(0)',
-                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
                 }}
               >
                 <img
