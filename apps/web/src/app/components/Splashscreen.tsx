@@ -15,6 +15,7 @@ const onboardingScreens = [
     title: 'Découvrez',
     description: 'Créez ou rejoignez des sorties, événements, ou activités locales près de chez vous',
     image: '/splash1.png',
+    rotation: -4,
   },
   {
     id: 2,
@@ -22,6 +23,7 @@ const onboardingScreens = [
     title: 'Partagez',
     description: 'Financez ensemble vos sorties en groupe via des cagnottes et partagez les frais pour mieux en profiter',
     image: '/splash2.png',
+    rotation: 4,
   },
   {
     id: 3,
@@ -29,6 +31,7 @@ const onboardingScreens = [
     title: 'Socialisez',
     description: 'Faites de nouvelles rencontres inoubliables et de nouveaux amis autour d\'intérêts communs',
     image: '/splash3.png',
+    rotation: 0,
   },
 ]
 
@@ -109,7 +112,10 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               className="flex flex-col items-center w-full"
             >
               {/* Image à bords très arrondis — Figma radius 28px */}
-              <div className="w-full h-[230px] rounded-[28px] overflow-hidden shadow-sm mb-[1.5rem]">
+              <div
+                className="w-full h-[230px] rounded-[28px] overflow-hidden shadow-sm mb-[1.5rem]"
+                style={{ transform: current.rotation ? `rotate(${current.rotation}deg)` : undefined }}
+              >
                 <img
                   src={current.image}
                   alt={current.title}
