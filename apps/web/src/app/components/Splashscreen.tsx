@@ -79,7 +79,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
     >
 
       {/* ── Contenu principal ───────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-[1rem] relative z-10">
+      <div className="flex-1 flex flex-col items-center justify-center px-[1.5rem] relative z-10">
         <AnimatePresence mode="wait">
 
           {/* ── ÉCRAN 0 : Logo centré sur fond blanc ──────────── */}
@@ -160,7 +160,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="px-[1rem] pb-[2rem] z-10">
+        <div className="px-[1.5rem] pb-[1rem] z-10">
 
           {/* ── SLIDE 1 : bouton suivant seul, aligné à droite ── */}
           {currentIndex === 1 && (
@@ -220,11 +220,6 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
         </div>
       )}
-
-      {/* ── Home Indicator iOS ──────────────────────────────────── */}
-      <div className="h-[22px] flex items-center justify-center pb-[4px]">
-        <div className="w-[128px] h-[4px] bg-foreground rounded-full opacity-20" />
-      </div>
     </div>
   )
 }

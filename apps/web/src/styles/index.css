@@ -3,8 +3,11 @@
 @import './theme.css';
 
 html, body, #root {
-  min-height: 100%;
+  /* Fallback for older browsers */
+  min-height: 100vh;
   height: 100%;
+  /* Dynamic viewport height — collapses browser chrome on mobile (iOS/Android) */
+  min-height: 100dvh;
   overflow: hidden;
 }
 
