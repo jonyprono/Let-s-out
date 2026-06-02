@@ -181,10 +181,10 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               <button
                 onClick={handlePrev}
                 aria-label="Précédent"
-                className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform"
+                className="h-[40px] px-[24px] bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-[24px] flex items-center justify-center active:scale-95 transition-transform"
               >
-            <NavArrowLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
-          </button>
+                <NavArrowLeft className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
+              </button>
               {/* Suivant — pill orange */}
               <button
                 onClick={handleNext}
@@ -203,10 +203,10 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               <button
                 onClick={handlePrev}
                 aria-label="Précédent"
-                className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform"
+                className="h-[40px] px-[24px] bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-[24px] flex items-center justify-center active:scale-95 transition-transform"
               >
-            <NavArrowLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
-          </button>
+                <NavArrowLeft className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
+              </button>
               {/* Commencer — pill orange pleine largeur */}
               <button
                 onClick={handleNext}
