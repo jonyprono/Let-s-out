@@ -111,11 +111,12 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               transition={{ duration: 0.28, ease: 'easeOut' }}
               className="flex flex-col items-center w-full"
             >
-              {/* Image — format paysage, bords asymétriques, clip strict */}
+              {/* Image — format paysage, coins arrondis uniformes, clip strict */}
               <div
-                className="w-full h-[220px] mb-[1.5rem]"
+                className="w-full mb-[1.5rem]"
                 style={{
-                  clipPath: 'inset(0 round 36px 36px 10px 36px)',
+                  aspectRatio: '16 / 9',
+                  clipPath: 'inset(0 round 24px)',
                   boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
                 }}
               >
