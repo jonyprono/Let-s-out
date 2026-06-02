@@ -16,6 +16,7 @@ interface ForgotPasswordProps {
 
 import { COUNTRIES, Country } from '@/lib/countries'
 import { CountryPicker } from '@/components/shared/CountryPicker'
+import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import {
   authShell,
   authTitle,
@@ -45,7 +46,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   // step: 1=phone, 2=otp(6 digits), 3=new password
   const [step, setStep] = useState(1)
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
-  const [phone, setPhone] = useState('')
+  const { displayValue: phoneDisplay, rawValue: phone, handleChange: handlePhoneChange, reset: resetPhone } = usePhoneFormatter()
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [countdown, setCountdown] = useState(0)
@@ -193,14 +194,11 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
       {/* ── Header ─────────────────────────────────── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
-        <div className="flex items-center justify-center relative mb-1">
-          <button onClick={handlePrev} className="absolute left-0 w-8 h-8 flex items-center justify-center active:opacity-70">
+        <div className="flex items-center justify-center relative mb-4">
+          <button onClick={handlePrev} className="absolute left-0 w-10 h-10 bg-neutral-gray-100 rounded-full flex items-center justify-center active:scale-95 transition-transform">
             <ChevronLeft className="w-5 h-5 text-foreground" strokeWidth={2.5} />
           </button>
           <span className={authHeader}>Réinitialiser votre mot de passe</span>
-        </div>
-        <div className="flex justify-center mt-1">
-          <div className="w-10 h-[2.5px] bg-action-primary rounded-full" />
         </div>
       </div>
 
@@ -219,11 +217,11 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
             <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
             <div className="flex gap-2 mb-6">
-              <CountryPicker value={country} onChange={setCountry} />
+              <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone() }} />
               <input
-                type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                type="tel" inputMode="numeric" value={phoneDisplay} onChange={handlePhoneChange}
                 placeholder="01 97 00 00 00"
-                className={`${authInputFlex} border-2`}
+                className={`${authInputFlex}`}
               />
             </div>
 
@@ -271,16 +269,16 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button onClick={handleResend} disabled={countdown > 0}
-                className="flex items-center gap-1.5 text-[13px] text-muted-foreground disabled:opacity-50">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                className="flex items-center justify-center gap-2 px-[18px] py-[10px] bg-neutral-gray-100 rounded-full text-[14px] font-medium text-foreground disabled:opacity-50 active:scale-95 transition-all">
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Renvoyer le code
               </button>
               {countdown > 0 && (
-                <span className="text-[13px] text-muted-foreground">
+                <span className="text-[14px] font-medium text-text-secondary">
                   dans {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
                 </span>
               )}
