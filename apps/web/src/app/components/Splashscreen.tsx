@@ -5,7 +5,7 @@ import { NavArrowLeft, NavArrowRight } from 'iconoir-react'
 /* ─────────────────────────────────────────────────────────────────
    Données des écrans onboarding
    Écran 0  → Logo + slogan (auto-advance 2.5s)
-   Écrans 1-3 → Carrousel avec Stepper 3 barres
+   Écrans 1-3 → Carrousel avec Stepper
 ───────────────────────────────────────────────────────────────── */
 const onboardingScreens = [
   { id: 0, type: 'logo' as const, image: '/logo.png' },
@@ -15,7 +15,6 @@ const onboardingScreens = [
     title: 'Découvrez',
     description: 'Créez ou rejoignez des sorties, événements, ou activités locales près de chez vous',
     image: '/splash1.png',
-    rotation: -4,
   },
   {
     id: 2,
@@ -23,7 +22,6 @@ const onboardingScreens = [
     title: 'Partagez',
     description: 'Financez ensemble vos sorties en groupe via des cagnottes et partagez les frais pour mieux en profiter',
     image: '/splash2.png',
-    rotation: 4,
   },
   {
     id: 3,
@@ -31,7 +29,6 @@ const onboardingScreens = [
     title: 'Socialisez',
     description: "Faites de nouvelles rencontres inoubliables et de nouveaux amis autour d'intérêts communs",
     image: '/splash3.png',
-    rotation: 0,
   },
 ]
 
@@ -92,7 +89,6 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               transition={{ duration: 0.45, ease: 'easeOut' }}
               className="flex flex-col items-center justify-center w-full"
             >
-              {/* Logo Lets Out (image PNG avec icône + texte) */}
               <img
                 src="/logo.png"
                 alt="Lets Out"
@@ -111,26 +107,26 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               transition={{ duration: 0.28, ease: 'easeOut' }}
               className="flex flex-col items-center w-full"
             >
-              {/* Image avec format paysage (environ 21:9) et bordures asymétriques */}
+              {/* Image format 16:9 avec coins uniformément arrondis */}
               <div
-                className="w-full aspect-[2.2/1] overflow-hidden"
+                className="w-full overflow-hidden"
                 style={{
-                  borderRadius: '40px 40px 12px 40px',
-                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.08)',
-                  transform: 'translateZ(0)', // Force Safari clipping
-                  WebkitMaskImage: '-webkit-radial-gradient(white, black)', // Ultimate Safari overflow fix
+                  aspectRatio: '16 / 9',
+                  borderRadius: '24px',
+                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.10)',
+                  transform: 'translateZ(0)',
+                  WebkitMaskImage: '-webkit-radial-gradient(white, black)',
                 }}
               >
                 <img
                   src={current.image}
                   alt={current.title}
                   className="w-full h-full object-cover object-center"
-                  style={{ borderRadius: '40px 40px 12px 40px' }} // Fallback for robust clipping
                 />
               </div>
 
-              {/* ── Stepper : pilule orange + petits points gris ─────────── */}
-              <div className="flex items-center justify-center gap-[8px] my-[1.5rem] w-full">
+              {/* ── Stepper : pilule orange active + petits points gris ── */}
+              <div className="flex items-center justify-center gap-[8px] mt-[1.25rem] mb-[1.5rem] w-full">
                 {SLIDES.map((_, idx) => (
                   <div
                     key={idx}
@@ -138,18 +134,18 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                     style={{
                       width: idx === activeSlide ? '28px' : '8px',
                       height: '8px',
-                      backgroundColor: idx === activeSlide ? '#FF7A00' : '#E5E7EB',
+                      backgroundColor: idx === activeSlide ? '#FF7A00' : '#E0E0E0',
                       transition: 'width 0.3s ease, background-color 0.3s ease',
                     }}
                   />
                 ))}
               </div>
 
-              {/* Titre fort */}
-              <h2 className="text-[26px] font-bold text-foreground mb-[0.5rem] text-center leading-tight">
+              {/* Titre */}
+              <h2 className="text-[24px] font-bold text-foreground mb-[0.5rem] text-center leading-tight">
                 {current.title}
               </h2>
-              {/* Description courte — Poppins Regular 12px / lh 18px / text-secondary */}
+              {/* Description */}
               <p className="splash-description max-w-[271px]">
                 {current.description}
               </p>
@@ -161,17 +157,17 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="px-[1.5rem] pb-[1rem] z-10">
+        <div className="px-[1.5rem] pb-[2rem] z-10">
 
-          {/* ── SLIDE 1 : bouton suivant seul, aligné à droite ── */}
+          {/* ── SLIDE 1 : bouton suivant centré ── */}
           {currentIndex === 1 && (
-            <div className="flex justify-end">
+            <div className="flex justify-center">
               <button
                 onClick={handleNext}
                 aria-label="Suivant"
-                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center gap-[8px] active:scale-[0.97] transition-transform"
+                className="w-[52px] h-[52px] rounded-full bg-[#FF7A00] flex items-center justify-center active:scale-[0.95] transition-transform shadow-md"
               >
-                <NavArrowRight width={20} height={20} strokeWidth={1.4} className="text-text-inverse" />
+                <NavArrowRight width={22} height={22} strokeWidth={2} className="text-white" />
               </button>
             </div>
           )}
@@ -179,40 +175,40 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
           {/* ── SLIDE 2 : retour gauche + suivant droite ── */}
           {currentIndex === 2 && (
             <div className="flex items-center justify-between">
-              {/* Retour — pill gris clair */}
+              {/* Retour — cercle gris */}
               <button
                 onClick={handlePrev}
                 aria-label="Précédent"
-                className="h-[40px] px-[24px] rounded-[24px] bg-neutral-gray-100 flex items-center justify-center gap-[8px] active:scale-[0.95] transition-transform"
+                className="w-[52px] h-[52px] rounded-full bg-[#F0F0F0] flex items-center justify-center active:scale-[0.95] transition-transform"
               >
-                <NavArrowLeft width={20} height={20} strokeWidth={1.4} className="text-foreground" />
+                <NavArrowLeft width={22} height={22} strokeWidth={2} className="text-foreground" />
               </button>
-              {/* Suivant — pill orange */}
+              {/* Suivant — cercle orange */}
               <button
                 onClick={handleNext}
                 aria-label="Suivant"
-                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center gap-[8px] active:scale-[0.97] transition-transform"
+                className="w-[52px] h-[52px] rounded-full bg-[#FF7A00] flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
               >
-                <NavArrowRight width={20} height={20} strokeWidth={1.4} className="text-text-inverse" />
+                <NavArrowRight width={22} height={22} strokeWidth={2} className="text-white" />
               </button>
             </div>
           )}
 
-          {/* ── SLIDE 3 (dernière) : retour + Commencer flex-1 ── */}
+          {/* ── SLIDE 3 (dernière) : retour cercle + Commencer pill ── */}
           {currentIndex === onboardingScreens.length - 1 && (
-            <div className="flex items-center gap-[8px]">
-              {/* Retour — pill gris clair */}
+            <div className="flex items-center gap-[12px]">
+              {/* Retour — cercle gris */}
               <button
                 onClick={handlePrev}
                 aria-label="Précédent"
-                className="h-[40px] px-[24px] rounded-[24px] bg-neutral-gray-100 flex items-center justify-center gap-[8px] shrink-0 active:scale-[0.95] transition-transform"
+                className="w-[52px] h-[52px] rounded-full bg-[#F0F0F0] flex items-center justify-center shrink-0 active:scale-[0.95] transition-transform"
               >
-                <NavArrowLeft width={20} height={20} strokeWidth={1.4} className="text-foreground" />
+                <NavArrowLeft width={22} height={22} strokeWidth={2} className="text-foreground" />
               </button>
               {/* Commencer — pill orange pleine largeur */}
               <button
                 onClick={handleNext}
-                className="flex-1 h-[40px] rounded-[24px] bg-action-primary text-text-inverse font-semibold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform"
+                className="flex-1 h-[52px] rounded-[26px] bg-[#FF7A00] text-white font-semibold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform shadow-md"
               >
                 Commencer
               </button>
