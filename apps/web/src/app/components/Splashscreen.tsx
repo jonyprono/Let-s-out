@@ -75,7 +75,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
   return (
     <div
       className="w-full h-full flex flex-col relative overflow-hidden"
-      style={{ backgroundColor: 'var(--background-white)' }}
+      style={{ backgroundColor: '#FFFFFF' }}
     >
 
       {/* ── Contenu principal ───────────────────────────────────── */}
@@ -111,31 +111,34 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               transition={{ duration: 0.28, ease: 'easeOut' }}
               className="flex flex-col items-center w-full"
             >
-              {/* Image à bords très arrondis — Figma radius 28px */}
+              {/* Image avec format paysage (environ 21:9) et bordures asymétriques */}
               <div
-                className="w-full h-[230px] rounded-[28px] overflow-hidden shadow-sm mb-[1.5rem]"
-                style={{ transform: current.rotation ? `rotate(${current.rotation}deg)` : undefined }}
+                className="w-full aspect-[2.2/1] overflow-hidden"
+                style={{
+                  borderRadius: '40px 40px 12px 40px',
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.08)'
+                }}
               >
                 <img
                   src={current.image}
                   alt={current.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
                 />
               </div>
 
-              {/* ── Stepper : 3 barres horizontales ─────────── */}
-              {/* Barre active = orange, inactives = neutral-gray-300 */}
-              <div className="flex items-center justify-center gap-[0.375rem] mb-[1.5rem]">
+              {/* ── Stepper : pilule orange + petits points gris ─────────── */}
+              <div className="flex items-center justify-center gap-[8px] my-[1.5rem]">
                 {SLIDES.map((_, idx) => (
                   <div
                     key={idx}
-                    className="h-[3px] rounded-full transition-all duration-300"
+                    className="rounded-full transition-all duration-300"
                     style={{
-                      width: idx === activeSlide ? '2rem' : '1.25rem',
+                      width: idx === activeSlide ? '28px' : '8px',
+                      height: '8px',
                       backgroundColor:
                         idx === activeSlide
-                          ? 'var(--action-primary)'
-                          : 'var(--neutral-gray-300)',
+                          ? '#FF7A00'
+                          : '#E5E7EB',
                     }}
                   />
                 ))}
