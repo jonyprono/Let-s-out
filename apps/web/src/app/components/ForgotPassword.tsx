@@ -346,13 +346,157 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-action-primary text-white disabled:bg-[#FFD99A] disabled:text-white"
         >
           {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-          <span>{step === 3 ? 'Réinitialiser' : 'Suivant'}</span>
-        </button>
+          </button>
+          <span className={authHeader}>Réinitialiser votre mot de passe</span>
+        </div>
       </div>
 
-      {/* Home indicator */}
-      <div className="h-6 flex items-center justify-center pb-1 shrink-0">
-        <div className="w-32 h-[4px] bg-foreground rounded-full opacity-80" />
+      {/* ── Content ────────────────────────────────── */}
+      <div className="flex-1 px-6 pt-7 overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+
+        {/* STEP 1: PHONE */}
+        {step === 1 && (
+          <div>
+            <h1 className={`${authTitle} mb-1.5`}>
+              Entrez votre numéro de téléphone
+            </h1>
+            <p className={`${authSubtitle} mb-7`}>
+              Entrez le numéro de téléphone lié à votre compte pour recevoir un code et réinitialiser votre mot de passe.
+            </p>
+
+            <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
+            <div className="flex gap-2 mb-6">
+              <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone() }} />
+              <input
+                type="tel" inputMode="numeric" value={phoneDisplay} onChange={handlePhoneChange}
+                placeholder="01 97 00 00 00"
+                className={`auth-phone-input ${authPhoneInputFlex}`}
+              />
+            </div>
+
+            <label className={`${authLabel} mb-2 block`}>Recevoir le code par</label>
+            <div className="flex gap-3">
+              {(['SMS', 'Whatsapp'] as const).map(ch => {
+                const val = ch.toLowerCase() as 'sms' | 'whatsapp'
+                const isActive = currentChannel === val
+                return (
+                  <button key={ch} type="button" onClick={() => setCurrentChannel(val)}
+                    className={authChannelBtn}>
+                    <span className={authChannelLabel}>{ch}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-action-primary' : 'border-[#CCCCCC]'}`}>
+                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: OTP (6 digits) */}
+        {step === 2 && (
+          <div>
+            <h1 className={`${authTitle} mb-1.5`}>
+              Quel est le code reçu&nbsp;?
+            </h1>
+            <p className={`${authSubtitle} mb-7`}>
+              Code à 6 chiffres envoyé par <strong className="text-foreground">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
+              <strong className="text-foreground">{maskPhone(fullPhone)}</strong>
+            </p>
+
+            <div className="grid grid-cols-6 gap-2 mb-5 w-full">
+              {otp.map((d, i) => (
+                <input
+                  key={i} ref={el => { otpRefs.current[i] = el }}
+                  type="text" inputMode="numeric" maxLength={1} value={d}
+                  onChange={e => handleOtpChange(i, e.target.value)}
+                  onKeyDown={e => handleOtpKey(i, e)}
+                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-card text-foreground
+                    ${d ? 'border-action-primary' : 'border-border'}
+                    focus:border-action-primary`}
+                />
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button onClick={handleResend} disabled={countdown > 0}
+                className="flex items-center justify-center gap-2 px-[18px] py-[10px] bg-neutral-gray-100 rounded-full text-[14px] font-medium text-foreground disabled:opacity-50 active:scale-95 transition-all">
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Renvoyer le code
+              </button>
+              {countdown > 0 && (
+                <span className="text-[14px] font-medium text-text-secondary">
+                  dans {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: NEW PASSWORD */}
+        {step === 3 && (
+          <div>
+            <h1 className={`${authTitle} mb-1.5`}>Nouveau mot de passe</h1>
+            <p className={`${authSubtitle} mb-7`}>
+              Définissez un nouveau mot de passe robuste et sécurisé pour<br />protéger votre compte
+            </p>
+
+            <label className={`${authLabel} mb-1.5 block`}>Mot de passe</label>
+            <div className="relative mb-5">
+              <input
+                type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className={`${authInput} pr-12`}
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+
+            <label className={`${authLabel} mb-1.5 block`}>Confirmer mot de passe</label>
+            <div className="relative mb-5">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                className={`${authInput} pr-12`}
+              />
+              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+
+            {/* Validation rules */}
+            <div className="space-y-2">
+              {[
+                { ok: pwdLength, label: 'Au moins 6 caractères numériques' },
+                { ok: pwdMixed, label: 'Au moins 1 majuscule et 1 minuscule' },
+                { ok: pwdNumber, label: 'Au moins 1 chiffre' },
+              ].map(({ ok, label }) => (
+                <div key={label} className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${ok ? 'bg-[#34C759]' : 'bg-[#E5E5E5]'}`}>
+                    <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                  </div>
+                  <span className={`text-[12px] ${ok ? 'text-[#34C759]' : 'text-[#888888]'}`}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Bottom Button ───────────────────────────── */}
+      <div className="px-6 pb-5 pt-3 shrink-0 bg-background">
+        <button
+          type="button"
+          onClick={handleNext}
+          disabled={isNextDisabled()}
+          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-action-primary text-white disabled:bg-[#FFD99A] disabled:text-white"
+        >
+          {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+          <span>{step === 3 ? 'Réinitialiser' : 'Suivant'}</span>
+        </button>
       </div>
     </div>
   )

@@ -114,9 +114,6 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
       </div>
 
-      <div className="h-6 flex items-center justify-center pb-1 shrink-0">
-        <div className="w-32 h-[4px] bg-foreground rounded-full opacity-80" />
-      </div>
     </div>
   )
 }

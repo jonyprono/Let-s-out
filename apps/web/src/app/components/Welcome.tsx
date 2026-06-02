@@ -67,10 +67,6 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
         </p>
       </div>
 
-      {/* ── Home Indicator ─────────────────────────────────────── */}
-      <div className="h-[22px] flex items-center justify-center pb-[4px]">
-        <div className="w-[128px] h-[4px] bg-foreground rounded-full opacity-20" />
-      </div>
     </div>
   )
 }

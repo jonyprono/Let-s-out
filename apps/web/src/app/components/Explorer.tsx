@@ -361,9 +361,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             Appliquer les filtres
           </button>
         </div>
-        <div className="flex justify-center pb-2">
-          <div className="w-32 h-[5px] bg-black rounded-full" />
-        </div>
       </div>
     );
   }

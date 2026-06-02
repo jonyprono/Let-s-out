@@ -704,11 +704,6 @@ export function Signup({ onBack }: SignupProps) {
           <span>{buttonLabel()}</span>
         </button>
       </div>
-
-      {/* Home indicator */}
-      <div className="h-6 flex items-center justify-center pb-1 shrink-0">
-        <div className="w-32 h-[4px] bg-foreground rounded-full opacity-80" />
-      </div>
     </div>
   )
 }

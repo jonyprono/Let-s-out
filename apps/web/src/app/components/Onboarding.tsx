@@ -386,10 +386,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         </div>
       </div>
 
-      {/* Home Indicator */}
-      <div className="h-8 flex items-center justify-center pb-2">
-        <div className="w-32 h-1 bg-black rounded-full" />
-      </div>
     </div>
   );
 }
