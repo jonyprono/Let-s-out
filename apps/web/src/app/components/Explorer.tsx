@@ -414,61 +414,58 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         <div className="flex-1 overflow-y-auto px-5 pt-4">
           {activeSearchInput === 'location' ? (
             <div className="space-y-1">
-              <button className="w-full flex items-center gap-2 px-4 py-3" onClick={handleMapGeolocate}>
+              {/* Position actuelle toujours visible en haut, alignée à gauche */}
+              <button className="w-full flex justify-start items-center text-left px-4 py-3 gap-2" onClick={handleMapGeolocate}>
                 <Target className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                <span className="text-[15px] text-gray-900">Position actuelle</span>
+                <span className="text-[15px] text-gray-900 flex-1">Position actuelle</span>
               </button>
               
-              {mapSearch.length > 0 ? (
-                mapSearchResults.map((loc, idx) => {
+              {(() => {
+                const defaultLocs = ['Abomey, BJ', 'Abomey-Calavi, BJ', 'Cotonou, BJ', 'Ouidah, BJ', 'Porto-Novo, BJ', 'Parakou, BJ', 'Bohicon, BJ'];
+                
+                let list = mapSearch.length > 0 
+                  ? [
+                      ...defaultLocs.map(label => ({ label, lat: 0, lon: 0, isStatic: true })),
+                      ...mapSearchResults.map(r => ({ label: r.label, lat: r.lat, lon: r.lon, isStatic: false }))
+                    ]
+                  : defaultLocs.map(label => ({ label, lat: 0, lon: 0, isStatic: true }));
+
+                if (mapSearch.length > 0) {
+                  // STRICT PREFIX MATCHING (STARTS WITH)
+                  list = list.filter(loc => loc.label.toLowerCase().startsWith(mapSearch.toLowerCase()));
+                  // Supprimer les doublons
+                  list = list.filter((loc, idx, self) => self.findIndex(l => l.label === loc.label) === idx);
+                }
+
+                if (mapSearch.length > 0 && list.length === 0) {
+                  return <div className="px-4 py-3 text-[14px] text-gray-400 text-left">Aucune ville trouvée</div>;
+                }
+
+                return list.map((loc, idx) => {
                   const isSelected = mapSearch === loc.label;
                   return (
                     <button
                       key={idx}
-                      className="w-full flex items-center justify-between px-4 py-3"
+                      className="w-full flex justify-start items-center text-left px-4 py-3 gap-2"
                       onClick={() => {
                         handleMapSearch(loc.label);
-                        setMapCenter([loc.lat, loc.lon]);
+                        if (!loc.isStatic && loc.lat && loc.lon) {
+                          setMapCenter([loc.lat, loc.lon]);
+                        }
                         setActiveSearchInput('keyword');
                       }}
                     >
-                      <div className="flex items-center gap-2 truncate">
-                        <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                        <span className="text-[15px] text-gray-900 truncate">{loc.label}</span>
-                      </div>
+                      <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      <span className="text-[15px] text-gray-900 flex-1 truncate">{loc.label}</span>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-action-primary flex items-center justify-center flex-shrink-0">
+                        <div className="w-5 h-5 rounded-full bg-action-primary flex items-center justify-center flex-shrink-0 ml-auto">
                           <Check className="w-3 h-3 text-white stroke-[3]" />
                         </div>
                       )}
                     </button>
                   );
-                })
-              ) : (
-                ['Abomey, BJ', 'Abomey-Calavi, BJ'].map((loc, idx) => {
-                  const isSelected = mapSearch === loc;
-                  return (
-                    <button
-                      key={idx}
-                      className="w-full flex items-center justify-between px-4 py-3"
-                      onClick={() => {
-                        handleMapSearch(loc);
-                        setActiveSearchInput('keyword');
-                      }}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                        <span className="text-[15px] text-gray-900 truncate">{loc}</span>
-                      </div>
-                      {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-action-primary flex items-center justify-center flex-shrink-0">
-                          <Check className="w-3 h-3 text-white stroke-[3]" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })
-              )}
+                });
+              })()}
             </div>
           ) : (
             <div className="space-y-1">
