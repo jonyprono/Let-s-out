@@ -106,33 +106,49 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.28, ease: 'easeOut' }}
-              className="flex flex-col items-center w-full px-2"
+              className="flex flex-col items-center w-full"
             >
-              {/* Image — format paysage strict, coins arrondis asymétriques, clip strict */}
+              {/* Image — fond blanc, marges généreuses, coins arrondis asymétriques stricts */}
               <div
-                className="w-full overflow-hidden mb-6"
+                className="w-full flex items-center justify-center mb-7"
                 style={{
-                  aspectRatio: '2.3 / 1',
-                  borderRadius: '32px 32px 8px 32px',
+                  backgroundColor: '#FFFFFF',
+                  paddingLeft: '1.25rem',
+                  paddingRight: '1.25rem',
+                  paddingTop: '1rem',
+                  paddingBottom: '1rem',
                 }}
               >
-                <img
-                  src={current.image}
-                  alt={current.title}
-                  className="w-full h-full object-cover object-center"
-                />
+                <div
+                  className="w-full overflow-hidden"
+                  style={{
+                    aspectRatio: '16 / 9',
+                    borderRadius: '70px 70px 70px 20px',
+                    boxShadow: '0 2px 16px rgba(0,0,0,0.07)',
+                  }}
+                >
+                  <img
+                    src={current.image}
+                    alt={current.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+                  />
+                </div>
               </div>
 
               {/* Pagination Dots */}
-              <div className="flex items-center justify-center gap-2 mb-8">
+              <div className="flex items-center justify-center gap-[10px] mb-8">
                 {SLIDES.map((_, idx) => {
                   const isActive = idx === activeSlide;
                   return (
                     <div
                       key={idx}
-                      className={`rounded-full flex-shrink-0 transition-all duration-300 ${
-                        isActive ? 'w-6 h-1.5 bg-[#FF7A00]' : 'w-1.5 h-1.5 bg-[#E0E0E0]'
-                      }`}
+                      className="flex-shrink-0 rounded-full"
+                      style={{
+                        width: isActive ? '28px' : '8px',
+                        height: '8px',
+                        backgroundColor: isActive ? '#FF7A00' : '#E0E0E0',
+                        transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1), background-color 0.3s ease',
+                      }}
                     />
                   );
                 })}
