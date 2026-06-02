@@ -75,9 +75,9 @@ export function Settings({ onBack }: SettingsProps) {
         <div className="flex items-center gap-150">
           <button
             onClick={onBack}
-            className="w-9 h-9 bg-gray-100 dark:bg-[#2A2A2A] rounded-full flex items-center justify-center"
+            className="absolute left-0 w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
           <h1 className="text-xl font-bold text-gray-900 dark:text-[#FFFFFF]">{t('settings.title')}</h1>
         </div>

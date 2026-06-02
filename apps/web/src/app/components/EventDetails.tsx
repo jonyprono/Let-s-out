@@ -471,9 +471,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         <div className="absolute top-0 left-0 right-0 z-10 px-5 pt-4 pt-safe-4 pb-2 flex items-center justify-between">
           <button
             onClick={onBack}
-            className="w-10 h-10 bg-background-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md relative z-10"
+            className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-800" />
+            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
           
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none mt-2">

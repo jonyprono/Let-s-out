@@ -195,8 +195,8 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       {/* ── Header ─────────────────────────────────── */}
       <div className="px-5 pt-4 pb-0 shrink-0">
         <div className="flex items-center justify-center relative mb-4">
-          <button onClick={handlePrev} className="absolute left-0 w-10 h-10 bg-neutral-gray-100 rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <ChevronLeft className="w-5 h-5 text-foreground" strokeWidth={2.5} />
+          <button onClick={handlePrev} className="absolute left-0 w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
+            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
           <span className={authHeader}>Réinitialiser votre mot de passe</span>
         </div>

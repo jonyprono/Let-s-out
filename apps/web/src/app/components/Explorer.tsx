@@ -222,8 +222,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         {/* Header */}
         <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between">
-            <button onClick={() => setScreen('list')} className="w-8 h-8 flex items-center justify-center">
-              <ChevronLeft className="w-5 h-5 text-gray-700" />
+            <button onClick={() => setScreen('list')} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
+              <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
             </button>
             <span className="text-[15px] font-semibold text-gray-900">Filtrer</span>
             <div className="w-8" />
@@ -374,8 +374,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       <div className="w-full h-full bg-background flex flex-col">
         <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between mb-200">
-            <button onClick={() => setScreen('list')} className="w-8 h-8 flex items-center justify-center">
-              <ChevronLeft className="w-5 h-5 text-gray-700" />
+            <button onClick={() => setScreen('list')} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
+              <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
             </button>
             <span className="text-[15px] font-semibold text-gray-900">Rechercher</span>
             <div className="w-8" />
@@ -515,8 +515,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return (
       <div className="w-full h-full bg-[#F8F7FF] dark:bg-[#111111] flex flex-col z-50 absolute inset-0">
         <div className="px-5 pt-safe-6 pb-3 flex items-center gap-150">
-          <button onClick={() => setScreen('list')} className="w-10 h-10 rounded-full bg-background-white flex items-center justify-center shadow-sm">
-            <ChevronLeft className="w-6 h-6 text-gray-800" />
+          <button onClick={() => setScreen('list')} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform shadow-sm">
+            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
           <h2 className="text-xl font-bold text-gray-900">Rejoindre</h2>
         </div>

@@ -331,9 +331,9 @@ export function Signup({ onBack }: SignupProps) {
           <button
             onClick={handlePrev}
             aria-label="Retour"
-            className="absolute left-0 w-9 h-9 flex items-center justify-center active:opacity-70 rounded-full"
+            className="absolute left-0 w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform"
           >
-            <NavArrowLeft width={24} height={24} strokeWidth={1.4} className="text-foreground" />
+            <NavArrowLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
           <span className={authHeader}>Inscription</span>
         </div>
