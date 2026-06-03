@@ -80,13 +80,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [selectedCategory, setSelectedCategory] = useState('Tous');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
-  const [filterDate, setFilterDate] = useState('all');
+  const [filterDate, setFilterDate] = useState('soon');
   const [filterTime, setFilterTime] = useState('all');
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
-  const [filterBudgetMax, setFilterBudgetMax] = useState(50000);
+  const [filterBudgetMax, setFilterBudgetMax] = useState(10000);
   const [filterCustomDate, setFilterCustomDate] = useState('');
   const [filterDistance, setFilterDistance] = useState(100);
-  const [appliedFilters, setAppliedFilters] = useState({ date: 'all', time: 'all', categories: [] as string[], budgetMax: 10000, customDate: '', distance: 100 });
+  const [appliedFilters, setAppliedFilters] = useState({ date: 'soon', time: 'all', categories: [] as string[], budgetMax: 10000, customDate: '', distance: 100 });
 
   // Map state
   const [mapCenter, setMapCenter] = useState<[number, number]>([6.36536, 2.41833])
@@ -190,7 +190,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   };
 
   const resetFilters = () => {
-    setFilterDate('all');
+    setFilterDate('soon');
     setFilterTime('all');
     setFilterCategories([]);
     setFilterBudgetMax(10000);
@@ -304,11 +304,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Budget */}
-          <div className="border-b border-gray-100 pb-6 mb-6">
+          <div className="pb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[17px] font-bold text-gray-900">Budget</h3>
-              <span className="text-[13px] font-bold text-gray-700">
-                0 - {filterBudgetMax === 10000 ? '10 000' : filterBudgetMax.toLocaleString('fr-FR')} F CFA
+              <span className="text-[13px] font-medium text-gray-500">
+                0 - {filterBudgetMax >= 10000 ? '10 000' : filterBudgetMax.toLocaleString('fr-FR')} F CFA
               </span>
             </div>
             <input
@@ -318,19 +318,19 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               step={500}
               value={filterBudgetMax}
               onChange={e => setFilterBudgetMax(Number(e.target.value))}
-              className="w-full h-1.5 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[22px] [&::-webkit-slider-thumb]:h-[22px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-200 [&::-webkit-slider-thumb]:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+              className="w-full h-1 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[20px] [&::-webkit-slider-thumb]:h-[20px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-action-primary [&::-webkit-slider-thumb]:shadow-[0_2px_6px_rgba(0,0,0,0.12)] [&::-moz-range-thumb]:w-[20px] [&::-moz-range-thumb]:h-[20px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-action-primary"
               style={{
-                background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${(filterBudgetMax / 10000) * 100}%, #f3f4f6 ${(filterBudgetMax / 10000) * 100}%, #f3f4f6 100%)`
+                background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${(filterBudgetMax / 10000) * 100}%, #E5E7EB ${(filterBudgetMax / 10000) * 100}%, #E5E7EB 100%)`
               }}
             />
           </div>
 
           {/* Distance */}
-          <div className="border-b border-gray-100 pb-6 mb-6">
+          <div className="pb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[17px] font-bold text-gray-900">Distance</h3>
-              <span className="text-[13px] font-bold text-gray-700">
-                {filterDistance === 100 ? "N'importe quelle distance" : `${filterDistance} km`}
+              <span className="text-[13px] font-medium text-gray-500">
+                {filterDistance >= 100 ? "N'importe quelle distance" : `${filterDistance} km`}
               </span>
             </div>
             <input
@@ -340,23 +340,23 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               step={1}
               value={filterDistance}
               onChange={e => setFilterDistance(Number(e.target.value))}
-              className="w-full h-1.5 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[22px] [&::-webkit-slider-thumb]:h-[22px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-200 [&::-webkit-slider-thumb]:shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
-              style={{ background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${(filterDistance / 100) * 100}%, #f3f4f6 ${(filterDistance / 100) * 100}%, #f3f4f6 100%)` }}
+              className="w-full h-1 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[20px] [&::-webkit-slider-thumb]:h-[20px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-action-primary [&::-webkit-slider-thumb]:shadow-[0_2px_6px_rgba(0,0,0,0.12)] [&::-moz-range-thumb]:w-[20px] [&::-moz-range-thumb]:h-[20px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-action-primary"
+              style={{ background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${(filterDistance / 100) * 100}%, #E5E7EB ${(filterDistance / 100) * 100}%, #E5E7EB 100%)` }}
             />
           </div>
         </div>
 
-        {/* Footer buttons */}
-        <div className="px-5 py-6 flex gap-4">
+        {/* Footer buttons — sticky en bas */}
+        <div className="px-5 py-5 flex items-center gap-3 border-t border-gray-100 bg-background shrink-0">
           <button
             onClick={resetFilters}
-            className="px-6 py-3.5 rounded-full bg-gray-100 text-[14px] font-bold text-gray-800"
+            className="px-5 py-3 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-800 active:scale-95 transition-transform"
           >
             Réinitialiser
           </button>
           <button
             onClick={applyFilters}
-            className="flex-1 py-3.5 rounded-full bg-action-primary active:bg-[#FF8C00] text-[14px] font-bold text-white shadow-md shadow-action-primary/20"
+            className="flex-1 py-3 rounded-full bg-action-primary active:bg-[#E56E00] text-[13px] font-semibold text-white active:scale-[0.98] transition-all"
           >
             Appliquer les filtres
           </button>
