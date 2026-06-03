@@ -34,8 +34,10 @@ import {
   computePoolStats,
   hasPaidParticipation,
   hasActivePool,
+  resolveContributionAmount,
 } from '@/lib/pool-contribution'
 import { ManageEventView } from '@/app/components/ManageEventView'
+import { hapticFeedback } from '@/lib/haptics'
 
 import { useFavoritesStore } from '@/stores/favorites.store'
 
@@ -195,9 +197,26 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       }
     }
   }
+  const handleContribute = () => {
+    hapticFeedback.impact()
+    if (!user) { toast.error("Connectez-vous pour contribuer."); return }
+    if (!event?.poolTarget || event.poolTarget <= 0) {
+      toast.error("Cet événement n'a pas de cagnotte active.")
+      return
+    }
+    setShowContributeModal(true)
+  }
 
-
-
+  const handleConfirmContribute = (amount: number) => {
+    if (!event) return
+    const resolved = resolveContributionAmount(event, amount)
+    if ('error' in resolved) {
+      toast.error(resolved.error)
+      return
+    }
+    setShowContributeModal(false)
+    navigate(`/events/${id}/pay?amount=${resolved.amount}&type=contribution`)
+  }
   const handleShare = async () => {
     if (!event) return;
     hapticFeedback.impact();
