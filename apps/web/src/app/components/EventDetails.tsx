@@ -27,7 +27,7 @@ import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { usersApi } from '@/features/users/api'
-import { apiClient } from '@/lib/api-client'
+
 import { QRCodeSVG } from 'qrcode.react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { ContributeModal } from '@/components/shared/ContributeModal'
