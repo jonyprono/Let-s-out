@@ -14,7 +14,6 @@ import {
   QrCode,
   Copy,
   Check,
-  Megaphone,
   BadgeCheck,
   X,
   Star,
@@ -283,16 +282,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     }
   }
 
-  const handlePublish = async () => {
-    if (!event) return;
-    try {
-      await apiClient.put(`/events/${event.id}/publish`)
-      toast.success('Événement publié avec succès !')
-      qc.invalidateQueries({ queryKey: ['event', id] })
-    } catch {
-      toast.error('Erreur lors de la publication')
-    }
-  }
+
 
   const goToChat = async () => {
     if (!event) return
