@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { ChevronLeft, Heart, MessageCircle, UserPlus, Calendar, DollarSign, Bell, Check, Loader2, Users, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react';
+import { ChevronLeft, Heart, MessageCircle, UserPlus, Calendar, DollarSign, Bell, Check, Loader2, Users, CheckCircle, AlertCircle, ChevronRight, Archive } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useState, useMemo } from 'react';
@@ -51,11 +51,14 @@ export function Notifications({ onBack }: NotificationsProps) {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<string | null>(null);
 
+  const [archivedTypes, setArchivedTypes] = useState<Set<string>>(new Set());
+  const [archivedIds, setArchivedIds] = useState<Set<string>>(new Set());
+
   const { data, isLoading } = useNotifications(100, false);
   const allNotifications = data?.data ?? [];
   const activeNotifications = useMemo(
-    () => filterActiveNotifications(allNotifications),
-    [allNotifications],
+    () => filterActiveNotifications(allNotifications).filter(n => !archivedIds.has(n.id) && !archivedTypes.has(n.type)),
+    [allNotifications, archivedIds, archivedTypes],
   );
   const unreadCount = activeNotifications.filter((n) => !n.isRead).length;
 
@@ -127,16 +130,20 @@ export function Notifications({ onBack }: NotificationsProps) {
               )}
             </div>
           </div>
-          {unreadCount > 0 && (
+          {(groups.length > 0 || typeNotifications.length > 0) && (
             <button
-              onClick={() => markAllReadMutation.mutate()}
-              disabled={markAllReadMutation.isPending}
-              className="flex items-center gap-1.5 text-xs font-semibold text-action-primary px-3 py-1.5 bg-orange-50 rounded-full flex-shrink-0"
+              onClick={() => {
+                markAllReadMutation.mutate();
+                if (selectedType) {
+                  setArchivedTypes(prev => new Set(prev).add(selectedType));
+                  setSelectedType(null);
+                } else {
+                  setArchivedTypes(new Set([...Array.from(archivedTypes), ...groups.map(g => g.type)]));
+                }
+              }}
+              className={`text-[13px] font-semibold transition-colors ${unreadCount > 0 ? 'text-action-primary' : 'text-gray-500'}`}
             >
-              {markAllReadMutation.isPending
-                ? <Loader2 className="w-3 h-3 animate-spin" />
-                : <Check className="w-3 h-3" />}
-              Tout lire
+              Tout effacer
             </button>
           )}
         </div>
@@ -193,9 +200,21 @@ export function Notifications({ onBack }: NotificationsProps) {
                       </div>
                       <p className="text-[13px] text-gray-500 leading-snug line-clamp-2">{notif.body}</p>
                     </div>
-                    {!notif.isRead && (
-                      <div className="w-2.5 h-2.5 bg-action-primary rounded-full flex-shrink-0 mt-1" />
-                    )}
+                    <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+                      {!notif.isRead && (
+                        <div className="w-2.5 h-2.5 bg-action-primary rounded-full" />
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setArchivedIds(prev => new Set(prev).add(notif.id));
+                        }}
+                        className="p-1.5 text-gray-300 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
+                        title="Archiver"
+                      >
+                        <Archive className="w-4 h-4" />
+                      </button>
+                    </div>
                   </button>
                 );
               })}
@@ -240,7 +259,19 @@ export function Notifications({ onBack }: NotificationsProps) {
                       {group.count} notification{group.count > 1 ? 's' : ''} · {timeAgo(group.latestAt)}
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300 flex-shrink-0" />
+                  <div className="flex items-center gap-1">
+                    <ChevronRight className="w-5 h-5 text-gray-300 flex-shrink-0" />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setArchivedTypes(prev => new Set(prev).add(group.type));
+                      }}
+                      className="p-1.5 text-gray-300 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
+                      title="Archiver"
+                    >
+                      <Archive className="w-4 h-4" />
+                    </button>
+                  </div>
                 </button>
               );
             })}
