@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { ChevronLeft, Heart, MessageCircle, UserPlus, Calendar, DollarSign, Bell, Check, Loader2, Users, CheckCircle, AlertCircle, ChevronRight, Archive } from 'lucide-react';
+import { ChevronLeft, Heart, MessageCircle, UserPlus, Calendar, DollarSign, Bell, Users, CheckCircle, AlertCircle, ChevronRight, Archive } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useState, useMemo } from 'react';
