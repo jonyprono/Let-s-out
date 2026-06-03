@@ -463,6 +463,20 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const participationPaid = hasPaidParticipation(event, myBookingData ?? null)
   const showPoolActions = hasPool && participationPaid
 
+  if (isCreator && event.status === 'DRAFT') {
+    return (
+      <ManageEventView
+        event={event}
+        organizerName={organizerName}
+        organizerAvatar={organizerAvatar}
+        formattedDate={formattedDate}
+        formattedStart={formattedStart}
+        formattedEnd={formattedEnd}
+        onBack={onBack}
+      />
+    )
+  }
+
   return (
     <>
       <div className="w-full h-full bg-background-white flex flex-col">
@@ -508,16 +522,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             </div>
           </div>
 
-          {isCreator && event.status === 'DRAFT' ? (
-            <ManageEventView 
-              event={event}
-              organizerName={organizerName}
-              organizerAvatar={organizerAvatar}
-              formattedDate={formattedDate}
-              formattedStart={formattedStart}
-              formattedEnd={formattedEnd}
-            />
-          ) : (
           <div className="px-5 py-5">
             {/* Title and Badge */}
             <h1 className="mt-2 text-3xl font-bold text-gray-900 leading-tight">{event.title}</h1>
@@ -792,26 +796,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               </div>
             )}
           </div>
-          )}
         </div>
 
         {/* Bottom Actions */}
         <div className="absolute bottom-0 left-0 right-0 bg-background-white border-t border-gray-100 px-5 pt-4 flex items-center justify-between gap-200 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
-          {isCreator && event.status === 'DRAFT' ? (
-            <div className="flex flex-col gap-150 w-full">
-              <button 
-                onClick={() => {
-                  setShowProfileVerificationModal(true);
-                }}
-                className="w-full py-150.5 bg-background-white border border-action-primary rounded-[16px] text-[15px] font-bold text-action-primary flex justify-center items-center gap-2 active:scale-95 transition-transform"
-              >
-                <HandCoins className="w-5 h-5" /> Ajouter cagnotte
-              </button>
-              <button onClick={handlePublish} className="w-full py-150.5 bg-action-primary active:bg-action-primary-hover rounded-[16px] text-[15px] font-bold text-white flex justify-center items-center gap-2 active:scale-95 transition-transform">
-                <Megaphone className="w-5 h-5" /> Publier l'événement
-              </button>
-            </div>
-          ) : !hasJoined ? (
+          {!hasJoined ? (
             <>
               <div className="flex-shrink-0">
                 <p className="text-[15px] font-bold text-gray-700">

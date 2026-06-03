@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BadgeCheck, Edit3, Loader2, PiggyBank, Send } from 'lucide-react'
+import { BadgeCheck, Edit3, Loader2, PiggyBank, Megaphone, ChevronLeft } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { useNavigate } from 'react-router'
 import { apiClient } from '@/lib/api-client'
@@ -13,6 +13,7 @@ interface ManageEventViewProps {
   formattedDate: string
   formattedStart: string
   formattedEnd: string
+  onBack: () => void
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -26,7 +27,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 // ── Pill badge for categories ─────────────────────────────────────────────────
 function CategoryPill({ cat }: { cat: string }) {
   return (
-    <span className="text-[12px] font-bold text-action-primary bg-[#FFF0D9] px-3 py-1 rounded-full border border-[#FFD99A]">
+    <span className="text-[12px] font-bold text-[#3B82F6] bg-[#EFF6FF] px-3 py-1 rounded-full">
       {CATEGORY_LABELS[cat] || cat}
     </span>
   )
@@ -37,12 +38,12 @@ function SectionCard({
   title, onEdit, children
 }: { title: string; onEdit: () => void; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+    <div className="bg-white border border-gray-100 rounded-[16px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-bold text-gray-900 text-[15px]">{title}</h3>
         <button
           onClick={onEdit}
-          className="text-[12px] text-gray-500 flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform"
+          className="text-[11px] text-gray-600 flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 rounded-full font-bold active:scale-95 transition-transform"
         >
           <Edit3 className="w-3.5 h-3.5" /> Modifier
         </button>
@@ -63,7 +64,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function ManageEventView({
-  event, organizerName, organizerAvatar, formattedDate, formattedStart, formattedEnd
+  event, organizerName, organizerAvatar, formattedDate, formattedStart, formattedEnd, onBack
 }: ManageEventViewProps) {
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -93,14 +94,26 @@ export function ManageEventView({
   const categories: string[] = event.category ? [event.category] : []
 
   return (
-    <div className="relative">
+    <div className="w-full h-full flex flex-col bg-[#F8F9FA]">
+      {/* ── Header ── */}
+      <div className="px-5 pt-4 pt-safe-4 pb-2 flex items-center justify-between border-b border-gray-100 bg-white shadow-sm flex-shrink-0">
+        <button
+          onClick={onBack}
+          className="w-10 h-10 bg-[#F5F5F5] rounded-full flex items-center justify-center active:scale-95 transition-transform"
+        >
+          <ChevronLeft className="w-6 h-6 text-gray-800" strokeWidth={2.5} />
+        </button>
+        <span className="text-[15px] font-bold text-gray-900">Détails événement</span>
+        <div className="w-10 h-10" /> {/* Spacer for centering */}
+      </div>
+
       {/* ── Scrollable content ── */}
-      <div className="px-5 py-5 bg-gray-50 pb-44">
+      <div className="flex-1 overflow-y-auto px-5 py-5 pb-44" style={{ scrollbarWidth: 'none' }}>
         <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-4">{event.title}</h1>
 
         {/* Info banner */}
-        <div className="bg-[#EBF3FA] mb-6 p-4 rounded-xl border border-blue-100">
-          <p className="text-gray-600 text-[13px] leading-relaxed">
+        <div className="bg-[#EBF5FF] mb-6 p-4 rounded-[12px]">
+          <p className="text-gray-600 text-[12px] leading-relaxed">
             Cet événement n'est pas encore visible sur Let's Out.<br />
             Publiez-le pour le rendre accessible publiquement.<br />
             Ou ajoutez une cagnotte pour partager les frais.
@@ -197,11 +210,11 @@ export function ManageEventView({
           {/* Couverture */}
           <SectionCard title="Couverture" onEdit={() => handleEdit(4)}>
             {event.coverUrl ? (
-              <div className="w-full h-36 rounded-xl overflow-hidden">
+              <div className="w-full h-40 rounded-[12px] overflow-hidden">
                 <SafeImage src={event.coverUrl} alt="Couverture" className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className="w-full h-36 rounded-xl bg-gray-100 flex flex-col items-center justify-center gap-2">
+              <div className="w-full h-40 rounded-[12px] bg-gray-100 flex flex-col items-center justify-center gap-2">
                 <span className="text-3xl">🖼</span>
                 <span className="text-[13px] text-gray-400">Aucune image</span>
               </div>
@@ -211,27 +224,27 @@ export function ManageEventView({
       </div>
 
       {/* ── Fixed bottom actions ── */}
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-gray-100 px-5 pt-4 pb-8 z-40 space-y-3">
+      <div className="absolute bottom-0 left-0 right-0 bg-[#F8F9FA] px-5 pb-safe-4 pt-4 flex flex-col gap-3">
         {/* Ajouter cagnotte */}
         <button
           onClick={handleAddPool}
-          className="w-full py-[15px] rounded-full border-2 border-action-primary text-action-primary font-bold text-[15px] bg-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+          className="w-full py-[14px] rounded-full border border-action-primary text-action-primary font-bold text-[14px] bg-white flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
-          <PiggyBank className="w-5 h-5" />
+          <PiggyBank className="w-4 h-4" />
           Ajouter cagnotte
         </button>
         {/* Publier l'événement */}
         <button
           onClick={handlePublish}
           disabled={publishing}
-          className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${
+          className={`w-full py-[14px] rounded-full font-bold text-[14px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all ${
             publishing ? 'bg-[#FFD99A]' : 'bg-action-primary'
           }`}
         >
           {publishing ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Send className="w-5 h-5" />
+            <Megaphone className="w-4 h-4" />
           )}
           {publishing ? 'Publication...' : 'Publier l\'événement'}
         </button>
