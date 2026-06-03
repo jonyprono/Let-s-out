@@ -197,16 +197,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       }
     }
   }
-  const handleContribute = () => {
-    hapticFeedback.impact()
-    if (!user) { toast.error("Connectez-vous pour contribuer."); return }
-    if (!event?.poolTarget || event.poolTarget <= 0) {
-      toast.error("Cet événement n'a pas de cagnotte active.")
-      return
-    }
-    setShowContributeModal(true)
-  }
-
   const handleConfirmContribute = (amount: number) => {
     if (!event) return
     const resolved = resolveContributionAmount(event, amount)
