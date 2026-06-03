@@ -99,6 +99,28 @@ body.barcode-scanner-active #app-layout-inner {
 .pt-safe-6 {
   padding-top: calc(1.5rem + env(safe-area-inset-top)) !important;
 }
+
+/* ── Focus styling for form fields ─────────────────────────────── */
+/* ── Unified focus styling for form fields ─────────────────────────────── */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+input:focus,
+textarea:focus,
+select:focus {
+  border: 2px solid #FF7A00 !important; /* action-primary orange */
+  outline: none;
+}
+
+
+/* Ensure existing Tailwind-like focus-visible classes don’t override */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+  padding-top: calc(1.5rem + env(safe-area-inset-top)) !important;
+}
 .pt-safe-8 {
   padding-top: calc(2rem + env(safe-area-inset-top)) !important;
 }
