@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react'
+import { useNavigate, useParams } from 'react-router'
 import { ChevronLeft, HelpCircle, Check, MapPin, Calendar, Clock } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
@@ -18,7 +18,7 @@ export function EventSuccessScreen() {
     enabled: !!id,
   })
 
-  const event = eventData?.event
+  const event = eventData
 
   if (!event) return null
 

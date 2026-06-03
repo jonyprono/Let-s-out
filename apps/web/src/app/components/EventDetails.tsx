@@ -7,16 +7,12 @@ import {
   Share2,
   Loader2,
   Users,
-  MessageCircle,
   Briefcase,
-  HandCoins,
   Lock,
-  QrCode,
   Copy,
   Check,
   BadgeCheck,
   X,
-  Star,
   Heart,
   Wallet,
 } from 'lucide-react'
@@ -38,113 +34,11 @@ import {
   computePoolStats,
   hasPaidParticipation,
   hasActivePool,
-  resolveContributionAmount,
 } from '@/lib/pool-contribution'
 import { ManageEventView } from '@/app/components/ManageEventView'
-import { hapticFeedback } from '@/lib/haptics'
 
 import { useFavoritesStore } from '@/stores/favorites.store'
 
-
-
-interface CoHostRowProps {
-  coHost: any
-  currentUser: any
-  onOpenProfile: (id: string, data: any) => void
-  onContactUser: (userId: string) => void
-}
-
-function CoHostRow({ coHost, currentUser, onOpenProfile, onContactUser }: CoHostRowProps) {
-  const coHostName = coHost.profile?.displayName || 'Co-organisateur'
-  const coHostAvatar = coHost.profile?.avatarUrl
-  const coHostFollowers = coHost.profile?.followersCount || 0
-  const coHostEvents = coHost.profile?.eventsCount || 0
-  const isThisCoHostMe = currentUser?.id === coHost.id
-
-  const [isFollowing, setIsFollowing] = useState(false)
-  const [loading, setLoading] = useState(false)
-
-  const handleFollow = async () => {
-    if (!currentUser) {
-      toast.error("Connectez-vous pour suivre le co-organisateur.")
-      return
-    }
-    setLoading(true)
-    try {
-      if (isFollowing) {
-        await usersApi.unfollowUser(coHost.id)
-        setIsFollowing(false)
-        toast.success("Vous ne suivez plus cet utilisateur")
-      } else {
-        await usersApi.followUser(coHost.id)
-        setIsFollowing(true)
-        toast.success("Vous suivez cet utilisateur")
-      }
-    } catch {
-      toast.error("Une erreur est survenue")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="flex flex-col p-200 rounded-2xl bg-gray-50 border border-gray-100">
-      <div className="flex items-start gap-150">
-        <div 
-          className="cursor-pointer flex-shrink-0"
-          onClick={() => onOpenProfile(coHost.id, { displayName: coHostName, avatarUrl: coHostAvatar })}
-        >
-          <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm">
-            <SafeImage 
-              src={coHostAvatar} 
-              alt={coHostName} 
-              className="w-full h-full object-cover"
-              fallback={
-                <div className="w-full h-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--action-primary)] flex items-center justify-center text-xl font-bold text-white">
-                  {coHostName.charAt(0).toUpperCase()}
-                </div>
-              }
-            />
-          </div>
-        </div>
-        
-        <div className="flex-1">
-          <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => onOpenProfile(coHost.id, { displayName: coHostName, avatarUrl: coHostAvatar })}>
-            <p className="text-[15px] font-bold text-gray-900">{coHostName}</p>
-            <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Co-hôte</span>
-          </div>
-          <p className="text-[12px] text-text-secondary mt-0.5 mb-2">
-            {coHostFollowers + (isFollowing ? 1 : 0)} followers • {coHostEvents} événement{coHostEvents > 1 ? 's' : ''}
-          </p>
-          
-          {isThisCoHostMe ? (
-            <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-150 py-1 rounded-full">Vous</span>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => onContactUser(coHost.id)} 
-                className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform"
-              >
-                Contacter
-              </button>
-              <button 
-                onClick={handleFollow} 
-                disabled={loading}
-                className={`px-150 py-1 rounded-full border text-[11px] font-bold shadow-sm active:scale-95 transition-all ${
-                  isFollowing 
-                    ? 'bg-blue-50 text-blue-600 border-blue-200' 
-                    : 'bg-background-white border-border-primary text-gray-700'
-                }`}
-              >
-                {isFollowing ? 'Suivi' : 'Suivre'}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
 
 interface EventDetailsProps {
   onBack: () => void
@@ -157,7 +51,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const user = useAuthStore((s) => s.user)
   const { openUserProfile } = useUserProfile()
   const [showJoinModal, setShowJoinModal] = useState(false)
-  const [isFollowing, setIsFollowing] = useState(false)
   const [showContributeModal, setShowContributeModal] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
@@ -303,61 +196,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     }
   }
 
-  const handleFollow = async () => {
-    hapticFeedback.impact()
-    if (!user) { toast.error("Connectez-vous pour suivre l'organisateur."); return }
-    if (!event?.creator?.id) return
-    const wasFollowing = isFollowing
-    setIsFollowing(!wasFollowing)
-    try {
-      if (wasFollowing) {
-        await usersApi.unfollowUser(event.creator.id)
-        toast.success(`Vous ne suivez plus ${organizerName}`)
-      } else {
-        await usersApi.followUser(event.creator.id)
-        toast.success(`Vous suivez ${organizerName}`)
-      }
-      hapticFeedback.success()
-    } catch {
-      setIsFollowing(wasFollowing)
-      hapticFeedback.error()
-      toast.error("Erreur lors de l'abonnement/désabonnement")
-    }
-  }
 
-  const handleContact = async () => {
-    hapticFeedback.impact()
-    if (!user) { toast.error("Connectez-vous pour contacter l'organisateur."); return }
-    if (!event?.creator?.id) return
-    try {
-      const conv = await chatApi.createDM(event.creator.id)
-      navigate(`/chat/${conv.id}`)
-    } catch {
-      hapticFeedback.error()
-      toast.error("Impossible d'ouvrir la discussion.")
-    }
-  }
-
-  const handleContribute = () => {
-    hapticFeedback.impact()
-    if (!user) { toast.error("Connectez-vous pour contribuer."); return }
-    if (!event?.poolTarget || event.poolTarget <= 0) {
-      toast.error("Cet événement n'a pas de cagnotte active.")
-      return
-    }
-    setShowContributeModal(true)
-  }
-
-  const handleConfirmContribute = (amount: number) => {
-    if (!event) return
-    const resolved = resolveContributionAmount(event, amount)
-    if ('error' in resolved) {
-      toast.error(resolved.error)
-      return
-    }
-    setShowContributeModal(false)
-    navigate(`/events/${id}/pay?amount=${resolved.amount}&type=contribution`)
-  }
 
   const handleShare = async () => {
     if (!event) return;
@@ -453,7 +292,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const hasPool = hasActivePool(event)
   const { budget: cagnoteBudget, collected: cagnoteCollected, remaining: cagnoteRemaining, progress: cagnoteProgress } = computePoolStats(event)
   const participationPaid = hasPaidParticipation(event, myBookingData ?? null)
-  const showPoolActions = hasPool && participationPaid
 
   if (isCreator && event.status === 'DRAFT') {
     return (

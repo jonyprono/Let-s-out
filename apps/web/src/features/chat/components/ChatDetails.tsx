@@ -269,7 +269,6 @@ export function ChatDetails() {
 
             // Group consecutive messages from same sender
             const isFirstInGroup = !prevMsg || prevMsg.senderId !== msg.senderId
-            const isLastInGroup = !nextMsg || nextMsg.senderId !== msg.senderId
 
             const isImage = msg.type === 'IMAGE'
             const isVideo = msg.type === 'VIDEO'
