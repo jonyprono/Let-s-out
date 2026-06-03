@@ -87,7 +87,11 @@ export function useDirectLogin() {
       navigate('/home')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.error || (error.message === 'Network Error' ? "Erreur réseau : serveur inaccessible" : 'Identifiants incorrects'))
+      if (error.message === 'Network Error') {
+        toast.error("Erreur réseau : serveur inaccessible")
+      } else {
+        toast.error("Numéro ou Mot de passe incorrect")
+      }
     }
   })
 }

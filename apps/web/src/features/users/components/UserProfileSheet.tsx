@@ -107,72 +107,72 @@ export function UserProfileSheet({ userId, username, preview, onClose }: UserPro
   return (
     /* Overlay */
     <div
-      className="absolute inset-0 z-[60] flex items-end justify-center"
-      style={{ background: 'rgba(0,0,0,0.4)' }}
+      className="absolute inset-0 z-[60] flex items-end justify-center animate-in fade-in duration-200"
+      style={{ background: 'rgba(0,0,0,0.6)' }}
       onClick={onClose}
     >
       {/* Sheet */}
       <div
-        className="w-full max-w-md bg-white rounded-t-3xl overflow-hidden"
+        className="w-full max-w-md bg-white rounded-t-[32px] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl"
         style={{ maxHeight: '85vh' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-gray-200 rounded-full" />
+        <div className="flex justify-center pt-4 pb-2">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-2 pb-4">
-          <h2 className="text-[17px] font-bold text-gray-900">Participant</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+        <div className="flex items-center justify-between px-6 pb-6">
+          <h2 className="text-[20px] font-bold text-gray-900 tracking-tight">Participant</h2>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center active:scale-95 transition-transform">
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
-        <div className="overflow-y-auto pb-24" style={{ maxHeight: 'calc(85vh - 60px)', scrollbarWidth: 'none' }}>
+        <div className="overflow-y-auto pb-safe-4" style={{ maxHeight: 'calc(85vh - 80px)', scrollbarWidth: 'none', paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
           {/* Profile Content */}
-          <div className="px-5">
-            <div className="flex flex-col items-start mb-4">
-              <div className="w-[56px] h-[56px] rounded-full bg-gray-100 overflow-hidden mb-3">
+          <div className="px-6">
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-[88px] h-[88px] rounded-full bg-gray-100 overflow-hidden mb-4 shadow-sm border border-gray-50">
                 <SafeImage
                   src={avatarUrl}
                   alt={displayName}
                   className="w-full h-full object-cover"
                   fallback={
-                    <div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-400">
+                    <div className="w-full h-full flex items-center justify-center text-[32px] font-bold text-gray-400">
                       {displayName.charAt(0).toUpperCase()}
                     </div>
                   }
                 />
               </div>
-              <h2 className="text-[17px] font-bold text-gray-900 truncate mb-1">{displayName}</h2>
+              <h2 className="text-[22px] font-bold text-gray-900 truncate mb-1 text-center tracking-tight">{displayName}</h2>
               {memberSince && (
-                <p className="text-[12px] text-gray-400 mb-1">Membre depuis {memberSince}</p>
+                <p className="text-[14px] text-gray-500 font-medium mb-3">Membre depuis {memberSince}</p>
               )}
               {profile?.bio ? (
-                <p className="text-[14px] text-gray-500 leading-relaxed text-left">{profile.bio}</p>
+                <p className="text-[15px] text-gray-600 leading-relaxed text-center max-w-[280px]">{profile.bio}</p>
               ) : (
-                <p className="text-[14px] text-gray-400 italic text-left">Aucune biographie renseignée.</p>
+                <p className="text-[14px] text-gray-400 italic text-center">Aucune biographie renseignée.</p>
               )}
             </div>
 
             {/* Loading skeleton */}
             {isLoading && !profile && (
-              <div className="space-y-3 animate-pulse max-w-[200px] mt-6">
-                <div className="h-4 bg-gray-100 rounded w-full" />
-                <div className="h-4 bg-gray-100 rounded w-2/3" />
+              <div className="space-y-3 animate-pulse flex flex-col items-center mt-6">
+                <div className="h-4 bg-gray-100 rounded w-48" />
+                <div className="h-4 bg-gray-100 rounded w-32" />
               </div>
             )}
           </div>
 
           {/* Actions — not shown for self */}
           {!isMe && (
-            <div className="px-5 pb-4 mt-2 space-y-3">
+            <div className="px-6 pb-4 mt-2 space-y-3">
               <div className="flex gap-3">
                 <button
                   onClick={handleMessage}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 bg-white text-gray-800 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
+                  className="flex-1 flex items-center justify-center gap-2 py-[14px] rounded-full border border-gray-200 bg-white text-gray-800 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
                 >
                   <MessageCircle className="w-4 h-4 text-gray-700" />
                   Message
@@ -183,7 +183,7 @@ export function UserProfileSheet({ userId, username, preview, onClose }: UserPro
                     onClose()
                     navigate(`/profile/${profile?.username || profile?.userId || userId}`)
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 bg-white text-gray-800 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
+                  className="flex-1 flex items-center justify-center gap-2 py-[14px] rounded-full border border-gray-200 bg-white text-gray-800 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
                 >
                   <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   Voir profil
@@ -195,23 +195,23 @@ export function UserProfileSheet({ userId, username, preview, onClose }: UserPro
                 <button
                   onClick={() => sendFriendMutation.mutate()}
                   disabled={sendFriendMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full bg-action-primary text-white font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
+                  className="w-full flex items-center justify-center gap-2 py-[14px] rounded-full bg-action-primary text-white font-bold text-[15px] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
                 >
                   {sendFriendMutation.isPending
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <UserPlus className="w-4 h-4" />}
+                    ? <Loader2 className="w-5 h-5 animate-spin" />
+                    : <UserPlus className="w-5 h-5" />}
                   Ajouter en ami
                 </button>
               )}
               {friendStatus === 'pending_sent' && (
-                <div className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 bg-gray-50 text-gray-500 font-bold text-[14px]">
-                  <UserCheck className="w-4 h-4" />
+                <div className="w-full flex items-center justify-center gap-2 py-[14px] rounded-full border border-gray-200 bg-gray-50 text-gray-500 font-bold text-[15px]">
+                  <UserCheck className="w-5 h-5" />
                   Demande envoyée
                 </div>
               )}
               {friendStatus === 'friend' && (
-                <div className="w-full flex items-center justify-center gap-2 py-3.5 rounded-full border border-green-200 bg-green-50 text-green-600 font-bold text-[14px]">
-                  <UserCheck className="w-4 h-4" />
+                <div className="w-full flex items-center justify-center gap-2 py-[14px] rounded-full border border-green-200 bg-green-50 text-green-600 font-bold text-[15px]">
+                  <UserCheck className="w-5 h-5" />
                   Amis
                 </div>
               )}

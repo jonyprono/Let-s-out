@@ -61,6 +61,7 @@ import {
   JoinPrivateEvent,
   VerifyProfile,
   MyEvents,
+  EventSuccessScreen,
 } from '@/app/components/adapters'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
@@ -156,6 +157,7 @@ export default function App() {
             <Route path="/my-events" element={<MyEvents />} />
             <Route path="/events/create" element={<CreateEvent />} />
             <Route path="/events/:id" element={<EventDetails />} />
+            <Route path="/events/:id/success" element={<EventSuccessScreen />} />
             <Route path="/scan-qr" element={<JoinPrivateEvent />} />
             <Route path="/events/:id/pay" element={<PaymentPage />} />
             <Route path="/payments/:bookingId" element={<PaymentReceipt />} />

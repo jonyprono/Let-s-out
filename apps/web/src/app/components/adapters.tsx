@@ -37,6 +37,7 @@ const VerifyProfileBase = lazy(() => import('@/app/components/VerifyProfile').th
 const PaymentReceiptBase= lazy(() => import('@/app/components/PaymentReceipt').then(m => ({ default: m.PaymentReceipt })))
 const FriendsListBase   = lazy(() => import('@/app/components/FriendsList').then(m => ({ default: m.FriendsList })))
 const JoinPrivateBase   = lazy(() => import('@/app/components/JoinPrivateEvent').then(m => ({ default: m.JoinPrivateEvent })))
+const EventSuccessBase  = lazy(() => import('@/app/components/EventSuccessScreen').then(m => ({ default: m.EventSuccessScreen })))
 
 // ─── Splashscreen ─────────────────────────────────────────────────────────────
 export function Splashscreen() {
@@ -317,6 +318,15 @@ export function JoinPrivateEvent() {
   return (
     <Suspense fallback={<PageLoader />}>
       <JoinPrivateBase />
+    </Suspense>
+  )
+}
+
+// ─── EventSuccessScreen ────────────────────────────────────────────────────────
+export function EventSuccessScreen() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <EventSuccessBase />
     </Suspense>
   )
 }

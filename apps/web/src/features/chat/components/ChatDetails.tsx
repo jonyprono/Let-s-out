@@ -164,51 +164,51 @@ export function ChatDetails() {
   return (
     <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" onClick={() => pickerMsgId && setPickerMsgId(null)}>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-[#1A1A1A] border-b border-gray-100 dark:border-[#333333] pt-safe-only">
-        <div className="h-16 flex items-center px-4">
-          <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-[#222222] rounded-full transition-colors">
-            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" />
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-50 pt-safe-only shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+        <div className="h-[68px] flex items-center px-4">
+          <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors active:scale-95">
+            <ChevronLeft className="w-6 h-6 text-gray-900" />
           </button>
 
           <button
-            className="flex items-center gap-3 ml-2 flex-1 min-w-0 text-left"
+            className="flex items-center gap-3 ml-1 flex-1 min-w-0 text-left active:scale-[0.98] transition-transform"
             onClick={() => {
               if (!isGroup && otherMember) {
                 openProfile(otherMember.userId, otherMember.user?.profile?.displayName, otherMember.user?.profile?.avatarUrl)
+              } else if (isGroup && event) {
+                setShowEventInfo(true)
               }
             }}
-            disabled={isGroup}
-            style={{ cursor: isGroup ? 'default' : 'pointer' }}
           >
             <div className="relative flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-[#333333] overflow-hidden">
+              <div className="w-11 h-11 rounded-full bg-gray-100 overflow-hidden shadow-sm">
                 <SafeImage
                   src={conversationAvatar}
                   alt={conversationTitle}
                   className="w-full h-full object-cover"
                   fallback={
-                    <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-500 dark:text-gray-400">
+                    <div className="w-full h-full flex items-center justify-center text-sm font-bold text-gray-400">
                       {conversationTitle.charAt(0).toUpperCase()}
                     </div>
                   }
                 />
               </div>
             </div>
-            <div className="min-w-0">
-              <h2 className="font-bold text-gray-900 dark:text-[#FFFFFF] text-[16px] truncate">{conversationTitle}</h2>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-bold text-gray-900 text-[16px] truncate leading-tight tracking-tight">{conversationTitle}</h2>
               {typingUser ? (
-                <p className="text-[12px] text-action-primary font-medium animate-pulse">{typingUser} est en train d'écrire...</p>
+                <p className="text-[13px] text-action-primary font-medium animate-pulse mt-0.5">{typingUser} écrit...</p>
               ) : isGroup ? (
-                <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400">{memberCount} membre{memberCount !== 1 ? 's' : ''}</p>
+                <p className="text-[13px] font-medium text-gray-500 mt-0.5">{memberCount} participant{memberCount !== 1 ? 's' : ''}</p>
               ) : (
-                <p className="text-[12px] font-medium text-action-primary">Voir le profil →</p>
+                <p className="text-[13px] font-medium text-gray-500 mt-0.5">Voir le profil</p>
               )}
             </div>
           </button>
 
           {event && (
-            <button onClick={() => setShowEventInfo(true)} className="p-2 -mr-2 hover:bg-gray-100 dark:hover:bg-[#222222] rounded-full transition-colors">
-              <Info className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+            <button onClick={() => setShowEventInfo(true)} className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95">
+              <Info className="w-[22px] h-[22px] text-gray-400" />
             </button>
           )}
         </div>
@@ -238,7 +238,7 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#F6F5FF] dark:bg-[#111111]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#F8F9FA]">
         {isLoading ? (
           <div className="flex flex-col gap-3">
             {[1, 2, 3].map(i => (
@@ -364,24 +364,24 @@ export function ChatDetails() {
                     )}
 
                     {msg.isDeleted ? (
-                      <div className="rounded-2xl px-4 py-2.5 bg-gray-100 dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#333333] italic">
-                        <p className="text-[13px] text-gray-400 dark:text-gray-500">Message supprimé</p>
+                      <div className="rounded-[20px] px-4 py-2.5 bg-gray-100 border border-gray-200 italic">
+                        <p className="text-[14px] text-gray-400">Message supprimé</p>
                       </div>
                     ) : isMedia ? (
                       <div
-                        className={`rounded-2xl overflow-hidden shadow-sm ${isMe ? 'rounded-tr-sm' : 'rounded-tl-sm'}`}
-                        style={{ maxWidth: '240px' }}
+                        className={`rounded-[20px] overflow-hidden shadow-sm ${isMe ? 'rounded-br-sm' : 'rounded-tl-sm'}`}
+                        style={{ maxWidth: '260px' }}
                       >
                         {isImage && msg.content ? (
                           <SafeImage
                             src={msg.content}
                             alt="photo"
                             className="w-full object-cover"
-                            style={{ maxHeight: '280px' } as React.CSSProperties}
+                            style={{ maxHeight: '300px' } as React.CSSProperties}
                           />
                         ) : isVideo && msg.content ? (
                           <div className="relative bg-black">
-                            <video src={msg.content} className="w-full object-cover" style={{ maxHeight: '280px' }} />
+                            <video src={msg.content} className="w-full object-cover" style={{ maxHeight: '300px' }} />
                             <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                               <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
                                 <Play className="w-5 h-5 text-gray-800 ml-1" />
@@ -389,27 +389,28 @@ export function ChatDetails() {
                             </div>
                           </div>
                         ) : null}
-                        <div className={`px-2 py-1 ${isMe ? 'bg-action-primary' : 'bg-gray-100 dark:bg-[#2A2A2A]'}`}>
-                          <span className={`text-[10px] block text-right ${isMe ? 'text-orange-300' : 'text-gray-400 dark:text-gray-500'}`}>
+                        <div className={`px-3 py-1.5 ${isMe ? 'bg-action-primary' : 'bg-white'}`}>
+                          <span className={`text-[11px] block text-right font-medium ${isMe ? 'text-white/80' : 'text-gray-400'}`}>
                             {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                           </span>
                         </div>
                       </div>
                     ) : (
                       <div
-                        className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                        className={`rounded-[20px] px-4 py-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${
                           isMe
-                            ? `bg-action-primary text-white ${isLastInGroup ? 'rounded-tr-sm' : ''}`
-                            : `bg-white dark:bg-[#2A2A2A] border border-gray-100 dark:border-[#333333] text-gray-900 dark:text-gray-100 ${isLastInGroup ? 'rounded-tl-sm' : ''}`
+                            ? `bg-action-primary text-white rounded-br-sm`
+                            : `bg-white border border-gray-50 text-gray-900 rounded-tl-sm`
                         }`}
+                        style={{ maxWidth: '280px' }}
                       >
                         <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
-                        <div className={`flex items-center gap-1 mt-0.5 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                          <span className={`text-[10px] ${isMe ? 'text-orange-300' : 'text-gray-400'}`}>
+                        <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                          <span className={`text-[11px] font-medium ${isMe ? 'text-white/80' : 'text-gray-400'}`}>
                             {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                           </span>
                           {isMe && isLastMsg && (
-                            <Check className="w-3 h-3 text-orange-300" />
+                            <Check className="w-3 h-3 text-white/80" />
                           )}
                         </div>
                       </div>
@@ -448,32 +449,35 @@ export function ChatDetails() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-[#333333] px-3 py-3 flex items-center gap-2">
+      <div className="bg-white border-t border-gray-100 px-4 py-3 flex items-end gap-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-[#222222] rounded-full transition-colors flex-shrink-0"
+          className="p-2 mb-1 text-gray-400 hover:bg-gray-50 rounded-full transition-colors flex-shrink-0"
           disabled={isUploading}
         >
-          <Paperclip className="w-5 h-5" />
+          <Paperclip className="w-[22px] h-[22px]" />
         </button>
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => handleTyping(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
-          placeholder="Votre message..."
-          className="flex-1 bg-gray-100 dark:bg-[#222222] border-none rounded-full px-4 py-2.5 text-[15px] text-gray-900 dark:text-[#FFFFFF] placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none min-w-0"
-        />
-        <button
-          onClick={handleSendText}
-          disabled={!inputText.trim() && !isUploading}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
-            inputText.trim() ? 'bg-action-primary text-white shadow-md shadow-orange-400/20' : 'bg-gray-100 dark:bg-[#222222] text-gray-400 dark:text-gray-500'
-          }`}
-        >
-          <Send className="w-4 h-4 ml-0.5" />
-        </button>
+        
+        <div className="flex-1 bg-[#F3F4F6] rounded-[24px] flex items-center px-2 py-1.5 min-h-[48px]">
+          <input
+            type="text"
+            value={inputText}
+            onChange={(e) => handleTyping(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
+            placeholder="Écrire un message..."
+            className="flex-1 bg-transparent border-none px-3 text-[15px] text-gray-900 placeholder:text-gray-500 outline-none min-w-0"
+          />
+          <button
+            onClick={handleSendText}
+            disabled={!inputText.trim() && !isUploading}
+            className={`w-[36px] h-[36px] rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
+              inputText.trim() ? 'bg-action-primary text-white shadow-sm' : 'bg-gray-300 text-white'
+            }`}
+          >
+            <Send className="w-[18px] h-[18px] ml-0.5" />
+          </button>
+        </div>
       </div>
 
       {showContributeModal && event && hasActivePool(event) && (

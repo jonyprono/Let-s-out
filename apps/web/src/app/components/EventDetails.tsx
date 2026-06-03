@@ -17,6 +17,8 @@ import {
   BadgeCheck,
   X,
   Star,
+  Heart,
+  Wallet,
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
@@ -231,7 +233,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['events', id] })
       qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
-      toast.success('🎉 Vous participez à cet événement !')
+      navigate(`/events/${id}/success`)
     },
     onError: (err: any) => {
       const errCode = err?.response?.data?.error
@@ -469,88 +471,89 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   return (
     <>
-      <div className="w-full h-full bg-background-white flex flex-col">
+      <div className="w-full h-full bg-white flex flex-col font-sans">
 
-        {/* Floating header */}
-        <div className="absolute top-0 left-0 right-0 z-10 px-5 pt-4 pt-safe-4 pb-2 flex items-center justify-between">
+        {/* Clean Static Header */}
+        <div className="flex-shrink-0 bg-white z-10 px-6 pt-4 pt-safe-4 pb-2 flex items-center justify-between border-b border-gray-50">
           <button
             onClick={onBack}
-            className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform"
+            className="w-10 h-10 flex items-center justify-start active:scale-95 transition-transform"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
+            <ChevronLeft className="w-6 h-6 text-gray-900" strokeWidth={2.5} />
           </button>
           
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none mt-2">
-            <span className="text-[15px] font-bold text-gray-900 bg-background-white/80 backdrop-blur-md px-200 py-1.5 rounded-full">Détails événement</span>
+          <div className="flex-1 flex items-center justify-center">
+            <span className="text-[16px] font-bold text-gray-900">Détails événement</span>
           </div>
 
-          <div className="flex items-center gap-2 relative z-10 mt-1">
-            {event.isPrivate && event.creatorId === user?.id && (
-              <button 
-                onClick={() => setShowQRModal(true)}
-                className="w-10 h-10 bg-background-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md"
-              >
-                <QrCode className="w-5 h-5 text-gray-700" />
-              </button>
-            )}
-            <button onClick={handleShare} className="w-10 h-10 bg-background-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
-              <Share2 className="w-5 h-5 text-gray-700" />
+          <div className="flex items-center gap-3">
+            <button onClick={handleShare} className="w-8 h-8 flex items-center justify-center active:scale-95 transition-transform bg-gray-50 rounded-full">
+              <Share2 className="w-4 h-4 text-gray-900" />
             </button>
-            <button onClick={handleFavorite} className="w-10 h-10 bg-background-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform">
-              <Star className={`w-5 h-5 ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-700'}`} />
+            <button onClick={handleFavorite} className="w-8 h-8 flex items-center justify-center active:scale-95 transition-transform bg-gray-50 rounded-full">
+              <Heart className={`w-4 h-4 ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-900'}`} />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto pb-28">
+        <div className="flex-1 overflow-y-auto pb-28" style={{ scrollbarWidth: 'none' }}>
 
-          <div className="px-200 pt-4">
-            <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative shadow-sm">
-              <SafeImage src={coverUrl} alt={event.title} className="w-full h-full object-cover opacity-90" />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/20" />
+          {/* Banner with transparent matrix pattern overlay */}
+          <div className="px-6 pt-4">
+            <div className="h-[200px] bg-slate-100 rounded-3xl overflow-hidden relative shadow-sm">
+              <div 
+                className="absolute inset-0 z-10 opacity-[0.05]" 
+                style={{
+                  backgroundImage: 'radial-gradient(#000 2px, transparent 2px)',
+                  backgroundSize: '16px 16px'
+                }}
+              />
+              <SafeImage src={coverUrl} alt={event.title} className="w-full h-full object-cover" />
             </div>
           </div>
 
-          <div className="px-5 py-5">
+          <div className="px-6 py-6">
             {/* Title and Badge */}
-            <h1 className="mt-2 text-3xl font-bold text-gray-900 leading-tight">{event.title}</h1>
-            <div className="mt-150 flex items-center">
-              <span className="px-150 py-1 bg-blue-100 text-blue-600 rounded-md text-xs font-semibold">{event.category || 'Conférence'}</span>
+            <h1 className="text-[24px] font-bold text-gray-900 leading-tight tracking-tight">{event.title}</h1>
+            <div className="mt-2 flex items-center">
+              <span className="px-3 py-1 bg-[#EFF6FF] text-[#3B82F6] rounded-full text-[12px] font-bold">{event.category || 'Conférence'}</span>
             </div>
 
-            <div className="mt-6 space-y-200 text-sm text-text-secondary">
-              <div className="flex items-center gap-150">
-                <div className="w-10 h-10 rounded-full bg-[var(--color-brand-orange-50)] flex items-center justify-center">
-                  <Calendar className="w-5 h-5 text-action-primary" />
+            {/* Date and Location - soft gray icons */}
+            <div className="mt-6 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                  <Calendar className="w-4 h-4 text-gray-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 text-base">{formattedDate}</p>
-                  <p className="text-sm text-text-secondary">{formattedStart} – {formattedEnd} GMT</p>
+                  <p className="font-medium text-gray-900 text-[14px]">{formattedDate}</p>
+                  <p className="text-[13px] text-gray-500">{formattedStart} – {formattedEnd} GMT</p>
                 </div>
               </div>
-              <div className="flex items-start gap-150">
-                <div className="w-10 h-10 rounded-full bg-[var(--color-brand-orange-50)] flex items-center justify-center shrink-0">
-                  <MapPin className="w-5 h-5 text-action-primary" />
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900 text-base">{event.city || event.address || 'Lieu non précisé'}</p>
+                  <p className="font-medium text-gray-900 text-[14px]">{event.city || event.address || 'Lieu non précisé'}</p>
                   {event.address && event.city && (
-                    <p className="text-sm text-text-secondary mb-150">{event.address}</p>
+                    <p className="text-[13px] text-gray-500">{event.address}</p>
                   )}
                 </div>
               </div>
             </div>
 
+            {/* À propos */}
             {event.description && (
               <div className="mt-8">
-                <p className="text-[17px] font-bold text-gray-900 mb-2">À propos</p>
-                <p className="text-[14px] text-text-secondary leading-relaxed">
+                <p className="text-[16px] font-bold text-gray-900 mb-2">À propos</p>
+                <p className="text-[14px] text-gray-500 leading-relaxed">
                   {isDescriptionExpanded ? event.description : `${event.description.substring(0, 120)}${event.description.length > 120 ? '...' : ''}`}
                   {event.description.length > 120 && (
                     <span 
                       onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                      className="text-text-secondary underline text-[13px] font-medium cursor-pointer ml-1 block mt-1"
+                      className="text-gray-900 underline text-[13px] font-medium cursor-pointer ml-1"
                     >
                       {isDescriptionExpanded ? 'Voir moins' : 'Voir plus'}
                     </span>
@@ -559,258 +562,191 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               </div>
             )}
 
+            {/* Organisateur */}
             <div className="mt-8">
-              <p className="text-[17px] font-bold text-gray-900 mb-200">Organisateurs</p>
-              <div className="space-y-150">
-                <div className="flex flex-col p-200 rounded-2xl bg-gray-50 border border-gray-100">
-                  <div className="flex items-start gap-150">
-                    <div 
-                      className="cursor-pointer flex-shrink-0"
-                      onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}
-                    >
-                      <div className="w-12 h-12 rounded-full overflow-hidden shadow-sm">
-                        <SafeImage 
-                          src={organizerAvatar} 
-                          alt={organizerName} 
-                          className="w-full h-full object-cover"
-                          fallback={
-                            <div className="w-full h-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--action-primary)] flex items-center justify-center text-xl font-bold text-white">
-                              {organizerName.charAt(0).toUpperCase()}
-                            </div>
-                          }
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}>
-                        <p className="text-[15px] font-bold text-gray-900">{organizerName}</p>
-                        <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                      </div>
-                      <p className="text-[12px] text-text-secondary mt-0.5 mb-2">
-                        {organizerFollowers} followers • {organizerEvents} événement{organizerEvents > 1 ? 's' : ''}
-                      </p>
-                      
-                      {user?.id === event.creator.id ? (
-                        <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-150 py-1 rounded-full">Vous</span>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <button onClick={handleContact} className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform">
-                            Contacter
-                          </button>
-                          <button onClick={handleFollow} className={`px-150 py-1 rounded-full border text-[11px] font-bold shadow-sm active:scale-95 transition-all ${isFollowing ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-background-white border-border-primary text-gray-700'}`}>
-                            {isFollowing ? 'Suivi' : 'Suivre'}
-                          </button>
-                        </div>
-                      )}
+              <p className="text-[16px] font-bold text-gray-900 mb-3">Organisateur</p>
+              <div className="flex flex-col p-4 rounded-[20px] bg-white border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+                <div className="flex items-start gap-3">
+                  <div 
+                    className="cursor-pointer flex-shrink-0"
+                    onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden">
+                      <SafeImage 
+                        src={organizerAvatar} 
+                        alt={organizerName} 
+                        className="w-full h-full object-cover bg-gray-100"
+                        fallback={
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-[16px] font-bold text-gray-500">
+                            {organizerName.charAt(0).toUpperCase()}
+                          </div>
+                        }
+                      />
                     </div>
                   </div>
+                  
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}>
+                      <p className="text-[15px] font-bold text-gray-900">{organizerName}</p>
+                      <BadgeCheck className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <p className="text-[12px] text-gray-500 mt-0.5 mb-3">
+                      {organizerFollowers} followers • {organizerEvents} événement{organizerEvents > 1 ? 's' : ''}
+                    </p>
+                    
+                    {user?.id === event.creator?.id ? (
+                      <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Vous</span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => {}} className="px-4 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-700 active:scale-95 transition-transform">
+                          Contacter
+                        </button>
+                        <button onClick={() => {}} className="px-4 py-1.5 rounded-full border text-[12px] font-bold active:scale-95 transition-all bg-white border-gray-200 text-gray-700">
+                          Suivre
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-
-                {event.coHosts?.map((coHost: any) => (
-                  <CoHostRow
-                    key={coHost.id}
-                    coHost={coHost}
-                    currentUser={user}
-                    onOpenProfile={openUserProfile}
-                    onContactUser={async (userId) => {
-                      hapticFeedback.impact()
-                      if (!user) { toast.error("Connectez-vous pour contacter le co-organisateur."); return }
-                      try {
-                        const conv = await chatApi.createDM(userId)
-                        navigate(`/chat/${conv.id}`)
-                      } catch {
-                        hapticFeedback.error()
-                        toast.error("Impossible d'ouvrir la discussion.")
-                      }
-                    }}
-                  />
-                ))}
               </div>
             </div>
 
+            {/* Participants */}
             <div className="mt-8">
-              <p className="text-[17px] font-bold text-gray-900 mb-200">Participants</p>
+              <p className="text-[16px] font-bold text-gray-900 mb-3">Participants</p>
               
-              <div className="flex items-center justify-between mb-200">
-                <div className="flex items-center gap-150">
-                  <div className="flex items-center -space-x-150">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center -space-x-2">
                     {[...Array(Math.min(attendeeCount, 3)).keys()].map((index) => {
                       const attendee = attendeesData?.data?.[index]
                       const avatar = attendee?.user?.profile?.avatarUrl
                       const name = attendee?.user?.profile?.displayName || '?'
                       
                       return (
-                        <div key={index} className="w-[36px] h-[36px] rounded-full border-[2px] border-white bg-gray-200 flex items-center justify-center text-xs font-bold text-white shadow-sm relative z-10 overflow-hidden">
-                          <SafeImage 
-                            src={avatar} 
-                            alt={name} 
-                            className="w-full h-full object-cover" 
-                            fallback={
-                              <div className="w-full h-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--action-primary)] flex items-center justify-center text-[16px] font-bold text-white">
-                                {name.charAt(0).toUpperCase()}
-                              </div>
-                            }
-                          />
+                        <div key={index} className="w-[32px] h-[32px] rounded-full border-[2px] border-white bg-gray-200 flex items-center justify-center overflow-hidden">
+                          <SafeImage src={avatar} alt={name} className="w-full h-full object-cover" />
                         </div>
                       )
                     })}
                   </div>
-                  <p className="text-[14px] font-bold text-gray-900">
-                    {attendeeCount}/{maxAttendees ?? attendeeCount} 
-                    {maxAttendees ? <span className="text-blue-500 font-medium ml-1">| {Math.max(maxAttendees - attendeeCount, 0)} restants</span> : ''}
+                  <p className="text-[13px] font-bold text-gray-900">
+                    {attendeeCount}/{maxAttendees ?? attendeeCount}
+                    {maxAttendees ? <span className="text-[#3B82F6] font-semibold ml-1">| {Math.max(maxAttendees - attendeeCount, 0)} restants</span> : ''}
                   </p>
                 </div>
 
                 {hasJoined ? (
-                  <div className="px-150 py-1 bg-green-500 text-white text-[11px] font-bold rounded-full shadow-sm">Vous participez !</div>
+                  <div className="px-3 py-1 bg-[#10B981] text-white text-[11px] font-bold rounded-full">Vous participez !</div>
                 ) : (
-                  <button onClick={() => setShowParticipantsModal(true)} className="px-200 py-1.5 rounded-full border border-border-primary bg-background-white text-[12px] font-bold text-gray-700 shadow-sm active:scale-95 transition-transform">Voir tous</button>
+                  <button onClick={() => setShowParticipantsModal(true)} className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[11px] font-bold text-gray-700 active:scale-95 transition-transform">Voir tous</button>
                 )}
               </div>
 
               {hasJoined && (
-                <div className="flex gap-150">
-                  <button onClick={() => setShowParticipantsModal(true)} className="flex-1 py-150 bg-background-white border border-border-primary rounded-full text-[13px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-[0.98] transition-transform">
-                    <Users className="w-4 h-4 text-text-secondary" />
+                <div className="flex gap-2">
+                  <button onClick={() => setShowParticipantsModal(true)} className="flex-1 py-2.5 bg-white border border-gray-200 rounded-[12px] text-[12px] font-bold text-gray-700 flex justify-center items-center gap-2 active:scale-95 transition-transform shadow-sm">
+                    <Users className="w-4 h-4" />
                     Voir les participants
                   </button>
                   <button
                     onClick={() => setShowInviteModal(true)}
-                    className="flex-1 py-150 bg-background-white border border-border-primary rounded-full text-[13px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-[0.98] transition-transform"
+                    className="flex-1 py-2.5 bg-white border border-gray-200 rounded-[12px] text-[12px] font-bold text-gray-700 flex justify-center items-center gap-2 active:scale-95 transition-transform shadow-sm"
                   >
-                    <Share2 className="w-4 h-4 text-text-secondary" />
+                    <Share2 className="w-4 h-4" />
                     Inviter des amis
                   </button>
                 </div>
               )}
-              {isOrganizer && event.requiresApproval && (
-                <button
-                  onClick={() => setShowPendingModal(true)}
-                  className="w-full mt-150 py-150 rounded-full bg-brand-orange-50 border border-orange-200 text-[13px] font-bold text-orange-600 flex justify-center items-center gap-2 active:scale-[0.98] transition-transform"
-                >
-                  <Users className="w-4 h-4" />
-                  Gérer les demandes en attente
-                </button>
-              )}
             </div>
 
+            {/* Participation */}
             <div className="mt-8">
-              <p className="text-[17px] font-bold text-gray-900 mb-200">Participation</p>
-              <div className="rounded-[16px] bg-gray-50 p-200 flex items-center justify-between border border-transparent">
-                <span className="text-[15px] text-gray-900 font-medium">Montant</span>
+              <p className="text-[16px] font-bold text-gray-900 mb-3">Participation</p>
+              <div className="rounded-[16px] bg-gray-50 p-4 flex items-center justify-between border border-transparent">
+                <span className="text-[14px] text-gray-900 font-medium">Montant</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[15px] font-bold text-blue-600">{amountToPay.toLocaleString()} F CFA</span>
-                  {hasJoined && <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-md">Payé</span>}
+                  <span className="text-[14px] font-bold text-[#3B82F6]">{amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : 'Gratuit'}</span>
+                  {hasJoined && amountToPay > 0 && <span className="px-2 py-0.5 bg-[#10B981] text-white text-[10px] font-bold rounded-[6px]">Payé</span>}
                 </div>
               </div>
             </div>
 
-            {/* Cagnotte — shown only if the event has a pool target */}
+            {/* Cagnotte */}
             {hasPool && (
               <div className="mt-8">
-                <p className="text-[17px] font-bold text-gray-900 mb-200">Cagnotte</p>
+                <p className="text-[16px] font-bold text-gray-900 mb-3">Cagnotte</p>
 
-                <div className="rounded-[16px] bg-gray-50 p-200">
-                  <div className="flex items-center justify-between mb-200">
-                    <span className="text-[15px] text-gray-900 font-medium">Objectif</span>
-                    <span className="text-[15px] font-bold text-blue-600">{cagnoteBudget.toLocaleString()} F CFA</span>
+                <div className="rounded-[20px] border border-gray-100 bg-white p-5 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[14px] text-gray-900 font-medium">Budget</span>
+                    <span className="text-[14px] font-bold text-[#3B82F6]">{cagnoteBudget.toLocaleString()} F CFA</span>
                   </div>
                   
-                  <div className="border-t border-dashed border-border-primary mb-200" />
+                  <div className="border-t border-dashed border-gray-200 mb-3" />
 
-                  <div className="flex items-center justify-between mb-150">
-                    <span className="text-[15px] text-text-secondary font-medium">Progression</span>
-                    <span className="px-2 py-0.5 bg-action-primary active:bg-action-primary-hover text-white text-[12px] font-bold rounded-md">{cagnoteProgress}%</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[13px] text-gray-500 font-medium">Progression</span>
+                    <span className="px-2 py-0.5 bg-action-primary text-white text-[11px] font-bold rounded-md">{cagnoteProgress}%</span>
                   </div>
                   
-                  <div className="h-2 rounded-full bg-gray-200 overflow-hidden mb-5">
-                    <div className="h-full rounded-full bg-action-primary active:bg-action-primary-hover" style={{ width: `${cagnoteProgress}%` }} />
+                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden mb-4">
+                    <div className="h-full rounded-full bg-action-primary" style={{ width: `${cagnoteProgress}%` }} />
                   </div>
 
-                  <div className="flex items-center justify-between mb-150">
-                    <span className="text-[15px] text-text-secondary font-medium">Collecté</span>
-                    <span className="text-[15px] font-bold text-[#10B981]">{cagnoteCollected.toLocaleString()} F</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[13px] text-gray-500 font-medium">Collecté</span>
+                    <span className="text-[13px] font-bold text-[#10B981]">{cagnoteCollected.toLocaleString()} F</span>
                   </div>
 
                   <div className="flex items-center justify-between mb-5">
-                    <span className="text-[15px] text-text-secondary font-medium">Restant</span>
-                    <span className="text-[15px] font-bold text-action-primary">{cagnoteRemaining.toLocaleString()} F</span>
+                    <span className="text-[13px] text-gray-500 font-medium">Restant</span>
+                    <span className="text-[13px] font-bold text-[#EF4444]">{cagnoteRemaining.toLocaleString()} F</span>
                   </div>
                   
-                  {showPoolActions ? (
-                    <div className="flex gap-150">
-                      {isCreator ? (
-                        <button
-                          onClick={() => setShowPoolManagementModal(true)}
-                          className="flex-1 py-150.5 bg-background-white border border-border-primary rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
-                        >
-                          <Briefcase className="w-4 h-4 text-text-secondary" />
-                          Voir la gestion
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setShowPoolManagementModal(true)}
-                          className="flex-1 py-150.5 bg-background-white border border-border-primary rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
-                        >
-                          <Briefcase className="w-4 h-4 text-text-secondary" />
-                          Voir la gestion
-                        </button>
-                      )}
-                      <button
-                        onClick={handleContribute}
-                        className="flex-1 py-150.5 bg-background-white border border-border-primary rounded-[12px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
-                      >
-                        <HandCoins className="w-4 h-4 text-text-secondary" />
-                        Contribuer
-                      </button>
-                    </div>
-                  ) : hasPool ? (
-                    <button
-                      onClick={() => {
-                        if (!participationPaid) {
-                          toast.info("Rejoignez l'événement et payez votre participation avant de contribuer à la cagnotte.")
-                          if (!hasJoined) setShowJoinModal(true)
-                          else if (event.price > 0) navigate(`/events/${id}/pay`)
-                          return
-                        }
-                        handleContribute()
-                      }}
-                      className="w-full py-150.5 bg-background-white border border-border-primary rounded-[32px] text-[14px] font-bold text-gray-800 flex justify-center items-center gap-2 shadow-sm active:scale-95 transition-transform touch-sm"
-                    >
-                      <HandCoins className="w-4 h-4 text-text-secondary" />
-                      Contribuer
-                    </button>
-                  ) : null}
+                  <button
+                    onClick={() => {
+                      if (isCreator || participationPaid) {
+                        setShowPoolManagementModal(true)
+                      } else {
+                        toast.info("Rejoignez l'événement et payez votre participation avant de contribuer à la cagnotte.")
+                        if (!hasJoined) setShowJoinModal(true)
+                        else if (event.price > 0) navigate(`/events/${id}/pay`)
+                      }
+                    }}
+                    className="w-full py-3 bg-white border border-gray-200 rounded-[12px] text-[13px] font-bold text-gray-700 flex justify-center items-center gap-2 active:scale-95 transition-transform"
+                  >
+                    <Wallet className="w-4 h-4 text-gray-500" />
+                    {isCreator ? 'Voir la gestion' : 'Contribuer'}
+                  </button>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Bottom Actions */}
-        <div className="absolute bottom-0 left-0 right-0 bg-background-white border-t border-gray-100 px-5 pt-4 flex items-center justify-between gap-200 shadow-[0_-8px_20px_rgba(0,0,0,0.04)]" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
+        {/* Sticky Footer */}
+        <div className="absolute bottom-0 left-0 right-0 bg-white px-6 pt-4 flex items-center justify-between border-none" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
           {!hasJoined ? (
             <>
               <div className="flex-shrink-0">
-                <p className="text-[15px] font-bold text-gray-700">
+                <p className="text-[14px] font-bold text-gray-700">
                   {maxAttendees ? `${Math.max(maxAttendees - attendeeCount, 0)} places restantes` : 'Places illimitées'}
                 </p>
               </div>
               <button
                 onClick={handleJoin}
                 disabled={joinMutation.isPending || isFull}
-                className="flex-1 py-200 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 disabled:opacity-60 bg-action-primary active:bg-action-primary-hover shadow-md shadow-orange-500/20"
+                className="px-6 py-[14px] rounded-full font-bold text-[14px] text-white transition-all active:scale-95 disabled:opacity-60 bg-action-primary active:bg-action-primary-hover"
               >
-                {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : isFull ? 'Complet' : event.requiresApproval ? 'Demander à participer' : 'Rejoindre l’événement'}
+                {joinMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : isFull ? 'Complet' : 'Rejoindre l\'événement'}
               </button>
             </>
           ) : (
             <button
               onClick={goToChat}
-              className="w-full flex items-center justify-center gap-2 py-200 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 bg-action-primary active:bg-action-primary-hover shadow-md shadow-orange-500/20"
+              className="w-full flex items-center justify-center gap-2 py-[14px] rounded-full font-bold text-[15px] text-white transition-all active:scale-95 bg-action-primary active:bg-action-primary-hover"
             >
-              <MessageCircle className="w-5 h-5" />
               Accéder au chat
             </button>
           )}
@@ -819,85 +755,78 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
       {/* Join confirmation modal */}
       {showJoinModal && event && (
-        <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
-          <div className="w-full bg-background-white rounded-t-[20px] shadow-2xl animate-in slide-in-from-bottom duration-300">
-
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-gray-200 rounded-full" />
-            </div>
-
-            {/* Header row */}
-            <div className="flex items-center justify-between px-5 py-150">
-              <span className="text-[15px] font-semibold text-gray-900">Rejoindre cet événement ?</span>
-              <button
-                onClick={() => setShowJoinModal(false)}
-                className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center"
-              >
-                <span className="text-text-secondary text-[14px] font-bold leading-none">✕</span>
-              </button>
-            </div>
-
-            <div className="px-5" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
-
-              {isCreator && event.status === 'DRAFT' && (
-                <div className="bg-[#EBF3FA] mt-200 mb-6 p-200 rounded-xl text-text-secondary text-[13px] leading-relaxed">
-                  Cet événement n'est pas encore visible sur Let's Out.<br/>
-                  Publiez-le pour le rendre accessible publiquement.<br/>
-                  Ou ajoutez une cagnotte pour partager les frais.
-                </div>
-              )}
+        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
+          <div className="w-full bg-white rounded-t-[32px] shadow-2xl animate-in slide-in-from-bottom duration-300">
+            
+            <div className="px-6 pt-6 pb-safe-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
+              
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <span className="text-[20px] font-bold text-gray-900 tracking-tight">Rejoindre cet événement ?</span>
+                <button
+                  onClick={() => setShowJoinModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center active:scale-95 transition-transform"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
 
               {/* Event info */}
-              <div className="mb-5">
-                <h2 className="text-[22px] font-bold text-gray-900 leading-tight">{event.title}</h2>
-                <p className="text-[13px] text-text-secondary mt-1">
+              <div className="mb-4">
+                <h2 className="text-[18px] font-bold text-gray-900 leading-tight mb-2">{event.title}</h2>
+                <p className="text-[14px] text-gray-500 font-medium capitalize">
                   {formattedDate} • {formattedStart} GMT
                 </p>
                 {(event.address || event.city) && (
-                  <p className="text-[13px] text-text-secondary mt-0.5">
-                    {event.address || event.city} • {event.city || ''}
+                  <p className="text-[14px] text-gray-500 font-medium mt-1">
+                    {event.city || event.address}
                   </p>
                 )}
               </div>
 
-              {/* Thin divider */}
-              <div className="border-t border-border-primary mb-5" />
+              <div className="border-t border-dashed border-gray-200 my-5" />
 
-              {/* Description */}
-              <p className="text-[13px] text-text-secondary leading-relaxed mb-5">
+              <p className="text-[14px] text-gray-500 leading-relaxed mb-6">
                 {event.price > 0
-                  ? `Confirmez votre participation. Un paiement de ${amountToPay.toLocaleString()} F CFA + ${transactionFee} F de frais est requis.`
-                  : 'Confirmez votre participation à cet événement. C\'est gratuit !'
-                }
+                  ? hasPool
+                    ? "Confirmez votre participation à cet événement en contribuant à la cagnotte ouverte."
+                    : `Confirmez votre participation. Un paiement de ${amountToPay.toLocaleString()} F CFA est requis.`
+                  : "Confirmez votre participation à cet événement. C'est gratuit !"}
               </p>
 
-              {/* Summary table — no background, clean rows */}
-              <div className="space-y-150 mb-8 text-[14px]">
+              {/* Invoice table */}
+              <div className="space-y-4 mb-8 text-[14px]">
                 <div className="flex justify-between items-center">
-                  <span className="text-text-secondary">Participation</span>
-                  <span className="font-bold text-gray-900">{amountToPay.toLocaleString()} F</span>
+                  <span className="text-gray-500 font-medium">Participation</span>
+                  <span className="font-bold text-gray-900">{amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : 'Gratuit'}</span>
                 </div>
+                {amountToPay > 0 && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500 font-medium">Type</span>
+                      <span className="font-bold text-gray-900">{hasPool ? 'Cagnotte' : 'Standard'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500 font-medium">Frais de transaction</span>
+                      <span className="font-bold text-gray-900">{transactionFee.toLocaleString()} F CFA</span>
+                    </div>
+                  </>
+                )}
+                
+                <div className="border-t border-dashed border-gray-200 pt-4" />
+                
                 <div className="flex justify-between items-center">
-                  <span className="text-text-secondary">Type</span>
-                  <span className="font-bold text-gray-900">{hasPool ? 'Cagnotte' : 'Standard'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-text-secondary">Frais de transaction</span>
-                  <span className="font-bold text-gray-900">{transactionFee.toLocaleString()} F</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-text-secondary">Net à payer</span>
-                  <span className="font-bold text-gray-900">{netToPay.toLocaleString()} F</span>
+                  <span className="text-gray-900 font-bold">Net à payer</span>
+                  <span className="font-black text-gray-900 text-[18px]">{amountToPay > 0 ? `${netToPay.toLocaleString()} F CFA` : '0 F CFA'}</span>
                 </div>
               </div>
 
-              {/* CTA button */}
+              {/* Action Button */}
               <button
                 onClick={handleConfirmJoin}
-                className="w-full bg-action-primary active:bg-action-primary-hover text-white py-200 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform"
+                className="w-full bg-action-primary active:bg-action-primary-hover text-white py-[14px] rounded-full font-bold text-[15px] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
               >
-                Procéder au paiement
+                {amountToPay > 0 ? 'Procéder au paiement' : 'Confirmer la participation'}
               </button>
 
             </div>
