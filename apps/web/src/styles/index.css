@@ -119,8 +119,7 @@ textarea:focus-visible,
 select:focus-visible {
   outline: none;
 }
-  padding-top: calc(1.5rem + env(safe-area-inset-top)) !important;
-}
+
 .pt-safe-8 {
   padding-top: calc(2rem + env(safe-area-inset-top)) !important;
 }
