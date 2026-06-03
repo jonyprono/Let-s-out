@@ -263,7 +263,6 @@ export function ChatDetails() {
             const showSenderInfo = isGroup && !isMe
 
             const prevMsg = index > 0 ? messages[index - 1] : null
-            const nextMsg = index < messages.length - 1 ? messages[index + 1] : null
             const showDateSep = !prevMsg ||
               new Date(msg.createdAt).toDateString() !== new Date(prevMsg.createdAt).toDateString()
 
