@@ -1,6 +1,5 @@
 import { useNavigate, useLocation } from 'react-router'
-import { Search, User, Group } from 'iconoir-react'
-import { MessageCircle } from 'lucide-react'
+import { Search, User, Group, ChatBubble } from 'iconoir-react'
 import { useConversations } from '@/features/chat/api'
 
 // Custom icon: groupe d'événements (3 silhouettes)
@@ -43,7 +42,7 @@ const leftTabs: NavTab[] = [
   { path: '/my-events', isCustom: true,      label: 'Evénements' },
 ]
 const rightTabs: NavTab[] = [
-  { path: '/messages',  icon: MessageCircle, label: 'Messages' },
+  { path: '/messages',  icon: ChatBubble,    label: 'Messages' },
   { path: '/profile',   icon: User,          label: 'Profil' },
 ]
 
@@ -79,19 +78,19 @@ export function BottomNav() {
             style={{ flex: 1, minWidth: 0 }}
             aria-label={tab.label}
           >
-            <div className="flex items-center justify-center w-6 h-6">
+            <div className="flex items-center justify-center w-7 h-7">
               {tab.isCustom
                 ? <EventsIcon active={active} />
                 : <tab.icon
-                    width={22}
-                    height={22}
-                    strokeWidth={active ? 2 : 1.6}
-                    style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}
+                    width={24}
+                    height={24}
+                    strokeWidth={active ? 1.8 : 1.5}
+                    style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
                   />
               }
             </div>
             <span
-              className="text-[11px] font-medium leading-none mt-1"
+              className="text-[12px] font-semibold leading-none mt-1"
               style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
             >
               {tab.label}
@@ -133,24 +132,24 @@ export function BottomNav() {
             style={{ flex: 1, minWidth: 0 }}
             aria-label={tab.label}
           >
-            <div className="flex items-center justify-center w-6 h-6 relative">
+            <div className="flex items-center justify-center w-7 h-7 relative">
               <IconComp
-                width={22}
-                height={22}
-                strokeWidth={active ? 2 : 1.6}
-                style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}
+                width={24}
+                height={24}
+                strokeWidth={active ? 1.8 : 1.5}
+                style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
               />
               {tab.path === '/messages' && totalUnread > 0 && (
                 <span
-                  className="absolute -top-1 -right-1.5 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-bold text-white ring-1 ring-white"
+                  className="absolute -top-1 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-[#1A1A1A]"
                 >
                   {totalUnread > 9 ? '9+' : totalUnread}
                 </span>
               )}
             </div>
             <span
-              className="text-[10px] font-semibold leading-none mt-1"
-              style={{ color: active ? '#FF7A00' : 'var(--neutral-gray-600)' }}
+              className="text-[12px] font-semibold leading-none mt-1"
+              style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
             >
               {tab.label}
             </span>
