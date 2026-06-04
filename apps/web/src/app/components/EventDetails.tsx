@@ -445,10 +445,32 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       <span className="text-[12px] font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Vous</span>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <button onClick={() => {}} className="px-4 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-700 active:scale-95 transition-transform">
+                        <button onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!event.creator?.id) return;
+                          try {
+                            const conv = await chatApi.createDM(event.creator.id);
+                            navigate(`/chat/${conv.id}`);
+                          } catch (err) {
+                            toast.error("Impossible de démarrer la conversation");
+                          }
+                        }} className="px-4 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-bold text-gray-700 active:scale-95 transition-transform">
                           Contacter
                         </button>
-                        <button onClick={() => {}} className="px-4 py-1.5 rounded-full border text-[12px] font-bold active:scale-95 transition-all bg-white border-gray-200 text-gray-700">
+                        <button onClick={async (e) => {
+                          e.stopPropagation();
+                          if (!event.creator?.id) return;
+                          try {
+                            await apiClient.post(`/users/${event.creator.id}/friend-request`, {});
+                            toast.success("Demande envoyée !");
+                          } catch (err: any) {
+                            if (err?.response?.status === 400 || err?.response?.data?.message?.includes('already')) {
+                              toast.error("Demande déjà envoyée ou déjà amis.");
+                            } else {
+                              toast.error("Erreur lors de l'envoi");
+                            }
+                          }
+                        }} className="px-4 py-1.5 rounded-full border text-[12px] font-bold active:scale-95 transition-all bg-white border-gray-200 text-gray-700">
                           Suivre
                         </button>
                       </div>

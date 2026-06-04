@@ -125,8 +125,8 @@ export function Notifications({ onBack }: NotificationsProps) {
               <h1 className="text-xl font-bold text-gray-900 dark:text-white truncate">
                 {selectedType && selectedCfg ? selectedCfg.label : 'Notifications'}
               </h1>
-              {unreadCount > 0 && !selectedType && (
-                <p className="text-xs text-gray-400">{unreadCount} non lu{unreadCount > 1 ? 'es' : ''}</p>
+              {!selectedType && (
+                <p className="text-[13px] text-gray-500 font-medium">{unreadCount} non lu{unreadCount > 1 ? 'es' : ''}</p>
               )}
             </div>
           </div>
@@ -134,25 +134,15 @@ export function Notifications({ onBack }: NotificationsProps) {
             <button
               onClick={() => {
                 markAllReadMutation.mutate();
-                if (selectedType) {
-                  setArchivedTypes(prev => new Set(prev).add(selectedType));
-                  setSelectedType(null);
-                } else {
-                  setArchivedTypes(new Set([...Array.from(archivedTypes), ...groups.map(g => g.type)]));
-                }
               }}
-              className={`text-[13px] font-semibold transition-colors ${unreadCount > 0 ? 'text-action-primary' : 'text-gray-500'}`}
+              className="text-[13px] font-semibold text-gray-700 bg-gray-100 dark:bg-[#2A2A2A] dark:text-gray-200 px-4 py-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-[#3A3A3A] active:scale-95 transition-all"
             >
-              Tout effacer
+              Tout lire
             </button>
           )}
         </div>
 
-        {!selectedType && (
-          <p className="text-[11px] text-gray-400 pb-3 px-1">
-            Les notifications de plus de {Math.round(NOTIFICATION_TTL_MS / (24 * 60 * 60 * 1000))} jours sont masquées.
-          </p>
-        )}
+
       </div>
 
       <div className="flex-1 overflow-y-auto pb-6" style={{ scrollbarWidth: 'none' }}>
