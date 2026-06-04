@@ -33,7 +33,7 @@ const CATEGORIES = [
   { label: 'Social', value: 'SOCIAL' },
   { label: 'Art & Culture', value: 'CULTURE' },
   { label: 'Bien-être & Santé', value: 'WELLNESS' },
-  { label: 'Techonologie', value: 'TECH' },
+  { label: 'Technologie', value: 'TECH' },
   { label: 'Science & Education', value: 'SCIENCE' },
   { label: 'Voyages', value: 'TRAVEL' },
   { label: 'Lifestyle', value: 'LIFESTYLE' },

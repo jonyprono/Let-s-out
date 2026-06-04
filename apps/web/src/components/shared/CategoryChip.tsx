@@ -1,4 +1,24 @@
 import { cn } from '@/lib/utils'
+import { Basketball, Palette, PizzaSlice, HalfMoon, Airplane, Gamepad, Heart, MusicDoubleNote, Star, Group, Laptop, Book, CoffeeCup, Map } from 'iconoir-react'
+
+const LABEL_TO_ICON: Record<string, React.FC<any>> = {
+  'Sport': Basketball,
+  'Culture & Art': Palette,
+  'Gastronomie': PizzaSlice,
+  'Soirées': HalfMoon,
+  'Voyages': Airplane,
+  'Gaming': Gamepad,
+  'Bien-être': Heart,
+  'Musique': MusicDoubleNote,
+  'Autre': Star,
+  'Social': Group,
+  'Bien-être & Santé': Heart,
+  'Technologie': Laptop,
+  'Techonologie': Laptop,
+  'Science & Education': Book,
+  'Lifestyle': CoffeeCup,
+  'Tourisme': Map,
+}
 
 interface CategoryChipProps {
   label: string
@@ -11,13 +31,15 @@ interface CategoryChipProps {
  * Pilule catégorie / centre d'intérêt — contrastes light & dark.
  */
 export function CategoryChip({ label, selected = false, onClick, disabled }: CategoryChipProps) {
+  const Icon = LABEL_TO_ICON[label]
+
   return (
     <button
       type="button"
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'px-4 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-200 touch-sm',
+        'px-4 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-200 touch-sm flex items-center gap-1.5',
         'active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none',
         selected
           ? 'bg-action-primary text-white shadow-sm'
@@ -28,7 +50,8 @@ export function CategoryChip({ label, selected = false, onClick, disabled }: Cat
             ],
       )}
     >
-      {label}
+      {Icon && <Icon className="w-4 h-4" strokeWidth={2} />}
+      <span>{label}</span>
     </button>
   )
 }
