@@ -462,13 +462,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           e.stopPropagation();
                           if (!event.creator?.id) return;
                           try {
-                            await apiClient.post(`/users/${event.creator.id}/friend-request`, {});
-                            toast.success("Demande envoyée !");
+                            await apiClient.post(`/users/${event.creator.id}/follow`, {});
+                            toast.success("Vous suivez maintenant cet organisateur !");
                           } catch (err: any) {
-                            if (err?.response?.status === 400 || err?.response?.data?.message?.includes('already')) {
-                              toast.error("Demande déjà envoyée ou déjà amis.");
+                            if (err?.response?.status === 400 || err?.response?.data?.message?.includes('Already')) {
+                              toast.error("Vous suivez déjà cet organisateur.");
                             } else {
-                              toast.error("Erreur lors de l'envoi");
+                              toast.error("Erreur lors de l'abonnement");
                             }
                           }
                         }} className="px-4 py-1.5 rounded-full border text-[12px] font-bold active:scale-95 transition-all bg-white border-gray-200 text-gray-700">
