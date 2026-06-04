@@ -19,6 +19,7 @@ export function Messages(_props: MessagesProps) {
   const [showNewConv, setShowNewConv] = useState(false);
   const [showAddFriends, setShowAddFriends] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'groups' | 'friends'>('all');
 
   const user = useAuthStore((s) => s.user);
 
@@ -72,6 +73,13 @@ export function Messages(_props: MessagesProps) {
   const directs = filtered.filter(c => !c.isGroup);
   const totalUnread = displayConversations.reduce((acc, c) => acc + (c.unread || 0), 0);
 
+  // Apply tab filter
+  const visibleConversations = useMemo(() => {
+    if (activeFilter === 'groups') return groups;
+    if (activeFilter === 'friends') return directs;
+    return filtered;
+  }, [activeFilter, filtered, groups, directs]);
+
   return (
     <div className="w-full h-full flex flex-col bg-background">
 
@@ -119,6 +127,30 @@ export function Messages(_props: MessagesProps) {
             </button>
           )}
         </div>
+
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-2 mt-4">
+          {[
+            { key: 'all' as const, label: 'Tous', count: filtered.length },
+            { key: 'groups' as const, label: 'Groupes', count: groups.length },
+            { key: 'friends' as const, label: 'Amis', count: directs.length },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveFilter(tab.key)}
+              className={`relative px-4 py-2 rounded-full text-[13px] font-bold transition-all active:scale-95 ${
+                activeFilter === tab.key
+                  ? 'bg-action-primary text-white shadow-md shadow-orange-500/20'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {tab.label}
+              {tab.count > 0 && activeFilter !== tab.key && (
+                <span className="ml-1.5 text-[11px] font-bold opacity-60">{tab.count}</span>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* List */}
@@ -137,54 +169,74 @@ export function Messages(_props: MessagesProps) {
           </div>
         ) : (
           <>
-            {/* Groups */}
-            {groups.length > 0 && (
-              <div className="pt-4">
-                <div className="px-5 mb-2 flex items-center gap-2">
-                  <Users className="w-4 h-4 text-gray-400" />
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Groupes</span>
-                </div>
-                <div className="space-y-1 px-4">
-                  {groups.map(conv => (
-                    <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Filtered Conversations */}
+            {visibleConversations.length > 0 && (
+              <div className="pt-3">
+                {activeFilter === 'all' && groups.length > 0 && (
+                  <>
+                    <div className="px-5 mb-2 flex items-center gap-2">
+                      <Users className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Groupes</span>
+                    </div>
+                    <div className="space-y-1 px-4 mb-4">
+                      {groups.map(conv => (
+                        <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
+                      ))}
+                    </div>
+                  </>
+                )}
 
-            {/* Direct Messages */}
-            {directs.length > 0 && (
-              <div className="pt-4">
-                <div className="px-5 mb-2 flex items-center gap-2">
-                  <MessageCircle className="w-4 h-4 text-gray-400" />
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Messages directs</span>
-                </div>
-                <div className="space-y-1 px-4">
-                  {directs.map(conv => (
-                    <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
-                  ))}
-                </div>
+                {activeFilter === 'all' && directs.length > 0 && (
+                  <>
+                    <div className="px-5 mb-2 flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Messages directs</span>
+                    </div>
+                    <div className="space-y-1 px-4">
+                      {directs.map(conv => (
+                        <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {activeFilter !== 'all' && (
+                  <div className="space-y-1 px-4">
+                    {visibleConversations.map(conv => (
+                      <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* Empty/No search results */}
-            {filtered.length === 0 && (
+            {visibleConversations.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
                 <div className="w-24 h-24 rounded-full mb-5 flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm border border-white">
-                  {searchQuery ? <Search className="w-10 h-10 text-action-primary" /> : <MessageCircle className="w-10 h-10 text-action-primary" />}
+                  {searchQuery ? <Search className="w-10 h-10 text-action-primary" /> 
+                    : activeFilter === 'groups' ? <Users className="w-10 h-10 text-action-primary" />
+                    : activeFilter === 'friends' ? <MessageCircle className="w-10 h-10 text-action-primary" />
+                    : <MessageCircle className="w-10 h-10 text-action-primary" />}
                 </div>
                 <h3 className="text-[17px] font-bold text-gray-900 mb-2">
-                  {searchQuery ? 'Aucun résultat' : 'Aucune conversation'}
+                  {searchQuery ? 'Aucun résultat' 
+                    : activeFilter === 'groups' ? 'Aucun groupe'
+                    : activeFilter === 'friends' ? 'Aucune discussion'
+                    : 'Aucune conversation'}
                 </h3>
                 <p className="text-[14px] text-gray-500 max-w-[250px]">
-                  {searchQuery ? `Aucune conversation ne correspond à "${searchQuery}"` : 'Rejoignez un événement ou démarrez une discussion.'}
+                  {searchQuery ? `Aucune conversation ne correspond à "${searchQuery}"`
+                    : activeFilter === 'groups' ? 'Rejoignez un événement pour accéder aux discussions de groupe.'
+                    : activeFilter === 'friends' ? 'Ajoutez des amis pour commencer à discuter.'
+                    : 'Rejoignez un événement ou démarrez une discussion.'}
                 </p>
                 {!searchQuery && (
                   <button
-                    onClick={() => setShowNewConv(true)}
+                    onClick={() => activeFilter === 'friends' ? setShowAddFriends(true) : setShowNewConv(true)}
                     className="mt-6 px-6 py-3 bg-action-primary text-white rounded-full font-bold text-[14px] shadow-lg shadow-action-primary/30 active:scale-95 transition-transform"
                   >
-                    Démarrer une discussion
+                    {activeFilter === 'friends' ? 'Ajouter des amis' : 'Démarrer une discussion'}
                   </button>
                 )}
               </div>
