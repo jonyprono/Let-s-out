@@ -62,13 +62,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
           <X className="w-5 h-5 text-gray-900" />
         </button>
         <h2 className="text-[17px] font-bold text-gray-900">Nouvelle discussion</h2>
-        <button 
-          onClick={handleCreate}
-          disabled={selectedFriends.length === 0 || isCreating}
-          className="text-[15px] font-bold text-action-primary disabled:opacity-50"
-        >
-          {isCreating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Créer'}
-        </button>
+        <div className="w-9" />
       </div>
 
       {/* Group Name (if multiple selected) */}
