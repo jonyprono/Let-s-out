@@ -123,6 +123,15 @@ export default async function chatRoutes(app: FastifyInstance) {
             messageId: msg.messageId,
           }, userId)
         }
+
+        // WebRTC Signaling
+        if (['call_start', 'call_offer', 'call_answer', 'ice_candidate', 'call_reject', 'call_end'].includes(msg.type)) {
+          // Simply relay the signaling message to other members in the conversation
+          broadcastToConversation(app, msg.conversationId, {
+            ...msg,
+            userId, // append the sender's userId so the receiver knows who it's from
+          }, userId)
+        }
       } catch (e) {
         app.log.error(e)
       }

@@ -208,13 +208,29 @@ export function ChatDetails() {
 
           <div className="flex items-center gap-0.5">
             <button
-              onClick={() => toast.info('Les appels audio arrivent bientôt !')}
+              onClick={() => {
+                if (isGroup) {
+                  toast.error('Les appels de groupe ne sont pas encore supportés.')
+                  return
+                }
+                window.dispatchEvent(new CustomEvent('call:start_outgoing', {
+                  detail: { conversationId: id, targetUserId: otherMember?.userId, mediaType: 'audio' }
+                }))
+              }}
               className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95"
             >
               <Phone className="w-[20px] h-[20px] text-gray-500" />
             </button>
             <button
-              onClick={() => toast.info('Les appels vidéo arrivent bientôt !')}
+              onClick={() => {
+                if (isGroup) {
+                  toast.error('Les appels de groupe ne sont pas encore supportés.')
+                  return
+                }
+                window.dispatchEvent(new CustomEvent('call:start_outgoing', {
+                  detail: { conversationId: id, targetUserId: otherMember?.userId, mediaType: 'video' }
+                }))
+              }}
               className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95"
             >
               <Video className="w-[22px] h-[22px] text-gray-500" />

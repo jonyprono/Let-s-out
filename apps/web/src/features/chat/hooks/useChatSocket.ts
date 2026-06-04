@@ -75,6 +75,11 @@ export function useChatSocket() {
           qc.invalidateQueries({ queryKey: ['notifications'] })
           qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
         }
+
+        // WebRTC Signaling
+        if (['call_start', 'call_offer', 'call_answer', 'ice_candidate', 'call_reject', 'call_end'].includes(data.type)) {
+          window.dispatchEvent(new CustomEvent('ws:webrtc', { detail: data }))
+        }
       } catch {
         // ignore
       }
@@ -130,9 +135,14 @@ export function useChatSocket() {
 
   const sendRead = useCallback(
     (conversationId: string, messageId: string) =>
-      send({ type: 'read', conversationId, messageId }),
+      send({ type: 'read', conversationId, messageId } as any),
     [send],
   )
 
-  return { sendMessage, sendTyping, sendRead, isConnected: ws.current?.readyState === WebSocket.OPEN }
+  const sendSignal = useCallback(
+    (payload: Record<string, any>) => send(payload as any),
+    [send]
+  )
+
+  return { sendMessage, sendTyping, sendRead, sendSignal, isConnected: ws.current?.readyState === WebSocket.OPEN }
 }

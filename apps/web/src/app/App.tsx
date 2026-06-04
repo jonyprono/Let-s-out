@@ -65,6 +65,7 @@ import {
 } from '@/app/components/adapters'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
+import { CallOverlay } from '@/features/chat/components/CallOverlay'
 import { AdminLayout } from '@/app/layouts/AdminLayout'
 import { AdminRoute } from '@/app/components/admin/AdminRoute'
 import { AdminLoginPage } from '@/app/components/admin/AdminLoginPage'
@@ -175,6 +176,7 @@ export default function App() {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <CallOverlay />
         </UserProfileProvider>
       </BrowserRouter>
       <Toaster position="top-center" richColors />
