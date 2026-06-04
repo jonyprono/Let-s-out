@@ -19,6 +19,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
 import { chatApi } from '@/features/chat/api'
+import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { toast } from 'sonner'

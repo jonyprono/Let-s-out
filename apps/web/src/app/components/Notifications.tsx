@@ -8,7 +8,6 @@ import {
   groupNotificationsByType,
   getNotificationsForType,
   filterActiveNotifications,
-  NOTIFICATION_TTL_MS,
 } from '@/lib/notifications-group';
 
 interface NotificationsProps {
