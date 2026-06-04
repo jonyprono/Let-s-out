@@ -13,7 +13,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
   const [search, setSearch] = useState('')
   const [selectedFriends, setSelectedFriends] = useState<string[]>([])
   const [groupName, setGroupName] = useState('')
-  const [isCreating, setIsCreating] = useState(false)
+
 
   const { data: friends, isLoading } = useFriends()
 
@@ -28,31 +28,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
     )
   }
 
-  const handleCreate = async () => {
-    if (selectedFriends.length === 0) return
-    setIsCreating(true)
-    try {
-      if (selectedFriends.length === 1) {
-        // Direct Message
-        const conv = await chatApi.createDM(selectedFriends[0])
-        navigate(`/chat/${conv.id}`)
-      } else {
-        // Group Message
-        if (!groupName.trim()) {
-          alert('Veuillez entrer un nom de groupe')
-          setIsCreating(false)
-          return
-        }
-        const conv = await chatApi.createGroup(groupName, selectedFriends)
-        navigate(`/chat/${conv.id}`)
-      }
-      onClose()
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setIsCreating(false)
-    }
-  }
+
 
   return (
     <div className="absolute inset-0 z-50 flex flex-col bg-white">
