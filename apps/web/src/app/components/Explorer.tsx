@@ -627,9 +627,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               }}
               className={`px-3 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors flex-shrink-0 flex items-center gap-1.5 ${
                 selectedCategory === category
-                  ? category === 'EN_COURS'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-action-primary active:bg-action-primary-hover text-white'
+                  ? 'bg-action-primary active:bg-action-primary-hover text-white'
                   : 'bg-gray-100 text-text-secondary'
               }`}
             >
@@ -637,7 +635,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 const Icon = CATEGORY_ICONS[category];
                 return <Icon className="w-4 h-4" strokeWidth={2} />
               })()}
-              {category === 'EN_COURS' && <span className="w-2 h-2 rounded-full bg-white opacity-80" />}
+              {category === 'EN_COURS' && <span className={`w-2 h-2 rounded-full ${selectedCategory === category ? 'bg-white opacity-80' : 'bg-red-500'}`} />}
               <span>{CATEGORY_CHIP_LABELS[category] || CATEGORY_LABELS[category] || category}</span>
             </button>
           ))}
