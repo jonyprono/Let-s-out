@@ -1114,11 +1114,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
           )}
         </div>
-        {step < 6 && (
-          <div className="flex justify-center mt-150 pb-1">
-            <div className="w-32 h-[5px] bg-black rounded-full" />
-          </div>
-        )}
+
       </div>
 
       {/* ── Modal Cagnotte multi-étapes ── */}
@@ -1379,9 +1375,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 ? '✓ Confirmer la cagnotte'
                 : 'Suivant'}
             </button>
-            <div className="flex justify-center mt-150">
-              <div className="w-32 h-[5px] bg-black rounded-full" />
-            </div>
+
           </div>
         </div>
       )}
