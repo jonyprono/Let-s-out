@@ -1,15 +1,12 @@
 import { useState } from 'react'
 import { Search, X, Check, Loader2, Users } from 'lucide-react'
 import { useFriends } from '@/features/users/api'
-import { chatApi } from '@/features/chat/api'
-import { useNavigate } from 'react-router'
 
 interface NewConversationModalProps {
   onClose: () => void
 }
 
 export function NewConversationModal({ onClose }: NewConversationModalProps) {
-  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [selectedFriends, setSelectedFriends] = useState<string[]>([])
   const [groupName, setGroupName] = useState('')
