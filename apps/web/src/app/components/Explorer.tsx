@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router';
 import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target } from 'lucide-react';
+import { Basketball, Palette, PizzaSlice, HalfMoon, Airplane, Gamepad, Heart, MusicDoubleNote, Star } from 'iconoir-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { apiClient } from '@/lib/api-client';
@@ -48,20 +49,32 @@ const TIME_FILTERS = [
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  SPORT: '⚽ Sport',
-  CULTURE: '🎭 Culture & Art',
-  FOOD: '🍔 Gastronomie',
-  NIGHTLIFE: '🍸 Soirées',
-  TRAVEL: '✈️ Voyages',
-  GAMING: '🎮 Gaming',
-  WELLNESS: '🧘 Bien-être',
-  MUSIC: '🎵 Musique',
-  OTHER: '✨ Autre',
+  SPORT: 'Sport',
+  CULTURE: 'Culture & Art',
+  FOOD: 'Gastronomie',
+  NIGHTLIFE: 'Soirées',
+  TRAVEL: 'Voyages',
+  GAMING: 'Gaming',
+  WELLNESS: 'Bien-être',
+  MUSIC: 'Musique',
+  OTHER: 'Autre',
+};
+
+const CATEGORY_ICONS: Record<string, React.FC<any>> = {
+  SPORT: Basketball,
+  CULTURE: Palette,
+  FOOD: PizzaSlice,
+  NIGHTLIFE: HalfMoon,
+  TRAVEL: Airplane,
+  GAMING: Gamepad,
+  WELLNESS: Heart,
+  MUSIC: MusicDoubleNote,
+  OTHER: Star,
 };
 
 // Base category list for search tab
 const BROWSE_CATEGORIES = ['Tous', 'EN_COURS', 'SPORT', 'CULTURE', 'FOOD', 'NIGHTLIFE', 'TRAVEL', 'GAMING', 'WELLNESS', 'MUSIC', 'OTHER'];
-const CATEGORY_CHIP_LABELS: Record<string, string> = { 'Tous': 'Tous', 'EN_COURS': '🔴 En cours', ...CATEGORY_LABELS };
+const CATEGORY_CHIP_LABELS: Record<string, string> = { 'Tous': 'Tous', 'EN_COURS': 'En cours', ...CATEGORY_LABELS };
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
 
@@ -612,7 +625,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 hapticFeedback.impact()
                 setSelectedCategory(category)
               }}
-              className={`px-200 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
+              className={`px-3 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors flex-shrink-0 flex items-center gap-1.5 ${
                 selectedCategory === category
                   ? category === 'EN_COURS'
                     ? 'bg-red-500 text-white'
@@ -620,7 +633,12 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   : 'bg-gray-100 text-text-secondary'
               }`}
             >
-              {CATEGORY_CHIP_LABELS[category] || CATEGORY_LABELS[category] || category}
+              {CATEGORY_ICONS[category] && (() => {
+                const Icon = CATEGORY_ICONS[category];
+                return <Icon className="w-4 h-4" strokeWidth={2} />
+              })()}
+              {category === 'EN_COURS' && <span className="w-2 h-2 rounded-full bg-white opacity-80" />}
+              <span>{CATEGORY_CHIP_LABELS[category] || CATEGORY_LABELS[category] || category}</span>
             </button>
           ))}
         </div>
