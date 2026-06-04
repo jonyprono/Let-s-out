@@ -48,23 +48,20 @@ const TIME_FILTERS = [
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  SPORT: 'Sport',
-  CULTURE: 'Culture & Art',
-  FOOD: 'Gastronomie',
-  NIGHTLIFE: 'Soirées',
-  TRAVEL: 'Voyages',
-  GAMING: 'Gaming',
-  WELLNESS: 'Bien-être',
-  MUSIC: 'Musique',
-  OTHER: 'Autre',
+  SPORT: '⚽ Sport',
+  CULTURE: '🎭 Culture & Art',
+  FOOD: '🍔 Gastronomie',
+  NIGHTLIFE: '🍸 Soirées',
+  TRAVEL: '✈️ Voyages',
+  GAMING: '🎮 Gaming',
+  WELLNESS: '🧘 Bien-être',
+  MUSIC: '🎵 Musique',
+  OTHER: '✨ Autre',
 };
 
 // Base category list for search tab
 const BROWSE_CATEGORIES = ['Tous', 'EN_COURS', 'SPORT', 'CULTURE', 'FOOD', 'NIGHTLIFE', 'TRAVEL', 'GAMING', 'WELLNESS', 'MUSIC', 'OTHER'];
-const CATEGORY_CHIP_LABELS: Record<string, string> = { 'Tous': 'Tous', 'EN_COURS': '🔴 En cours', ...Object.fromEntries(Object.entries({
-  SPORT: 'Sport', CULTURE: 'Culture & Art', FOOD: 'Gastronomie', NIGHTLIFE: 'Soirées',
-  TRAVEL: 'Voyages', GAMING: 'Gaming', WELLNESS: 'Bien-être', MUSIC: 'Musique', OTHER: 'Autre'
-})) };
+const CATEGORY_CHIP_LABELS: Record<string, string> = { 'Tous': 'Tous', 'EN_COURS': '🔴 En cours', ...CATEGORY_LABELS };
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
 
@@ -629,44 +626,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         </div>
       </div>
 
-      {/* Applied filters badge */}
-      {(appliedFilters.date !== 'all' || appliedFilters.time !== 'all' || appliedFilters.categories.length > 0 || appliedFilters.budgetMax < 50000) && (
-        <div className="px-5 pb-2 pt-2 flex flex-wrap items-center gap-2">
-          <span className="text-[12px] text-action-primary font-semibold">Filtres actifs :</span>
-          {appliedFilters.date !== 'all' && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-orange-50 text-action-primary font-medium">
-              {appliedFilters.date === 'pick' && appliedFilters.customDate
-                ? new Date(appliedFilters.customDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                : DATE_FILTERS.find(f => f.key === appliedFilters.date)?.label ?? appliedFilters.date}
-            </span>
-          )}
-          {appliedFilters.time !== 'all' && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-orange-50 text-action-primary font-medium">
-              {TIME_FILTERS.find(f => f.key === appliedFilters.time)?.label ?? appliedFilters.time}
-            </span>
-          )}
-          {appliedFilters.categories.map(c => (
-            <span key={c} className="text-[11px] px-2 py-0.5 rounded-full bg-brand-orange-50 text-action-primary font-medium">
-              {CATEGORIES_FILTER.find(cf => cf.key === c)?.label ?? c}
-            </span>
-          ))}
-          {appliedFilters.budgetMax < 50000 && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-brand-orange-50 text-action-primary font-medium">
-              ≤ {appliedFilters.budgetMax.toLocaleString('fr-FR')} F
-            </span>
-          )}
-          <button
-            onClick={() => {
-              setFilterDate('all'); setFilterTime('all'); setFilterCategories([]);
-              setFilterBudgetMax(10000); setFilterCustomDate(''); setFilterDistance(100);
-              setAppliedFilters({ date: 'all', time: 'all', categories: [], budgetMax: 10000, customDate: '', distance: 100 });
-            }}
-            className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-text-secondary font-medium"
-          >
-            × Tout effacer
-          </button>
-        </div>
-      )}
+
 
         {/* Content (List or Map) */}
         {viewMode === 'map' ? (
