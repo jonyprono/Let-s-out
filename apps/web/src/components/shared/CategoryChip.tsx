@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { Basketball, Palette, PizzaSlice, HalfMoon, Airplane, Gamepad, Heart, MusicDoubleNote, Star, Group, Laptop, Book, CoffeeCup, Map } from 'iconoir-react'
+import { Basketball01Icon as Basketball, PaintBoardIcon as Palette, Pizza01Icon as PizzaSlice, Moon01Icon as HalfMoon, Airplane01Icon as Airplane, GameIcon as Gamepad, FavouriteIcon as Heart, MusicNote01Icon as MusicDoubleNote, StarIcon as Star, UserMultiple02Icon as Group, LaptopIcon as Laptop, Book01Icon as Book, Coffee01Icon as CoffeeCup, MapsIcon as Map } from 'hugeicons-react'
 
 const LABEL_TO_ICON: Record<string, React.FC<any>> = {
   'Sport': Basketball,

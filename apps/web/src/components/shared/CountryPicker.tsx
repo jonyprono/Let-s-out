@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { NavArrowDown, Search, Xmark } from 'iconoir-react'
+import { ArrowDown01Icon, Search01Icon, Cancel01Icon } from 'hugeicons-react'
 import { COUNTRIES, Country } from '@/lib/countries'
 
 interface CountryPickerProps {
@@ -65,7 +65,7 @@ export function CountryPicker({ value, onChange }: CountryPickerProps) {
           {cca2}&nbsp;({dialCode})
         </span>
         {/* Flèche Iconoir — Small 16px stroke 1 */}
-        <NavArrowDown
+        <ArrowDown01Icon
           width={16}
           height={16}
           strokeWidth={1}
@@ -82,7 +82,7 @@ export function CountryPicker({ value, onChange }: CountryPickerProps) {
           {/* Barre de recherche */}
           <div className="px-3 py-2.5 border-b border-border-primary shrink-0 bg-card">
             <div className="flex items-center gap-2 bg-neutral-gray-100 rounded-xl px-3 py-2">
-              <Search width={16} height={16} strokeWidth={1} className="text-neutral-gray-400 shrink-0" />
+              <Search01Icon width={16} height={16} strokeWidth={1} className="text-neutral-gray-400 shrink-0" />
               <input
                 ref={searchRef}
                 value={search}
@@ -92,7 +92,7 @@ export function CountryPicker({ value, onChange }: CountryPickerProps) {
               />
               {search && (
                 <button type="button" onClick={() => setSearch('')} className="shrink-0">
-                  <Xmark width={14} height={14} strokeWidth={1.4} className="text-neutral-gray-400" />
+                  <Cancel01Icon width={14} height={14} strokeWidth={1.4} className="text-neutral-gray-400" />
                 </button>
               )}
             </div>

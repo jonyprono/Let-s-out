@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router'
-import { Search, User, Group, ChatBubble } from 'iconoir-react'
+import { Search01Icon as Search, UserIcon as User, UserMultiple02Icon as Group, Comment01Icon as ChatBubble } from 'hugeicons-react'
 import { useConversations } from '@/features/chat/api'
 
 // Custom icon: groupe d'événements (3 silhouettes)

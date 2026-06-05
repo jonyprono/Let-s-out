@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router';
 import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target } from 'lucide-react';
-import { Basketball, Palette, PizzaSlice, HalfMoon, Airplane, Gamepad, Heart, MusicDoubleNote, Star } from 'iconoir-react';
+import { Basketball01Icon, PaintBoardIcon, Pizza01Icon, Moon01Icon, Airplane01Icon, GameIcon, FavouriteIcon, MusicNote01Icon, StarIcon } from 'hugeicons-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { apiClient } from '@/lib/api-client';
@@ -61,15 +61,15 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_ICONS: Record<string, React.FC<any>> = {
-  SPORT: Basketball,
-  CULTURE: Palette,
-  FOOD: PizzaSlice,
-  NIGHTLIFE: HalfMoon,
-  TRAVEL: Airplane,
-  GAMING: Gamepad,
-  WELLNESS: Heart,
-  MUSIC: MusicDoubleNote,
-  OTHER: Star,
+  SPORT: Basketball01Icon,
+  CULTURE: PaintBoardIcon,
+  FOOD: Pizza01Icon,
+  NIGHTLIFE: Moon01Icon,
+  TRAVEL: Airplane01Icon,
+  GAMING: GameIcon,
+  WELLNESS: FavouriteIcon,
+  MUSIC: MusicNote01Icon,
+  OTHER: StarIcon,
 };
 
 // Base category list for search tab

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import { ChevronLeft, Calendar, MapPin, Search, X, Loader2, Check, Edit3, BadgeCheck } from 'lucide-react'
-import { Calendar as IconoirCalendar, Clock as IconoirClock, MapPin as IconoirMapPin, Xmark, NavArrowDown, MediaImagePlus } from 'iconoir-react'
+import { Calendar01Icon as IconoirCalendar, Clock01Icon as IconoirClock, Location01Icon as IconoirMapPin, Cancel01Icon, ArrowDown01Icon, ImageAdd01Icon } from 'hugeicons-react'
 import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
 import { useQuery } from '@tanstack/react-query'
@@ -428,7 +428,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <div className="flex items-center w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
                     <span className="flex-1 text-[#1A1A1A] font-medium">{formattedDate}</span>
                     <button onClick={() => setDate('')} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                      <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
+                      <Cancel01Icon className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                     </button>
                   </div>
                 ) : (
@@ -455,7 +455,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <IconoirClock className="w-[20px] h-[20px] text-[#71717A] mr-3" strokeWidth={1.5} />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{startTime} h – {endTime} h</span>
                   <button onClick={() => { setStartTime(''); setEndTime(''); setIsEditingTime(false); }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
+                    <Cancel01Icon className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                   </button>
                 </div>
               ) : isEditingTime ? (
@@ -489,7 +489,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <IconoirMapPin className="w-[20px] h-[20px] text-[#71717A] mr-3" strokeWidth={1.5} />
                   <span className="flex-1 text-[#1A1A1A] font-medium">{city}</span>
                   <button onClick={() => { setCity(''); setCityInput('') }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
+                    <Cancel01Icon className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                   </button>
                 </div>
               ) : (
@@ -522,7 +522,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <IconoirMapPin className="w-[20px] h-[20px] text-[#71717A] mr-3 flex-shrink-0" strokeWidth={1.5} />
                   <span className="flex-1 text-[#1A1A1A] font-medium truncate">{address}</span>
                   <button onClick={() => setAddress('')} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <Xmark className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
+                    <Cancel01Icon className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
                   </button>
                 </div>
               ) : (
@@ -556,7 +556,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   className="flex-1 px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
                 />
                 <div className="px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#555555] bg-background-white flex-shrink-0 flex items-center justify-center font-medium">
-                  F CFA <NavArrowDown className="w-4 h-4 ml-1 text-[#71717A]" strokeWidth={1.5} />
+                  F CFA <ArrowDown01Icon className="w-4 h-4 ml-1 text-[#71717A]" strokeWidth={1.5} />
                 </div>
               </div>
             </div>
@@ -617,7 +617,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 ) : (
                   <>
                     <div className="mb-2">
-                      <MediaImagePlus className="w-[24px] h-[24px] text-[#71717A]" strokeWidth={1.5} />
+                      <ImageAdd01Icon className="w-[24px] h-[24px] text-[#71717A]" strokeWidth={1.5} />
                     </div>
                     <span className="text-[13px] font-medium text-[#71717A]">Sélectionner une image</span>
                   </>

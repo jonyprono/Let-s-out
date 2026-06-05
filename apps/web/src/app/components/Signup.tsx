@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { NavArrowLeft, Eye, EyeClosed, Check, MapPin, Xmark, Calendar, Refresh } from 'iconoir-react'
+import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, Tick01Icon, Location01Icon, Cancel01Icon, Calendar01Icon, RefreshIcon } from 'hugeicons-react'
 import { useSendOtp, useRegister, useCheckTarget, useCheckOtp } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
@@ -333,7 +333,7 @@ export function Signup({ onBack }: SignupProps) {
             aria-label="Retour"
             className="absolute left-0 w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform"
           >
-            <NavArrowLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
+            <ArrowLeft01Icon className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
           <span className={authHeader}>Inscription</span>
         </div>
@@ -503,7 +503,7 @@ export function Signup({ onBack }: SignupProps) {
                 className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
                 aria-label="Choisir une date"
               >
-                <Calendar
+                <Calendar01Icon
                   width={20} height={20} strokeWidth={1.2}
                   className="text-neutral-gray-400"
                 />
@@ -526,7 +526,7 @@ export function Signup({ onBack }: SignupProps) {
             {/* Champ de recherche + dropdown autocomplete */}
             <div className="relative">
               {/* Icône MapPin — absolue gauche */}
-              <MapPin
+              <Location01Icon
                 width={20} height={20} strokeWidth={1.2}
                 className="absolute left-4 top-[26px] -translate-y-1/2 text-neutral-gray-400 pointer-events-none z-10"
               />
@@ -564,7 +564,7 @@ export function Signup({ onBack }: SignupProps) {
                   }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
                 >
-                  <Xmark width={16} height={16} strokeWidth={1.4} className="text-neutral-gray-500" />
+                  <Cancel01Icon width={16} height={16} strokeWidth={1.4} className="text-neutral-gray-500" />
                 </button>
               )}
 
@@ -591,7 +591,7 @@ export function Signup({ onBack }: SignupProps) {
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--neutral-gray-50)')}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
-                      <MapPin width={16} height={16} strokeWidth={1.2} className="text-neutral-gray-400 shrink-0" />
+                      <Location01Icon width={16} height={16} strokeWidth={1.2} className="text-neutral-gray-400 shrink-0" />
                       <span style={{ fontFamily: 'var(--font-poppins)', fontSize: '14px', color: 'var(--foreground)' }}>
                         {s.label}
                       </span>
@@ -643,8 +643,8 @@ export function Signup({ onBack }: SignupProps) {
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
                 {showPassword
-                  ? <Eye width={20} height={20} strokeWidth={1.2} />
-                  : <EyeClosed width={20} height={20} strokeWidth={1.2} />}
+                  ? <ViewIcon width={20} height={20} strokeWidth={1.2} />
+                  : <ViewOffIcon width={20} height={20} strokeWidth={1.2} />}
               </button>
             </div>
 
@@ -657,8 +657,8 @@ export function Signup({ onBack }: SignupProps) {
               />
               <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
                 {showConfirmPassword
-                  ? <Eye width={20} height={20} strokeWidth={1.2} />
-                  : <EyeClosed width={20} height={20} strokeWidth={1.2} />}
+                  ? <ViewIcon width={20} height={20} strokeWidth={1.2} />
+                  : <ViewOffIcon width={20} height={20} strokeWidth={1.2} />}
               </button>
             </div>
 
@@ -670,7 +670,7 @@ export function Signup({ onBack }: SignupProps) {
               ].map(({ ok, label }) => (
                 <div key={label} className="flex items-center gap-2">
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${ok ? 'bg-[#34C759]' : 'bg-neutral-gray-200'}`}>
-                    {ok && <Check width={10} height={10} strokeWidth={2} className="text-white" />}
+                    {ok && <Tick01Icon width={10} height={10} strokeWidth={2} className="text-white" />}
                   </div>
                   <span className={`text-[12px] ${ok ? 'text-[#34C759]' : 'text-neutral-gray-500'}`}>{label}</span>
                 </div>
@@ -687,7 +687,7 @@ export function Signup({ onBack }: SignupProps) {
           <label className="flex items-start gap-2.5 cursor-pointer mb-4"
             onClick={e => { e.preventDefault(); setAcceptedTerms(!acceptedTerms) }}>
           <div className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${acceptedTerms ? 'bg-action-primary border-action-primary' : 'border-border-primary bg-background-white'}`}>
-              {acceptedTerms && <Check width={12} height={12} strokeWidth={2.5} className="text-text-inverse" />}
+              {acceptedTerms && <Tick01Icon width={12} height={12} strokeWidth={2.5} className="text-text-inverse" />}
             </div>
             <span className="text-[12px] text-text-secondary leading-relaxed">
               Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
@@ -700,7 +700,7 @@ export function Signup({ onBack }: SignupProps) {
           disabled={isNextDisabled()}
           className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-action-primary hover:bg-action-primary-hover text-text-inverse disabled:opacity-40"
         >
-          {isLoading && <Refresh width={20} height={20} strokeWidth={1.4} className="animate-spin" />}
+          {isLoading && <RefreshIcon width={20} height={20} strokeWidth={1.4} className="animate-spin" />}
           <span>{buttonLabel()}</span>
         </button>
       </div>
