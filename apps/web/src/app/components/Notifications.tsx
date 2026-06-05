@@ -3,6 +3,7 @@ import { ChevronLeft, Heart, MessageCircle, UserPlus, Calendar, DollarSign, Bell
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useState, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/features/notifications/api';
 import {
   groupNotificationsByType,
@@ -48,8 +49,10 @@ function timeAgo(dateStr: string): string {
 
 export function Notifications({ onBack }: NotificationsProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
+  const [showReadSuccess, setShowReadSuccess] = useState(false);
 
   const [archivedTypes, setArchivedTypes] = useState<Set<string>>(() => {
     try {
@@ -176,14 +179,25 @@ export function Notifications({ onBack }: NotificationsProps) {
                 Archives
               </button>
               <button
-                onClick={() => markAllReadMutation.mutate()}
-                className={`text-[12px] font-semibold px-3 py-1.5 rounded-full transition-all ${
-                  activeUnreadCount === 0 
-                    ? 'bg-action-primary text-white' 
-                    : 'bg-gray-100 dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3A3A3A]'
+                onClick={() => {
+                  markAllReadMutation.mutate();
+                  
+                  // Clear messages badge locally
+                  queryClient.setQueryData(['chat', 'conversations'], (old: any) => {
+                    if (!old) return old;
+                    return old.map((c: any) => ({ ...c, unread: 0 }));
+                  });
+
+                  setShowReadSuccess(true);
+                  setTimeout(() => setShowReadSuccess(false), 2000);
+                }}
+                className={`text-[12px] font-semibold px-3 py-1.5 rounded-full transition-all duration-300 ${
+                  showReadSuccess 
+                    ? 'bg-action-primary text-white scale-95' 
+                    : 'bg-gray-100 dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3A3A3A] active:scale-95'
                 }`}
               >
-                {activeUnreadCount === 0 ? 'Tout lu' : 'Tout lire'}
+                {showReadSuccess ? 'Tout lu' : 'Tout lire'}
               </button>
             </div>
           )}
