@@ -170,8 +170,8 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               <h2 className="text-[24px] font-bold text-foreground mb-3 text-center tracking-tight font-sans">
                 {current.title}
               </h2>
-              {/* Description courte — light, text-center */}
-              <p className="font-['Inter_Display',sans-serif] text-[14px] font-normal leading-[18px] tracking-[0px] text-center text-text-secondary w-full max-w-[271px] mx-auto h-auto max-h-[54px]">
+              {/* Description courte — accessible, text-center */}
+              <p className="font-['Inter_Display',sans-serif] text-[16px] font-medium leading-[24px] text-center text-gray-700 dark:text-gray-300 w-full max-w-[300px] mx-auto h-auto">
                 {current.description}
               </p>
             </motion.div>
