@@ -136,13 +136,12 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                     alt={current.title}
                     style={{
                       position: 'absolute',
-                      inset: '-5%', /* Petite marge pour absorber la contre-rotation sans bord blanc */
-                      width: '110%',
-                      height: '110%',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
                       objectFit: 'cover',
                       objectPosition: 'center',
                       display: 'block',
-                      transform: 'rotate(1.73deg)', /* Contre-rotation pour garder l'image droite (non déformée) */
                     }}
                   />
                 </div>
