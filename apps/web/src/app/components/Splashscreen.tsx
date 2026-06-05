@@ -109,26 +109,26 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               className="flex flex-col items-center w-full"
             >
               {/* Wrapper shadow — séparé du clip pour éviter le débordement */}
+              {/* Wrapper shadow — centré avec dimension exacte */}
               <div
-                className="w-full mb-7"
+                className="w-full flex justify-center mb-8"
                 style={{
                   paddingLeft: '1.25rem',
                   paddingRight: '1.25rem',
-                  paddingTop: '1rem',
-                  paddingBottom: '1rem',
                 }}
               >
                 <div
+                  className="shadow-sm"
                   style={{
                     position: 'relative',
                     width: '100%',
-                    aspectRatio: '16 / 9',
-                    borderRadius: '70px 70px 70px 20px',
+                    maxWidth: '342px',
+                    height: '142px',
+                    borderRadius: '24px',
                     overflow: 'hidden',
                     isolation: 'isolate',
-                    transform: 'translateZ(0)', /* Force GPU layer — fix Safari border-radius bleed */
-                    WebkitMaskImage: 'radial-gradient(white, white)', /* Fix Safari overflow:hidden */
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.10)',
+                    transform: 'translateZ(0) rotate(-1.73deg)', /* Inclinaison exacte Figma et GPU layer */
+                    WebkitMaskImage: 'radial-gradient(white, white)', /* Fix overflow Safari */
                   }}
                 >
                   <img
@@ -136,12 +136,13 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                     alt={current.title}
                     style={{
                       position: 'absolute',
-                      inset: 0,
-                      width: '100%',
-                      height: '100%',
+                      inset: '-5%', /* Petite marge pour absorber la contre-rotation sans bord blanc */
+                      width: '110%',
+                      height: '110%',
                       objectFit: 'cover',
                       objectPosition: 'center',
                       display: 'block',
+                      transform: 'rotate(1.73deg)', /* Contre-rotation pour garder l'image droite (non déformée) */
                     }}
                   />
                 </div>
