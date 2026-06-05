@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "npm@10.8.1",
   "scripts": {
-    "preinstall": "npx -y pnpm@9 install",
+    "preinstall": "node -e \"const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json'));delete p.packageManager;fs.writeFileSync('package.json',JSON.stringify(p,null,2));\" && npx -y pnpm@9 install",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
