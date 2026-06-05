@@ -163,7 +163,7 @@ export function Notifications({ onBack }: NotificationsProps) {
               )}
             </div>
           </div>
-          {(groups.length > 0 || typeNotifications.length > 0 || viewMode === 'archived') && (
+          {(allNotifications.length > 0) && (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => {
