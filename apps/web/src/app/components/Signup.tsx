@@ -35,9 +35,9 @@ const INTERESTS_LIST = [
   'Voyages', 'Lifestyle', 'Tourisme',
 ]
 
-function maskPhone(full: string) {
-  if (full.length <= 7) return full
-  return full.slice(0, 5) + ' ' + full.slice(5, 7) + ' ' + full.slice(7, -2).replace(/\d/g, '0') + ' ' + full.slice(-2)
+function formatPhone(full: string) {
+  if (full.length <= 4) return full
+  return full.slice(0, 4) + ' ' + full.slice(4)
 }
 
 function validatePhone(code: string, phone: string) {
@@ -392,7 +392,7 @@ export function Signup({ onBack }: SignupProps) {
             </h1>
             <p className={`${authSubtitle} mb-7`}>
               Code à 6 chiffres envoyé par <strong className="text-foreground">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
-              <strong className="text-foreground">{maskPhone(fullPhone) || '+229 01 97 00 00 00'}</strong>
+              <strong className="text-foreground">{formatPhone(fullPhone)}</strong>
             </p>
 
             <div className="grid grid-cols-6 gap-2 mb-5 w-full">
