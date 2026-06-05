@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router';
 import { ChevronLeft, Heart, MessageCircle, UserPlus, Calendar, DollarSign, Bell, Users, CheckCircle, AlertCircle, ChevronRight, Archive } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/features/notifications/api';
 import {
   groupNotificationsByType,
@@ -49,31 +49,60 @@ function timeAgo(dateStr: string): string {
 export function Notifications({ onBack }: NotificationsProps) {
   const navigate = useNavigate();
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
 
-  const [archivedTypes, setArchivedTypes] = useState<Set<string>>(new Set());
-  const [archivedIds, setArchivedIds] = useState<Set<string>>(new Set());
+  const [archivedTypes, setArchivedTypes] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('letsout_archived_types');
+      if (stored) return new Set(JSON.parse(stored));
+    } catch (e) {}
+    return new Set();
+  });
+  const [archivedIds, setArchivedIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('letsout_archived_ids');
+      if (stored) return new Set(JSON.parse(stored));
+    } catch (e) {}
+    return new Set();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('letsout_archived_types', JSON.stringify(Array.from(archivedTypes)));
+  }, [archivedTypes]);
+
+  useEffect(() => {
+    localStorage.setItem('letsout_archived_ids', JSON.stringify(Array.from(archivedIds)));
+  }, [archivedIds]);
 
   const { data, isLoading } = useNotifications(100, false);
   const allNotifications = data?.data ?? [];
-  const activeNotifications = useMemo(
+  
+  const unarchivedNotifications = useMemo(
     () => filterActiveNotifications(allNotifications).filter(n => !archivedIds.has(n.id) && !archivedTypes.has(n.type)),
     [allNotifications, archivedIds, archivedTypes],
   );
-  const unreadCount = activeNotifications.filter((n) => !n.isRead).length;
+
+  const archivedNotifications = useMemo(
+    () => allNotifications.filter(n => archivedIds.has(n.id) || archivedTypes.has(n.type)),
+    [allNotifications, archivedIds, archivedTypes],
+  );
+
+  const displayedNotifications = viewMode === 'active' ? unarchivedNotifications : archivedNotifications;
+  const activeUnreadCount = unarchivedNotifications.filter((n) => !n.isRead).length;
 
   const groups = useMemo(
-    () => groupNotificationsByType(activeNotifications, { ...TYPE_LABELS, default: 'Notification' }),
-    [activeNotifications],
+    () => groupNotificationsByType(displayedNotifications, { ...TYPE_LABELS, default: 'Notification' }),
+    [displayedNotifications],
   );
 
   const typeNotifications = selectedType
-    ? getNotificationsForType(activeNotifications, selectedType)
+    ? getNotificationsForType(displayedNotifications, selectedType)
     : [];
 
   const markReadMutation = useMarkNotificationAsRead();
   const markAllReadMutation = useMarkAllNotificationsAsRead();
 
-  const handleNotifPress = (notif: (typeof activeNotifications)[number]) => {
+  const handleNotifPress = (notif: (typeof displayedNotifications)[number]) => {
     if (!notif.isRead) markReadMutation.mutate(notif.id);
 
     const d = notif.data as Record<string, string> | undefined;
@@ -125,19 +154,38 @@ export function Notifications({ onBack }: NotificationsProps) {
                 {selectedType && selectedCfg ? selectedCfg.label : 'Notifications'}
               </h1>
               {!selectedType && (
-                <p className="text-[13px] text-gray-500 font-medium">{unreadCount} non lu{unreadCount > 1 ? 'es' : ''}</p>
+                <p className="text-[13px] text-gray-500 font-medium">
+                  {viewMode === 'archived' ? `${displayedNotifications.length} archivée${displayedNotifications.length > 1 ? 's' : ''}` : `${activeUnreadCount} non lu${activeUnreadCount > 1 ? 'es' : ''}`}
+                </p>
               )}
             </div>
           </div>
-          {(groups.length > 0 || typeNotifications.length > 0) && (
-            <button
-              onClick={() => {
-                markAllReadMutation.mutate();
-              }}
-              className="text-[13px] font-semibold text-gray-700 bg-gray-100 dark:bg-[#2A2A2A] dark:text-gray-200 px-4 py-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-[#3A3A3A] active:scale-95 transition-all"
-            >
-              Tout lire
-            </button>
+          {(groups.length > 0 || typeNotifications.length > 0 || viewMode === 'archived') && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setViewMode(viewMode === 'active' ? 'archived' : 'active');
+                  setSelectedType(null);
+                }}
+                className={`text-[12px] font-semibold px-3 py-1.5 rounded-full transition-all ${
+                  viewMode === 'archived'
+                    ? 'bg-action-primary text-white'
+                    : 'bg-gray-100 dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3A3A3A]'
+                }`}
+              >
+                Archives
+              </button>
+              <button
+                onClick={() => markAllReadMutation.mutate()}
+                className={`text-[12px] font-semibold px-3 py-1.5 rounded-full transition-all ${
+                  activeUnreadCount === 0 
+                    ? 'bg-action-primary text-white' 
+                    : 'bg-gray-100 dark:bg-[#2A2A2A] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3A3A3A]'
+                }`}
+              >
+                {activeUnreadCount === 0 ? 'Tout lu' : 'Tout lire'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -196,10 +244,22 @@ export function Notifications({ onBack }: NotificationsProps) {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setArchivedIds(prev => new Set(prev).add(notif.id));
+                          if (viewMode === 'archived') {
+                            setArchivedIds(prev => {
+                              const next = new Set(prev);
+                              next.delete(notif.id);
+                              return next;
+                            });
+                          } else {
+                            setArchivedIds(prev => new Set(prev).add(notif.id));
+                          }
                         }}
-                        className="p-1.5 text-gray-300 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
-                        title="Archiver"
+                        className={`p-1.5 transition-colors rounded-full ${
+                          viewMode === 'archived' 
+                            ? 'text-gray-400 hover:text-green-500 hover:bg-green-50' 
+                            : 'text-gray-300 hover:text-red-500 hover:bg-red-50'
+                        }`}
+                        title={viewMode === 'archived' ? 'Désarchiver' : 'Archiver'}
                       >
                         <Archive className="w-4 h-4" />
                       </button>
