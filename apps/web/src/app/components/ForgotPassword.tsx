@@ -29,9 +29,10 @@ import {
   authChannelLabel,
 } from '@/lib/auth-ui'
 
-function formatPhone(full: string) {
-  if (full.length <= 4) return full
-  return full.slice(0, 4) + ' ' + full.slice(4)
+function formatPhone(code: string, local: string) {
+  const digits = local.replace(/\s+/g, '')
+  const grouped = digits.match(/.{1,2}/g)?.join(' ') || digits
+  return `${code} ${grouped}`
 }
 
 function validatePhone(code: string, phone: string) {
@@ -252,7 +253,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             </h1>
             <p className={`${authSubtitle} mb-7`}>
               Code à 6 chiffres envoyé par <strong className="text-foreground">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
-              <strong className="text-foreground">{formatPhone(fullPhone)}</strong>
+              <strong className="text-foreground">{formatPhone(country.code, phone)}</strong>
             </p>
 
             <div className="grid grid-cols-6 gap-2 mb-5 w-full">
