@@ -259,11 +259,29 @@ export function Notifications({ onBack }: NotificationsProps) {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (viewMode === 'archived') {
-                            setArchivedIds(prev => {
-                              const next = new Set(prev);
-                              next.delete(notif.id);
-                              return next;
-                            });
+                            if (archivedTypes.has(notif.type)) {
+                              setArchivedTypes(prev => {
+                                const next = new Set(prev);
+                                next.delete(notif.type);
+                                return next;
+                              });
+                              setArchivedIds(prev => {
+                                const next = new Set(prev);
+                                allNotifications.forEach(n => {
+                                  if (n.type === notif.type && n.id !== notif.id) {
+                                    next.add(n.id);
+                                  }
+                                });
+                                next.delete(notif.id);
+                                return next;
+                              });
+                            } else {
+                              setArchivedIds(prev => {
+                                const next = new Set(prev);
+                                next.delete(notif.id);
+                                return next;
+                              });
+                            }
                           } else {
                             setArchivedIds(prev => new Set(prev).add(notif.id));
                           }
@@ -327,10 +345,29 @@ export function Notifications({ onBack }: NotificationsProps) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setArchivedTypes(prev => new Set(prev).add(group.type));
+                        if (viewMode === 'archived') {
+                          setArchivedTypes(prev => {
+                            const next = new Set(prev);
+                            next.delete(group.type);
+                            return next;
+                          });
+                          setArchivedIds(prev => {
+                            const next = new Set(prev);
+                            allNotifications.forEach(n => {
+                              if (n.type === group.type) next.delete(n.id);
+                            });
+                            return next;
+                          });
+                        } else {
+                          setArchivedTypes(prev => new Set(prev).add(group.type));
+                        }
                       }}
-                      className="p-1.5 text-gray-300 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
-                      title="Archiver"
+                      className={`p-1.5 transition-colors rounded-full ${
+                        viewMode === 'archived' 
+                          ? 'text-gray-400 hover:text-green-500 hover:bg-green-50' 
+                          : 'text-gray-300 hover:text-red-500 hover:bg-red-50'
+                      }`}
+                      title={viewMode === 'archived' ? 'Désarchiver' : 'Archiver'}
                     >
                       <Archive className="w-4 h-4" />
                     </button>
