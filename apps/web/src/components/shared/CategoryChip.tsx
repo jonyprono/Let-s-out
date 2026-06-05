@@ -4,6 +4,7 @@ import { Basketball, Palette, PizzaSlice, HalfMoon, Airplane, Gamepad, Heart, Mu
 const LABEL_TO_ICON: Record<string, React.FC<any>> = {
   'Sport': Basketball,
   'Culture & Art': Palette,
+  'Art & Culture': Palette,
   'Gastronomie': PizzaSlice,
   'Soirées': HalfMoon,
   'Voyages': Airplane,
