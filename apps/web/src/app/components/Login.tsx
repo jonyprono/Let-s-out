@@ -7,6 +7,16 @@ import { CountryPicker } from '@/components/shared/CountryPicker'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import {
   authShell,
+  authTitle,
+  authSubtitle,
+  authLabel,
+  authPhoneInputFlex,
+  authInput,
+  authLink,
+  authPrimaryBtn,
+  authDivider,
+  authDividerText,
+  authSecondaryBtn,
 } from '@/lib/auth-ui'
 
 interface LoginProps {
