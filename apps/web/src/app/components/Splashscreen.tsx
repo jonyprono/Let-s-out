@@ -34,7 +34,7 @@ const onboardingScreens = [
   },
 ]
 
-
+const SLIDES = onboardingScreens.filter(s => s.type === 'slide')
 
 interface SplashscreenProps {
   onComplete: () => void
@@ -156,17 +156,27 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               </div>
 
               {/* Titre fort */}
-              <h2 className="text-[20px] sm:text-[22px] font-bold mb-3 text-center tracking-tight font-sans">
-                <span className="text-[#FF8A00] block">{current.title1}</span>
-                <span className="text-[#FFB800] block">{current.title2}</span>
+              <h2 className="text-[20px] sm:text-[22px] font-bold mb-3 text-center tracking-tight font-sans text-[#FFA800]">
+                <span className="block">{current.title1}</span>
+                <span className="block">{current.title2}</span>
               </h2>
               {/* Description courte — accessible, text-center */}
-              <p className="font-['Inter_Display',sans-serif] text-[13px] sm:text-[14px] font-medium leading-[20px] sm:leading-[22px] text-center text-gray-500 dark:text-gray-400 w-full max-w-[280px] mx-auto h-auto">
+              <p className="font-['Inter_Display',sans-serif] text-[13px] sm:text-[14px] font-medium leading-[20px] sm:leading-[22px] text-center text-gray-600 dark:text-gray-400 w-full max-w-[280px] mx-auto h-auto">
                 {current.description}
               </p>
               
-              {/* Decorative Dash */}
-              <div className="w-[20px] h-[3px] bg-[#FF8A00] mx-auto rounded-full mt-6 mb-2" />
+              {/* Pagination Dots */}
+              <div className="flex justify-center items-center gap-1.5 mt-6 mb-2">
+                {SLIDES.map((_, i) => {
+                  const isActive = (currentIndex - 1) === i;
+                  return (
+                    <div
+                      key={i}
+                      className={`h-[4px] rounded-full transition-all duration-300 ${isActive ? 'w-[24px] bg-[#FFA800]' : 'w-[4px] bg-gray-200'}`}
+                    />
+                  )
+                })}
+              </div>
             </motion.div>
           )}
 
