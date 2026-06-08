@@ -49,13 +49,13 @@ export function Splashscreen() {
     if (token) {
       nav('/home', { replace: true })
     } else if (hasSeenOnboarding) {
-      nav('/welcome', { replace: true })
+      nav('/login', { replace: true })
     }
   }, [token, hasSeenOnboarding, nav])
 
   if (token || hasSeenOnboarding) return null
 
-  return <SplashscreenBase onComplete={() => nav('/welcome', { replace: true })} />
+  return <SplashscreenBase onComplete={() => nav('/login', { replace: true })} />
 }
 
 // ─── Welcome ──────────────────────────────────────────────────────────────────
