@@ -40,7 +40,6 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
     return (
-    return (
       <div className="auth-flow w-full h-full flex flex-col bg-white text-foreground transition-colors overflow-hidden relative">
         <div className="flex-1 px-6 pt-12 flex flex-col overflow-y-auto pb-8 w-full max-w-[400px] mx-auto scrollbar-hide">
           {/* Logo */}
@@ -140,6 +139,5 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
       </div>
-    )
     )
 }
