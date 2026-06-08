@@ -5,11 +5,12 @@ import { COUNTRIES, Country } from '@/lib/countries'
 interface CountryPickerProps {
   value: Country
   onChange: (country: Country) => void
+  className?: string
 }
 
 const LIST_MAX_HEIGHT = 'min(16rem, calc(100dvh - 14rem))'
 
-export function CountryPicker({ value, onChange }: CountryPickerProps) {
+export function CountryPicker({ value, onChange, className }: CountryPickerProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
@@ -55,7 +56,7 @@ export function CountryPicker({ value, onChange }: CountryPickerProps) {
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="auth-country-btn flex items-center gap-[6px] h-[52px] px-[12px] border border-border-primary rounded-[12px] bg-background-white whitespace-nowrap active:opacity-80 transition-colors"
+        className={className || "auth-country-btn flex items-center gap-[6px] h-[52px] px-[12px] border border-border-primary rounded-[12px] bg-background-white whitespace-nowrap active:opacity-80 transition-colors"}
         style={{ minWidth: 96 }}
       >
         {/* Drapeau */}
