@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import { ArrowLeft01Icon, ArrowRight01Icon } from 'hugeicons-react'
 
 /* ─────────────────────────────────────────────────────────────────
    Données des écrans onboarding
@@ -12,27 +11,30 @@ const onboardingScreens = [
   {
     id: 1,
     type: 'slide' as const,
-    title: 'Découvrez',
-    description: 'Créez ou rejoignez des sorties, événements, ou activités locales près de chez vous',
+    title1: 'Découvrez des',
+    title2: 'événements près de vous',
+    description: 'Créez ou rejoignez des événements, sorties, ou activités intéressantes près de vous',
     image: '/splash1.png',
   },
   {
     id: 2,
     type: 'slide' as const,
-    title: 'Partagez',
-    description: 'Financez ensemble vos sorties en groupe via des cagnottes pour et partagez les frais pour mieux en profiter',
+    title1: 'Rencontrez de',
+    title2: 'nouveaux amis intéressants',
+    description: "Faites de nouvelles rencontres inoubliables et de nouveaux amis autour d'intérêts communs",
     image: '/splash2.png',
   },
   {
     id: 3,
     type: 'slide' as const,
-    title: 'Socialisez',
-    description: "Faites de nouvelles rencontres inoubliables et de nouveaux amis autour d'intérêts communs",
+    title1: 'Partagez pour',
+    title2: 'mieux profiter',
+    description: 'Financez vos sorties en groupe via des cagnottes partagées et mutualisez les frais pour mieux en profiter ensemble',
     image: '/splash3.png',
   },
 ]
 
-const SLIDES = onboardingScreens.filter(s => s.type === 'slide')
+
 
 interface SplashscreenProps {
   onComplete: () => void
@@ -61,13 +63,9 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
     }
   }
 
-  const handlePrev = () => {
-    if (currentIndex > 1) setCurrentIndex(currentIndex - 1)
-  }
+
 
   const current = onboardingScreens[currentIndex]
-  /* Index de la slide active pour le Stepper (0-based parmi les slides) */
-  const activeSlide = currentIndex - 1
 
   return (
     <div
@@ -109,9 +107,19 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               className="flex flex-col items-center w-full"
             >
               {/* Wrapper shadow — séparé du clip pour éviter le débordement */}
+              {/* Passer > button for Slide 1 */}
+              {current.id === 1 && (
+                <div className="w-full flex justify-end mb-[2vh]">
+                   <button onClick={onComplete} className="text-[13px] text-gray-500 font-medium tracking-wide">Passer &gt;</button>
+                </div>
+              )}
+              {current.id !== 1 && (
+                <div className="w-full mb-[2vh] h-[20px]" />
+              )}
+
               {/* Wrapper shadow — centré avec dimension exacte */}
               <div
-                className="w-full flex justify-center mb-8"
+                className="w-full flex justify-center mb-[4vh]"
                 style={{
                   paddingLeft: '1.25rem',
                   paddingRight: '1.25rem',
@@ -133,7 +141,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                 >
                   <img
                     src={current.image}
-                    alt={current.title}
+                    alt={current.title1}
                     style={{
                       position: 'absolute',
                       inset: 0,
@@ -147,33 +155,18 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                 </div>
               </div>
 
-              {/* Pagination Dots */}
-              <div className="flex items-center justify-center gap-[10px] mb-8">
-                {SLIDES.map((_, idx) => {
-                  const isActive = idx === activeSlide;
-                  return (
-                    <div
-                      key={idx}
-                      className="flex-shrink-0 rounded-full"
-                      style={{
-                        width: isActive ? '28px' : '8px',
-                        height: '8px',
-                        backgroundColor: isActive ? '#FF7A00' : '#E0E0E0',
-                        transition: 'width 0.35s cubic-bezier(0.4,0,0.2,1), background-color 0.3s ease',
-                      }}
-                    />
-                  );
-                })}
-              </div>
-
               {/* Titre fort */}
-              <h2 className="text-[24px] font-bold text-foreground mb-3 text-center tracking-tight font-sans">
-                {current.title}
+              <h2 className="text-[20px] sm:text-[22px] font-bold mb-3 text-center tracking-tight font-sans">
+                <span className="text-[#FF8A00] block">{current.title1}</span>
+                <span className="text-[#FFB800] block">{current.title2}</span>
               </h2>
               {/* Description courte — accessible, text-center */}
-              <p className="font-['Inter_Display',sans-serif] text-[16px] font-medium leading-[24px] text-center text-gray-700 dark:text-gray-300 w-full max-w-[300px] mx-auto h-auto">
+              <p className="font-['Inter_Display',sans-serif] text-[13px] sm:text-[14px] font-medium leading-[20px] sm:leading-[22px] text-center text-gray-500 dark:text-gray-400 w-full max-w-[280px] mx-auto h-auto">
                 {current.description}
               </p>
+              
+              {/* Decorative Dash */}
+              <div className="w-[20px] h-[3px] bg-[#FF8A00] mx-auto rounded-full mt-6 mb-2" />
             </motion.div>
           )}
 
@@ -182,64 +175,13 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="px-[1rem] pb-[2rem] z-10">
-
-          {/* ── SLIDE 1 : bouton suivant centré ── */}
-          {currentIndex === 1 && (
-            <div className="flex justify-center">
-              <button
-                onClick={handleNext}
-                aria-label="Suivant"
-                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <ArrowRight01Icon className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </button>
-            </div>
-          )}
-
-          {/* ── SLIDE 2 : retour gauche + suivant droite ── */}
-          {currentIndex === 2 && (
-            <div className="flex items-center justify-between">
-              {/* Retour — pill gris clair */}
-              <button
-                onClick={handlePrev}
-                aria-label="Précédent"
-                className="h-[40px] px-[24px] bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-[24px] flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <ArrowLeft01Icon className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
-              </button>
-              {/* Suivant — pill orange */}
-              <button
-                onClick={handleNext}
-                aria-label="Suivant"
-                className="h-[40px] px-[24px] rounded-[24px] bg-action-primary flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <ArrowRight01Icon className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </button>
-            </div>
-          )}
-
-          {/* ── SLIDE 3 (dernière) : retour + Commencer flex-1 ── */}
-          {currentIndex === onboardingScreens.length - 1 && (
-            <div className="flex items-center gap-[8px]">
-              {/* Retour — pill gris clair */}
-              <button
-                onClick={handlePrev}
-                aria-label="Précédent"
-                className="h-[40px] px-[24px] bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-[24px] flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <ArrowLeft01Icon className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
-              </button>
-              {/* Commencer — pill orange pleine largeur */}
-              <button
-                onClick={handleNext}
-                className="flex-1 h-[40px] rounded-[24px] bg-action-primary text-text-inverse font-semibold text-[15px] flex items-center justify-center active:scale-[0.97] transition-transform"
-              >
-                Commencer
-              </button>
-            </div>
-          )}
-
+        <div className="px-[1rem] pb-[1rem] sm:pb-[1.5rem] z-10 w-full max-w-[400px] mx-auto">
+          <button
+            onClick={handleNext}
+            className="w-full h-[48px] rounded-[24px] bg-[#F58220] hover:bg-[#E6781D] text-white font-semibold text-[16px] flex items-center justify-center active:scale-[0.97] transition-transform"
+          >
+            {currentIndex === onboardingScreens.length - 1 ? 'Commencer' : 'Suivant'}
+          </button>
         </div>
       )}
 
