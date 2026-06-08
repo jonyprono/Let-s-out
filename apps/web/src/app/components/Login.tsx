@@ -66,7 +66,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
               onChange={handlePhoneChange}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
               placeholder="00 00 00 00 00"
-              className="flex-1 min-w-0 h-full text-[16px] bg-transparent text-gray-900 placeholder:text-[#718096] focus:outline-none"
+              className="flex-1 min-w-0 h-full text-[16px] bg-transparent text-gray-900 placeholder-[#718096] focus:outline-none"
             />
           </div>
 
@@ -125,7 +125,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             Se connecter avec Google
           </button>
 
-          <div className="mt-auto flex flex-col items-center justify-center gap-4 text-center pb-2">
+          <div className="mt-auto flex flex-col items-center justify-center gap-4 text-center pb-2 w-full">
             <p className="text-[14px] text-gray-700">
               Vous êtes nouveau sur Let's Out ?{' '}
               <button onClick={onSignup} className="text-[#FF951A] hover:underline underline-offset-2 font-medium transition-all">
@@ -133,8 +133,8 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
               </button>
             </p>
             <div className="w-full h-[1px] bg-[#E2E8F0] my-2" />
-            <p className="text-[12px] text-[#718096] max-w-[300px]">
-              En continuant, vous acceptez nos <button className="text-[#FF951A] hover:underline">Conditions d'Utilisation</button> et notre <button className="text-[#FF951A] hover:underline">Politique de Confidentialité</button>
+            <p className="text-[11px] text-[#718096] w-full px-2 leading-relaxed">
+              En continuant, vous acceptez nos <button className="text-[#FF951A] hover:underline whitespace-nowrap">Conditions d'Utilisation</button> et notre <button className="text-[#FF951A] hover:underline whitespace-nowrap">Politique de Confidentialité</button>
             </p>
           </div>
         </div>
