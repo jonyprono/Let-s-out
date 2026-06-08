@@ -46,8 +46,7 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
     setOpen(false)
   }
 
-  /* ── Libellé affiché : "BJ (229)" — format exact Figma ── */
-  const cca2  = value.cca2  || ''
+  /* ── Libellé affiché : "(229)" — format exact Figma ── */
   const dialCode = value.code.replace('+', '')
 
   return (
@@ -61,9 +60,9 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
       >
         {/* Drapeau */}
         <span className="text-[18px] leading-none">{value.flag}</span>
-        {/* Code pays + indicatif — "BJ (229)" */}
+        {/* Code pays + indicatif — "(229)" */}
         <span className="auth-country-btn">
-          {cca2}&nbsp;({dialCode})
+          ({dialCode})
         </span>
         {/* Flèche Iconoir — Small 16px stroke 1 */}
         <ArrowDown01Icon
