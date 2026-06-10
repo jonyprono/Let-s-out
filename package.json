@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "npm@10.8.1",
   "scripts": {
-    "preinstall": "npx -y pnpm@9.15.4 install",
+    "preinstall": "node -e \"if(process.env.SKIP_PREINSTALL)process.exit(0); require('child_process').execSync('npx -y pnpm@9.15.4 install', {stdio:'inherit', env: {...process.env, SKIP_PREINSTALL: '1'}})\"",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
@@ -18,5 +18,9 @@
   },
   "devDependencies": {
     "turbo": "^2.0.0"
-  }
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }
