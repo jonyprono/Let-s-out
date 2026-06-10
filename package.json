@@ -3,8 +3,8 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "packageManager": "pnpm@9.0.0",
   "scripts": {
+    "preinstall": "node -e \"const fs=require('fs'); if(fs.existsSync('.pnpm-lock.yaml')){fs.renameSync('.pnpm-lock.yaml', 'pnpm-lock.yaml');} require('child_process').execSync('npx -y pnpm@9.15.4 install', {stdio:'inherit'});\"",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
