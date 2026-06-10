@@ -3,8 +3,9 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "packageManager": "npm@10.8.1",
   "scripts": {
-    "preinstall": "node -e \"const fs=require('fs'); if(fs.existsSync('.pnpm-lock.yaml')){fs.renameSync('.pnpm-lock.yaml', 'pnpm-lock.yaml');} require('child_process').execSync('npx -y pnpm@9.15.4 install', {stdio:'inherit'});\"",
+    "preinstall": "npx -y pnpm@9.15.4 install",
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
