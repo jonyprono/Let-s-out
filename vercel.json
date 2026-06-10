@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm i -g pnpm@9.15.4 && pnpm install",
+  "installCommand": "corepack enable && corepack prepare pnpm@9.15.4 --activate && pnpm install --no-frozen-lockfile",
   "build": {
     "env": {
       "ENABLE_EXPERIMENTAL_COREPACK": "1"
