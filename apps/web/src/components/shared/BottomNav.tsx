@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router'
-import { Search01Icon as Search, UserIcon as User, UserMultiple02Icon as Group, Comment01Icon as ChatBubble } from 'hugeicons-react'
+import { Home01Icon as Home, Search01Icon as Search, UserIcon as User, UserMultiple02Icon as Group, Comment01Icon as ChatBubble } from 'hugeicons-react'
 import { useConversations } from '@/features/chat/api'
 
 // Custom icon: groupe d'événements (3 silhouettes)
@@ -38,8 +38,8 @@ type NavTab = {
 }
 
 const leftTabs: NavTab[] = [
-  { path: '/home',      icon: Search,        label: 'Explorer' },
-  { path: '/my-events', isCustom: true,      label: 'Evénements' },
+  { path: '/home',      icon: Home,          label: 'Accueil' },
+  { path: '/explorer',  icon: Search,        label: 'Explorer' },
 ]
 const rightTabs: NavTab[] = [
   { path: '/messages',  icon: ChatBubble,    label: 'Messages' },

@@ -1184,16 +1184,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <p className="text-[13px] text-gray-400 mb-6">Définissez le montant à atteindre</p>
 
                 <label className="text-[13px] font-semibold text-gray-700 mb-2 block">Montant cible</label>
-                <div className="flex gap-2 items-center mb-5">
+                <div className="flex gap-2 items-center mb-5 max-w-full">
                   <input
                     type="number"
                     min={1}
                     value={poolTarget}
                     onChange={e => setPoolTarget(e.target.value)}
                     placeholder="150 000"
-                    className="flex-1 px-200 py-150.5 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
+                    className="flex-1 min-w-0 px-200 py-150.5 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
                   />
-                  <div className="px-200 py-150.5 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 flex-shrink-0 flex items-center gap-1">
+                  <div className="px-200 py-150.5 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 w-[85px] shrink-0 flex items-center justify-center gap-1">
                     F CFA <ChevronLeft className="w-3 h-3 rotate-[-90deg] text-gray-400" />
                   </div>
                 </div>
@@ -1283,16 +1283,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     <label className="text-[13px] font-semibold text-gray-700 mb-2 block">
                       {poolMode === 'minimum' ? 'Montant minimum (F CFA)' : 'Montant fixe par participant (F CFA)'}
                     </label>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex gap-2 items-center max-w-full">
                       <input
                         type="number"
                         min={1}
                         value={poolMinAmount}
                         onChange={e => setPoolMinAmount(e.target.value)}
                         placeholder="Ex: 5 000"
-                        className="flex-1 px-200 py-150.5 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
+                        className="flex-1 min-w-0 px-200 py-150.5 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
                       />
-                      <div className="px-200 py-150.5 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 flex-shrink-0">
+                      <div className="px-200 py-150.5 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 w-[85px] shrink-0 flex items-center justify-center">
                         F CFA
                       </div>
                     </div>

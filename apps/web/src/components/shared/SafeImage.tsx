@@ -1,12 +1,24 @@
 import { useState, useEffect } from 'react'
 
-// ── Computed once at module load — never re-calculated per render ─────────────
 const API_BASE = (() => {
   const envUrl = import.meta.env.VITE_API_URL as string | undefined
-  if (envUrl) return envUrl.replace('/api/v1', '')
-  if (typeof window !== 'undefined' && window.location?.origin) {
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl.replace(/\/api\/v1\/?$/, '')
+  }
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
     const origin = window.location.origin
+    if (origin.includes('vercel.app') || origin.includes('let-s-out-web')) {
+      return 'https://let-s-out.onrender.com'
+    }
     if (origin.includes(':3000')) return origin.replace(':3000', ':3001')
+    
+    const isCap = () => {
+      try { return !!(window as any).Capacitor?.isNativePlatform?.() } catch { return false }
+    }
+    if (isCap() && process.env.NODE_ENV === 'production') {
+      return 'https://let-s-out.onrender.com'
+    }
+    
     return origin
   }
   return 'http://localhost:3001'
