@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, indexedDBLocalPersistence, browserLocalPersistence, initializeAuth } from "firebase/auth";
+import { Capacitor } from "@capacitor/core";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAm1SfhGln_Zc7ZboqFT74RfwLGaBn0hYk",
@@ -12,4 +13,9 @@ const firebaseConfig = {
 };
 
 export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// Use indexedDB on native (Capacitor) for persistence, localStorage on web
+export const auth = Capacitor.isNativePlatform()
+  ? initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] })
+  : getAuth(app);
+

@@ -123,6 +123,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@capacitor-firebase/authentication':
+        specifier: ^8.3.0
+        version: 8.3.0(@capacitor/core@8.3.1)(firebase@12.12.1)
       '@capacitor-mlkit/barcode-scanning':
         specifier: ^8.1.0
         version: 8.1.0(@capacitor/core@8.3.1)
@@ -455,6 +458,15 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@capacitor-firebase/authentication@8.3.0':
+    resolution: {integrity: sha512-ecbZxyzNVDOE6tE0iaAD9fZZh5GuoKPq//b+Zkx4k51/P6NNksst2IpbdlZHHAOF5jGWVPrgXec8ujz3CiRd9Q==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+      firebase: ^12.6.0
+    peerDependenciesMeta:
+      firebase:
+        optional: true
 
   '@capacitor-mlkit/barcode-scanning@8.1.0':
     resolution: {integrity: sha512-lhOYHZINLOCT0i5YSbSMkouik3zh0BncJouumNTgXCT0/533Z4733jAX9zv+nEd++bE8QHeUl2g0NrewreumnQ==}
@@ -4635,6 +4647,12 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@capacitor-firebase/authentication@8.3.0(@capacitor/core@8.3.1)(firebase@12.12.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
+    optionalDependencies:
+      firebase: 12.12.1
 
   '@capacitor-mlkit/barcode-scanning@8.1.0(@capacitor/core@8.3.1)':
     dependencies:

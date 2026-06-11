@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "259737951981",
+    "project_id": "let-s-out",
+    "storage_bucket": "let-s-out.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:259737951981:android:4b82f457f478ee26deb6e4",
+        "android_client_info": {
+          "package_name": "com.letsout.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAGQcTSBDJ2X3ixqjaM7l6DOsN_9yQHx8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,6 +4,8 @@ import { useSendOtp, useCheckTarget, useCheckOtp, useResetPassword } from '@/fea
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import { Capacitor } from '@capacitor/core'
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 
 declare global {
   interface Window { recaptchaVerifier: any; }
@@ -56,6 +58,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
+  const [nativeVerificationId, setNativeVerificationId] = useState<string>('')
   const [idToken, setIdToken] = useState<string>('')
   const [isFirebaseSending, setIsFirebaseSending] = useState(false)
   const [isFirebaseVerifying, setIsFirebaseVerifying] = useState(false)
@@ -91,12 +94,24 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             if (currentChannel === 'sms') {
               try {
                 setIsFirebaseSending(true)
-                if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
-                const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
-                setConfirmationResult(confirmation); setStep(2); setCountdown(59)
-                setTimeout(() => otpRefs.current[0]?.focus(), 100)
+                if (Capacitor.isNativePlatform()) {
+                  const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
+                    setNativeVerificationId(event.verificationId)
+                  })
+                  await FirebaseAuthentication.signInWithPhoneNumber({
+                    phoneNumber: fullPhone,
+                  })
+                  setStep(2); setCountdown(59)
+                  setTimeout(() => otpRefs.current[0]?.focus(), 100)
+                  setTimeout(() => listener.remove(), 60000)
+                } else {
+                  if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
+                  const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
+                  setConfirmationResult(confirmation); setStep(2); setCountdown(59)
+                  setTimeout(() => otpRefs.current[0]?.focus(), 100)
+                }
               } catch {
-                if (window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
+                if (!Capacitor.isNativePlatform() && window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
                 setConfirmationResult(null)
                 sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
                   onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
@@ -116,12 +131,22 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
     } else if (step === 2) {
       const codeStr = otp.join('')
       if (codeStr.length < 6) return
-      if (currentChannel === 'sms' && confirmationResult) {
+      if (currentChannel === 'sms' && (confirmationResult || nativeVerificationId)) {
         setIsFirebaseVerifying(true)
         try {
-          const result = await confirmationResult.confirm(codeStr)
-          const token = await result.user.getIdToken()
-          setIdToken(token); setStep(3)
+          if (Capacitor.isNativePlatform() && nativeVerificationId) {
+            await FirebaseAuthentication.confirmVerificationCode({
+              verificationId: nativeVerificationId,
+              verificationCode: codeStr,
+            })
+            const tokenResult = await FirebaseAuthentication.getIdToken()
+            if (tokenResult.token) setIdToken(tokenResult.token)
+            setStep(3)
+          } else if (confirmationResult) {
+            const result = await confirmationResult.confirm(codeStr)
+            const token = await result.user.getIdToken()
+            setIdToken(token); setStep(3)
+          }
         } catch { toast.error('Code SMS invalide ou expiré') }
         finally { setIsFirebaseVerifying(false) }
       } else {
@@ -131,7 +156,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         })
       }
     } else if (step === 3) {
-      const isFirebaseFlow = currentChannel === 'sms' && !!idToken
+      const isFirebaseFlow = currentChannel === 'sms' && (!!idToken || !!nativeVerificationId)
       resetPassword({
         target: fullPhone,
         code: isFirebaseFlow ? undefined : otp.join(''),
@@ -160,12 +185,24 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
     setOtp(['', '', '', '', '', ''])
     try {
       setIsFirebaseSending(true)
-      if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
-      const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
-      setConfirmationResult(confirmation); setCountdown(59); setCurrentChannel('sms')
-      toast.success('Code renvoyé par SMS'); setTimeout(() => otpRefs.current[0]?.focus(), 100)
+      if (Capacitor.isNativePlatform()) {
+        const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
+          setNativeVerificationId(event.verificationId)
+        })
+        await FirebaseAuthentication.signInWithPhoneNumber({
+          phoneNumber: fullPhone,
+        })
+        setTimeout(() => listener.remove(), 60000)
+        setCountdown(59); setCurrentChannel('sms')
+        toast.success('Code renvoyé par SMS'); setTimeout(() => otpRefs.current[0]?.focus(), 100)
+      } else {
+        if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
+        const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
+        setConfirmationResult(confirmation); setCountdown(59); setCurrentChannel('sms')
+        toast.success('Code renvoyé par SMS'); setTimeout(() => otpRefs.current[0]?.focus(), 100)
+      }
     } catch {
-      if (window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
+      if (!Capacitor.isNativePlatform() && window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
       setConfirmationResult(null)
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
         onSuccess: () => { setCountdown(59); toast.success('Code renvoyé'); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
