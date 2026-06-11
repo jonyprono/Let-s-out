@@ -194,8 +194,9 @@ export function Signup({ onBack }: SignupProps) {
                   setConfirmationResult(confirmation); setStep(2); setCountdown(59)
                   setTimeout(() => otpRefs.current[0]?.focus(), 100)
                 }
-              } catch (err) {
+              } catch (err: any) {
                 console.error("Firebase sending error:", err)
+                toast.error(`[Firebase Error] ${err?.message || err}`)
                 if (!Capacitor.isNativePlatform() && window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
                 setConfirmationResult(null)
                 sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
