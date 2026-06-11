@@ -283,19 +283,7 @@ export function LandingPage() {
             Rencontrez des gens,<br />
             <span>vivez des événements</span>
           </h1>
-          <p>
-            <strong>Let's Out</strong> est une application mobile sociale qui vous permet de créer,
-            découvrir et rejoindre des événements et activités près de chez vous — sorties, soirées,
-            randonnées, jeux de société, et bien plus. Rencontrez de nouvelles personnes partageant
-            vos centres d'intérêt et mutualisez les frais en groupe.
-          </p>
-          <Link to="/app" className="lp-btn-hero">Rejoindre Let's Out →</Link>
-        </section>
-
-        {/* ── Features ───────────────────────────────────────────── */}
-        <section className="lp-features">
-          <h2>Comment ça marche ?</h2>
-          <div className="lp-grid">
+          <div className="lp-grid" style={{ marginBottom: '2.5rem', marginTop: '1.5rem', textAlign: 'left' }}>
             {[
               { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4cd/512.webp', title: 'Découvrir', desc: "Explorez les événements publics ou privés organisés autour de vous sur la carte interactive." },
               { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp', title: 'Organiser', desc: "Créez une sortie ou une activité en quelques secondes et invitez d'autres personnes." },
@@ -309,6 +297,8 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+
+          <Link to="/app" className="lp-btn-hero">Rejoindre Let's Out →</Link>
         </section>
 
         {/* ── About ──────────────────────────────────────────────── */}
