@@ -2,17 +2,19 @@ import { v2 as cloudinary } from 'cloudinary';
 
 // Configure Cloudinary. It will automatically pick up CLOUDINARY_URL from env if set,
 // or individual variables if passed.
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+if (process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_URL) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 /**
- * Uploads a readable stream (e.g. from fastify multipart) directly to Cloudinary.
+ * Uploads a Buffer directly to Cloudinary.
  */
-export const uploadStreamToCloudinary = (
-  stream: NodeJS.ReadableStream,
+export const uploadBufferToCloudinary = (
+  buffer: Buffer,
   folder: string,
   filename: string
 ): Promise<string> => {
@@ -35,6 +37,6 @@ export const uploadStreamToCloudinary = (
       }
     );
 
-    stream.pipe(uploadStream);
+    uploadStream.end(buffer);
   });
 };

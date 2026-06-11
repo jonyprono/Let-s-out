@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
-import { uploadStreamToCloudinary } from '../../services/cloudinary.service'
+import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 
 export default async function uploadRoutes(app: FastifyInstance) {
   app.addHook('preHandler', app.authenticate)
@@ -16,7 +16,8 @@ export default async function uploadRoutes(app: FastifyInstance) {
     const filename = `${uuidv4()}${ext}`
     
     try {
-      const url = await uploadStreamToCloudinary(data.file, 'chat_uploads', filename)
+      const buffer = await data.toBuffer()
+      const url = await uploadBufferToCloudinary(buffer, 'chat_uploads', filename)
       return reply.send({ url })
     } catch (err) {
       console.error('Upload error', err)

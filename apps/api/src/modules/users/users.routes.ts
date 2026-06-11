@@ -6,7 +6,7 @@ import path from 'path'
 import { pipeline } from 'stream/promises'
 import { v4 as uuidv4 } from 'uuid'
 import { createAndSendNotification } from '../notifications/notifications.routes'
-import { uploadStreamToCloudinary } from '../../services/cloudinary.service'
+import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 
 export default async function usersRoutes(app: FastifyInstance) {
   // All routes require authentication
@@ -120,7 +120,8 @@ export default async function usersRoutes(app: FastifyInstance) {
         const filename = `${part.fieldname}-${uuidv4()}${ext}`
         const folder = `kyc/${sub}`
         
-        const url = await uploadStreamToCloudinary(part.file, folder, filename)
+        const buffer = await part.toBuffer()
+        const url = await uploadBufferToCloudinary(buffer, folder, filename)
         saved[part.fieldname] = url
       }
 
