@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Politique de confidentialité — Let's Out</title>
+  <meta name="description" content="Politique de confidentialité de l'application Let's Out. Découvrez comment nous collectons, utilisons et protégeons vos données personnelles." />
+  <link rel="icon" type="image/webp" href="/icons/icon-192.webp" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.webp" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; background: #fff; }
+    a { color: #F58220; text-decoration: none; }
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem; border-bottom: 1px solid #f0f0f0;
+      background: #fff; position: sticky; top: 0; z-index: 10;
+    }
+    nav img { height: 40px; width: 40px; object-fit: cover; border-radius: 10px; }
+    nav a { font-size: 0.85rem; color: #666; }
+    .container { max-width: 760px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+    .meta { color: #888; font-size: 0.85rem; margin-bottom: 2rem; line-height: 1.8; }
+    h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .section { margin-bottom: 2.5rem; }
+    .section h2 {
+      font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem;
+      border-left: 3px solid #F58220; padding-left: 0.75rem;
+    }
+    .section p, .section li { font-size: 0.93rem; color: #444; line-height: 1.8; margin-bottom: 0.5rem; }
+    .section ul { padding-left: 1.5rem; }
+    .footer-links { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #f0f0f0; font-size: 0.85rem; color: #aaa; }
+    .footer-links a { color: #aaa; margin-right: 1rem; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/"><img src="/icons/icon-192.webp" alt="Let's Out" /></a>
+    <a href="/">← Retour à l'accueil</a>
+  </nav>
+
+  <div class="container">
+    <h1>Politique de confidentialité</h1>
+    <div class="meta">
+      <strong>Dernière mise à jour :</strong> Juin 2025<br />
+      <strong>Application :</strong> Let's Out (Project ID: let-s-out)<br />
+      <strong>Contact :</strong> <a href="mailto:contact@letsout.app">contact@letsout.app</a>
+    </div>
+
+    <div class="section">
+      <h2>1. Présentation de l'application</h2>
+      <p>
+        <strong>Let's Out</strong> est une application mobile sociale qui permet aux utilisateurs de créer,
+        découvrir et rejoindre des événements et activités locales. L'application facilite les rencontres
+        entre personnes partageant des centres d'intérêt communs, et propose un système de cagnotte partagée
+        pour financer les sorties en groupe.
+      </p>
+      <p>L'application est disponible sur iOS et Android et accessible via le web.</p>
+    </div>
+
+    <div class="section">
+      <h2>2. Responsable du traitement</h2>
+      <p>
+        Le responsable du traitement est l'éditeur de l'application <strong>Let's Out</strong>.
+        Contact : <a href="mailto:contact@letsout.app">contact@letsout.app</a>
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>3. Données collectées</h2>
+      <ul>
+        <li><strong>Numéro de téléphone</strong> — pour l'authentification OTP via Firebase Authentication. Aucun mot de passe n'est stocké.</li>
+        <li><strong>Données de profil</strong> — nom d'affichage, pseudo, photo de profil que vous fournissez.</li>
+        <li><strong>Données d'événements</strong> — événements créés ou rejoints, date, lieu, description.</li>
+        <li><strong>Messages</strong> — conversations dans la messagerie intégrée.</li>
+        <li><strong>Données de paiement</strong> — traitées via des prestataires sécurisés, non stockées directement par Let's Out.</li>
+        <li><strong>Données techniques</strong> — identifiant d'appareil, logs d'erreurs pour améliorer la stabilité.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>4. Utilisation des données</h2>
+      <ul>
+        <li>Vous authentifier de manière sécurisée via OTP</li>
+        <li>Afficher votre profil public aux autres utilisateurs</li>
+        <li>Vous permettre de créer et rejoindre des événements</li>
+        <li>Gérer la messagerie et les notifications</li>
+        <li>Améliorer les fonctionnalités et la stabilité de l'application</li>
+      </ul>
+      <p><strong>Vos données ne sont jamais vendues à des tiers</strong> ni utilisées à des fins publicitaires ou pour entraîner des modèles d'IA.</p>
+    </div>
+
+    <div class="section">
+      <h2>5. Authentification OTP et Google / Firebase</h2>
+      <p>
+        Let's Out utilise <strong>Firebase Authentication</strong> (service de Google) pour gérer
+        l'authentification par numéro de téléphone. Un code OTP est envoyé par SMS pour vérifier
+        votre identité. Firebase opère selon la <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">politique de confidentialité de Google</a>.
+      </p>
+      <p>
+        Nous proposons également la connexion via <strong>Google Sign-In</strong>. Dans ce cas, nous accédons
+        uniquement à votre nom, adresse e-mail et photo de profil Google, utilisés uniquement pour identifier
+        votre compte Let's Out.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>6. Partage des données</h2>
+      <ul>
+        <li><strong>Firebase / Google</strong> — authentification et stockage sécurisé</li>
+        <li><strong>Cloudinary</strong> — stockage des photos et médias uploadés</li>
+        <li><strong>Prestataires de paiement</strong> — traitement sécurisé des transactions</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>7. Durée de conservation</h2>
+      <p>
+        Vos données sont conservées tant que votre compte est actif. En cas de suppression, toutes vos
+        données personnelles sont supprimées sous 30 jours (sauf obligations légales).
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>8. Sécurité</h2>
+      <ul>
+        <li>Authentification sans mot de passe (OTP uniquement)</li>
+        <li>Communications chiffrées via HTTPS/TLS</li>
+        <li>Accès restreint aux données</li>
+        <li>Stockage via l'infrastructure sécurisée Firebase (Google Cloud)</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>9. Vos droits (RGPD)</h2>
+      <ul>
+        <li><strong>Droit d'accès</strong> — consulter vos données</li>
+        <li><strong>Droit de rectification</strong> — corriger des données inexactes</li>
+        <li><strong>Droit à l'effacement</strong> — demander la suppression de votre compte</li>
+        <li><strong>Droit à la portabilité</strong> — recevoir vos données dans un format structuré</li>
+        <li><strong>Droit d'opposition</strong> — vous opposer à certains traitements</li>
+      </ul>
+      <p>Pour exercer ces droits : <a href="mailto:contact@letsout.app">contact@letsout.app</a></p>
+    </div>
+
+    <div class="section">
+      <h2>10. Cookies</h2>
+      <p>
+        L'application mobile Let's Out n'utilise pas de cookies publicitaires. Des tokens d'authentification
+        sont stockés localement sur votre appareil pour maintenir votre session.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>11. Modifications</h2>
+      <p>
+        Nous pouvons mettre à jour cette politique à tout moment. Vous serez informé des modifications
+        importantes via l'application.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>12. Contact</h2>
+      <p>
+        📧 <a href="mailto:contact@letsout.app">contact@letsout.app</a>
+      </p>
+    </div>
+
+    <div class="footer-links">
+      <a href="/">← Retour à l'accueil</a>
+      <a href="/terms">Conditions d'utilisation</a>
+    </div>
+  </div>
+
+</body>
+</html>

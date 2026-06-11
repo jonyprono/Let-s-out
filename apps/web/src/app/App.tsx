@@ -36,6 +36,7 @@ import { AppLayout } from '@/app/layouts/AppLayout'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { PrivacyPolicy } from '@/app/components/PrivacyPolicy'
 import { TermsOfService } from '@/app/components/TermsOfService'
+import { LandingPage } from '@/app/components/LandingPage'
 
 // All screens via adapter bridge (prop-based → React Router)
 import {
@@ -92,7 +93,7 @@ function CapacitorBackButton() {
   useEffect(() => {
     const handleBackButton = ({ canGoBack }: { canGoBack: boolean }) => {
       // If we are on the main tab screens or login, exit the app
-      const exitRoutes = ['/', '/home', '/login', '/welcome']
+      const exitRoutes = ['/app', '/home', '/login', '/welcome']
       if (exitRoutes.includes(location.pathname) || !canGoBack) {
         CapacitorApp.exitApp()
       } else {
@@ -120,9 +121,12 @@ export default function App() {
         <CapacitorBackButton />
         <UserProfileProvider>
         <Routes>
+          {/* Public landing page (homepage for Google OAuth verification) */}
+          <Route path="/" element={<LandingPage />} />
+
           {/* Splash + Guest only */}
           <Route element={<AuthLayout />}>
-            <Route path="/" element={<Splashscreen />} />
+            <Route path="/app" element={<Splashscreen />} />
             <Route path="/welcome" element={<GuestRoute><Welcome /></GuestRoute>} />
             <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
             <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
@@ -174,7 +178,7 @@ export default function App() {
           </Route>
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>
         <CallOverlay />
         </UserProfileProvider>

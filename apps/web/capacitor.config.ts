@@ -32,14 +32,14 @@ const LOCAL_IP = getLocalIP()
 
 const config: CapacitorConfig = {
   appId: 'com.letsout.app',
-  appName: 'Lets Out',
+  appName: "Let's Out",
   webDir: 'dist',
   server: isProduction
     ? {
-        // Production: load the live Vercel web app
-        url: 'https://let-s-out-web.vercel.app',
+        // Production: load the live web app
+        url: 'https://letsout.app',
         cleartext: false,
-        allowNavigation: ['let-s-out.onrender.com', 'let-s-out-web.vercel.app'],
+        allowNavigation: ['letsout.app', 'let-s-out.onrender.com', 'let-s-out-web.vercel.app'],
       }
     : {
         // Development: point to local Vite dev server for live-reload

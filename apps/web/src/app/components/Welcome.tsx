@@ -15,7 +15,7 @@ export function Welcome({ onLogin, onSignup }: WelcomeProps) {
         <div className="mb-[2rem] flex justify-center w-full">
           <img
             src="/logoci.png"
-            alt="Lets Out"
+            alt="Let's Out"
             className="w-[180px] h-auto object-contain"
           />
         </div>

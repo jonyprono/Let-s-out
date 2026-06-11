@@ -66,7 +66,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
         {/* Logo */}
         <div className="flex justify-center mb-3">
-          <img src="/logo.png" alt="Lets Out Logo" className="w-[80px] h-auto object-contain" />
+          <img src="/logo.png" alt="Let's Out" className="w-[80px] h-auto object-contain" />
         </div>
 
         <h1 className="text-[24px] font-bold text-[#1A1A1A] mb-1.5 text-center tracking-tight">Connectez-vous</h1>

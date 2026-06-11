@@ -90,7 +90,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               {/* Logo Lets Out (image PNG avec icône + texte) */}
               <img
                 src="/logo.png"
-                alt="Lets Out"
+                alt="Let's Out"
                 className="w-[220px] h-auto object-contain"
               />
             </motion.div>

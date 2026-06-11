@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Let's Out — Découvrez des événements près de vous</title>
+  <meta name="description" content="Let's Out est une application mobile sociale pour créer, découvrir et rejoindre des événements et activités locales. Rencontrez de nouvelles personnes et partagez des expériences authentiques." />
+  <meta name="application-name" content="Let's Out" />
+  <meta property="og:title" content="Let's Out — Application sociale d'événements" />
+  <meta property="og:description" content="Créez, découvrez et rejoignez des événements près de chez vous. Rencontrez de nouvelles personnes autour d'activités partagées." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/webp" href="/icons/icon-192.webp" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.webp" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1a1a1a; background: #fff; }
+    a { text-decoration: none; }
+
+    /* Nav */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem; border-bottom: 1px solid #f0f0f0;
+      position: sticky; top: 0; background: #fff; z-index: 100;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    }
+    nav img { height: 40px; width: 40px; object-fit: cover; border-radius: 10px; }
+    .nav-links { display: flex; gap: 1rem; align-items: center; }
+    .nav-links a { font-size: 0.85rem; color: #666; }
+    .btn-primary {
+      background: #F58220; color: #fff; padding: 0.5rem 1.2rem;
+      border-radius: 24px; font-size: 0.85rem; font-weight: 600;
+    }
+    .btn-primary:hover { background: #e07318; }
+
+    /* Hero */
+    .hero {
+      min-height: 90vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 3rem 1.5rem 2rem;
+      background: linear-gradient(160deg, #fff8f2 0%, #fff 60%);
+      text-align: center;
+    }
+    .hero img { width: min(200px, 55vw); margin-bottom: 2rem; }
+    .hero h1 { font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 800; line-height: 1.15; margin-bottom: 1rem; }
+    .hero h1 span { color: #F58220; }
+    .hero p { font-size: clamp(1rem, 2.5vw, 1.2rem); color: #555; line-height: 1.65; max-width: 560px; margin-bottom: 2.5rem; }
+    .btn-hero {
+      display: inline-block; background: #F58220; color: #fff;
+      padding: 0.85rem 2rem; border-radius: 32px; font-size: 1rem;
+      font-weight: 700; box-shadow: 0 4px 18px rgba(245,130,32,0.35);
+    }
+
+    /* Features */
+    .features { padding: 4rem 1.5rem; background: #fafafa; }
+    .features h2 { text-align: center; font-size: clamp(1.4rem,4vw,2rem); font-weight: 700; margin-bottom: 2.5rem; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem; max-width: 960px; margin: 0 auto;
+    }
+    .card {
+      background: #fff; border-radius: 16px; padding: 1.75rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    .card .emoji { font-size: 2rem; display: block; margin-bottom: 0.75rem; }
+    .card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .card p { font-size: 0.9rem; color: #666; line-height: 1.6; }
+
+    /* About */
+    .about { padding: 4rem 1.5rem; max-width: 760px; margin: 0 auto; }
+    .about h2 { font-size: clamp(1.3rem, 3.5vw, 1.8rem); font-weight: 700; margin-bottom: 1rem; }
+    .about p { font-size: 1rem; color: #555; line-height: 1.75; margin-bottom: 1rem; }
+    .about a { color: #F58220; }
+
+    /* Footer */
+    footer {
+      background: #1a1a1a; color: #aaa;
+      padding: 2.5rem 1.5rem; text-align: center;
+    }
+    footer img { height: 52px; width: 52px; object-fit: cover; border-radius: 14px; margin-bottom: 1rem; }
+    footer p { font-size: 0.85rem; margin-bottom: 1rem; }
+    .footer-links { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .footer-links a { color: #aaa; font-size: 0.85rem; }
+    .copyright { font-size: 0.75rem; color: #666; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .nav-links a:not(.btn-primary) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <img src="/icons/icon-192.webp" alt="Let's Out" />
+    <div class="nav-links">
+      <a href="/privacy">Confidentialité</a>
+      <a href="/terms">CGU</a>
+      <a href="/app" class="btn-primary">Ouvrir l'app</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <img src="/icons/icon-192.webp" alt="Let's Out — Application d'événements sociaux" style="border-radius: 22px;" />
+    <h1>Rencontrez des gens,<br /><span>vivez des événements</span></h1>
+    <p>
+      <strong>Let's Out</strong> est une application mobile sociale qui vous permet de créer,
+      découvrir et rejoindre des événements et activités près de chez vous — sorties, soirées,
+      randonnées, jeux de société, et bien plus. Rencontrez de nouvelles personnes partageant
+      vos centres d'intérêt et mutualisez les frais en groupe.
+    </p>
+    <a href="/app" class="btn-hero">Rejoindre Let's Out →</a>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <h2>Comment ça marche ?</h2>
+    <div class="features-grid">
+      <div class="card">
+        <span class="emoji">📍</span>
+        <h3>Découvrez près de vous</h3>
+        <p>Explorez les événements publics ou privés organisés autour de vous grâce à la carte interactive de l'application.</p>
+      </div>
+      <div class="card">
+        <span class="emoji">🎉</span>
+        <h3>Créez votre événement</h3>
+        <p>Organisez une sortie, une soirée ou une activité en quelques secondes. Définissez le lieu, la date, le nombre de participants et le tarif.</p>
+      </div>
+      <div class="card">
+        <span class="emoji">👥</span>
+        <h3>Faites des rencontres</h3>
+        <p>Connectez-vous avec d'autres participants, envoyez des demandes d'amis et échangez via la messagerie intégrée.</p>
+      </div>
+      <div class="card">
+        <span class="emoji">💰</span>
+        <h3>Partagez les frais</h3>
+        <p>Financez vos sorties en groupe grâce au système de cagnotte partagée intégré à l'application.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="about">
+    <h2>À propos de Let's Out</h2>
+    <p>
+      <strong>Let's Out</strong> est une plateforme sociale événementielle conçue pour faciliter les
+      rencontres authentiques en dehors des réseaux sociaux traditionnels. Disponible sur iOS et Android,
+      l'application connecte des personnes autour d'activités partagées dans leur ville.
+    </p>
+    <p>
+      L'authentification sur Let's Out utilise votre numéro de téléphone via un code OTP sécurisé
+      (authentification Firebase). Aucun mot de passe n'est stocké. Vos données sont utilisées
+      uniquement pour le bon fonctionnement du service.
+    </p>
+    <p>
+      Pour toute question, contactez-nous à <a href="mailto:contact@letsout.app">contact@letsout.app</a>
+    </p>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <img src="/icons/icon-192.webp" alt="Let's Out" />
+    <p>Let's Out — Trouvez des événements et vivez des expériences partagées</p>
+    <div class="footer-links">
+      <a href="/privacy">Politique de confidentialité</a>
+      <a href="/terms">Conditions d'utilisation</a>
+      <a href="mailto:contact@letsout.app">Contact</a>
+    </div>
+    <p class="copyright">© 2025 Let's Out. Tous droits réservés.</p>
+  </footer>
+
+</body>
+</html>
