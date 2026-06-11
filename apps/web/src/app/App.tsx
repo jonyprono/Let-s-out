@@ -123,7 +123,7 @@ export default function App() {
         <Routes>
           {/* Public landing page (homepage for Google OAuth verification) */}
           <Route path="/" element={
-            Capacitor.isNativePlatform() || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768
+            Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'web' || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|wv/i.test(navigator.userAgent) || window.innerWidth < 768
               ? <Navigate to="/app" replace /> 
               : <LandingPage />
           } />

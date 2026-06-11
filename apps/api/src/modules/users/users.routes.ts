@@ -213,6 +213,27 @@ export default async function usersRoutes(app: FastifyInstance) {
     return reply.send({ success: true, phone: updated.phone })
   })
 
+  // Update email
+  app.patch('/me/email', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const schema = z.object({ email: z.string().email() })
+
+    const result = schema.safeParse(req.body)
+    if (!result.success) return reply.code(400).send({ error: 'E-mail invalide' })
+
+    const existing = await app.prisma.user.findUnique({ where: { email: result.data.email } })
+    if (existing && existing.id !== sub) {
+      return reply.code(409).send({ error: 'Cet e-mail est déjà utilisé' })
+    }
+
+    const updated = await app.prisma.user.update({
+      where: { id: sub },
+      data: { email: result.data.email }
+    })
+
+    return reply.send({ success: true, email: updated.email })
+  })
+
   // Get friends list
   app.get('/me/friends', async (req, reply) => {
     const { sub } = req.user as { sub: string }

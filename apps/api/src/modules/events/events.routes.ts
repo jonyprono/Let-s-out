@@ -2,6 +2,9 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { randomBytes } from 'crypto'
 import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
+import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
 
 const CreateEventSchema = z.object({
   title: z.string().min(3).max(100),
@@ -214,6 +217,34 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     if (!booking) return reply.code(404).send({ error: 'No booking found' })
     return reply.send(booking)
+  })
+
+  // Upload event cover
+  app.post('/upload-cover', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    let coverUrl: string | null = null
+
+    try {
+      for await (const part of req.parts()) {
+        if (part.type !== 'file') continue
+        const ext = path.extname(part.filename) || '.jpg'
+        const filename = `cover-${uuidv4()}${ext}`
+        const folder = `events/covers/${sub}`
+        
+        const buffer = await part.toBuffer()
+        coverUrl = await uploadBufferToCloudinary(buffer, folder, filename)
+        break // Only process first file
+      }
+
+      if (!coverUrl) {
+        return reply.code(400).send({ error: 'Aucun fichier fourni' })
+      }
+
+      return reply.send({ success: true, url: coverUrl })
+    } catch (err) {
+      console.error('Event cover upload error', err)
+      return reply.code(500).send({ error: 'Upload failed' })
+    }
   })
 
   // Create event

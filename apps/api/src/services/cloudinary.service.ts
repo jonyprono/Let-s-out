@@ -1,5 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 
+import { v4 as uuidv4 } from 'uuid';
+
 /**
  * Configure Cloudinary.
  * - If CLOUDINARY_URL is set, the SDK parses it automatically — don't override it.
@@ -32,9 +34,10 @@ export const uploadBufferToCloudinary = (
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
-        public_id: filename.split('.')[0],
+        public_id: `${filename.split('.')[0]}-${uuidv4()}`,
         resource_type: 'auto',
-        overwrite: false,
+        overwrite: true,
+        invalidate: true,
       },
       (error, result) => {
         if (error) {

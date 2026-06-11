@@ -81,6 +81,9 @@ export const authApi = {
   directLogin: (payload: { target: string; password: string }) =>
     apiClient.post<AuthResponse>('/auth/login', { target: payload.target, password: payload.password }),
 
+  googleSignIn: (payload: { idToken: string; email: string }) =>
+    apiClient.post<AuthResponse>('/auth/google', payload),
+
   refresh: () =>
     apiClient.post<{ accessToken: string }>('/auth/refresh'),
 

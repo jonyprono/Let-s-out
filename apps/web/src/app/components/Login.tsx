@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ViewIcon, ViewOffIcon } from 'hugeicons-react'
-import { useDirectLogin, useLogin } from '@/features/auth/hooks/useAuth'
+import { useDirectLogin, useGoogleSignIn } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { COUNTRIES, Country } from '@/lib/countries'
 import { CountryPicker } from '@/components/shared/CountryPicker'
@@ -33,7 +33,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   const [googleLoading, setGoogleLoading] = useState(false)
 
   const { mutate: directLogin, isPending: logging } = useDirectLogin()
-  const { mutate: loginWithToken } = useLogin()
+  const { mutate: googleSignIn } = useGoogleSignIn()
 
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
 
@@ -50,17 +50,26 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true)
+      let idToken = ''
+      let email = ''
+
       if (Capacitor.isNativePlatform()) {
         const result = await FirebaseAuthentication.signInWithGoogle()
-        if (result.credential?.idToken && result.user?.email) {
-          loginWithToken({ target: result.user.email, idToken: result.credential.idToken })
+        if (!result.credential?.idToken || !result.user?.email) {
+          toast.error('Connexion Google échouée. Veuillez réessayer.')
+          return
         }
+        idToken = result.credential.idToken
+        email = result.user.email
       } else {
         const provider = new GoogleAuthProvider()
         const result = await signInWithPopup(auth, provider)
-        const idToken = await result.user.getIdToken()
-        const email = result.user.email || ''
-        loginWithToken({ target: email, idToken })
+        idToken = await result.user.getIdToken()
+        email = result.user.email || ''
+      }
+
+      if (idToken && email) {
+        googleSignIn({ idToken, email })
       }
     } catch (err: any) {
       console.error("Google Auth Error:", err)
@@ -73,26 +82,42 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
   return (
-    <div className="auth-flow w-full h-full flex flex-col bg-[#F8F9FA] text-foreground overflow-hidden">
-      <div className="h-full px-5 py-4 flex flex-col w-full max-w-[420px] mx-auto overflow-y-auto scrollbar-hide bg-white shadow-sm sm:rounded-[40px] sm:my-auto sm:h-auto sm:max-h-[90vh]">
-        
+    <div className="auth-flow w-full h-full flex flex-col overflow-hidden" style={{ background: '#FFFFFF' }}>
+      <div
+        className="h-full flex flex-col w-full max-w-[420px] mx-auto sm:rounded-[40px] sm:my-auto sm:h-auto sm:shadow-2xl"
+        style={{ background: '#FFFFFF', paddingLeft: 'clamp(16px, 5vw, 24px)', paddingRight: 'clamp(16px, 5vw, 24px)' }}
+      >
+
+        {/* Spacer top adaptatif */}
+        <div className="flex-shrink-0" style={{ height: 'clamp(20px, 5vh, 48px)' }} />
+
         {/* Logo */}
-        <div className="flex justify-center mb-2">
-          <img src="/logo.png" alt="Let's Out" className="w-[100px] h-auto object-contain" />
+        <div className="flex justify-center flex-shrink-0" style={{ marginBottom: 'clamp(12px, 3vh, 24px)' }}>
+          <img src="/logo.png" alt="Let's Out" className="object-contain" style={{ width: 'clamp(60px, 16vw, 80px)', height: 'auto' }} />
         </div>
 
-        <h1 className="text-[22px] font-semibold text-[#1A1A1A] mb-1 text-center tracking-tight">Connectez-vous</h1>
-        <p className="text-[14px] text-[#718096] mb-5 text-center leading-snug px-2">
-          Rejoignez des événements près de vous et vivez des expériences inoubliables.
-        </p>
+        {/* Titres */}
+        <div className="flex-shrink-0 text-center" style={{ marginBottom: 'clamp(16px, 4vh, 28px)' }}>
+          <h1 className="font-bold text-[#1A1A1A] tracking-tight" style={{ fontSize: 'clamp(20px, 5.5vw, 26px)', marginBottom: 6 }}>
+            Connectez-vous
+          </h1>
+          <p className="text-[#718096] leading-snug px-2" style={{ fontSize: 'clamp(12px, 3.5vw, 14px)' }}>
+            Rejoignez des événements près de vous et vivez des expériences inoubliables.
+          </p>
+        </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-4 mb-2">
-          
+        <div className="flex flex-col flex-shrink-0" style={{ gap: 'clamp(10px, 2.5vh, 16px)', marginBottom: 'clamp(8px, 2vh, 12px)' }}>
+
           {/* Téléphone */}
           <div>
-            <label className="block text-[13px] font-normal text-[#1A1A1A] mb-1.5">Numéro de téléphone</label>
-            <div className="flex items-stretch h-[48px] border border-[#E2E8F0] rounded-[12px] bg-white focus-within:border-[#FF951A] focus-within:ring-1 focus-within:ring-[#FF951A] transition-all">
+            <label className="block font-medium text-[#1A1A1A]" style={{ fontSize: 13, marginBottom: 6 }}>
+              Numéro de téléphone
+            </label>
+            <div
+              className="flex items-stretch border border-[#E2E8F0] rounded-[14px] bg-white focus-within:border-[#FF951A] focus-within:ring-1 focus-within:ring-[#FF951A] transition-all"
+              style={{ height: 'clamp(44px, 12vw, 52px)' }}
+            >
               <CountryPicker
                 value={country}
                 onChange={(c) => { setCountry(c); resetPhone() }}
@@ -105,14 +130,17 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                 onChange={handlePhoneChange}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
                 placeholder="00 00 00 00 00"
-                className="flex-1 min-w-0 px-2 text-[14px] bg-transparent text-[#1A1A1A] placeholder-[#A0AEC0] focus:outline-none"
+                className="flex-1 min-w-0 px-2 bg-transparent text-[#1A1A1A] placeholder-[#A0AEC0] focus:outline-none"
+                style={{ fontSize: 14 }}
               />
             </div>
           </div>
 
           {/* Mot de passe */}
           <div>
-            <label className="block text-[13px] font-normal text-[#1A1A1A] mb-1.5">Mot de passe</label>
+            <label className="block font-medium text-[#1A1A1A]" style={{ fontSize: 13, marginBottom: 6 }}>
+              Mot de passe
+            </label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -120,7 +148,8 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                 onChange={e => setPassword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
                 placeholder=""
-                className="w-full h-[48px] px-3 pr-12 border border-[#E2E8F0] rounded-[12px] text-[14px] focus:outline-none focus:border-[#FF951A] focus:ring-1 focus:ring-[#FF951A] transition-all text-[#1A1A1A]"
+                className="w-full px-4 pr-12 border border-[#E2E8F0] rounded-[14px] focus:outline-none focus:border-[#FF951A] focus:ring-1 focus:ring-[#FF951A] transition-all text-[#1A1A1A]"
+                style={{ height: 'clamp(44px, 12vw, 52px)', fontSize: 14 }}
               />
               <button
                 type="button"
@@ -135,13 +164,15 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="text-right mb-4">
+        {/* Mot de passe oublié */}
+        <div className="text-right flex-shrink-0" style={{ marginBottom: 'clamp(12px, 3vh, 20px)' }}>
           <button
             type="button"
             onClick={onForgotPassword}
-            className="text-[13px] font-normal text-[#FF951A] underline underline-offset-2 transition-all hover:opacity-80"
+            className="font-medium text-[#FF951A] transition-all hover:opacity-80"
+            style={{ fontSize: 13 }}
           >
-            Mot de passe oublié?
+            Mot de passe oublié ?
           </button>
         </div>
 
@@ -151,24 +182,26 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           type="button"
           onClick={handleLogin}
           disabled={!phone.trim() || !password || logging}
-          className="w-full bg-[#FF951A] hover:bg-[#E68617] text-white h-[48px] rounded-full font-medium text-[15px] mb-5 flex items-center justify-center disabled:opacity-60 active:scale-[0.98] transition-all shadow-sm"
+          className="w-full bg-[#FF951A] hover:bg-[#E68617] text-white rounded-full font-semibold flex items-center justify-center disabled:opacity-60 active:scale-[0.98] transition-all shadow-sm flex-shrink-0"
+          style={{ height: 'clamp(44px, 12vw, 52px)', fontSize: 15, marginBottom: 'clamp(12px, 3vh, 20px)' }}
         >
           {logging ? 'Connexion...' : 'Se connecter'}
         </button>
 
         {/* Séparateur Ou */}
-        <div className="flex items-center gap-4 mb-5">
+        <div className="flex items-center gap-3 flex-shrink-0" style={{ marginBottom: 'clamp(12px, 3vh, 20px)' }}>
           <div className="flex-1 h-[1px] bg-[#E2E8F0]" />
-          <span className="text-[#A0AEC0] text-[12px] font-normal">Ou</span>
+          <span className="text-[#A0AEC0] font-normal" style={{ fontSize: 12 }}>Ou</span>
           <div className="flex-1 h-[1px] bg-[#E2E8F0]" />
         </div>
 
-        {/* Google */}
+        {/* Bouton Google */}
         <button
           type="button"
           onClick={handleGoogleLogin}
           disabled={googleLoading}
-          className="w-full bg-white border border-[#E2E8F0] text-[#1A1A1A] hover:bg-gray-50 h-[48px] rounded-full font-medium text-[14px] mb-4 flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-60 transition-all shadow-sm"
+          className="w-full bg-white border border-[#E2E8F0] text-[#1A1A1A] hover:bg-gray-50 rounded-full font-medium flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-60 transition-all flex-shrink-0"
+          style={{ height: 'clamp(44px, 12vw, 52px)', fontSize: 14, marginBottom: 'clamp(12px, 3vh, 20px)' }}
         >
           {googleLoading ? (
             <span className="text-[#718096]">Connexion avec Google...</span>
@@ -185,16 +218,18 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           )}
         </button>
 
+        {/* Spacer flexible */}
+        <div className="flex-1 min-h-0" />
+
         {/* Bas de page */}
-        <div className="flex flex-col items-center gap-2 mt-auto pt-2 pb-2">
-          <p className="text-[13px] text-[#4A5568]">
+        <div className="flex flex-col items-center gap-2 flex-shrink-0" style={{ paddingBottom: 'clamp(12px, 4vh, 24px)' }}>
+          <p style={{ fontSize: 13 }} className="text-[#4A5568]">
             Vous êtes nouveau sur Let's Out ?{' '}
-            <button onClick={onSignup} className="text-[#FF951A] font-normal underline underline-offset-2 transition-all hover:opacity-80">
+            <button onClick={onSignup} className="text-[#FF951A] font-medium transition-all hover:opacity-80">
               Inscrivez-vous
             </button>
           </p>
-          <div className="w-full h-[1px] bg-[#E2E8F0] my-2" />
-          <p className="text-[11px] text-[#A0AEC0] leading-tight text-center px-2">
+          <p className="text-[#A0AEC0] leading-tight text-center px-4" style={{ fontSize: 11 }}>
             En continuant, vous acceptez nos{' '}
             <button onClick={() => nav('/terms')} className="text-[#FF951A] font-normal underline hover:opacity-80 inline-block">Conditions d'Utilisation</button>
             {' '}et notre{' '}

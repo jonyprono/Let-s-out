@@ -425,4 +425,43 @@ export class AuthController {
 
     return reply.send({ accessToken, refreshToken, user: { ...adminUser, passwordHash: undefined } })
   }
+
+  async googleSignIn(req: FastifyRequest, reply: FastifyReply) {
+    const { idToken, email } = req.body as { idToken: string, email: string }
+    if (!idToken || !email) {
+      return reply.code(400).send({ error: 'idToken and email are required' })
+    }
+
+    const isValid = await this.service.verifyFirebaseToken(idToken, email)
+    if (!isValid) {
+      return reply.code(401).send({ error: 'Token Google invalide' })
+    }
+
+    const user = await this.service.findUserByTarget(email)
+    if (!user || !user.isActive) {
+      return reply.code(404).send({ error: 'Compte introuvable. Veuillez vous inscrire d\'abord.' })
+    }
+
+    // Update last seen
+    await this.app.prisma.user.update({
+      where: { id: user.id },
+      data: { lastSeenAt: new Date() },
+    })
+
+    const accessToken = this.app.jwt.sign({ sub: user.id, role: user.role })
+    const refreshToken = await this.service.createRefreshToken(user.id, {
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+    })
+
+    reply.setCookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60,
+    })
+
+    return reply.send({ accessToken, refreshToken, user: { ...user, passwordHash: undefined } })
+  }
 }

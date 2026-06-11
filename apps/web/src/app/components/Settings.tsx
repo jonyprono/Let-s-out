@@ -16,6 +16,7 @@ import { LanguageModal } from '@/features/users/components/LanguageModal';
 import { ChangePasswordModal } from '@/features/users/components/ChangePasswordModal';
 import { PrivacyModal } from '@/features/users/components/PrivacyModal';
 import { EditPhoneModal } from '@/features/users/components/EditPhoneModal';
+import { EditEmailModal } from '@/features/users/components/EditEmailModal';
 import { useLogout } from '@/features/auth/hooks/useAuth';
 import { useSettingsStore } from '@/stores/settings.store';
 import { PreferenceSegment } from '@/components/shared/SettingsToggle';
@@ -44,6 +45,7 @@ export function Settings({ onBack }: SettingsProps) {
   const [showPassModal, setShowPassModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
   const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'rejected' | null>(null);
 
   const { notifEnabled, setNotifEnabled, language } = useSettingsStore();
@@ -226,6 +228,20 @@ export function Settings({ onBack }: SettingsProps) {
             </button>
 
             <button 
+              onClick={() => setShowEmailModal(true)}
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.blue}`}>
+                <User className="w-5 h-5" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">Adresse e-mail</p>
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">{user?.email || 'Non renseignée'}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-300" />
+            </button>
+
+            <button 
               onClick={() => navigate('/verify-profile')}
               className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
@@ -352,6 +368,7 @@ export function Settings({ onBack }: SettingsProps) {
       {showPassModal && <ChangePasswordModal onClose={() => setShowPassModal(false)} />}
       {showPrivacyModal && <PrivacyModal onClose={() => setShowPrivacyModal(false)} />}
       {showPhoneModal && <EditPhoneModal onClose={() => setShowPhoneModal(false)} />}
+      {showEmailModal && <EditEmailModal onClose={() => setShowEmailModal(false)} />}
     </div>
   );
 }

@@ -74,6 +74,35 @@ export function useLogin() {
   })
 }
 
+export function useGoogleSignIn() {
+  const nav = useNavigate()
+  const { setAccessToken, setRefreshToken, setUser } = useAuthStore()
+
+  return useMutation({
+    mutationFn: authApi.googleSignIn,
+    onSuccess: async (res) => {
+      const data = res.data
+      setAccessToken(data.accessToken)
+      if (data.refreshToken) setRefreshToken(data.refreshToken)
+      setUser(data.user as any)
+
+      const isProfileIncomplete = !data.user.profile?.displayName || !data.user.profile?.avatarUrl
+      if (isProfileIncomplete) {
+        nav('/onboarding', { replace: true })
+      } else {
+        nav('/home', { replace: true })
+      }
+    },
+    onError: (err: any) => {
+      if (err.response?.status === 404) {
+        toast.error('Compte introuvable. Veuillez vous inscrire d\'abord.')
+      } else {
+        toast.error(err.response?.data?.error || 'Erreur de connexion avec Google')
+      }
+    },
+  })
+}
+
 export function useDirectLogin() {
   const { setAccessToken, setRefreshToken, setUser } = useAuthStore()
   const navigate = useNavigate()

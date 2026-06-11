@@ -145,5 +145,14 @@ export const eventsApi = {
   // Pool Release
   releasePool: async (eventId: string) => {
     return apiClient.post(`/events/${eventId}/pool/release`)
+  },
+
+  // Upload cover
+  uploadCover: async (file: File) => {
+    const formData = new FormData()
+    formData.append('cover', file)
+    return apiClient.post<{ success: boolean; url: string }>('/events/upload-cover', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
   }
 }

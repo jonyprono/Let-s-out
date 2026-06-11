@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from 'react-router'
 import { BottomNav } from '@/components/shared/BottomNav'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
-import { cn } from '@/lib/utils'
+
 
 export function AppLayout() {
   const location = useLocation()
@@ -21,10 +21,7 @@ export function AppLayout() {
       <div id="app-layout-inner" className="w-full h-full sm:max-w-[430px] sm:h-screen sm:max-h-[932px] bg-background text-foreground overflow-hidden relative flex flex-col shadow-2xl transition-colors">
         {/* Offline indicator — shown at the very top when no network */}
         <OfflineBanner />
-        <main className={cn(
-          "flex-1 flex flex-col overflow-hidden relative",
-          !hideBottomNav && "pb-[calc(4.5rem+env(safe-area-inset-bottom))]"
-        )}>
+        <main className="flex-1 flex flex-col overflow-hidden relative">
           <Outlet />
         </main>
         {!hideBottomNav && <BottomNav />}

@@ -48,6 +48,11 @@ export default async function authRoutes(app: FastifyInstance) {
     handler: ctrl.login.bind(ctrl),
   })
 
+  // Google Sign-In (Login only)
+  app.post('/google', {
+    handler: ctrl.googleSignIn.bind(ctrl),
+  })
+
   // Refresh access token
   app.post('/refresh', {
     handler: ctrl.refresh.bind(ctrl),

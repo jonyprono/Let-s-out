@@ -59,7 +59,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="absolute bottom-0 left-0 right-0 bg-card dark:bg-[#1A1A1A] flex items-end justify-around border-t border-border dark:border-[#2A2A2A]"
+      className="w-full bg-card dark:bg-[#1A1A1A] flex items-end justify-around border-t border-border dark:border-[#2A2A2A] flex-shrink-0"
       style={{
         height: 'calc(64px + env(safe-area-inset-bottom))',
         paddingBottom: 'env(safe-area-inset-bottom)',

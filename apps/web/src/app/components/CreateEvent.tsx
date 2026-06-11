@@ -4,6 +4,7 @@ import { ChevronLeft, Calendar, MapPin, Search, X, Loader2, Check, Edit3, BadgeC
 import { Calendar01Icon as IconoirCalendar, Clock01Icon as IconoirClock, Location01Icon as IconoirMapPin, Cancel01Icon, ArrowDown01Icon, ImageAdd01Icon } from 'hugeicons-react'
 import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
+import { eventsApi } from '@/features/events/api'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
@@ -269,8 +270,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     try {
       let coverUrl: string | undefined
       if (coverFile) {
-        const fd = new FormData(); fd.append('file', coverFile)
-        const { data } = await apiClient.post('/chat/upload', fd)
+        const { data } = await eventsApi.uploadCover(coverFile)
         coverUrl = data.url
       } else if (coverPreview) {
         coverUrl = coverPreview

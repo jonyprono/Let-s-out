@@ -55,6 +55,7 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
     setLoaded(false)
   }, [src, cacheKey])
 
+
   if (!src) {
     return (
       <div className={`bg-gray-100 flex items-center justify-center overflow-hidden ${className ?? ''}`} style={style}>
@@ -72,7 +73,7 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
   }
 
   let resolvedSrc = resolveImageSrc(src)
-  if (cacheKey != null && cacheKey !== '') {
+  if (cacheKey != null && cacheKey !== '' && !resolvedSrc.includes('res.cloudinary.com')) {
     const sep = resolvedSrc.includes('?') ? '&' : '?'
     resolvedSrc = `${resolvedSrc}${sep}v=${cacheKey}`
   }
