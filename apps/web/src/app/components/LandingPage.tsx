@@ -78,20 +78,19 @@ export function LandingPage() {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 3rem 1.25rem 2.5rem;
+          padding: 4rem 1.25rem 3rem;
           background: linear-gradient(160deg, #fff8f2 0%, #fff 60%);
           text-align: center;
-          min-height: 85vh;
           box-sizing: border-box;
           width: 100%;
         }
         .lp-hero-icon {
-          width: clamp(80px, 22vw, 120px);
-          height: clamp(80px, 22vw, 120px);
+          width: 96px;
+          height: 96px;
           object-fit: cover;
-          border-radius: clamp(18px, 5vw, 28px);
-          box-shadow: 0 8px 32px rgba(245,130,32,0.25);
-          margin-bottom: 1.5rem;
+          border-radius: 24px;
+          box-shadow: 0 12px 32px rgba(245,130,32,0.25);
+          margin-bottom: 2rem;
           flex-shrink: 0;
         }
         .lp-hero h1 {
@@ -161,36 +160,40 @@ export function LandingPage() {
         }
         .lp-card {
           background: #fff;
-          border-radius: 20px;
-          padding: 1.75rem;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+          border-radius: 24px;
+          padding: 2rem;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+          border: 1px solid #f0f0f0;
           box-sizing: border-box;
           min-width: 280px;
           flex-shrink: 0;
           scroll-snap-align: center;
           display: flex;
           flex-direction: column;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .lp-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 12px 32px rgba(0,0,0,0.08);
         }
         @media (min-width: 860px) {
-          .lp-card {
-            min-width: 0;
-          }
+          .lp-card { min-width: 0; }
         }
         .lp-card-emoji {
-          width: 48px;
-          height: 48px;
+          width: 56px;
+          height: 56px;
           object-fit: contain;
-          margin-bottom: 1.25rem;
+          margin-bottom: 1.5rem;
         }
         .lp-card h3 {
-          margin: 0 0 0.5rem;
-          font-size: 1rem;
+          margin: 0 0 0.75rem;
+          font-size: 1.1rem;
           font-weight: 700;
           color: #1a1a1a;
         }
         .lp-card p {
           margin: 0;
-          font-size: 0.88rem;
+          font-size: 0.95rem;
           color: #666;
           line-height: 1.6;
         }
@@ -294,10 +297,10 @@ export function LandingPage() {
           <h2>Comment ça marche ?</h2>
           <div className="lp-grid">
             {[
-              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4cd/512.webp', title: 'Découvrez près de vous', desc: "Explorez les événements publics ou privés organisés autour de vous grâce à la carte interactive de l'application." },
-              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp', title: 'Créez votre événement', desc: 'Organisez une sortie, une soirée ou une activité en quelques secondes. Définissez le lieu, la date, le nombre de participants et le tarif.' },
-              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f465/512.webp', title: 'Faites des rencontres', desc: "Connectez-vous avec d'autres participants, envoyez des demandes d'amis et échangez via la messagerie." },
-              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4b0/512.webp', title: 'Partagez les frais', desc: "Financez vos sorties en groupe grâce au système de cagnotte partagée intégré à l'application." },
+              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4cd/512.webp', title: 'Découvrir', desc: "Explorez les événements publics ou privés organisés autour de vous sur la carte interactive." },
+              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp', title: 'Organiser', desc: "Créez une sortie ou une activité en quelques secondes et invitez d'autres personnes." },
+              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f465/512.webp', title: 'Rencontrer', desc: "Faites-vous de nouveaux amis partageant vos centres d'intérêt via la messagerie." },
+              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4b0/512.webp', title: 'Partager', desc: "Mutualisez les frais de vos sorties grâce au système de cagnotte partagée intégré." },
             ].map((f) => (
               <div key={f.title} className="lp-card">
                 <img src={f.emojiUrl} alt="icon" className="lp-card-emoji" />

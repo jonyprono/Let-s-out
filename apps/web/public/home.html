@@ -86,18 +86,17 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 3rem 1.25rem 2.5rem;
+      padding: 4rem 1.25rem 3rem;
       background: linear-gradient(160deg, #fff8f2 0%, #fff 60%);
       text-align: center;
-      min-height: 85vh;
     }
     .hero-icon {
-      width: clamp(80px, 22vw, 120px);
-      height: clamp(80px, 22vw, 120px);
+      width: 96px;
+      height: 96px;
       object-fit: cover;
-      border-radius: clamp(18px, 5vw, 28px);
-      box-shadow: 0 8px 32px rgba(245,130,32,0.25);
-      margin-bottom: 1.5rem;
+      border-radius: 24px;
+      box-shadow: 0 12px 32px rgba(245,130,32,0.25);
+      margin-bottom: 2rem;
     }
     .hero h1 {
       font-size: clamp(1.75rem, 5.5vw, 3.2rem);
@@ -162,21 +161,27 @@
     }
     .card {
       background: #fff;
-      border-radius: 20px;
-      padding: 1.75rem;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      border-radius: 24px;
+      padding: 2rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+      border: 1px solid #f0f0f0;
       min-width: 280px;
       flex-shrink: 0;
       scroll-snap-align: center;
       display: flex;
       flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.08);
     }
     @media (min-width: 860px) {
       .card { min-width: 0; }
     }
-    .card .emoji { width: 48px; height: 48px; object-fit: contain; margin-bottom: 1.25rem; }
-    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: #1a1a1a; }
-    .card p { font-size: 0.88rem; color: #666; line-height: 1.6; }
+    .card .emoji { width: 56px; height: 56px; object-fit: contain; margin-bottom: 1.5rem; }
+    .card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; color: #1a1a1a; }
+    .card p { font-size: 0.95rem; color: #666; line-height: 1.6; }
 
     /* ── About ───────────────────────────────────────────────── */
     .about {
@@ -253,23 +258,23 @@
     <div class="features-grid">
       <div class="card">
         <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4cd/512.webp" alt="icon" class="emoji" />
-        <h3>Découvrez près de vous</h3>
-        <p>Explorez les événements publics ou privés organisés autour de vous grâce à la carte interactive de l'application.</p>
+        <h3>Découvrir</h3>
+        <p>Explorez les événements publics ou privés organisés autour de vous sur la carte interactive.</p>
       </div>
       <div class="card">
         <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp" alt="icon" class="emoji" />
-        <h3>Créez votre événement</h3>
-        <p>Organisez une sortie, une soirée ou une activité en quelques secondes. Définissez le lieu, la date, le nombre de participants et le tarif.</p>
+        <h3>Organiser</h3>
+        <p>Créez une sortie ou une activité en quelques secondes et invitez d'autres personnes.</p>
       </div>
       <div class="card">
         <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f465/512.webp" alt="icon" class="emoji" />
-        <h3>Faites des rencontres</h3>
-        <p>Connectez-vous avec d'autres participants, envoyez des demandes d'amis et échangez via la messagerie intégrée.</p>
+        <h3>Rencontrer</h3>
+        <p>Faites-vous de nouveaux amis partageant vos centres d'intérêt via la messagerie.</p>
       </div>
       <div class="card">
         <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4b0/512.webp" alt="icon" class="emoji" />
-        <h3>Partagez les frais</h3>
-        <p>Financez vos sorties en groupe grâce au système de cagnotte partagée intégré à l'application.</p>
+        <h3>Partager</h3>
+        <p>Mutualisez les frais de vos sorties grâce au système de cagnotte partagée intégré.</p>
       </div>
     </div>
   </section>
