@@ -190,7 +190,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         </div>
 
         {/* Intérêts */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 mb-8">
           <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Centres d'intérêt</label>
           <input
             type="text"
@@ -201,6 +201,15 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
           />
           <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-1">Séparez vos intérêts par des virgules.</p>
         </div>
+
+        {/* Bouton d'enregistrement bas */}
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="w-full min-h-[52px] h-auto py-3 bg-action-primary text-white rounded-full font-bold text-[16px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md disabled:opacity-60"
+        >
+          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
+        </button>
 
       </div>
     </div>

@@ -575,10 +575,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
   // ── MAIN LIST SCREEN ───────────────────────────────────────────────────────
   return (
-    <div className="w-full h-full bg-background flex flex-col">
+    <div className={`w-full h-full flex flex-col relative ${viewMode === 'map' ? 'bg-transparent' : 'bg-background'}`}>
 
         {/* Header & Search Bar */}
-        <div className="bg-background-white px-5 pt-safe-6 pb-2 shrink-0 z-10 relative">
+        <div className={`px-5 pt-safe-6 pb-2 shrink-0 z-10 relative ${viewMode === 'map' ? 'bg-white/95 backdrop-blur-md rounded-b-[32px] shadow-sm' : 'bg-background-white'}`}>
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
@@ -656,26 +656,29 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               <Loader2 className="w-7 h-7 animate-spin text-action-primary" />
             </div>
           }>
+            <div className="absolute inset-0 z-0">
+              <LazyExplorerMap
+                events={events}
+                mapCenter={mapCenter}
+                mapSearch={mapSearch}
+                mapSearchResults={mapSearchResults}
+                mapGeoLoading={mapGeoLoading}
+                onMapSearch={handleMapSearch}
+                onClearSearch={() => { setMapSearch(''); setMapSearchResults([]); }}
+                onSelectSearchResult={(r) => { setMapCenter([r.lat, r.lon]); setMapSearch(''); setMapSearchResults([]); }}
+                onGeolocate={handleMapGeolocate}
+                onNavigate={onNavigate}
+              />
+            </div>
+            {/* FAB to switch back to list */}
             <div className="absolute right-5 bottom-24 z-[60]">
               <button 
                 onClick={() => setViewMode('list')} 
-                className="w-[50px] h-[50px] bg-action-primary rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+                className="w-[50px] h-[50px] bg-action-primary rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
               >
                 <List className="w-6 h-6 text-white" />
               </button>
             </div>
-            <LazyExplorerMap
-              events={events}
-              mapCenter={mapCenter}
-              mapSearch={mapSearch}
-              mapSearchResults={mapSearchResults}
-              mapGeoLoading={mapGeoLoading}
-              onMapSearch={handleMapSearch}
-              onClearSearch={() => { setMapSearch(''); setMapSearchResults([]); }}
-              onSelectSearchResult={(r) => { setMapCenter([r.lat, r.lon]); setMapSearch(''); setMapSearchResults([]); }}
-              onGeolocate={handleMapGeolocate}
-              onNavigate={onNavigate}
-            />
           </Suspense>
         ) : (
           <div className="flex-1 overflow-y-auto px-5 pt-4 space-y-200 pb-20">

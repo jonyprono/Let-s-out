@@ -4,6 +4,7 @@
  * saving ~150 KB from the initial JS bundle.
  */
 import { MapPin, Search, X, Loader2, Navigation } from 'lucide-react'
+import L from 'leaflet'
 import '@/lib/leaflet-init'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { SafeImage } from '@/components/shared/SafeImage'
@@ -37,6 +38,25 @@ export default function ExplorerMap({
   onGeolocate,
   onNavigate,
 }: ExplorerMapProps) {
+  const createCustomIcon = () => {
+    return L.divIcon({
+      className: 'bg-transparent border-none',
+      html: `
+        <div class="relative flex flex-col items-center">
+          <div class="w-8 h-8 relative">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-md">
+              <path d="M12 21.5C12 21.5 20.5 15.5 20.5 9.5C20.5 4.80558 16.6944 1 12 1C7.30558 1 3.5 4.80558 3.5 9.5C3.5 15.5 12 21.5 12 21.5Z" fill="#FF7A00"/>
+              <circle cx="12" cy="9.5" r="3.5" fill="white"/>
+            </svg>
+          </div>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32],
+    })
+  }
+
   return (
     <div className="flex-1 relative z-0">
       <MapContainer
@@ -51,7 +71,7 @@ export default function ExplorerMap({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
         {events.filter(e => e.latitude && e.longitude).map((event) => (
-          <Marker key={event.id} position={[event.latitude!, event.longitude!]}>
+          <Marker key={event.id} position={[event.latitude!, event.longitude!]} icon={createCustomIcon()}>
             <Popup className="rounded-xl overflow-hidden shadow-sm">
               <div className="w-[200px] flex flex-col gap-2 p-1">
                 <SafeImage
@@ -73,37 +93,7 @@ export default function ExplorerMap({
         ))}
       </MapContainer>
 
-      {/* Search overlay */}
-      <div className="absolute top-4 left-4 right-4 z-[1000] flex flex-col gap-2">
-        <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 flex items-center px-4 py-3">
-          <Search className="w-4 h-4 text-action-primary mr-2 shrink-0" />
-          <input
-            value={mapSearch}
-            onChange={e => onMapSearch(e.target.value)}
-            placeholder="Rechercher un lieu sur la carte..."
-            className="flex-1 outline-none text-[14px] bg-transparent text-gray-900 placeholder:text-gray-400"
-          />
-          {mapSearch && (
-            <button onClick={onClearSearch} className="ml-2">
-              <X className="w-4 h-4 text-gray-400" />
-            </button>
-          )}
-        </div>
-        {mapSearchResults.length > 0 && (
-          <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden max-h-48 overflow-y-auto divide-y divide-gray-100">
-            {mapSearchResults.map((r, i) => (
-              <button key={i} onClick={() => onSelectSearchResult(r)}
-                className="w-full text-left px-4 py-3 hover:bg-orange-50 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-action-primary shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-[13px] font-semibold text-gray-900 truncate">{r.name || r.label.split(',')[0]}</span>
-                  <span className="text-[11px] text-gray-400 truncate">{r.label}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+
 
       {/* Locate me */}
       <button
