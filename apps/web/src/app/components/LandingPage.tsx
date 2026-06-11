@@ -138,30 +138,49 @@ export function LandingPage() {
           color: #1a1a1a;
         }
         .lp-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 1rem;
-          max-width: 960px;
+          display: flex;
+          overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          gap: 1.25rem;
+          padding: 1rem 0.5rem;
           margin: 0 auto;
-          width: 100%;
+          max-width: 1000px;
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE/Edge */
         }
-        @media (min-width: 560px) {
-          .lp-grid { grid-template-columns: 1fr 1fr; }
+        .lp-grid::-webkit-scrollbar {
+          display: none; /* Chrome/Safari */
         }
         @media (min-width: 860px) {
-          .lp-grid { grid-template-columns: repeat(4, 1fr); }
+          .lp-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            overflow-x: visible;
+            padding: 1rem 0;
+          }
         }
         .lp-card {
           background: #fff;
-          border-radius: 16px;
-          padding: 1.5rem;
-          box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+          border-radius: 20px;
+          padding: 1.75rem;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.06);
           box-sizing: border-box;
+          min-width: 280px;
+          flex-shrink: 0;
+          scroll-snap-align: center;
+          display: flex;
+          flex-direction: column;
+        }
+        @media (min-width: 860px) {
+          .lp-card {
+            min-width: 0;
+          }
         }
         .lp-card-emoji {
-          font-size: 2rem;
-          display: block;
-          margin-bottom: 0.75rem;
+          width: 48px;
+          height: 48px;
+          object-fit: contain;
+          margin-bottom: 1.25rem;
         }
         .lp-card h3 {
           margin: 0 0 0.5rem;
@@ -275,13 +294,13 @@ export function LandingPage() {
           <h2>Comment ça marche ?</h2>
           <div className="lp-grid">
             {[
-              { emoji: '📍', title: 'Découvrez près de vous', desc: "Explorez les événements publics ou privés organisés autour de vous grâce à la carte interactive de l'application." },
-              { emoji: '🎉', title: 'Créez votre événement', desc: 'Organisez une sortie, une soirée ou une activité en quelques secondes. Définissez le lieu, la date, le nombre de participants et le tarif.' },
-              { emoji: '👥', title: 'Faites des rencontres', desc: "Connectez-vous avec d'autres participants, envoyez des demandes d'amis et échangez via la messagerie intégrée." },
-              { emoji: '💰', title: 'Partagez les frais', desc: "Financez vos sorties en groupe grâce au système de cagnotte partagée intégré à l'application." },
+              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4cd/512.webp', title: 'Découvrez près de vous', desc: "Explorez les événements publics ou privés organisés autour de vous grâce à la carte interactive de l'application." },
+              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp', title: 'Créez votre événement', desc: 'Organisez une sortie, une soirée ou une activité en quelques secondes. Définissez le lieu, la date, le nombre de participants et le tarif.' },
+              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f465/512.webp', title: 'Faites des rencontres', desc: "Connectez-vous avec d'autres participants, envoyez des demandes d'amis et échangez via la messagerie." },
+              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4b0/512.webp', title: 'Partagez les frais', desc: "Financez vos sorties en groupe grâce au système de cagnotte partagée intégré à l'application." },
             ].map((f) => (
               <div key={f.title} className="lp-card">
-                <span className="lp-card-emoji">{f.emoji}</span>
+                <img src={f.emojiUrl} alt="icon" className="lp-card-emoji" />
                 <h3>{f.title}</h3>
                 <p>{f.desc}</p>
               </div>

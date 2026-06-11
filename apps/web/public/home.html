@@ -139,25 +139,42 @@
       color: #1a1a1a;
     }
     .features-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-      max-width: 960px;
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      gap: 1.25rem;
+      padding: 1rem 0.5rem;
+      max-width: 1000px;
       margin: 0 auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
-    @media (min-width: 560px) {
-      .features-grid { grid-template-columns: 1fr 1fr; }
+    .features-grid::-webkit-scrollbar {
+      display: none;
     }
     @media (min-width: 860px) {
-      .features-grid { grid-template-columns: repeat(4, 1fr); }
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        overflow-x: visible;
+        padding: 1rem 0;
+      }
     }
     .card {
       background: #fff;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      border-radius: 20px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      min-width: 280px;
+      flex-shrink: 0;
+      scroll-snap-align: center;
+      display: flex;
+      flex-direction: column;
     }
-    .card .emoji { font-size: 2rem; display: block; margin-bottom: 0.75rem; }
+    @media (min-width: 860px) {
+      .card { min-width: 0; }
+    }
+    .card .emoji { width: 48px; height: 48px; object-fit: contain; margin-bottom: 1.25rem; }
     .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: #1a1a1a; }
     .card p { font-size: 0.88rem; color: #666; line-height: 1.6; }
 
@@ -235,22 +252,22 @@
     <h2>Comment ça marche ?</h2>
     <div class="features-grid">
       <div class="card">
-        <span class="emoji">📍</span>
+        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4cd/512.webp" alt="icon" class="emoji" />
         <h3>Découvrez près de vous</h3>
         <p>Explorez les événements publics ou privés organisés autour de vous grâce à la carte interactive de l'application.</p>
       </div>
       <div class="card">
-        <span class="emoji">🎉</span>
+        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp" alt="icon" class="emoji" />
         <h3>Créez votre événement</h3>
         <p>Organisez une sortie, une soirée ou une activité en quelques secondes. Définissez le lieu, la date, le nombre de participants et le tarif.</p>
       </div>
       <div class="card">
-        <span class="emoji">👥</span>
+        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f465/512.webp" alt="icon" class="emoji" />
         <h3>Faites des rencontres</h3>
         <p>Connectez-vous avec d'autres participants, envoyez des demandes d'amis et échangez via la messagerie intégrée.</p>
       </div>
       <div class="card">
-        <span class="emoji">💰</span>
+        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4b0/512.webp" alt="icon" class="emoji" />
         <h3>Partagez les frais</h3>
         <p>Financez vos sorties en groupe grâce au système de cagnotte partagée intégré à l'application.</p>
       </div>
