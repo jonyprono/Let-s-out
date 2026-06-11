@@ -150,10 +150,10 @@ export class AuthService {
     }
     try {
       const decodedToken = await admin.auth().verifyIdToken(idToken)
-      if (decodedToken.phone_number === targetPhone) {
+      if (decodedToken.phone_number === targetPhone || decodedToken.email === targetPhone) {
         return true
       }
-      console.warn(`Phone number mismatch. Expected ${targetPhone}, got ${decodedToken.phone_number}`);
+      console.warn(`Token mismatch. Expected ${targetPhone}, got phone: ${decodedToken.phone_number}, email: ${decodedToken.email}`);
       return false
     } catch (error) {
       console.error('Firebase ID Token validation error:', error)
