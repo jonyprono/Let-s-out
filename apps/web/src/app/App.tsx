@@ -122,7 +122,7 @@ export default function App() {
         <UserProfileProvider>
         <Routes>
           {/* Public landing page (homepage for Google OAuth verification) */}
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={Capacitor.isNativePlatform() ? <Navigate to="/app" replace /> : <LandingPage />} />
 
           {/* Splash + Guest only */}
           <Route element={<AuthLayout />}>
