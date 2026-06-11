@@ -716,7 +716,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {step === 6 && (
           <div className="space-y-0">
             {/* Preview banner */}
-            <div className="bg-[#FFF8ED] border border-[#FFE4B2] rounded-xl px-200 py-150 mb-5 flex items-center gap-150">
+            <div className="bg-[#FFF8ED] border border-[#FFE4B2] rounded-xl px-4 py-3 mb-5 flex items-center gap-3">
               <span className="text-action-primary text-xl">👁</span>
               <div>
                 <p className="text-[13px] font-bold text-action-primary">Rendu après publication</p>
@@ -737,7 +737,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
 
             {/* ── Title + Categories ── */}
-            <h2 className="text-[24px] font-bold text-[#1A1A1A] leading-tight mb-150">{title || 'Titre de l\'événement'}</h2>
+            <h2 className="text-[24px] font-bold text-[#1A1A1A] leading-tight mb-3">{title || 'Titre de l\'événement'}</h2>
             <div className="flex flex-wrap gap-2 mb-5">
               {categories.map(cat => (
                 <span key={cat} className="text-[12px] font-bold text-[#007AFF] bg-[#EBF5FF] px-2 py-1 rounded-full">
@@ -748,7 +748,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* ── Location + Date ── */}
             <div className="space-y-150 mb-6">
-              <div className="flex items-start gap-150">
+              <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-full bg-[var(--color-brand-orange-50)] flex items-center justify-center shrink-0 mt-0.5">
                   <MapPin className="w-4 h-4 text-action-primary" />
                 </div>
@@ -757,7 +757,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <p className="text-[13px] text-text-secondary">{address || 'Lieu non précisé'}</p>
                 </div>
               </div>
-              <div className="flex items-start gap-150">
+              <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-full bg-[var(--color-brand-orange-50)] flex items-center justify-center shrink-0 mt-0.5">
                   <Calendar className="w-4 h-4 text-action-primary" />
                 </div>
@@ -781,11 +781,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* ── Organisateurs ── */}
             <div className="mb-6">
-              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-150">Organisateurs</h3>
+              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Organisateurs</h3>
               <div className="space-y-150">
                 {/* Main organizer */}
-                <div className="bg-gray-50 rounded-[16px] p-200 border border-gray-100">
-                  <div className="flex items-center gap-150">
+                <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
+                  <div className="flex items-center gap-3">
                     {me?.profile?.avatarUrl ? (
                       <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-12 h-12 rounded-full object-cover" />
                     ) : (
@@ -808,8 +808,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </div>
                 {/* Co-organisateurs */}
                 {selectedCoOrgs.map(org => (
-                  <div key={org.id} className="bg-gray-50 rounded-[16px] p-200 border border-gray-100">
-                    <div className="flex items-center gap-150">
+                  <div key={org.id} className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
+                    <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full overflow-hidden">
                         <SafeImage src={org.avatarUrl} alt={org.name} className="w-full h-full object-cover"
                           fallback={<div className="w-full h-full bg-orange-200 flex items-center justify-center font-bold text-white">{org.name.charAt(0)}</div>}
@@ -829,8 +829,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   </div>
                 ))}
                 {/* Let's Out Staff */}
-                <div className="bg-gray-50 rounded-[16px] p-200 border border-gray-100">
-                  <div className="flex items-center gap-150">
+                <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
+                  <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[var(--color-brand-yellow-400)] to-[var(--action-primary)] flex items-center justify-center">
                       <span className="text-white font-bold text-[13px]">LO</span>
                     </div>
@@ -852,8 +852,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* ── Participation ── */}
             <div className="mb-6">
-              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-150">Participation</h3>
-              <div className="bg-gray-50 rounded-[16px] p-200 border border-gray-100 flex items-center justify-between">
+              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Participation</h3>
+              <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100 flex items-center justify-between">
                 <span className="text-[14px] text-gray-700 font-medium">Montant</span>
                 <span className="text-[15px] font-bold text-blue-600">
                   {amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}
@@ -863,9 +863,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* ── Participants ── */}
             <div className="mb-2">
-              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-150">Participants</h3>
-              <div className="bg-gray-50 rounded-[16px] p-200 border border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-150">
+              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Participants</h3>
+              <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <div className="flex -space-x-2">
                     {['var(--action-primary)','var(--action-primary)','#B070FF'].map((color, i) => (
                       <div key={i} className="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center text-white text-[11px] font-bold" style={{ backgroundColor: color }} />
@@ -873,7 +873,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   </div>
                   <span className="text-[14px] font-bold text-gray-900">0/{maxPlaces || '∞'}</span>
                 </div>
-                <button className="px-200 py-1.5 rounded-full border border-border-primary bg-background-white text-[12px] font-bold text-gray-700 shadow-sm">Voir tous</button>
+                <button className="px-4 py-1.5 rounded-full border border-border-primary bg-background-white text-[12px] font-bold text-gray-700 shadow-sm">Voir tous</button>
               </div>
             </div>
           </div>
@@ -883,10 +883,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         {step === 7 && (
           <div className="pb-8">
             {/* Titre */}
-            <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-200">{title || 'Votre événement'}</h1>
+            <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-4">{title || 'Votre événement'}</h1>
 
             {/* Info banner */}
-            <div className="bg-[#EBF3FA] mb-6 p-200 rounded-xl border border-blue-100">
+            <div className="bg-[#EBF3FA] mb-6 p-4 rounded-xl border border-blue-100">
               <p className="text-text-secondary text-[13px] leading-relaxed">
                 Cet événement n'est pas encore visible sur Let's Out.<br />
                 Publiez-le pour le rendre accessible publiquement.<br />
@@ -896,15 +896,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             <div className="space-y-200">
               {/* Organisateurs */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-200 shadow-sm">
-                <div className="flex justify-between items-center mb-200">
+              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900 text-[15px]">Organisateurs</h3>
                   <button onClick={() => setStep(5)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
                     <Edit3 className="w-3.5 h-3.5" /> Modifier
                   </button>
                 </div>
                 <div className="space-y-150">
-                  <div className="flex items-center gap-150">
+                  <div className="flex items-center gap-3">
                     {me?.profile?.avatarUrl ? (
                       <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-9 h-9 rounded-full object-cover" />
                     ) : (
@@ -915,7 +915,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     <span className="text-[14px] text-gray-700 font-medium">{me?.profile?.displayName || 'Vous'}</span>
                   </div>
                   {selectedCoOrgs.map(org => (
-                    <div key={org.id} className="flex items-center gap-150 pl-2 border-l-2 border-gray-100">
+                    <div key={org.id} className="flex items-center gap-3 pl-2 border-l-2 border-gray-100">
                       <SafeImage src={org.avatarUrl} alt={org.name} className="w-7 h-7 rounded-full object-cover"
                         fallback={<div className="w-7 h-7 rounded-full bg-orange-200 flex items-center justify-center text-white font-bold text-[11px]">{org.name.charAt(0).toUpperCase()}</div>}
                       />
@@ -925,7 +925,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       </span>
                     </div>
                   ))}
-                  <div className="flex items-center gap-150">
+                  <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[var(--color-brand-yellow-400)] to-[var(--action-primary)] flex items-center justify-center">
                       <span className="text-white font-bold text-[10px]">LO</span>
                     </div>
@@ -937,14 +937,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
 
               {/* Informations */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-200 shadow-sm">
-                <div className="flex justify-between items-center mb-200">
+              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900 text-[15px]">Informations</h3>
                   <button onClick={() => setStep(1)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
                     <Edit3 className="w-3.5 h-3.5" /> Modifier
                   </button>
                 </div>
-                <div className="flex justify-between items-center mb-150">
+                <div className="flex justify-between items-center mb-3">
                   <span className="text-[14px] text-text-secondary">Nom</span>
                   <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{title}</span>
                 </div>
@@ -962,22 +962,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
 
               {/* Date & lieu */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-200 shadow-sm">
-                <div className="flex justify-between items-center mb-200">
+              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900 text-[15px]">Date & lieu</h3>
                   <button onClick={() => setStep(2)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
                     <Edit3 className="w-3.5 h-3.5" /> Modifier
                   </button>
                 </div>
-                <div className="flex justify-between items-center mb-150">
+                <div className="flex justify-between items-center mb-3">
                   <span className="text-[14px] text-text-secondary">Date</span>
                   <span className="text-[14px] font-medium text-gray-900">{formattedDate || '—'}</span>
                 </div>
-                <div className="flex justify-between items-center mb-150">
+                <div className="flex justify-between items-center mb-3">
                   <span className="text-[14px] text-text-secondary">Heure</span>
                   <span className="text-[14px] font-medium text-gray-900">{startTime && endTime ? `${startTime} – ${endTime} (GMT)` : '—'}</span>
                 </div>
-                <div className="flex justify-between items-center mb-150">
+                <div className="flex justify-between items-center mb-3">
                   <span className="text-[14px] text-text-secondary">Ville</span>
                   <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{city || '—'}</span>
                 </div>
@@ -988,18 +988,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
 
               {/* Participation */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-200 shadow-sm">
-                <div className="flex justify-between items-center mb-200">
+              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900 text-[15px]">Participation</h3>
                   <button onClick={() => setStep(3)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
                     <Edit3 className="w-3.5 h-3.5" /> Modifier
                   </button>
                 </div>
-                <div className="flex justify-between items-center mb-150">
+                <div className="flex justify-between items-center mb-3">
                   <span className="text-[14px] text-text-secondary">Places</span>
                   <span className="text-[14px] font-medium text-gray-900">{maxPlaces || 'Illimitées'}</span>
                 </div>
-                <div className="flex justify-between items-center mb-150">
+                <div className="flex justify-between items-center mb-3">
                   <span className="text-[14px] text-text-secondary">Ticket</span>
                   <span className="text-[14px] font-medium text-action-primary font-bold">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
                 </div>
@@ -1009,8 +1009,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
 
               {/* Description */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-200 shadow-sm">
-                <div className="flex justify-between items-center mb-200">
+              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900 text-[15px]">Description</h3>
                   <button onClick={() => setStep(4)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
                     <Edit3 className="w-3.5 h-3.5" /> Modifier
@@ -1023,8 +1023,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
 
               {/* Couverture */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-200 shadow-sm">
-                <div className="flex justify-between items-center mb-200">
+              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
+                <div className="flex justify-between items-center mb-4">
                   <h3 className="font-bold text-gray-900 text-[15px]">Couverture</h3>
                   <button onClick={() => setStep(4)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
                     <Edit3 className="w-3.5 h-3.5" /> Modifier
@@ -1122,7 +1122,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="absolute inset-0 z-50 bg-background-white flex flex-col">
           {/* Header */}
           <div className="px-5 pt-safe-6 pb-0 flex-shrink-0">
-            <div className="flex items-center justify-center relative mb-150">
+            <div className="flex items-center justify-center relative mb-3">
               <button
                 onClick={() => {
                   if (poolStep === 1) {
@@ -1171,7 +1171,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   onChange={e => setPoolDescription(e.target.value)}
                   placeholder="Indiquez l'objectif..."
                   rows={5}
-                  className="w-full px-200 py-150.5 border border-border-primary rounded-2xl text-[14px] text-gray-700 resize-none focus:outline-none focus:border-action-primary placeholder:text-gray-300 transition-colors"
+                  className="w-full px-4 py-3 border border-border-primary rounded-2xl text-[14px] text-gray-700 resize-none focus:outline-none focus:border-action-primary placeholder:text-gray-300 transition-colors"
                 />
                 <p className="text-[12px] text-gray-400 mt-2">{poolDescription.length}/500 caractères</p>
               </div>
@@ -1191,9 +1191,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     value={poolTarget}
                     onChange={e => setPoolTarget(e.target.value)}
                     placeholder="150 000"
-                    className="flex-1 min-w-0 px-200 py-150.5 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
+                    className="flex-1 min-w-0 px-4 py-3 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
                   />
-                  <div className="px-200 py-150.5 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 w-[85px] shrink-0 flex items-center justify-center gap-1">
+                  <div className="px-4 py-3 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 w-[85px] shrink-0 flex items-center justify-center gap-1">
                     F CFA <ChevronLeft className="w-3 h-3 rotate-[-90deg] text-gray-400" />
                   </div>
                 </div>
@@ -1205,10 +1205,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     type="date"
                     value={poolDeadline}
                     onChange={e => setPoolDeadline(e.target.value)}
-                    className="w-full pl-11 pr-4 py-150.5 border border-border-primary rounded-2xl text-[14px] text-text-secondary focus:outline-none focus:border-action-primary transition-colors"
+                    className="w-full pl-11 pr-4 py-3 border border-border-primary rounded-2xl text-[14px] text-text-secondary focus:outline-none focus:border-action-primary transition-colors"
                   />
                 </div>
-                <p className="text-[11px] text-gray-400 mt-150">
+                <p className="text-[11px] text-gray-400 mt-3">
                   ⚠️ Une vérification d'identité (KYC) sera requise pour le retrait des fonds.
                 </p>
               </div>
@@ -1220,13 +1220,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <h2 className="text-[20px] font-bold text-gray-900 mb-1">Participation</h2>
                 <p className="text-[13px] text-gray-400 mb-6">Choisissez comment les participants pourront contribuer</p>
 
-                <label className="text-[13px] font-semibold text-gray-700 mb-150 block">Mode de participation</label>
+                <label className="text-[13px] font-semibold text-gray-700 mb-3 block">Mode de participation</label>
 
                 <div className="relative">
                   <select
                     value={poolMode}
                     onChange={e => setPoolMode(e.target.value as any)}
-                    className="w-full appearance-none px-200 py-150.5 border border-border-primary rounded-2xl text-[14px] text-gray-700 font-medium bg-background-white focus:outline-none focus:border-action-primary transition-colors pr-10"
+                    className="w-full appearance-none px-4 py-3 border border-border-primary rounded-2xl text-[14px] text-gray-700 font-medium bg-background-white focus:outline-none focus:border-action-primary transition-colors pr-10"
                   >
                     <option value="libre">Montant libre</option>
                     <option value="minimum">Montant minimum</option>
@@ -1236,7 +1236,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </div>
 
                 {/* Description du mode */}
-                <div className="mt-200 p-200 bg-gray-50 rounded-2xl">
+                <div className="mt-4 p-4 bg-gray-50 rounded-2xl">
                   {poolMode === 'libre' && (
                     <p className="text-[13px] text-text-secondary leading-relaxed">
                       🎁 Chaque participant contribue librement, <strong>selon ses moyens</strong>. Aucun montant minimum n'est imposé.
@@ -1262,14 +1262,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <h2 className="text-[20px] font-bold text-gray-900 mb-1">Participation</h2>
                 <p className="text-[13px] text-gray-400 mb-6">Choisissez comment les participants pourront contribuer</p>
 
-                <label className="text-[13px] font-semibold text-gray-700 mb-150 block">Mode de participation</label>
+                <label className="text-[13px] font-semibold text-gray-700 mb-3 block">Mode de participation</label>
 
                 {/* Mode affiché en lecture seule — tap pour modifier */}
                 <div className="relative mb-5">
                   <select
                     value={poolMode}
                     onChange={e => setPoolMode(e.target.value as any)}
-                    className="w-full appearance-none px-200 py-150.5 border border-action-primary rounded-2xl text-[14px] text-gray-700 font-medium bg-background-white focus:outline-none pr-10"
+                    className="w-full appearance-none px-4 py-3 border border-action-primary rounded-2xl text-[14px] text-gray-700 font-medium bg-background-white focus:outline-none pr-10"
                   >
                     <option value="libre">Montant libre</option>
                     <option value="minimum">Montant minimum</option>
@@ -1290,9 +1290,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                         value={poolMinAmount}
                         onChange={e => setPoolMinAmount(e.target.value)}
                         placeholder="Ex: 5 000"
-                        className="flex-1 min-w-0 px-200 py-150.5 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
+                        className="flex-1 min-w-0 px-4 py-3 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
                       />
-                      <div className="px-200 py-150.5 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 w-[85px] shrink-0 flex items-center justify-center">
+                      <div className="px-4 py-3 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 w-[85px] shrink-0 flex items-center justify-center">
                         F CFA
                       </div>
                     </div>
@@ -1300,7 +1300,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 )}
 
                 {poolMode === 'libre' && (
-                  <div className="p-200 bg-[var(--color-brand-orange-50)] border border-action-primary/20 rounded-2xl">
+                  <div className="p-4 bg-[var(--color-brand-orange-50)] border border-action-primary/20 rounded-2xl">
                     <p className="text-[13px] text-action-primary font-medium">
                       ✅ Mode libre sélectionné — aucun montant minimum requis.
                     </p>
@@ -1309,8 +1309,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
                 {/* Récapitulatif cagnotte */}
                 {poolTarget && (
-                  <div className="mt-6 p-200 bg-gray-50 rounded-2xl space-y-2">
-                    <p className="text-[12px] font-bold text-text-secondary uppercase tracking-wider mb-150">Récapitulatif</p>
+                  <div className="mt-6 p-4 bg-gray-50 rounded-2xl space-y-2">
+                    <p className="text-[12px] font-bold text-text-secondary uppercase tracking-wider mb-3">Récapitulatif</p>
                     <div className="flex justify-between items-center">
                       <span className="text-[13px] text-text-secondary">Objectif</span>
                       <span className="text-[13px] font-bold text-gray-900">{parseInt(poolTarget).toLocaleString()} F CFA</span>
@@ -1342,7 +1342,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           </div>
 
           {/* Bottom CTA */}
-          <div className="absolute bottom-0 left-0 right-0 bg-background-white border-t border-gray-100 px-5 py-200">
+          <div className="absolute bottom-0 left-0 right-0 bg-background-white border-t border-gray-100 px-5 py-4">
             <button
               onClick={() => {
                 if (poolStep < 4) {
@@ -1364,7 +1364,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 (poolStep === 1 && poolDescription.trim().length < 5) ||
                 (poolStep === 2 && !poolTarget)
               }
-              className={`w-full py-200 rounded-full font-bold text-[15px] text-white transition-all active:scale-[0.98] ${
+              className={`w-full py-4 rounded-full font-bold text-[15px] text-white transition-all active:scale-[0.98] ${
                 (poolStep === 1 && poolDescription.trim().length < 5) ||
                 (poolStep === 2 && !poolTarget)
                   ? 'bg-action-primary active:bg-action-primary-hover/30'
@@ -1426,7 +1426,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* Premium Search overlay inside Map */}
             <div className="absolute top-24 left-4 right-4 z-[1000] flex flex-col gap-2">
-              <div className="bg-background-white/95 backdrop-blur-xl rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 flex items-center px-200 py-150.5 transition-all focus-within:ring-4 focus-within:ring-action-primary/20">
+              <div className="bg-background-white/95 backdrop-blur-xl rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 flex items-center px-4 py-3 transition-all focus-within:ring-4 focus-within:ring-action-primary/20">
                 <Search className="w-[18px] h-[18px] text-action-primary mr-3 shrink-0" strokeWidth={2.5} />
                 <input 
                   value={mapSearchQuery} 
@@ -1451,7 +1451,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     
                     return (
                       <button key={i} onClick={() => selectMapSuggestion(s)} 
-                        className="w-full text-left px-5 py-150.5 hover:bg-brand-orange-50/50 flex items-start gap-150 transition-colors active:bg-orange-100/50">
+                        className="w-full text-left px-5 py-3 hover:bg-brand-orange-50/50 flex items-start gap-3 transition-colors active:bg-orange-100/50">
                         <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
                           <MapPin className="w-4 h-4 text-action-primary" strokeWidth={2.5} />
                         </div>
@@ -1467,14 +1467,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
 
             {/* Crosshair instruction overlay */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[110] bg-gray-900/80 backdrop-blur-sm text-white px-200 py-2 rounded-full text-[12px] font-medium shadow-lg pointer-events-none flex items-center gap-2">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[110] bg-gray-900/80 backdrop-blur-sm text-white px-4 py-2 rounded-full text-[12px] font-medium shadow-lg pointer-events-none flex items-center gap-2">
               Appuyez ou glissez le pin pour ajuster
             </div>
           </div>
 
           <div className="bg-background-white border-t border-gray-100 px-5 pt-4 pb-8 z-[110] shadow-[0_-8px_20px_rgba(0,0,0,0.05)] relative">
             <button onClick={confirmMapLocation} disabled={isReverseGeocoding}
-              className={`w-full py-200 rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 transition-all active:scale-95 ${!isReverseGeocoding ? 'bg-action-primary active:bg-action-primary-hover' : 'bg-action-primary active:bg-action-primary-hover/50'}`}>
+              className={`w-full py-4 rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 transition-all active:scale-95 ${!isReverseGeocoding ? 'bg-action-primary active:bg-action-primary-hover' : 'bg-action-primary active:bg-action-primary-hover/50'}`}>
               {isReverseGeocoding ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
               {isReverseGeocoding ? 'Traduction de l\'adresse...' : 'Valider cette position'}
             </button>

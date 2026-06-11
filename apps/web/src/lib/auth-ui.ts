@@ -79,18 +79,18 @@ export const authPhoneInputFlex =
  * brand/orange/500, texte blanc, h-[52px], rounded-full
  */
 export const authPrimaryBtn =
-  'w-full h-[52px] rounded-full bg-action-primary text-text-inverse font-semibold text-[15px] flex items-center justify-center gap-150 active:scale-[0.98] transition-all disabled:bg-brand-orange-100 disabled:text-brand-orange-400 disabled:cursor-not-allowed'
+  'w-full min-h-[52px] h-auto py-3 rounded-full bg-action-primary text-text-inverse font-semibold text-[15px] flex flex-col sm:flex-row items-center justify-center gap-150 active:scale-[0.98] transition-all disabled:bg-brand-orange-100 disabled:text-brand-orange-400 disabled:cursor-not-allowed text-center break-words max-w-full px-4'
 
 /**
  * BOUTON SECONDAIRE — outline blanc
  * fond blanc, bordure neutral/gray/300, texte neutre, h-[52px]
  */
 export const authSecondaryBtn =
-  'w-full h-[52px] rounded-full bg-background-white border border-border-primary text-foreground font-semibold text-[15px] flex items-center justify-center gap-150 active:scale-[0.98] transition-all'
+  'w-full min-h-[52px] h-auto py-3 rounded-full bg-background-white border border-border-primary text-foreground font-semibold text-[15px] flex flex-col sm:flex-row items-center justify-center gap-150 active:scale-[0.98] transition-all text-center break-words max-w-full px-4'
 
 /** Bouton ghost (sans fond, sans bordure, juste texte) */
 export const authGhostBtn =
-  'w-full h-[52px] rounded-full text-foreground font-semibold text-[15px] flex items-center justify-center active:opacity-70 transition-all'
+  'w-full min-h-[52px] h-auto py-3 rounded-full text-foreground font-semibold text-[15px] flex flex-col sm:flex-row items-center justify-center active:opacity-70 transition-all text-center break-words max-w-full px-4'
 
 /** Bouton canal (SMS / WhatsApp) — card avec radio interne */
 export const authChannelBtn =

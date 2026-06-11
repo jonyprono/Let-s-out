@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router';
-import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target } from 'lucide-react';
+import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target, Bell, ChevronDown, QrCode, List } from 'lucide-react';
 import { Basketball01Icon, PaintBoardIcon, Pizza01Icon, Moon01Icon, Airplane01Icon, GameIcon, FavouriteIcon, MusicNote01Icon, StarIcon } from 'hugeicons-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
@@ -73,8 +73,7 @@ const CATEGORY_ICONS: Record<string, React.FC<any>> = {
 };
 
 // Base category list for search tab
-const BROWSE_CATEGORIES = ['Tous', 'EN_COURS', 'SPORT', 'CULTURE', 'FOOD', 'NIGHTLIFE', 'TRAVEL', 'GAMING', 'WELLNESS', 'MUSIC', 'OTHER'];
-const CATEGORY_CHIP_LABELS: Record<string, string> = { 'Tous': 'Tous', 'EN_COURS': 'En cours', ...CATEGORY_LABELS };
+const BROWSE_CATEGORIES = ['Tout', 'Pour vous', 'En ce moment', 'Ce week-end'];
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
 
@@ -87,7 +86,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [isJoining, setIsJoining] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearchInput, setActiveSearchInput] = useState<'location'|'keyword'>('location');
-  const [selectedCategory, setSelectedCategory] = useState('Tous');
+  const [selectedCategory, setSelectedCategory] = useState('Tout');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
   const [filterDate, setFilterDate] = useState('soon');
@@ -107,23 +106,23 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   // Keyword event suggestions
   const [keywordSuggestions, setKeywordSuggestions] = useState<Event[]>([]);
 
-  const isEnCours = selectedCategory === 'EN_COURS';
-  const apiCategory = (selectedCategory === 'Tous' || isEnCours) ? undefined : selectedCategory;
+  const isEnCours = selectedCategory === 'En ce moment';
+  const isWeekend = selectedCategory === 'Ce week-end';
+  const apiCategory = undefined;
 
   const { data: eventsData, isLoading } = useQuery({
-    queryKey: ['events', 'explorer', apiCategory, searchQuery, appliedFilters, isEnCours],
+    queryKey: ['events', 'explorer', apiCategory, searchQuery, appliedFilters, isEnCours, isWeekend],
     queryFn: () => {
-      // Resolve the date param: if custom date was picked, format as ISO date string
       let dateParam: string | undefined = undefined;
       if (appliedFilters.date === 'pick' && appliedFilters.customDate) {
         dateParam = appliedFilters.customDate;
-      } else if (appliedFilters.date !== 'all') {
+      } else if (appliedFilters.date !== 'all' && appliedFilters.date !== 'soon') {
         dateParam = appliedFilters.date;
       } else if (isEnCours) {
-        // "En cours" = events happening today
         dateParam = 'today';
+      } else if (isWeekend) {
+        dateParam = 'weekend';
       }
-      // No date filter when "all" is selected — fetch everything
 
       return eventsApi.list({
         status: 'PUBLISHED',
@@ -577,70 +576,74 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className="w-full h-full bg-background flex flex-col">
 
         {/* Header & Search Bar */}
-        <div className="bg-background-white px-5 pt-safe-6 pb-3 border-b border-gray-100">
-          <div className="flex items-center gap-150 mb-200">
+        <div className="bg-background-white px-5 pt-safe-6 pb-2 shrink-0 z-10 relative">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Explorez et découvrez</h1>
+            <button onClick={() => onNavigate('notifications')} className="relative p-1">
+              <Bell className="w-[22px] h-[22px] text-gray-700" strokeWidth={2} />
+              <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-action-primary rounded-full border-2 border-white" />
+            </button>
+          </div>
+
+          <button onClick={() => setScreen('search')} className="flex items-center gap-1.5 mb-4 text-gray-700 active:opacity-70 transition-opacity">
+            <MapPin className="w-4 h-4" strokeWidth={2} />
+            <span className="text-[14px] font-semibold">{mapSearch || 'Cotonou'}</span>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </button>
+
+          <div className="flex items-center gap-2 mb-4">
             <div
-              className="flex-1 bg-gray-50 rounded-full flex items-center px-200 py-2.5 cursor-text"
+              className="flex-1 border border-gray-200 rounded-full flex items-center px-4 py-2.5 cursor-text"
               onClick={() => {
                 hapticFeedback.impact()
                 setScreen('search')
               }}
             >
-              <Search className="w-4 h-4 text-gray-400 mr-2" />
-              <span className="text-[14px] text-gray-400">Rechercher...</span>
+              <Search className="w-[18px] h-[18px] text-gray-400 mr-2 shrink-0" />
+              <span className="text-[14px] text-gray-400 truncate flex-1">Rechercher des événements</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  hapticFeedback.impact()
+                  setScreen('filter')
+                }}
+                className="ml-2 shrink-0 border-l pl-3 border-gray-200"
+              >
+                <SlidersHorizontal className="w-[18px] h-[18px] text-gray-500" />
+              </button>
             </div>
-            <button
-              onClick={() => {
-                hapticFeedback.impact()
-                setScreen('filter')
-              }}
-              className="w-10 h-10 rounded-full border border-border-primary flex items-center justify-center transition-colors hover:bg-gray-50 active:bg-gray-100"
-            >
-              <SlidersHorizontal className="w-4 h-4 text-gray-700" />
-            </button>
+            
             <button
               onClick={() => {
                 hapticFeedback.impact()
                 setViewMode(viewMode === 'list' ? 'map' : 'list')
               }}
-              className="w-10 h-10 rounded-full border border-border-primary flex items-center justify-center transition-colors bg-background-white hover:bg-gray-50 active:bg-gray-100 touch-sm"
+              className="w-[42px] h-[42px] rounded-full border border-gray-200 flex items-center justify-center transition-colors bg-white active:bg-gray-50 shrink-0"
             >
-              <MapPin className={`w-4 h-4 ${viewMode === 'map' ? 'text-action-primary' : 'text-gray-700'}`} />
-            </button>
-            <button
-              onClick={() => { hapticFeedback.impact(); setScreen('join') }}
-              className="w-10 h-10 rounded-full border border-border-primary flex items-center justify-center transition-colors bg-background-white hover:bg-gray-50 active:bg-gray-100 touch-sm"
-              title="Rejoindre un événement privé"
-            >
-              <Lock className="w-4 h-4 text-gray-700" />
+              <QrCode className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
-        {/* Category chips */}
-        <div className="flex gap-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-          {BROWSE_CATEGORIES.map((category) => (
-            <button
-              key={category}
-              onClick={() => {
-                hapticFeedback.impact()
-                setSelectedCategory(category)
-              }}
-              className={`px-3 py-2 rounded-full text-sm whitespace-nowrap font-medium transition-colors flex-shrink-0 flex items-center gap-1.5 ${
-                selectedCategory === category
-                  ? 'bg-action-primary active:bg-action-primary-hover text-white'
-                  : 'bg-gray-100 text-text-secondary'
-              }`}
-            >
-              {CATEGORY_ICONS[category] && (() => {
-                const Icon = CATEGORY_ICONS[category];
-                return <Icon className="w-4 h-4" strokeWidth={2} />
-              })()}
-              {category === 'EN_COURS' && <span className={`w-2 h-2 rounded-full ${selectedCategory === category ? 'bg-white opacity-80' : 'bg-red-500'}`} />}
-              <span>{CATEGORY_CHIP_LABELS[category] || CATEGORY_LABELS[category] || category}</span>
-            </button>
-          ))}
+          {/* Category chips */}
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5" style={{ scrollbarWidth: 'none' }}>
+            {BROWSE_CATEGORIES.map((category) => (
+              <button
+                key={category}
+                onClick={() => {
+                  hapticFeedback.impact()
+                  setSelectedCategory(category)
+                }}
+                className={`px-4 py-1.5 rounded-full text-[13px] whitespace-nowrap font-semibold transition-colors flex-shrink-0 ${
+                  selectedCategory === category
+                    ? 'bg-[#FFF5ED] text-[#FF7A00]'
+                    : 'bg-transparent text-gray-500'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
 
 
@@ -651,6 +654,14 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               <Loader2 className="w-7 h-7 animate-spin text-action-primary" />
             </div>
           }>
+            <div className="absolute right-5 bottom-24 z-[60]">
+              <button 
+                onClick={() => setViewMode('list')} 
+                className="w-[50px] h-[50px] bg-action-primary rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+              >
+                <List className="w-6 h-6 text-white" />
+              </button>
+            </div>
             <LazyExplorerMap
               events={events}
               mapCenter={mapCenter}

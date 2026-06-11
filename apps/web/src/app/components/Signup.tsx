@@ -699,10 +699,10 @@ export function Signup({ onBack }: SignupProps) {
         <button
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] bg-action-primary hover:bg-action-primary-hover text-text-inverse disabled:opacity-40"
+          className="auth-primary-btn w-full min-h-[52px] h-auto py-3 px-4 rounded-full font-semibold text-[15px] flex flex-col sm:flex-row items-center justify-center gap-2 transition-all active:scale-[0.98] bg-action-primary hover:bg-action-primary-hover text-text-inverse disabled:opacity-40 break-words max-w-full text-center"
         >
-          {isLoading && <RefreshIcon width={20} height={20} strokeWidth={1.4} className="animate-spin" />}
-          <span>{buttonLabel()}</span>
+          {isLoading && <RefreshIcon width={20} height={20} strokeWidth={1.4} className="animate-spin shrink-0" />}
+          <span className="break-words max-w-full">{buttonLabel()}</span>
         </button>
       </div>
     </div>
