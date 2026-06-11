@@ -5,12 +5,13 @@ export function PrivacyPolicy() {
   const navigate = useNavigate()
 
   return (
-    <div style={{ fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", backgroundColor: '#fff', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", backgroundColor: '#fff', minHeight: '100vh', boxSizing: 'border-box', width: '100%', overflowX: 'hidden' }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '0.75rem',
         padding: '1rem 1.25rem', borderBottom: '1px solid #f0f0f0',
-        position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 10
+        position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 10,
+        boxSizing: 'border-box', width: '100%'
       }}>
         <button
           onClick={() => navigate(-1)}
@@ -23,7 +24,7 @@ export function PrivacyPolicy() {
         </h1>
       </div>
 
-      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '2rem 1.25rem 4rem' }}>
+      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '2rem 1.25rem 4rem', boxSizing: 'border-box', width: '100%' }}>
         <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '2rem' }}>
           <strong>Dernière mise à jour :</strong> {new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}<br />
           Application : <strong>Let's Out</strong><br />
