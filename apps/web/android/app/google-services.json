@@ -12,7 +12,20 @@
           "package_name": "com.letsout.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "259737951981-sgo7ffp31c2g7ppls7j7ihh4jvv93cag.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.letsout.app",
+            "certificate_hash": "9463b647a8e509137a6c9e12fdd86fe21fe7899f"
+          }
+        },
+        {
+          "client_id": "259737951981-qrbvi6caic644v3i10kvf08p349pl0em.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBAGQcTSBDJ2X3ixqjaM7l6DOsN_9yQHx8"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "259737951981-qrbvi6caic644v3i10kvf08p349pl0em.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "259737951981-egc736gs4p0r2oi1t86utjnic648agoj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.letsout.app"
+              }
+            }
+          ]
         }
       }
     }
