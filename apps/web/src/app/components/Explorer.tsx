@@ -660,12 +660,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               <LazyExplorerMap
                 events={events}
                 mapCenter={mapCenter}
-                mapSearch={mapSearch}
-                mapSearchResults={mapSearchResults}
                 mapGeoLoading={mapGeoLoading}
-                onMapSearch={handleMapSearch}
-                onClearSearch={() => { setMapSearch(''); setMapSearchResults([]); }}
-                onSelectSearchResult={(r) => { setMapCenter([r.lat, r.lon]); setMapSearch(''); setMapSearchResults([]); }}
                 onGeolocate={handleMapGeolocate}
                 onNavigate={onNavigate}
               />

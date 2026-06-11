@@ -3,7 +3,7 @@
  * This file is loaded ONLY when the user switches to map view in Explorer,
  * saving ~150 KB from the initial JS bundle.
  */
-import { MapPin, Search, X, Loader2, Navigation } from 'lucide-react'
+import { Loader2, Navigation } from 'lucide-react'
 import L from 'leaflet'
 import '@/lib/leaflet-init'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
@@ -11,17 +11,12 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import type { Event } from '@/features/events/api'
-import type { GeoPlace } from '@/lib/geo'
+
 
 interface ExplorerMapProps {
   events: Event[]
   mapCenter: [number, number]
-  mapSearch: string
-  mapSearchResults: GeoPlace[]
   mapGeoLoading: boolean
-  onMapSearch: (q: string) => void
-  onClearSearch: () => void
-  onSelectSearchResult: (r: GeoPlace) => void
   onGeolocate: () => void
   onNavigate: (screen: string, id?: string) => void
 }
@@ -29,12 +24,7 @@ interface ExplorerMapProps {
 export default function ExplorerMap({
   events,
   mapCenter,
-  mapSearch,
-  mapSearchResults,
   mapGeoLoading,
-  onMapSearch,
-  onClearSearch,
-  onSelectSearchResult,
   onGeolocate,
   onNavigate,
 }: ExplorerMapProps) {
