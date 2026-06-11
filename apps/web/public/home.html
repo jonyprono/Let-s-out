@@ -179,7 +179,17 @@
     @media (min-width: 860px) {
       .card { min-width: 0; }
     }
-    .card .emoji { width: 56px; height: 56px; object-fit: contain; margin-bottom: 1.5rem; }
+    .icon-wrapper {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: #FFF1E5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .card .emoji { font-size: 1.75rem; line-height: 1; display: block; }
     .card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.75rem; color: #1a1a1a; }
     .card p { font-size: 0.95rem; color: #666; line-height: 1.6; }
 
@@ -246,22 +256,30 @@
     
     <div class="features-grid" style="margin-bottom: 2.5rem; margin-top: 1.5rem; text-align: left;">
       <div class="card">
-        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4cd/512.webp" alt="icon" class="emoji" />
+        <div class="icon-wrapper">
+          <span class="emoji">📍</span>
+        </div>
         <h3>Découvrir</h3>
         <p>Explorez les événements publics ou privés organisés autour de vous sur la carte interactive.</p>
       </div>
       <div class="card">
-        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp" alt="icon" class="emoji" />
+        <div class="icon-wrapper">
+          <span class="emoji">🎉</span>
+        </div>
         <h3>Organiser</h3>
         <p>Créez une sortie ou une activité en quelques secondes et invitez d'autres personnes.</p>
       </div>
       <div class="card">
-        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f465/512.webp" alt="icon" class="emoji" />
+        <div class="icon-wrapper">
+          <span class="emoji">👥</span>
+        </div>
         <h3>Rencontrer</h3>
         <p>Faites-vous de nouveaux amis partageant vos centres d'intérêt via la messagerie.</p>
       </div>
       <div class="card">
-        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4b0/512.webp" alt="icon" class="emoji" />
+        <div class="icon-wrapper">
+          <span class="emoji">💰</span>
+        </div>
         <h3>Partager</h3>
         <p>Mutualisez les frais de vos sorties grâce au système de cagnotte partagée intégré.</p>
       </div>

@@ -181,11 +181,19 @@ export function LandingPage() {
         @media (min-width: 860px) {
           .lp-card { min-width: 0; }
         }
-        .lp-card-emoji {
+        .lp-icon-wrapper {
           width: 56px;
           height: 56px;
-          object-fit: contain;
+          border-radius: 16px;
+          background: #FFF1E5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           margin-bottom: 1.5rem;
+        }
+        .lp-card-emoji {
+          font-size: 1.75rem;
+          line-height: 1;
         }
         .lp-card h3 {
           margin: 0 0 0.75rem;
@@ -287,13 +295,15 @@ export function LandingPage() {
           </h1>
           <div className="lp-grid" style={{ marginBottom: '2.5rem', marginTop: '1.5rem', textAlign: 'left' }}>
             {[
-              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4cd/512.webp', title: 'Découvrir', desc: "Explorez les événements publics ou privés organisés autour de vous sur la carte interactive." },
-              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp', title: 'Organiser', desc: "Créez une sortie ou une activité en quelques secondes et invitez d'autres personnes." },
-              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f465/512.webp', title: 'Rencontrer', desc: "Faites-vous de nouveaux amis partageant vos centres d'intérêt via la messagerie." },
-              { emojiUrl: 'https://fonts.gstatic.com/s/e/notoemoji/latest/1f4b0/512.webp', title: 'Partager', desc: "Mutualisez les frais de vos sorties grâce au système de cagnotte partagée intégré." },
+              { emoji: '📍', title: 'Découvrir', desc: "Explorez les événements publics ou privés organisés autour de vous sur la carte interactive." },
+              { emoji: '🎉', title: 'Organiser', desc: "Créez une sortie ou une activité en quelques secondes et invitez d'autres personnes." },
+              { emoji: '👥', title: 'Rencontrer', desc: "Faites-vous de nouveaux amis partageant vos centres d'intérêt via la messagerie." },
+              { emoji: '💰', title: 'Partager', desc: "Mutualisez les frais de vos sorties grâce au système de cagnotte partagée intégré." },
             ].map((f) => (
               <div key={f.title} className="lp-card">
-                <img src={f.emojiUrl} alt="icon" className="lp-card-emoji" />
+                <div className="lp-icon-wrapper">
+                  <span className="lp-card-emoji">{f.emoji}</span>
+                </div>
                 <h3>{f.title}</h3>
                 <p>{f.desc}</p>
               </div>
