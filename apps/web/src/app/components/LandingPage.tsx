@@ -69,7 +69,6 @@ export function LandingPage() {
           font-weight: 600;
         }
         @media (max-width: 480px) {
-          .lp-nav-links a:not(.lp-nav-cta) { display: none; }
           .lp-nav-brand span { display: none; }
         }
 
@@ -306,6 +305,23 @@ export function LandingPage() {
           <p>
             Pour toute question, contactez-nous à{' '}
             <a href="mailto:contact@letsout.app">contact@letsout.app</a>
+          </p>
+        </section>
+
+        {/* ── Privacy Summary ────────────────────────────────────── */}
+        <section className="lp-about" id="privacy-summary" style={{ background: '#f5f5f5', borderRadius: '16px', marginTop: '1rem', marginBottom: '3rem' }}>
+          <h2>Confidentialité & Conditions</h2>
+          <p>
+            Chez <strong>Let's Out</strong>, la protection de vos données est une priorité. L'authentification
+            se fait de manière sécurisée via <strong>Firebase (OTP)</strong> ou <strong>Google Sign-In</strong>.
+          </p>
+          <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem', color: '#555', fontSize: '0.95rem', lineHeight: '1.75' }}>
+            <li><strong>Données collectées :</strong> Numéro de téléphone, nom, photo de profil, et données d'événements.</li>
+            <li><strong>Utilisation :</strong> Strictement limitées au fonctionnement de l'application (événements, messagerie). <strong>Jamais vendues à des tiers.</strong></li>
+            <li><strong>Vos droits (RGPD) :</strong> Accès, rectification, et suppression complète de vos données sur simple demande.</li>
+          </ul>
+          <p>
+            Consultez notre <Link to="/privacy" style={{ fontWeight: 600 }}>Politique de confidentialité complète</Link> et nos <Link to="/terms" style={{ fontWeight: 600 }}>Conditions d'utilisation</Link>.
           </p>
         </section>
 
