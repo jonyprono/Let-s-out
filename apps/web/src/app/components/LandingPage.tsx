@@ -10,7 +10,9 @@ export function LandingPage() {
           padding: 0;
           background: #fff;
           color: #1a1a1a;
+          height: 100dvh;
           overflow-x: hidden;
+          overflow-y: auto;
           width: 100%;
         }
 

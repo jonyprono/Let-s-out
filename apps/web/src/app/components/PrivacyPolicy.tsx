@@ -5,7 +5,7 @@ export function PrivacyPolicy() {
   const navigate = useNavigate()
 
   return (
-    <div style={{ fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", backgroundColor: '#fff', minHeight: '100vh', boxSizing: 'border-box', width: '100%', overflowX: 'hidden' }}>
+    <div style={{ fontFamily: "'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", backgroundColor: '#fff', height: '100dvh', boxSizing: 'border-box', width: '100%', overflowX: 'hidden', overflowY: 'auto' }}>
       {/* Header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '0.75rem',
