@@ -6,6 +6,7 @@ import path from 'path'
 import { pipeline } from 'stream/promises'
 import { v4 as uuidv4 } from 'uuid'
 import { createAndSendNotification } from '../notifications/notifications.routes'
+import { uploadStreamToCloudinary } from '../../services/cloudinary.service'
 
 export default async function usersRoutes(app: FastifyInstance) {
   // All routes require authentication
@@ -110,38 +111,42 @@ export default async function usersRoutes(app: FastifyInstance) {
   // Submit KYC documents (multipart)
   app.post('/me/kyc', async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'kyc', sub)
-    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
-
     const saved: Record<string, string> = {}
-    for await (const part of req.parts()) {
-      if (part.type !== 'file') continue
-      const ext = path.extname(part.filename) || '.jpg'
-      const filename = `${part.fieldname}-${uuidv4()}${ext}`
-      const saveTo = path.join(uploadsDir, filename)
-      await pipeline(part.file, fs.createWriteStream(saveTo))
-      saved[part.fieldname] = `/uploads/kyc/${sub}/${filename}`
+
+    try {
+      for await (const part of req.parts()) {
+        if (part.type !== 'file') continue
+        const ext = path.extname(part.filename) || '.jpg'
+        const filename = `${part.fieldname}-${uuidv4()}${ext}`
+        const folder = `kyc/${sub}`
+        
+        const url = await uploadStreamToCloudinary(part.file, folder, filename)
+        saved[part.fieldname] = url
+      }
+
+      if (Object.keys(saved).length === 0) {
+        return reply.code(400).send({ error: 'Aucun document fourni' })
+      }
+
+      const profile = await app.prisma.profile.update({
+        where: { userId: sub },
+        data: {
+          kycStatus: 'pending',
+          kycSubmittedAt: new Date(),
+          kycReviewedAt: null,
+          kycRejectedReason: null,
+          kycIdFront: saved.idFront ?? undefined,
+          kycIdBack: saved.idBack ?? undefined,
+          kycSelfie: saved.selfie ?? undefined,
+          kycSelfieWithId: saved.selfieWithId ?? undefined,
+        },
+      })
+
+      return reply.send({ success: true, kycStatus: profile.kycStatus, documents: saved })
+    } catch (err) {
+      console.error('KYC Upload error', err)
+      return reply.code(500).send({ error: 'Upload failed' })
     }
-
-    if (Object.keys(saved).length === 0) {
-      return reply.code(400).send({ error: 'Aucun document fourni' })
-    }
-
-    const profile = await app.prisma.profile.update({
-      where: { userId: sub },
-      data: {
-        kycStatus: 'pending',
-        kycSubmittedAt: new Date(),
-        kycReviewedAt: null,
-        kycRejectedReason: null,
-        kycIdFront: saved.idFront ?? undefined,
-        kycIdBack: saved.idBack ?? undefined,
-        kycSelfie: saved.selfie ?? undefined,
-        kycSelfieWithId: saved.selfieWithId ?? undefined,
-      },
-    })
-
-    return reply.send({ success: true, kycStatus: profile.kycStatus, documents: saved })
   })
 
   // Get current KYC status for the authenticated user
