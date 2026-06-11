@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router';
 import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target, Bell, ChevronDown, QrCode, List } from 'lucide-react';
-import { Basketball01Icon, PaintBoardIcon, Pizza01Icon, Moon01Icon, Airplane01Icon, GameIcon, FavouriteIcon, MusicNote01Icon, StarIcon } from 'hugeicons-react';
+// import { Basketball01Icon, PaintBoardIcon, Pizza01Icon, Moon01Icon, Airplane01Icon, GameIcon, FavouriteIcon, MusicNote01Icon, StarIcon } from 'hugeicons-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { apiClient } from '@/lib/api-client';
@@ -48,6 +48,7 @@ const TIME_FILTERS = [
   { key: 'night', label: 'Nuit' },
 ];
 
+/*
 const CATEGORY_LABELS: Record<string, string> = {
   SPORT: 'Sport',
   CULTURE: 'Culture & Art',
@@ -71,6 +72,7 @@ const CATEGORY_ICONS: Record<string, React.FC<any>> = {
   MUSIC: MusicNote01Icon,
   OTHER: StarIcon,
 };
+*/
 
 // Base category list for search tab
 const BROWSE_CATEGORIES = ['Tout', 'Pour vous', 'En ce moment', 'Ce week-end'];
