@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { Loader2, Navigation, X } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Loader2, Navigation, X, MapPin } from 'lucide-react'
 import L from 'leaflet'
 import '@/lib/leaflet-init'
-import { MapContainer, TileLayer, Marker } from 'react-leaflet'
-import { EventCard } from '@/components/shared/EventCard'
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
+import { SafeImage } from '@/components/shared/SafeImage'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import type { Event } from '@/features/events/api'
-
 
 interface ExplorerMapProps {
   events: Event[]
@@ -15,6 +16,187 @@ interface ExplorerMapProps {
   onNavigate: (screen: string, id?: string) => void
 }
 
+/** Cluster events by proximity (roughly 0.03° ≈ 3 km at equator) */
+function clusterEvents(events: Event[], zoom: number): Array<{
+  lat: number
+  lon: number
+  events: Event[]
+}> {
+  const radius = zoom >= 15 ? 0.005 : zoom >= 13 ? 0.02 : 0.05
+  const clusters: Array<{ lat: number; lon: number; events: Event[] }> = []
+  const used = new Set<string>()
+
+  for (const event of events) {
+    if (used.has(event.id) || !event.latitude || !event.longitude) continue
+    const cluster = { lat: event.latitude, lon: event.longitude, events: [event] }
+    used.add(event.id)
+
+    for (const other of events) {
+      if (used.has(other.id) || !other.latitude || !other.longitude) continue
+      const dlat = Math.abs(other.latitude - event.latitude)
+      const dlon = Math.abs(other.longitude - event.longitude)
+      if (dlat < radius && dlon < radius) {
+        cluster.events.push(other)
+        used.add(other.id)
+      }
+    }
+    clusters.push(cluster)
+  }
+  return clusters
+}
+
+/** Single orange pin icon — matches Figma exactly */
+function makePinIcon(count: number, isSelected: boolean) {
+  const scale = isSelected ? 1.15 : 1
+  const shadow = isSelected
+    ? 'drop-shadow(0 4px 12px rgba(255,122,0,0.5))'
+    : 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))'
+
+  if (count <= 1) {
+    return L.divIcon({
+      className: '',
+      html: `
+        <div style="transform:scale(${scale});transform-origin:bottom center;filter:${shadow};transition:transform 0.15s">
+          <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="#FF7A00"/>
+            <circle cx="18" cy="18" r="7" fill="white"/>
+          </svg>
+        </div>`,
+      iconSize: [36, 44],
+      iconAnchor: [18, 44],
+    })
+  }
+
+  // Cluster pin: pin + badge
+  return L.divIcon({
+    className: '',
+    html: `
+      <div style="transform:scale(${scale});transform-origin:bottom center;filter:${shadow};transition:transform 0.15s;position:relative;display:inline-flex;flex-direction:column;align-items:center">
+        <div style="background:#FFF5ED;border:1.5px solid #FF7A00;border-radius:20px;padding:2px 8px;margin-bottom:2px;white-space:nowrap">
+          <span style="color:#FF7A00;font-weight:700;font-size:11px;font-family:system-ui">${count} événements</span>
+        </div>
+        <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="#FF7A00"/>
+          <circle cx="18" cy="18" r="7" fill="white"/>
+        </svg>
+      </div>`,
+    iconSize: [80, 64],
+    iconAnchor: [40, 64],
+  })
+}
+
+/** Listen to map zoom/click changes */
+function ZoomWatcher({ onZoom, onMapClick }: { onZoom: (z: number) => void; onMapClick: () => void }) {
+  useMapEvents({
+    zoomend: (e) => onZoom(e.target.getZoom()),
+    click: () => onMapClick(),
+  })
+  return null
+}
+
+/** Compact event mini-card shown at bottom of map when a pin is tapped */
+function EventMiniCard({
+  event,
+  onNavigate,
+  onClose,
+}: {
+  event: Event
+  onNavigate: (s: string, id?: string) => void
+  onClose: () => void
+}) {
+  const dateStr = event.startAt
+    ? format(new Date(event.startAt), "EEEE d MMM 'à' HH'h'mm", { locale: fr })
+    : ''
+  const location = [event.city, event.address].filter(Boolean).join(' • ')
+  const price = event.price === 0 ? 'Gratuit' : `${Number(event.price).toLocaleString('fr-FR')} F`
+  const isFree = event.price === 0
+
+  return (
+    <div
+      className="absolute bottom-0 left-0 right-0 z-[1000] px-4 pb-6 pt-3"
+      style={{ pointerEvents: 'all' }}
+    >
+      <div className="bg-white rounded-[20px] shadow-2xl overflow-hidden">
+        {/* Close */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center z-10 active:scale-90"
+        >
+          <X className="w-3.5 h-3.5 text-gray-500" />
+        </button>
+
+        <div className="flex gap-3 p-3">
+          {/* Thumbnail */}
+          <div className="w-[90px] h-[80px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-100">
+            <SafeImage
+              src={event.coverUrl}
+              alt={event.title}
+              className="w-full h-full"
+              fallback={
+                <div className="w-full h-full"
+                  style={{ backgroundImage: `repeating-conic-gradient(#e5e7eb 0% 25%, #f3f4f6 0% 50%)`, backgroundSize: '16px 16px' }}
+                />
+              }
+            />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+            <div>
+              <h3 className="text-[14px] font-bold text-gray-900 leading-tight truncate">{event.title}</h3>
+              <p className="text-[12px] text-gray-500 mt-0.5 capitalize">{dateStr}</p>
+              {location && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                  <p className="text-[12px] text-gray-500 truncate">{location}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between mt-2">
+              {/* Participants */}
+              <div className="flex items-center gap-1">
+                {((event as any).bookings || []).slice(0, 3).map((b: any, i: number) => (
+                  <div
+                    key={i}
+                    className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200"
+                    style={{ marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i }}
+                  >
+                    {b?.user?.profile?.avatarUrl ? (
+                      <SafeImage src={b.user.profile.avatarUrl} alt="" className="w-full h-full" />
+                    ) : (
+                      <div className="w-full h-full bg-orange-200" />
+                    )}
+                  </div>
+                ))}
+                <span className="text-[11px] text-gray-500 ml-1">
+                  {(event.currentAttendees || 0) > 0
+                    ? `+${event.currentAttendees} Participants`
+                    : 'Aucun inscrit'}
+                </span>
+              </div>
+              {/* Price */}
+              <span
+                className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${isFree ? 'text-green-600 bg-green-50' : 'text-blue-600 bg-blue-50'}`}
+              >
+                {price}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button
+          onClick={() => onNavigate('event-details', event.id)}
+          className="w-full bg-action-primary text-white text-[13px] font-bold py-3 active:opacity-80"
+        >
+          Voir les détails
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function ExplorerMap({
   events,
   mapCenter,
@@ -22,73 +204,80 @@ export default function ExplorerMap({
   onGeolocate,
   onNavigate,
 }: ExplorerMapProps) {
+  const [selectedCluster, setSelectedCluster] = useState<Event[] | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
+  const [zoom, setZoom] = useState(13)
 
-  const createCustomIcon = (isSelected: boolean) => {
-    return L.divIcon({
-      className: 'bg-transparent border-none',
-      html: `
-        <div class="relative flex flex-col items-center transition-transform ${isSelected ? 'scale-125' : 'scale-100'}">
-          <div class="w-10 h-10 relative flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full drop-shadow-md">
-              <path d="M12 21.5C12 21.5 20.5 15.5 20.5 9.5C20.5 4.80558 16.6944 1 12 1C7.30558 1 3.5 4.80558 3.5 9.5C3.5 15.5 12 21.5 12 21.5Z" fill="#FF7A00"/>
-              <circle cx="12" cy="9.5" r="3.5" fill="white"/>
-            </svg>
-          </div>
-        </div>
-      `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 40],
-    })
+  const validEvents = events.filter((e) => e.latitude && e.longitude)
+  const clusters = useMemo(() => clusterEvents(validEvents, zoom), [validEvents, zoom])
+
+  const handleClusterClick = (clusterEvents: Event[]) => {
+    if (clusterEvents.length === 1) {
+      setSelectedEvent(clusterEvents[0])
+      setSelectedCluster(null)
+    } else {
+      setSelectedCluster(clusterEvents)
+      setSelectedEvent(null)
+    }
+  }
+
+  const closeCard = () => {
+    setSelectedEvent(null)
+    setSelectedCluster(null)
   }
 
   return (
-    <div className="flex-1 relative z-0 w-full h-full">
+    <div className="absolute inset-0 z-0">
       <MapContainer
         key={`${mapCenter[0]}-${mapCenter[1]}`}
         center={mapCenter}
-        zoom={14}
+        zoom={zoom}
         style={{ width: '100%', height: '100%' }}
         zoomControl={false}
       >
+        <ZoomWatcher onZoom={setZoom} onMapClick={closeCard} />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
         />
-        {events.filter(e => e.latitude && e.longitude).map((event) => (
-          <Marker 
-            key={event.id} 
-            position={[event.latitude!, event.longitude!]} 
-            icon={createCustomIcon(selectedEvent?.id === event.id)}
-            eventHandlers={{
-              click: () => {
-                setSelectedEvent(event)
-              }
-            }}
-          />
-        ))}
+        {clusters.map((cluster, i) => {
+          const isSelected =
+            (selectedEvent && cluster.events.some((e) => e.id === selectedEvent.id)) ||
+            (selectedCluster && cluster.events[0]?.id === selectedCluster[0]?.id)
+          return (
+            <Marker
+              key={i}
+              position={[cluster.lat, cluster.lon]}
+              icon={makePinIcon(cluster.events.length, !!isSelected)}
+              eventHandlers={{ click: () => handleClusterClick(cluster.events) }}
+            />
+          )
+        })}
       </MapContainer>
 
-      {/* Floating Event Card at the bottom when an event is selected */}
+      {/* Bottom mini-card — single event */}
       {selectedEvent && (
-        <div className="absolute bottom-24 left-0 right-0 px-5 z-[1000] animate-in slide-in-from-bottom-8 duration-300">
-          <div className="relative">
-            <button 
-              onClick={() => setSelectedEvent(null)}
-              className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center z-10 active:scale-95"
-            >
-              <X className="w-4 h-4 text-gray-500" />
-            </button>
-            <EventCard event={selectedEvent} onNavigate={onNavigate} />
-          </div>
-        </div>
+        <EventMiniCard
+          event={selectedEvent}
+          onNavigate={onNavigate}
+          onClose={closeCard}
+        />
       )}
 
-      {/* Locate me */}
+      {/* Bottom mini-card — cluster: show first event with count */}
+      {selectedCluster && !selectedEvent && (
+        <EventMiniCard
+          event={selectedCluster[0]}
+          onNavigate={onNavigate}
+          onClose={closeCard}
+        />
+      )}
+
+      {/* Geolocate FAB */}
       <button
         onClick={onGeolocate}
         disabled={mapGeoLoading}
-        className="absolute bottom-32 right-5 z-[900] w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+        className={`absolute z-[900] w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform ${selectedEvent || selectedCluster ? 'bottom-52 right-4' : 'bottom-8 right-4'}`}
       >
         {mapGeoLoading
           ? <Loader2 className="w-5 h-5 animate-spin text-action-primary" />

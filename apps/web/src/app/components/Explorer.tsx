@@ -578,7 +578,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className={`w-full h-full flex flex-col relative ${viewMode === 'map' ? 'bg-transparent' : 'bg-background'}`}>
 
         {/* Header & Search Bar */}
-        <div className={`px-5 pt-safe-6 pb-2 shrink-0 z-10 relative ${viewMode === 'map' ? 'bg-white/95 backdrop-blur-md rounded-b-[32px] shadow-sm' : 'bg-background-white'}`}>
+        <div className={`px-5 pt-safe-6 pb-2 shrink-0 relative ${viewMode === 'map' ? 'z-[500] bg-white shadow-sm rounded-b-[28px]' : 'z-10 bg-background-white'}`}>
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
@@ -656,20 +656,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               <Loader2 className="w-7 h-7 animate-spin text-action-primary" />
             </div>
           }>
-            <div className="absolute inset-0 z-0">
-              <LazyExplorerMap
-                events={events}
-                mapCenter={mapCenter}
-                mapGeoLoading={mapGeoLoading}
-                onGeolocate={handleMapGeolocate}
-                onNavigate={onNavigate}
-              />
-            </div>
+            <LazyExplorerMap
+              events={events}
+              mapCenter={mapCenter}
+              mapGeoLoading={mapGeoLoading}
+              onGeolocate={handleMapGeolocate}
+              onNavigate={onNavigate}
+            />
             {/* FAB to switch back to list */}
-            <div className="absolute right-5 bottom-24 z-[60]">
-              <button 
-                onClick={() => setViewMode('list')} 
-                className="w-[50px] h-[50px] bg-action-primary rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+            <div className="absolute right-5 bottom-8 z-[900]">
+              <button
+                onClick={() => setViewMode('list')}
+                className="w-[50px] h-[50px] bg-action-primary rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
               >
                 <List className="w-6 h-6 text-white" />
               </button>
