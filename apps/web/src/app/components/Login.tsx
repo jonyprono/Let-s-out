@@ -18,10 +18,7 @@ import {
   authInput,
   authPhoneInputFlex,
   authPrimaryBtn,
-  authSecondaryBtn,
-  authDivider,
-  authDividerText,
-  authLink
+  authSecondaryBtn
 } from '@/lib/auth-ui'
 
 interface LoginProps {
@@ -96,29 +93,26 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
   return (
     <div className={authShell}>
-      {/* Scrollable container for mobile */}
-      <div className="flex-1 overflow-y-auto px-6 pt-7 pb-4" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex flex-col h-full px-6 pt-4 pb-4">
         
-        <div className="h-4 sm:h-12" />
-
         {/* Logo */}
-        <div className="flex justify-center mb-6">
-          <img src="/logo.png" alt="Let's Out" className="w-[70px] h-auto object-contain" />
+        <div className="flex justify-center mb-3 sm:mt-4 shrink-0">
+          <img src="/logo.png" alt="Let's Out" className="w-[60px] h-auto object-contain" />
         </div>
 
         {/* Titres */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-5 shrink-0">
           <h1 className={authTitle}>Connectez-vous</h1>
-          <p className={authSubtitle}>
-            Rejoignez des événements près de vous et vivez des expériences inoubliables.
+          <p className={`${authSubtitle} !mt-1`}>
+            Rejoignez des événements près de vous et vivez<br/>des expériences inoubliables.
           </p>
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-5 mb-5">
+        <div className="flex flex-col gap-4 shrink-0">
           {/* Téléphone */}
           <div>
-            <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
+            <label className={`${authLabel} !mb-1 block`}>Numéro de téléphone</label>
             <div className="flex gap-2">
               <CountryPicker
                 value={country}
@@ -130,7 +124,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                 value={displayValue}
                 onChange={handlePhoneChange}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                placeholder="01 00 00 00 00"
+                placeholder="00 00 00 00 00"
                 className={`auth-phone-input ${authPhoneInputFlex}`}
               />
             </div>
@@ -138,98 +132,106 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Mot de passe */}
           <div>
-            <label className={`${authLabel} mb-1.5 block`}>Mot de passe</label>
+            <label className={`${authLabel} !mb-1 block`}>Mot de passe</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
-                placeholder="••••••••"
+                placeholder=""
                 className={`${authInput} pr-12`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500 hover:text-action-primary transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-400 hover:text-action-primary transition-colors"
               >
                 {showPassword
                   ? <ViewIcon width={20} height={20} strokeWidth={1.2} />
                   : <ViewOffIcon width={20} height={20} strokeWidth={1.2} />}
               </button>
             </div>
+            
+            {/* Mot de passe oublié */}
+            <div className="text-right mt-2">
+              <button
+                type="button"
+                onClick={onForgotPassword}
+                className="text-action-primary text-[12px] underline font-medium hover:text-action-primary-hover transition-colors"
+              >
+                Mot de passe oublié?
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Mot de passe oublié */}
-        <div className="text-right mb-6">
+        <div className="mt-4 shrink-0">
+          {/* Bouton Se connecter */}
           <button
+            id="login-send-btn"
             type="button"
-            onClick={onForgotPassword}
-            className={`${authLink} text-[13px]`}
+            onClick={handleLogin}
+            disabled={!phone.trim() || !password || logging}
+            className={`${authPrimaryBtn} !h-[48px] !min-h-[48px]`}
           >
-            Mot de passe oublié ?
+            {logging ? 'Connexion...' : 'Se connecter'}
           </button>
         </div>
 
-        {/* Bouton Se connecter */}
-        <button
-          id="login-send-btn"
-          type="button"
-          onClick={handleLogin}
-          disabled={!phone.trim() || !password || logging}
-          className={`${authPrimaryBtn} mb-5`}
-        >
-          {logging ? 'Connexion...' : 'Se connecter'}
-        </button>
-
         {/* Séparateur Ou */}
-        <div className={authDivider}>
-          <div className="flex-1 h-[1px] bg-border-primary" />
-          <span className={authDividerText}>Ou</span>
-          <div className="flex-1 h-[1px] bg-border-primary" />
+        <div className="flex items-center gap-3 my-4 shrink-0">
+          <div className="flex-1 h-[1px] bg-neutral-gray-200" />
+          <span className="text-[12px] text-text-secondary">Ou</span>
+          <div className="flex-1 h-[1px] bg-neutral-gray-200" />
         </div>
 
         {/* Bouton Google */}
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          disabled={googleLoading}
-          className={`${authSecondaryBtn} mb-6`}
-        >
-          {googleLoading ? (
-            <span className="text-text-secondary">Connexion avec Google...</span>
-          ) : (
-            <>
-              <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M47.532 24.5528C47.532 22.9214 47.3997 21.2811 47.1175 19.6761H24.48V28.9181H37.4434C36.9055 31.8988 35.177 34.5356 32.6461 36.2111V42.2078H40.3801C44.9217 38.0278 47.532 31.8547 47.532 24.5528Z" fill="#4285F4"/>
-                <path d="M24.48 48.0016C30.9529 48.0016 36.4116 45.8766 40.3888 42.2078L32.6549 36.2111C30.5031 37.675 27.7253 38.5039 24.4888 38.5039C18.2275 38.5039 12.9187 34.2798 11.0139 28.6006H3.03296V34.7825C7.10718 42.8868 15.4056 48.0016 24.48 48.0016Z" fill="#34A853"/>
-                <path d="M11.0051 28.6006C9.99973 25.6199 9.99973 22.3633 11.0051 19.3825V13.2006H3.02419C-0.805404 20.7366 -0.805404 27.2466 3.02419 34.7825L11.0051 28.6006Z" fill="#FBBC05"/>
-                <path d="M24.48 9.49932C27.9016 9.42956 31.2086 10.7339 33.6866 13.0973L40.5387 6.24523C36.2 2.17101 30.4414 -0.068932 24.48 0.00171733C15.4056 0.00171733 7.10718 5.11652 3.03296 13.2006L11.0139 19.3825C12.9099 13.7234 18.2275 9.49932 24.48 9.49932Z" fill="#EA4335"/>
-              </svg>
-              <span>Se connecter avec Google</span>
-            </>
-          )}
-        </button>
-
-      </div>
-
-      {/* Bas de page */}
-      <div className="px-6 pb-5 pt-3 shrink-0 bg-background flex flex-col items-center gap-2">
-        <p style={{ fontSize: 13 }} className="text-text-secondary">
-          Vous êtes nouveau sur Let's Out ?{' '}
-          <button onClick={onSignup} className={authLink}>
-            Inscrivez-vous
+        <div className="shrink-0">
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={googleLoading}
+            className={`${authSecondaryBtn} !h-[48px] !min-h-[48px] text-[14px] font-semibold text-gray-700`}
+          >
+            {googleLoading ? (
+              <span className="text-text-secondary">Connexion avec Google...</span>
+            ) : (
+              <>
+                <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M47.532 24.5528C47.532 22.9214 47.3997 21.2811 47.1175 19.6761H24.48V28.9181H37.4434C36.9055 31.8988 35.177 34.5356 32.6461 36.2111V42.2078H40.3801C44.9217 38.0278 47.532 31.8547 47.532 24.5528Z" fill="#4285F4"/>
+                  <path d="M24.48 48.0016C30.9529 48.0016 36.4116 45.8766 40.3888 42.2078L32.6549 36.2111C30.5031 37.675 27.7253 38.5039 24.4888 38.5039C18.2275 38.5039 12.9187 34.2798 11.0139 28.6006H3.03296V34.7825C7.10718 42.8868 15.4056 48.0016 24.48 48.0016Z" fill="#34A853"/>
+                  <path d="M11.0051 28.6006C9.99973 25.6199 9.99973 22.3633 11.0051 19.3825V13.2006H3.02419C-0.805404 20.7366 -0.805404 27.2466 3.02419 34.7825L11.0051 28.6006Z" fill="#FBBC05"/>
+                  <path d="M24.48 9.49932C27.9016 9.42956 31.2086 10.7339 33.6866 13.0973L40.5387 6.24523C36.2 2.17101 30.4414 -0.068932 24.48 0.00171733C15.4056 0.00171733 7.10718 5.11652 3.03296 13.2006L11.0139 19.3825C12.9099 13.7234 18.2275 9.49932 24.48 9.49932Z" fill="#EA4335"/>
+                </svg>
+                <span>Se connecter avec Google</span>
+              </>
+            )}
           </button>
-        </p>
-        <p className="text-neutral-gray-400 leading-tight text-center px-4" style={{ fontSize: 11 }}>
-          En continuant, vous acceptez nos{' '}
-          <button onClick={() => nav('/terms')} className={`${authLink} font-normal underline inline-block`}>Conditions d'Utilisation</button>
-          {' '}et notre{' '}
-          <button onClick={() => nav('/privacy')} className={`${authLink} font-normal underline inline-block`}>Politique de Confidentialité</button>
-        </p>
-      </div>
+        </div>
 
+        <div className="flex-1 min-h-0" />
+
+        {/* Bas de page */}
+        <div className="flex flex-col items-center gap-3 shrink-0 pt-2">
+          <p className="text-[13px] text-text-secondary">
+            Vous êtes nouveau sur Let's Out ?{' '}
+            <button onClick={onSignup} className="text-action-primary underline font-medium">
+              Inscrivez-vous
+            </button>
+          </p>
+          
+          <div className="w-full h-[1px] bg-neutral-gray-200" />
+
+          <p className="text-text-secondary leading-tight text-center px-1" style={{ fontSize: 10 }}>
+            En continuant, vous acceptez nos{' '}
+            <button onClick={() => nav('/terms')} className="text-action-primary font-normal hover:opacity-80 inline-block">Conditions d'Utilisation</button>
+            {' '}et notre{' '}
+            <button onClick={() => nav('/privacy')} className="text-action-primary font-normal hover:opacity-80 inline-block">Politique de Confidentialité</button>
+          </p>
+        </div>
+
+      </div>
     </div>
   )
 }
