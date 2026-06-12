@@ -522,4 +522,77 @@ export default async function usersRoutes(app: FastifyInstance) {
     })
     return reply.send({ data: follows.map(f => f.following.profile) })
   })
+
+  // Delete own account (soft delete + tracking)
+  app.delete('/me', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const body = req.body as { reason?: string } | undefined
+
+    // 1. Get the user and profile
+    const user = await app.prisma.user.findUnique({
+      where: { id: sub },
+      include: { profile: true }
+    })
+
+    if (!user) return reply.code(404).send({ error: 'User not found' })
+    if (user.deletedAt) return reply.code(400).send({ error: 'User already deleted' })
+
+    // 2. Track deleted account (store the reason if provided)
+    await app.prisma.deletedAccountTracker.create({
+      data: {
+        userId: sub,
+        email: user.email,
+        phone: user.phone,
+        reason: body?.reason || 'Account deleted by user via settings',
+      }
+    })
+
+    // 3. Delete from Firebase Auth so the user can never log in again
+    try {
+      const admin = require('firebase-admin')
+      if (admin.apps.length) {
+        if (user.email) {
+          const fbUser = await admin.auth().getUserByEmail(user.email).catch(() => null)
+          if (fbUser) await admin.auth().deleteUser(fbUser.uid)
+        }
+        if (user.phone) {
+          const fbUser = await admin.auth().getUserByPhoneNumber(user.phone).catch(() => null)
+          if (fbUser) await admin.auth().deleteUser(fbUser.uid)
+        }
+      }
+    } catch (err) {
+      console.error('[Firebase] Failed to delete user from Firebase Auth:', err)
+      // Continue anyway — soft delete in DB is still applied
+    }
+
+    // 4. Soft delete in DB + anonymize profile
+    //    Nullify email/phone so unique constraints don't block future accounts with same credentials
+    await app.prisma.$transaction([
+      app.prisma.user.update({
+        where: { id: sub },
+        data: {
+          deletedAt: new Date(),
+          isActive: false,
+          email: null,
+          phone: null,
+        }
+      }),
+      app.prisma.profile.update({
+        where: { userId: sub },
+        data: {
+          displayName: 'Utilisateur Supprimé',
+          avatarUrl: null,
+          coverUrl: null,
+          bio: null,
+          city: null,
+          country: null,
+        }
+      }),
+      // Revoke all refresh tokens and device tokens
+      app.prisma.refreshToken.deleteMany({ where: { userId: sub } }),
+      app.prisma.deviceToken.deleteMany({ where: { userId: sub } }),
+    ])
+
+    return reply.send({ success: true, message: 'Account deleted successfully' })
+  })
 }

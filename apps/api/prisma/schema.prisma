@@ -18,6 +18,8 @@ model User {
   provider         AuthProvider         @default(PHONE)
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
+  deletedAt        DateTime?
+
   lastSeenAt       DateTime?
   bookings         Booking[]
   conversations    ConversationMember[]
@@ -73,6 +75,17 @@ model Profile {
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
+}
+
+model DeletedAccountTracker {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String?
+  phone     String?
+  reason    String?
+  deletedAt DateTime @default(now())
+
+  @@map("deleted_accounts")
 }
 
 model OtpCode {
@@ -324,6 +337,7 @@ model Friendship {
   @@index([receiverId])
   @@map("friendships")
 }
+
 
 model Report {
   id          String       @id @default(cuid())

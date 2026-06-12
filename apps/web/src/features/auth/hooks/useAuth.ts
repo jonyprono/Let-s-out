@@ -159,3 +159,24 @@ export function useResetPassword() {
     mutationFn: authApi.resetPassword,
   })
 }
+
+export function useDeleteAccount() {
+  const { logout } = useAuthStore()
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (reason?: string) => {
+      const { apiClient } = await import('@/lib/api-client')
+      await apiClient.delete('/users/me', { data: { reason } })
+    },
+    onSuccess: () => {
+      qc.clear()
+      logout()
+      navigate('/welcome', { replace: true })
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Erreur lors de la suppression du compte')
+    },
+  })
+}

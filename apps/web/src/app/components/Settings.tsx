@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   ChevronLeft, ChevronRight, Globe, Lock, Bell, Shield, HelpCircle,
   LogOut, User, Moon, Smartphone, ExternalLink, Loader2, Clock,
-  CheckCircle2, XCircle,
+  CheckCircle2, XCircle, Trash2, AlertTriangle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
@@ -17,7 +17,7 @@ import { ChangePasswordModal } from '@/features/users/components/ChangePasswordM
 import { PrivacyModal } from '@/features/users/components/PrivacyModal';
 import { EditPhoneModal } from '@/features/users/components/EditPhoneModal';
 import { EditEmailModal } from '@/features/users/components/EditEmailModal';
-import { useLogout } from '@/features/auth/hooks/useAuth';
+import { useLogout, useDeleteAccount } from '@/features/auth/hooks/useAuth';
 import { useSettingsStore } from '@/stores/settings.store';
 import { PreferenceSegment } from '@/components/shared/SettingsToggle';
 
@@ -47,10 +47,14 @@ export function Settings({ onBack }: SettingsProps) {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'rejected' | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteReason, setDeleteReason] = useState('');
 
   const { notifEnabled, setNotifEnabled, language } = useSettingsStore();
   const { theme, setTheme } = useTheme();
   const { mutate: doLogout, isPending: loggingOut } = useLogout();
+  const { mutate: doDeleteAccount, isPending: deletingAccount } = useDeleteAccount();
 
   // Fetch KYC status
   useEffect(() => {
@@ -358,6 +362,15 @@ export function Settings({ onBack }: SettingsProps) {
           {t('settings.logout')}
         </button>
 
+        {/* ── Suppression de compte ────────────────────────────────────────── */}
+        <button
+          onClick={() => { setDeleteStep(1); setDeleteReason(''); setShowDeleteModal(true); }}
+          className="w-full flex items-center justify-center gap-2 py-200 rounded-2xl font-semibold text-red-600 border border-red-200 dark:border-red-500/20 active:scale-[0.98] transition-all"
+        >
+          <Trash2 className="w-5 h-5" />
+          Supprimer mon compte
+        </button>
+
         <div className="text-center pb-2">
           <p className="text-[11px] text-gray-300">Let's Out • {displayName}</p>
         </div>
@@ -369,6 +382,133 @@ export function Settings({ onBack }: SettingsProps) {
       {showPrivacyModal && <PrivacyModal onClose={() => setShowPrivacyModal(false)} />}
       {showPhoneModal && <EditPhoneModal onClose={() => setShowPhoneModal(false)} />}
       {showEmailModal && <EditEmailModal onClose={() => setShowEmailModal(false)} />}
+
+      {/* ── Modale de suppression de compte ─────────────────────────────── */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+          <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+
+            {deleteStep === 1 ? (
+              <>
+                {/* Step 1 — Confirmation initiale */}
+                <div className="flex flex-col items-center text-center gap-3 mb-6">
+                  <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
+                    <AlertTriangle className="w-8 h-8 text-red-500" />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Supprimer mon compte</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                    Cette action est <strong>irréversible</strong>. Votre profil sera anonymisé
+                    et vous ne pourrez plus vous connecter avec ce compte.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="bg-red-50 dark:bg-red-500/10 rounded-2xl p-4 space-y-2">
+                    <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">Ce qui sera supprimé</p>
+                    <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
+                      <li>• Votre profil et vos données personnelles</li>
+                      <li>• Votre accès au compte</li>
+                      <li>• Vos photos et informations</li>
+                    </ul>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-[#222] rounded-2xl p-4 space-y-2">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ce qui est conservé</p>
+                    <ul className="text-sm text-gray-500 space-y-1">
+                      <li>• Vos transactions et paiements (traçabilité légale)</li>
+                      <li>• Les événements que vous avez créés</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="flex-1 py-3 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#2A2A2A] active:scale-[0.98] transition-all"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={() => setDeleteStep(2)}
+                    className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 active:scale-[0.98] transition-all"
+                  >
+                    Continuer
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Step 2 — Raison + confirmation finale */}
+                <div className="flex flex-col items-center text-center gap-2 mb-5">
+                  <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
+                    <Trash2 className="w-7 h-7 text-red-500" />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Dernière étape</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Aidez-nous à nous améliorer en indiquant la raison (optionnel).
+                  </p>
+                </div>
+
+                <div className="mb-5">
+                  <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">Motif de suppression</label>
+                  <div className="grid grid-cols-1 gap-2 mb-3">
+                    {[
+                      "Je ne trouve pas d'événements intéressants",
+                      "Problème technique",
+                      "Je crée un nouveau compte",
+                      "Confidentialité et données personnelles",
+                    ].map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setDeleteReason(r)}
+                        className={`text-left px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
+                          deleteReason === r
+                            ? 'border-red-400 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
+                            : 'border-gray-200 dark:border-[#2A2A2A] text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={deleteReason.startsWith('Autre') || ![
+                      "Je ne trouve pas d'événements intéressants",
+                      "Problème technique",
+                      "Je crée un nouveau compte",
+                      "Confidentialité et données personnelles",
+                    ].includes(deleteReason) ? deleteReason : ''}
+                    onChange={(e) => setDeleteReason(e.target.value)}
+                    placeholder="Autre raison (optionnel)..."
+                    rows={2}
+                    className="w-full px-4 py-3 rounded-xl text-sm border border-gray-200 dark:border-[#2A2A2A] bg-transparent text-gray-700 dark:text-gray-300 placeholder-gray-300 focus:outline-none focus:border-red-400 resize-none"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setDeleteStep(1)}
+                    disabled={deletingAccount}
+                    className="flex-1 py-3 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#2A2A2A] active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    Retour
+                  </button>
+                  <button
+                    onClick={() => doDeleteAccount(deleteReason || undefined)}
+                    disabled={deletingAccount}
+                    className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {deletingAccount ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Suppression...</>
+                    ) : (
+                      <><Trash2 className="w-4 h-4" /> Supprimer définitivement</>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
