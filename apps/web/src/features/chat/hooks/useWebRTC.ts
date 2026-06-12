@@ -80,9 +80,17 @@ export function useWebRTC() {
       if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {
         import('sonner').then(({ toast }) => {
           toast.error(mediaType === 'video'
-            ? 'Accès à la caméra et au micro refusé. Autorisez-les dans les paramètres.'
-            : 'Accès au microphone refusé. Autorisez-le dans les paramètres.')
+            ? 'Accès à la caméra et au micro refusé. Ouverture des paramètres...'
+            : 'Accès au microphone refusé. Ouverture des paramètres...')
         })
+        setTimeout(() => {
+          import('capacitor-native-settings').then(({ NativeSettings, AndroidSettings, IOSSettings }) => {
+            NativeSettings.open({
+              optionAndroid: AndroidSettings.ApplicationDetails,
+              optionIOS: IOSSettings.App
+            }).catch(e => console.error(e))
+          }).catch(e => console.error(e))
+        }, 1500)
       } else if (error?.name === 'NotFoundError') {
         import('sonner').then(({ toast }) => {
           toast.error(mediaType === 'video'

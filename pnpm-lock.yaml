@@ -252,6 +252,9 @@ importers:
       axios:
         specifier: ^1.7.7
         version: 1.15.2
+      capacitor-native-settings:
+        specifier: ^8.1.0
+        version: 8.1.0(@capacitor/core@8.3.1)
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -2541,6 +2544,11 @@ packages:
 
   caniuse-lite@1.0.30001791:
     resolution: {integrity: sha512-yk0l/YSrOnFZk3UROpDLQD9+kC1l4meK/wed583AXrzoarMGJcbRi2Q4RaUYbKxYAsZ8sWmaSa/DsLmdBeI1vQ==}
+
+  capacitor-native-settings@8.1.0:
+    resolution: {integrity: sha512-bcIsKO0EBChdiG2l7RAt70cKxz0Vygfx7quN6tSoNlwziCct8f5EgT8xmwNit+7F712ojl54xNaEddu87EpkjQ==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.2'
 
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
@@ -6737,6 +6745,10 @@ snapshots:
       get-intrinsic: 1.3.0
 
   caniuse-lite@1.0.30001791: {}
+
+  capacitor-native-settings@8.1.0(@capacitor/core@8.3.1):
+    dependencies:
+      '@capacitor/core': 8.3.1
 
   chokidar@4.0.3:
     dependencies:

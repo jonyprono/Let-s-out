@@ -181,8 +181,20 @@ export function ChatDetails() {
       recordingIntervalRef.current = setInterval(() => {
         setRecordingTime(prev => prev + 1)
       }, 1000)
-    } catch (e) {
-      toast.error("Accès au microphone refusé. Veuillez l'autoriser dans les paramètres.")
+    } catch (e: any) {
+      if (e?.name === 'NotAllowedError' || e?.name === 'PermissionDeniedError') {
+        toast.error("Accès au microphone refusé. Ouverture des paramètres...")
+        setTimeout(() => {
+          import('capacitor-native-settings').then(({ NativeSettings, AndroidSettings, IOSSettings }) => {
+            NativeSettings.open({
+              optionAndroid: AndroidSettings.ApplicationDetails,
+              optionIOS: IOSSettings.App
+            }).catch(err => console.error(err))
+          }).catch(err => console.error(err))
+        }, 1500)
+      } else {
+        toast.error("Impossible d'accéder au microphone.")
+      }
     }
   }
 
