@@ -69,7 +69,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         }
         const tokenResult = await FirebaseAuthentication.getIdToken()
         if (!tokenResult.token) {
-          toast.error('Impossible de récupérer le token d\\'authentification.')
+          toast.error("Impossible de récupérer le token d'authentification.")
           return
         }
         idToken = tokenResult.token
