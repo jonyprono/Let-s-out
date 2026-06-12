@@ -178,7 +178,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Entrez votre prénom"
-                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
+                  className="app-input"
                 />
               </div>
 
@@ -189,7 +189,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Entrez votre nom"
-                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
+                  className="app-input"
                 />
               </div>
 
@@ -198,7 +198,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary bg-background-white"
+                  className="app-input"
                 >
                   <option value="">Sélectionner</option>
                   <option value="homme">Homme</option>
@@ -213,7 +213,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   type="date"
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
-                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
+                  className="app-input"
                 />
               </div>
             </div>
@@ -241,7 +241,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary bg-background-white"
+                  className="app-input"
                 >
                   {COUNTRIES.map(c => (
                     <option key={c.cca2} value={c.name}>{c.name}</option>
@@ -259,7 +259,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Paris, Lyon, Marseille..."
-                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
+                  className="app-input"
                 />
               </div>
 
@@ -270,7 +270,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                   placeholder="Nom du quartier"
-                  className="w-full px-200 py-150 border border-border-primary rounded-xl focus:outline-none focus:border-action-primary"
+                  className="app-input"
                 />
               </div>
             </div>

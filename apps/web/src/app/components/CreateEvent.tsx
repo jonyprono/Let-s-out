@@ -480,7 +480,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 )}
               </div>
               <div className="flex gap-1.5 mb-2">
-                {[1,2,3,4].map(s => (
+                {[1,2,3].map(s => (
                   <div key={s} className={`h-1 flex-1 rounded-full transition-all ${s <= poolStep ? 'bg-[#FF7A00]' : 'bg-[#EEEEEE]'}`} />
                 ))}
               </div>
@@ -493,7 +493,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Description</label>
                   <textarea value={poolDescription} onChange={e => setPoolDescription(e.target.value)}
                     placeholder="Indiquez l'objectif..." rows={5}
-                    className="w-full px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[14px] resize-none focus:outline-none focus:border-[#FF7A00]" />
+                    className="app-input-textarea" />
                 </div>
               )}
               {poolStep === 2 && (
@@ -504,12 +504,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <div className="flex gap-2 items-center mb-4">
                     <input type="number" min={1} value={poolTarget} onChange={e => setPoolTarget(e.target.value)}
                       placeholder="150 000"
-                      className="flex-1 px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[15px] focus:outline-none focus:border-[#FF7A00]" />
-                    <div className="px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[13px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
+                      className="app-input flex-1" />
+                    <div className="px-5 py-3 border border-[#E0E0E0] rounded-full text-[15px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
                   </div>
                   <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Date limite</label>
                   <input type="date" value={poolDeadline} onChange={e => setPoolDeadline(e.target.value)}
-                    className="w-full px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[14px] focus:outline-none focus:border-[#FF7A00]" />
+                    className="app-input" />
                 </div>
               )}
               {poolStep === 3 && (
@@ -517,45 +517,43 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">Mode de participation</h2>
                   <p className="text-[13px] text-[#766F6E] mb-5">Choisissez comment les participants pourront contribuer</p>
                   {['libre','minimum','fixe'].map(m => (
-                    <button key={m} onClick={() => setPoolMode(m as any)}
-                      className={`w-full flex items-center p-4 rounded-2xl border mb-2 transition-all ${poolMode === m ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}>
-                      <span className="flex-1 text-left text-[14px] font-medium text-[#1A1A1A]">{m === 'libre' ? 'Montant libre' : m === 'minimum' ? 'Montant minimum' : 'Montant fixe'}</span>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${poolMode === m ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
-                        {poolMode === m && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
-                      </div>
-                    </button>
+                    <div key={m} className="mb-2">
+                      <button onClick={() => { setPoolMode(m as any); if(m === 'libre') setPoolMinAmount(''); }}
+                        className={`w-full flex items-center p-4 rounded-[24px] border transition-all ${poolMode === m ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}>
+                        <span className="flex-1 text-left text-[14px] font-medium text-[#1A1A1A]">{m === 'libre' ? 'Montant libre' : m === 'minimum' ? 'Montant minimum' : 'Montant fixe'}</span>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${poolMode === m ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
+                          {poolMode === m && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
+                        </div>
+                      </button>
+                      {poolMode === m && m !== 'libre' && (
+                        <div className="mt-2 animate-in slide-in-from-top-2">
+                          <div className="flex gap-2 items-center">
+                            <input type="number" min={1} value={poolMinAmount} onChange={e => setPoolMinAmount(e.target.value)}
+                              placeholder={m === 'minimum' ? "Montant minimum (Ex: 5 000)" : "Montant fixe (Ex: 5 000)"}
+                              className="app-input flex-1" />
+                            <div className="px-5 py-3 border border-[#E0E0E0] rounded-full text-[15px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ))}
-                </div>
-              )}
-              {poolStep === 4 && poolMode !== 'libre' && (
-                <div>
-                  <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">Montant {poolMode === 'minimum' ? 'minimum' : 'fixe'}</h2>
-                  <p className="text-[13px] text-[#766F6E] mb-5">Définissez le montant par participant</p>
-                  <div className="flex gap-2 items-center">
-                    <input type="number" min={1} value={poolMinAmount} onChange={e => setPoolMinAmount(e.target.value)}
-                      placeholder="Ex: 5 000"
-                      className="flex-1 px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[15px] focus:outline-none focus:border-[#FF7A00]" />
-                    <div className="px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[13px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
-                  </div>
                 </div>
               )}
             </div>
             <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 py-4">
               <button
                 onClick={() => {
-                  if (poolStep < 4) {
-                    if (poolStep === 3 && poolMode === 'libre') {
-                      setEnablePool(true); setShowPoolModal(false)
-                      savePoolToEvent().then(() => toast.success('Cagnotte configurée !'))
-                    } else { setPoolStep(s => s + 1) }
+                  if (poolStep < 3) {
+                    setPoolStep(s => s + 1)
                   } else {
+                    if (poolMode !== 'libre' && !poolMinAmount) return; // Basic check, ideally with toast
                     setEnablePool(true); setShowPoolModal(false)
                     savePoolToEvent().then(() => toast.success('Cagnotte configurée !'))
                   }
                 }}
-                disabled={(poolStep === 1 && poolDescription.trim().length < 5) || (poolStep === 2 && !poolTarget)}
+                disabled={(poolStep === 1 && poolDescription.trim().length < 5) || (poolStep === 2 && !poolTarget) || (poolStep === 3 && poolMode !== 'libre' && !poolMinAmount)}
                 className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all">
-                {poolStep === 4 || (poolStep === 3 && poolMode === 'libre') ? '✓ Confirmer la cagnotte' : 'Suivant'}
+                {poolStep === 3 ? '✓ Confirmer la cagnotte' : 'Suivant'}
               </button>
             </div>
           </div>
@@ -838,16 +836,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="px-5">
 
           {/* Nom */}
-          <div className="border-b border-[#F0F0F0]">
-            <div className="py-4">
-              <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Nom</p>
-              <input
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="Nom de l'événement..."
-                className="w-full text-[15px] text-[#1A1A1A] placeholder:text-[#BDBDBD] bg-transparent focus:outline-none font-medium"
-              />
-            </div>
+          <div className="py-3">
+            <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Nom</p>
+            <input
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Nom de l'événement..."
+              className="app-input"
+            />
           </div>
 
           {/* Date et heure de début */}
@@ -911,17 +907,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           />
 
           {/* Détails */}
-          <div className="border-b border-[#F0F0F0]">
-            <div className="py-4">
-              <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Détails</p>
-              <textarea
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                placeholder="Écrivez les détails ici..."
-                rows={3}
-                className="w-full text-[15px] text-[#1A1A1A] placeholder:text-[#BDBDBD] bg-transparent focus:outline-none resize-none font-medium leading-relaxed"
-              />
-            </div>
+          <div className="py-3">
+            <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Détails</p>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Écrivez les détails ici..."
+              rows={3}
+              className="app-input-textarea"
+            />
           </div>
 
           {/* Catégorie */}
@@ -935,18 +929,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           />
 
           {/* Facultatif — Places */}
-          <div className="border-b border-[#F0F0F0]">
-            <div className="py-4">
-              <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Facultatif</p>
-              <input
-                value={maxPlaces}
-                onChange={e => setMaxPlaces(e.target.value)}
-                type="number"
-                min={1}
-                placeholder="Nombre de places maximum..."
-                className="w-full text-[15px] text-[#1A1A1A] placeholder:text-[#BDBDBD] bg-transparent focus:outline-none font-medium"
-              />
-            </div>
+          <div className="py-3">
+            <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Places (Facultatif)</p>
+            <input
+              value={maxPlaces}
+              onChange={e => setMaxPlaces(e.target.value)}
+              type="number"
+              min={1}
+              placeholder="Nombre de places maximum..."
+              className="app-input"
+            />
           </div>
 
           {/* Mode d'accès */}

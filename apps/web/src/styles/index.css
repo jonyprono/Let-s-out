@@ -132,3 +132,12 @@ select:focus-visible {
 .mt-safe-2 {
   margin-top: calc(0.5rem + env(safe-area-inset-top)) !important;
 }
+
+/* ── Global Inputs ─────────────────────────────────────────────── */
+.app-input {
+  @apply w-full min-h-[48px] px-5 py-3 border border-[#E0E0E0] dark:border-[#2A2A2A] rounded-full text-[15px] bg-transparent text-[#1A1A1A] dark:text-white focus:outline-none focus:border-[#FF7A00] transition-all;
+}
+.app-input-textarea {
+  @apply w-full px-5 py-3 border border-[#E0E0E0] dark:border-[#2A2A2A] rounded-[24px] text-[15px] bg-transparent text-[#1A1A1A] dark:text-white focus:outline-none focus:border-[#FF7A00] transition-all resize-none;
+}
+

@@ -163,6 +163,13 @@ export default async function usersRoutes(app: FastifyInstance) {
       },
     })
     if (!profile) return reply.code(404).send({ error: 'Profile not found' })
+    
+    // Fix: Un nouveau compte a 'pending' par défaut dans le schéma, 
+    // mais s'il n'a jamais rien soumis, le statut réel est 'non vérifié' (null).
+    if (profile.kycStatus === 'pending' && !profile.kycSubmittedAt) {
+      profile.kycStatus = null
+    }
+
     return reply.send(profile)
   })
 

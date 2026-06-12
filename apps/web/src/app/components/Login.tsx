@@ -63,11 +63,16 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
       if (Capacitor.isNativePlatform()) {
         const result = await FirebaseAuthentication.signInWithGoogle()
-        if (!result.credential?.idToken || !result.user?.email) {
+        if (!result.user?.email) {
           toast.error('Connexion Google échouée. Veuillez réessayer.')
           return
         }
-        idToken = result.credential.idToken
+        const tokenResult = await FirebaseAuthentication.getIdToken()
+        if (!tokenResult.token) {
+          toast.error('Impossible de récupérer le token d\\'authentification.')
+          return
+        }
+        idToken = tokenResult.token
         email = result.user.email
       } else {
         const provider = new GoogleAuthProvider()
