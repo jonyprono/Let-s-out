@@ -333,6 +333,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         title: title.trim(),
         description: description.trim() || undefined,
         category: category!,
+        currency: 'XOF',
         startAt,
         endAt,
         city: city.trim() || undefined,

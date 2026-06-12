@@ -121,12 +121,19 @@ export default function App() {
         <CapacitorBackButton />
         <UserProfileProvider>
         <Routes>
-          {/* Public landing page (homepage for Google OAuth verification) */}
-          <Route path="/" element={
-            Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'web' || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|wv/i.test(navigator.userAgent) || window.innerWidth < 768
-              ? <Navigate to="/app" replace /> 
-              : <LandingPage />
-          } />
+          <Route path="/" element={(() => {
+            const isMobile = 
+              Capacitor.isNativePlatform() ||
+              // Android, iOS, tablets, WebViews
+              /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|wv|CriOS|FxiOS/i.test(navigator.userAgent) ||
+              // Viewport mobile
+              window.matchMedia('(max-width: 767px)').matches ||
+              // PWA standalone mode (ajouté à l'écran d'accueil)
+              (window.matchMedia('(display-mode: standalone)').matches) ||
+              // iOS Safari standalone
+              ('standalone' in window.navigator && (window.navigator as any).standalone === true)
+            return isMobile ? <Navigate to="/app" replace /> : <LandingPage />
+          })() } />
 
           {/* Splash + Guest only */}
           <Route element={<AuthLayout />}>

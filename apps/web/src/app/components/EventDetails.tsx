@@ -105,12 +105,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   })
 
   // Fetch friends for invite modal
-  const { data: friendsData } = useQuery({
+  const { data: friendsData, isLoading: friendsLoading } = useQuery({
     queryKey: ['users', 'friends'],
     queryFn: () => usersApi.getFriends(),
     enabled: showInviteModal,
   })
-  const friends = friendsData ?? []
+  const friends = Array.isArray(friendsData) ? friendsData : (friendsData as any)?.data ?? []
 
   // Fetch pending bookings for organizer
   const isCreator = user?.id === event?.creatorId
@@ -889,34 +889,89 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
       {/* Invite Friends Modal */}
       {showInviteModal && (
-        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[75%] bg-background-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
-            <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
+        <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
+          <div className="w-full max-h-[82%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300 shadow-2xl">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
               <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
             </div>
-            <div className="px-5 py-150 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
+            {/* Header */}
+            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
               <div>
                 <h3 className="text-[18px] font-bold text-gray-900">Partager l'événement</h3>
                 <p className="text-[12px] text-gray-400 mt-0.5">Invitez vos amis ou partagez le lien</p>
               </div>
-              <button onClick={() => setShowInviteModal(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <X className="w-4 h-4 text-text-secondary" />
+              <button onClick={() => setShowInviteModal(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center active:scale-95">
+                <X className="w-4 h-4 text-gray-500" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto px-5 py-200" style={{ scrollbarWidth: 'none' }}>
-              {friends.length === 0 ? (
+
+            {/* Copy link — toujours visible */}
+            <div className="px-5 pt-4 pb-2 flex-shrink-0">
+              <button
+                onClick={async () => {
+                  if (!event) return
+                  const url = `${window.location.origin}/events/${event.id}`
+                  const doShare = async () => {
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({ title: event.title, text: `Découvrez "${event.title}" sur Let's Out !`, url })
+                        return
+                      } catch { /* user dismissed or not supported */ }
+                    }
+                    try {
+                      if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(url)
+                      } else {
+                        const ta = document.createElement('textarea')
+                        ta.value = url
+                        ta.style.position = 'fixed'
+                        ta.style.opacity = '0'
+                        document.body.appendChild(ta)
+                        ta.select()
+                        document.execCommand('copy')
+                        document.body.removeChild(ta)
+                      }
+                      toast.success('Lien copié !')
+                    } catch {
+                      toast.error('Impossible de copier le lien')
+                    }
+                  }
+                  doShare()
+                }}
+                className="w-full py-3 rounded-2xl bg-action-primary text-white font-bold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-sm shadow-orange-500/20"
+              >
+                <Share2 className="w-4 h-4" />
+                Copier le lien d'invitation
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 px-5 py-2 flex-shrink-0">
+              <div className="flex-1 h-px bg-gray-100" />
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">ou inviter des amis</p>
+              <div className="flex-1 h-px bg-gray-100" />
+            </div>
+
+            {/* Friends list */}
+            <div className="flex-1 overflow-y-auto px-5 pb-6" style={{ scrollbarWidth: 'none' }}>
+              {friendsLoading ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
+                  <p className="text-[13px] text-gray-400">Chargement de vos amis...</p>
+                </div>
+              ) : friends.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-brand-orange-50 rounded-full flex items-center justify-center mx-auto mb-150">
+                  <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
                     <span className="text-2xl">👥</span>
                   </div>
                   <p className="text-gray-700 font-bold text-[15px]">Aucun ami à inviter</p>
                   <p className="text-gray-400 text-[13px] mt-1">Ajoutez des amis depuis votre profil.</p>
                 </div>
               ) : (
-                <div className="space-y-150">
-                  <p className="text-[12px] font-bold text-gray-400 uppercase tracking-wide mb-2">Vos amis</p>
+                <div className="space-y-1">
                   {friends.map((friend: any) => (
-                    <div key={friend.userId} className="flex items-center gap-150 py-1">
+                    <div key={friend.userId} className="flex items-center gap-3 py-2">
                       <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
                         <SafeImage
                           src={friend.avatarUrl}
@@ -944,7 +999,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           }
                         }}
                         disabled={invitingUsers.has(friend.userId) || invitedUsers.has(friend.userId)}
-                        className={`px-200 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 ${
+                        className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 flex-shrink-0 ${
                           invitedUsers.has(friend.userId)
                             ? 'bg-green-100 text-green-600 border border-green-200'
                             : 'bg-action-primary active:bg-action-primary-hover text-white shadow-sm'
@@ -956,31 +1011,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   ))}
                 </div>
               )}
-            </div>
-            {/* Footer: native share link */}
-            <div className="px-5 py-200 border-t border-gray-100 flex-shrink-0">
-              <button
-                onClick={async () => {
-                  if (!event) return
-                  const url = `${window.location.origin}/events/${event.id}`
-                  if (navigator.share) {
-                    try {
-                      await navigator.share({ title: event.title, text: `Découvrez "${event.title}" sur Let's Out !`, url })
-                    } catch { /* user dismissed */ }
-                  } else {
-                    try {
-                      await navigator.clipboard.writeText(url)
-                      toast.success('Lien copié !')
-                    } catch {
-                      toast.error('Impossible de copier le lien')
-                    }
-                  }
-                }}
-                className="w-full py-150.5 rounded-full border-2 border-action-primary text-action-primary font-bold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-              >
-                <Share2 className="w-4 h-4" />
-                Partager le lien
-              </button>
             </div>
           </div>
         </div>

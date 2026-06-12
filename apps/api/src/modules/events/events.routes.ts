@@ -12,7 +12,7 @@ const CreateEventSchema = z.object({
   category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM']),
   maxAttendees: z.number().int().positive().optional(),
   price: z.number().min(0).default(0),
-  currency: z.string().length(3).default('EUR'),
+  currency: z.string().length(3).default('XOF'),
   isPrivate: z.boolean().default(false),
   requiresApproval: z.boolean().default(false),
   address: z.string().optional(),

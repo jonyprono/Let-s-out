@@ -27,11 +27,17 @@ function formatEventDate(dateStr: string): string {
     date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' GMT';
 }
 
-function formatPrice(price: number, currency: string): string {
+function formatPrice(price: number, currency: string, poolTarget?: number, participationMode?: string): string {
+  // Cagnotte : poolTarget défini OU mode participation = cagnotte
+  if ((poolTarget && poolTarget > 0) || participationMode === 'cagnotte' || participationMode === 'pool') return 'Cagnotte';
+  // Tickets
+  if (participationMode === 'ticket' || participationMode === 'tickets') return 'Tickets';
   if (price === 0) return 'Gratuit';
-  if (currency === 'XOF' || currency === 'CFA') return `${Number(price).toLocaleString('fr-FR')} F`;
-  if (currency === 'EUR') return `${price} €`;
-  return `${price} ${currency}`;
+  // Devise : FCFA par défaut si non spécifiée
+  const cur = currency || 'XOF';
+  if (cur === 'XOF' || cur === 'CFA' || cur === 'FCFA') return `${Number(price).toLocaleString('fr-FR')} F CFA`;
+  if (cur === 'EUR') return `${price} €`;
+  return `${price} ${cur}`;
 }
 
 export const EventCard = memo(function EventCard({
@@ -53,7 +59,7 @@ export const EventCard = memo(function EventCard({
 
   const joinCode = event.joinCode || fullEvent?.data?.joinCode;
 
-  const price = formatPrice(event.price, event.currency);
+  const price = formatPrice(event.price, event.currency, event.poolTarget, (event as any).participationMode);
   const dateStr = formatEventDate(event.startAt);
   const location = [event.address, event.city].filter(Boolean).join(' • ');
   const attendees: any[] = (event as any).bookings || [];
@@ -224,10 +230,14 @@ export const EventCard = memo(function EventCard({
 
           {/* Price badge */}
           {badge ?? (
-            <span className={`px-150 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap ${
-              event.price === 0
-                ? 'bg-[var(--color-functional-green-positive)/10] text-[var(--color-functional-green-positive)]'
-                : 'bg-[#EBF5FF] text-[#007AFF]'
+            <span className={`px-3 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap ${
+              ((event.poolTarget && event.poolTarget > 0) || (event as any).participationMode === 'cagnotte' || (event as any).participationMode === 'pool')
+                ? 'bg-purple-100 text-purple-600'
+                : ((event as any).participationMode === 'ticket' || (event as any).participationMode === 'tickets')
+                  ? 'bg-blue-100 text-blue-600'
+                  : event.price === 0
+                    ? 'bg-green-100 text-green-600'
+                    : 'bg-[#EBF5FF] text-[#007AFF]'
             }`}>
               {price}
             </span>

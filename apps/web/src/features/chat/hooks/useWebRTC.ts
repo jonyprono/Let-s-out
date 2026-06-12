@@ -31,6 +31,7 @@ export function useWebRTC() {
   const activeConversationId = useRef<string | null>(null)
   const isVideoEnabled = useRef<boolean>(true)
   const peerConnection = useRef<RTCPeerConnection | null>(null)
+  const localStreamRef = useRef<MediaStream | null>(null)
 
   // Initialize WebRTC Peer Connection
   const createPeerConnection = useCallback((conversationId: string) => {
@@ -70,10 +71,29 @@ export function useWebRTC() {
         video: mediaType === 'video' ? { facingMode: 'user' } : false,
       })
       setLocalStream(stream)
+      localStreamRef.current = stream
       isVideoEnabled.current = mediaType === 'video'
       return stream
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error accessing media devices.', error)
+      // Show user-friendly error based on error type
+      if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {
+        import('sonner').then(({ toast }) => {
+          toast.error(mediaType === 'video'
+            ? 'Accès à la caméra et au micro refusé. Autorisez-les dans les paramètres.'
+            : 'Accès au microphone refusé. Autorisez-le dans les paramètres.')
+        })
+      } else if (error?.name === 'NotFoundError') {
+        import('sonner').then(({ toast }) => {
+          toast.error(mediaType === 'video'
+            ? 'Aucune caméra ou microphone trouvé sur cet appareil.'
+            : 'Aucun microphone trouvé sur cet appareil.')
+        })
+      } else {
+        import('sonner').then(({ toast }) => {
+          toast.error("Impossible d'accéder aux périphériques audio/vidéo.")
+        })
+      }
       return null
     }
   }
@@ -84,15 +104,16 @@ export function useWebRTC() {
       peerConnection.current.close()
       peerConnection.current = null
     }
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop())
-      setLocalStream(null)
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop())
+      localStreamRef.current = null
     }
+    setLocalStream(null)
     setRemoteStream(null)
     setCallStatus('IDLE')
     setIncomingCall(null)
     activeConversationId.current = null
-  }, [localStream])
+  }, [])
 
   // End Call
   const endCall = useCallback((conversationId: string, emit = true) => {
@@ -126,7 +147,8 @@ export function useWebRTC() {
 
     const stream = await getMedia(mediaType)
     if (!stream) {
-      cleanup()
+      // Keep CALLING state briefly so user sees the error toast, then cleanup
+      setTimeout(() => cleanup(), 2500)
       return
     }
 
@@ -185,25 +207,27 @@ export function useWebRTC() {
 
   // Toggle Mute
   const toggleMute = useCallback(() => {
-    if (localStream) {
-      localStream.getAudioTracks().forEach(track => {
+    const stream = localStreamRef.current
+    if (stream) {
+      stream.getAudioTracks().forEach(track => {
         track.enabled = !track.enabled
       })
-      return localStream.getAudioTracks()[0]?.enabled ?? false
+      return stream.getAudioTracks()[0]?.enabled ?? false
     }
     return false
-  }, [localStream])
+  }, [])
 
   // Toggle Video
   const toggleVideo = useCallback(() => {
-    if (localStream) {
-      localStream.getVideoTracks().forEach(track => {
+    const stream = localStreamRef.current
+    if (stream) {
+      stream.getVideoTracks().forEach(track => {
         track.enabled = !track.enabled
       })
-      return localStream.getVideoTracks()[0]?.enabled ?? false
+      return stream.getVideoTracks()[0]?.enabled ?? false
     }
     return false
-  }, [localStream])
+  }, [])
 
   // Handle incoming signaling messages
   useEffect(() => {
@@ -221,24 +245,32 @@ export function useWebRTC() {
           // Optional: We can show ringing earlier here if needed
           break
         case 'call_offer':
-          // Only handle if idle
-          if (callStatus === 'IDLE') {
-            setCallStatus('RINGING')
-            setIncomingCall({
-              conversationId: data.conversationId,
-              callerId: data.userId, // The one who sent the offer
-              mediaType: data.mediaType || 'audio',
-              offer: data.offer,
-            })
-          } else {
-            // Already in a call, reject automatically
-            sendSignal({ type: 'call_reject', conversationId: data.conversationId, targetUserId: data.userId })
-          }
+          setCallStatus(prev => {
+            if (prev === 'IDLE') {
+              setIncomingCall({
+                conversationId: data.conversationId,
+                callerId: data.userId,
+                mediaType: data.mediaType || 'audio',
+                offer: data.offer,
+              })
+              return 'RINGING'
+            } else {
+              // Already in a call, reject automatically
+              sendSignal({ type: 'call_reject', conversationId: data.conversationId, targetUserId: data.userId })
+              return prev
+            }
+          })
           break
         case 'call_answer':
-          if (peerConnection.current && callStatus === 'CALLING') {
-            setCallStatus('CONNECTED')
-            await peerConnection.current.setRemoteDescription(new RTCSessionDescription(data.answer))
+          if (peerConnection.current) {
+            setCallStatus(prev => {
+              if (prev === 'CALLING') {
+                peerConnection.current!.setRemoteDescription(new RTCSessionDescription(data.answer))
+                  .catch(err => console.error('Error setting remote description', err))
+                return 'CONNECTED'
+              }
+              return prev
+            })
           }
           break
         case 'ice_candidate':
@@ -275,7 +307,7 @@ export function useWebRTC() {
       window.removeEventListener('ws:webrtc', handleSignal)
       window.removeEventListener('call:start_outgoing', handleOutgoingCall)
     }
-  }, [callStatus, user, sendSignal, cleanup, startCall])
+  }, [user, sendSignal, cleanup, startCall])
 
   return {
     callStatus,
