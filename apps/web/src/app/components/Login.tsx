@@ -16,9 +16,7 @@ import {
   authSubtitle,
   authLabel,
   authInput,
-  authPhoneInputFlex,
-  authPrimaryBtn,
-  authSecondaryBtn
+  authPhoneInputFlex
 } from '@/lib/auth-ui'
 
 interface LoginProps {
