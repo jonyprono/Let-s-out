@@ -17,18 +17,18 @@ interface ExplorerProps {
 
 const CATEGORIES_FILTER = [
   { key: 'SPORT', label: 'Sports' },
-  { key: 'CONFERENCE', label: 'Conférences' },
-  { key: 'CONCERT', label: 'Concerts' },
-  { key: 'FESTIVAL', label: 'Festivals' },
-  { key: 'NIGHTLIFE', label: 'Soirées' },
-  { key: 'THEATER', label: 'Théâtre' },
-  { key: 'CINEMA', label: 'Cinéma' },
-  { key: 'WORKSHOP', label: 'Formations' },
+  { key: 'TECH', label: 'Tech & Pro' },
+  { key: 'MUSIC', label: 'Musique' },
+  { key: 'NIGHTLIFE', label: 'Soirées & Fêtes' },
+  { key: 'ART', label: 'Art & Théâtre' },
+  { key: 'CULTURE', label: 'Culture & Cinéma' },
   { key: 'FOOD', label: 'Gastronomie' },
   { key: 'LIFESTYLE', label: 'Lifestyle' },
-  { key: 'FASHION', label: 'Mode' },
-  { key: 'HEALTH', label: 'Santé' },
+  { key: 'WELLNESS', label: 'Santé & Bien-être' },
   { key: 'SCIENCE', label: 'Science' },
+  { key: 'TRAVEL', label: 'Voyages' },
+  { key: 'GAMING', label: 'Jeux' },
+  { key: 'SOCIAL', label: 'Social & Comédie' },
 ];
 
 const DATE_FILTERS = [

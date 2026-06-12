@@ -108,7 +108,6 @@ select:focus-visible,
 input:focus,
 textarea:focus,
 select:focus {
-  border: 2px solid #FF7A00 !important; /* action-primary orange */
   outline: none;
 }
 

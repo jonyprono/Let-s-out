@@ -47,16 +47,16 @@ interface CreateEventProps { onBack: () => void }
 const CATEGORIES = [
   { label: 'Art et culture',            value: 'CULTURE',   Icon: PaintBoardIcon },
   { label: 'Comédie',                   value: 'SOCIAL',    Icon: HappyIcon },
-  { label: 'Sport',                     value: 'WELLNESS',  Icon: FootballIcon },
-  { label: 'Santé et bien-être',        value: 'HEALTH',    Icon: HealthIcon },
+  { label: 'Sport',                     value: 'SPORT',     Icon: FootballIcon },
+  { label: 'Santé et bien-être',        value: 'WELLNESS',  Icon: HealthIcon },
   { label: 'Cuisine et gastronomie',    value: 'FOOD',      Icon: Restaurant01Icon },
-  { label: 'Boissons',                  value: 'DRINKS',    Icon: Coffee01Icon },
+  { label: 'Boissons',                  value: 'NIGHTLIFE', Icon: Coffee01Icon },
   { label: 'Réseautage professionnel',  value: 'TECH',      Icon: Briefcase01Icon },
-  { label: 'Fêtes',                     value: 'PARTY',     Icon: GiftIcon },
-  { label: 'Religion',                  value: 'RELIGION',  Icon: ChurchIcon },
-  { label: 'Shopping',                  value: 'SHOPPING',  Icon: ShoppingBag01Icon },
+  { label: 'Fêtes',                     value: 'NIGHTLIFE', Icon: GiftIcon },
+  { label: 'Religion',                  value: 'CULTURE',   Icon: ChurchIcon },
+  { label: 'Shopping',                  value: 'LIFESTYLE', Icon: ShoppingBag01Icon },
   { label: 'Musique et son',            value: 'MUSIC',     Icon: MusicNote01Icon },
-  { label: 'Télévision et cinéma',      value: 'MEDIA',     Icon: Tv01Icon },
+  { label: 'Télévision et cinéma',      value: 'ART',       Icon: Tv01Icon },
 ]
 
 // ── Participation modes ──────────────────────────────────────────────────────
