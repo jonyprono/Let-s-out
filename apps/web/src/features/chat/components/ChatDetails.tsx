@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Send, Paperclip, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video, Mic, Square, Trash2, Loader2 } from 'lucide-react'
+import { ChevronLeft, Send, Paperclip, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video, Mic, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
@@ -386,7 +386,8 @@ export function ChatDetails() {
 
             const isImage = msg.type === 'IMAGE'
             const isVideo = msg.type === 'VIDEO'
-            const isMedia = isImage || isVideo
+            const isAudio = msg.type === 'AUDIO'
+            const isMedia = isImage || isVideo || isAudio
             const isLastMsg = index === messages.length - 1
 
             const grouped = groupReactions(msg.reactions ?? [])
