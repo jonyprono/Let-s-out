@@ -88,7 +88,7 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Rechercher un pays..."
-                className="flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-neutral-gray-400"
+                className="flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-neutral-gray-400 border-none focus:ring-0"
               />
               {search && (
                 <button type="button" onClick={() => setSearch('')} className="shrink-0">

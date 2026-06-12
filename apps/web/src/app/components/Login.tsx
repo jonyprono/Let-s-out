@@ -130,7 +130,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                 onChange={handlePhoneChange}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
                 placeholder="00 00 00 00 00"
-                className="flex-1 min-w-0 px-2 bg-transparent text-[#1A1A1A] placeholder-[#A0AEC0] focus:outline-none"
+                className="flex-1 min-w-0 px-2 bg-transparent text-[#1A1A1A] placeholder-[#A0AEC0] focus:outline-none border-none focus:ring-0"
                 style={{ fontSize: 14 }}
               />
             </div>

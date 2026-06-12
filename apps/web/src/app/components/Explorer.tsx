@@ -398,7 +398,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               onChange={(e) => handleMapSearch(e.target.value)}
               onFocus={() => setActiveSearchInput('location')}
               placeholder="Saisissez une ville..."
-              className="flex-1 text-[15px] outline-none text-gray-900 placeholder:text-gray-400"
+              className="flex-1 text-[15px] outline-none text-gray-900 placeholder:text-gray-400 border-none focus:ring-0"
             />
             {mapSearch && (
               <button onClick={() => { handleMapSearch(''); setActiveSearchInput('location'); }}>
@@ -417,7 +417,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               onChange={e => setSearchQuery(e.target.value)}
               onFocus={() => setActiveSearchInput('keyword')}
               placeholder="Concert, sortie, fête..."
-              className="flex-1 text-[15px] outline-none bg-transparent text-gray-900 placeholder:text-gray-400"
+              className="flex-1 text-[15px] outline-none bg-transparent text-gray-900 placeholder:text-gray-400 border-none focus:ring-0"
             />
           </div>
         </div>

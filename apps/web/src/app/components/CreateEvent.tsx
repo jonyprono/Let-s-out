@@ -518,9 +518,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <p className="text-[13px] text-[#766F6E] mb-5">Choisissez comment les participants pourront contribuer</p>
                   {['libre','minimum','fixe'].map(m => (
                     <button key={m} onClick={() => setPoolMode(m as any)}
-                      className={`w-full flex items-center justify-between p-4 rounded-2xl border mb-2 transition-all ${poolMode === m ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}>
-                      <span className="text-[14px] font-medium text-[#1A1A1A]">{m === 'libre' ? 'Montant libre' : m === 'minimum' ? 'Montant minimum' : 'Montant fixe'}</span>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${poolMode === m ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
+                      className={`w-full flex items-center p-4 rounded-2xl border mb-2 transition-all ${poolMode === m ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}>
+                      <span className="flex-1 text-left text-[14px] font-medium text-[#1A1A1A]">{m === 'libre' ? 'Montant libre' : m === 'minimum' ? 'Montant minimum' : 'Montant fixe'}</span>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${poolMode === m ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
                         {poolMode === m && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
                       </div>
                     </button>
