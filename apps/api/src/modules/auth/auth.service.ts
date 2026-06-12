@@ -165,17 +165,17 @@ export class AuthService {
    * Verify a Google Firebase ID token and return the decoded payload.
    * Does NOT require a phone/email match — just validates the token signature.
    */
-  async verifyAndDecodeGoogleToken(idToken: string): Promise<admin.auth.DecodedIdToken | null> {
+  async verifyAndDecodeGoogleToken(idToken: string): Promise<{ decoded?: admin.auth.DecodedIdToken, error?: string }> {
     if (!admin.apps.length) {
       console.warn('[Firebase Admin] Not initialized — cannot verify Google token.')
-      return null
+      return { error: 'Firebase Admin not initialized. Check FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY.' }
     }
     try {
       const decoded = await admin.auth().verifyIdToken(idToken)
-      return decoded
-    } catch (error) {
+      return { decoded }
+    } catch (error: any) {
       console.error('[Firebase] Google token verification failed:', error)
-      return null
+      return { error: error.message || 'Verification failed' }
     }
   }
 

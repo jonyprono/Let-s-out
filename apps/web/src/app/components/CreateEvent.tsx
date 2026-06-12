@@ -11,6 +11,18 @@ import {
   UserIcon,
   ArrowLeft01Icon,
   Tick01Icon,
+  PaintBoardIcon,
+  HappyIcon,
+  FootballIcon,
+  HealthIcon,
+  Restaurant01Icon,
+  Coffee01Icon,
+  Briefcase01Icon,
+  GiftIcon,
+  ChurchIcon,
+  ShoppingBag01Icon,
+  MusicNote01Icon,
+  Tv01Icon,
 } from 'hugeicons-react'
 import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
@@ -33,18 +45,18 @@ interface CreateEventProps { onBack: () => void }
 
 // ── Categories (fidèles aux maquettes) ──────────────────────────────────────
 const CATEGORIES = [
-  { label: 'Art & culture',             value: 'CULTURE',   emoji: '🎨' },
-  { label: 'Comédie',                   value: 'SOCIAL',    emoji: '🎭' },
-  { label: 'Sport',                     value: 'WELLNESS',  emoji: '💪' },
-  { label: 'Soirée & bar / boite',      value: 'LIFESTYLE', emoji: '🎤' },
-  { label: 'Carnaval & fête',           value: 'TOURISM',   emoji: '🎃' },
-  { label: 'Boissons',                  value: 'TRAVEL',    emoji: '🍸' },
-  { label: 'Réseautage professionnel',  value: 'TECH',      emoji: '💼' },
-  { label: 'Fêtes',                     value: 'SCIENCE',   emoji: '🎉' },
-  { label: 'Religion',                  value: 'RELIGION',  emoji: '⛪' },
-  { label: 'Shopping',                  value: 'SHOPPING',  emoji: '🛍' },
-  { label: 'Mode de vie',               value: 'FASHION',   emoji: '🌊' },
-  { label: 'Multimédia & cinéma',       value: 'MEDIA',     emoji: '🎬' },
+  { label: 'Art et culture',            value: 'CULTURE',   Icon: PaintBoardIcon },
+  { label: 'Comédie',                   value: 'SOCIAL',    Icon: HappyIcon },
+  { label: 'Sport',                     value: 'WELLNESS',  Icon: FootballIcon },
+  { label: 'Santé et bien-être',        value: 'HEALTH',    Icon: HealthIcon },
+  { label: 'Cuisine et gastronomie',    value: 'FOOD',      Icon: Restaurant01Icon },
+  { label: 'Boissons',                  value: 'DRINKS',    Icon: Coffee01Icon },
+  { label: 'Réseautage professionnel',  value: 'TECH',      Icon: Briefcase01Icon },
+  { label: 'Fêtes',                     value: 'PARTY',     Icon: GiftIcon },
+  { label: 'Religion',                  value: 'RELIGION',  Icon: ChurchIcon },
+  { label: 'Shopping',                  value: 'SHOPPING',  Icon: ShoppingBag01Icon },
+  { label: 'Musique et son',            value: 'MUSIC',     Icon: MusicNote01Icon },
+  { label: 'Télévision et cinéma',      value: 'MEDIA',     Icon: Tv01Icon },
 ]
 
 // ── Participation modes ──────────────────────────────────────────────────────
@@ -915,7 +927,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {/* Catégorie */}
           <FieldRow
             label="Catégorie"
-            value={catLabel ? `${catLabel.emoji} ${catLabel.label}` : undefined}
+            value={catLabel ? catLabel.label : undefined}
             placeholder="Aucune"
             onPress={() => setShowCategorySheet(true)}
             onEdit={() => setShowCategorySheet(true)}
@@ -1078,13 +1090,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <button
               key={cat.value}
               onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
-              className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all text-left ${category === cat.value ? 'bg-orange-50' : 'hover:bg-gray-50'}`}
+              className={`w-full flex items-center justify-between py-3 rounded-2xl transition-all text-left ${category === cat.value ? 'bg-orange-50 px-2' : ''}`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-xl w-7 text-center">{cat.emoji}</span>
-                <span className="text-[15px] font-medium text-[#1A1A1A]">{cat.label}</span>
+                <div className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center shrink-0">
+                  <cat.Icon className="w-5 h-5 text-[#555]" strokeWidth={1.5} />
+                </div>
+                <span className="text-[14px] font-semibold text-[#1A1A1A]">{cat.label}</span>
               </div>
-              {category === cat.value && <Tick01Icon className="w-5 h-5 text-[#FF7A00]" strokeWidth={2} />}
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${category === cat.value ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
+                {category === cat.value && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
+              </div>
             </button>
           ))}
         </div>

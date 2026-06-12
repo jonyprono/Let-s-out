@@ -434,10 +434,11 @@ export class AuthController {
     }
 
     // Step 1: Verify the Firebase ID token (signature + expiration)
-    const decoded = await this.service.verifyAndDecodeGoogleToken(idToken)
-    if (!decoded) {
-      return reply.code(401).send({ error: 'Token Google invalide ou expiré. Veuillez réessayer.' })
+    const result = await this.service.verifyAndDecodeGoogleToken(idToken)
+    if (result.error || !result.decoded) {
+      return reply.code(401).send({ error: `Erreur Firebase: ${result.error}` })
     }
+    const decoded = result.decoded
 
     // Step 2: Ensure the decoded email matches what the client sent (extra safety check)
     const resolvedEmail = decoded.email || email
