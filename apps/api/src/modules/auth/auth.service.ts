@@ -161,6 +161,75 @@ export class AuthService {
     }
   }
 
+  /**
+   * Verify a Google Firebase ID token and return the decoded payload.
+   * Does NOT require a phone/email match — just validates the token signature.
+   */
+  async verifyAndDecodeGoogleToken(idToken: string): Promise<admin.auth.DecodedIdToken | null> {
+    if (!admin.apps.length) {
+      console.warn('[Firebase Admin] Not initialized — cannot verify Google token.')
+      return null
+    }
+    try {
+      const decoded = await admin.auth().verifyIdToken(idToken)
+      return decoded
+    } catch (error) {
+      console.error('[Firebase] Google token verification failed:', error)
+      return null
+    }
+  }
+
+  /**
+   * Google Sign-In: find existing account or create a new one.
+   * Returns { user, isNewUser }.
+   */
+  async googleRegisterOrLogin(decoded: admin.auth.DecodedIdToken): Promise<{ user: any; isNewUser: boolean }> {
+    const email = decoded.email
+    if (!email) throw new Error('GOOGLE_NO_EMAIL')
+
+    const existing = await this.prisma.user.findFirst({
+      where: { email },
+      include: { profile: true },
+    })
+
+    if (existing) {
+      return { user: existing, isNewUser: false }
+    }
+
+    // Auto-create account from Google profile
+    const displayName = decoded.name || decoded.email?.split('@')[0] || 'Utilisateur'
+    const avatarUrl = decoded.picture || undefined
+
+    // Generate a safe unique username
+    const baseUsername = email
+      .split('@')[0]
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .slice(0, 20)
+    const username = `${baseUsername}_${Math.floor(Math.random() * 9999)}`
+
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        provider: 'GOOGLE',
+        isVerified: true,
+        profile: {
+          create: {
+            username,
+            displayName,
+            avatarUrl,
+          },
+        },
+        wallet: { create: {} },
+      },
+      include: { profile: true },
+    })
+
+    return { user, isNewUser: true }
+  }
+
   // ── Pre-verified Session ────────────────────────────────────────────────────
   // Used to allow multi-step signup flows where the OTP might expire before step 11
 

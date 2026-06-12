@@ -427,27 +427,49 @@ export class AuthController {
   }
 
   async googleSignIn(req: FastifyRequest, reply: FastifyReply) {
-    const { idToken, email } = req.body as { idToken: string, email: string }
-    if (!idToken || !email) {
-      return reply.code(400).send({ error: 'idToken and email are required' })
+    const { idToken, email } = req.body as { idToken?: string; email?: string }
+
+    if (!idToken) {
+      return reply.code(400).send({ error: 'idToken est requis' })
     }
 
-    const isValid = await this.service.verifyFirebaseToken(idToken, email)
-    if (!isValid) {
-      return reply.code(401).send({ error: 'Token Google invalide' })
+    // Step 1: Verify the Firebase ID token (signature + expiration)
+    const decoded = await this.service.verifyAndDecodeGoogleToken(idToken)
+    if (!decoded) {
+      return reply.code(401).send({ error: 'Token Google invalide ou expiré. Veuillez réessayer.' })
     }
 
-    const user = await this.service.findUserByTarget(email)
-    if (!user || !user.isActive) {
-      return reply.code(404).send({ error: 'Compte introuvable. Veuillez vous inscrire d\'abord.' })
+    // Step 2: Ensure the decoded email matches what the client sent (extra safety check)
+    const resolvedEmail = decoded.email || email
+    if (!resolvedEmail) {
+      return reply.code(400).send({ error: 'Aucune adresse email associée à ce compte Google.' })
     }
 
-    // Update last seen
+    // Step 3: Find or auto-create the user account
+    let user: any
+    let isNewUser: boolean
+    try {
+      const result = await this.service.googleRegisterOrLogin(decoded)
+      user = result.user
+      isNewUser = result.isNewUser
+    } catch (err: any) {
+      if (err.message === 'GOOGLE_NO_EMAIL') {
+        return reply.code(400).send({ error: 'Aucune adresse email associée à ce compte Google.' })
+      }
+      throw err
+    }
+
+    if (!user.isActive) {
+      return reply.code(403).send({ error: 'Ce compte est désactivé. Contactez le support.' })
+    }
+
+    // Step 4: Update last seen
     await this.app.prisma.user.update({
       where: { id: user.id },
       data: { lastSeenAt: new Date() },
     })
 
+    // Step 5: Issue tokens
     const accessToken = this.app.jwt.sign({ sub: user.id, role: user.role })
     const refreshToken = await this.service.createRefreshToken(user.id, {
       userAgent: req.headers['user-agent'],
@@ -456,12 +478,18 @@ export class AuthController {
 
     reply.setCookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
       maxAge: 30 * 24 * 60 * 60,
     })
 
-    return reply.send({ accessToken, refreshToken, user: { ...user, passwordHash: undefined } })
+    return reply.send({
+      accessToken,
+      refreshToken,
+      isNewUser,
+      user: { ...user, passwordHash: undefined },
+    })
   }
+
 }

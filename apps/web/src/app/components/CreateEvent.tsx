@@ -1,140 +1,290 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ChevronLeft, Calendar, MapPin, Search, X, Loader2, Check, Edit3, BadgeCheck } from 'lucide-react'
-import { Calendar01Icon as IconoirCalendar, Clock01Icon as IconoirClock, Location01Icon as IconoirMapPin, Cancel01Icon, ArrowDown01Icon, ImageAdd01Icon } from 'hugeicons-react'
+import { X, Search, Loader2, Check, Trash2, Pencil, MapPin, ChevronLeft } from 'lucide-react'
+import {
+  Cancel01Icon,
+  ImageAdd01Icon,
+  Location01Icon as HugeMapPin,
+  Calendar01Icon as HugeCalendar,
+  Clock01Icon as HugeClock,
+  UserAdd01Icon,
+  UserIcon,
+  ArrowLeft01Icon,
+  Tick01Icon,
+} from 'hugeicons-react'
 import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
-import { CategoryChip } from '@/components/shared/CategoryChip'
 import { toast } from 'sonner'
-import { searchPlaces, searchCities, reverseGeocode } from '@/lib/geo'
+import { searchPlaces, reverseGeocode } from '@/lib/geo'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-
-// Fix default Leaflet icon path issues
-import iconUrl from 'leaflet/dist/images/marker-icon.png';
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
-import shadowUrl from 'leaflet/dist/images/marker-shadow.png';
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl,
-  iconUrl,
-  shadowUrl,
-});
+import iconUrl from 'leaflet/dist/images/marker-icon.png'
+import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
+import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
+L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl })
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-
 interface CreateEventProps { onBack: () => void }
 
+// ── Categories (fidèles aux maquettes) ──────────────────────────────────────
 const CATEGORIES = [
-  { label: 'Social', value: 'SOCIAL' },
-  { label: 'Art & Culture', value: 'CULTURE' },
-  { label: 'Bien-être & Santé', value: 'WELLNESS' },
-  { label: 'Technologie', value: 'TECH' },
-  { label: 'Science & Education', value: 'SCIENCE' },
-  { label: 'Voyages', value: 'TRAVEL' },
-  { label: 'Lifestyle', value: 'LIFESTYLE' },
-  { label: 'Tourisme', value: 'TOURISM' },
+  { label: 'Art & culture',             value: 'CULTURE',   emoji: '🎨' },
+  { label: 'Comédie',                   value: 'SOCIAL',    emoji: '🎭' },
+  { label: 'Sport',                     value: 'WELLNESS',  emoji: '💪' },
+  { label: 'Soirée & bar / boite',      value: 'LIFESTYLE', emoji: '🎤' },
+  { label: 'Carnaval & fête',           value: 'TOURISM',   emoji: '🎃' },
+  { label: 'Boissons',                  value: 'TRAVEL',    emoji: '🍸' },
+  { label: 'Réseautage professionnel',  value: 'TECH',      emoji: '💼' },
+  { label: 'Fêtes',                     value: 'SCIENCE',   emoji: '🎉' },
+  { label: 'Religion',                  value: 'RELIGION',  emoji: '⛪' },
+  { label: 'Shopping',                  value: 'SHOPPING',  emoji: '🛍' },
+  { label: 'Mode de vie',               value: 'FASHION',   emoji: '🌊' },
+  { label: 'Multimédia & cinéma',       value: 'MEDIA',     emoji: '🎬' },
 ]
 
-const TOTAL_STEPS = 6
+// ── Participation modes ──────────────────────────────────────────────────────
+const PARTICIPATION_MODES = [
+  { value: 'free',    label: 'Gratuit',      desc: 'Entrée ouverte à tous sans paiement',              emoji: '🔓' },
+  { value: 'ticket',  label: 'Sur ticket',   desc: "Accès sur achat de tickets d'entrée",               emoji: '🎫' },
+  { value: 'cagnotte',label: 'Sur cagnotte', desc: 'Accès sur contribution à une cagnotte partagée',   emoji: '💰' },
+]
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function formatDateFr(iso: string) {
+  try { return format(new Date(iso + 'T00:00:00'), 'dd MMMM yyyy', { locale: fr }) }
+  catch { return iso }
+}
+
+function formatDateTime(date: string, time: string) {
+  if (!date || !time) return ''
+  try {
+    return format(new Date(`${date}T${time}`), "EEEE d MMMM yyyy HH:mm", { locale: fr })
+      .replace(/^\w/, c => c.toUpperCase())
+  } catch { return `${date} ${time}` }
+}
+
+// ── Field Row component ──────────────────────────────────────────────────────
+function FieldRow({
+  label, value, placeholder, onPress, onEdit, onDelete, children
+}: {
+  label: string
+  value?: string
+  placeholder?: string
+  onPress?: () => void
+  onEdit?: () => void
+  onDelete?: () => void
+  children?: React.ReactNode
+}) {
+  return (
+    <div className="border-b border-[#F0F0F0] last:border-0">
+      <div
+        onClick={!value && !children ? onPress : undefined}
+        className={`flex items-center justify-between py-4 ${!value && !children && onPress ? 'cursor-pointer active:bg-gray-50' : ''}`}
+      >
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-[#1A1A1A] mb-0.5">{label}</p>
+          {children ?? (
+            value
+              ? <p className="text-[14px] text-[#1A1A1A] font-medium truncate">{value}</p>
+              : <p className="text-[14px] text-[#BDBDBD]">{placeholder}</p>
+          )}
+        </div>
+        {value && (onEdit || onDelete) && (
+          <div className="flex items-center gap-2 ml-3 shrink-0">
+            {onEdit && (
+              <button onClick={(e) => { e.stopPropagation(); onEdit() }}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all">
+                <Pencil className="w-4 h-4 text-[#555]" />
+              </button>
+            )}
+            {onDelete && (
+              <button onClick={(e) => { e.stopPropagation(); onDelete() }}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 active:scale-95 transition-all">
+                <Trash2 className="w-4 h-4 text-[#C5221F]" />
+              </button>
+            )}
+          </div>
+        )}
+        {!value && !children && onPress && (
+          <ChevronLeft className="w-4 h-4 text-[#BDBDBD] rotate-180 shrink-0" />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Bottom Sheet wrapper ─────────────────────────────────────────────────────
+function BottomSheet({ title, open, onClose, children }: {
+  title: string; open: boolean; onClose: () => void; children: React.ReactNode
+}) {
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div
+        className="relative w-full bg-white rounded-t-[24px] px-5 pt-5 pb-10 max-h-[85vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+        style={{ boxShadow: '0 -4px 30px rgba(0,0,0,0.15)' }}
+      >
+        {/* Handle */}
+        <div className="w-10 h-1 rounded-full bg-[#E0E0E0] mx-auto mb-4" />
+        <h3 className="text-[17px] font-bold text-[#1A1A1A] mb-4">{title}</h3>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ── Main Component ──────────────────────────────────────────────────────────
 export function CreateEvent({ onBack }: CreateEventProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const me = useAuthStore((state: any) => state.user)
-  const initialStep: number = Number(location.state?.step) || 1
-  const [step, setStep] = useState<number>(initialStep)
 
-  // Step 1
+  // ── Form state ──────────────────────────────────────────────────────────
   const [title, setTitle] = useState('')
-  const [categories, setCategories] = useState<string[]>([])
-
-  // Step 2 — Date & lieu
-  const [date, setDate] = useState('')
+  const [category, setCategory] = useState<string | null>(null)
+  const [startDate, setStartDate] = useState('')
   const [startTime, setStartTime] = useState('')
+  const [hasEndDate, setHasEndDate] = useState(false)
+  const [endDate, setEndDate] = useState('')
   const [endTime, setEndTime] = useState('')
-  const [isEditingTime, setIsEditingTime] = useState(false)
-  const [city, setCity] = useState('')
   const [address, setAddress] = useState('')
-  const [cityInput, setCityInput] = useState('')
-  const [citySuggestions, setCitySuggestions] = useState<{label:string;lat:number|string;lon:number|string}[]>([])
-  // const [geoLoading, setGeoLoading] = useState(false)
-  const [lat, setLat] = useState<number|null>(null)
-  const [lon, setLon] = useState<number|null>(null)
-  
-  // Map Modal State
-  const [showMapModal, setShowMapModal] = useState(false)
-  const [mapCenter, setMapCenter] = useState<[number, number]>([6.36536, 2.41833]) // Default to Cotonou
+  const [city, setCity] = useState('')
+  const [lat, setLat] = useState<number | null>(null)
+  const [lon, setLon] = useState<number | null>(null)
+  const [privacy, setPrivacy] = useState<'PUBLIC' | 'PRIVATE' | null>(null)
+  const [description, setDescription] = useState('')
+  const [participationMode, setParticipationMode] = useState<string | null>(null)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>([])
+  const [maxPlaces, setMaxPlaces] = useState('')
+  const [amount, setAmount] = useState('')
+
+  // ── UI state ────────────────────────────────────────────────────────────
+  const [showCategorySheet, setShowCategorySheet] = useState(false)
+  const [showStartDateSheet, setShowStartDateSheet] = useState(false)
+  const [showEndDateSheet, setShowEndDateSheet] = useState(false)
+  const [showPrivacySheet, setShowPrivacySheet] = useState(false)
+  const [showParticipationSheet, setShowParticipationSheet] = useState(false)
+  const [showOrganizerSearch, setShowOrganizerSearch] = useState(false)
+  const [showLocationSearch, setShowLocationSearch] = useState(false)
+  const [showPoolModal, setShowPoolModal] = useState(false)
+
+  // ── Temp state for date sheets ──────────────────────────────────────────
+  const [tempStartDate, setTempStartDate] = useState('')
+  const [tempStartTime, setTempStartTime] = useState('10:00')
+  const [tempEndDate, setTempEndDate] = useState('')
+  const [tempEndTime, setTempEndTime] = useState('12:00')
+
+  // ── Location search ─────────────────────────────────────────────────────
+  const [locationTab, setLocationTab] = useState<'liste' | 'carte'>('liste')
+  const [locationQuery, setLocationQuery] = useState('')
+  const [locationSuggestions, setLocationSuggestions] = useState<{label:string;lat:number;lon:number}[]>([])
   const [tempLat, setTempLat] = useState<number>(6.36536)
   const [tempLon, setTempLon] = useState<number>(2.41833)
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false)
-  
-  const [mapSearchQuery, setMapSearchQuery] = useState('')
-  const [mapSearchSuggestions, setMapSearchSuggestions] = useState<{label:string;lat:number;lon:number}[]>([])
 
-  // Step 3
-  const [maxPlaces, setMaxPlaces] = useState('')
-  const [amount, setAmount] = useState('')
-  const [privacy, setPrivacy] = useState<'PUBLIC' | 'PRIVATE' | null>(null)
+  // ── Organizer search ────────────────────────────────────────────────────
+  const [coOrgSearch, setCoOrgSearch] = useState('')
+
+  // ── Submission ──────────────────────────────────────────────────────────
+  const [loading, setLoading] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [createdEventId, setCreatedEventId] = useState<string | null>(null)
+  const [step, setStep] = useState<'form' | 'preview' | 'done'>('form')
+
+  // ── Pool state ──────────────────────────────────────────────────────────
   const [enablePool, setEnablePool] = useState(false)
-  const [poolTarget, setPoolTarget] = useState('')
-  // Cagnotte modal
-  const [showPoolModal, setShowPoolModal] = useState(false)
-  const [poolStep, setPoolStep] = useState(1) // 1=but, 2=objectif, 3=participation, 4=mode
+  const [poolStep, setPoolStep] = useState(1)
   const [poolDescription, setPoolDescription] = useState('')
   const [poolDeadline, setPoolDeadline] = useState('')
   const [poolMode, setPoolMode] = useState<'libre' | 'minimum' | 'fixe'>('libre')
+  const [poolTarget, setPoolTarget] = useState('')
   const [poolMinAmount, setPoolMinAmount] = useState('')
 
-  // Step 4
-  const [description, setDescription] = useState('')
-  const [coverFile, setCoverFile] = useState<File | null>(null)
-  const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // Step 5
-  const [coOrgSearch, setCoOrgSearch] = useState('')
-  const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [createdEventId, setCreatedEventId] = useState<string | null>(null)
-  const [publishing, setPublishing] = useState(false)
-
-  // Friends search
+  // ── Friends for organizer search ────────────────────────────────────────
   const { data: friendsData } = useQuery({
     queryKey: ['friends-search', coOrgSearch],
     queryFn: async () => {
       const res = await apiClient.get('/users/me/friends', { params: { search: coOrgSearch || undefined, limit: 20 } })
       return res.data
     },
-    enabled: step === 5,
+    enabled: showOrganizerSearch,
     staleTime: 30000,
   })
   const friends: any[] = Array.isArray(friendsData) ? friendsData : (friendsData?.data ?? [])
 
-  // Pre-fill from navigation state (coming from ManageEventView) or restore from localStorage
+  // ── Location search handler ──────────────────────────────────────────────
+  const locationTimeoutRef = useRef<number | null>(null)
+  const handleLocationSearch = (q: string) => {
+    setLocationQuery(q)
+    if (q.length < 2) { setLocationSuggestions([]); return }
+    if (locationTimeoutRef.current) window.clearTimeout(locationTimeoutRef.current)
+    locationTimeoutRef.current = window.setTimeout(async () => {
+      try {
+        const res = await searchPlaces(q, city)
+        setLocationSuggestions(res)
+      } catch { setLocationSuggestions([]) }
+    }, 400)
+  }
+
+  const selectLocation = (s: {label:string;lat:number;lon:number}) => {
+    const parts = s.label.split(',')
+    setCity(parts[0].trim())
+    setAddress(s.label)
+    setLat(s.lat)
+    setLon(s.lon)
+    setShowLocationSearch(false)
+    setLocationQuery('')
+    setLocationSuggestions([])
+  }
+
+  const confirmMapLocation = async () => {
+    setIsReverseGeocoding(true)
+    const result = await reverseGeocode(tempLat, tempLon)
+    setCity(result.city)
+    setAddress(result.address)
+    setLat(result.lat)
+    setLon(result.lon)
+    setShowLocationSearch(false)
+    setIsReverseGeocoding(false)
+    toast.success('Emplacement validé !')
+  }
+
+  // ── Cover image ──────────────────────────────────────────────────────────
+  const handleCover = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]; if (!f) return
+    setCoverFile(f); setCoverPreview(URL.createObjectURL(f))
+  }
+
+  // ── Pre-fill from editing ─────────────────────────────────────────────
   useEffect(() => {
     const eventData = location.state?.eventData
     const editEventId = location.state?.editEventId
-
     if (eventData && editEventId) {
-      // Pre-fill from real event data (editing a draft)
       if (eventData.title) setTitle(eventData.title)
-      if (eventData.category) setCategories([eventData.category])
+      if (eventData.category) setCategory(eventData.category)
       if (eventData.startAt) {
         const d = new Date(eventData.startAt)
-        setDate(d.toISOString().split('T')[0])
+        setStartDate(d.toISOString().split('T')[0])
         setStartTime(d.toISOString().split('T')[1].slice(0, 5))
       }
       if (eventData.endAt) {
         const d = new Date(eventData.endAt)
+        setEndDate(d.toISOString().split('T')[0])
         setEndTime(d.toISOString().split('T')[1].slice(0, 5))
+        setHasEndDate(true)
       }
-      if (eventData.city) { setCity(eventData.city); setCityInput(eventData.city) }
+      if (eventData.city) setCity(eventData.city)
       if (eventData.address) setAddress(eventData.address)
       if (eventData.latitude) setLat(eventData.latitude)
       if (eventData.longitude) setLon(eventData.longitude)
@@ -143,128 +293,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (eventData.isPrivate !== undefined) setPrivacy(eventData.isPrivate ? 'PRIVATE' : 'PUBLIC')
       if (eventData.description) setDescription(eventData.description)
       if (eventData.coverUrl) setCoverPreview(eventData.coverUrl)
-    } else {
-      // Fall back to localStorage draft
-      const draftStr = localStorage.getItem('create_event_draft')
-      if (draftStr) {
-        try {
-          const draft = JSON.parse(draftStr)
-          if (draft.title) setTitle(draft.title)
-          if (draft.categories) setCategories(draft.categories)
-          if (draft.date) setDate(draft.date)
-          if (draft.startTime) setStartTime(draft.startTime)
-          if (draft.endTime) setEndTime(draft.endTime)
-          if (draft.city) { setCity(draft.city); setCityInput(draft.city) }
-          if (draft.address) setAddress(draft.address)
-          if (draft.lat) setLat(draft.lat)
-          if (draft.lon) setLon(draft.lon)
-          if (draft.maxPlaces) setMaxPlaces(draft.maxPlaces)
-          if (draft.amount) setAmount(draft.amount)
-          if (draft.privacy !== undefined) setPrivacy(draft.privacy)
-          if (draft.enablePool !== undefined) setEnablePool(draft.enablePool)
-          if (draft.poolTarget) setPoolTarget(draft.poolTarget)
-          if (draft.description) setDescription(draft.description)
-          toast.success('Brouillon local restauré')
-        } catch (e) {
-          console.error('Failed to parse local draft', e)
-        }
-      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-save draft on change
-  useEffect(() => {
-    // Only save if at least title or category is started to avoid saving pure empty state
-    // Do not save if we are on step 6 or 7 (preview or done)
-    if (step < 6 && (title || categories.length > 0 || city)) {
-      const draft = { step, title, categories, date, startTime, endTime, city, address, lat, lon, maxPlaces, amount, privacy, enablePool, poolTarget, description }
-      localStorage.setItem('create_event_draft', JSON.stringify(draft))
-    }
-  }, [step, title, categories, date, startTime, endTime, city, address, lat, lon, maxPlaces, amount, privacy, description])
-
-  const toggleCategory = (val: string) =>
-    setCategories(prev => prev.includes(val) ? prev.filter(c => c !== val) : [...prev, val])
-
-  const handleCover = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (!f) return
-    setCoverFile(f); setCoverPreview(URL.createObjectURL(f))
-  }
-
-  // Géolocalisation GPS native (Capacitor) — via geo.ts (double fallback)
-  // const handleGeolocate = async () => {
-  //   // ... (commented out to match exact Figma design which removed geo buttons)
-  // }
-
-  // Handle map interaction
-  // const openMap = () => {
-  //   // ... (commented out to match exact Figma design)
-  // }
-
-  const handleMapSearch = async (q: string) => {
-    setMapSearchQuery(q)
-    if (q.length < 2) { setMapSearchSuggestions([]); return }
-    try {
-      const results = await searchPlaces(q, city)
-      setMapSearchSuggestions(results)
-    } catch { setMapSearchSuggestions([]) }
-  }
-
-  const selectMapSuggestion = (s: {label:string; lat:number; lon:number}) => {
-    setMapCenter([s.lat, s.lon])
-    setTempLat(s.lat)
-    setTempLon(s.lon)
-    setMapSearchQuery('')
-    setMapSearchSuggestions([])
-  }
-
-  const confirmMapLocation = async () => {
-    setIsReverseGeocoding(true)
-    // reverseGeocode from geo.ts never throws — has full fallback
-    const result = await reverseGeocode(tempLat, tempLon)
-    setCity(result.city)
-    setAddress(result.address)
-    if (result.city) setCityInput(result.city)
-    setLat(result.lat)
-    setLon(result.lon)
-    setMapCenter([tempLat, tempLon])
-    setShowMapModal(false)
-    setIsReverseGeocoding(false)
-    toast.success('Emplacement validé !')
-  }
-
-  // Recherche ville
-  const cityTimeoutRef = useRef<number | null>(null)
-  const handleCitySearch = (q: string) => {
-    setCityInput(q)
-    if (q.length < 2) { setCitySuggestions([]); return }
-    if (cityTimeoutRef.current) window.clearTimeout(cityTimeoutRef.current)
-    cityTimeoutRef.current = window.setTimeout(async () => {
-      try {
-        const results = await searchCities(q)
-        setCitySuggestions(results)
-      } catch { setCitySuggestions([]) }
-    }, 400)
-  }
-
-  const selectCity = (s: { label: string; lat: number|string; lon: number|string }) => {
-    const parts = s.label.split(',')
-    setCity(parts[0].trim())
-    setAddress(s.label)
-    setCityInput(parts[0].trim())
-    setLat(parseFloat(String(s.lat)))
-    setLon(parseFloat(String(s.lon)))
-    setCitySuggestions([])
-  }
-
-  const canNext = () => {
-    if (step === 1) return title.trim().length >= 2 && categories.length > 0
-    if (step === 2) return !!date && !!startTime && !!endTime && !!city
-    if (step === 3) return !!maxPlaces
-    if (step === 4) return description.trim().length >= 10
-    return true
-  }
+  // ── Submit ───────────────────────────────────────────────────────────────
+  const canSubmit = title.trim().length >= 2 && !!startDate && !!startTime && !!category
 
   const handleSubmit = async () => {
+    if (!canSubmit) { toast.error('Remplissez au moins le nom, la date et la catégorie.'); return }
     setLoading(true)
     const editEventId = location.state?.editEventId || createdEventId
     try {
@@ -275,13 +311,20 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       } else if (coverPreview) {
         coverUrl = coverPreview
       }
-      const startAt = new Date(`${date}T${startTime}`).toISOString()
-      const endAt = new Date(`${date}T${endTime}`).toISOString()
+
+      const startAt = new Date(`${startDate}T${startTime}`).toISOString()
+      const endAt = hasEndDate && endDate && endTime
+        ? new Date(`${endDate}T${endTime}`).toISOString()
+        : new Date(`${startDate}T${startTime}`).toISOString()
 
       const payload = {
-        title: title.trim(), description: description.trim(),
-        category: categories[0], startAt, endAt,
-        city: city.trim(), address: address.trim() || undefined,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        category: category!,
+        startAt,
+        endAt,
+        city: city.trim() || undefined,
+        address: address.trim() || undefined,
         country: 'Bénin',
         latitude: lat ?? undefined,
         longitude: lon ?? undefined,
@@ -293,7 +336,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         poolMode: enablePool && poolTarget ? poolMode : undefined,
         poolMinAmount: enablePool && poolMinAmount ? parseFloat(poolMinAmount) : undefined,
         status: 'DRAFT',
-        coHostIds: selectedCoOrgs.map(o => o.id)
+        coHostIds: selectedCoOrgs.map(o => o.id),
       }
 
       let res
@@ -303,13 +346,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         res = await apiClient.post('/events', payload)
       }
 
-      localStorage.removeItem('create_event_draft')
       const eventId = editEventId || res.data?.id
       setCreatedEventId(eventId)
+      localStorage.removeItem('create_event_draft')
       toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
-      setStep(7)
+      setStep('done')
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Erreur lors de la création")
+      toast.error(err?.response?.data?.message || 'Erreur lors de la création')
     } finally { setLoading(false) }
   }
 
@@ -334,1071 +377,322 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       navigate(`/events/${eventId}`)
     } catch (err: any) {
       toast.error(err?.response?.data?.error || 'Erreur lors de la publication')
-    } finally {
-      setPublishing(false)
-    }
+    } finally { setPublishing(false) }
   }
 
-  // ── Shared layout ──────────────────────────────────────────────────
-  const stepTitles = ['Informations', 'Date & lieu', 'Participation', 'Personnalisation', 'Organisation']
-  const stepSubs = [
-    "Indiquez les informations essentielles de votre événement",
-    "Indiquez quand et où l'événement aura lieu",
-    "Définissez les modalités de participation",
-    "Donnez envie de rejoindre votre événement",
-    "Ajoutez les personnes qui co-organisent avec vous",
-  ]
+  // ── Derived labels ───────────────────────────────────────────────────────
+  const catLabel = CATEGORIES.find(c => c.value === category)
+  const privacyLabel = privacy === 'PUBLIC' ? 'Public' : privacy === 'PRIVATE' ? 'Privé' : null
+  const participationLabel = PARTICIPATION_MODES.find(p => p.value === participationMode)?.label ?? null
+  const startDateLabel = startDate && startTime ? formatDateTime(startDate, startTime) : null
+  const endDateLabel = endDate && endTime ? formatDateTime(endDate, endTime) : null
 
-  const formattedDate = date
-    ? format(new Date(date + 'T00:00:00'), 'dd MMMM yyyy', { locale: fr })
-    : ''
-
-  return (
-    <div className="w-full h-full bg-background flex flex-col">
-
-      {/* Header */}
-      <div className="px-5 pt-safe-6 pb-4 bg-background">
-        <div className="flex items-center justify-center relative">
-          {step < 7 && (
-            <button onClick={step === 1 ? onBack : () => setStep(s => s - 1)}
-              className="absolute left-0 w-8 h-8 rounded-full bg-[#F4F4F5] flex items-center justify-center transition-transform active:scale-95">
-              <ChevronLeft className="w-5 h-5 text-[#1A1A1A]" />
-            </button>
-          )}
-          <span className="text-[15px] font-bold text-[#1A1A1A]">
-            {step === 7 ? 'Détails événement' : 'Créer un événement'}
-          </span>
+  // ──────────────────────────────────────────────────────────────────────────
+  // RENDER — DONE screen
+  // ──────────────────────────────────────────────────────────────────────────
+  if (step === 'done') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        {/* Header */}
+        <div className="px-5 pt-safe-6 pb-4 bg-white border-b border-[#F0F0F0]">
+          <div className="flex items-center justify-center relative">
+            <span className="text-[15px] font-bold text-[#1A1A1A]">Détails événement</span>
+          </div>
         </div>
-      </div>
-      {/* Ligne orange de séparation / progression */}
-      <div className="mx-5 h-[2px] bg-brand-orange-100 rounded-full overflow-hidden shrink-0">
-        <div className="h-full bg-action-primary transition-all duration-300 rounded-full"
-          style={{ width: `${(step / TOTAL_STEPS) * 100}%` }} />
-      </div>
-
-      {/* Step content */}
-      <div className="flex-1 overflow-y-auto px-5 pt-8 pb-32 bg-background">
-        {step < 6 && (
-          <div className="mb-8">
-            <h2 className="text-[24px] font-bold text-[#1A1A1A] mb-1.5">
-              {step === 1 ? 'Informations' : stepTitles[step - 1]}
-            </h2>
-            <p className="text-[14px] text-[#555555]">
-              {step === 1 ? 'Indiquez les informations essentielles de votre événement.' : stepSubs[step - 1]}
+        <div className="flex-1 overflow-y-auto px-5 pt-6 pb-36">
+          <h1 className="text-[22px] font-bold text-[#1A1A1A] mb-4">{title || 'Votre événement'}</h1>
+          <div className="bg-[#EBF3FA] mb-5 p-4 rounded-xl border border-blue-100">
+            <p className="text-[13px] text-[#555] leading-relaxed">
+              Cet événement n'est pas encore visible sur Let's Out.<br />
+              Publiez-le pour le rendre accessible publiquement.
             </p>
           </div>
-        )}
-
-        {/* ── STEP 1: Informations ── */}
-        {step === 1 && (
-          <div className="space-y-8">
-            <div>
-              <label className="text-[13px] font-bold text-[#1A1A1A] mb-2 block">Nom</label>
-              <input
-                value={title} onChange={e => setTitle(e.target.value)}
-                placeholder="Nom de l'événement..."
-                className="w-full px-4 py-4 border border-[#E4E4E7] rounded-xl text-[15px] font-medium text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-transparent"
-              />
-            </div>
-            <div>
-              <label className="text-[13px] font-bold text-[#1A1A1A] mb-3 block">Catégories</label>
-              <div className="flex flex-wrap gap-2.5">
-                {CATEGORIES.map(cat => (
-                  <CategoryChip
-                    key={cat.value}
-                    label={cat.label}
-                    selected={categories.includes(cat.value)}
-                    onClick={() => toggleCategory(cat.value)}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 2: Date & lieu ── */}
-        {step === 2 && (
-          <div className="space-y-4">
-            {/* Date */}
-            <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Date</label>
-              <div className="relative">
-                <IconoirCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
-                {date ? (
-                  <div className="flex items-center w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
-                    <span className="flex-1 text-[#1A1A1A] font-medium">{formattedDate}</span>
-                    <button onClick={() => setDate('')} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                      <Cancel01Icon className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
-                    </button>
-                  </div>
-                ) : (
-                  <input
-                    type="text"
-                    onFocus={(e) => (e.target.type = 'date')}
-                    onBlur={(e) => {
-                      if (!e.target.value) e.target.type = 'text'
-                    }}
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                    placeholder="Sélectionnez une date"
-                    className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:opacity-0"
-                  />
-                )}
-              </div>
-            </div>
-
-            {/* Heure */}
-            <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Heure</label>
-              {startTime && endTime ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
-                  <IconoirClock className="w-[20px] h-[20px] text-[#71717A] mr-3" strokeWidth={1.5} />
-                  <span className="flex-1 text-[#1A1A1A] font-medium">{startTime} h – {endTime} h</span>
-                  <button onClick={() => { setStartTime(''); setEndTime(''); setIsEditingTime(false); }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <Cancel01Icon className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
-                  </button>
+          {/* Summary cards */}
+          {[
+            { title: 'Informations', rows: [['Nom', title], ['Catégorie', catLabel?.label ?? '—']] },
+            { title: 'Date & lieu', rows: [['Début', startDateLabel ?? '—'], ['Fin', hasEndDate ? (endDateLabel ?? '—') : 'Non définie'], ['Lieu', address || city || '—']] },
+            { title: 'Participation', rows: [['Confidentialité', privacyLabel ?? 'Non défini'], ['Mode', participationLabel ?? 'Gratuit']] },
+          ].map(card => (
+            <div key={card.title} className="bg-white border border-[#EEEEEE] rounded-2xl p-4 mb-3 shadow-sm">
+              <h3 className="font-bold text-[14px] text-[#1A1A1A] mb-3">{card.title}</h3>
+              {card.rows.map(([k, v]) => (
+                <div key={k} className="flex justify-between items-center mb-2 last:mb-0">
+                  <span className="text-[13px] text-[#766F6E]">{k}</span>
+                  <span className="text-[13px] font-medium text-[#1A1A1A] text-right max-w-[200px] truncate">{v}</span>
                 </div>
-              ) : isEditingTime ? (
-                <div className="flex gap-3">
-                  <div className="relative flex-1">
-                    <IconoirClock className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
-                    <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} autoFocus
-                      className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
-                    />
-                  </div>
-                  <div className="relative flex-1">
-                    <IconoirClock className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
-                    <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)}
-                      className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] focus:outline-none focus:border-action-primary bg-background-white text-[#1A1A1A]"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <button type="button" onClick={() => setIsEditingTime(true)} className="relative flex items-center w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#71717A] bg-background-white text-left focus:outline-none focus:border-action-primary">
-                  <IconoirClock className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
-                  Choisissez une heure
-                </button>
-              )}
-            </div>
-
-            {/* Ville */}
-            <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Ville</label>
-              {city && !citySuggestions.length ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
-                  <IconoirMapPin className="w-[20px] h-[20px] text-[#71717A] mr-3" strokeWidth={1.5} />
-                  <span className="flex-1 text-[#1A1A1A] font-medium">{city}</span>
-                  <button onClick={() => { setCity(''); setCityInput('') }} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <Cancel01Icon className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
-                  </button>
-                </div>
-              ) : (
-                <div className="relative">
-                  <IconoirMapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
-                  <input value={cityInput} onChange={e => handleCitySearch(e.target.value)}
-                    placeholder="Sélectionnez une ville"
-                    className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
-                  />
-                  {citySuggestions.length > 0 && (
-                    <div className="absolute z-20 top-full left-0 right-0 bg-background-white border border-[#E4E4E7] rounded-2xl mt-1 shadow-lg overflow-hidden">
-                      {citySuggestions.map((s, i) => (
-                        <button key={i} onClick={() => selectCity(s)}
-                          className="w-full text-left px-4 py-3 text-[14px] text-[#1A1A1A] hover:bg-gray-50 border-b border-[#F5F5F5] last:border-0 flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-[#71717A] flex-shrink-0" />
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Localisation */}
-            <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Localisation</label>
-              {address && !citySuggestions.length ? (
-                <div className="flex items-center w-full pl-4 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] bg-background-white">
-                  <IconoirMapPin className="w-[20px] h-[20px] text-[#71717A] mr-3 flex-shrink-0" strokeWidth={1.5} />
-                  <span className="flex-1 text-[#1A1A1A] font-medium truncate">{address}</span>
-                  <button onClick={() => setAddress('')} className="w-6 h-6 rounded-full bg-[#F4F4F5] flex items-center justify-center">
-                    <Cancel01Icon className="w-[18px] h-[18px] text-[#71717A]" strokeWidth={1.5} />
-                  </button>
-                </div>
-              ) : (
-                <div className="relative">
-                  <IconoirMapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[#71717A]" strokeWidth={1.5} />
-                  <input value={address} onChange={e => setAddress(e.target.value)}
-                    placeholder="Sélectionnez sur la carte"
-                    className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 3: Participation ── */}
-        {step === 3 && (
-          <div className="space-y-4">
-            <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Nombre de places</label>
-              <input type="number" min={1} value={maxPlaces} onChange={e => setMaxPlaces(e.target.value)}
-                placeholder="0"
-                className="w-full px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
-              />
-            </div>
-            <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Montant</label>
-              <div className="flex gap-2 items-center">
-                <input type="number" min={0} value={amount} onChange={e => setAmount(e.target.value)}
-                  placeholder="0"
-                  className="flex-1 px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
-                />
-                <div className="px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#555555] bg-background-white flex-shrink-0 flex items-center justify-center font-medium">
-                  F CFA <ArrowDown01Icon className="w-4 h-4 ml-1 text-[#71717A]" strokeWidth={1.5} />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[14px] font-medium text-[#71717A] mb-2 block">Confidentialité</label>
-              <div className="flex justify-between" style={{ gap: '11px' }}>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  className={`flex-1 h-[48px] flex items-center px-[14px] py-[12px] rounded-[12px] border transition-colors cursor-pointer ${privacy === 'PUBLIC' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
-                  onClick={() => setPrivacy('PUBLIC')}
-                >
-                  <span className="flex-1 text-left text-[15px] font-medium text-[#1A1A1A]">Public</span>
-                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors shrink-0 ${privacy === 'PUBLIC' ? 'border-[2px] border-action-primary' : 'border border-[#E4E4E7]'}`}>
-                    {privacy === 'PUBLIC' && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
-                  </div>
-                </div>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  className={`flex-1 h-[48px] flex items-center px-[14px] py-[12px] rounded-[12px] border transition-colors cursor-pointer ${privacy === 'PRIVATE' ? 'border-action-primary bg-background-white' : 'border-[#E4E4E7] bg-background-white'}`}
-                  onClick={() => setPrivacy('PRIVATE')}
-                >
-                  <span className="flex-1 text-left text-[15px] font-medium text-[#1A1A1A]">Privé</span>
-                  <div className={`w-[20px] h-[20px] rounded-full flex items-center justify-center transition-colors shrink-0 ${privacy === 'PRIVATE' ? 'border-[2px] border-action-primary' : 'border border-[#E4E4E7]'}`}>
-                    {privacy === 'PRIVATE' && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 4: Présentation ── */}
-        {step === 4 && (
-          <div className="space-y-4">
-            <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Description</label>
-              <textarea value={description} onChange={e => setDescription(e.target.value)}
-                placeholder="À propos de votre événement..."
-                rows={6}
-                className="w-full px-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] resize-none focus:outline-none focus:border-action-primary bg-background-white"
-              />
-            </div>
-            <div>
-              <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Couverture</label>
-              <button onClick={() => fileRef.current?.click()}
-                className="w-full h-44 border border-[#E4E4E7] rounded-2xl flex flex-col items-center justify-center overflow-hidden relative bg-background-white active:scale-[0.99] transition-transform">
-                {coverPreview ? (
-                  <>
-                    <SafeImage src={coverPreview} alt="Aperçu couverture" className="absolute inset-0 w-full h-full object-cover" />
-                    <button onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
-                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-[#FFEBEB] transition-colors">
-                      <X className="w-4 h-4 text-[#FF4444]" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-2">
-                      <ImageAdd01Icon className="w-[24px] h-[24px] text-[#71717A]" strokeWidth={1.5} />
-                    </div>
-                    <span className="text-[13px] font-medium text-[#71717A]">Sélectionner une image</span>
-                  </>
-                )}
-              </button>
-              <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 5: Organisation ── */}
-        {step === 5 && (
-          <div className="space-y-6">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[#71717A]" />
-              <input 
-                autoFocus 
-                value={coOrgSearch} 
-                onChange={e => setCoOrgSearch(e.target.value)}
-                placeholder="Rechercher un ami"
-                className="w-full pl-11 pr-4 py-4 border border-[#E4E4E7] rounded-2xl text-[15px] text-[#1A1A1A] placeholder:text-[#71717A] focus:outline-none focus:border-action-primary bg-background-white"
-              />
-            </div>
-
-            {/* Selected */}
-            {selectedCoOrgs.length > 0 && (
-              <div>
-                <p className="text-[13px] font-semibold text-[#1A1A1A] mb-3">Sélectionnés</p>
-                <div className="space-y-3">
-                  {selectedCoOrgs.map(org => (
-                    <div key={org.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E4E4E7]">
-                          <SafeImage 
-                            src={org.avatarUrl} 
-                            alt={org.name} 
-                            className="w-full h-full object-cover" 
-                            fallback={
-                              <div className="w-full h-full bg-brand-orange-100 flex items-center justify-center text-action-primary font-bold text-[14px]">
-                                {org.name.charAt(0).toUpperCase()}
-                              </div>
-                            }
-                          />
-                        </div>
-                        <span className="text-[15px] font-medium text-[#1A1A1A] flex items-center gap-1">
-                          {org.name}
-                          <BadgeCheck className="w-4 h-4 text-blue-500" />
-                        </span>
-                      </div>
-                      <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
-                        className="text-[12px] font-semibold text-[#71717A] active:scale-95 transition-transform">
-                        Retirer
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Results */}
-            {friends.length > 0 && (
-              <div>
-                <p className="text-[13px] font-semibold text-[#1A1A1A] mb-3">Recherche</p>
-                <div className="space-y-3">
-                  {friends.filter(f => !selectedCoOrgs.find(o => o.id === (f.userId || f.id))).map((f: any) => {
-                    const name = f.displayName || f.username || 'Utilisateur'
-                    const uid = f.userId || f.id
-                    return (
-                      <div key={uid} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {f.avatarUrl ? (
-                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-[#E4E4E7]">
-                              <SafeImage src={f.avatarUrl} alt={name} className="w-full h-full object-cover" />
-                            </div>
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-orange-300 flex items-center justify-center text-white font-bold text-[14px] shrink-0 border border-[#E4E4E7]">
-                              {name.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <span className="text-[15px] font-medium text-[#1A1A1A]">{name}</span>
-                        </div>
-                        <button onClick={() => setSelectedCoOrgs(p => [...p, { id: uid, name, avatarUrl: f.avatarUrl }])}
-                          className="text-[12px] font-semibold text-[#71717A] active:scale-95 transition-transform">
-                          Ajouter
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── STEP 6: Rendu après publication ── */}
-        {step === 6 && (
-          <div className="space-y-0">
-            {/* Preview banner */}
-            <div className="bg-[#FFF8ED] border border-[#FFE4B2] rounded-xl px-4 py-3 mb-5 flex items-center gap-3">
-              <span className="text-action-primary text-xl">👁</span>
-              <div>
-                <p className="text-[13px] font-bold text-action-primary">Rendu après publication</p>
-                <p className="text-[11px] text-[#B87A00]">Voici comment votre événement apparaîtra publiquement.</p>
-              </div>
-            </div>
-
-            {/* ── Cover image ── */}
-            <div className="w-full h-52 bg-[#F0F0F0] rounded-[20px] overflow-hidden relative mb-5">
-              {coverPreview ? (
-                <SafeImage src={coverPreview} alt="Aperçu couverture" className="w-full h-full object-cover" />
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                  <div className="text-5xl">{categories[0] === 'SOCIAL' ? '✨' : categories[0] === 'CULTURE' ? '🎭' : categories[0] === 'WELLNESS' ? '🧘' : categories[0] === 'TECH' ? '💻' : categories[0] === 'SCIENCE' ? '🔬' : categories[0] === 'TRAVEL' ? '✈️' : categories[0] === 'LIFESTYLE' ? '🍹' : '🗺️'}</div>
-                  <span className="text-[13px] text-[#AAAAAA] font-medium">Image de couverture</span>
-                </div>
-              )}
-            </div>
-
-            {/* ── Title + Categories ── */}
-            <h2 className="text-[24px] font-bold text-[#1A1A1A] leading-tight mb-3">{title || 'Titre de l\'événement'}</h2>
-            <div className="flex flex-wrap gap-2 mb-5">
-              {categories.map(cat => (
-                <span key={cat} className="text-[12px] font-bold text-[#007AFF] bg-[#EBF5FF] px-2 py-1 rounded-full">
-                  {CATEGORIES.find(c => c.value === cat)?.label}
-                </span>
               ))}
             </div>
-
-            {/* ── Location + Date ── */}
-            <div className="space-y-150 mb-6">
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-[var(--color-brand-orange-50)] flex items-center justify-center shrink-0 mt-0.5">
-                  <MapPin className="w-4 h-4 text-action-primary" />
-                </div>
-                <div>
-                  <p className="font-bold text-[#1A1A1A] text-[14px]">{city || 'Ville non précisée'}</p>
-                  <p className="text-[13px] text-text-secondary">{address || 'Lieu non précisé'}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-[var(--color-brand-orange-50)] flex items-center justify-center shrink-0 mt-0.5">
-                  <Calendar className="w-4 h-4 text-action-primary" />
-                </div>
-                <div>
-                  <p className="font-bold text-[#1A1A1A] text-[14px] capitalize">{formattedDate || 'Date non précisée'}</p>
-                  <p className="text-[13px] text-text-secondary">{startTime ? `${startTime} h – ${endTime} h (GMT)` : '--:--'}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* ── À propos ── */}
-            <div className="mb-6">
-              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-2">À propos</h3>
-              <p className="text-[14px] text-text-secondary leading-relaxed line-clamp-3 whitespace-pre-wrap">
-                {description || 'Aucune description fournie.'}
-              </p>
-              {description && description.length > 120 && (
-                <span className="text-[13px] text-gray-400 underline mt-1 block cursor-pointer">Voir plus</span>
-              )}
-            </div>
-
-            {/* ── Organisateurs ── */}
-            <div className="mb-6">
-              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Organisateurs</h3>
-              <div className="space-y-150">
-                {/* Main organizer */}
-                <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
-                  <div className="flex items-center gap-3">
-                    {me?.profile?.avatarUrl ? (
-                      <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-12 h-12 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--color-brand-orange-400)] flex items-center justify-center font-bold text-[18px] text-white">
-                        {me?.profile?.displayName?.charAt(0) || 'M'}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-[15px] font-bold text-[#1A1A1A]">{me?.profile?.displayName || 'Vous'}</p>
-                        <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                      </div>
-                      <p className="text-[12px] text-text-secondary mt-0.5 mb-2">{me?.profile?.followersCount || 0} followers • {me?.profile?.eventsCount || 0} événement</p>
-                      <div className="flex items-center gap-2">
-                        <button className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm">Contacter</button>
-                        <button className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm">Suivre</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {/* Co-organisateurs */}
-                {selectedCoOrgs.map(org => (
-                  <div key={org.id} className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full overflow-hidden">
-                        <SafeImage src={org.avatarUrl} alt={org.name} className="w-full h-full object-cover"
-                          fallback={<div className="w-full h-full bg-orange-200 flex items-center justify-center font-bold text-white">{org.name.charAt(0)}</div>}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-[15px] font-bold text-[#1A1A1A]">{org.name}</p>
-                          <span className="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold">Co-hôte</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-2">
-                          <button className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm">Contacter</button>
-                          <button className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm">Suivre</button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {/* Let's Out Staff */}
-                <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[var(--color-brand-yellow-400)] to-[var(--action-primary)] flex items-center justify-center">
-                      <span className="text-white font-bold text-[13px]">LO</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-[15px] font-bold text-[#1A1A1A]">Let's Out Staff</p>
-                        <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-                      </div>
-                      <p className="text-[12px] text-text-secondary mt-0.5 mb-2">2020 followers • 6 événements • 4.8 ★</p>
-                      <div className="flex items-center gap-2">
-                        <button className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm">Contacter</button>
-                        <button className="px-150 py-1 rounded-full border border-border-primary bg-background-white text-[11px] font-bold text-gray-700 shadow-sm">Suivre</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ── Participation ── */}
-            <div className="mb-6">
-              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Participation</h3>
-              <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100 flex items-center justify-between">
-                <span className="text-[14px] text-gray-700 font-medium">Montant</span>
-                <span className="text-[15px] font-bold text-blue-600">
-                  {amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}
-                </span>
-              </div>
-            </div>
-
-            {/* ── Participants ── */}
-            <div className="mb-2">
-              <h3 className="text-[16px] font-bold text-[#1A1A1A] mb-3">Participants</h3>
-              <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {['var(--action-primary)','var(--action-primary)','#B070FF'].map((color, i) => (
-                      <div key={i} className="w-9 h-9 rounded-full border-2 border-white flex items-center justify-center text-white text-[11px] font-bold" style={{ backgroundColor: color }} />
-                    ))}
-                  </div>
-                  <span className="text-[14px] font-bold text-gray-900">0/{maxPlaces || '∞'}</span>
-                </div>
-                <button className="px-4 py-1.5 rounded-full border border-border-primary bg-background-white text-[12px] font-bold text-gray-700 shadow-sm">Voir tous</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 7: Gestion du brouillon ── */}
-        {step === 7 && (
-          <div className="pb-8">
-            {/* Titre */}
-            <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-4">{title || 'Votre événement'}</h1>
-
-            {/* Info banner */}
-            <div className="bg-[#EBF3FA] mb-6 p-4 rounded-xl border border-blue-100">
-              <p className="text-text-secondary text-[13px] leading-relaxed">
-                Cet événement n'est pas encore visible sur Let's Out.<br />
-                Publiez-le pour le rendre accessible publiquement.<br />
-                Ou ajoutez une cagnotte pour partager les frais.
-              </p>
-            </div>
-
-            <div className="space-y-200">
-              {/* Organisateurs */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-gray-900 text-[15px]">Organisateurs</h3>
-                  <button onClick={() => setStep(5)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
-                  </button>
-                </div>
-                <div className="space-y-150">
-                  <div className="flex items-center gap-3">
-                    {me?.profile?.avatarUrl ? (
-                      <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-9 h-9 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--action-primary)] to-[var(--color-brand-orange-400)] flex items-center justify-center text-white font-bold text-[13px]">
-                        {me?.profile?.displayName?.charAt(0).toUpperCase() || 'M'}
-                      </div>
-                    )}
-                    <span className="text-[14px] text-gray-700 font-medium">{me?.profile?.displayName || 'Vous'}</span>
-                  </div>
-                  {selectedCoOrgs.map(org => (
-                    <div key={org.id} className="flex items-center gap-3 pl-2 border-l-2 border-gray-100">
-                      <SafeImage src={org.avatarUrl} alt={org.name} className="w-7 h-7 rounded-full object-cover"
-                        fallback={<div className="w-7 h-7 rounded-full bg-orange-200 flex items-center justify-center text-white font-bold text-[11px]">{org.name.charAt(0).toUpperCase()}</div>}
-                      />
-                      <span className="text-[13px] text-text-secondary font-medium flex items-center gap-1.5">
-                        {org.name}
-                        <span className="text-[9px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-bold">Co-hôte</span>
-                      </span>
-                    </div>
-                  ))}
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[var(--color-brand-yellow-400)] to-[var(--action-primary)] flex items-center justify-center">
-                      <span className="text-white font-bold text-[10px]">LO</span>
-                    </div>
-                    <span className="text-[14px] text-gray-700 font-medium flex items-center gap-1">
-                      Let's Out Staff <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-500" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Informations */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-gray-900 text-[15px]">Informations</h3>
-                  <button onClick={() => setStep(1)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
-                  </button>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[14px] text-text-secondary">Nom</span>
-                  <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{title}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-text-secondary">Catégories</span>
-                  <div className="flex flex-wrap gap-1.5 justify-end">
-                    {categories.map(cat => (
-                      <span key={cat} className="text-[12px] font-bold text-[#007AFF] bg-[#EBF5FF] px-2 py-1 rounded-full">
-                        {CATEGORIES.find(c => c.value === cat)?.label || cat}
-                      </span>
-                    ))}
-                    {categories.length === 0 && <span className="text-[14px] text-gray-400">Non spécifié</span>}
-                  </div>
-                </div>
-              </div>
-
-              {/* Date & lieu */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-gray-900 text-[15px]">Date & lieu</h3>
-                  <button onClick={() => setStep(2)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
-                  </button>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[14px] text-text-secondary">Date</span>
-                  <span className="text-[14px] font-medium text-gray-900">{formattedDate || '—'}</span>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[14px] text-text-secondary">Heure</span>
-                  <span className="text-[14px] font-medium text-gray-900">{startTime && endTime ? `${startTime} – ${endTime} (GMT)` : '—'}</span>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[14px] text-text-secondary">Ville</span>
-                  <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{city || '—'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] text-text-secondary">Localisation</span>
-                  <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{address || '—'}</span>
-                </div>
-              </div>
-
-              {/* Participation */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-gray-900 text-[15px]">Participation</h3>
-                  <button onClick={() => setStep(3)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
-                  </button>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[14px] text-text-secondary">Places</span>
-                  <span className="text-[14px] font-medium text-gray-900">{maxPlaces || 'Illimitées'}</span>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-[14px] text-text-secondary">Ticket</span>
-                  <span className="text-[14px] font-medium text-action-primary font-bold">{amount && amount !== '0' ? `${parseInt(amount).toLocaleString()} F CFA` : 'Gratuit'}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] font-medium text-gray-900">{privacy === 'PRIVATE' ? 'Privée' : 'Publique'}</span>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-gray-900 text-[15px]">Description</h3>
-                  <button onClick={() => setStep(4)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
-                  </button>
-                </div>
-                <p className="text-[13px] text-text-secondary line-clamp-3">{description || 'Aucune description'}</p>
-                {description && description.length > 100 && (
-                  <span className="text-[13px] text-gray-400 underline mt-1 block cursor-pointer">Voir plus</span>
-                )}
-              </div>
-
-              {/* Couverture */}
-              <div className="bg-background-white border border-border-primary rounded-2xl p-4 shadow-sm">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-gray-900 text-[15px]">Couverture</h3>
-                  <button onClick={() => setStep(4)} className="text-[12px] text-text-secondary flex items-center gap-1.5 px-150 py-1.5 bg-gray-100 rounded-full font-medium active:scale-95 transition-transform">
-                    <Edit3 className="w-3.5 h-3.5" /> Modifier
-                  </button>
-                </div>
-                {coverPreview ? (
-                  <div className="w-full h-36 rounded-xl overflow-hidden">
-                    <SafeImage src={coverPreview} alt="Couverture" className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="w-full h-36 rounded-xl bg-gray-100 flex flex-col items-center justify-center gap-2">
-                    <span className="text-3xl">🖼</span>
-                    <span className="text-[13px] text-gray-400">Aucune image</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Bottom nav */}
-      <div className="w-full shrink-0 px-5 pt-4 pb-8 bg-background-white">
-        <div className="flex" style={{ gap: '4px' }}>
-          {step < 6 ? (
-            <>
-              {step === 1 && !canNext() ? (
-                <button disabled className="flex-1 h-[48px] flex items-center justify-center rounded-full font-bold text-[15px] bg-[#FFEEDB] text-white cursor-not-allowed transition-all">
-                  Commencer
-                </button>
-              ) : (
-                <>
-                  <button onClick={() => step === 1 ? onBack() : setStep(s => s - 1)}
-                    className="flex-1 h-[48px] flex items-center justify-center rounded-full border border-[#E4E4E7] font-bold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
-                    Précédent
-                  </button>
-                  <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
-                    className={`flex-1 h-[48px] flex items-center justify-center rounded-full font-bold text-[15px] transition-all ${canNext() ? 'bg-action-primary text-white shadow-sm active:scale-[0.98]' : 'bg-[#FFEEDB] text-white cursor-not-allowed'}`}>
-                    Suivant
-                  </button>
-                </>
-              )}
-            </>
-          ) : step === 6 ? (
-            <>
-              <button onClick={() => setStep(5)}
-                className="flex-1 h-[48px] flex items-center justify-center rounded-full border border-border-primary font-semibold text-[15px] text-[#1A1A1A] bg-background-white transition-colors active:bg-gray-50">
-                Précédent
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className={`flex-1 h-[48px] flex items-center justify-center rounded-full font-bold text-[15px] text-white gap-2 active:scale-95 transition-all ${
-                  !loading ? 'bg-action-primary active:bg-action-primary-hover' : 'bg-action-primary/50'
-                }`}
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                {loading ? 'Création...' : "Créer l'événement"}
-              </button>
-            </>
-          ) : (
-            /* Step 7: publish actions */
-            <div className="w-full space-y-150">
-              <button
-                onClick={() => { setShowPoolModal(true) }}
-                className="w-full py-[15px] rounded-full border border-border-primary text-action-primary font-bold text-[15px] bg-background-white flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform"
-              >
-                <CagnotteAddIcon className="w-5 h-5 text-action-primary" />
-                Ajouter cagnotte
-              </button>
-              <button
-                onClick={handlePublish}
-                disabled={publishing}
-                className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all ${
-                  publishing ? 'bg-action-primary/50' : 'bg-action-primary active:bg-action-primary-hover'
-                }`}
-              >
-                {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <PublishEventIcon className="w-5 h-5 text-white" />}
-                {publishing ? 'Publication...' : "Publier l'événement"}
-              </button>
-              <button
-                onClick={() => navigate('/profile')}
-                className="w-full py-[13px] rounded-full border border-border-primary text-text-secondary font-semibold text-[14px] bg-background-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-              >
-                Retour au profil
-              </button>
+          ))}
+          {coverPreview && (
+            <div className="w-full h-40 rounded-2xl overflow-hidden mb-4 border border-[#EEEEEE]">
+              <SafeImage src={coverPreview} alt="Couverture" className="w-full h-full object-cover" />
             </div>
           )}
         </div>
+        {/* Bottom buttons */}
+        <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 py-4 space-y-2">
+          <button
+            onClick={() => setShowPoolModal(true)}
+            className="w-full py-[15px] rounded-full border border-[#E0E0E0] text-[#FF7A00] font-bold text-[15px] flex items-center justify-center gap-2.5 active:scale-[0.98] transition-transform"
+          >
+            <CagnotteAddIcon className="w-5 h-5 text-[#FF7A00]" />
+            Ajouter une cagnotte
+          </button>
+          <button
+            onClick={handlePublish}
+            disabled={publishing}
+            className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all ${publishing ? 'bg-[#FF7A00]/50' : 'bg-[#FF7A00]'}`}
+          >
+            {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <PublishEventIcon className="w-5 h-5 text-white" />}
+            {publishing ? 'Publication...' : "Publier l'événement"}
+          </button>
+          <button onClick={() => navigate('/profile')}
+            className="w-full py-[13px] rounded-full border border-[#E0E0E0] text-[#766F6E] font-semibold text-[14px] active:scale-[0.98] transition-transform">
+            Retour au profil
+          </button>
+        </div>
 
-      </div>
-
-      {/* ── Modal Cagnotte multi-étapes ── */}
-      {showPoolModal && (
-        <div className="absolute inset-0 z-50 bg-background-white flex flex-col">
-          {/* Header */}
-          <div className="px-5 pt-safe-6 pb-0 flex-shrink-0">
-            <div className="flex items-center justify-center relative mb-3">
+        {/* Pool modal */}
+        {showPoolModal && (
+          <div className="absolute inset-0 z-50 bg-white flex flex-col">
+            <div className="px-5 pt-safe-6 pb-0 flex-shrink-0">
+              <div className="flex items-center justify-center relative mb-3">
+                <button onClick={() => { if (poolStep === 1) setShowPoolModal(false); else setPoolStep(s => s - 1) }}
+                  className="absolute left-0 w-8 h-8 flex items-center justify-center">
+                  <ArrowLeft01Icon className="w-6 h-6 text-[#1A1A1A]" strokeWidth={2} />
+                </button>
+                <span className="text-[15px] font-semibold text-[#1A1A1A]">Ajouter cagnotte</span>
+                {enablePool && (
+                  <button onClick={() => { setEnablePool(false); setPoolTarget(''); setPoolDescription(''); setShowPoolModal(false) }}
+                    className="absolute right-0 text-[12px] text-red-400 font-medium">Supprimer</button>
+                )}
+              </div>
+              <div className="flex gap-1.5 mb-2">
+                {[1,2,3,4].map(s => (
+                  <div key={s} className={`h-1 flex-1 rounded-full transition-all ${s <= poolStep ? 'bg-[#FF7A00]' : 'bg-[#EEEEEE]'}`} />
+                ))}
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-5 pt-5 pb-32">
+              {poolStep === 1 && (
+                <div>
+                  <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">But de la cagnotte</h2>
+                  <p className="text-[13px] text-[#766F6E] mb-5">Expliquez l'objectif & le dépôt de la cagnotte</p>
+                  <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Description</label>
+                  <textarea value={poolDescription} onChange={e => setPoolDescription(e.target.value)}
+                    placeholder="Indiquez l'objectif..." rows={5}
+                    className="w-full px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[14px] resize-none focus:outline-none focus:border-[#FF7A00]" />
+                </div>
+              )}
+              {poolStep === 2 && (
+                <div>
+                  <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">Objectif de collecte</h2>
+                  <p className="text-[13px] text-[#766F6E] mb-5">Définissez le montant à atteindre</p>
+                  <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Montant cible</label>
+                  <div className="flex gap-2 items-center mb-4">
+                    <input type="number" min={1} value={poolTarget} onChange={e => setPoolTarget(e.target.value)}
+                      placeholder="150 000"
+                      className="flex-1 px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[15px] focus:outline-none focus:border-[#FF7A00]" />
+                    <div className="px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[13px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
+                  </div>
+                  <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Date limite</label>
+                  <input type="date" value={poolDeadline} onChange={e => setPoolDeadline(e.target.value)}
+                    className="w-full px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[14px] focus:outline-none focus:border-[#FF7A00]" />
+                </div>
+              )}
+              {poolStep === 3 && (
+                <div>
+                  <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">Mode de participation</h2>
+                  <p className="text-[13px] text-[#766F6E] mb-5">Choisissez comment les participants pourront contribuer</p>
+                  {['libre','minimum','fixe'].map(m => (
+                    <button key={m} onClick={() => setPoolMode(m as any)}
+                      className={`w-full flex items-center justify-between p-4 rounded-2xl border mb-2 transition-all ${poolMode === m ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}>
+                      <span className="text-[14px] font-medium text-[#1A1A1A]">{m === 'libre' ? 'Montant libre' : m === 'minimum' ? 'Montant minimum' : 'Montant fixe'}</span>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${poolMode === m ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
+                        {poolMode === m && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {poolStep === 4 && poolMode !== 'libre' && (
+                <div>
+                  <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">Montant {poolMode === 'minimum' ? 'minimum' : 'fixe'}</h2>
+                  <p className="text-[13px] text-[#766F6E] mb-5">Définissez le montant par participant</p>
+                  <div className="flex gap-2 items-center">
+                    <input type="number" min={1} value={poolMinAmount} onChange={e => setPoolMinAmount(e.target.value)}
+                      placeholder="Ex: 5 000"
+                      className="flex-1 px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[15px] focus:outline-none focus:border-[#FF7A00]" />
+                    <div className="px-4 py-3 border border-[#E0E0E0] rounded-2xl text-[13px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 py-4">
               <button
                 onClick={() => {
-                  if (poolStep === 1) {
-                    setShowPoolModal(false)
+                  if (poolStep < 4) {
+                    if (poolStep === 3 && poolMode === 'libre') {
+                      setEnablePool(true); setShowPoolModal(false)
+                      savePoolToEvent().then(() => toast.success('Cagnotte configurée !'))
+                    } else { setPoolStep(s => s + 1) }
                   } else {
-                    setPoolStep(s => s - 1)
+                    setEnablePool(true); setShowPoolModal(false)
+                    savePoolToEvent().then(() => toast.success('Cagnotte configurée !'))
                   }
                 }}
-                className="absolute left-0 w-8 h-8 flex items-center justify-center"
-              >
-                <ChevronLeft className="w-6 h-6 text-gray-800" />
+                disabled={(poolStep === 1 && poolDescription.trim().length < 5) || (poolStep === 2 && !poolTarget)}
+                className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all">
+                {poolStep === 4 || (poolStep === 3 && poolMode === 'libre') ? '✓ Confirmer la cagnotte' : 'Suivant'}
               </button>
-              <span className="text-[15px] font-semibold text-gray-900">Ajouter cagnotte</span>
-              {enablePool && (
-                <button
-                  onClick={() => { setEnablePool(false); setPoolTarget(''); setPoolDescription(''); setPoolDeadline(''); setPoolMode('libre'); setPoolMinAmount(''); setShowPoolModal(false) }}
-                  className="absolute right-0 text-[12px] text-red-400 font-medium"
-                >
-                  Supprimer
-                </button>
-              )}
             </div>
-            {/* Progress bar — 4 segments */}
-            <div className="flex gap-1.5 mb-1">
-              {[1,2,3,4].map(s => (
-                <div key={s} className={`h-1 flex-1 rounded-full transition-all duration-300 ${s <= poolStep ? 'bg-action-primary active:bg-action-primary-hover' : 'bg-gray-100'}`} />
-              ))}
-            </div>
-            {/* Event name chip */}
-            <p className="text-[11px] text-gray-400 text-center mt-2 mb-1">
-              Cagnotte · <span className="font-medium text-text-secondary">{title || 'Votre événement'}</span>
-            </p>
           </div>
+        )}
+      </div>
+    )
+  }
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto px-5 pt-5 pb-32">
-
-            {/* ── POOL STEP 1: But de la cagnotte ── */}
-            {poolStep === 1 && (
-              <div>
-                <h2 className="text-[20px] font-bold text-gray-900 mb-1">But de la cagnotte</h2>
-                <p className="text-[13px] text-gray-400 mb-6">Expliquez l'objectif &amp; le dépôt de la cagnotte</p>
-                <label className="text-[13px] font-semibold text-gray-700 mb-2 block">Description</label>
-                <textarea
-                  value={poolDescription}
-                  onChange={e => setPoolDescription(e.target.value)}
-                  placeholder="Indiquez l'objectif..."
-                  rows={5}
-                  className="w-full px-4 py-3 border border-border-primary rounded-2xl text-[14px] text-gray-700 resize-none focus:outline-none focus:border-action-primary placeholder:text-gray-300 transition-colors"
-                />
-                <p className="text-[12px] text-gray-400 mt-2">{poolDescription.length}/500 caractères</p>
-              </div>
-            )}
-
-            {/* ── POOL STEP 2: Objectif de collecte ── */}
-            {poolStep === 2 && (
-              <div>
-                <h2 className="text-[20px] font-bold text-gray-900 mb-1">Objectif de collecte</h2>
-                <p className="text-[13px] text-gray-400 mb-6">Définissez le montant à atteindre</p>
-
-                <label className="text-[13px] font-semibold text-gray-700 mb-2 block">Montant cible</label>
-                <div className="flex gap-2 items-center mb-5 max-w-full">
-                  <input
-                    type="number"
-                    min={1}
-                    value={poolTarget}
-                    onChange={e => setPoolTarget(e.target.value)}
-                    placeholder="150 000"
-                    className="flex-1 min-w-0 px-4 py-3 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
-                  />
-                  <div className="px-4 py-3 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 w-[85px] shrink-0 flex items-center justify-center gap-1">
-                    F CFA <ChevronLeft className="w-3 h-3 rotate-[-90deg] text-gray-400" />
-                  </div>
-                </div>
-
-                <label className="text-[13px] font-semibold text-gray-700 mb-2 block">Date limite de participation</label>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="date"
-                    value={poolDeadline}
-                    onChange={e => setPoolDeadline(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 border border-border-primary rounded-2xl text-[14px] text-text-secondary focus:outline-none focus:border-action-primary transition-colors"
-                  />
-                </div>
-                <p className="text-[11px] text-gray-400 mt-3">
-                  ⚠️ Une vérification d'identité (KYC) sera requise pour le retrait des fonds.
-                </p>
-              </div>
-            )}
-
-            {/* ── POOL STEP 3: Mode de participation ── */}
-            {poolStep === 3 && (
-              <div>
-                <h2 className="text-[20px] font-bold text-gray-900 mb-1">Participation</h2>
-                <p className="text-[13px] text-gray-400 mb-6">Choisissez comment les participants pourront contribuer</p>
-
-                <label className="text-[13px] font-semibold text-gray-700 mb-3 block">Mode de participation</label>
-
-                <div className="relative">
-                  <select
-                    value={poolMode}
-                    onChange={e => setPoolMode(e.target.value as any)}
-                    className="w-full appearance-none px-4 py-3 border border-border-primary rounded-2xl text-[14px] text-gray-700 font-medium bg-background-white focus:outline-none focus:border-action-primary transition-colors pr-10"
-                  >
-                    <option value="libre">Montant libre</option>
-                    <option value="minimum">Montant minimum</option>
-                    <option value="fixe">Montant fixe</option>
-                  </select>
-                  <ChevronLeft className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 rotate-[-90deg] pointer-events-none" />
-                </div>
-
-                {/* Description du mode */}
-                <div className="mt-4 p-4 bg-gray-50 rounded-2xl">
-                  {poolMode === 'libre' && (
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
-                      🎁 Chaque participant contribue librement, <strong>selon ses moyens</strong>. Aucun montant minimum n'est imposé.
-                    </p>
-                  )}
-                  {poolMode === 'minimum' && (
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
-                      📌 Chaque participant doit contribuer <strong>au moins le montant minimum</strong>. Il peut donner plus s'il le souhaite.
-                    </p>
-                  )}
-                  {poolMode === 'fixe' && (
-                    <p className="text-[13px] text-text-secondary leading-relaxed">
-                      🔒 Chaque participant contribue <strong>exactement le même montant</strong>, ni plus ni moins.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ── POOL STEP 4: Montant minimum ou fixe ── */}
-            {poolStep === 4 && (
-              <div>
-                <h2 className="text-[20px] font-bold text-gray-900 mb-1">Participation</h2>
-                <p className="text-[13px] text-gray-400 mb-6">Choisissez comment les participants pourront contribuer</p>
-
-                <label className="text-[13px] font-semibold text-gray-700 mb-3 block">Mode de participation</label>
-
-                {/* Mode affiché en lecture seule — tap pour modifier */}
-                <div className="relative mb-5">
-                  <select
-                    value={poolMode}
-                    onChange={e => setPoolMode(e.target.value as any)}
-                    className="w-full appearance-none px-4 py-3 border border-action-primary rounded-2xl text-[14px] text-gray-700 font-medium bg-background-white focus:outline-none pr-10"
-                  >
-                    <option value="libre">Montant libre</option>
-                    <option value="minimum">Montant minimum</option>
-                    <option value="fixe">Montant fixe</option>
-                  </select>
-                  <ChevronLeft className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-action-primary rotate-[-90deg] pointer-events-none" />
-                </div>
-
-                {poolMode !== 'libre' && (
-                  <>
-                    <label className="text-[13px] font-semibold text-gray-700 mb-2 block">
-                      {poolMode === 'minimum' ? 'Montant minimum (F CFA)' : 'Montant fixe par participant (F CFA)'}
-                    </label>
-                    <div className="flex gap-2 items-center max-w-full">
-                      <input
-                        type="number"
-                        min={1}
-                        value={poolMinAmount}
-                        onChange={e => setPoolMinAmount(e.target.value)}
-                        placeholder="Ex: 5 000"
-                        className="flex-1 min-w-0 px-4 py-3 border border-border-primary rounded-2xl text-[15px] font-medium text-gray-900 focus:outline-none focus:border-action-primary transition-colors"
-                      />
-                      <div className="px-4 py-3 border border-border-primary rounded-2xl text-[13px] font-semibold text-text-secondary bg-gray-50 w-[85px] shrink-0 flex items-center justify-center">
-                        F CFA
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {poolMode === 'libre' && (
-                  <div className="p-4 bg-[var(--color-brand-orange-50)] border border-action-primary/20 rounded-2xl">
-                    <p className="text-[13px] text-action-primary font-medium">
-                      ✅ Mode libre sélectionné — aucun montant minimum requis.
-                    </p>
-                  </div>
-                )}
-
-                {/* Récapitulatif cagnotte */}
-                {poolTarget && (
-                  <div className="mt-6 p-4 bg-gray-50 rounded-2xl space-y-2">
-                    <p className="text-[12px] font-bold text-text-secondary uppercase tracking-wider mb-3">Récapitulatif</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-[13px] text-text-secondary">Objectif</span>
-                      <span className="text-[13px] font-bold text-gray-900">{parseInt(poolTarget).toLocaleString()} F CFA</span>
-                    </div>
-                    {poolDeadline && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-[13px] text-text-secondary">Date limite</span>
-                        <span className="text-[13px] font-bold text-gray-900">
-                          {new Date(poolDeadline + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center">
-                      <span className="text-[13px] text-text-secondary">Mode</span>
-                      <span className="text-[13px] font-bold text-gray-900 capitalize">
-                        {poolMode === 'libre' ? 'Montant libre' : poolMode === 'minimum' ? 'Montant minimum' : 'Montant fixe'}
-                      </span>
-                    </div>
-                    {poolMode !== 'libre' && poolMinAmount && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-[13px] text-text-secondary">{poolMode === 'minimum' ? 'Minimum' : 'Montant'}</span>
-                        <span className="text-[13px] font-bold text-action-primary">{parseInt(poolMinAmount).toLocaleString()} F CFA</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Bottom CTA */}
-          <div className="absolute bottom-0 left-0 right-0 bg-background-white border-t border-gray-100 px-5 py-4">
-            <button
-              onClick={() => {
-                if (poolStep < 4) {
-                  // Step 3 → si mode libre, on saute step 4 et on valide directement
-                  if (poolStep === 3 && poolMode === 'libre') {
-                    setEnablePool(true)
-                    setShowPoolModal(false)
-                    savePoolToEvent().then(() => toast.success('Cagnotte configurée !')).catch(() => toast.error('Erreur lors de l\'enregistrement de la cagnotte'))
-                  } else {
-                    setPoolStep(s => s + 1)
-                  }
-                } else {
-                  setEnablePool(true)
-                  setShowPoolModal(false)
-                  savePoolToEvent().then(() => toast.success('Cagnotte configurée !')).catch(() => toast.error('Erreur lors de l\'enregistrement de la cagnotte'))
-                }
-              }}
-              disabled={
-                (poolStep === 1 && poolDescription.trim().length < 5) ||
-                (poolStep === 2 && !poolTarget)
-              }
-              className={`w-full py-4 rounded-full font-bold text-[15px] text-white transition-all active:scale-[0.98] ${
-                (poolStep === 1 && poolDescription.trim().length < 5) ||
-                (poolStep === 2 && !poolTarget)
-                  ? 'bg-action-primary active:bg-action-primary-hover/30'
-                  : 'bg-action-primary active:bg-action-primary-hover'
-              }`}
-            >
-              {poolStep === 4 || (poolStep === 3 && poolMode === 'libre')
-                ? '✓ Confirmer la cagnotte'
-                : 'Suivant'}
+  // ──────────────────────────────────────────────────────────────────────────
+  // RENDER — ORGANIZER SEARCH screen
+  // ──────────────────────────────────────────────────────────────────────────
+  if (showOrganizerSearch) {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        <div className="px-5 pt-safe-6 pb-3 border-b border-[#F0F0F0] shrink-0">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setShowOrganizerSearch(false)}
+              className="w-9 h-9 rounded-full bg-[#F5F5F5] flex items-center justify-center active:scale-95 transition-transform">
+              <ArrowLeft01Icon className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2} />
             </button>
-
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BDBDBD]" />
+              <input
+                autoFocus
+                value={coOrgSearch}
+                onChange={e => setCoOrgSearch(e.target.value)}
+                placeholder="Rechercher un organisateur"
+                className="w-full pl-10 pr-4 py-2.5 border border-[#E0E0E0] rounded-full text-[14px] focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
           </div>
         </div>
-      )}
+        <div className="flex-1 overflow-y-auto px-5 pt-3">
+          {friends.filter(f => !selectedCoOrgs.find(o => o.id === (f.userId || f.id))).map((f: any) => {
+            const name = f.displayName || f.username || 'Utilisateur'
+            const uid = f.userId || f.id
+            const colors = ['#FF7A00', '#4CAF50', '#2196F3', '#9C27B0', '#FF5722']
+            const color = colors[name.charCodeAt(0) % colors.length]
+            return (
+              <div key={uid} className="flex items-center justify-between py-3 border-b border-[#F5F5F5] last:border-0">
+                <div className="flex items-center gap-3">
+                  {f.avatarUrl ? (
+                    <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                      <SafeImage src={f.avatarUrl} alt={name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-[15px]"
+                      style={{ backgroundColor: color }}>
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-[14px] font-semibold text-[#1A1A1A]">{name}</p>
+                    {f.username && <p className="text-[12px] text-[#766F6E]">@{f.username}</p>}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedCoOrgs(p => [...p, { id: uid, name, avatarUrl: f.avatarUrl }])
+                    setShowOrganizerSearch(false)
+                  }}
+                  className="text-[13px] font-semibold text-[#FF7A00] active:scale-95 transition-transform px-3 py-1 rounded-full border border-[#FF7A00]">
+                  Ajouter
+                </button>
+              </div>
+            )
+          })}
+          {friends.length === 0 && (
+            <div className="flex flex-col items-center justify-center pt-16 text-center">
+              <UserIcon className="w-12 h-12 text-[#BDBDBD] mb-3" strokeWidth={1.5} />
+              <p className="text-[14px] text-[#766F6E]">Aucun ami trouvé</p>
+              <p className="text-[12px] text-[#BDBDBD] mt-1">Essayez un autre nom</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
 
-
-
-      {/* ── Interactive Map Modal ── */}
-      {showMapModal && (
-        <div className="fixed inset-0 z-[100] bg-background-white flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="absolute top-0 left-0 right-0 z-[110] bg-background-white/90 backdrop-blur-md px-5 pt-16 pb-4 shadow-sm border-b border-gray-100 flex items-center justify-between">
-            <button onClick={() => setShowMapModal(false)} className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full active:scale-95 transition-transform">
-              <ChevronLeft className="w-6 h-6 text-gray-800" />
+  // ──────────────────────────────────────────────────────────────────────────
+  // RENDER — LOCATION SEARCH screen
+  // ──────────────────────────────────────────────────────────────────────────
+  if (showLocationSearch) {
+    return (
+      <div className="w-full h-full bg-white flex flex-col">
+        {/* Header with tabs */}
+        <div className="px-5 pt-safe-6 pb-0 border-b border-[#F0F0F0] shrink-0">
+          <div className="flex items-center gap-3 mb-3">
+            <button onClick={() => setShowLocationSearch(false)}
+              className="w-9 h-9 rounded-full bg-[#F5F5F5] flex items-center justify-center active:scale-95">
+              <ArrowLeft01Icon className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2} />
             </button>
-            <span className="text-[16px] font-bold text-gray-900">Placer le repère</span>
-            <div className="w-10" /> {/* Spacer for centering */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BDBDBD]" />
+              <input
+                autoFocus
+                value={locationQuery}
+                onChange={e => handleLocationSearch(e.target.value)}
+                placeholder="Rechercher un lieu..."
+                className="w-full pl-10 pr-4 py-2.5 border border-[#E0E0E0] rounded-full text-[14px] focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
           </div>
-          
-          <div className="flex-1 relative z-0">
-            <MapContainer 
-              key={`${mapCenter[0]}-${mapCenter[1]}`}
-              center={mapCenter} 
-              zoom={14} 
-              scrollWheelZoom={true} 
+          {/* Tabs */}
+          <div className="flex">
+            {(['liste','carte'] as const).map(tab => (
+              <button key={tab} onClick={() => setLocationTab(tab)}
+                className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${locationTab === tab ? 'border-[#FF7A00] text-[#FF7A00]' : 'border-transparent text-[#766F6E]'}`}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {locationTab === 'liste' ? (
+          <div className="flex-1 overflow-y-auto">
+            {locationSuggestions.map((s, i) => (
+              <button key={i} onClick={() => selectLocation(s)}
+                className="w-full flex items-start gap-3 px-5 py-4 border-b border-[#F5F5F5] last:border-0 hover:bg-gray-50 text-left active:bg-orange-50 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
+                  <HugeMapPin className="w-4 h-4 text-[#FF7A00]" strokeWidth={1.5} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-semibold text-[#1A1A1A] truncate">{s.label.split(',')[0]}</p>
+                  <p className="text-[12px] text-[#766F6E] truncate">{s.label.split(',').slice(1).join(',').trim()}</p>
+                </div>
+              </button>
+            ))}
+            {locationSuggestions.length === 0 && locationQuery.length >= 2 && (
+              <div className="flex flex-col items-center justify-center pt-16">
+                <HugeMapPin className="w-12 h-12 text-[#BDBDBD] mb-3" strokeWidth={1.5} />
+                <p className="text-[14px] text-[#766F6E]">Aucun lieu trouvé</p>
+              </div>
+            )}
+            {/* Confirm from map button */}
+            <div className="px-5 py-4 border-t border-[#F0F0F0] mt-4">
+              <button onClick={() => { setLocationTab('carte') }}
+                className="w-full py-3.5 rounded-full border border-[#E0E0E0] text-[#1A1A1A] font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+                <MapPin className="w-4 h-4 text-[#FF7A00]" />
+                Sélectionner sur la carte
+              </button>
+            </div>
+          </div>
+        ) : (
+          // MAP tab
+          <div className="flex-1 relative">
+            <MapContainer
+              center={[6.36536, 2.41833]} zoom={14}
+              scrollWheelZoom={true}
               style={{ width: '100%', height: '100%' }}
               zoomControl={false}
             >
@@ -1406,94 +700,425 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <MapInteractionHandler onMapClick={(coords) => {
-                setTempLat(coords.lat)
-                setTempLon(coords.lng)
-              }} />
-              <Marker 
-                position={[tempLat, tempLon]} 
-                draggable={true}
-                eventHandlers={{
-                  dragend: (e) => {
-                    const marker = e.target;
-                    const position = marker.getLatLng();
-                    setTempLat(position.lat);
-                    setTempLon(position.lng);
-                  }
-                }}
-              />
+              <MapInteractionHandler onMapClick={coords => { setTempLat(coords.lat); setTempLon(coords.lng) }} />
+              <Marker position={[tempLat, tempLon]} draggable={true}
+                eventHandlers={{ dragend: e => { const p = e.target.getLatLng(); setTempLat(p.lat); setTempLon(p.lng) } }} />
             </MapContainer>
+            <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 pt-4 pb-8 z-[110]">
+              <button onClick={confirmMapLocation} disabled={isReverseGeocoding}
+                className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all">
+                {isReverseGeocoding ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                {isReverseGeocoding ? "Traduction de l'adresse..." : 'Confirmer la sélection'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
-            {/* Premium Search overlay inside Map */}
-            <div className="absolute top-24 left-4 right-4 z-[1000] flex flex-col gap-2">
-              <div className="bg-background-white/95 backdrop-blur-xl rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 flex items-center px-4 py-3 transition-all focus-within:ring-4 focus-within:ring-action-primary/20">
-                <Search className="w-[18px] h-[18px] text-action-primary mr-3 shrink-0" strokeWidth={2.5} />
-                <input 
-                  value={mapSearchQuery} 
-                  onChange={e => handleMapSearch(e.target.value)} 
-                  placeholder={city ? `Rechercher dans ${city}...` : "Rechercher un lieu précis..."} 
-                  className="flex-1 outline-none text-[15px] bg-transparent text-gray-900 placeholder:text-gray-400 font-medium"
-                />
-                {mapSearchQuery && (
-                  <button onClick={() => { setMapSearchQuery(''); setMapSearchSuggestions([]) }} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors ml-2">
-                    <X className="w-4 h-4 text-text-secondary" strokeWidth={2.5} />
-                  </button>
-                )}
-              </div>
-              
-              {mapSearchSuggestions.length > 0 && (
-                <div className="bg-background-white/95 backdrop-blur-xl rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-white/20 overflow-hidden max-h-60 overflow-y-auto divide-y divide-gray-100/50">
-                  {mapSearchSuggestions.map((s, i) => {
-                    // Highlight the first part of the address
-                    const parts = s.label.split(',');
-                    const mainText = parts[0];
-                    const subText = parts.slice(1).join(',').trim();
-                    
-                    return (
-                      <button key={i} onClick={() => selectMapSuggestion(s)} 
-                        className="w-full text-left px-5 py-3 hover:bg-brand-orange-50/50 flex items-start gap-3 transition-colors active:bg-orange-100/50">
-                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
-                          <MapPin className="w-4 h-4 text-action-primary" strokeWidth={2.5} />
-                        </div>
-                        <div className="flex flex-col flex-1 min-w-0">
-                          <span className="text-[14px] font-bold text-gray-900 truncate">{mainText}</span>
-                          {subText && <span className="text-[12px] text-text-secondary truncate">{subText}</span>}
-                        </div>
-                      </button>
-                    )
-                  })}
+  // ──────────────────────────────────────────────────────────────────────────
+  // RENDER — MAIN FORM
+  // ──────────────────────────────────────────────────────────────────────────
+  return (
+    <div className="w-full h-full bg-white flex flex-col">
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className="px-5 pt-safe-6 pb-4 bg-white shrink-0">
+        <div className="flex items-center justify-center relative">
+          <button
+            onClick={onBack}
+            className="absolute left-0 w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center active:scale-95 transition-transform"
+          >
+            <X className="w-4 h-4 text-[#1A1A1A]" />
+          </button>
+          <span className="text-[15px] font-bold text-[#1A1A1A]">Créer un événement</span>
+        </div>
+      </div>
+
+      {/* ── Progress bar ─────────────────────────────────────────────────── */}
+      <div className="mx-5 h-[2px] bg-[#FFF2D3] rounded-full overflow-hidden shrink-0">
+        <div className="h-full bg-[#FF7A00] rounded-full transition-all duration-300"
+          style={{ width: canSubmit ? '100%' : `${Math.min(100, [title, startDate, category, address || city].filter(Boolean).length * 25)}%` }} />
+      </div>
+
+      {/* ── Scrollable content ───────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto pb-36">
+
+        {/* ── Cover photo ─────────────────────────────────────────────── */}
+        <div className="relative w-full h-44 bg-[#E8E8E8] overflow-hidden">
+          {coverPreview ? (
+            <>
+              <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
+              <button
+                onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
+                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                <X className="w-4 h-4 text-[#C5221F]" />
+              </button>
+            </>
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+              <ImageAdd01Icon className="w-8 h-8 text-[#BDBDBD]" strokeWidth={1.5} />
+            </div>
+          )}
+          {/* Galerie / Importer buttons */}
+          <div className="absolute bottom-3 right-3 flex gap-2">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] shadow-sm active:scale-95 transition-transform">
+              <ImageAdd01Icon className="w-3.5 h-3.5" strokeWidth={1.5} />
+              Galerie
+            </button>
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] shadow-sm active:scale-95 transition-transform">
+              Importer
+            </button>
+          </div>
+          <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
+        </div>
+
+        {/* ── Organizer row ────────────────────────────────────────────── */}
+        <div className="px-5 py-4 border-b border-[#F0F0F0]">
+          {/* Main organizer */}
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+              {me?.profile?.avatarUrl ? (
+                <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white font-bold text-[16px]">
+                  {me?.profile?.displayName?.charAt(0)?.toUpperCase() || 'M'}
                 </div>
               )}
             </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-bold text-[#1A1A1A] truncate">{me?.profile?.displayName || 'Vous'}</p>
+              <p className="text-[12px] text-[#766F6E]">Organisateur de l'événement</p>
+            </div>
+          </div>
+          {/* Co-organisateurs */}
+          {selectedCoOrgs.map(org => (
+            <div key={org.id} className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                <SafeImage src={org.avatarUrl} alt={org.name} className="w-full h-full object-cover"
+                  fallback={<div className="w-full h-full bg-[#4CAF50] flex items-center justify-center text-white font-bold text-[15px]">{org.name.charAt(0)}</div>} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-[#1A1A1A] truncate">{org.name}</p>
+                <p className="text-[12px] text-[#766F6E]">Co-organisateur</p>
+              </div>
+              <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
+                className="w-7 h-7 rounded-full bg-[#FFF0F0] flex items-center justify-center active:scale-95">
+                <Cancel01Icon className="w-4 h-4 text-[#C5221F]" strokeWidth={1.5} />
+              </button>
+            </div>
+          ))}
+          {/* Add organizer button */}
+          <button
+            onClick={() => setShowOrganizerSearch(true)}
+            className="flex items-center gap-2 text-[13px] font-semibold text-[#2196F3] active:opacity-70 transition-opacity">
+            <UserAdd01Icon className="w-4 h-4" strokeWidth={1.5} />
+            Ajouter un organisateur
+          </button>
+        </div>
 
-            {/* Crosshair instruction overlay */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[110] bg-gray-900/80 backdrop-blur-sm text-white px-4 py-2 rounded-full text-[12px] font-medium shadow-lg pointer-events-none flex items-center gap-2">
-              Appuyez ou glissez le pin pour ajuster
+        {/* ── Form fields ──────────────────────────────────────────────── */}
+        <div className="px-5">
+
+          {/* Nom */}
+          <div className="border-b border-[#F0F0F0]">
+            <div className="py-4">
+              <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Nom</p>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Nom de l'événement..."
+                className="w-full text-[15px] text-[#1A1A1A] placeholder:text-[#BDBDBD] bg-transparent focus:outline-none font-medium"
+              />
             </div>
           </div>
 
-          <div className="bg-background-white border-t border-gray-100 px-5 pt-4 pb-8 z-[110] shadow-[0_-8px_20px_rgba(0,0,0,0.05)] relative">
-            <button onClick={confirmMapLocation} disabled={isReverseGeocoding}
-              className={`w-full py-4 rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 transition-all active:scale-95 ${!isReverseGeocoding ? 'bg-action-primary active:bg-action-primary-hover' : 'bg-action-primary active:bg-action-primary-hover/50'}`}>
-              {isReverseGeocoding ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
-              {isReverseGeocoding ? 'Traduction de l\'adresse...' : 'Valider cette position'}
-            </button>
+          {/* Date et heure de début */}
+          <FieldRow
+            label="Date et heure de début"
+            value={startDateLabel ?? undefined}
+            placeholder="Sélectionnez une date et heure"
+            onPress={() => { setTempStartDate(startDate); setTempStartTime(startTime || '10:00'); setShowStartDateSheet(true) }}
+            onEdit={() => { setTempStartDate(startDate); setTempStartTime(startTime || '10:00'); setShowStartDateSheet(true) }}
+            onDelete={startDate ? () => { setStartDate(''); setStartTime('') } : undefined}
+          />
+
+          {/* Ajouter une heure de fin */}
+          <div className="border-b border-[#F0F0F0] py-3">
+            <label className="flex items-center gap-2.5 cursor-pointer">
+              <div
+                onClick={() => setHasEndDate(!hasEndDate)}
+                className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${hasEndDate ? 'bg-[#FF7A00] border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
+                {hasEndDate && <Tick01Icon className="w-3 h-3 text-white" strokeWidth={2.5} />}
+              </div>
+              <span className="text-[13px] text-[#1A1A1A] font-medium">Ajouter une heure de fin</span>
+            </label>
+            {hasEndDate && (
+              <div className="mt-3">
+                <FieldRow
+                  label="Date et heure de fin"
+                  value={endDateLabel ?? undefined}
+                  placeholder="Sélectionnez une date et heure"
+                  onPress={() => { setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
+                  onEdit={() => { setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
+                  onDelete={endDate ? () => { setEndDate(''); setEndTime('') } : undefined}
+                />
+                {endDate && endTime && (
+                  <div className="flex items-center gap-1.5 mb-2 mt-1">
+                    <HugeClock className="w-3.5 h-3.5 text-[#FF7A00]" strokeWidth={1.5} />
+                    <span className="text-[12px] text-[#FF7A00] font-medium">Heure de fin ajoutée</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
+
+          {/* Lieu de l'événement */}
+          <FieldRow
+            label="Lieu de l'événement"
+            value={address || city || undefined}
+            placeholder="Où aura lieu l'événement ?"
+            onPress={() => setShowLocationSearch(true)}
+            onEdit={() => setShowLocationSearch(true)}
+            onDelete={address || city ? () => { setAddress(''); setCity(''); setLat(null); setLon(null) } : undefined}
+          />
+
+          {/* Confidentialité */}
+          <FieldRow
+            label="Confidentialité"
+            value={privacyLabel ?? undefined}
+            placeholder="Qui peut voir cet événement ?"
+            onPress={() => setShowPrivacySheet(true)}
+            onEdit={() => setShowPrivacySheet(true)}
+            onDelete={privacy ? () => setPrivacy(null) : undefined}
+          />
+
+          {/* Détails */}
+          <div className="border-b border-[#F0F0F0]">
+            <div className="py-4">
+              <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Détails</p>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Écrivez les détails ici..."
+                rows={3}
+                className="w-full text-[15px] text-[#1A1A1A] placeholder:text-[#BDBDBD] bg-transparent focus:outline-none resize-none font-medium leading-relaxed"
+              />
+            </div>
+          </div>
+
+          {/* Catégorie */}
+          <FieldRow
+            label="Catégorie"
+            value={catLabel ? `${catLabel.emoji} ${catLabel.label}` : undefined}
+            placeholder="Aucune"
+            onPress={() => setShowCategorySheet(true)}
+            onEdit={() => setShowCategorySheet(true)}
+            onDelete={category ? () => setCategory(null) : undefined}
+          />
+
+          {/* Facultatif — Places */}
+          <div className="border-b border-[#F0F0F0]">
+            <div className="py-4">
+              <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Facultatif</p>
+              <input
+                value={maxPlaces}
+                onChange={e => setMaxPlaces(e.target.value)}
+                type="number"
+                min={1}
+                placeholder="Nombre de places maximum..."
+                className="w-full text-[15px] text-[#1A1A1A] placeholder:text-[#BDBDBD] bg-transparent focus:outline-none font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Mode d'accès */}
+          <FieldRow
+            label="Mode d'accès"
+            value={participationLabel ?? undefined}
+            placeholder="Comment participer ?"
+            onPress={() => setShowParticipationSheet(true)}
+            onEdit={() => setShowParticipationSheet(true)}
+            onDelete={participationMode ? () => setParticipationMode(null) : undefined}
+          />
+
         </div>
-      )}
+      </div>
+
+      {/* ── Footer CTA ───────────────────────────────────────────────────── */}
+      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 py-4">
+        <button
+          onClick={handleSubmit}
+          disabled={loading || !canSubmit}
+          className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${loading || !canSubmit ? 'bg-[#FFEEDB]' : 'bg-[#FF7A00]'}`}
+        >
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+          {loading ? "Création..." : "Suivant"}
+        </button>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* BOTTOM SHEETS                                                     */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+
+      {/* ── Start Date Sheet ─────────────────────────────────────────────── */}
+      <BottomSheet title="Date et heure de début" open={showStartDateSheet} onClose={() => setShowStartDateSheet(false)}>
+        <div className="space-y-4">
+          <div>
+            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Date de début</label>
+            <div className="relative">
+              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <input
+                type="date"
+                value={tempStartDate}
+                onChange={e => setTempStartDate(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
+            {tempStartDate && (
+              <p className="text-[13px] text-[#766F6E] mt-1.5 pl-1">{formatDateFr(tempStartDate)}</p>
+            )}
+          </div>
+          <div>
+            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Heure de début</label>
+            <div className="relative">
+              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <input
+                type="time"
+                value={tempStartTime}
+                onChange={e => setTempStartTime(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => { setStartDate(tempStartDate); setStartTime(tempStartTime); setShowStartDateSheet(false) }}
+            disabled={!tempStartDate || !tempStartTime}
+            className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
+            Terminé
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* ── End Date Sheet ───────────────────────────────────────────────── */}
+      <BottomSheet title="Date et heure de fin" open={showEndDateSheet} onClose={() => setShowEndDateSheet(false)}>
+        <div className="space-y-4">
+          <div>
+            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Date de fin</label>
+            <div className="relative">
+              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <input
+                type="date"
+                value={tempEndDate}
+                min={startDate}
+                onChange={e => setTempEndDate(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
+            {tempEndDate && (
+              <p className="text-[13px] text-[#766F6E] mt-1.5 pl-1">{formatDateFr(tempEndDate)}</p>
+            )}
+          </div>
+          <div>
+            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Heure de fin</label>
+            <div className="relative">
+              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <input
+                type="time"
+                value={tempEndTime}
+                onChange={e => setTempEndTime(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
+          </div>
+          <button
+            onClick={() => { setEndDate(tempEndDate); setEndTime(tempEndTime); setShowEndDateSheet(false) }}
+            disabled={!tempEndDate || !tempEndTime}
+            className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
+            Terminé
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* ── Privacy Sheet ────────────────────────────────────────────────── */}
+      <BottomSheet title="Confidentialité de l'événement" open={showPrivacySheet} onClose={() => setShowPrivacySheet(false)}>
+        <p className="text-[13px] text-[#766F6E] mb-5">
+          Choisissez qui peut voir cet événement et participer. Vous pourrez envoyer des invitations plus tard.
+        </p>
+        {[
+          { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invitées', emoji: '🔒' },
+          { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde au sein de Let's Out`, emoji: '🌍' },
+        ].map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => { setPrivacy(opt.value); setShowPrivacySheet(false) }}
+            className={`w-full flex items-center gap-4 p-4 rounded-2xl border mb-3 transition-all text-left ${privacy === opt.value ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}
+          >
+            <span className="text-2xl">{opt.emoji}</span>
+            <div className="flex-1">
+              <p className="text-[15px] font-semibold text-[#1A1A1A]">{opt.label}</p>
+              <p className="text-[12px] text-[#766F6E]">{opt.desc}</p>
+            </div>
+            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${privacy === opt.value ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
+              {privacy === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
+            </div>
+          </button>
+        ))}
+      </BottomSheet>
+
+      {/* ── Category Sheet ───────────────────────────────────────────────── */}
+      <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
+        <div className="space-y-1">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.value}
+              onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
+              className={`w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all text-left ${category === cat.value ? 'bg-orange-50' : 'hover:bg-gray-50'}`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl w-7 text-center">{cat.emoji}</span>
+                <span className="text-[15px] font-medium text-[#1A1A1A]">{cat.label}</span>
+              </div>
+              {category === cat.value && <Tick01Icon className="w-5 h-5 text-[#FF7A00]" strokeWidth={2} />}
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
+
+      {/* ── Participation Mode Sheet ─────────────────────────────────────── */}
+      <BottomSheet title="Mode de participation" open={showParticipationSheet} onClose={() => setShowParticipationSheet(false)}>
+        <p className="text-[13px] text-[#766F6E] mb-5">Choisissez le mode de participation à l'événement.</p>
+        <div className="space-y-3">
+          {PARTICIPATION_MODES.map(mode => (
+            <button
+              key={mode.value}
+              onClick={() => { setParticipationMode(mode.value); setShowParticipationSheet(false) }}
+              className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left ${participationMode === mode.value ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}
+            >
+              <span className="text-2xl">{mode.emoji}</span>
+              <div className="flex-1">
+                <p className="text-[15px] font-semibold text-[#1A1A1A]">{mode.label}</p>
+                <p className="text-[12px] text-[#766F6E]">{mode.desc}</p>
+              </div>
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${participationMode === mode.value ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
+                {participationMode === mode.value && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
+              </div>
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
+
     </div>
   )
 }
 
-// Map helper component to handle clicks
+// ── Map helper ───────────────────────────────────────────────────────────────
 function MapInteractionHandler({ onMapClick }: { onMapClick: (coords: {lat: number, lng: number}) => void }) {
-  useMapEvents({
-    click(e) {
-      onMapClick(e.latlng);
-    },
-  });
-  
-  // Center map when props change is usually handled by keeping MapContainer center stable or using map.flyTo
-  // For simplicity, we just listen to clicks.
-  return null;
+  useMapEvents({ click(e) { onMapClick(e.latlng) } })
+  return null
 }
