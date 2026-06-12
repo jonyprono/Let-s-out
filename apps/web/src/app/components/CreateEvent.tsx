@@ -139,13 +139,13 @@ function BottomSheet({ title, open, onClose, children }: {
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div
-        className="relative w-full bg-white rounded-t-[24px] px-5 pt-5 pb-10 max-h-[85vh] overflow-y-auto"
+        className="relative w-full bg-white rounded-t-[24px] px-5 pt-4 pb-10 max-h-[85vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
         style={{ boxShadow: '0 -4px 30px rgba(0,0,0,0.15)' }}
       >
         {/* Handle */}
-        <div className="w-10 h-1 rounded-full bg-[#E0E0E0] mx-auto mb-4" />
-        <h3 className="text-[17px] font-bold text-[#1A1A1A] mb-4">{title}</h3>
+        <div className="w-10 h-1 rounded-full bg-[#DADADA] mx-auto mb-4" />
+        <h3 className="text-[17px] font-bold text-[#1A1A1A] text-center mb-2">{title}</h3>
         {children}
       </div>
     </div>
@@ -1085,21 +1085,24 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       {/* ── Category Sheet ───────────────────────────────────────────────── */}
       <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
-        <div className="space-y-1">
+        <div className="divide-y divide-[#F2F2F2]">
           {CATEGORIES.map(cat => (
             <button
               key={cat.value}
               onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
-              className={`w-full flex items-center justify-between py-3 rounded-2xl transition-all text-left ${category === cat.value ? 'bg-orange-50 px-2' : ''}`}
+              className="w-full flex items-center gap-4 py-[13px] text-left active:bg-[#FAFAFA] transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#F5F5F5] flex items-center justify-center shrink-0">
-                  <cat.Icon className="w-5 h-5 text-[#555]" strokeWidth={1.5} />
-                </div>
-                <span className="text-[14px] font-semibold text-[#1A1A1A]">{cat.label}</span>
+              {/* Icon */}
+              <div className="w-9 h-9 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
+                <cat.Icon className="w-[18px] h-[18px] text-[#3D3D3D]" strokeWidth={1.5} />
               </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${category === cat.value ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
-                {category === cat.value && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
+              {/* Label */}
+              <span className="flex-1 text-[15px] font-medium text-[#1A1A1A] text-left">{cat.label}</span>
+              {/* Radio */}
+              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                category === cat.value ? 'border-[#FF7A00]' : 'border-[#CCCCCC]'
+              }`}>
+                {category === cat.value && <div className="w-[11px] h-[11px] rounded-full bg-[#FF7A00]" />}
               </div>
             </button>
           ))}
