@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Send, Paperclip, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video } from 'lucide-react'
+import { ChevronLeft, Send, Paperclip, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video, Mic, Square, Trash2, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
@@ -80,6 +80,13 @@ export function ChatDetails() {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const qc = useQueryClient()
 
+  // Voice recording states
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingTime, setRecordingTime] = useState(0)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -134,6 +141,72 @@ export function ChatDetails() {
       setIsUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  // Voice Notes
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = recorder
+      audioChunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop())
+        if (audioChunksRef.current.length > 0) {
+          const mimeType = recorder.mimeType || 'audio/webm'
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
+          const ext = mimeType.includes('mp4') ? 'mp4' : 'webm'
+          const file = new File([audioBlob], `voice-note-${Date.now()}.${ext}`, { type: mimeType })
+          
+          setIsUploading(true)
+          try {
+            const url = await chatApi.uploadMedia(file)
+            sendMsg({ content: url, type: 'AUDIO' })
+          } catch (e) {
+            toast.error("Erreur d'envoi de la note vocale")
+          } finally {
+            setIsUploading(false)
+          }
+        }
+      }
+
+      recorder.start()
+      setIsRecording(true)
+      setRecordingTime(0)
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1)
+      }, 1000)
+    } catch (e) {
+      toast.error("Accès au microphone refusé. Veuillez l'autoriser dans les paramètres.")
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current)
+    }
+  }
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      audioChunksRef.current = [] // clear chunks to prevent upload
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current)
+    }
+  }
+
+  const formatRecordingTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const openProfile = (userId: string, displayName?: string, avatarUrl?: string | null) => {
@@ -363,20 +436,22 @@ export function ChatDetails() {
                     onMouseUp={handlePressEnd}
                     onTouchStart={() => handlePressStart(msg.id)}
                     onTouchEnd={handlePressEnd}
-                  >
-                    {showSenderInfo && isFirstInGroup && (
-                      <button
-                        className="text-[11px] font-semibold text-action-primary mb-0.5 ml-1 active:opacity-70"
-                        onClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
-                      >
-                        {senderName}
-                      </button>
+                >
+                  {!isMe && isGroup && (
+                    <button onClick={() => openProfile(msg.senderId, senderName, senderAvatar)} className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-100">
+                        {senderAvatar ? <img src={senderAvatar} alt="" className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold text-gray-500">{senderName?.[0]}</span>}
+                      </div>
+                    </button>
+                  )}
+                  <div className={`relative flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                    {showSenderName && (
+                      <span className="text-[12px] font-semibold text-gray-500 mb-1 ml-1">{senderName}</span>
                     )}
 
-                    {/* Reaction emoji picker (shown on long press) */}
                     {pickerMsgId === msg.id && (
                       <div
-                        className={`absolute ${isMe ? 'right-0' : 'left-0'} -top-14 z-50 bg-white dark:bg-[#2A2A2A] rounded-full shadow-2xl border border-gray-100 dark:border-[#444444] flex gap-1 px-3 py-2`}
+                        className={`absolute bottom-full mb-2 z-10 flex items-center gap-1 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-full px-2 py-1.5 animate-in zoom-in-95 duration-200 ${isMe ? 'right-0' : 'left-0'}`}
                         onClick={e => e.stopPropagation()}
                       >
                         {REACTION_EMOJIS.map(emoji => (
@@ -397,7 +472,7 @@ export function ChatDetails() {
                       </div>
                     ) : isMedia ? (
                       <div
-                        className={`rounded-[20px] overflow-hidden shadow-sm ${isMe ? 'rounded-br-sm' : 'rounded-tl-sm'}`}
+                        className={`rounded-[20px] overflow-hidden shadow-sm ${isMe ? 'rounded-br-sm' : 'rounded-tl-sm'} ${isAudio ? (isMe ? 'bg-action-primary text-white' : 'bg-white border border-gray-100') : ''}`}
                         style={{ maxWidth: '260px' }}
                       >
                         {isImage && msg.content ? (
@@ -415,6 +490,10 @@ export function ChatDetails() {
                                 <Play className="w-5 h-5 text-gray-800 ml-1" />
                               </div>
                             </div>
+                          </div>
+                        ) : isAudio && msg.content ? (
+                          <div className="px-3 py-2 flex flex-col">
+                            <audio controls controlsList="nodownload noplaybackrate" src={msg.content} className={`h-10 w-[200px] ${isMe ? 'invert sepia contrast-200' : ''}`} />
                           </div>
                         ) : null}
                         <div className={`px-3 py-1.5 ${isMe ? 'bg-action-primary' : 'bg-white'}`}>
@@ -487,24 +566,54 @@ export function ChatDetails() {
         </button>
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
         
-        <div className="flex-1 bg-[#F3F4F6] rounded-[24px] flex items-center px-2 py-1.5 min-h-[48px]">
-          <input
-            type="text"
-            value={inputText}
-            onChange={(e) => handleTyping(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
-            placeholder="Écrire un message..."
-            className="flex-1 bg-transparent border-none px-3 text-[15px] text-gray-900 placeholder:text-gray-500 outline-none min-w-0"
-          />
-          <button
-            onClick={handleSendText}
-            disabled={!inputText.trim() && !isUploading}
-            className={`w-[36px] h-[36px] rounded-full flex items-center justify-center transition-all flex-shrink-0 ${
-              inputText.trim() ? 'bg-action-primary text-white shadow-sm' : 'bg-gray-300 text-white'
-            }`}
-          >
-            <Send className="w-[18px] h-[18px] ml-0.5" />
-          </button>
+        <div className="flex-1 bg-[#F3F4F6] rounded-[24px] flex items-center px-2 py-1.5 min-h-[48px] overflow-hidden transition-all relative">
+          {isRecording ? (
+            <div className="flex items-center justify-between w-full px-2">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-red-500 font-medium text-[15px]">{formatRecordingTime(recordingTime)}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={cancelRecording} className="text-gray-400 hover:text-red-500 transition-colors p-2">
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => handleTyping(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
+              placeholder="Écrire un message..."
+              className="flex-1 bg-transparent border-none px-3 text-[15px] text-gray-900 placeholder:text-gray-500 outline-none min-w-0"
+            />
+          )}
+
+          {isRecording ? (
+            <button
+              onClick={stopRecording}
+              className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-action-primary text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
+            >
+              <Send className="w-[18px] h-[18px] ml-0.5" />
+            </button>
+          ) : inputText.trim() ? (
+            <button
+              onClick={handleSendText}
+              disabled={isUploading}
+              className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-action-primary text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
+            >
+              <Send className="w-[18px] h-[18px] ml-0.5" />
+            </button>
+          ) : (
+            <button
+              onClick={startRecording}
+              disabled={isUploading}
+              className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-gray-300 hover:bg-gray-400 text-white flex-shrink-0 transition-colors"
+            >
+              <Mic className="w-[18px] h-[18px]" />
+            </button>
+          )}
         </div>
       </div>
 
