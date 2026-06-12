@@ -173,7 +173,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             type="button"
             onClick={handleLogin}
             disabled={!phone.trim() || !password || logging}
-            className={`${authPrimaryBtn} !h-[48px] !min-h-[48px]`}
+            className="w-full bg-[#FF7A00] hover:opacity-90 text-white rounded-full font-medium flex items-center justify-center disabled:opacity-50 active:scale-[0.98] transition-all shrink-0 h-[48px] text-[15px]"
           >
             {logging ? 'Connexion...' : 'Se connecter'}
           </button>
@@ -192,10 +192,10 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             type="button"
             onClick={handleGoogleLogin}
             disabled={googleLoading}
-            className={`${authSecondaryBtn} !h-[48px] !min-h-[48px] text-[14px] font-semibold text-gray-700`}
+            className="w-full bg-white border border-[#E2E8F0] text-[#1A1A1A] hover:bg-gray-50 rounded-full font-medium flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-60 transition-all shrink-0 h-[48px]"
           >
             {googleLoading ? (
-              <span className="text-text-secondary">Connexion avec Google...</span>
+              <span className="text-[#718096] text-[14px]">Connexion avec Google...</span>
             ) : (
               <>
                 <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -204,7 +204,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                   <path d="M11.0051 28.6006C9.99973 25.6199 9.99973 22.3633 11.0051 19.3825V13.2006H3.02419C-0.805404 20.7366 -0.805404 27.2466 3.02419 34.7825L11.0051 28.6006Z" fill="#FBBC05"/>
                   <path d="M24.48 9.49932C27.9016 9.42956 31.2086 10.7339 33.6866 13.0973L40.5387 6.24523C36.2 2.17101 30.4414 -0.068932 24.48 0.00171733C15.4056 0.00171733 7.10718 5.11652 3.03296 13.2006L11.0139 19.3825C12.9099 13.7234 18.2275 9.49932 24.48 9.49932Z" fill="#EA4335"/>
                 </svg>
-                <span>Se connecter avec Google</span>
+                <span className="text-[#333333] font-medium text-[14px]">Se connecter avec Google</span>
               </>
             )}
           </button>
@@ -214,20 +214,20 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
         {/* Bas de page */}
         <div className="flex flex-col items-center gap-3 shrink-0 pt-2">
-          <p className="text-[13px] text-text-secondary">
+          <p className="text-[12px] text-[#A0AEC0]">
             Vous êtes nouveau sur Let's Out ?{' '}
-            <button onClick={onSignup} className="text-action-primary underline font-medium">
+            <span onClick={onSignup} className="text-[#FF7A00] underline font-medium cursor-pointer hover:opacity-80">
               Inscrivez-vous
-            </button>
+            </span>
           </p>
           
           <div className="w-full h-[1px] bg-neutral-gray-200" />
 
-          <p className="text-text-secondary leading-tight text-center px-1" style={{ fontSize: 10 }}>
+          <p className="text-[#A0AEC0] leading-tight text-center px-1" style={{ fontSize: 10 }}>
             En continuant, vous acceptez nos{' '}
-            <button onClick={() => nav('/terms')} className="text-action-primary font-normal hover:opacity-80 inline-block">Conditions d'Utilisation</button>
+            <span onClick={() => nav('/terms')} className="text-[#FF7A00] font-normal cursor-pointer hover:opacity-80">Conditions d'Utilisation</span>
             {' '}et notre{' '}
-            <button onClick={() => nav('/privacy')} className="text-action-primary font-normal hover:opacity-80 inline-block">Politique de Confidentialité</button>
+            <span onClick={() => nav('/privacy')} className="text-[#FF7A00] font-normal cursor-pointer hover:opacity-80">Politique de Confidentialité</span>
           </p>
         </div>
 
