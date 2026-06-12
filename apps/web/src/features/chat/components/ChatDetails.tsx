@@ -448,22 +448,20 @@ export function ChatDetails() {
                     onMouseUp={handlePressEnd}
                     onTouchStart={() => handlePressStart(msg.id)}
                     onTouchEnd={handlePressEnd}
-                >
-                  {!isMe && isGroup && (
-                    <button onClick={() => openProfile(msg.senderId, senderName, senderAvatar)} className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-100">
-                        {senderAvatar ? <img src={senderAvatar} alt="" className="w-full h-full object-cover" /> : <span className="text-[10px] font-bold text-gray-500">{senderName?.[0]}</span>}
-                      </div>
-                    </button>
-                  )}
-                  <div className={`relative flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[75%]`}>
-                    {showSenderName && (
-                      <span className="text-[12px] font-semibold text-gray-500 mb-1 ml-1">{senderName}</span>
+                  >
+                    {showSenderInfo && isFirstInGroup && (
+                      <button
+                        className="text-[11px] font-semibold text-action-primary mb-0.5 ml-1 active:opacity-70"
+                        onClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
+                      >
+                        {senderName}
+                      </button>
                     )}
 
+                    {/* Reaction emoji picker (shown on long press) */}
                     {pickerMsgId === msg.id && (
                       <div
-                        className={`absolute bottom-full mb-2 z-10 flex items-center gap-1 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-full px-2 py-1.5 animate-in zoom-in-95 duration-200 ${isMe ? 'right-0' : 'left-0'}`}
+                        className={`absolute ${isMe ? 'right-0' : 'left-0'} -top-14 z-50 bg-white dark:bg-[#2A2A2A] rounded-full shadow-2xl border border-gray-100 dark:border-[#444444] flex gap-1 px-3 py-2`}
                         onClick={e => e.stopPropagation()}
                       >
                         {REACTION_EMOJIS.map(emoji => (
