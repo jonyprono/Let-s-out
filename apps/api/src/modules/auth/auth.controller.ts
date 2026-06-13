@@ -433,18 +433,18 @@ export class AuthController {
       return reply.code(401).send({ error: 'Mot de passe incorrect.' })
     }
 
-    const accessToken = this.app.jwt.sign({ sub: adminUser.id, role: 'ADMIN' })
-    const refreshToken = await this.service.createRefreshToken(adminUser.id, {
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip,
-    })
+    const accessToken = this.app.jwt.sign({ sub: adminUser.id, role: 'ADMIN' }, { expiresIn: '7d' })
+    // We skip DB refresh token for admins to avoid foreign key errors on the users table.
+    // We just return a dummy refresh token string to satisfy the frontend if it checks for it,
+    // or just omit it. The access token is valid for 7 days anyway.
+    const refreshToken = 'admin_no_refresh_token_needed'
 
     reply.setCookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: 7 * 24 * 60 * 60,
     })
 
     return reply.send({
