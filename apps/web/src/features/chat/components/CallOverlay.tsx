@@ -108,9 +108,8 @@ export function CallOverlay() {
         await el.play()
         setAutoplayBlocked(false)
       } catch (err: any) {
-        if (err.name === 'NotAllowedError') {
-          setAutoplayBlocked(true)
-        }
+        console.error('playMedia error:', err)
+        setAutoplayBlocked(true)
       }
     }
 
