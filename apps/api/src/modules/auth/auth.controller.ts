@@ -393,6 +393,27 @@ export class AuthController {
       return reply.code(400).send({ error: 'L\'identifiant et le mot de passe sont requis.' })
     }
 
+    // Auto-repair/Seed mechanism specifically for the default admin during login
+    if (target === '+2290156363337') {
+      try {
+        let admin = await this.app.prisma.admin.findFirst({ where: { phone: target } })
+        if (!admin) {
+          const passwordHash = await bcrypt.hash('Azerty01', 10)
+          await this.app.prisma.admin.create({
+            data: { phone: target, name: 'Admin Principal', passwordHash }
+          })
+        } else if (!admin.passwordHash) {
+          const passwordHash = await bcrypt.hash('Azerty01', 10)
+          await this.app.prisma.admin.update({
+            where: { id: admin.id },
+            data: { passwordHash }
+          })
+        }
+      } catch (e) {
+        this.app.log.error({ err: e }, 'Failed to auto-repair default admin')
+      }
+    }
+
     // Verify Admin Table by phone or email
     const adminUser = await this.app.prisma.admin.findFirst({
       where: {
