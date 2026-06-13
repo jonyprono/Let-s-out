@@ -86,6 +86,20 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function RootRoute() {
+  const token = useAuthStore((s) => s.accessToken)
+  if (token) return <Navigate to="/home" replace />
+
+  const isMobile = 
+    Capacitor.isNativePlatform() ||
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|wv|CriOS|FxiOS/i.test(navigator.userAgent) ||
+    window.innerWidth <= 1024 ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    ('standalone' in window.navigator && (window.navigator as any).standalone === true)
+
+  return isMobile ? <Navigate to="/app" replace /> : <LandingPage />
+}
+
 function CapacitorBackButton() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -121,19 +135,7 @@ export default function App() {
         <CapacitorBackButton />
         <UserProfileProvider>
         <Routes>
-          <Route path="/" element={(() => {
-            const isMobile = 
-              Capacitor.isNativePlatform() ||
-              // Android, iOS, tablets, WebViews
-              /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|wv|CriOS|FxiOS/i.test(navigator.userAgent) ||
-              // Viewport mobile
-              window.matchMedia('(max-width: 767px)').matches ||
-              // PWA standalone mode (ajouté à l'écran d'accueil)
-              (window.matchMedia('(display-mode: standalone)').matches) ||
-              // iOS Safari standalone
-              ('standalone' in window.navigator && (window.navigator as any).standalone === true)
-            return isMobile ? <Navigate to="/app" replace /> : <LandingPage />
-          })() } />
+          <Route path="/" element={<RootRoute />} />
 
           {/* Splash + Guest only */}
           <Route element={<AuthLayout />}>
