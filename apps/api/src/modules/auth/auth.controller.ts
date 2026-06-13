@@ -450,7 +450,7 @@ export class AuthController {
     return reply.send({
       accessToken,
       refreshToken,
-      user: { ...adminUser, passwordHash: undefined }
+      user: { ...adminUser, role: 'ADMIN', passwordHash: undefined }
     })
   }
 
