@@ -72,6 +72,7 @@ export function CallOverlay() {
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOff, setIsVideoOff] = useState(false)
   const [callDuration, setCallDuration] = useState(0)
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false)
 
   // ── Sonnerie / ring-back ──────────────────────────────────────────────────
   useRingtone(callStatus)
@@ -102,11 +103,24 @@ export function CallOverlay() {
   }, [localStream, callStatus])
 
   useEffect(() => {
+    const playMedia = async (el: HTMLMediaElement) => {
+      try {
+        await el.play()
+        setAutoplayBlocked(false)
+      } catch (err: any) {
+        if (err.name === 'NotAllowedError') {
+          setAutoplayBlocked(true)
+        }
+      }
+    }
+
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream
+      playMedia(remoteVideoRef.current)
     }
     if (remoteAudioRef.current && remoteStream) {
       remoteAudioRef.current.srcObject = remoteStream
+      playMedia(remoteAudioRef.current)
     }
   }, [remoteStream, callStatus])
 
@@ -212,17 +226,45 @@ export function CallOverlay() {
       {/* ── Remote video / Avatar area ─────────────────────────────────── */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
         {hasRemoteVideo ? (
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="w-full h-full object-cover"
-          />
+          <>
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            {autoplayBlocked && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+                <button
+                  onClick={() => {
+                    remoteVideoRef.current?.play()
+                    setAutoplayBlocked(false)
+                  }}
+                  className="bg-green-500 text-white px-6 py-3 rounded-full font-bold shadow-xl animate-bounce"
+                >
+                  Toucher pour activer la vidéo
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center gap-6">
             {/* Audio fallback */}
             {remoteStream && (
-              <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+              <>
+                <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+                {autoplayBlocked && (
+                  <button
+                    onClick={() => {
+                      remoteAudioRef.current?.play()
+                      setAutoplayBlocked(false)
+                    }}
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white px-6 py-3 rounded-full font-bold shadow-xl animate-bounce z-50"
+                  >
+                    Toucher pour activer le son
+                  </button>
+                )}
+              </>
             )}
             
             {/* Avatar */}
