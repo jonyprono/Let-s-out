@@ -129,7 +129,7 @@ export function AdminLoginPage() {
 
     } catch (err: any) {
       console.error(err)
-      setError("Code invalide ou expiré.")
+      setError(err.response?.data?.error || "Code invalide ou expiré.")
     } finally {
       setLoading(false)
     }

@@ -145,7 +145,22 @@ export class AuthService {
 
   async verifyFirebaseToken(idToken: string, targetPhone: string): Promise<boolean> {
     if (!admin.apps.length) {
-      console.warn('Firebase Admin not initialized. Cannot verify token.');
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Firebase Admin not initialized. Bypassing token signature validation for DEV MODE.');
+        try {
+          const parts = idToken.split('.')
+          if (parts.length === 3) {
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'))
+            if (payload.phone_number === targetPhone || payload.email === targetPhone) {
+              return true
+            }
+          }
+        } catch (e) {
+          console.error('Failed to decode JWT locally:', e)
+        }
+      } else {
+        console.warn('Firebase Admin not initialized. Cannot verify token.');
+      }
       return false;
     }
     try {
