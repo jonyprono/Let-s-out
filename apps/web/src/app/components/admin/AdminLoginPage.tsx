@@ -174,19 +174,17 @@ export function AdminLoginPage() {
                 maxLength={6}
                 value={otp}
                 onChange={setOtp}
-                render={({ slots }) => (
-                  <InputOTPGroup className="gap-2">
-                    {slots?.map((slot: any, i: number) => (
-                      <InputOTPSlot 
-                        key={i} 
-                        {...slot} 
-                        index={i}
-                        className="w-12 h-14 rounded-xl border-white/10 bg-white/5 text-lg font-bold text-white focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all"
-                      />
-                    )) ?? null}
-                  </InputOTPGroup>
-                )}
-              />
+              >
+                <InputOTPGroup className="gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <InputOTPSlot 
+                      key={i} 
+                      index={i}
+                      className="w-12 h-14 rounded-xl border-white/10 bg-white/5 text-lg font-bold text-white focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all"
+                    />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
             </div>
 
             {error && <p className="text-red-400 text-sm text-center font-medium bg-red-500/10 py-2 rounded-xl border border-red-500/20">{error}</p>}
