@@ -155,13 +155,11 @@ export function useWebRTC() {
       if (pc.connectionState === 'connected') {
         if (disconnectTimer) { clearTimeout(disconnectTimer); disconnectTimer = null }
       } else if (pc.connectionState === 'failed') {
-        if (callStatusRef.current !== 'IDLE') {
-          sendSignal({ type: 'call_end', conversationId })
-          cleanup()
-        }
+        sendSignal({ type: 'call_end', conversationId })
+        cleanup()
       } else if (pc.connectionState === 'disconnected') {
         disconnectTimer = setTimeout(() => {
-          if ((pc.connectionState === 'disconnected' || pc.connectionState === 'failed') && callStatusRef.current !== 'IDLE') {
+          if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
             sendSignal({ type: 'call_end', conversationId })
             cleanup()
           }
