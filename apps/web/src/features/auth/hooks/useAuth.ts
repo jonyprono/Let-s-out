@@ -86,14 +86,12 @@ export function useGoogleSignIn() {
       if (data.refreshToken) setRefreshToken(data.refreshToken)
       setUser(data.user as any)
 
-      // Redirect to onboarding if new account created via Google
+      // Redirect to onboarding if new account or missing display name
       if (data.isNewUser) {
         nav('/onboarding', { replace: true })
       } else {
         const p: any = data.user.profile || {}
-        const hasBirthdate = !!(p.birthdate || p.birthDate)
-        const isProfileIncomplete = !p.displayName || !p.interests || p.interests.length === 0 || !hasBirthdate
-        if (isProfileIncomplete) {
+        if (!p.displayName) {
           nav('/onboarding', { replace: true })
         } else {
           nav('/home', { replace: true })

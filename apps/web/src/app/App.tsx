@@ -80,8 +80,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!token) return <Navigate to="/login" replace />
 
   const p: any = user?.profile || {}
-  const hasBirthdate = !!(p.birthdate || p.birthDate)
-  const isProfileIncomplete = !p.displayName || !p.interests || p.interests.length === 0 || !hasBirthdate
+  // Only block if profile has literally no name — avoids loops for Google/existing users
+  const isProfileIncomplete = !p.displayName
   if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
 
   return <>{children}</>
@@ -93,8 +93,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   
   if (token) {
     const p: any = user?.profile || {}
-    const hasBirthdate = !!(p.birthdate || p.birthDate)
-    const isProfileIncomplete = !p.displayName || !p.interests || p.interests.length === 0 || !hasBirthdate
+    const isProfileIncomplete = !p.displayName
     if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
     return <Navigate to="/home" replace />
   }
@@ -107,8 +106,7 @@ function RootRoute() {
 
   if (token) {
     const p: any = user?.profile || {}
-    const hasBirthdate = !!(p.birthdate || p.birthDate)
-    const isProfileIncomplete = !p.displayName || !p.interests || p.interests.length === 0 || !hasBirthdate
+    const isProfileIncomplete = !p.displayName
     if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
     return <Navigate to="/home" replace />
   }

@@ -36,8 +36,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: isProduction
     ? {
-        // Production: load the live web app
-        url: 'https://letsout.app',
+        // Production: load /app directly — bypasses LandingPage entirely for native apps
+        url: 'https://letsout.app/app',
         cleartext: false,
         allowNavigation: ['letsout.app', 'let-s-out.onrender.com', 'let-s-out-web.vercel.app'],
       }
