@@ -90,8 +90,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function GuestRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
+  const location = useLocation()
   
   if (token) {
+    if (location.pathname === '/signup' && location.search.includes('mode=google')) {
+      return <>{children}</>
+    }
     const p: any = user?.profile || {}
     const isProfileIncomplete = !p.displayName
     if (isProfileIncomplete) return <Navigate to="/onboarding" replace />

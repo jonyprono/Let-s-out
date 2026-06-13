@@ -124,8 +124,16 @@ function VideoMessage({ src, isMe }: { src: string, isMe: boolean }) {
   
   return (
     <>
-      <div className="relative bg-black cursor-pointer overflow-hidden group" onClick={() => setIsFullscreen(true)}>
-        <video src={src} className="w-full object-cover opacity-90 transition-opacity group-hover:opacity-100" style={{ maxHeight: '250px' }} preload="metadata" />
+      <div 
+        className="relative bg-black cursor-pointer overflow-hidden group" 
+        onClick={(e) => { e.stopPropagation(); setIsFullscreen(true); }}
+      >
+        <video 
+          src={`${src}#t=0.001`} 
+          className="w-full object-cover opacity-90 transition-opacity group-hover:opacity-100" 
+          style={{ maxHeight: '250px' }} 
+          preload="metadata" 
+        />
         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
           <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-xl">
             <Play className="w-5 h-5 text-gray-900 ml-1 fill-gray-900" />
@@ -134,7 +142,10 @@ function VideoMessage({ src, isMe }: { src: string, isMe: boolean }) {
       </div>
       
       {isFullscreen && (
-        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col animate-in fade-in duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
            <div className="flex justify-between items-center p-4 pt-safe-4 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent">
              <span className="text-white/80 text-sm font-medium">Vidéo</span>
              <button onClick={() => setIsFullscreen(false)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-md active:scale-95 transition-transform">

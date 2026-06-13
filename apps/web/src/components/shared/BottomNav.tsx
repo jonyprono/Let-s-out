@@ -157,10 +157,6 @@ export function BottomNav() {
         )
       })}
 
-      {/* Home indicator pill */}
-      <div
-        className="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-foreground/20 rounded-full"
-      />
     </nav>
   )
 }
