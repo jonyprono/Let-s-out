@@ -73,6 +73,7 @@ import { AdminLoginPage } from '@/app/components/admin/AdminLoginPage'
 import { AdminDashboardPage } from '@/app/components/admin/AdminDashboardPage'
 import { AdminKycListPage } from '@/app/components/admin/AdminKycListPage'
 import { AdminKycDetailPage } from '@/app/components/admin/AdminKycDetailPage'
+import { AdminAdminsPage } from '@/app/components/admin/AdminAdminsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
@@ -188,9 +189,6 @@ export default function App() {
           {/* Legal routes */}
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
-
-import { AdminAdminsPage } from '@/app/components/admin/AdminAdminsPage'
-
           {/* Administration KYC */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route
