@@ -367,13 +367,20 @@ export function useWebRTC() {
             setIncomingCall(data)
             updateCallStatusRef.current('RINGING')
             activeConversationId.current = data.conversationId
-            import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
-              IncomingCallKit.showIncomingCall({
-                callId: data.conversationId,
-                callerName: data.callerName || 'Appel entrant',
-                hasVideo: data.mediaType === 'video',
-              }).catch(err => console.error('showIncomingCall error', err))
-            }).catch(() => {})
+            
+            // On Android, showing the native call screen while the app is active 
+            // can sometimes cause immediate rejection or conflicts.
+            // Only trigger Native CallKit if we are not actively visible.
+            if (document.visibilityState !== 'visible') {
+              import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
+                IncomingCallKit.showIncomingCall({
+                  callId: data.conversationId,
+                  callerName: data.callerName || 'Appel entrant',
+                  hasVideo: data.mediaType === 'video',
+                }).catch(err => console.error('showIncomingCall error', err))
+              }).catch(() => {})
+            }
+            
             ringingTimeoutRef.current = setTimeout(() => {
               if (callStatusRef.current === 'RINGING') {
                 sendSignalRef.current({ type: 'call_reject', conversationId: data.conversationId })

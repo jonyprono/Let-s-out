@@ -76,6 +76,19 @@ function connectGlobal(token: string) {
   ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data)
+      
+      // Global events: dispatch EXACTLY ONCE to the window,
+      // avoiding duplicate events if multiple components call useChatSocket
+      if (['call_start', 'call_offer', 'call_answer', 'ice_candidate', 'call_reject', 'call_end'].includes(data.type)) {
+        window.dispatchEvent(new CustomEvent('ws:webrtc', { detail: data }))
+      }
+      if (data.type === 'typing') {
+        window.dispatchEvent(new CustomEvent('ws:typing', {
+          detail: { conversationId: data.conversationId, displayName: data.displayName }
+        }))
+      }
+
+      // Local component events: notify each registered handler
       messageHandlers.forEach(handler => {
         try { handler(data) } catch (e) { console.error('[WS] handler error', e) }
       })
@@ -151,21 +164,13 @@ export function useChatSocket() {
         qc.invalidateQueries({ queryKey: ['chat', 'messages', data.conversationId] })
       }
 
-      if (data.type === 'typing') {
-        window.dispatchEvent(new CustomEvent('ws:typing', {
-          detail: { conversationId: data.conversationId, displayName: data.displayName }
-        }))
-      }
-
       if (data.type === 'notification:new') {
         qc.invalidateQueries({ queryKey: ['notifications'] })
         qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
       }
-
-      // WebRTC Signaling → forward via window event
-      if (['call_start', 'call_offer', 'call_answer', 'ice_candidate', 'call_reject', 'call_end'].includes(data.type)) {
-        window.dispatchEvent(new CustomEvent('ws:webrtc', { detail: data }))
-      }
+      
+      // WebRTC and typing signals are now handled directly in ws.onmessage
+      // to avoid duplicate dispatches from multiple hooks.
     }
 
     handlerRef.current = handler
