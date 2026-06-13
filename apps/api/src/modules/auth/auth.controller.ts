@@ -387,32 +387,29 @@ export class AuthController {
   }
 
   async adminLogin(req: FastifyRequest, reply: FastifyReply) {
-    const { target, code, idToken } = req.body as { target?: string; code?: string; idToken?: string }
+    const { target, password } = req.body as { target?: string; password?: string }
     
-    if (!target) {
-      return reply.code(400).send({ error: 'Le numéro de téléphone (target) est requis.' })
+    if (!target || !password) {
+      return reply.code(400).send({ error: 'L\'identifiant et le mot de passe sont requis.' })
     }
 
-    // Verify Admin Table
-    const adminUser = await this.app.prisma.admin.findUnique({
-      where: { phone: target }
+    // Verify Admin Table by phone or email
+    const adminUser = await this.app.prisma.admin.findFirst({
+      where: {
+        OR: [
+          { phone: target },
+          { email: target }
+        ]
+      }
     })
 
-    if (!adminUser) {
-      return reply.code(403).send({ error: 'Accès refusé. Numéro non autorisé.' })
+    if (!adminUser || !adminUser.passwordHash) {
+      return reply.code(403).send({ error: 'Accès refusé. Identifiants incorrects.' })
     }
 
-    let otpValid = false
-    if (idToken) {
-      otpValid = await this.service.verifyFirebaseToken(idToken, target)
-    } else if (code) {
-      otpValid = await this.service.verifyOtp(target, code)
-    } else {
-      return reply.code(400).send({ error: 'Code ou idToken requis.' })
-    }
-
-    if (!otpValid) {
-      return reply.code(401).send({ error: 'Code invalide ou expiré' })
+    const passwordValid = await bcrypt.compare(password, adminUser.passwordHash)
+    if (!passwordValid) {
+      return reply.code(401).send({ error: 'Mot de passe incorrect.' })
     }
 
     const accessToken = this.app.jwt.sign({ sub: adminUser.id, role: 'ADMIN' })
@@ -423,32 +420,115 @@ export class AuthController {
 
     reply.setCookie('refresh_token', refreshToken, {
       httpOnly: true,
-      secure: false, // secure: true in prod
+      secure: process.env.NODE_ENV === 'production',
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/',
       maxAge: 30 * 24 * 60 * 60,
     })
 
-    return reply.send({ accessToken, refreshToken, user: { id: adminUser.id, role: 'ADMIN', username: adminUser.name || 'Admin', displayName: adminUser.name || 'Admin' } })
+    return reply.send({
+      accessToken,
+      refreshToken,
+      user: { ...adminUser, passwordHash: undefined }
+    })
   }
 
-  async adminSendOtp(req: FastifyRequest, reply: FastifyReply) {
+  async adminResetPasswordOtp(req: FastifyRequest, reply: FastifyReply) {
     const { target, channel } = req.body as { target?: string; channel?: 'sms' | 'whatsapp' }
     
     if (!target) {
-      return reply.code(400).send({ error: 'Le numéro de téléphone est requis.' })
+      return reply.code(400).send({ error: 'Le numéro de téléphone (target) est requis.' })
     }
 
-    const adminUser = await this.app.prisma.admin.findUnique({
-      where: { phone: target }
+    const adminUser = await this.app.prisma.admin.findFirst({
+      where: {
+        OR: [
+          { phone: target },
+          { email: target }
+        ]
+      }
     })
 
     if (!adminUser) {
-      return reply.code(403).send({ error: 'Accès refusé. Numéro non autorisé.' })
+      return reply.code(403).send({ error: 'Accès refusé. Administrateur introuvable.' })
     }
 
-    await this.service.generateAndSendOtp(target, 'phone', channel || 'whatsapp')
+    const type = target.includes('@') ? 'email' : 'phone'
+    await this.service.generateAndSendOtp(target, type, channel || 'whatsapp')
     return reply.send({ success: true, message: 'OTP sent' })
+  }
+
+  async adminResetPassword(req: FastifyRequest, reply: FastifyReply) {
+    const { target, code, idToken, newPassword } = req.body as { target?: string; code?: string; idToken?: string; newPassword?: string }
+    
+    if (!target || !newPassword || (!code && !idToken)) {
+      return reply.code(400).send({ error: 'Informations incomplètes.' })
+    }
+
+    let otpValid = false
+    if (idToken) {
+      otpValid = await this.service.verifyFirebaseToken(idToken, target)
+    } else if (code) {
+      otpValid = await this.service.verifyOtp(target, code)
+    }
+
+    if (!otpValid) {
+      return reply.code(400).send({ error: 'Code invalide ou expiré' })
+    }
+
+    const adminUser = await this.app.prisma.admin.findFirst({
+      where: {
+        OR: [
+          { phone: target },
+          { email: target }
+        ]
+      }
+    })
+
+    if (!adminUser) {
+      return reply.code(404).send({ error: 'Administrateur non trouvé' })
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10)
+    await this.app.prisma.admin.update({
+      where: { id: adminUser.id },
+      data: { passwordHash }
+    })
+
+    return reply.send({ success: true, message: 'Mot de passe mis à jour avec succès' })
+  }
+
+  async createAdmin(req: FastifyRequest, reply: FastifyReply) {
+    const { phone, email, name, password } = req.body as any
+    
+    if ((!phone && !email) || !password) {
+      return reply.code(400).send({ error: 'Email/Numéro et mot de passe sont requis.' })
+    }
+
+    const existingAdmin = await this.app.prisma.admin.findFirst({
+      where: {
+        OR: [
+          phone ? { phone } : {},
+          email ? { email } : {}
+        ].filter(Boolean)
+      }
+    })
+
+    if (existingAdmin) {
+      return reply.code(409).send({ error: 'Un administrateur existe déjà avec ces identifiants.' })
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10)
+    const newAdmin = await this.app.prisma.admin.create({
+      data: {
+        phone: phone || null,
+        email: email || null,
+        name: name || null,
+        passwordHash
+      }
+    })
+
+    return reply.send({ success: true, admin: { ...newAdmin, passwordHash: undefined } })
   }
 
   async googleSignIn(req: FastifyRequest, reply: FastifyReply) {

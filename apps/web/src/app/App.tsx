@@ -74,6 +74,7 @@ import { AdminDashboardPage } from '@/app/components/admin/AdminDashboardPage'
 import { AdminKycListPage } from '@/app/components/admin/AdminKycListPage'
 import { AdminKycDetailPage } from '@/app/components/admin/AdminKycDetailPage'
 import { AdminAdminsPage } from '@/app/components/admin/AdminAdminsPage'
+import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
@@ -191,6 +192,7 @@ export default function App() {
           <Route path="/terms" element={<TermsOfService />} />
           {/* Administration KYC */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
           <Route
             path="/admin"
             element={

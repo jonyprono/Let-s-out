@@ -501,11 +501,13 @@ enum FriendStatus {
 }
 
 model Admin {
-  id        String   @id @default(cuid())
-  phone     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  phone        String?  @unique
+  email        String?  @unique
+  passwordHash String?
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("admins")
 }

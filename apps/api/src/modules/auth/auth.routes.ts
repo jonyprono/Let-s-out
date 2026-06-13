@@ -75,14 +75,25 @@ export default async function authRoutes(app: FastifyInstance) {
     handler: ctrl.resetPassword.bind(ctrl),
   })
 
-  // Admin send OTP
-  app.post('/admin-send-otp', {
-    config: { rateLimit: { max: 50, timeWindow: '5 minutes' } },
-    handler: ctrl.adminSendOtp.bind(ctrl),
-  })
-
-  // Admin login (OTP-based)
+  // Admin login (Password-based)
   app.post('/admin-login', {
     handler: ctrl.adminLogin.bind(ctrl),
+  })
+
+  // Admin send OTP for password reset
+  app.post('/admin-reset-password-otp', {
+    config: { rateLimit: { max: 50, timeWindow: '5 minutes' } },
+    handler: ctrl.adminResetPasswordOtp.bind(ctrl),
+  })
+
+  // Admin reset password
+  app.post('/admin-reset-password', {
+    handler: ctrl.adminResetPassword.bind(ctrl),
+  })
+
+  // Create new Admin
+  app.post('/admins', {
+    preHandler: [app.authenticate, app.requireAdmin],
+    handler: ctrl.createAdmin.bind(ctrl),
   })
 }

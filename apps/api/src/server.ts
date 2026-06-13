@@ -46,6 +46,26 @@ async function bootstrap() {
   // ── Health ─────────────────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }))
 
+  // ── Seed Admin ─────────────────────────────────────────────────
+  try {
+    const adminPhone = '+2290156363337'
+    const existingAdmin = await app.prisma.admin.findUnique({ where: { phone: adminPhone } })
+    if (!existingAdmin) {
+      const bcrypt = await import('bcryptjs')
+      const passwordHash = await bcrypt.hash('Azerty01', 10)
+      await app.prisma.admin.create({
+        data: {
+          phone: adminPhone,
+          name: 'Admin Principal',
+          passwordHash
+        }
+      })
+      app.log.info('✅ Default admin account created')
+    }
+  } catch (err) {
+    app.log.warn('⚠️ Could not seed default admin. DB might not be migrated yet.')
+  }
+
   // ── Start ──────────────────────────────────────────────────────
   const port = Number(process.env.PORT) || 3001
   await app.listen({ port, host: '0.0.0.0' })
