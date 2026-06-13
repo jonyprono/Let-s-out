@@ -385,7 +385,7 @@ export function Settings({ onBack }: SettingsProps) {
 
       {/* ── Modale de suppression de compte ─────────────────────────────── */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-end sm:justify-center px-4 pb-6 sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteModal(false)}>
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-end sm:justify-center px-4 pb-6 sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteModal(false)}>
           <div
             className="bg-white dark:bg-[#1A1A1A] w-full max-w-sm rounded-[32px] p-6 shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}

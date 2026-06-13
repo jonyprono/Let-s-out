@@ -8,6 +8,8 @@ import { hapticFeedback } from '@/lib/haptics';
 import { toast } from 'sonner';
 import { useFavoritesStore } from '@/stores/favorites.store';
 import { useAuthStore } from '@/stores/auth.store';
+import { getEventParticipationMode } from '@/lib/utils';
+import { ShareModal } from '@/components/shared/ShareModal';
 
 interface EventCardProps {
   event: Event;
@@ -27,17 +29,16 @@ function formatEventDate(dateStr: string): string {
     date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' GMT';
 }
 
-function formatPrice(price: number, currency: string, poolTarget?: number, participationMode?: string): string {
-  // Cagnotte : poolTarget défini OU mode participation = cagnotte
-  if ((poolTarget && poolTarget > 0) || participationMode === 'cagnotte' || participationMode === 'pool') return 'Cagnotte';
-  // Tickets
-  if (participationMode === 'ticket' || participationMode === 'tickets') return 'Tickets';
-  if (price === 0) return 'Gratuit';
+function formatPrice(event: any): string {
+  const mode = getEventParticipationMode(event);
+  if (mode !== 'Gratuit') return mode;
+  if (event.price === 0) return 'Gratuit';
+  
   // Devise : FCFA par défaut si non spécifiée
-  const cur = currency || 'XOF';
-  if (cur === 'XOF' || cur === 'CFA' || cur === 'FCFA') return `${Number(price).toLocaleString('fr-FR')} F CFA`;
-  if (cur === 'EUR') return `${price} €`;
-  return `${price} ${cur}`;
+  const cur = event.currency || 'XOF';
+  if (cur === 'XOF' || cur === 'CFA' || cur === 'FCFA') return `${Number(event.price).toLocaleString('fr-FR')} F CFA`;
+  if (cur === 'EUR') return `${event.price} €`;
+  return `${event.price} ${cur}`;
 }
 
 export const EventCard = memo(function EventCard({
@@ -50,6 +51,7 @@ export const EventCard = memo(function EventCard({
   const { user } = useAuthStore();
   const favorite = isFavorite(event.id);
   const [showQRModal, setShowQRModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { data: fullEvent, isLoading: isLoadingEvent } = useQuery({
     queryKey: ['events', event.id],
@@ -59,7 +61,7 @@ export const EventCard = memo(function EventCard({
 
   const joinCode = event.joinCode || fullEvent?.data?.joinCode;
 
-  const price = formatPrice(event.price, event.currency, event.poolTarget, (event as any).participationMode);
+  const price = formatPrice(event);
   const dateStr = formatEventDate(event.startAt);
   const location = [event.address, event.city].filter(Boolean).join(' • ');
   const attendees: any[] = (event as any).bookings || [];
@@ -67,59 +69,11 @@ export const EventCard = memo(function EventCard({
   const max = event.maxAttendees;
   const colors = ['#9747FF', 'var(--action-primary)', '#B070FF', 'var(--color-brand-orange-400)'];
 
-  const fallbackCopyTextToClipboard = (text: string) => {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    // Avoid scrolling to bottom
-    textArea.style.top = "0";
-    textArea.style.left = "0";
-    textArea.style.position = "fixed";
-
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-      const successful = document.execCommand('copy');
-      if (successful) {
-        toast.success('Lien copié !');
-      } else {
-        toast.error('Impossible de copier le lien');
-      }
-    } catch (err) {
-      toast.error('Impossible de copier le lien');
-    }
-
-    document.body.removeChild(textArea);
-  };
-
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     hapticFeedback.impact();
-    const url = `${window.location.origin}/events/${event.id}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: event.title,
-          text: `Découvrez "${event.title}" sur Let's Out !`,
-          url: url,
-        });
-      } catch (err) {
-        console.error('Error sharing:', err);
-      }
-    } else {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        try {
-          await navigator.clipboard.writeText(url);
-          toast.success('Lien copié !');
-        } catch {
-          fallbackCopyTextToClipboard(url);
-        }
-      } else {
-        fallbackCopyTextToClipboard(url);
-      }
-    }
+    setShowShareModal(true);
   };
 
   const handleFavorite = (e: React.MouseEvent) => {
@@ -283,6 +237,14 @@ export const EventCard = memo(function EventCard({
             <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mt-2">{joinCode}</p>
           </div>
         </div>
+      )}
+
+      {showShareModal && (
+        <ShareModal
+          eventId={event.id}
+          eventTitle={event.title}
+          onClose={() => setShowShareModal(false)}
+        />
       )}
     </button>
   );

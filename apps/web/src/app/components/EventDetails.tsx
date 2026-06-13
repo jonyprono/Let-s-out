@@ -31,6 +31,8 @@ import { QRCodeSVG } from 'qrcode.react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { ContributeModal } from '@/components/shared/ContributeModal'
 import { PoolManagementModal } from '@/components/shared/PoolManagementModal'
+import { ShareModal } from '@/components/shared/ShareModal'
+import { getEventParticipationMode } from '@/lib/utils'
 import {
   computePoolStats,
   hasPaidParticipation,
@@ -59,11 +61,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const [codeCopied, setCodeCopied] = useState(false)
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const [showParticipantsModal, setShowParticipantsModal] = useState(false)
-  const [showInviteModal, setShowInviteModal] = useState(false)
   const [showPendingModal, setShowPendingModal] = useState(false)
   const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set())
   const [invitedUsers, setInvitedUsers] = useState<Set<string>>(new Set())
 
+  // ── Share Modal state ───────────────────────────────────────────────
+  const [showInviteModal, setShowInviteModal] = useState(false)
   const [showProfileVerificationModal, setShowProfileVerificationModal] = useState(false)
   const [showReleaseModal, setShowReleaseModal] = useState(false)
   const [showPoolManagementModal, setShowPoolManagementModal] = useState(false)
@@ -536,7 +539,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="rounded-[16px] bg-gray-50 p-4 flex items-center justify-between border border-transparent">
                 <span className="text-[14px] text-gray-900 font-medium">Montant</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[14px] font-bold text-[#3B82F6]">{amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : 'Gratuit'}</span>
+                  <span className="text-[14px] font-bold text-[#3B82F6]">{amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : getEventParticipationMode(event)}</span>
                   {hasJoined && amountToPay > 0 && <span className="px-2 py-0.5 bg-[#10B981] text-white text-[10px] font-bold rounded-[6px]">Payé</span>}
                 </div>
               </div>
@@ -668,7 +671,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="space-y-4 mb-8 text-[14px]">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500 font-medium">Participation</span>
-                  <span className="font-bold text-gray-900">{amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : 'Gratuit'}</span>
+                  <span className="font-bold text-gray-900">{amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : getEventParticipationMode(event)}</span>
                 </div>
                 {amountToPay > 0 && (
                   <>
@@ -888,132 +891,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       )}
 
       {/* Invite Friends Modal */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full max-h-[82%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300 shadow-2xl">
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
-            </div>
-            {/* Header */}
-            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
-              <div>
-                <h3 className="text-[18px] font-bold text-gray-900">Partager l'événement</h3>
-                <p className="text-[12px] text-gray-400 mt-0.5">Invitez vos amis ou partagez le lien</p>
-              </div>
-              <button onClick={() => setShowInviteModal(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center active:scale-95">
-                <X className="w-4 h-4 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Copy link — toujours visible */}
-            <div className="px-5 pt-4 pb-2 flex-shrink-0">
-              <button
-                onClick={async () => {
-                  if (!event) return
-                  const url = `${window.location.origin}/events/${event.id}`
-                  const doShare = async () => {
-                    if (navigator.share) {
-                      try {
-                        await navigator.share({ title: event.title, text: `Découvrez "${event.title}" sur Let's Out !`, url })
-                        return
-                      } catch { /* user dismissed or not supported */ }
-                    }
-                    try {
-                      if (navigator.clipboard?.writeText) {
-                        await navigator.clipboard.writeText(url)
-                      } else {
-                        const ta = document.createElement('textarea')
-                        ta.value = url
-                        ta.style.position = 'fixed'
-                        ta.style.opacity = '0'
-                        document.body.appendChild(ta)
-                        ta.select()
-                        document.execCommand('copy')
-                        document.body.removeChild(ta)
-                      }
-                      toast.success('Lien copié !')
-                    } catch {
-                      toast.error('Impossible de copier le lien')
-                    }
-                  }
-                  doShare()
-                }}
-                className="w-full py-3 rounded-2xl bg-action-primary text-white font-bold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-sm shadow-orange-500/20"
-              >
-                <Share2 className="w-4 h-4" />
-                Copier le lien d'invitation
-              </button>
-            </div>
-
-            {/* Divider */}
-            <div className="flex items-center gap-3 px-5 py-2 flex-shrink-0">
-              <div className="flex-1 h-px bg-gray-100" />
-              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">ou inviter des amis</p>
-              <div className="flex-1 h-px bg-gray-100" />
-            </div>
-
-            {/* Friends list */}
-            <div className="flex-1 overflow-y-auto px-5 pb-6" style={{ scrollbarWidth: 'none' }}>
-              {friendsLoading ? (
-                <div className="flex flex-col items-center justify-center py-10 gap-3">
-                  <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
-                  <p className="text-[13px] text-gray-400">Chargement de vos amis...</p>
-                </div>
-              ) : friends.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <span className="text-2xl">👥</span>
-                  </div>
-                  <p className="text-gray-700 font-bold text-[15px]">Aucun ami à inviter</p>
-                  <p className="text-gray-400 text-[13px] mt-1">Ajoutez des amis depuis votre profil.</p>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {friends.map((friend: any) => (
-                    <div key={friend.userId} className="flex items-center gap-3 py-2">
-                      <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
-                        <SafeImage
-                          src={friend.avatarUrl}
-                          alt={friend.displayName}
-                          className="w-full h-full object-cover"
-                          fallback={<div className="w-full h-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>{(friend.displayName || 'A').charAt(0)}</div>}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 text-[14px] truncate">{friend.displayName}</p>
-                        <p className="text-gray-400 text-[12px]">@{friend.username}</p>
-                      </div>
-                      <button
-                        onClick={async () => {
-                          if (invitedUsers.has(friend.userId)) return
-                          setInvitingUsers(s => new Set([...s, friend.userId]))
-                          try {
-                            await eventsApi.inviteFriends(id!, [friend.userId])
-                            setInvitedUsers(s => new Set([...s, friend.userId]))
-                            toast.success(`${friend.displayName} invité !`)
-                          } catch {
-                            toast.error('Erreur lors de l\'invitation')
-                          } finally {
-                            setInvitingUsers(s => { const n = new Set(s); n.delete(friend.userId); return n })
-                          }
-                        }}
-                        disabled={invitingUsers.has(friend.userId) || invitedUsers.has(friend.userId)}
-                        className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 flex-shrink-0 ${
-                          invitedUsers.has(friend.userId)
-                            ? 'bg-green-100 text-green-600 border border-green-200'
-                            : 'bg-action-primary active:bg-action-primary-hover text-white shadow-sm'
-                        } disabled:opacity-60`}
-                      >
-                        {invitingUsers.has(friend.userId) ? <Loader2 className="w-4 h-4 animate-spin" /> : invitedUsers.has(friend.userId) ? '✓ Invité' : 'Inviter'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {showInviteModal && event && (
+        <ShareModal
+          eventId={event.id}
+          eventTitle={event.title}
+          onClose={() => setShowInviteModal(false)}
+        />
       )}
 
       {/* Pending Bookings Modal (Organizer) */}

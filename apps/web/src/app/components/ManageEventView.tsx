@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router'
 import { apiClient } from '@/lib/api-client'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { getEventParticipationMode } from '@/lib/utils'
 
 interface ManageEventViewProps {
   event: any
@@ -195,7 +196,7 @@ export function ManageEventView({
           {/* Participation */}
           <SectionCard title="Participation" onEdit={() => handleEdit(3)}>
             <InfoRow label="Places" value={event.maxAttendees ? String(event.maxAttendees) : 'Illimitées'} />
-            <InfoRow label="Ticket" value={event.price > 0 ? `${Number(event.price).toLocaleString()} F CFA` : 'Gratuit'} />
+            <InfoRow label="Participation" value={event.price > 0 ? `${Number(event.price).toLocaleString()} F CFA` : getEventParticipationMode(event)} />
             <InfoRow label="Confidentialité" value={event.isPrivate ? 'Privée' : 'Publique'} />
           </SectionCard>
 

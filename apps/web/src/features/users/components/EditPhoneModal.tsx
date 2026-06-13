@@ -5,6 +5,14 @@ import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { useSendOtp, useCheckOtp } from '@/features/auth/hooks/useAuth';
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+
+declare global {
+  interface Window { recaptchaVerifier: any; }
+}
 
 interface Props {
   onClose: () => void;
@@ -24,6 +32,10 @@ export function EditPhoneModal({ onClose }: Props) {
   const { mutate: sendOtp, isPending: sendingOtp } = useSendOtp();
   const { mutate: checkOtp, isPending: checkingOtp } = useCheckOtp();
   const [isPatching, setIsPatching] = useState(false);
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [nativeVerificationId, setNativeVerificationId] = useState<string>('');
+  const [isFirebaseSending, setIsFirebaseSending] = useState(false);
+  const [isFirebaseVerifying, setIsFirebaseVerifying] = useState(false);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -31,49 +43,99 @@ export function EditPhoneModal({ onClose }: Props) {
     return () => clearTimeout(timer);
   }, [countdown]);
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     if (!phone || phone.length < 6) return;
     
-    // Si c'est le même numéro, pas besoin de le modifier
     if (phone === user?.phone) {
       toast.success(t('editPhoneModal.success') || 'Numéro mis à jour');
       onClose();
       return;
     }
 
-    sendOtp({ target: phone, type: 'phone', channel: 'sms' }, {
-      onSuccess: () => {
-        setStep(2);
-        setCountdown(59);
+    try {
+      setIsFirebaseSending(true);
+      if (Capacitor.isNativePlatform()) {
+        const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
+          setNativeVerificationId(event.verificationId);
+        });
+        await FirebaseAuthentication.signInWithPhoneNumber({
+          phoneNumber: phone,
+        });
+        setStep(2); setCountdown(59);
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
-      },
-      onError: (e: any) => {
-        if (e?.response?.status === 429) toast.error('Trop de tentatives.');
-        else toast.error(e?.response?.data?.message || "Erreur d'envoi du code");
+        setTimeout(() => listener.remove(), 60000);
+      } else {
+        if (!window.recaptchaVerifier) {
+          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
+        }
+        const confirmation = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+        setConfirmationResult(confirmation); setStep(2); setCountdown(59);
+        setTimeout(() => otpRefs.current[0]?.focus(), 100);
       }
-    });
+    } catch (err: any) {
+      console.error("Firebase sending error:", err);
+      toast.error(`[Firebase Error] ${err?.message || err}`);
+      setConfirmationResult(null);
+      // Fallback
+      sendOtp({ target: phone, type: 'phone', channel: 'sms' }, {
+        onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100); },
+        onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || "Erreur d'envoi du code"); }
+      });
+    } finally {
+      setIsFirebaseSending(false);
+    }
   };
 
-  const handleVerifyOtp = () => {
+  const handleVerifyOtp = async () => {
     const codeStr = otp.join('');
     if (codeStr.length < 6) return;
 
-    checkOtp({ target: phone, code: codeStr }, {
-      onSuccess: async () => {
-        setIsPatching(true);
-        try {
-          await apiClient.patch('/users/me/phone', { phone });
-          await refreshUser();
-          toast.success(t('editPhoneModal.success') || 'Numéro mis à jour');
-          onClose();
-        } catch (err: any) {
-          toast.error(err.response?.data?.error || 'Erreur lors de la mise à jour');
-        } finally {
-          setIsPatching(false);
+    if (confirmationResult || nativeVerificationId) {
+      setIsFirebaseVerifying(true);
+      try {
+        if (Capacitor.isNativePlatform() && nativeVerificationId) {
+          await FirebaseAuthentication.confirmVerificationCode({
+            verificationId: nativeVerificationId,
+            verificationCode: codeStr,
+          });
+        } else if (confirmationResult) {
+          await confirmationResult.confirm(codeStr);
         }
-      },
-      onError: () => toast.error('Code invalide ou expiré.'),
-    });
+        
+        // If Firebase verified successfully, patch backend
+        setIsPatching(true);
+        await apiClient.patch('/users/me/phone', { phone });
+        await refreshUser();
+        toast.success(t('editPhoneModal.success') || 'Numéro mis à jour');
+        onClose();
+      } catch (err: any) {
+        if (err.response?.data?.error) {
+           toast.error(err.response.data.error);
+        } else {
+           toast.error('Code invalide ou expiré');
+        }
+      } finally {
+        setIsFirebaseVerifying(false);
+        setIsPatching(false);
+      }
+    } else {
+      checkOtp({ target: phone, code: codeStr }, {
+        onSuccess: async () => {
+          setIsPatching(true);
+          try {
+            await apiClient.patch('/users/me/phone', { phone });
+            await refreshUser();
+            toast.success(t('editPhoneModal.success') || 'Numéro mis à jour');
+            onClose();
+          } catch (err: any) {
+            toast.error(err.response?.data?.error || 'Erreur lors de la mise à jour');
+          } finally {
+            setIsPatching(false);
+          }
+        },
+        onError: () => toast.error('Code invalide ou expiré.'),
+      });
+    }
   };
 
   const handleOtpChange = (i: number, v: string) => {
@@ -88,10 +150,11 @@ export function EditPhoneModal({ onClose }: Props) {
     if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus();
   };
 
-  const isLoading = sendingOtp || checkingOtp || isPatching;
+  const isLoading = sendingOtp || checkingOtp || isPatching || isFirebaseSending || isFirebaseVerifying;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center">
+      <div id="recaptcha-container" />
       <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl sm:rounded-3xl p-5 shadow-xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-[#FFFFFF]">

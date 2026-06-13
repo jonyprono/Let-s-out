@@ -27,6 +27,12 @@ export function formatPrice(amount: number, currency = 'EUR') {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount)
 }
 
+export function getEventParticipationMode(event: { price?: number, poolTarget?: number | null }) {
+  if (event.poolTarget && event.poolTarget > 0) return 'Cagnotte';
+  if (event.price && event.price > 0) return 'Tickets';
+  return 'Gratuit';
+}
+
 export function getInitials(name: string) {
   return name
     .split(' ')

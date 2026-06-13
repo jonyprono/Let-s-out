@@ -9,6 +9,7 @@ import { useConversationMessages, useConversation, chatApi, useSendMessage } fro
 import { eventsApi } from '@/features/events/api'
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { ShareModal } from '@/components/shared/ShareModal'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { apiClient } from '@/lib/api-client'
 import { shareLink } from '@/lib/utils'
@@ -201,6 +202,7 @@ export function ChatDetails() {
   const [inputText, setInputText] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [showEventInfo, setShowEventInfo] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
   const [showContributeModal, setShowContributeModal] = useState(false)
   const [pickerMsgId, setPickerMsgId] = useState<string | null>(null)
   const [typingUser, setTypingUser] = useState<string | null>(null)
@@ -833,12 +835,8 @@ export function ChatDetails() {
                 Voir l'événement
               </button>
               <button
-                onClick={async () => {
-                  await shareLink(
-                    event.title,
-                    "Rejoins cet événement sur Let's Out !",
-                    window.location.origin + `/events/${event.id}`
-                  )
+                onClick={() => {
+                  setShowShareModal(true)
                 }}
                 className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
               >
@@ -848,6 +846,14 @@ export function ChatDetails() {
             </div>
           </div>
         </div>
+      )}
+
+      {showShareModal && event && (
+        <ShareModal
+          eventId={event.id}
+          eventTitle={event.title}
+          onClose={() => setShowShareModal(false)}
+        />
       )}
     </div>
   )

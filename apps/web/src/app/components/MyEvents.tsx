@@ -7,6 +7,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useNotifications } from '@/features/notifications/api';
 import { EventCard } from '@/components/shared/EventCard';
 import { useFavoritesStore } from '@/stores/favorites.store';
+import { getEventParticipationMode } from '@/lib/utils';
 
 interface MyEventsProps {
   onNavigate: (screen: string, id?: string) => void;
@@ -20,11 +21,14 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'past', label: 'Passés' },
 ];
 
-function formatPrice(price: number, currency: string): string {
-  if (price === 0) return 'Gratuit';
-  if (currency === 'XOF' || currency === 'CFA') return `${Number(price).toLocaleString('fr-FR')} F`;
-  if (currency === 'EUR') return `${price} €`;
-  return `${price} ${currency}`;
+function formatPrice(event: any): string {
+  const mode = getEventParticipationMode(event);
+  if (mode !== 'Gratuit') return mode;
+  if (event.price === 0) return 'Gratuit';
+  const currency = event.currency || 'XOF';
+  if (currency === 'XOF' || currency === 'CFA') return `${Number(event.price).toLocaleString('fr-FR')} F`;
+  if (currency === 'EUR') return `${event.price} €`;
+  return `${event.price} ${currency}`;
 }
 
 export function MyEvents({ onNavigate }: MyEventsProps) {
@@ -70,7 +74,7 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
       case 'favorites':
         return (
           <span className="px-3 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap text-action-primary">
-            {formatPrice(event.price, event.currency)}
+            {formatPrice(event)}
           </span>
         );
       case 'past':

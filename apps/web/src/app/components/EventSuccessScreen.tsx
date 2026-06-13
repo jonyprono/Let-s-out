@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { getEventParticipationMode } from '@/lib/utils'
 
 export function EventSuccessScreen() {
   const { id } = useParams()
@@ -133,7 +134,7 @@ export function EventSuccessScreen() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[13px] text-gray-500">Prix</span>
-                <span className="text-[13px] font-bold text-gray-900">{event.price > 0 ? `${event.price.toLocaleString()} F CFA` : 'Gratuit'}</span>
+                <span className="text-[13px] font-bold text-gray-900">{event.price > 0 ? `${event.price.toLocaleString()} F CFA` : getEventParticipationMode(event)}</span>
               </div>
             </div>
           </div>
