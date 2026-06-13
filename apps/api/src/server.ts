@@ -46,6 +46,30 @@ async function bootstrap() {
   // ── Health ─────────────────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }))
 
+  // ── Database Migration (applied directly to avoid relying on Render's start command) ──
+  try {
+    // Ensure admins table exists and has all required columns
+    await app.prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "admins" (
+        "id" TEXT NOT NULL,
+        "phone" TEXT,
+        "email" TEXT,
+        "passwordHash" TEXT,
+        "name" TEXT,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "admins_pkey" PRIMARY KEY ("id")
+      )
+    `)
+    await app.prisma.$executeRawUnsafe(`ALTER TABLE "admins" ADD COLUMN IF NOT EXISTS "email" TEXT`)
+    await app.prisma.$executeRawUnsafe(`ALTER TABLE "admins" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT`)
+    await app.prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "admins_email_key" ON "admins"("email")`)
+    await app.prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "admins_phone_key" ON "admins"("phone")`)
+    app.log.info('✅ Admin table migration applied')
+  } catch (err) {
+    app.log.warn({ err }, '⚠️ Admin table migration warning (non-fatal)')
+  }
+
   // ── Seed Admin ─────────────────────────────────────────────────
   try {
     const adminPhone = '+2290156363337'
@@ -63,7 +87,7 @@ async function bootstrap() {
       app.log.info('✅ Default admin account created')
     }
   } catch (err) {
-    app.log.warn('⚠️ Could not seed default admin. DB might not be migrated yet.')
+    app.log.warn('⚠️ Could not seed default admin.')
   }
 
   // ── Start ──────────────────────────────────────────────────────
