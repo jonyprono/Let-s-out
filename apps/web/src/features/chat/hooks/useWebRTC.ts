@@ -44,7 +44,7 @@ export function useWebRTC() {
 
   const [callStatus, setCallStatus] = useState<CallStatus>('IDLE')
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null)
-  const [outgoingCall, setOutgoingCall] = useState<{ targetName?: string; targetAvatar?: string | null } | null>(null)
+  const [outgoingCall, setOutgoingCall] = useState<{ targetName?: string; targetAvatar?: string | null; mediaType?: 'audio' | 'video' } | null>(null)
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
 
@@ -226,7 +226,7 @@ export function useWebRTC() {
     console.log('[WebRTC] startCall →', { conversationId, targetUserId, mediaType })
 
     updateCallStatus('CALLING')
-    setOutgoingCall({ targetName, targetAvatar })
+    setOutgoingCall({ targetName, targetAvatar, mediaType })
     activeConversationId.current = conversationId
 
     sendSignalRef.current({ type: 'call_start', conversationId, callerId: currentUser.id, targetUserId, mediaType })
