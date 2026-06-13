@@ -164,10 +164,17 @@ export function useWebRTC() {
     pc.ontrack = (event) => {
       console.log('[WebRTC] ontrack fired, streams:', event.streams?.length)
       if (event.streams && event.streams[0]) {
-        setRemoteStream(event.streams[0])
+        // Clone the stream to force React state update and re-create the DOM element
+        setRemoteStream(new MediaStream(event.streams[0].getTracks()))
       } else if (event.track) {
-        const stream = new MediaStream([event.track])
-        setRemoteStream(stream)
+        setRemoteStream(prev => {
+          if (prev) {
+            const newStream = new MediaStream(prev.getTracks())
+            newStream.addTrack(event.track)
+            return newStream
+          }
+          return new MediaStream([event.track])
+        })
       }
     }
 

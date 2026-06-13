@@ -129,7 +129,7 @@ export function CallOverlay() {
   })
 
   // Determine media type for remote player
-  const remoteMediaType = (incomingCall?.mediaType || 'audio') === 'video' ? 'video' : 'audio'
+  const remoteMediaType = (incomingCall?.mediaType || outgoingCall?.mediaType || 'audio') === 'video' ? 'video' : 'audio'
   const { containerRef: remoteVideoContainerRef, needsUserTap, forcePlay } = useRemoteMedia(
     callStatus === 'CONNECTED' ? remoteStream : null,
     remoteMediaType
