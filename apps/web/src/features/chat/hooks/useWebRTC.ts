@@ -366,6 +366,7 @@ export function useWebRTC() {
             incomingCallRef.current = data
             setIncomingCall(data)
             updateCallStatusRef.current('RINGING')
+            activeConversationId.current = data.conversationId
             import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
               IncomingCallKit.showIncomingCall({
                 callId: data.conversationId,
@@ -379,7 +380,14 @@ export function useWebRTC() {
                 cleanupRef.current()
               }
             }, RINGING_TIMEOUT_MS)
+          } else if (
+            // Duplicate offer for the same call we're already handling — ignore safely
+            (callStatusRef.current === 'RINGING' || callStatusRef.current === 'CONNECTED') &&
+            activeConversationId.current === data.conversationId
+          ) {
+            console.log('[WebRTC] Ignoring duplicate call_offer for same conversation')
           } else {
+            // Genuinely busy with a different call — reject
             sendSignalRef.current({ type: 'call_reject', conversationId: data.conversationId, targetUserId: data.userId })
           }
           break
