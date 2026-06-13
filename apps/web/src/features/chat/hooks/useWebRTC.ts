@@ -161,18 +161,26 @@ export function useWebRTC() {
   // Start Call (Caller)
   const startCall = useCallback(async (conversationId: string, targetUserId: string, mediaType: 'audio' | 'video') => {
     if (!user) return
+    if (!targetUserId) {
+      console.error('[WebRTC] startCall: targetUserId manquant !')
+      import('sonner').then(({ toast }) => toast.error('Impossible de démarrer l\'appel : destinataire introuvable.'))
+      return
+    }
+
+    console.log('[WebRTC] startCall →', { conversationId, targetUserId, mediaType })
     
     setCallStatus('CALLING')
     activeConversationId.current = conversationId
 
     // Notify peer we are starting a call
-    sendSignal({
+    const sent1 = sendSignal({
       type: 'call_start',
       conversationId,
       callerId: user.id,
       targetUserId,
       mediaType,
     })
+    console.log('[WebRTC] call_start envoyé:', sent1)
 
     const stream = await getMedia(mediaType)
     if (!stream) {
@@ -186,13 +194,21 @@ export function useWebRTC() {
     try {
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
-      sendSignal({
+
+      const sent2 = sendSignal({
         type: 'call_offer',
         conversationId,
         targetUserId,
         offer,
         mediaType
       })
+      console.log('[WebRTC] call_offer envoyé:', sent2, '— conversationId:', conversationId, '— targetUserId:', targetUserId)
+
+      if (!sent2) {
+        import('sonner').then(({ toast }) => toast.error('Erreur réseau : impossible d\'envoyer l\'appel. Réessaie dans un instant.'))
+        cleanup()
+        return
+      }
 
       // ── Timeout côté appelant : 45 secondes sans réponse ──────────────────
       callerTimeoutRef.current = setTimeout(() => {
