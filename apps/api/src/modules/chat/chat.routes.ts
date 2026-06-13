@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import type { WebSocket } from 'ws'
+import { sendPushToUser } from '../../services/push.service'
 
 // In-memory map: userId -> Set of WebSocket connections
 const connections = new Map<string, Set<WebSocket>>()
@@ -131,6 +132,53 @@ export default async function chatRoutes(app: FastifyInstance) {
             ...msg,
             userId, // append the sender's userId so the receiver knows who it's from
           }, userId)
+
+          // When a call_offer arrives, send a FCM push to all offline members
+          // so they receive an incoming call notification even when the app is closed
+          if (msg.type === 'call_offer') {
+            try {
+              // Get caller profile
+              const callerProfile = await app.prisma.profile.findUnique({
+                where: { userId },
+                select: { displayName: true, avatarUrl: true },
+              })
+              const callerName = callerProfile?.displayName ?? 'Quelqu\'un'
+              const mediaType = (msg as any).mediaType ?? 'audio'
+              const mediaLabel = mediaType === 'video' ? 'vidéo' : 'audio'
+
+              // Get all members except the caller
+              const members = await app.prisma.conversationMember.findMany({
+                where: { conversationId: msg.conversationId, userId: { not: userId } },
+                select: { userId: true },
+              })
+
+              // Send FCM push to each member who is NOT connected via WS
+              await Promise.allSettled(
+                members.map(async ({ userId: recipientId }) => {
+                  const isOnline = connections.has(recipientId) && connections.get(recipientId)!.size > 0
+                  // Always send FCM push so background-killed apps can receive it
+                  await sendPushToUser(app.prisma, recipientId, {
+                    title: `📞 Appel ${mediaLabel} entrant`,
+                    body: `${callerName} vous appelle`,
+                    data: {
+                      type: 'INCOMING_CALL',
+                      conversationId: msg.conversationId,
+                      callerId: userId,
+                      mediaType,
+                      // Pass offer as JSON string so the front can reconstruct the WebRTC offer
+                      offer: JSON.stringify((msg as any).offer ?? null),
+                      callerName,
+                      callerAvatar: callerProfile?.avatarUrl ?? '',
+                      // Signal front that the WS relayed the offer too
+                      wsRelayed: isOnline ? 'true' : 'false',
+                    },
+                  })
+                })
+              )
+            } catch (callPushErr) {
+              app.log.warn('[FCM] Failed to send call push:', callPushErr)
+            }
+          }
         }
       } catch (e) {
         app.log.error(e)
@@ -224,6 +272,29 @@ export default async function chatRoutes(app: FastifyInstance) {
             data: { conversationId, messageId: message.id }
           }))
         })
+
+        // Send FCM push notification for offline members
+        const senderName = message.sender.profile?.displayName ?? 'Quelqu\'un'
+        const msgPreview = type === 'TEXT'
+          ? content.substring(0, 60) + (content.length > 60 ? '...' : '')
+          : type === 'IMAGE' ? '📷 Photo'
+          : type === 'VIDEO' ? '🎥 Vidéo'
+          : type === 'AUDIO' ? '🎵 Message vocal'
+          : content.substring(0, 60)
+
+        await Promise.allSettled(
+          offlineMembers.map(({ userId: recipientId }) =>
+            sendPushToUser(app.prisma, recipientId, {
+              title: senderName,
+              body: msgPreview,
+              data: {
+                type: 'NEW_MESSAGE',
+                conversationId,
+                messageId: message.id,
+              },
+            })
+          )
+        )
       }
 
       return reply.code(201).send(message)

@@ -56,6 +56,100 @@ function groupReactions(reactions: any[]) {
   return Object.values(map)
 }
 
+function AudioMessage({ src, isMe }: { src: string, isMe: boolean }) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const audioRef = useRef<HTMLAudioElement>(null)
+
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    const updateProgress = () => {
+      setProgress((audio.currentTime / (audio.duration || 1)) * 100)
+    }
+    const handleLoaded = () => setDuration(audio.duration)
+    const handleEnd = () => { setIsPlaying(false); setProgress(0) }
+    
+    audio.addEventListener('timeupdate', updateProgress)
+    audio.addEventListener('loadedmetadata', handleLoaded)
+    audio.addEventListener('ended', handleEnd)
+    return () => {
+      audio.removeEventListener('timeupdate', updateProgress)
+      audio.removeEventListener('loadedmetadata', handleLoaded)
+      audio.removeEventListener('ended', handleEnd)
+    }
+  }, [])
+
+  const togglePlay = () => {
+    if (audioRef.current?.paused) {
+      audioRef.current.play()
+      setIsPlaying(true)
+    } else {
+      audioRef.current?.pause()
+      setIsPlaying(false)
+    }
+  }
+
+  const formatTime = (secs: number) => {
+    if (!secs || isNaN(secs)) return '0:00'
+    const m = Math.floor(secs / 60)
+    const s = Math.floor(secs % 60)
+    return `${m}:${s.toString().padStart(2, '0')}`
+  }
+
+  return (
+    <div className={`flex flex-col px-1 w-[240px] ${isMe ? 'text-white' : 'text-gray-800'}`}>
+      <div className="flex items-center gap-3 py-1">
+        <button onClick={togglePlay} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0" style={{ background: isMe ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)' }}>
+          {isPlaying ? <span className="w-3 h-3 bg-current rounded-sm" /> : <Play className="w-5 h-5 ml-1 text-current fill-current" />}
+        </button>
+        <div className="flex-1 flex flex-col gap-1.5">
+          <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: isMe ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)' }}>
+            <div className="absolute top-0 left-0 h-full bg-current transition-all duration-100" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="flex justify-between items-center text-[11px] opacity-80 font-medium">
+            <span>{formatTime(audioRef.current?.currentTime || 0)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+      </div>
+      <audio ref={audioRef} src={src} className="hidden" preload="metadata" />
+    </div>
+  )
+}
+
+function VideoMessage({ src, isMe }: { src: string, isMe: boolean }) {
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  
+  return (
+    <>
+      <div className="relative bg-black cursor-pointer overflow-hidden group" onClick={() => setIsFullscreen(true)}>
+        <video src={src} className="w-full object-cover opacity-90 transition-opacity group-hover:opacity-100" style={{ maxHeight: '250px' }} preload="metadata" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-xl">
+            <Play className="w-5 h-5 text-gray-900 ml-1 fill-gray-900" />
+          </div>
+        </div>
+      </div>
+      
+      {isFullscreen && (
+        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col animate-in fade-in duration-200">
+           <div className="flex justify-between items-center p-4 pt-safe-4 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent">
+             <span className="text-white/80 text-sm font-medium">Vidéo</span>
+             <button onClick={() => setIsFullscreen(false)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-md active:scale-95 transition-transform">
+               <X className="w-6 h-6" />
+             </button>
+           </div>
+           <div className="flex-1 flex items-center justify-center pt-safe-top pb-safe-bottom">
+             <video src={src} controls autoPlay playsInline className="w-full h-full object-contain max-h-[100dvh]" />
+           </div>
+        </div>
+      )}
+    </>
+  )
+}
+
 export function ChatDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -386,15 +480,17 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-[#F8F9FA]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[#EFEAE2] dark:bg-[#0B141A]">
         {isLoading ? (
-          <div className="flex flex-col gap-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className={`flex gap-2 ${i % 2 === 0 ? 'flex-row-reverse' : ''}`}>
-                <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-[#333333] animate-pulse flex-shrink-0" />
-                <div className={`h-10 rounded-2xl bg-gray-200 dark:bg-[#333333] animate-pulse ${i % 2 === 0 ? 'w-32' : 'w-48'}`} />
+          <div className="flex flex-col gap-4 py-4">
+            {[1, 2, 3, 4, 5].map(i => {
+              const isMe = i % 2 === 0
+              return (
+              <div key={i} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
+                {!isMe && isGroup && <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-[#202C33] animate-pulse flex-shrink-0 self-end" />}
+                <div className={`h-[42px] rounded-2xl bg-gray-200/80 dark:bg-[#202C33] animate-pulse ${isMe ? 'w-[180px] rounded-br-sm' : 'w-[220px] rounded-bl-sm'}`} />
               </div>
-            ))}
+            )})}
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2">
@@ -511,57 +607,63 @@ export function ChatDetails() {
                     )}
 
                     {msg.isDeleted ? (
-                      <div className="rounded-[20px] px-4 py-2.5 bg-gray-100 border border-gray-200 italic">
-                        <p className="text-[14px] text-gray-400">Message supprimé</p>
+                      <div className={`rounded-[18px] px-3.5 py-2 flex items-center gap-2 ${isMe ? 'bg-[#FF7A00]/10 border border-[#FF7A00]/20 text-[#FF7A00]' : 'bg-gray-100 border border-gray-200 text-gray-500'} italic`}>
+                        <Trash2 className="w-4 h-4 opacity-70" />
+                        <p className="text-[14px]">Ce message a été supprimé</p>
                       </div>
                     ) : isMedia ? (
                       <div
-                        className={`rounded-[20px] overflow-hidden shadow-sm ${isMe ? 'rounded-br-sm' : 'rounded-tl-sm'} ${isAudio ? (isMe ? 'bg-action-primary text-white' : 'bg-white border border-gray-100') : ''}`}
-                        style={{ maxWidth: '260px' }}
+                        className={`rounded-[18px] overflow-hidden shadow-sm relative ${
+                          isAudio
+                            ? isMe ? 'bg-[#FF7A00] text-white pt-2' : 'bg-white text-gray-900 pt-2'
+                            : 'bg-black p-0.5'
+                        } ${isMe ? (isFirstInGroup ? 'rounded-br-sm' : '') : (isFirstInGroup ? 'rounded-tl-sm' : '')}`}
+                        style={{ maxWidth: '280px' }}
                       >
                         {isImage && msg.content ? (
                           <SafeImage
                             src={msg.content}
                             alt="photo"
-                            className="w-full object-cover"
-                            style={{ maxHeight: '300px' } as React.CSSProperties}
+                            className="w-full object-cover rounded-[16px]"
+                            style={{ maxHeight: '350px' } as React.CSSProperties}
                           />
                         ) : isVideo && msg.content ? (
-                          <div className="relative bg-black">
-                            <video src={msg.content} className="w-full object-cover" style={{ maxHeight: '300px' }} />
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                              <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                                <Play className="w-5 h-5 text-gray-800 ml-1" />
-                              </div>
-                            </div>
+                          <div className="rounded-[16px] overflow-hidden">
+                            <VideoMessage src={msg.content} isMe={isMe} />
                           </div>
                         ) : isAudio && msg.content ? (
-                          <div className="px-3 py-2 flex flex-col">
-                            <audio controls controlsList="nodownload noplaybackrate" src={msg.content} className={`h-10 w-[200px] ${isMe ? 'invert sepia contrast-200' : ''}`} />
-                          </div>
+                          <AudioMessage src={msg.content} isMe={isMe} />
                         ) : null}
-                        <div className={`px-3 py-1.5 ${isMe ? 'bg-action-primary' : 'bg-white'}`}>
-                          <span className={`text-[11px] block text-right font-medium ${isMe ? 'text-white/80' : 'text-gray-400'}`}>
-                            {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
-                          </span>
+                        
+                        {/* Time for media (overlay for image/video, inline for audio) */}
+                        <div className={`${isAudio ? 'px-3 pb-1.5' : 'absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full'}`}>
+                          <div className={`flex items-center gap-1 justify-end`}>
+                            <span className={`text-[11px] font-medium ${isAudio ? (isMe ? 'text-white/80' : 'text-gray-400') : 'text-white'}`}>
+                              {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                            </span>
+                            {isMe && isLastMsg && <Check className={`w-[14px] h-[14px] ${isAudio ? 'text-white/80' : 'text-white'}`} strokeWidth={2.5} />}
+                          </div>
                         </div>
                       </div>
                     ) : (
                       <div
-                        className={`rounded-[20px] px-4 py-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${
+                        className={`px-3.5 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.08)] relative ${
                           isMe
-                            ? `bg-action-primary text-white rounded-br-sm`
-                            : `bg-white border border-gray-50 text-gray-900 rounded-tl-sm`
+                            ? `bg-[#FF7A00] text-white rounded-[18px] ${isFirstInGroup ? 'rounded-br-sm' : ''}`
+                            : `bg-white dark:bg-[#202C33] text-gray-900 dark:text-[#E9EDEF] rounded-[18px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`
                         }`}
                         style={{ maxWidth: '280px' }}
                       >
-                        <p className="text-[15px] leading-relaxed break-words">{msg.content}</p>
-                        <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                          <span className={`text-[11px] font-medium ${isMe ? 'text-white/80' : 'text-gray-400'}`}>
+                        {/* Tail for WhatsApp effect (optional, css pseudo element logic can go here or we keep it clean with corner radius) */}
+                        
+                        <p className="text-[15px] leading-relaxed break-words pr-12">{msg.content}</p>
+                        
+                        <div className={`absolute bottom-1 right-2 flex items-center gap-1`}>
+                          <span className={`text-[10px] font-medium ${isMe ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
                             {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                           </span>
                           {isMe && isLastMsg && (
-                            <Check className="w-3 h-3 text-white/80" />
+                            <Check className="w-[14px] h-[14px] text-white/90" strokeWidth={2.5} />
                           )}
                         </div>
                       </div>

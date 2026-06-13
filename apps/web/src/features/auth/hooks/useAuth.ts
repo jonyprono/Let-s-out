@@ -86,13 +86,13 @@ export function useGoogleSignIn() {
       if (data.refreshToken) setRefreshToken(data.refreshToken)
       setUser(data.user as any)
 
-      // Redirect to onboarding if new account or missing display name
+      // Redirect to full signup flow if new account or missing display name
       if (data.isNewUser) {
-        nav('/onboarding', { replace: true })
+        nav('/signup?mode=google', { replace: true })
       } else {
         const p: any = data.user.profile || {}
         if (!p.displayName) {
-          nav('/onboarding', { replace: true })
+          nav('/signup?mode=google', { replace: true })
         } else {
           nav('/home', { replace: true })
         }

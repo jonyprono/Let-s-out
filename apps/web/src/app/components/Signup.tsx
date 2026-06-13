@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useLocation } from 'react-router'
 import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, Tick01Icon, Location01Icon, Cancel01Icon, Calendar01Icon, RefreshIcon } from 'hugeicons-react'
 import { useSendOtp, useRegister, useCheckTarget, useCheckOtp } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
@@ -53,10 +53,13 @@ function validatePhone(code: string, phone: string) {
 
 export function Signup({ onBack }: SignupProps) {
   const nav = useNavigate()
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
+  const isGoogleMode = queryParams.get('mode') === 'google'
 
   // Steps:
   // 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=password
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(isGoogleMode ? 3 : 1)
 
   // Step 1 – Phone
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
@@ -244,6 +247,22 @@ export function Signup({ onBack }: SignupProps) {
         })
       }
     } else if (step === 7) {
+      if (isGoogleMode) {
+        setIsFirebaseVerifying(true)
+        try {
+            const profileData: any = { interests, displayName: `${firstName} ${pseudo}`.trim() }
+            if (birthday) profileData.birthdate = birthday
+            if (city) profileData.city = city
+            await apiClient.patch('/users/me/profile', profileData)
+            await apiClient.patch('/users/me/password', { newPassword: password })
+            localStorage.setItem('letsout_onboarding_done', 'true')
+            nav('/home')
+        } catch (e: any) {
+            toast.error(e?.response?.data?.error || "Erreur lors de l'enregistrement")
+        } finally {
+            setIsFirebaseVerifying(false)
+        }
+      } else {
       // Final step: register
       const isFirebaseFlow = currentChannel === 'sms' && (!!idToken || !!nativeVerificationId)
       register({
@@ -271,6 +290,7 @@ export function Signup({ onBack }: SignupProps) {
           else toast.error("Erreur lors de l'inscription")
         },
       })
+      }
     } else if (step === 4) {
       if (birthday) {
         const birthDate = new Date(birthday)
@@ -344,8 +364,8 @@ export function Signup({ onBack }: SignupProps) {
   const isPwdValid = pwdLength && pwdMixed && pwdNumber && pwdMatch
 
   const isNextDisabled = () => {
-    if (step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
-    if (step === 2) return otp.join('').length < 6 || isFirebaseVerifying || checkingOtp
+    if (!isGoogleMode && step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
+    if (!isGoogleMode && step === 2) return otp.join('').length < 6 || isFirebaseVerifying || checkingOtp
     if (step === 3) return !firstName.trim()
     if (step === 4) return false
     if (step === 5) return false
@@ -390,7 +410,7 @@ export function Signup({ onBack }: SignupProps) {
       <div className="flex-1 px-6 pt-7 overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
 
         {/* ── STEP 1: PHONE ── */}
-        {step === 1 && (
+        {!isGoogleMode && step === 1 && (
           <div>
             <h1 className={`${authTitle} mb-1.5`}>
               Quel est votre numéro de<br />téléphone&nbsp;?
@@ -432,7 +452,7 @@ export function Signup({ onBack }: SignupProps) {
         )}
 
         {/* ── STEP 2: OTP (6 digits) ── */}
-        {step === 2 && (
+        {!isGoogleMode && step === 2 && (
           <div>
             <h1 className={`${authTitle} mb-1.5`}>
               Quel est le code reçu&nbsp;?

@@ -7,7 +7,7 @@ import { isOnline } from '@/lib/offline'
  * AppBootstrap — mounted at root level.
  * On every app load, if we have an access token we silently re-fetch
  * the current user so profile data stays fresh.
- * 
+ *
  * If the device is offline, we skip the network call entirely and
  * use the cached user data from the auth store (persisted in localStorage).
  */
@@ -40,15 +40,61 @@ export function AppBootstrap() {
     // Capacitor Push Notification deep linking
     if (Capacitor.isNativePlatform()) {
       PushNotifications.addListener('pushNotificationActionPerformed', (notification: any) => {
-        const data = notification.notification.data
+        const data = notification.notification?.data || notification.data || {}
+
+        // ── INCOMING CALL (background) ───────────────────────────────────
+        if (data?.type === 'INCOMING_CALL') {
+          // The WebSocket may have already relayed the offer if the app was alive.
+          // In all cases, dispatch the call_offer event so the CallOverlay can show.
+          // If the WS had already delivered it, this is a no-op (the overlay is already shown).
+          try {
+            const offer = data.offer ? JSON.parse(data.offer) : null
+            window.dispatchEvent(new CustomEvent('ws:webrtc', {
+              detail: {
+                type: 'call_offer',
+                conversationId: data.conversationId,
+                callerId: data.callerId,
+                mediaType: data.mediaType || 'audio',
+                offer,
+                callerName: data.callerName || '',
+                callerAvatar: data.callerAvatar || '',
+                // If no offer available (app was killed before WS sent it),
+                // we mark it as a "push-only" call — the WS reconnection will retry
+                pushOnly: !offer,
+              }
+            }))
+          } catch (e) {
+            console.error('[Push] Failed to parse incoming call:', e)
+          }
+          return
+        }
+
+        // ── NEW MESSAGE → open specific chat ────────────────────────────
+        if (data?.type === 'NEW_MESSAGE') {
+          if (data?.conversationId) {
+            navigate(`/chat/${data.conversationId}`)
+          } else {
+            navigate('/messages')
+          }
+          return
+        }
+
+        // ── EVENT deep link ──────────────────────────────────────────────
         if (data?.eventId) {
           navigate(`/events/${data.eventId}`)
-        } else if (data?.bookingId) {
+          return
+        }
+
+        // ── PAYMENT deep link ────────────────────────────────────────────
+        if (data?.bookingId) {
           navigate(`/payments/${data.bookingId}`)
-        } else if (data?.type === 'FRIEND_REQUEST') {
+          return
+        }
+
+        // ── FRIEND REQUEST ───────────────────────────────────────────────
+        if (data?.type === 'FRIEND_REQUEST') {
           navigate('/friend-requests')
-        } else if (data?.type === 'NEW_MESSAGE') {
-          navigate('/messages')
+          return
         }
       })
     }

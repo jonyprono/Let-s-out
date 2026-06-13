@@ -177,7 +177,7 @@ export default async function usersRoutes(app: FastifyInstance) {
   app.patch('/me/password', async (req, reply) => {
     const { sub } = req.user as { sub: string }
     const schema = z.object({
-      oldPassword: z.string().min(1),
+      oldPassword: z.string().optional(),
       newPassword: z.string().min(6),
     })
 
@@ -185,10 +185,13 @@ export default async function usersRoutes(app: FastifyInstance) {
     if (!result.success) return reply.code(400).send({ error: 'Données invalides' })
 
     const user = await app.prisma.user.findUnique({ where: { id: sub } })
-    if (!user || !user.passwordHash) return reply.code(400).send({ error: 'Aucun mot de passe défini' })
+    if (!user) return reply.code(404).send({ error: 'Utilisateur non trouvé' })
 
-    const valid = await bcrypt.compare(result.data.oldPassword, user.passwordHash)
-    if (!valid) return reply.code(400).send({ error: 'Ancien mot de passe incorrect' })
+    if (user.passwordHash) {
+      if (!result.data.oldPassword) return reply.code(400).send({ error: 'Ancien mot de passe requis' })
+      const valid = await bcrypt.compare(result.data.oldPassword, user.passwordHash)
+      if (!valid) return reply.code(400).send({ error: 'Ancien mot de passe incorrect' })
+    }
 
     const newHash = await bcrypt.hash(result.data.newPassword, 10)
     await app.prisma.user.update({
