@@ -56,6 +56,7 @@ export function useWebRTC() {
   const isVideoEnabled = useRef<boolean>(true)
   const peerConnection = useRef<RTCPeerConnection | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
+  const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([])
   
   useEffect(() => {
     callStatusRef.current = callStatus
@@ -168,6 +169,7 @@ export function useWebRTC() {
 
     activeConversationId.current = null
     incomingCallRef.current = null
+    iceCandidateQueue.current = []
     setLocalStream(null)
     setRemoteStream(null)
     setIncomingCall(null)
@@ -197,6 +199,7 @@ export function useWebRTC() {
     
     activeConversationId.current = null
     incomingCallRef.current = null
+    iceCandidateQueue.current = []
     setIncomingCall(null)
     setOutgoingCall(null)
     setCallStatus('IDLE')
@@ -283,38 +286,45 @@ export function useWebRTC() {
 
   // Accept Call (Receiver)
   const acceptCall = useCallback(async () => {
-    if (!incomingCall) return
+    const callData = incomingCallRef.current
+    if (!callData) return
 
     clearAllTimers() // Annule le timer de sonnerie
     setCallStatus('CONNECTED')
-    activeConversationId.current = incomingCall.conversationId
+    activeConversationId.current = callData.conversationId
 
-    const stream = await getMedia(incomingCall.mediaType)
+    const stream = await getMedia(callData.mediaType)
     if (!stream) {
-      rejectCall(incomingCall.conversationId)
+      rejectCall(callData.conversationId)
       cleanup()
       return
     }
 
-    const pc = createPeerConnection(incomingCall.conversationId)
+    const pc = createPeerConnection(callData.conversationId)
     stream.getTracks().forEach(track => pc.addTrack(track, stream))
 
     try {
-      await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer))
+      await pc.setRemoteDescription(new RTCSessionDescription(callData.offer))
+      
+      iceCandidateQueue.current.forEach(candidate => {
+        pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error)
+      })
+      iceCandidateQueue.current = []
+
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
       
       sendSignal({
         type: 'call_answer',
-        conversationId: incomingCall.conversationId,
-        targetUserId: incomingCall.callerId,
+        conversationId: callData.conversationId,
+        targetUserId: callData.callerId,
         answer,
       })
     } catch (e) {
       console.error('Error creating answer', e)
       cleanup()
     }
-  }, [incomingCall, createPeerConnection, rejectCall, cleanup, sendSignal, clearAllTimers])
+  }, [createPeerConnection, rejectCall, cleanup, sendSignal, clearAllTimers])
 
   // Toggle Mute
   const toggleMute = useCallback(() => {
@@ -410,6 +420,12 @@ export function useWebRTC() {
             setCallStatus(prev => {
               if (prev === 'CALLING') {
                 peerConnection.current!.setRemoteDescription(new RTCSessionDescription(data.answer))
+                  .then(() => {
+                    iceCandidateQueue.current.forEach(candidate => {
+                      peerConnection.current!.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error)
+                    })
+                    iceCandidateQueue.current = []
+                  })
                   .catch(err => console.error('Error setting remote description', err))
                 return 'CONNECTED'
               }
@@ -418,12 +434,14 @@ export function useWebRTC() {
           }
           break
         case 'ice_candidate':
-          if (peerConnection.current) {
+          if (peerConnection.current && peerConnection.current.remoteDescription) {
             try {
               await peerConnection.current.addIceCandidate(new RTCIceCandidate(data.candidate))
             } catch (err) {
               console.error('Error adding ICE candidate', err)
             }
+          } else {
+            iceCandidateQueue.current.push(data.candidate)
           }
           break
         case 'call_reject':
