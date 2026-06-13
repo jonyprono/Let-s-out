@@ -48,7 +48,7 @@ export function useWebRTC() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
 
-  // Use refs for all mutable values to avoid stale closures
+  // ── Refs: never go stale in closures ────────────────────────────────────────
   const callStatusRef = useRef<CallStatus>('IDLE')
   const activeConversationId = useRef<string | null>(null)
   const incomingCallRef = useRef<IncomingCallData | null>(null)
@@ -58,25 +58,39 @@ export function useWebRTC() {
   const isVideoEnabled = useRef<boolean>(true)
   const callerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const ringingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const disconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Keep callStatusRef in sync
+  // Keep live references to functions so signal handlers never get stale
+  const userRef = useRef(user)
+  const sendSignalRef = useRef(sendSignal)
+  const sendMessageRef = useRef(sendMessage)
+
+  useEffect(() => { userRef.current = user }, [user])
+  useEffect(() => { sendSignalRef.current = sendSignal }, [sendSignal])
+  useEffect(() => { sendMessageRef.current = sendMessage }, [sendMessage])
+
+  // ── updateCallStatus ──────────────────────────────────────────────────────────
   const updateCallStatus = useCallback((status: CallStatus) => {
     callStatusRef.current = status
     setCallStatus(status)
   }, [])
 
+  // ── clearAllTimers ────────────────────────────────────────────────────────────
   const clearAllTimers = useCallback(() => {
     if (callerTimeoutRef.current) { clearTimeout(callerTimeoutRef.current); callerTimeoutRef.current = null }
     if (ringingTimeoutRef.current) { clearTimeout(ringingTimeoutRef.current); ringingTimeoutRef.current = null }
+    if (disconnectTimerRef.current) { clearTimeout(disconnectTimerRef.current); disconnectTimerRef.current = null }
   }, [])
 
-  // ─── Cleanup ─────────────────────────────────────────────────────────────────
+  // ── cleanup ───────────────────────────────────────────────────────────────────
   const cleanup = useCallback(() => {
-    console.log('[WebRTC] cleanup')
+    console.log('[WebRTC] cleanup, status was:', callStatusRef.current)
+    clearAllTimers()
     if (peerConnection.current) {
       peerConnection.current.ontrack = null
       peerConnection.current.onicecandidate = null
       peerConnection.current.oniceconnectionstatechange = null
+      peerConnection.current.onconnectionstatechange = null
       peerConnection.current.close()
       peerConnection.current = null
     }
@@ -92,7 +106,6 @@ export function useWebRTC() {
     activeConversationId.current = null
     incomingCallRef.current = null
     iceCandidateQueue.current = []
-    clearAllTimers()
     setLocalStream(null)
     setRemoteStream(null)
     setIncomingCall(null)
@@ -100,7 +113,7 @@ export function useWebRTC() {
     updateCallStatus('IDLE')
   }, [clearAllTimers, updateCallStatus])
 
-  // ─── Get Media ───────────────────────────────────────────────────────────────
+  // ── getMedia ──────────────────────────────────────────────────────────────────
   const getMedia = useCallback(async (mediaType: 'audio' | 'video'): Promise<MediaStream | null> => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -120,61 +133,7 @@ export function useWebRTC() {
     }
   }, [])
 
-  // ─── Create Peer Connection ───────────────────────────────────────────────────
-  const createPeerConnection = useCallback((conversationId: string): RTCPeerConnection => {
-    if (peerConnection.current) {
-      peerConnection.current.close()
-    }
-    const pc = new RTCPeerConnection(ICE_SERVERS)
-    peerConnection.current = pc
-
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        sendSignal({ type: 'ice_candidate', conversationId, candidate: event.candidate })
-      }
-    }
-
-    pc.ontrack = (event) => {
-      console.log('[WebRTC] ontrack fired', event.streams)
-      if (event.streams && event.streams[0]) {
-        setRemoteStream(event.streams[0])
-      } else if (event.track) {
-        // Fallback: build a stream manually from the track
-        const stream = new MediaStream([event.track])
-        setRemoteStream(stream)
-      }
-    }
-
-    let disconnectTimer: ReturnType<typeof setTimeout> | null = null
-
-    pc.onconnectionstatechange = () => {
-      console.log('[WebRTC] connectionState:', pc.connectionState, '| callStatus:', callStatusRef.current)
-      // Only handle disconnect events once the call is actually established
-      if (callStatusRef.current !== 'CONNECTED') return
-
-      if (pc.connectionState === 'connected') {
-        if (disconnectTimer) { clearTimeout(disconnectTimer); disconnectTimer = null }
-      } else if (pc.connectionState === 'failed') {
-        sendSignal({ type: 'call_end', conversationId })
-        cleanup()
-      } else if (pc.connectionState === 'disconnected') {
-        disconnectTimer = setTimeout(() => {
-          if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-            sendSignal({ type: 'call_end', conversationId })
-            cleanup()
-          }
-        }, 6000)
-      }
-    }
-
-    pc.oniceconnectionstatechange = () => {
-      console.log('[WebRTC] iceConnectionState:', pc.iceConnectionState)
-    }
-
-    return pc
-  }, [sendSignal, cleanup])
-
-  // ─── Flush ICE queue ─────────────────────────────────────────────────────────
+  // ── flushIceCandidates ────────────────────────────────────────────────────────
   const flushIceCandidates = useCallback(async (pc: RTCPeerConnection) => {
     const queue = iceCandidateQueue.current.splice(0)
     for (const candidate of queue) {
@@ -186,20 +145,68 @@ export function useWebRTC() {
     }
   }, [])
 
-  // ─── End Call ────────────────────────────────────────────────────────────────
+  // ── createPeerConnection ──────────────────────────────────────────────────────
+  const createPeerConnection = useCallback((conversationId: string): RTCPeerConnection => {
+    if (peerConnection.current) {
+      peerConnection.current.ontrack = null
+      peerConnection.current.onicecandidate = null
+      peerConnection.current.close()
+    }
+    const pc = new RTCPeerConnection(ICE_SERVERS)
+    peerConnection.current = pc
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        sendSignalRef.current({ type: 'ice_candidate', conversationId, candidate: event.candidate })
+      }
+    }
+
+    pc.ontrack = (event) => {
+      console.log('[WebRTC] ontrack fired, streams:', event.streams?.length)
+      if (event.streams && event.streams[0]) {
+        setRemoteStream(event.streams[0])
+      } else if (event.track) {
+        const stream = new MediaStream([event.track])
+        setRemoteStream(stream)
+      }
+    }
+
+    pc.onconnectionstatechange = () => {
+      console.log('[WebRTC] connectionState:', pc.connectionState, '| callStatus:', callStatusRef.current)
+      // Only monitor after the call is fully connected
+      if (callStatusRef.current !== 'CONNECTED') return
+
+      if (pc.connectionState === 'connected') {
+        if (disconnectTimerRef.current) { clearTimeout(disconnectTimerRef.current); disconnectTimerRef.current = null }
+      } else if (pc.connectionState === 'failed') {
+        sendSignalRef.current({ type: 'call_end', conversationId })
+        cleanup()
+      } else if (pc.connectionState === 'disconnected') {
+        disconnectTimerRef.current = setTimeout(() => {
+          if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+            sendSignalRef.current({ type: 'call_end', conversationId })
+            cleanup()
+          }
+        }, 6000)
+      }
+    }
+
+    return pc
+  }, [cleanup])
+
+  // ── endCall ───────────────────────────────────────────────────────────────────
   const endCall = useCallback((conversationId: string, emit = true) => {
-    if (emit) sendSignal({ type: 'call_end', conversationId })
+    if (emit) sendSignalRef.current({ type: 'call_end', conversationId })
     cleanup()
-  }, [cleanup, sendSignal])
+  }, [cleanup])
 
-  // ─── Reject Call ─────────────────────────────────────────────────────────────
+  // ── rejectCall ────────────────────────────────────────────────────────────────
   const rejectCall = useCallback((conversationId: string) => {
-    clearAllTimers()
-    sendSignal({ type: 'call_reject', conversationId })
+    sendSignalRef.current({ type: 'call_reject', conversationId })
     cleanup()
-  }, [sendSignal, clearAllTimers, cleanup])
+  }, [cleanup])
 
-  // ─── Start Call (Caller) ─────────────────────────────────────────────────────
+  // ── startCall ─────────────────────────────────────────────────────────────────
   const startCall = useCallback(async (
     conversationId: string,
     targetUserId: string,
@@ -207,22 +214,20 @@ export function useWebRTC() {
     targetName?: string,
     targetAvatar?: string | null
   ) => {
-    if (!user || !targetUserId) {
-      console.error('[WebRTC] startCall: missing user or targetUserId')
-      return
-    }
+    const currentUser = userRef.current
+    if (!currentUser || !targetUserId) return
     console.log('[WebRTC] startCall →', { conversationId, targetUserId, mediaType })
 
     updateCallStatus('CALLING')
     setOutgoingCall({ targetName, targetAvatar })
     activeConversationId.current = conversationId
 
-    sendSignal({ type: 'call_start', conversationId, callerId: user.id, targetUserId, mediaType })
+    sendSignalRef.current({ type: 'call_start', conversationId, callerId: currentUser.id, targetUserId, mediaType })
 
     const stream = await getMedia(mediaType)
     if (!stream) { setTimeout(cleanup, 2500); return }
 
-    sendMessage(conversationId, `📞 Appel ${mediaType === 'video' ? 'vidéo' : 'audio'}`, 'SYSTEM')
+    sendMessageRef.current(conversationId, `📞 Appel ${mediaType === 'video' ? 'vidéo' : 'audio'}`, 'SYSTEM')
 
     const pc = createPeerConnection(conversationId)
     stream.getTracks().forEach(track => pc.addTrack(track, stream))
@@ -230,14 +235,14 @@ export function useWebRTC() {
     try {
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
-      const sent = sendSignal({
+      const sent = sendSignalRef.current({
         type: 'call_offer',
         conversationId,
         targetUserId,
         offer,
         mediaType,
-        callerName: user.profile?.displayName || user.email || 'Appel entrant',
-        callerAvatar: user.profile?.avatarUrl || null,
+        callerName: currentUser.profile?.displayName || currentUser.email || 'Appel entrant',
+        callerAvatar: currentUser.profile?.avatarUrl || null,
       })
       if (!sent) {
         import('sonner').then(({ toast }) => toast.error("Erreur réseau. Réessaie."))
@@ -246,7 +251,7 @@ export function useWebRTC() {
       }
       callerTimeoutRef.current = setTimeout(() => {
         if (callStatusRef.current === 'CALLING') {
-          sendSignal({ type: 'call_end', conversationId })
+          sendSignalRef.current({ type: 'call_end', conversationId })
           cleanup()
           import('sonner').then(({ toast }) => toast.info('Appel sans réponse'))
         }
@@ -255,9 +260,9 @@ export function useWebRTC() {
       console.error('[WebRTC] Error creating offer:', e)
       cleanup()
     }
-  }, [user, sendSignal, sendMessage, getMedia, createPeerConnection, cleanup, clearAllTimers, updateCallStatus])
+  }, [updateCallStatus, getMedia, createPeerConnection, cleanup])
 
-  // ─── Accept Call (Receiver) ───────────────────────────────────────────────────
+  // ── acceptCall ────────────────────────────────────────────────────────────────
   const acceptCall = useCallback(async () => {
     const callData = incomingCallRef.current
     if (!callData) { console.warn('[WebRTC] acceptCall: no incomingCallRef'); return }
@@ -280,7 +285,7 @@ export function useWebRTC() {
       await flushIceCandidates(pc)
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
-      sendSignal({
+      sendSignalRef.current({
         type: 'call_answer',
         conversationId: callData.conversationId,
         targetUserId: callData.callerId,
@@ -290,9 +295,9 @@ export function useWebRTC() {
       console.error('[WebRTC] Error creating answer:', e)
       cleanup()
     }
-  }, [clearAllTimers, updateCallStatus, getMedia, createPeerConnection, rejectCall, flushIceCandidates, sendSignal, cleanup])
+  }, [clearAllTimers, updateCallStatus, getMedia, createPeerConnection, rejectCall, flushIceCandidates, cleanup])
 
-  // ─── Toggle Mute / Video ─────────────────────────────────────────────────────
+  // ── Toggle Mute / Video ───────────────────────────────────────────────────────
   const toggleMute = useCallback(() => {
     const stream = localStreamRef.current
     if (!stream) return false
@@ -307,18 +312,37 @@ export function useWebRTC() {
     return stream.getVideoTracks()[0]?.enabled ?? false
   }, [])
 
-  // ─── Signaling Event Handler ─────────────────────────────────────────────────
+  // ── Signaling useEffect — runs ONCE (no function deps that change) ────────────
+  // All functions are accessed via stable refs, so this effect never re-runs
+  // during an active call, preventing listener removal during call setup.
+  const acceptCallRef = useRef(acceptCall)
+  const rejectCallRef = useRef(rejectCall)
+  const startCallRef = useRef(startCall)
+  const cleanupRef = useRef(cleanup)
+  const clearAllTimersRef = useRef(clearAllTimers)
+  const flushIceCandidatesRef = useRef(flushIceCandidates)
+  const updateCallStatusRef = useRef(updateCallStatus)
+
+  // Keep all function refs up to date without triggering useEffect re-runs
+  useEffect(() => { acceptCallRef.current = acceptCall }, [acceptCall])
+  useEffect(() => { rejectCallRef.current = rejectCall }, [rejectCall])
+  useEffect(() => { startCallRef.current = startCall }, [startCall])
+  useEffect(() => { cleanupRef.current = cleanup }, [cleanup])
+  useEffect(() => { clearAllTimersRef.current = clearAllTimers }, [clearAllTimers])
+  useEffect(() => { flushIceCandidatesRef.current = flushIceCandidates }, [flushIceCandidates])
+  useEffect(() => { updateCallStatusRef.current = updateCallStatus }, [updateCallStatus])
+
   useEffect(() => {
     // Native CallKit listeners
     const callKitListeners: Array<{ remove: () => void }> = []
     import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
       const accepted = IncomingCallKit.addListener('callAccepted', () => {
-        console.log('[Native] callAccepted, ref:', incomingCallRef.current)
-        acceptCall()
+        console.log('[Native] callAccepted, incomingCallRef:', incomingCallRef.current)
+        acceptCallRef.current()
       })
       const declined = IncomingCallKit.addListener('callDeclined', () => {
         console.log('[Native] callDeclined')
-        if (incomingCallRef.current) rejectCall(incomingCallRef.current.conversationId)
+        if (incomingCallRef.current) rejectCallRef.current(incomingCallRef.current.conversationId)
       })
       Promise.all([accepted, declined]).then(listeners => {
         callKitListeners.push(...listeners)
@@ -327,19 +351,21 @@ export function useWebRTC() {
 
     const handleSignal = async (e: Event) => {
       const data = (e as CustomEvent).detail
-      // Ignore messages not targeting us
-      if (data.targetUserId && user && data.targetUserId !== user.id) return
-      // Ignore our own messages
-      if (data.userId === user?.id) return
+      const currentUser = userRef.current
 
-      console.log('[WebRTC] Signal received:', data.type, data)
+      // Ignore messages not targeting us
+      if (data.targetUserId && currentUser && data.targetUserId !== currentUser.id) return
+      // Ignore our own messages
+      if (data.userId === currentUser?.id) return
+
+      console.log('[WebRTC] Signal received:', data.type, '| callStatus:', callStatusRef.current)
 
       switch (data.type) {
         case 'call_offer':
           if (callStatusRef.current === 'IDLE') {
             incomingCallRef.current = data
             setIncomingCall(data)
-            updateCallStatus('RINGING')
+            updateCallStatusRef.current('RINGING')
             import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
               IncomingCallKit.showIncomingCall({
                 callId: data.conversationId,
@@ -349,22 +375,22 @@ export function useWebRTC() {
             }).catch(() => {})
             ringingTimeoutRef.current = setTimeout(() => {
               if (callStatusRef.current === 'RINGING') {
-                sendSignal({ type: 'call_reject', conversationId: data.conversationId })
-                cleanup()
+                sendSignalRef.current({ type: 'call_reject', conversationId: data.conversationId })
+                cleanupRef.current()
               }
             }, RINGING_TIMEOUT_MS)
           } else {
-            sendSignal({ type: 'call_reject', conversationId: data.conversationId, targetUserId: data.userId })
+            sendSignalRef.current({ type: 'call_reject', conversationId: data.conversationId, targetUserId: data.userId })
           }
           break
 
         case 'call_answer':
           if (peerConnection.current && callStatusRef.current === 'CALLING') {
-            clearAllTimers()
+            clearAllTimersRef.current()
             try {
               await peerConnection.current.setRemoteDescription(new RTCSessionDescription(data.answer))
-              await flushIceCandidates(peerConnection.current)
-              updateCallStatus('CONNECTED')
+              await flushIceCandidatesRef.current(peerConnection.current)
+              updateCallStatusRef.current('CONNECTED')
             } catch (err) {
               console.error('[WebRTC] Error setting remote answer:', err)
             }
@@ -385,16 +411,16 @@ export function useWebRTC() {
 
         case 'call_reject':
           if (activeConversationId.current === data.conversationId) {
-            clearAllTimers()
-            cleanup()
+            clearAllTimersRef.current()
+            cleanupRef.current()
             import('sonner').then(({ toast }) => toast.info('Appel refusé'))
           }
           break
 
         case 'call_end':
           if (activeConversationId.current === data.conversationId) {
-            clearAllTimers()
-            cleanup()
+            clearAllTimersRef.current()
+            cleanupRef.current()
           }
           break
       }
@@ -402,7 +428,7 @@ export function useWebRTC() {
 
     const handleOutgoingCall = (e: Event) => {
       const { conversationId, targetUserId, mediaType, targetName, targetAvatar } = (e as CustomEvent).detail
-      startCall(conversationId, targetUserId, mediaType, targetName, targetAvatar)
+      startCallRef.current(conversationId, targetUserId, mediaType, targetName, targetAvatar)
     }
 
     window.addEventListener('ws:webrtc', handleSignal)
@@ -413,7 +439,8 @@ export function useWebRTC() {
       window.removeEventListener('call:start_outgoing', handleOutgoingCall)
       callKitListeners.forEach(l => l.remove())
     }
-  }, [user, sendSignal, cleanup, startCall, acceptCall, rejectCall, clearAllTimers, updateCallStatus, flushIceCandidates])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty deps: runs once. All state/functions accessed via refs.
 
   return {
     callStatus,
