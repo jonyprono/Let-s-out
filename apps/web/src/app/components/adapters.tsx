@@ -49,13 +49,16 @@ export function Splashscreen() {
     if (token) {
       nav('/home', { replace: true })
     } else if (hasSeenOnboarding) {
-      nav('/login', { replace: true })
+      nav('/welcome', { replace: true })
     }
   }, [token, hasSeenOnboarding, nav])
 
   if (token || hasSeenOnboarding) return null
 
-  return <SplashscreenBase onComplete={() => nav('/login', { replace: true })} />
+  return <SplashscreenBase onComplete={() => {
+    localStorage.setItem('letsout_onboarding_done', 'true')
+    nav('/welcome', { replace: true })
+  }} />
 }
 
 // ─── Welcome ──────────────────────────────────────────────────────────────────

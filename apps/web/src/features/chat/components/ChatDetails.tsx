@@ -14,8 +14,35 @@ import { apiClient } from '@/lib/api-client'
 import { shareLink } from '@/lib/utils'
 import { ContributeModal } from '@/components/shared/ContributeModal'
 import { toast } from 'sonner'
+import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Capacitor } from '@capacitor/core'
 import { resolveContributionAmount, computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 
+async function saveFileLocally(file: File | Blob, name: string) {
+  if (!Capacitor.isNativePlatform()) return null
+  try {
+    const base64Data = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+    
+    // remove data:image/png;base64, prefix
+    const data = base64Data.split(',')[1]
+
+    const savedFile = await Filesystem.writeFile({
+      path: `lets_out_media/${name}`,
+      data: data,
+      directory: Directory.Documents,
+      recursive: true
+    })
+    return savedFile.uri
+  } catch (e) {
+    console.error("Failed to save file locally", e)
+    return null
+  }
+}
 const REACTION_EMOJIS = ['❤️', '😂', '👍', '😮', '😢', '🙏']
 
 // Group reactions by emoji → { emoji, count, users }
@@ -133,6 +160,9 @@ export function ChatDetails() {
     if (!file || !id) return
     setIsUploading(true)
     try {
+      if (Capacitor.isNativePlatform()) {
+        await saveFileLocally(file, file.name)
+      }
       const url = await chatApi.uploadMedia(file)
       sendMsg({ content: url, type: file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE' })
     } catch {
@@ -165,6 +195,9 @@ export function ChatDetails() {
           
           setIsUploading(true)
           try {
+            if (Capacitor.isNativePlatform()) {
+              await saveFileLocally(audioBlob, file.name)
+            }
             const url = await chatApi.uploadMedia(file)
             sendMsg({ content: url, type: 'AUDIO' })
           } catch (e) {

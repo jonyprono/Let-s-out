@@ -76,26 +76,44 @@ import { AdminKycDetailPage } from '@/app/components/admin/AdminKycDetailPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
+  const user = useAuthStore((s) => s.user)
   if (!token) return <Navigate to="/login" replace />
+
+  const p: any = user?.profile || {}
+  const isProfileIncomplete = !p.displayName || !p.avatarUrl || !p.birthdate || !p.interests || p.interests.length === 0
+  if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
+
   return <>{children}</>
 }
 
 function GuestRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
-  if (token) return <Navigate to="/home" replace />
+  const user = useAuthStore((s) => s.user)
+  
+  if (token) {
+    const p: any = user?.profile || {}
+    const isProfileIncomplete = !p.displayName || !p.avatarUrl || !p.birthdate || !p.interests || p.interests.length === 0
+    if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
+    return <Navigate to="/home" replace />
+  }
   return <>{children}</>
 }
 
 function RootRoute() {
   const token = useAuthStore((s) => s.accessToken)
-  if (token) return <Navigate to="/home" replace />
+  const user = useAuthStore((s) => s.user)
+
+  if (token) {
+    const p: any = user?.profile || {}
+    const isProfileIncomplete = !p.displayName || !p.avatarUrl || !p.birthdate || !p.interests || p.interests.length === 0
+    if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
+    return <Navigate to="/home" replace />
+  }
 
   const isMobile = 
     Capacitor.isNativePlatform() ||
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|wv|CriOS|FxiOS/i.test(navigator.userAgent) ||
-    window.innerWidth <= 1024 ||
-    window.matchMedia('(display-mode: standalone)').matches ||
-    ('standalone' in window.navigator && (window.navigator as any).standalone === true)
+    window.matchMedia('(max-width: 1024px)').matches
 
   return isMobile ? <Navigate to="/app" replace /> : <LandingPage />
 }
