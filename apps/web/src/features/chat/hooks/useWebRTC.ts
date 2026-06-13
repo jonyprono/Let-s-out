@@ -29,6 +29,7 @@ export function useWebRTC() {
   const { sendSignal, sendMessage } = useChatSocket()
 
   const [callStatus, setCallStatus] = useState<CallStatus>('IDLE')
+  const callStatusRef = useRef<CallStatus>('IDLE')
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null)
   const [outgoingCall, setOutgoingCall] = useState<{ targetName?: string, targetAvatar?: string | null } | null>(null)
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
@@ -40,6 +41,10 @@ export function useWebRTC() {
   const isVideoEnabled = useRef<boolean>(true)
   const peerConnection = useRef<RTCPeerConnection | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
+  
+  useEffect(() => {
+    callStatusRef.current = callStatus
+  }, [callStatus])
 
   // Timers
   const callerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -142,7 +147,7 @@ export function useWebRTC() {
 
     if (activeConversationId.current) {
       import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
-        IncomingCallKit.endCall(activeConversationId.current!).catch(() => {})
+        IncomingCallKit.endCall({ callId: activeConversationId.current! }).catch(() => {})
       }).catch(() => {})
     }
 
@@ -171,7 +176,7 @@ export function useWebRTC() {
     
     if (activeConversationId.current) {
       import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
-        IncomingCallKit.endCall(activeConversationId.current!).catch(() => {})
+        IncomingCallKit.endCall({ callId: activeConversationId.current! }).catch(() => {})
       }).catch(() => {})
     }
     
@@ -364,7 +369,6 @@ export function useWebRTC() {
               IncomingCallKit.showIncomingCall({
                 callId: data.conversationId,
                 callerName: data.callerName || 'Appel entrant',
-                callerSubtitle: data.mediaType === 'video' ? 'Appel vidéo' : 'Appel audio',
                 hasVideo: data.mediaType === 'video',
                 avatarUrl: data.callerAvatar || undefined
               }).catch(err => console.error('showIncomingCall error', err))
