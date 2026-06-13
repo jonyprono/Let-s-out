@@ -51,12 +51,17 @@ function useRemoteMedia(remoteStream: MediaStream | null, mediaType: 'audio' | '
         video.style.objectFit = 'cover'
         el = video
       } else {
-        el = document.createElement('audio')
-        el.autoplay = true
+        const audio = document.createElement('audio')
+        audio.autoplay = true
+        audio.playsInline = true // Helps on iOS
+        el = audio
       }
       mediaElementRef.current = el
-      if (containerRef.current && mediaType === 'video') {
+      // ALWAYS append to DOM to prevent mobile WebView from suspending detached media elements
+      if (containerRef.current) {
         containerRef.current.appendChild(el)
+      } else {
+        document.body.appendChild(el)
       }
     }
 
@@ -79,6 +84,10 @@ function useRemoteMedia(remoteStream: MediaStream | null, mediaType: 'audio' | '
     return () => {
       mediaEl.pause()
       mediaEl.srcObject = null
+      if (mediaEl.parentNode) {
+        mediaEl.parentNode.removeChild(mediaEl)
+      }
+      mediaElementRef.current = null
     }
   }, [remoteStream, mediaType])
 
@@ -222,13 +231,11 @@ export function CallOverlay() {
     >
       {/* ── Remote video / Avatar area ─────────────────────────────────────── */}
       <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-        {/* Remote video container (imperatively managed) */}
-        {hasRemoteVideo && (
-          <div
-            ref={remoteVideoContainerRef}
-            className="w-full h-full"
-          />
-        )}
+        {/* Remote media container (imperatively managed, ALWAYS rendered so audio isn't suspended) */}
+        <div
+          ref={remoteVideoContainerRef}
+          className={`w-full h-full ${hasRemoteVideo ? 'block' : 'hidden'}`}
+        />
 
         {/* Tap-to-play overlay */}
         {needsUserTap && (
