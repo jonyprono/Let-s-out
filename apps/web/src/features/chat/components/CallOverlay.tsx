@@ -53,7 +53,7 @@ function useRemoteMedia(remoteStream: MediaStream | null, mediaType: 'audio' | '
       } else {
         const audio = document.createElement('audio')
         audio.autoplay = true
-        audio.playsInline = true // Helps on iOS
+        ;(audio as any).playsInline = true // Helps on iOS
         el = audio
       }
       mediaElementRef.current = el
