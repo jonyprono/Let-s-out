@@ -9,6 +9,8 @@ interface IncomingCallData {
   callerId: string
   mediaType: 'audio' | 'video'
   offer: RTCSessionDescriptionInit
+  callerName?: string
+  callerAvatar?: string | null
 }
 
 const ICE_SERVERS = {
