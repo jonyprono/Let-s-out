@@ -438,7 +438,13 @@ export function ChatDetails() {
                   return
                 }
                 window.dispatchEvent(new CustomEvent('call:start_outgoing', {
-                  detail: { conversationId: id, targetUserId: otherMember?.userId, mediaType: 'audio' }
+                  detail: { 
+                    conversationId: id, 
+                    targetUserId: otherMember?.userId, 
+                    targetName: otherMember?.user?.profile?.displayName,
+                    targetAvatar: otherMember?.user?.profile?.avatarUrl,
+                    mediaType: 'audio' 
+                  }
                 }))
               }}
               className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95"
@@ -452,7 +458,13 @@ export function ChatDetails() {
                   return
                 }
                 window.dispatchEvent(new CustomEvent('call:start_outgoing', {
-                  detail: { conversationId: id, targetUserId: otherMember?.userId, mediaType: 'video' }
+                  detail: { 
+                    conversationId: id, 
+                    targetUserId: otherMember?.userId, 
+                    targetName: otherMember?.user?.profile?.displayName,
+                    targetAvatar: otherMember?.user?.profile?.avatarUrl,
+                    mediaType: 'video' 
+                  }
                 }))
               }}
               className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95"

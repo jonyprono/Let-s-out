@@ -54,6 +54,7 @@ export function CallOverlay() {
   const {
     callStatus,
     incomingCall,
+    outgoingCall,
     localStream,
     remoteStream,
     activeConversationId,
@@ -190,8 +191,8 @@ export function CallOverlay() {
   }
 
   // ─── Active Call Screen ────────────────────────────────────────────────────
-  const callerName = conversation?.name || 'Discussion'
-  const callerAvatar = conversation?.avatarUrl || null
+  const callerName = incomingCall ? (incomingCall.callerName || 'Appel entrant') : (outgoingCall?.targetName || conversation?.name || 'Discussion')
+  const callerAvatar = incomingCall ? (incomingCall.callerAvatar || null) : (outgoingCall?.targetAvatar || conversation?.avatarUrl || null)
   const hasRemoteVideo = remoteStream && remoteStream.getVideoTracks().length > 0
   const hasLocalVideo = localStream && localStream.getVideoTracks().length > 0 && !isVideoOff
 

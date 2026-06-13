@@ -21,8 +21,8 @@ const resolveApiUrl = (): string => {
 
   if (typeof window !== 'undefined' && window.location && window.location.origin) {
     const origin = window.location.origin
-    // If running on Vercel or production domain, point to the live Render backend
-    if (origin.includes('vercel.app') || origin.includes('let-s-out-web')) {
+    // If running on any production domain, point to the live Render backend
+    if (!origin.includes('localhost') && !origin.includes('127.0.0.1') && !origin.includes('192.168.')) {
       return 'https://let-s-out.onrender.com/api/v1'
     }
     if (origin.includes(':3000')) {

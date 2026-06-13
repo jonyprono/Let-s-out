@@ -28,6 +28,7 @@ export function useWebRTC() {
 
   const [callStatus, setCallStatus] = useState<CallStatus>('IDLE')
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null)
+  const [outgoingCall, setOutgoingCall] = useState<{ targetName?: string, targetAvatar?: string | null } | null>(null)
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
   
@@ -155,11 +156,12 @@ export function useWebRTC() {
     clearAllTimers()
     sendSignal({ type: 'call_reject', conversationId })
     setIncomingCall(null)
+    setOutgoingCall(null)
     setCallStatus('IDLE')
   }, [sendSignal, clearAllTimers])
 
   // Start Call (Caller)
-  const startCall = useCallback(async (conversationId: string, targetUserId: string, mediaType: 'audio' | 'video') => {
+  const startCall = useCallback(async (conversationId: string, targetUserId: string, mediaType: 'audio' | 'video', targetName?: string, targetAvatar?: string | null) => {
     if (!user) return
     if (!targetUserId) {
       console.error('[WebRTC] startCall: targetUserId manquant !')
@@ -170,6 +172,7 @@ export function useWebRTC() {
     console.log('[WebRTC] startCall →', { conversationId, targetUserId, mediaType })
     
     setCallStatus('CALLING')
+    setOutgoingCall({ targetName, targetAvatar })
     activeConversationId.current = conversationId
 
     // Notify peer we are starting a call
@@ -379,8 +382,8 @@ export function useWebRTC() {
     }
 
     const handleOutgoingCall = (e: Event) => {
-      const { conversationId, targetUserId, mediaType } = (e as CustomEvent).detail
-      startCall(conversationId, targetUserId, mediaType)
+      const { conversationId, targetUserId, mediaType, targetName, targetAvatar } = (e as CustomEvent).detail
+      startCall(conversationId, targetUserId, mediaType, targetName, targetAvatar)
     }
 
     window.addEventListener('ws:webrtc', handleSignal)
@@ -395,6 +398,7 @@ export function useWebRTC() {
   return {
     callStatus,
     incomingCall,
+    outgoingCall,
     localStream,
     remoteStream,
     activeConversationId: activeConversationId.current,

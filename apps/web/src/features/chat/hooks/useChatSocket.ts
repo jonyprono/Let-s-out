@@ -30,7 +30,7 @@ function getWsUrl(token: string): string {
   } else {
     if (typeof window !== 'undefined' && window.location?.origin) {
       const origin = window.location.origin
-      if (origin.includes('vercel.app') || origin.includes('let-s-out-web')) {
+      if (!origin.includes('localhost') && !origin.includes('127.0.0.1') && !origin.includes('192.168.')) {
         wsUrl = 'wss://let-s-out.onrender.com'
       } else if (origin.includes(':3000')) {
         wsUrl = origin.replace('http://', 'ws://').replace(':3000', ':3001')
