@@ -228,7 +228,9 @@ export function useWebRTC() {
         conversationId,
         targetUserId,
         offer,
-        mediaType
+        mediaType,
+        callerName: user.profile?.displayName || user.email || 'Appel entrant',
+        callerAvatar: user.profile?.avatarUrl || null
       })
       console.log('[WebRTC] call_offer envoyé:', sent2, '— conversationId:', conversationId, '— targetUserId:', targetUserId)
 
@@ -379,14 +381,10 @@ export function useWebRTC() {
                   return currentStatus
                 })
               }, RINGING_TIMEOUT_MS)
-
-              return 'RINGING'
-            } else {
-              // Already in a call, reject automatically
-              sendSignal({ type: 'call_reject', conversationId: data.conversationId, targetUserId: data.userId })
-              return prev
-            }
-          })
+          } else {
+            // Already in a call, reject automatically
+            sendSignal({ type: 'call_reject', conversationId: data.conversationId, targetUserId: data.userId })
+          }
           break
         case 'call_answer':
           if (peerConnection.current) {

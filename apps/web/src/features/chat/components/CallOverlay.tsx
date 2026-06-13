@@ -67,6 +67,7 @@ export function CallOverlay() {
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
+  const remoteAudioRef = useRef<HTMLAudioElement>(null)
 
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOff, setIsVideoOff] = useState(false)
@@ -103,6 +104,9 @@ export function CallOverlay() {
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream
+    }
+    if (remoteAudioRef.current && remoteStream) {
+      remoteAudioRef.current.srcObject = remoteStream
     }
   }, [remoteStream, callStatus])
 
@@ -216,6 +220,11 @@ export function CallOverlay() {
           />
         ) : (
           <div className="flex flex-col items-center justify-center gap-6">
+            {/* Audio fallback */}
+            {remoteStream && (
+              <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+            )}
+            
             {/* Avatar */}
             <div className="w-40 h-40 rounded-full overflow-hidden ring-4 ring-white/20 shadow-2xl">
               <SafeImage
