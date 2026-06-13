@@ -152,27 +152,30 @@ export default async function chatRoutes(app: FastifyInstance) {
                 select: { userId: true },
               })
 
-              // Send FCM push to each member who is NOT connected via WS
+              // Only send FCM push if the user is NOT connected via WebSocket.
+              // If they are online via WS, the call_offer was already relayed above.
+              // Sending FCM to an online user would cause a DUPLICATE call_offer on the client
+              // which triggers an auto-reject (callStatus !== 'IDLE') and silently kills the call.
               await Promise.allSettled(
                 members.map(async ({ userId: recipientId }) => {
                   const isOnline = connections.has(recipientId) && connections.get(recipientId)!.size > 0
-                  // Always send FCM push so background-killed apps can receive it
+                  if (isOnline) {
+                    app.log.info(`[FCM] Skipping push for ${recipientId} — already online via WS`)
+                    return
+                  }
                   await sendPushToUser(app.prisma, recipientId, {
                     title: `📞 Appel ${mediaLabel} entrant`,
                     body: `${callerName} vous appelle`,
-                    // isCall = true → TTL 30s + data-only Android (réveille l'app en Doze mode)
                     isCall: true,
                     data: {
                       type: 'INCOMING_CALL',
                       conversationId: msg.conversationId,
                       callerId: userId,
                       mediaType,
-                      // Pass offer as JSON string so the front can reconstruct the WebRTC offer
                       offer: JSON.stringify((msg as any).offer ?? null),
                       callerName,
                       callerAvatar: callerProfile?.avatarUrl ?? '',
-                      // Signal front that the WS relayed the offer too
-                      wsRelayed: isOnline ? 'true' : 'false',
+                      wsRelayed: 'false',
                     },
                   })
                 })
