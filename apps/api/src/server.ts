@@ -73,10 +73,10 @@ async function bootstrap() {
   // ── Seed Admin ─────────────────────────────────────────────────
   try {
     const adminPhone = '+2290156363337'
+    const bcrypt = await import('bcryptjs')
+    const passwordHash = await bcrypt.hash('Azerty01', 10)
     const existingAdmin = await app.prisma.admin.findUnique({ where: { phone: adminPhone } })
     if (!existingAdmin) {
-      const bcrypt = await import('bcryptjs')
-      const passwordHash = await bcrypt.hash('Azerty01', 10)
       await app.prisma.admin.create({
         data: {
           phone: adminPhone,
@@ -85,6 +85,13 @@ async function bootstrap() {
         }
       })
       app.log.info('✅ Default admin account created')
+    } else if (!existingAdmin.passwordHash) {
+      // Admin already exists but was created before passwordHash column — update it
+      await app.prisma.admin.update({
+        where: { phone: adminPhone },
+        data: { passwordHash, name: existingAdmin.name || 'Admin Principal' }
+      })
+      app.log.info('✅ Default admin password hash updated')
     }
   } catch (err) {
     app.log.warn('⚠️ Could not seed default admin.')
