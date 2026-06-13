@@ -89,8 +89,13 @@ export function AdminLoginPage() {
     try {
       if (confirmationResult) {
         // Try Firebase first
-        const result = await confirmationResult.confirm(otp)
-        idToken = await result.user.getIdToken()
+        try {
+          const result = await confirmationResult.confirm(otp)
+          idToken = await result.user.getIdToken()
+        } catch (firebaseErr) {
+          // Fallback to backend validation (WhatsApp OTP)
+          backendCode = otp
+        }
       } else {
         // Fallback to backend validation
         backendCode = otp
