@@ -456,7 +456,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           e.stopPropagation();
                           if (!event.creator?.id) return;
                           try {
-                            await apiClient.post(`/users/${event.creator.id}/follow`, {});
+                            await usersApi.followUser(event.creator.id);
                             toast.success("Vous suivez maintenant cet organisateur !");
                           } catch (err: any) {
                             if (err?.response?.status === 400 || err?.response?.data?.message?.includes('Already')) {
