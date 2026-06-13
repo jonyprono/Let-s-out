@@ -60,15 +60,11 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
 
     await admin.messaging(app).send({
       token,
-      // Pour les appels : pas de bloc 'notification' sur Android → data-only
-      // Cela réveille l'app même si elle est en arrière-plan (Doze mode)
-      ...(!isCall && {
-        notification: {
-          title: payload.title,
-          body: payload.body,
-          imageUrl: payload.imageUrl,
-        },
-      }),
+      notification: {
+        title: payload.title,
+        body: payload.body,
+        imageUrl: payload.imageUrl,
+      },
       data: {
         ...(payload.data || {}),
         // Pour les appels en data-only : inclure title/body dans data
@@ -82,7 +78,7 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
         priority: 'high',
         // TTL : 30s pour les appels (inutile de livrer un appel vieux de 2 min)
         ttl: isCall ? 30_000 : 3_600_000,
-        notification: isCall ? undefined : {
+        notification: {
           sound: 'default',
           clickAction: 'FLUTTER_NOTIFICATION_CLICK',
         },
