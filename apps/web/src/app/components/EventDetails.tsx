@@ -19,7 +19,6 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
 import { chatApi } from '@/features/chat/api'
-import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { toast } from 'sonner'
@@ -62,8 +61,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false)
   const [showParticipantsModal, setShowParticipantsModal] = useState(false)
   const [showPendingModal, setShowPendingModal] = useState(false)
-  const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set())
-  const [invitedUsers, setInvitedUsers] = useState<Set<string>>(new Set())
 
   // ── Share Modal state ───────────────────────────────────────────────
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -107,13 +104,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     enabled: !!id,
   })
 
-  // Fetch friends for invite modal
-  const { data: friendsData, isLoading: friendsLoading } = useQuery({
-    queryKey: ['users', 'friends'],
-    queryFn: () => usersApi.getFriends(),
-    enabled: showInviteModal,
-  })
-  const friends = Array.isArray(friendsData) ? friendsData : (friendsData as any)?.data ?? []
+
 
   // Fetch pending bookings for organizer
   const isCreator = user?.id === event?.creatorId
