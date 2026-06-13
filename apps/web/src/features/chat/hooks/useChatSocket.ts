@@ -45,8 +45,10 @@ function getWsUrl(token: string): string {
 }
 
 function connectGlobal(token: string) {
-  // Already connected with the same token
-  if (globalWs?.readyState === WebSocket.OPEN && currentToken === token) return
+  // Already connected or currently connecting with the same token
+  if (globalWs && (globalWs.readyState === WebSocket.OPEN || globalWs.readyState === WebSocket.CONNECTING) && currentToken === token) {
+    return
+  }
   // Close stale connection
   if (globalWs) {
     globalWs.onclose = null // prevent auto-reconnect on manual close
@@ -62,6 +64,13 @@ function connectGlobal(token: string) {
   ws.onopen = () => {
     console.log('[WS Global] Connected')
     if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null }
+    // Flush queued messages
+    while (messageQueue.length > 0) {
+      const payload = messageQueue.shift()
+      if (payload && globalWs?.readyState === WebSocket.OPEN) {
+        globalWs.send(JSON.stringify(payload))
+      }
+    }
   }
 
   ws.onmessage = (event) => {
@@ -92,12 +101,21 @@ function connectGlobal(token: string) {
   }
 }
 
+const messageQueue: Record<string, any>[] = []
+
 export function sendGlobal(payload: Record<string, any>): boolean {
   if (globalWs?.readyState === WebSocket.OPEN) {
     globalWs.send(JSON.stringify(payload))
     return true
   }
-  console.warn('[WS Global] Cannot send — WebSocket not open. State:', globalWs?.readyState)
+  
+  if (globalWs?.readyState === WebSocket.CONNECTING) {
+    console.log('[WS Global] Queueing message (WebSocket is connecting)')
+    messageQueue.push(payload)
+    return true // Assume it will be sent when connected
+  }
+
+  console.warn('[WS Global] Cannot send — WebSocket not open/connecting. State:', globalWs?.readyState)
   return false
 }
 

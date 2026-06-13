@@ -24,7 +24,7 @@ const RINGING_TIMEOUT_MS = 60_000 // 60s côté receveur
 
 export function useWebRTC() {
   const { user } = useAuthStore()
-  const { sendSignal } = useChatSocket()
+  const { sendSignal, sendMessage } = useChatSocket()
 
   const [callStatus, setCallStatus] = useState<CallStatus>('IDLE')
   const [incomingCall, setIncomingCall] = useState<IncomingCallData | null>(null)
@@ -187,6 +187,9 @@ export function useWebRTC() {
       setTimeout(() => cleanup(), 2500)
       return
     }
+
+    // Send a system message to the chat
+    sendMessage(conversationId, `📞 Appel ${mediaType === 'video' ? 'vidéo' : 'audio'}`, 'SYSTEM')
 
     const pc = createPeerConnection(conversationId)
     stream.getTracks().forEach(track => pc.addTrack(track, stream))
