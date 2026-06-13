@@ -97,7 +97,7 @@ export function CallOverlay() {
 
   // Assign streams to video elements
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
+    if (localVideoRef.current && localStream && localVideoRef.current.srcObject !== localStream) {
       localVideoRef.current.srcObject = localStream
     }
   }, [localStream, callStatus])
@@ -113,11 +113,11 @@ export function CallOverlay() {
       }
     }
 
-    if (remoteVideoRef.current && remoteStream) {
+    if (remoteVideoRef.current && remoteStream && remoteVideoRef.current.srcObject !== remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream
       playMedia(remoteVideoRef.current)
     }
-    if (remoteAudioRef.current && remoteStream) {
+    if (remoteAudioRef.current && remoteStream && remoteAudioRef.current.srcObject !== remoteStream) {
       remoteAudioRef.current.srcObject = remoteStream
       playMedia(remoteAudioRef.current)
     }
