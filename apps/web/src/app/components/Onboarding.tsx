@@ -152,8 +152,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       </div>
 
       {/* Header */}
-      <div className="px-6 py-200 border-b border-gray-100">
-        <div className="flex items-center gap-200">
+      <div className="px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-4">
           {step > 1 && (
             <button onClick={() => setStep(step - 1)}>
               <ChevronLeft className="w-6 h-6" />
@@ -170,7 +170,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           <div>
             <h2 className="text-xl mb-6">Informations personnelles</h2>
 
-            <div className="space-y-200">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm text-text-secondary mb-2 block">Prénom</label>
                 <input
@@ -228,14 +228,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <button 
                 onClick={handleLocate}
                 disabled={isLocating}
-                className="flex items-center gap-2 text-sm font-medium text-action-primary bg-brand-orange-50 px-150 py-1.5 rounded-full active:scale-95 transition-transform"
+                className="flex items-center gap-2 text-sm font-medium text-action-primary bg-brand-orange-50 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
               >
                 {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
                 Me localiser
               </button>
             </div>
 
-            <div className="space-y-200">
+            <div className="space-y-4">
               <div>
                 <label className="text-sm text-text-secondary mb-2 block">Pays</label>
                 <select
@@ -314,7 +314,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div className="flex flex-col items-center">
               {/* Avatar preview */}
               <div
-                className="w-40 h-40 rounded-full bg-gray-100 border-2 border-dashed border-border-primary flex items-center justify-center mb-200 overflow-hidden relative cursor-pointer active:scale-95 transition-transform"
+                className="w-40 h-40 rounded-full bg-gray-100 border-2 border-dashed border-border-primary flex items-center justify-center mb-4 overflow-hidden relative cursor-pointer active:scale-95 transition-transform"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {isUploadingPhoto ? (
@@ -349,7 +349,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingPhoto}
-                className="text-action-primary text-sm font-semibold bg-brand-orange-50 px-200 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
+                className="text-action-primary text-sm font-semibold bg-brand-orange-50 px-4 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
               >
                 {isUploadingPhoto ? 'Upload en cours...' : profilePicture ? 'Changer la photo' : 'Choisir une photo'}
               </button>
@@ -366,7 +366,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         <button
           onClick={handleNext}
           disabled={step === 3 && selectedInterests.length < 3}
-          className="w-full bg-action-primary active:bg-action-primary-hover text-white py-150.5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-action-primary active:bg-action-primary-hover text-white py-3 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {step === 4 ? 'Terminer' : 'Suivant'}
         </button>

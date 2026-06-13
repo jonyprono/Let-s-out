@@ -43,20 +43,16 @@ const EventSuccessBase  = lazy(() => import('@/app/components/EventSuccessScreen
 export function Splashscreen() {
   const nav = useNavigate()
   const token = useAuthStore((s) => s.accessToken)
-  const hasSeenOnboarding = localStorage.getItem('letsout_onboarding_done')
 
   useEffect(() => {
     if (token) {
       nav('/home', { replace: true })
-    } else if (hasSeenOnboarding) {
-      nav('/welcome', { replace: true })
     }
-  }, [token, hasSeenOnboarding, nav])
+  }, [token, nav])
 
-  if (token || hasSeenOnboarding) return null
+  if (token) return null
 
   return <SplashscreenBase onComplete={() => {
-    localStorage.setItem('letsout_onboarding_done', 'true')
     nav('/welcome', { replace: true })
   }} />
 }
