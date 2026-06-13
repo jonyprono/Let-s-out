@@ -119,7 +119,7 @@ function AudioMessage({ src, isMe }: { src: string, isMe: boolean }) {
   )
 }
 
-function VideoMessage({ src, isMe }: { src: string, isMe: boolean }) {
+function VideoMessage({ src }: { src: string, isMe: boolean }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   
   return (
