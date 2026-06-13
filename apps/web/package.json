@@ -24,6 +24,7 @@
     "@capacitor/ios": "^8.3.1",
     "@capacitor/push-notifications": "^8.1.1",
     "@capacitor/status-bar": "^8.0.2",
+    "@capgo/capacitor-incoming-call-kit": "^8.2.1",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",
     "@radix-ui/react-aspect-ratio": "1.1.2",

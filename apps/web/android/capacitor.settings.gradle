@@ -29,5 +29,8 @@ project(':capacitor-push-notifications').projectDir = new File('../../../node_mo
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.3.1/node_modules/@capacitor/status-bar/android')
 
+include ':capgo-capacitor-incoming-call-kit'
+project(':capgo-capacitor-incoming-call-kit').projectDir = new File('../../../node_modules/.pnpm/@capgo+capacitor-incoming-call-kit@8.2.1_@capacitor+core@8.3.1/node_modules/@capgo/capacitor-incoming-call-kit/android')
+
 include ':capacitor-native-settings'
 project(':capacitor-native-settings').projectDir = new File('../../../node_modules/.pnpm/capacitor-native-settings@8.1.0_@capacitor+core@8.3.1/node_modules/capacitor-native-settings/android')

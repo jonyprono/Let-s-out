@@ -36,6 +36,7 @@ export function useWebRTC() {
   
   // Track active call details
   const activeConversationId = useRef<string | null>(null)
+  const incomingCallRef = useRef<IncomingCallData | null>(null)
   const isVideoEnabled = useRef<boolean>(true)
   const peerConnection = useRef<RTCPeerConnection | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
@@ -129,7 +130,7 @@ export function useWebRTC() {
 
   // Cleanup function
   const cleanup = useCallback(() => {
-    clearAllTimers()
+    console.log('[WebRTC] cleanup')
     if (peerConnection.current) {
       peerConnection.current.close()
       peerConnection.current = null
@@ -138,11 +139,21 @@ export function useWebRTC() {
       localStreamRef.current.getTracks().forEach(track => track.stop())
       localStreamRef.current = null
     }
+
+    if (activeConversationId.current) {
+      import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
+        IncomingCallKit.endCall(activeConversationId.current!).catch(() => {})
+      }).catch(() => {})
+    }
+
+    activeConversationId.current = null
+    incomingCallRef.current = null
     setLocalStream(null)
     setRemoteStream(null)
-    setCallStatus('IDLE')
     setIncomingCall(null)
-    activeConversationId.current = null
+    setOutgoingCall(null)
+    setCallStatus('IDLE')
+    clearAllTimers()
   }, [clearAllTimers])
 
   // End Call
@@ -157,6 +168,15 @@ export function useWebRTC() {
   const rejectCall = useCallback((conversationId: string) => {
     clearAllTimers()
     sendSignal({ type: 'call_reject', conversationId })
+    
+    if (activeConversationId.current) {
+      import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
+        IncomingCallKit.endCall(activeConversationId.current!).catch(() => {})
+      }).catch(() => {})
+    }
+    
+    activeConversationId.current = null
+    incomingCallRef.current = null
     setIncomingCall(null)
     setOutgoingCall(null)
     setCallStatus('IDLE')
@@ -300,6 +320,24 @@ export function useWebRTC() {
 
   // Handle incoming signaling messages
   useEffect(() => {
+    import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
+      IncomingCallKit.addListener('callAccepted', (call) => {
+        console.log('[Native] callAccepted', call)
+        // L'utilisateur a décroché depuis l'écran natif
+        if (incomingCallRef.current) {
+          acceptCall()
+        }
+      })
+      
+      IncomingCallKit.addListener('callDeclined', (call) => {
+        console.log('[Native] callDeclined', call)
+        // L'utilisateur a raccroché depuis l'écran natif
+        if (incomingCallRef.current) {
+          rejectCall(incomingCallRef.current.conversationId)
+        }
+      })
+    }).catch(err => console.error('IncomingCallKit not available', err))
+
     const handleSignal = async (e: Event) => {
       const data = (e as CustomEvent).detail
       
@@ -314,17 +352,24 @@ export function useWebRTC() {
           // Optional: We can show ringing earlier here if needed
           break
         case 'call_offer':
-          setCallStatus(prev => {
-            if (prev === 'IDLE') {
-              setIncomingCall({
-                conversationId: data.conversationId,
-                callerId: data.userId,
-                mediaType: data.mediaType || 'audio',
-                offer: data.offer,
-              })
-
-              // ── Timeout côté receveur : 60 secondes sans décrocher ──────────
-              ringingTimeoutRef.current = setTimeout(() => {
+          if (callStatusRef.current === 'IDLE' || callStatusRef.current === 'CALLING') {
+            setIncomingCall(data)
+            incomingCallRef.current = data
+            setCallStatus('RINGING')
+            
+            // Afficher l'écran natif si on est sur mobile
+            import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
+              IncomingCallKit.showIncomingCall({
+                callId: data.conversationId,
+                callerName: data.callerName || 'Appel entrant',
+                callerSubtitle: data.mediaType === 'video' ? 'Appel vidéo' : 'Appel audio',
+                hasVideo: data.mediaType === 'video',
+                avatarUrl: data.callerAvatar || undefined
+              }).catch(err => console.error('showIncomingCall error', err))
+            }).catch(() => {})
+            
+            // Set 60s timeout for ringing
+            ringingTimeoutRef.current = setTimeout(() => {
                 setCallStatus(currentStatus => {
                   if (currentStatus === 'RINGING') {
                     sendSignal({ type: 'call_reject', conversationId: data.conversationId })

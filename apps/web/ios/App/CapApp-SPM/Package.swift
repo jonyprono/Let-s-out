@@ -20,6 +20,7 @@ let package = Package(
         .package(name: "CapacitorHaptics", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+haptics@8.0.2_@capacitor+core@8.3.1\node_modules\@capacitor\haptics"),
         .package(name: "CapacitorPushNotifications", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+push-notifications@8.1.1_@capacitor+core@8.3.1\node_modules\@capacitor\push-notifications"),
         .package(name: "CapacitorStatusBar", path: "..\..\..\..\..\node_modules\.pnpm\@capacitor+status-bar@8.0.2_@capacitor+core@8.3.1\node_modules\@capacitor\status-bar"),
+        .package(name: "CapgoCapacitorIncomingCallKit", path: "..\..\..\..\..\node_modules\.pnpm\@capgo+capacitor-incoming-call-kit@8.2.1_@capacitor+core@8.3.1\node_modules\@capgo\capacitor-incoming-call-kit"),
         .package(name: "CapacitorNativeSettings", path: "..\..\..\..\..\node_modules\.pnpm\capacitor-native-settings@8.1.0_@capacitor+core@8.3.1\node_modules\capacitor-native-settings")
     ],
     targets: [
@@ -36,6 +37,7 @@ let package = Package(
                 .product(name: "CapacitorHaptics", package: "CapacitorHaptics"),
                 .product(name: "CapacitorPushNotifications", package: "CapacitorPushNotifications"),
                 .product(name: "CapacitorStatusBar", package: "CapacitorStatusBar"),
+                .product(name: "CapgoCapacitorIncomingCallKit", package: "CapgoCapacitorIncomingCallKit"),
                 .product(name: "CapacitorNativeSettings", package: "CapacitorNativeSettings")
             ]
         )

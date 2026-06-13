@@ -162,6 +162,9 @@ importers:
       '@capacitor/status-bar':
         specifier: ^8.0.2
         version: 8.0.2(@capacitor/core@8.3.1)
+      '@capgo/capacitor-incoming-call-kit':
+        specifier: ^8.2.1
+        version: 8.2.1(@capacitor/core@8.3.1)
       '@radix-ui/react-accordion':
         specifier: 1.2.3
         version: 1.2.3(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -534,6 +537,11 @@ packages:
 
   '@capacitor/synapse@1.0.4':
     resolution: {integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==}
+
+  '@capgo/capacitor-incoming-call-kit@8.2.1':
+    resolution: {integrity: sha512-VDo21OjZ/2jjAqlJ5MTBrzDwaPPGtu2V0o3DIZT/K+f0jk0SH1at5P4EwFUwKjWRiTPTMdYa6grtJI3yjDzxuQ==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -4739,6 +4747,10 @@ snapshots:
       '@capacitor/core': 8.3.1
 
   '@capacitor/synapse@1.0.4': {}
+
+  '@capgo/capacitor-incoming-call-kit@8.2.1(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
