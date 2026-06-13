@@ -54,6 +54,8 @@ export function AppBootstrap() {
                 type: 'call_offer',
                 conversationId: data.conversationId,
                 callerId: data.callerId,
+                // ⚠️ userId est requis par useWebRTC pour identifier l'appelant (data.userId)
+                userId: data.callerId,
                 mediaType: data.mediaType || 'audio',
                 offer,
                 callerName: data.callerName || '',

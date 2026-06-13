@@ -60,7 +60,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     socket.on('message', async (raw: Buffer | string) => {
       try {
         const msg = JSON.parse(raw.toString()) as {
-          type: 'message' | 'typing' | 'read'
+          type: 'message' | 'typing' | 'read' | 'call_start' | 'call_offer' | 'call_answer' | 'ice_candidate' | 'call_reject' | 'call_end'
           conversationId: string
           content?: string
           messageType?: string
@@ -160,6 +160,8 @@ export default async function chatRoutes(app: FastifyInstance) {
                   await sendPushToUser(app.prisma, recipientId, {
                     title: `📞 Appel ${mediaLabel} entrant`,
                     body: `${callerName} vous appelle`,
+                    // isCall = true → TTL 30s + data-only Android (réveille l'app en Doze mode)
+                    isCall: true,
                     data: {
                       type: 'INCOMING_CALL',
                       conversationId: msg.conversationId,
@@ -176,7 +178,7 @@ export default async function chatRoutes(app: FastifyInstance) {
                 })
               )
             } catch (callPushErr) {
-              app.log.warn('[FCM] Failed to send call push:', callPushErr)
+              app.log.warn(`[FCM] Failed to send call push: ${String(callPushErr)}`)
             }
           }
         }

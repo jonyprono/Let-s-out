@@ -5,6 +5,51 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { useQuery } from '@tanstack/react-query'
 import { chatApi } from '../api'
 
+// ─── Composant audio de sonnerie ──────────────────────────────────────────────
+function useRingtone(callStatus: string) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    // Créer l'élément audio une seule fois
+    if (!audioRef.current) {
+      const audio = new Audio('/sounds/ringtone.wav')
+      audio.loop = true
+      audio.volume = 1.0
+      audioRef.current = audio
+    }
+
+    const audio = audioRef.current
+
+    if (callStatus === 'RINGING' || callStatus === 'CALLING') {
+      // Jouer la sonnerie (avec gestion des politiques autoplay)
+      const playPromise = audio.play()
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay bloqué — on réessaie sur interaction utilisateur
+          const resume = () => {
+            audio.play().catch(() => {})
+            window.removeEventListener('touchstart', resume)
+            window.removeEventListener('click', resume)
+          }
+          window.addEventListener('touchstart', resume, { once: true })
+          window.addEventListener('click', resume, { once: true })
+        })
+      }
+    } else {
+      // Arrêter la sonnerie quand l'appel change d'état
+      audio.pause()
+      audio.currentTime = 0
+    }
+
+    return () => {
+      audio.pause()
+      audio.currentTime = 0
+    }
+  }, [callStatus])
+
+  return audioRef
+}
+
 export function CallOverlay() {
   const {
     callStatus,
@@ -25,6 +70,9 @@ export function CallOverlay() {
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOff, setIsVideoOff] = useState(false)
   const [callDuration, setCallDuration] = useState(0)
+
+  // ── Sonnerie / ring-back ──────────────────────────────────────────────────
+  useRingtone(callStatus)
 
   // Fetch caller/conversation details
   const convId = incomingCall?.conversationId || activeConversationId

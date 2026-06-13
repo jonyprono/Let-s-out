@@ -18,6 +18,10 @@ const ICE_SERVERS = {
   ],
 }
 
+// Timeout avant raccroché automatique (en millisecondes)
+const CALLER_TIMEOUT_MS = 45_000  // 45s côté appelant
+const RINGING_TIMEOUT_MS = 60_000 // 60s côté receveur
+
 export function useWebRTC() {
   const { user } = useAuthStore()
   const { sendSignal } = useChatSocket()
@@ -32,6 +36,21 @@ export function useWebRTC() {
   const isVideoEnabled = useRef<boolean>(true)
   const peerConnection = useRef<RTCPeerConnection | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
+
+  // Timers
+  const callerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const ringingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearAllTimers = useCallback(() => {
+    if (callerTimeoutRef.current) {
+      clearTimeout(callerTimeoutRef.current)
+      callerTimeoutRef.current = null
+    }
+    if (ringingTimeoutRef.current) {
+      clearTimeout(ringingTimeoutRef.current)
+      ringingTimeoutRef.current = null
+    }
+  }, [])
 
   // Initialize WebRTC Peer Connection
   const createPeerConnection = useCallback((conversationId: string) => {
@@ -76,7 +95,6 @@ export function useWebRTC() {
       return stream
     } catch (error: any) {
       console.error('Error accessing media devices.', error)
-      // Show user-friendly error based on error type
       if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {
         import('sonner').then(({ toast }) => {
           toast.error(mediaType === 'video'
@@ -108,6 +126,7 @@ export function useWebRTC() {
 
   // Cleanup function
   const cleanup = useCallback(() => {
+    clearAllTimers()
     if (peerConnection.current) {
       peerConnection.current.close()
       peerConnection.current = null
@@ -121,7 +140,7 @@ export function useWebRTC() {
     setCallStatus('IDLE')
     setIncomingCall(null)
     activeConversationId.current = null
-  }, [])
+  }, [clearAllTimers])
 
   // End Call
   const endCall = useCallback((conversationId: string, emit = true) => {
@@ -133,9 +152,11 @@ export function useWebRTC() {
 
   // Reject Call
   const rejectCall = useCallback((conversationId: string) => {
+    clearAllTimers()
     sendSignal({ type: 'call_reject', conversationId })
     setIncomingCall(null)
-  }, [sendSignal])
+    setCallStatus('IDLE')
+  }, [sendSignal, clearAllTimers])
 
   // Start Call (Caller)
   const startCall = useCallback(async (conversationId: string, targetUserId: string, mediaType: 'audio' | 'video') => {
@@ -155,7 +176,6 @@ export function useWebRTC() {
 
     const stream = await getMedia(mediaType)
     if (!stream) {
-      // Keep CALLING state briefly so user sees the error toast, then cleanup
       setTimeout(() => cleanup(), 2500)
       return
     }
@@ -173,16 +193,33 @@ export function useWebRTC() {
         offer,
         mediaType
       })
+
+      // ── Timeout côté appelant : 45 secondes sans réponse ──────────────────
+      callerTimeoutRef.current = setTimeout(() => {
+        // Vérifier qu'on est encore en train d'appeler (pas connecté)
+        setCallStatus(prev => {
+          if (prev === 'CALLING') {
+            sendSignal({ type: 'call_end', conversationId })
+            cleanup()
+            import('sonner').then(({ toast }) => {
+              toast.info('Appel sans réponse')
+            })
+          }
+          return prev
+        })
+      }, CALLER_TIMEOUT_MS)
+
     } catch (e) {
       console.error('Error creating offer', e)
       cleanup()
     }
-  }, [user, sendSignal, createPeerConnection, cleanup])
+  }, [user, sendSignal, createPeerConnection, cleanup, clearAllTimers])
 
   // Accept Call (Receiver)
   const acceptCall = useCallback(async () => {
     if (!incomingCall) return
 
+    clearAllTimers() // Annule le timer de sonnerie
     setCallStatus('CONNECTED')
     activeConversationId.current = incomingCall.conversationId
 
@@ -211,7 +248,7 @@ export function useWebRTC() {
       console.error('Error creating answer', e)
       cleanup()
     }
-  }, [incomingCall, createPeerConnection, rejectCall, cleanup, sendSignal])
+  }, [incomingCall, createPeerConnection, rejectCall, cleanup, sendSignal, clearAllTimers])
 
   // Toggle Mute
   const toggleMute = useCallback(() => {
@@ -261,6 +298,19 @@ export function useWebRTC() {
                 mediaType: data.mediaType || 'audio',
                 offer: data.offer,
               })
+
+              // ── Timeout côté receveur : 60 secondes sans décrocher ──────────
+              ringingTimeoutRef.current = setTimeout(() => {
+                setCallStatus(currentStatus => {
+                  if (currentStatus === 'RINGING') {
+                    sendSignal({ type: 'call_reject', conversationId: data.conversationId })
+                    setIncomingCall(null)
+                    return 'IDLE'
+                  }
+                  return currentStatus
+                })
+              }, RINGING_TIMEOUT_MS)
+
               return 'RINGING'
             } else {
               // Already in a call, reject automatically
@@ -271,6 +321,7 @@ export function useWebRTC() {
           break
         case 'call_answer':
           if (peerConnection.current) {
+            clearAllTimers() // L'appelé a décroché, annuler le timeout
             setCallStatus(prev => {
               if (prev === 'CALLING') {
                 peerConnection.current!.setRemoteDescription(new RTCSessionDescription(data.answer))
@@ -292,11 +343,16 @@ export function useWebRTC() {
           break
         case 'call_reject':
           if (activeConversationId.current === data.conversationId) {
+            clearAllTimers()
             cleanup()
+            import('sonner').then(({ toast }) => {
+              toast.info('Appel refusé')
+            })
           }
           break
         case 'call_end':
           if (activeConversationId.current === data.conversationId) {
+            clearAllTimers()
             cleanup()
           }
           break
@@ -315,7 +371,7 @@ export function useWebRTC() {
       window.removeEventListener('ws:webrtc', handleSignal)
       window.removeEventListener('call:start_outgoing', handleOutgoingCall)
     }
-  }, [user, sendSignal, cleanup, startCall])
+  }, [user, sendSignal, cleanup, startCall, clearAllTimers])
 
   return {
     callStatus,

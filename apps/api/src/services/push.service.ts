@@ -43,6 +43,8 @@ export interface PushPayload {
   body: string
   data?: Record<string, string>
   imageUrl?: string
+  /** Si true : notification d'appel — TTL court, priorité maximale */
+  isCall?: boolean
 }
 
 /**
@@ -54,26 +56,50 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
 
   try {
     const admin = require('firebase-admin')
+    const isCall = payload.isCall === true
+
     await admin.messaging(app).send({
       token,
-      notification: {
-        title: payload.title,
-        body: payload.body,
-        imageUrl: payload.imageUrl,
-      },
-      data: payload.data || {},
-      android: {
-        priority: 'high',
+      // Pour les appels : pas de bloc 'notification' sur Android → data-only
+      // Cela réveille l'app même si elle est en arrière-plan (Doze mode)
+      ...(!isCall && {
         notification: {
+          title: payload.title,
+          body: payload.body,
+          imageUrl: payload.imageUrl,
+        },
+      }),
+      data: {
+        ...(payload.data || {}),
+        // Pour les appels en data-only : inclure title/body dans data
+        ...(isCall && {
+          notifTitle: payload.title,
+          notifBody: payload.body,
+        }),
+      },
+      android: {
+        // Priorité maximale pour réveiller l'appareil
+        priority: 'high',
+        // TTL : 30s pour les appels (inutile de livrer un appel vieux de 2 min)
+        ttl: isCall ? 30_000 : 3_600_000,
+        notification: isCall ? undefined : {
           sound: 'default',
           clickAction: 'FLUTTER_NOTIFICATION_CLICK',
         },
       },
       apns: {
+        headers: {
+          // Priorité maximale pour iOS
+          'apns-priority': '10',
+          // TTL iOS : 30s pour les appels
+          ...(isCall && { 'apns-expiration': String(Math.floor(Date.now() / 1000) + 30) }),
+        },
         payload: {
           aps: {
             sound: 'default',
             badge: 1,
+            // content-available = 1 pour réveiller l'app en arrière-plan sur iOS
+            'content-available': 1,
           },
         },
       },
