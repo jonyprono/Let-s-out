@@ -37,11 +37,18 @@ export function AdminLoginPage() {
 
   const setupRecaptcha = () => {
     if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear()
+      try {
+        window.recaptchaVerifier.clear()
+      } catch (err) {
+        console.warn('Unable to clear existing reCAPTCHA verifier:', err)
+      }
+      window.recaptchaVerifier = undefined
     }
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'invisible',
-    })
+    if (!window.recaptchaVerifier) {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+      })
+    }
   }
 
   const handleSendOtp = async (e: React.FormEvent) => {
@@ -169,14 +176,14 @@ export function AdminLoginPage() {
                 onChange={setOtp}
                 render={({ slots }) => (
                   <InputOTPGroup className="gap-2">
-                    {slots.map((slot: any, i: number) => (
+                    {slots?.map((slot: any, i: number) => (
                       <InputOTPSlot 
                         key={i} 
                         {...slot} 
                         index={i}
                         className="w-12 h-14 rounded-xl border-white/10 bg-white/5 text-lg font-bold text-white focus:border-red-500/50 focus:ring-1 focus:ring-red-500/50 transition-all"
                       />
-                    ))}
+                    )) ?? null}
                   </InputOTPGroup>
                 )}
               />
