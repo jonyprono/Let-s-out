@@ -80,7 +80,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!token) return <Navigate to="/login" replace />
 
   const p: any = user?.profile || {}
-  const isProfileIncomplete = !p.displayName || !p.avatarUrl || !p.birthdate || !p.interests || p.interests.length === 0
+  const hasBirthdate = !!(p.birthdate || p.birthDate)
+  const isProfileIncomplete = !p.displayName || !p.interests || p.interests.length === 0 || !hasBirthdate
   if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
 
   return <>{children}</>
@@ -92,7 +93,8 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   
   if (token) {
     const p: any = user?.profile || {}
-    const isProfileIncomplete = !p.displayName || !p.avatarUrl || !p.birthdate || !p.interests || p.interests.length === 0
+    const hasBirthdate = !!(p.birthdate || p.birthDate)
+    const isProfileIncomplete = !p.displayName || !p.interests || p.interests.length === 0 || !hasBirthdate
     if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
     return <Navigate to="/home" replace />
   }
@@ -105,7 +107,8 @@ function RootRoute() {
 
   if (token) {
     const p: any = user?.profile || {}
-    const isProfileIncomplete = !p.displayName || !p.avatarUrl || (!p.birthdate && !p.birthDate) || !p.interests || p.interests.length === 0
+    const hasBirthdate = !!(p.birthdate || p.birthDate)
+    const isProfileIncomplete = !p.displayName || !p.interests || p.interests.length === 0 || !hasBirthdate
     if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
     return <Navigate to="/home" replace />
   }

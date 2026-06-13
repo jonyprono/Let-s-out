@@ -110,6 +110,7 @@ export function Onboarding() {
               country: data.country || undefined,
               interests: data.interests?.length ? data.interests : undefined,
               avatarUrl: data.profilePicture || undefined,
+              birthdate: data.birthDate || undefined,
             })
             await refreshUser()
           } catch (e) {

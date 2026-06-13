@@ -91,7 +91,8 @@ export function useGoogleSignIn() {
         nav('/onboarding', { replace: true })
       } else {
         const p: any = data.user.profile || {}
-        const isProfileIncomplete = !p.displayName || !p.avatarUrl || (!p.birthdate && !p.birthDate) || !p.interests || p.interests.length === 0
+        const hasBirthdate = !!(p.birthdate || p.birthDate)
+        const isProfileIncomplete = !p.displayName || !p.interests || p.interests.length === 0 || !hasBirthdate
         if (isProfileIncomplete) {
           nav('/onboarding', { replace: true })
         } else {
