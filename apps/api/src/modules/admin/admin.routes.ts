@@ -186,4 +186,41 @@ export default async function adminRoutes(app: FastifyInstance) {
 
     return reply.send({ success: true, kycStatus: profile.kycStatus })
   })
+
+  // ── Gestion des Administrateurs ───────────────────────────────────
+  app.get('/admins', async (req, reply) => {
+    const admins = await app.prisma.admin.findMany({
+      orderBy: { createdAt: 'desc' },
+    })
+    return reply.send(admins)
+  })
+
+  app.post('/admins', async (req, reply) => {
+    const body = z.object({ phone: z.string().min(5), name: z.string().optional() }).parse(req.body)
+
+    const existing = await app.prisma.admin.findUnique({ where: { phone: body.phone } })
+    if (existing) {
+      return reply.code(400).send({ error: 'Cet administrateur existe déjà.' })
+    }
+
+    const admin = await app.prisma.admin.create({
+      data: {
+        phone: body.phone,
+        name: body.name,
+      },
+    })
+    return reply.send(admin)
+  })
+
+  app.delete('/admins/:id', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    
+    // Prevent deleting oneself
+    if ((req.user as any).sub === id) {
+      return reply.code(400).send({ error: 'Vous ne pouvez pas vous supprimer vous-même.' })
+    }
+
+    await app.prisma.admin.delete({ where: { id } })
+    return reply.send({ success: true })
+  })
 }

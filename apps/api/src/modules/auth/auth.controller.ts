@@ -387,29 +387,35 @@ export class AuthController {
   }
 
   async adminLogin(req: FastifyRequest, reply: FastifyReply) {
-    const { password } = req.body as { password?: string }
+    const { target, code, idToken } = req.body as { target?: string; code?: string; idToken?: string }
     
-    // Mot de passe prédéfini (peut être mis dans process.env plus tard)
-    if (password !== 'Azerty01') {
-      return reply.code(401).send({ error: 'Mot de passe incorrect' })
+    if (!target) {
+      return reply.code(400).send({ error: 'Le numéro de téléphone (target) est requis.' })
     }
 
-    const adminUser = await this.app.prisma.user.findFirst({
-      where: { role: 'ADMIN' },
-      include: { profile: true }
+    // Verify Admin Table
+    const adminUser = await this.app.prisma.admin.findUnique({
+      where: { phone: target }
     })
 
     if (!adminUser) {
-      return reply.code(404).send({ error: 'Aucun compte administrateur trouvé en base' })
+      return reply.code(403).send({ error: 'Accès refusé. Numéro non autorisé.' })
     }
 
-    // Update last seen
-    await this.app.prisma.user.update({
-      where: { id: adminUser.id },
-      data: { lastSeenAt: new Date() },
-    })
+    let otpValid = false
+    if (idToken) {
+      otpValid = await this.service.verifyFirebaseToken(idToken, target)
+    } else if (code) {
+      otpValid = await this.service.verifyOtp(target, code)
+    } else {
+      return reply.code(400).send({ error: 'Code ou idToken requis.' })
+    }
 
-    const accessToken = this.app.jwt.sign({ sub: adminUser.id, role: adminUser.role })
+    if (!otpValid) {
+      return reply.code(401).send({ error: 'Code invalide ou expiré' })
+    }
+
+    const accessToken = this.app.jwt.sign({ sub: adminUser.id, role: 'ADMIN' })
     const refreshToken = await this.service.createRefreshToken(adminUser.id, {
       userAgent: req.headers['user-agent'],
       ipAddress: req.ip,
@@ -423,7 +429,26 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60,
     })
 
-    return reply.send({ accessToken, refreshToken, user: { ...adminUser, passwordHash: undefined } })
+    return reply.send({ accessToken, refreshToken, user: { id: adminUser.id, role: 'ADMIN', username: adminUser.name || 'Admin', displayName: adminUser.name || 'Admin' } })
+  }
+
+  async adminSendOtp(req: FastifyRequest, reply: FastifyReply) {
+    const { target, channel } = req.body as { target?: string; channel?: 'sms' | 'whatsapp' }
+    
+    if (!target) {
+      return reply.code(400).send({ error: 'Le numéro de téléphone est requis.' })
+    }
+
+    const adminUser = await this.app.prisma.admin.findUnique({
+      where: { phone: target }
+    })
+
+    if (!adminUser) {
+      return reply.code(403).send({ error: 'Accès refusé. Numéro non autorisé.' })
+    }
+
+    await this.service.generateAndSendOtp(target, 'phone', channel || 'whatsapp')
+    return reply.send({ success: true, message: 'OTP sent' })
   }
 
   async googleSignIn(req: FastifyRequest, reply: FastifyReply) {

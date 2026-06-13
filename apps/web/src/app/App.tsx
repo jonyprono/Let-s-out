@@ -189,6 +189,8 @@ export default function App() {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
 
+import { AdminAdminsPage } from '@/app/components/admin/AdminAdminsPage'
+
           {/* Administration KYC */}
           <Route path="/admin/login" element={<AdminLoginPage />} />
           <Route
@@ -202,6 +204,7 @@ export default function App() {
             <Route index element={<AdminDashboardPage />} />
             <Route path="kyc" element={<AdminKycListPage />} />
             <Route path="kyc/:userId" element={<AdminKycDetailPage />} />
+            <Route path="admins" element={<AdminAdminsPage />} />
           </Route>
 
           {/* Protected app */}
