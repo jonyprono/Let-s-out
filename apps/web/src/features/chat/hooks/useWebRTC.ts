@@ -369,8 +369,7 @@ export function useWebRTC() {
               IncomingCallKit.showIncomingCall({
                 callId: data.conversationId,
                 callerName: data.callerName || 'Appel entrant',
-                hasVideo: data.mediaType === 'video',
-                avatarUrl: data.callerAvatar || undefined
+                hasVideo: data.mediaType === 'video'
               }).catch(err => console.error('showIncomingCall error', err))
             }).catch(() => {})
             
