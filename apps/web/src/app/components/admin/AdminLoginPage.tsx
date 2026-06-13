@@ -19,6 +19,7 @@ export function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
+  const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
   
   const navigate = useNavigate()
   
@@ -53,23 +54,36 @@ export function AdminLoginPage() {
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!currentChannel) {
+      setError("Veuillez sélectionner un canal d'envoi.")
+      return
+    }
     setError('')
     setLoading(true)
 
     const fullPhone = `${country.code}${phone}`
 
     try {
-      // 1. Ask backend to send OTP via WhatsApp (or SMS) first
-      await apiClient.post('/auth/admin-send-otp', { target: fullPhone })
+      if (currentChannel === 'sms') {
+        try {
+          setupRecaptcha()
+          const confResult = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
+          setConfirmationResult(confResult)
+        } catch (err: any) {
+          console.warn("Firebase SMS failed, falling back to backend SMS", err)
+          await apiClient.post('/auth/admin-send-otp', { target: fullPhone, channel: 'sms' })
+          setConfirmationResult(null)
+        }
+      } else {
+        await apiClient.post('/auth/admin-send-otp', { target: fullPhone, channel: 'whatsapp' })
+        setConfirmationResult(null)
+      }
       setStep(2)
-      
-      // 2. Also prepare Firebase SMS fallback invisibly
-      setupRecaptcha()
-      const confResult = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
-      setConfirmationResult(confResult)
     } catch (err: any) {
-      setError(err.response?.data?.error || "Erreur lors de l'envoi du code. Ce numéro n'est peut-être pas autorisé.")
-      if (window.recaptchaVerifier) window.recaptchaVerifier.clear()
+      setError(err.response?.data?.error || err.message || "Erreur lors de l'envoi du code. Ce numéro n'est peut-être pas autorisé.")
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear() } catch(e) {}
+      }
     } finally {
       setLoading(false)
     }
@@ -141,7 +155,7 @@ export function AdminLoginPage() {
 
         {step === 1 ? (
           <form onSubmit={handleSendOtp} className="space-y-4 mt-8">
-            <div className="flex gap-2">
+            <div className="flex gap-2 mb-4">
               <CountryPicker value={country} onChange={setCountry} />
               <input
                 type="tel"
@@ -152,6 +166,23 @@ export function AdminLoginPage() {
                 autoFocus
                 required
               />
+            </div>
+
+            <label className="text-white/70 text-sm font-medium mb-2 block">Recevoir le code par</label>
+            <div className="flex gap-3 mb-2">
+              {(['SMS', 'Whatsapp'] as const).map(ch => {
+                const val = ch.toLowerCase() as 'sms' | 'whatsapp'
+                const isActive = currentChannel === val
+                return (
+                  <button key={ch} type="button" onClick={() => setCurrentChannel(val)}
+                    className={`flex-1 flex items-center justify-between px-4 py-3 rounded-2xl border transition-all ${isActive ? 'border-red-500 bg-red-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}>
+                    <span className={`text-sm font-medium ${isActive ? 'text-white' : 'text-white/70'}`}>{ch}</span>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-red-500' : 'border-white/20'}`}>
+                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-red-500" />}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
 
             {error && <p className="text-red-400 text-sm text-center font-medium bg-red-500/10 py-2 rounded-xl border border-red-500/20">{error}</p>}
