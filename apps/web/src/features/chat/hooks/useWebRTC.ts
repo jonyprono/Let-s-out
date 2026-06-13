@@ -242,11 +242,35 @@ export function useWebRTC() {
     try {
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
+
+      // Wait for ICE gathering to complete so that candidates are embedded in the SDP offer!
+      // This is crucial because if the callee receives the offer via Push Notification, 
+      // they will miss the trickle ice_candidate WebSocket events while their app is waking up.
+      if (pc.iceGatheringState !== 'complete') {
+        await new Promise<void>(resolve => {
+          const checkState = () => {
+            if (pc.iceGatheringState === 'complete') {
+              pc.removeEventListener('icegatheringstatechange', checkState)
+              resolve()
+            }
+          }
+          pc.addEventListener('icegatheringstatechange', checkState)
+          // Timeout after 2.5 seconds to avoid hanging the UI too long
+          setTimeout(() => {
+            pc.removeEventListener('icegatheringstatechange', checkState)
+            resolve()
+          }, 2500)
+        })
+      }
+
+      // Re-read the local description which now contains the embedded ICE candidates
+      const finalOffer = pc.localDescription || offer
+
       const sent = sendSignalRef.current({
         type: 'call_offer',
         conversationId,
         targetUserId,
-        offer,
+        offer: finalOffer,
         mediaType,
         callerName: currentUser.profile?.displayName || currentUser.email || 'Appel entrant',
         callerAvatar: currentUser.profile?.avatarUrl || null,
