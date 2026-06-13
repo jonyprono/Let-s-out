@@ -148,24 +148,22 @@ export function useWebRTC() {
     let disconnectTimer: ReturnType<typeof setTimeout> | null = null
 
     pc.onconnectionstatechange = () => {
-      console.log('[WebRTC] connectionState:', pc.connectionState)
+      console.log('[WebRTC] connectionState:', pc.connectionState, '| callStatus:', callStatusRef.current)
+      // Only handle disconnect events once the call is actually established
+      if (callStatusRef.current !== 'CONNECTED') return
+
       if (pc.connectionState === 'connected') {
-        // Clear any pending disconnect timer if we reconnect
         if (disconnectTimer) { clearTimeout(disconnectTimer); disconnectTimer = null }
       } else if (pc.connectionState === 'failed') {
-        // Hard failure — end the call immediately
         if (callStatusRef.current !== 'IDLE') {
           sendSignal({ type: 'call_end', conversationId })
           cleanup()
         }
       } else if (pc.connectionState === 'disconnected') {
-        // Transient state during ICE setup or brief network blip — wait 6s before ending
         disconnectTimer = setTimeout(() => {
-          if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-            if (callStatusRef.current !== 'IDLE') {
-              sendSignal({ type: 'call_end', conversationId })
-              cleanup()
-            }
+          if ((pc.connectionState === 'disconnected' || pc.connectionState === 'failed') && callStatusRef.current !== 'IDLE') {
+            sendSignal({ type: 'call_end', conversationId })
+            cleanup()
           }
         }, 6000)
       }
