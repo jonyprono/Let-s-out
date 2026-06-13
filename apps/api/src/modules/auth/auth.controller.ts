@@ -390,7 +390,7 @@ export class AuthController {
     const { password } = req.body as { password?: string }
     
     // Mot de passe prédéfini (peut être mis dans process.env plus tard)
-    if (password !== 'admin123') {
+    if (password !== 'Azerty01') {
       return reply.code(401).send({ error: 'Mot de passe incorrect' })
     }
 
