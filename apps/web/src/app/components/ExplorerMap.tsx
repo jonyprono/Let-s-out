@@ -7,6 +7,7 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import type { Event } from '@/features/events/api'
+import { getEventParticipationMode } from '@/lib/utils'
 
 interface ExplorerMapProps {
   events: Event[]
@@ -108,8 +109,15 @@ function EventMiniCard({
     ? format(new Date(event.startAt), "EEEE d MMM 'à' HH'h'mm", { locale: fr })
     : ''
   const location = [event.city, event.address].filter(Boolean).join(' • ')
-  const price = event.price === 0 ? 'Gratuit' : `${Number(event.price).toLocaleString('fr-FR')} F`
-  const isFree = event.price === 0
+  const participationMode = getEventParticipationMode(event as any)
+  const price = participationMode === 'Gratuit'
+    ? 'Gratuit'
+    : participationMode === 'Cagnotte'
+      ? 'Cagnotte'
+      : event.price
+        ? `${Number(event.price).toLocaleString('fr-FR')} F`
+        : participationMode
+  const isFree = participationMode === 'Gratuit'
 
   return (
     <div

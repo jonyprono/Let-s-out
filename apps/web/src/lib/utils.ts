@@ -27,7 +27,12 @@ export function formatPrice(amount: number, currency = 'EUR') {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount)
 }
 
-export function getEventParticipationMode(event: { price?: number, poolTarget?: number | null }) {
+export function getEventParticipationMode(event: { price?: number | null, poolTarget?: number | null, participationMode?: string | null }) {
+  // Check explicit participationMode field first (set at event creation)
+  const mode = (event as any).participationMode as string | undefined | null;
+  if (mode === 'pool' || mode === 'cagnotte') return 'Cagnotte';
+  if (mode === 'ticket' || mode === 'tickets') return 'Tickets';
+  // Fallback: derive from numeric fields
   if (event.poolTarget && event.poolTarget > 0) return 'Cagnotte';
   if (event.price && event.price > 0) return 'Tickets';
   return 'Gratuit';

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ChevronLeft, ChevronRight, Globe, Lock, Bell, Shield, HelpCircle,
   LogOut, User, Moon, Smartphone, ExternalLink, Loader2, Clock,
@@ -384,7 +385,7 @@ export function Settings({ onBack }: SettingsProps) {
       {showEmailModal && <EditEmailModal onClose={() => setShowEmailModal(false)} />}
 
       {/* ── Modale de suppression de compte ─────────────────────────────── */}
-      {showDeleteModal && (
+      {showDeleteModal && createPortal(
         <div className="fixed inset-0 z-[100] flex flex-col items-center justify-end sm:justify-center px-4 pb-6 sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowDeleteModal(false)}>
           <div
             className="bg-white dark:bg-[#1A1A1A] w-full max-w-sm rounded-[32px] p-6 shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto"
@@ -509,7 +510,8 @@ export function Settings({ onBack }: SettingsProps) {
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
