@@ -115,7 +115,15 @@ export function sendGlobal(payload: Record<string, any>): boolean {
     return true // Assume it will be sent when connected
   }
 
-  console.warn('[WS Global] Cannot send — WebSocket not open/connecting. State:', globalWs?.readyState)
+  const latestToken = useAuthStore.getState().accessToken
+  if (latestToken) {
+    console.log('[WS Global] WebSocket is closed/null. Forcing reconnection and queueing message.')
+    messageQueue.push(payload)
+    connectGlobal(latestToken)
+    return true
+  }
+
+  console.warn('[WS Global] Cannot send — WebSocket not open/connecting and no token. State:', globalWs?.readyState)
   return false
 }
 

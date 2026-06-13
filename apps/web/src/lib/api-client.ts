@@ -165,9 +165,11 @@ apiClient.interceptors.response.use(
     )
 
     if (isNetworkError && !isSilent(original.url)) {
+      const isGet = original.method?.toLowerCase() === 'get'
+
       if (!isOnline()) {
         // Device is truly offline — show once, not on every background request
-        if (!offlineToastShown) {
+        if (!offlineToastShown && !isGet) {
           offlineToastShown = true
           toast.warning('Vous êtes hors ligne. Les données affichées peuvent ne pas être à jour.', {
             duration: 4000,
@@ -175,11 +177,14 @@ apiClient.interceptors.response.use(
           })
         }
       } else {
-        // Online but can't reach the server (wrong IP, server down, etc.)
-        toast.error('Serveur inaccessible. Vérifiez que le serveur est démarré.', {
-          duration: 5000,
-          id: 'server-error-toast',
-        })
+        // Online but can't reach the server (wrong IP, server down, cold start etc.)
+        // Only show for explicit user actions (POST/PUT/DELETE), not for background GET fetches
+        if (!isGet) {
+          toast.error('Erreur de connexion au serveur. Vérifiez votre connexion.', {
+            duration: 4000,
+            id: 'server-error-toast',
+          })
+        }
       }
     }
 
