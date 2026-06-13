@@ -105,15 +105,28 @@ function RootRoute() {
 
   if (token) {
     const p: any = user?.profile || {}
-    const isProfileIncomplete = !p.displayName || !p.avatarUrl || !p.birthdate || !p.interests || p.interests.length === 0
+    const isProfileIncomplete = !p.displayName || !p.avatarUrl || (!p.birthdate && !p.birthDate) || !p.interests || p.interests.length === 0
     if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
     return <Navigate to="/home" replace />
   }
 
-  const isMobile = 
-    Capacitor.isNativePlatform() ||
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|wv|CriOS|FxiOS/i.test(navigator.userAgent) ||
-    window.matchMedia('(max-width: 1024px)').matches
+  // Detect native Capacitor WebView
+  const isNative = Capacitor.isNativePlatform()
+
+  // Android WebView always has "wv" in UA
+  const ua = navigator.userAgent || ''
+  const isAndroidWebView = /wv/.test(ua) && /Android/.test(ua)
+
+  // iOS WKWebView has no "Safari" token
+  const isIOSWebView = /iPhone|iPad|iPod/.test(ua) && !/Safari/.test(ua) && /AppleWebKit/.test(ua)
+
+  // Generic mobile/tablet browser
+  const isMobileBrowser = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet|CriOS|FxiOS/i.test(ua)
+
+  // Small screen (tablet / phone in browser)
+  const isSmallScreen = window.matchMedia('(max-width: 1024px)').matches
+
+  const isMobile = isNative || isAndroidWebView || isIOSWebView || isMobileBrowser || isSmallScreen
 
   return isMobile ? <Navigate to="/app" replace /> : <LandingPage />
 }

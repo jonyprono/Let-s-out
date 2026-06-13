@@ -44,6 +44,27 @@
       </div>
 
       <script>
+        // ── Early native-app detection — runs BEFORE React ──────────────────
+        // When Capacitor loads https://letsout.app inside the native WebView,
+        // we must redirect to /app immediately so the LandingPage is never shown.
+        (function () {
+          var loc = window.location;
+          // Only act on the root path
+          if (loc.pathname !== '/') return;
+
+          var ua = navigator.userAgent || '';
+          var isCapacitorProtocol = loc.protocol === 'capacitor:' || loc.protocol === 'ionic:';
+          // Android WebView user-agent always contains 'wv'
+          var isAndroidWebView = /wv/.test(ua) && /Android/.test(ua);
+          // iOS WKWebView used by Capacitor has no 'Safari' keyword but has 'AppleWebKit'
+          var isIOSWebView = /iPhone|iPad|iPod/.test(ua) && !/Safari/.test(ua) && /AppleWebKit/.test(ua);
+
+          if (isCapacitorProtocol || isAndroidWebView || isIOSWebView) {
+            // Replace current history entry so the back button doesn't return here
+            loc.replace('/app');
+          }
+        })();
+
         // Global error handler for debugging
         window.addEventListener('error', function(e) {
           console.error('Global error:', e.error);
