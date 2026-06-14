@@ -280,7 +280,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const attendeeCount = event._count?.bookings ?? event.currentAttendees ?? 0
   const maxAttendees = event.maxAttendees
-  const isFull = maxAttendees ? attendeeCount >= maxAttendees : false
+  const isFull = maxAttendees != null && attendeeCount >= maxAttendees
+  const isPastEvent = event?.startAt ? new Date(event.startAt) < new Date() : false
 
   const organizerName = event.creator?.profile?.displayName || 'Organisateur'
   const organizerAvatar = event.creator?.profile?.avatarUrl
@@ -595,16 +596,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <>
               <div className="flex-shrink-0">
                 <p className="text-[14px] font-bold text-gray-700">
-                  {maxAttendees ? `${Math.max(maxAttendees - attendeeCount, 0)} places restantes` : 'Places illimitées'}
+                  {isPastEvent ? 'Événement terminé' : maxAttendees ? `${Math.max(maxAttendees - attendeeCount, 0)} places restantes` : 'Places illimitées'}
                 </p>
               </div>
-              <button
-                onClick={handleJoin}
-                disabled={joinMutation.isPending || isFull}
-                className="px-6 py-[14px] rounded-full font-bold text-[14px] text-white transition-all active:scale-95 disabled:opacity-60 bg-action-primary active:bg-action-primary-hover"
-              >
-                {joinMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : isFull ? 'Complet' : 'Rejoindre l\'événement'}
-              </button>
+              {!isPastEvent && (
+                <button
+                  onClick={handleJoin}
+                  disabled={joinMutation.isPending || isFull}
+                  className="px-6 py-[14px] rounded-full font-bold text-[14px] text-white transition-all active:scale-95 disabled:opacity-60 bg-action-primary active:bg-action-primary-hover"
+                >
+                  {joinMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : isFull ? 'Complet' : 'Rejoindre l\'événement'}
+                </button>
+              )}
             </>
           ) : (
             <button

@@ -79,7 +79,8 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
         // TTL : 30s pour les appels (inutile de livrer un appel vieux de 2 min)
         ttl: isCall ? 30_000 : 3_600_000,
         notification: {
-          sound: 'default',
+          sound: isCall ? 'ringtone' : 'default', // 'ringtone.wav' must exist in res/raw (without extension)
+          channelId: isCall ? 'calls' : 'default',
           clickAction: 'FLUTTER_NOTIFICATION_CLICK',
         },
       },
@@ -92,7 +93,7 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
         },
         payload: {
           aps: {
-            sound: 'default',
+            sound: isCall ? 'ringtone.wav' : 'default',
             badge: 1,
             // content-available = 1 pour réveiller l'app en arrière-plan sur iOS
             'content-available': 1,
