@@ -20,11 +20,21 @@ const ICE_SERVERS: RTCConfiguration = {
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' },
-    // Serveur TURN public (fallback pour les tests sur le même réseau Wi-Fi)
+    // Serveurs TURN privés (Metered.ca) pour garantir la connexion derrière un NAT
     {
-      urls: 'turn:freedns.zone:3478',
-      username: 'free',
-      credential: 'free'
+      urls: 'turn:global.relay.metered.ca:80',
+      username: '8e5cf94f4414232ce5b203a6',
+      credential: 'IWaWq4jxX9Fqb6Zz'
+    },
+    {
+      urls: 'turn:global.relay.metered.ca:443',
+      username: '8e5cf94f4414232ce5b203a6',
+      credential: 'IWaWq4jxX9Fqb6Zz'
+    },
+    {
+      urls: 'turn:global.relay.metered.ca:443?transport=tcp',
+      username: '8e5cf94f4414232ce5b203a6',
+      credential: 'IWaWq4jxX9Fqb6Zz'
     }
   ],
 }
