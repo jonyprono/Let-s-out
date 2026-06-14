@@ -20,6 +20,12 @@ const ICE_SERVERS: RTCConfiguration = {
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' },
+    // Serveur TURN public (fallback pour les tests sur le même réseau Wi-Fi)
+    {
+      urls: 'turn:freedns.zone:3478',
+      username: 'free',
+      credential: 'free'
+    }
   ],
 }
 
