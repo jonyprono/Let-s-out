@@ -75,7 +75,9 @@ function useRemoteMedia(remoteStream: MediaStream | null, mediaType: 'audio' | '
         setNeedsUserTap(false)
       }).catch((err) => {
         console.warn('[RemoteMedia] autoplay blocked:', err)
-        setNeedsUserTap(true)
+        if (err.name === 'NotAllowedError') {
+          setNeedsUserTap(true)
+        }
       })
     }
 
