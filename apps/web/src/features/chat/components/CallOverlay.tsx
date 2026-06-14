@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Volume2 } from 'lucide-react'
 import { useWebRTC } from '../hooks/useWebRTC'
 import { SafeImage } from '@/components/shared/SafeImage'
-import { useQuery } from '@tanstack/react-query'
-import { chatApi } from '../api'
 
 function useRingtone(callStatus: string) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -197,7 +195,6 @@ export function CallOverlay() {
   const callerName = incomingCall?.callerName || outgoingCall?.targetName || 'Discussion'
   const streamsArray = Array.from(remoteStreams.entries())
   const hasLocalVideo = localStream && localStream.getVideoTracks().length > 0 && !isVideoOff
-  const isVideoCall = remoteMediaType === 'video'
 
   return (
     <div

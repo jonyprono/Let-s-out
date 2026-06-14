@@ -246,7 +246,7 @@ export function useWebRTC() {
 
   const startCall = useCallback(async (
     conversationId: string,
-    targetUserId: string | null,
+    _targetUserId: string | null,
     mediaType: 'audio' | 'video',
     targetName?: string,
     targetAvatar?: string | null
