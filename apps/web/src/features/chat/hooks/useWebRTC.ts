@@ -367,6 +367,10 @@ export function useWebRTC() {
   useEffect(() => { updateCallStatusRef.current = updateCallStatus }, [updateCallStatus])
   useEffect(() => { createPeerConnectionRef.current = createPeerConnection }, [createPeerConnection])
 
+  // Ref for startCall so the event listener below never goes stale
+  const startCallRef = useRef(startCall)
+  useEffect(() => { startCallRef.current = startCall }, [startCall])
+
   useEffect(() => {
     const callKitListeners: Array<{ remove: () => void }> = []
     import('@capgo/capacitor-incoming-call-kit').then(({ IncomingCallKit }) => {
@@ -493,9 +497,21 @@ export function useWebRTC() {
       }
     }
 
+    // ── Listener for outgoing call initiated from ChatDetails ──────────────────
+    const handleStartOutgoing = (e: Event) => {
+      const { conversationId, targetUserId, mediaType, targetName, targetAvatar } = (e as CustomEvent).detail
+      if (callStatusRef.current !== 'IDLE') {
+        import('sonner').then(({ toast }) => toast.error('Un appel est déjà en cours.'))
+        return
+      }
+      startCallRef.current(conversationId, targetUserId, mediaType, targetName, targetAvatar)
+    }
+
     window.addEventListener('ws:webrtc', handleSignal)
+    window.addEventListener('call:start_outgoing', handleStartOutgoing)
     return () => {
       window.removeEventListener('ws:webrtc', handleSignal)
+      window.removeEventListener('call:start_outgoing', handleStartOutgoing)
       callKitListeners.forEach(l => l.remove())
     }
   }, [])

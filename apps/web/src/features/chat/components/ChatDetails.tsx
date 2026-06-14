@@ -433,16 +433,12 @@ export function ChatDetails() {
           <div className="flex items-center gap-0.5">
             <button
               onClick={() => {
-                if (isGroup) {
-                  toast.error('Les appels de groupe ne sont pas encore supportés.')
-                  return
-                }
                 window.dispatchEvent(new CustomEvent('call:start_outgoing', {
                   detail: { 
                     conversationId: id, 
-                    targetUserId: otherMember?.userId, 
-                    targetName: otherMember?.user?.profile?.displayName,
-                    targetAvatar: otherMember?.user?.profile?.avatarUrl,
+                    targetUserId: isGroup ? null : otherMember?.userId, 
+                    targetName: isGroup ? undefined : otherMember?.user?.profile?.displayName,
+                    targetAvatar: isGroup ? undefined : otherMember?.user?.profile?.avatarUrl,
                     mediaType: 'audio' 
                   }
                 }))
@@ -453,16 +449,12 @@ export function ChatDetails() {
             </button>
             <button
               onClick={() => {
-                if (isGroup) {
-                  toast.error('Les appels de groupe ne sont pas encore supportés.')
-                  return
-                }
                 window.dispatchEvent(new CustomEvent('call:start_outgoing', {
                   detail: { 
                     conversationId: id, 
-                    targetUserId: otherMember?.userId, 
-                    targetName: otherMember?.user?.profile?.displayName,
-                    targetAvatar: otherMember?.user?.profile?.avatarUrl,
+                    targetUserId: isGroup ? null : otherMember?.userId, 
+                    targetName: isGroup ? undefined : otherMember?.user?.profile?.displayName,
+                    targetAvatar: isGroup ? undefined : otherMember?.user?.profile?.avatarUrl,
                     mediaType: 'video' 
                   }
                 }))
