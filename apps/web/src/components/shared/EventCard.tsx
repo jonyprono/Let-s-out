@@ -12,8 +12,18 @@ import { getEventParticipationMode } from '@/lib/utils';
 import { ShareModal } from '@/components/shared/ShareModal';
 
 interface EventCardProps {
-  event: Event;
-  onNavigate: (screen: string, id?: string) => void;
+  // Propriétés explicites exigées par la maquette
+  name?: string;
+  datetime?: string;
+  city?: string;
+  place?: string;
+  attendeesCount?: string | number;
+  price?: string;
+  cover?: boolean | string; // URL ou true pour afficher la grille par défaut
+
+  // Propriétés legacy pour la rétrocompatibilité
+  event?: Event;
+  onNavigate?: (screen: string, id?: string) => void;
   badge?: React.ReactNode;
   horizontal?: boolean;
 }
@@ -42,6 +52,13 @@ function formatPrice(event: any): string {
 }
 
 export const EventCard = memo(function EventCard({
+  name,
+  datetime,
+  city,
+  place,
+  attendeesCount,
+  price,
+  cover = true,
   event,
   onNavigate,
   badge,
@@ -54,19 +71,27 @@ export const EventCard = memo(function EventCard({
   const [showShareModal, setShowShareModal] = useState(false);
 
   const { data: fullEvent, isLoading: isLoadingEvent } = useQuery({
-    queryKey: ['events', event.id],
-    queryFn: () => eventsApi.getById(event.id),
-    enabled: showQRModal && !event.joinCode,
+    queryKey: ['events', event?.id],
+    queryFn: () => event?.id ? eventsApi.getById(event.id) : Promise.reject('No event'),
+    enabled: showQRModal && !!event && !event.joinCode,
   });
 
-  const joinCode = event.joinCode || fullEvent?.data?.joinCode;
+  const joinCode = event?.joinCode || fullEvent?.data?.joinCode;
 
-  const price = formatPrice(event);
-  const dateStr = formatEventDate(event.startAt);
-  const location = [event.address, event.city].filter(Boolean).join(' • ');
-  const attendees: any[] = (event as any).bookings || [];
-  const count = event.currentAttendees ?? 0;
-  const max = event.maxAttendees;
+  // Calcul dynamique des données (Priorité aux Props explicites, sinon fallback sur l'objet Event)
+  const displayTitle = name || event?.title || '';
+  const displayDate = datetime || (event?.startAt ? formatEventDate(event.startAt) : '');
+  const displayCity = city || event?.city || '';
+  const displayPlace = place || event?.address || '';
+  const displayLocation = [displayCity, displayPlace].filter(Boolean).join(' • ');
+  const displayPrice = price || (event ? formatPrice(event) : 'Gratuit');
+  const displayCover = typeof cover === 'string' ? cover : event?.coverUrl;
+
+  const attendees: any[] = event ? (event as any).bookings || [] : [];
+  const count = event?.currentAttendees ?? 0;
+  const max = event?.maxAttendees;
+  const displayAttendeesCount = attendeesCount || (max ? `${count}/${max} Participants` : `${count} Participants`);
+
   const colors = ['#9747FF', 'var(--action-primary)', '#B070FF', 'var(--color-brand-orange-400)'];
 
   const handleShare = async (e: React.MouseEvent) => {
@@ -91,48 +116,74 @@ export const EventCard = memo(function EventCard({
 
   return (
     <button
-      onClick={() => { hapticFeedback.impact(); onNavigate('event-details', event.id); }}
-      className={`flex flex-col bg-background-white rounded-2xl overflow-hidden text-left shadow-sm border border-gray-100 active:scale-[0.98] transition-transform relative ${
-        horizontal ? 'flex-shrink-0 w-[280px]' : 'w-full mb-200'
+      onClick={() => {
+        hapticFeedback.impact();
+        if (onNavigate && event?.id) onNavigate('event-details', event.id);
+      }}
+      className={`flex flex-col text-left transition-transform active:scale-[0.98] ${
+        horizontal ? 'flex-shrink-0 mr-4' : 'mb-4'
       }`}
+      style={{
+        width: '358px',
+        minHeight: '266px', // "Enserrer" autorise l'expansion si nécessaire, 266px de base
+        borderRadius: '12px',
+        backgroundColor: '#FFFFFF',
+        border: '0.5px solid #DFDFDF',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.02)', // Léger relief optionnel
+        overflow: 'hidden'
+      }}
     >
-      {/* Image + Actions */}
-      <div className="relative w-full bg-gray-100" style={{ height: 176 }}>
-        <SafeImage
-          src={event.coverUrl}
-          alt={event.title}
-          className="w-full h-full object-cover"
-          fallback={
-            <div
-              className="w-full h-full"
-              style={{
-                backgroundImage: `repeating-conic-gradient(#e5e7eb 0% 25%, #f3f4f6 0% 50%)`,
-                backgroundSize: '24px 24px',
-              }}
-            />
-          }
-        />
+      {/* ── ZONE DE COUVERTURE ────────────────────────────────────────── */}
+      <div className="relative w-full bg-[#F5F5F5] overflow-hidden" style={{ height: '148px', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>
+        {displayCover ? (
+          <SafeImage
+            src={displayCover}
+            alt={displayTitle}
+            className="w-full h-full object-cover"
+            fallback={
+              <div
+                className="w-full h-full"
+                style={{
+                  backgroundImage: `linear-gradient(45deg, #E5E5E5 25%, transparent 25%, transparent 75%, #E5E5E5 75%, #E5E5E5), linear-gradient(45deg, #E5E5E5 25%, transparent 25%, transparent 75%, #E5E5E5 75%, #E5E5E5)`,
+                  backgroundSize: '20px 20px',
+                  backgroundPosition: '0 0, 10px 10px'
+                }}
+              />
+            }
+          />
+        ) : (
+          <div
+            className="w-full h-full"
+            style={{
+              backgroundImage: `linear-gradient(45deg, #E5E5E5 25%, transparent 25%, transparent 75%, #E5E5E5 75%, #E5E5E5), linear-gradient(45deg, #E5E5E5 25%, transparent 25%, transparent 75%, #E5E5E5 75%, #E5E5E5)`,
+              backgroundSize: '20px 20px',
+              backgroundPosition: '0 0, 10px 10px'
+            }}
+          />
+        )}
+        
+        {/* Actions (Favoris, Partage) */}
         <div className="absolute top-3 right-3 flex gap-2 z-10">
           <button
             onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-gray-200/60 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
           >
-            <Share2 className="w-4 h-4 text-gray-800" />
+            <Share2 className="w-4 h-4 text-gray-600" strokeWidth={2} />
           </button>
           <button
             onClick={handleFavorite}
-            className="w-9 h-9 rounded-full bg-gray-200/60 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
           >
-            <Star className={`w-4 h-4 ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-800'}`} />
+            <Star className={`w-[18px] h-[18px] ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-600'}`} strokeWidth={favorite ? 0 : 1.8} />
           </button>
         </div>
         
         {/* Private Badge */}
-        {event.isPrivate && (
+        {event?.isPrivate && (
           event.creatorId === user?.id ? (
             <button
               onClick={(e) => { e.stopPropagation(); setShowQRModal(true); }}
-              className="absolute top-3 left-3 bg-gray-900/90 backdrop-blur-md px-150 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-transform z-10"
+              className="absolute top-3 left-3 bg-gray-900/90 backdrop-blur-md px-2 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-transform z-10"
             >
               <QrCode className="w-3.5 h-3.5 text-action-primary" />
               <span className="text-[11px] font-bold text-white uppercase tracking-wider">Privé</span>
@@ -146,25 +197,40 @@ export const EventCard = memo(function EventCard({
         )}
       </div>
 
-      {/* Info */}
-      <div className="p-150 w-full">
-        <h3 className="text-base font-bold text-gray-900 leading-tight mb-1 truncate flex items-center gap-1.5">
-          {event.title}
-        </h3>
-        <p className="text-[12px] text-text-secondary mb-0.5">{dateStr}</p>
-        {location && <p className="text-[12px] text-text-secondary mb-200 truncate">{location}</p>}
+      {/* ── ZONE DE CONTENU ─────────────────────────────────────────────── */}
+      <div className="p-4 w-full flex flex-col flex-1 justify-between">
+        
+        {/* Informations */}
+        <div>
+          <h3 
+            className="font-semibold text-[#1B1818] leading-tight mb-1 truncate" 
+            style={{ fontFamily: 'var(--font-poppins)', fontSize: '17px', fontWeight: 500 }}
+          >
+            {displayTitle}
+          </h3>
+          <p className="text-[13px] text-gray-500 mb-0.5 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
+            {displayDate}
+          </p>
+          {displayLocation && (
+            <p className="text-[13px] text-gray-500 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
+              {displayLocation}
+            </p>
+          )}
+        </div>
 
-        <div className="flex items-center justify-between mt-auto">
+        {/* Pied de la carte (Avatars + Prix) */}
+        <div className="flex items-center justify-between mt-4">
+          
           <div className="flex items-center gap-2">
-            {/* Overlapping avatars */}
-            {count > 0 && (
+            {/* Avatars */}
+            {count > 0 ? (
               <div className="flex -space-x-2">
                 {Array.from({ length: Math.min(count, 3) }).map((_, i) => {
                   const avatar = attendees[i]?.user?.profile?.avatarUrl;
                   return (
                     <div
                       key={i}
-                      className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-white text-[11px] font-bold overflow-hidden"
+                      className="w-[26px] h-[26px] rounded-full border-[2px] border-white flex items-center justify-center text-white text-[10px] font-bold overflow-hidden"
                       style={{ backgroundColor: avatar ? 'transparent' : colors[i % colors.length], zIndex: 3 - i }}
                     >
                       {avatar
@@ -175,26 +241,38 @@ export const EventCard = memo(function EventCard({
                   );
                 })}
               </div>
+            ) : (
+              // Mock avatars pour la maquette si pas d'attendees
+              <div className="flex -space-x-2">
+                <div className="w-[26px] h-[26px] rounded-full bg-gray-300 border-[2px] border-white" style={{ zIndex: 3 }} />
+                <div className="w-[26px] h-[26px] rounded-full bg-gray-400 border-[2px] border-white" style={{ zIndex: 2 }} />
+                <div className="w-[26px] h-[26px] rounded-full bg-gray-500 border-[2px] border-white" style={{ zIndex: 1 }} />
+              </div>
             )}
-            {/* Participant count */}
-            <span className="text-[13px] text-text-secondary font-medium">
-              {max ? `${count}/${max} Participants` : `${count} Participants`}
+            
+            <span className="text-[12px] font-medium text-gray-600" style={{ fontFamily: 'var(--font-poppins)' }}>
+              {displayAttendeesCount}
             </span>
           </div>
 
-          {/* Price badge */}
+          {/* Badge Prix */}
           {badge ?? (
-            <span className={`px-3 py-1 rounded-lg text-[12px] font-bold whitespace-nowrap ${
-              ((event.poolTarget && event.poolTarget > 0) || (event as any).participationMode === 'cagnotte' || (event as any).participationMode === 'pool')
-                ? 'bg-purple-100 text-purple-600'
-                : ((event as any).participationMode === 'ticket' || (event as any).participationMode === 'tickets')
-                  ? 'bg-blue-100 text-blue-600'
-                  : event.price === 0
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-[#EBF5FF] text-[#007AFF]'
+            <div className={`px-3 py-1 rounded-full flex items-center justify-center ${
+              displayPrice.toLowerCase() === 'gratuit' || displayPrice.toLowerCase() === 'free'
+                ? 'bg-[#E8F8F0]'
+                : 'bg-gray-100'
             }`}>
-              {price}
-            </span>
+              <span 
+                className={`text-[13px] font-semibold ${
+                  displayPrice.toLowerCase() === 'gratuit' || displayPrice.toLowerCase() === 'free'
+                    ? 'text-[#00A35F]'
+                    : 'text-gray-700'
+                }`} 
+                style={{ fontFamily: 'var(--font-poppins)' }}
+              >
+                {displayPrice}
+              </span>
+            </div>
           )}
         </div>
       </div>
