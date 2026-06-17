@@ -420,13 +420,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         )}
 
         {/* Bouton bascule Liste/Carte */}
-        <div className="absolute right-4 z-50 pointer-events-none" style={{ top: '190px' }}>
+        <div className="absolute bottom-[100px] right-4 z-[1050]">
           <button
             onClick={() => {
               hapticFeedback.impact();
               setViewMode(viewMode === 'list' ? 'map' : 'list');
             }}
-            className="w-[44px] h-[44px] rounded-[12px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform pointer-events-auto"
+            className="w-[44px] h-[44px] rounded-[12px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform"
           >
             {viewMode === 'list' ? (
               <Map className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
