@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { X, Search, Loader2, Check, Trash2, Pencil, MapPin, ChevronLeft } from 'lucide-react'
 import {
   Cancel01Icon,
   ImageAdd01Icon,
@@ -10,7 +9,6 @@ import {
   UserAdd01Icon,
   UserIcon,
   ArrowLeft01Icon,
-  Tick01Icon,
   PaintBoardIcon,
   HappyIcon,
   FootballIcon,
@@ -23,6 +21,13 @@ import {
   ShoppingBag01Icon,
   MusicNote01Icon,
   Tv01Icon,
+  Time02Icon,
+  PencilEdit01Icon,
+  Delete01Icon,
+  EarthIcon,
+  LockIcon,
+  Search01Icon,
+  CheckmarkCircle02Icon
 } from 'hugeicons-react'
 import { CagnotteAddIcon, PublishEventIcon } from '@/components/shared/icons/EventActionIcons'
 import { apiClient } from '@/lib/api-client'
@@ -80,50 +85,32 @@ function formatDateTime(date: string, time: string) {
   } catch { return `${date} ${time}` }
 }
 
-// ── Field Row component ──────────────────────────────────────────────────────
-function FieldRow({
-  label, value, placeholder, onPress, onEdit, onDelete, children
+function InputField({
+  label, value, placeholder, onClick, onChange, readOnly, rightIcons
 }: {
   label: string
   value?: string
   placeholder?: string
-  onPress?: () => void
-  onEdit?: () => void
-  onDelete?: () => void
-  children?: React.ReactNode
+  onClick?: () => void
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
+  readOnly?: boolean
+  rightIcons?: React.ReactNode
 }) {
   return (
-    <div className="border-b border-[#F0F0F0] last:border-0">
-      <div
-        onClick={!value && !children ? onPress : undefined}
-        className={`flex items-center justify-between py-4 ${!value && !children && onPress ? 'cursor-pointer active:bg-gray-50' : ''}`}
-      >
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-[#1A1A1A] mb-0.5">{label}</p>
-          {children ?? (
-            value
-              ? <p className="text-[14px] text-[#1A1A1A] font-medium truncate">{value}</p>
-              : <p className="text-[14px] text-[#BDBDBD]">{placeholder}</p>
-          )}
-        </div>
-        {value && (onEdit || onDelete) && (
-          <div className="flex items-center gap-2 ml-3 shrink-0">
-            {onEdit && (
-              <button onClick={(e) => { e.stopPropagation(); onEdit() }}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all">
-                <Pencil className="w-4 h-4 text-[#555]" />
-              </button>
-            )}
-            {onDelete && (
-              <button onClick={(e) => { e.stopPropagation(); onDelete() }}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 active:scale-95 transition-all">
-                <Trash2 className="w-4 h-4 text-[#C5221F]" />
-              </button>
-            )}
+    <div className="mb-4">
+      <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">{label}</p>
+      <div className="relative" onClick={onClick}>
+        <input
+          value={value || ''}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          onChange={onChange}
+          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00] ${readOnly ? 'cursor-pointer' : ''}`}
+        />
+        {rightIcons && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {rightIcons}
           </div>
-        )}
-        {!value && !children && onPress && (
-          <ChevronLeft className="w-4 h-4 text-[#BDBDBD] rotate-180 shrink-0" />
         )}
       </div>
     </div>
@@ -144,7 +131,7 @@ function BottomSheet({ title, open, onClose, children }: {
         style={{ boxShadow: '0 -4px 30px rgba(0,0,0,0.15)' }}
       >
         {/* Handle */}
-        <div className="w-10 h-1 rounded-full bg-[#DADADA] mx-auto mb-4" />
+        <div className="w-10 h-1 rounded-full bg-[#E0E0E0] mx-auto mb-4" />
         <h3 className="text-[17px] font-bold text-[#1A1A1A] text-center mb-2">{title}</h3>
         {children}
       </div>
@@ -456,7 +443,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             disabled={publishing}
             className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2.5 active:scale-[0.98] transition-all ${publishing ? 'bg-[#FF7A00]/50' : 'bg-[#FF7A00]'}`}
           >
-            {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : <PublishEventIcon className="w-5 h-5 text-white" />}
+            {publishing ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <PublishEventIcon className="w-5 h-5 text-white" />}
             {publishing ? 'Publication...' : "Publier l'événement"}
           </button>
           <button onClick={() => navigate('/profile')}
@@ -576,7 +563,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <ArrowLeft01Icon className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2} />
             </button>
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BDBDBD]" />
+              <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BDBDBD]" />
               <input
                 autoFocus
                 value={coOrgSearch}
@@ -648,7 +635,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <ArrowLeft01Icon className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2} />
             </button>
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BDBDBD]" />
+              <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BDBDBD]" />
               <input
                 autoFocus
                 value={locationQuery}
@@ -693,7 +680,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="px-5 py-4 border-t border-[#F0F0F0] mt-4">
               <button onClick={() => { setLocationTab('carte') }}
                 className="w-full py-3.5 rounded-full border border-[#E0E0E0] text-[#1A1A1A] font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-                <MapPin className="w-4 h-4 text-[#FF7A00]" />
+                <HugeMapPin className="w-4 h-4 text-[#FF7A00]" />
                 Sélectionner sur la carte
               </button>
             </div>
@@ -718,7 +705,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 pt-4 pb-8 z-[110]">
               <button onClick={confirmMapLocation} disabled={isReverseGeocoding}
                 className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all">
-                {isReverseGeocoding ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                {isReverseGeocoding ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <CheckmarkCircle02Icon className="w-5 h-5" />}
                 {isReverseGeocoding ? "Traduction de l'adresse..." : 'Confirmer la sélection'}
               </button>
             </div>
@@ -741,7 +728,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             onClick={onBack}
             className="absolute left-0 w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center active:scale-95 transition-transform"
           >
-            <X className="w-4 h-4 text-[#1A1A1A]" />
+            <Cancel01Icon className="w-4 h-4 text-[#1A1A1A]" />
           </button>
           <span className="text-[15px] font-bold text-[#1A1A1A]">Créer un événement</span>
         </div>
@@ -764,7 +751,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <button
                 onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
                 className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
-                <X className="w-4 h-4 text-[#C5221F]" />
+                <Cancel01Icon className="w-4 h-4 text-[#C5221F]" />
               </button>
             </>
           ) : (
@@ -827,7 +814,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {/* Add organizer button */}
           <button
             onClick={() => setShowOrganizerSearch(true)}
-            className="flex items-center gap-2 text-[13px] font-semibold text-[#2196F3] active:opacity-70 transition-opacity">
+            className="flex items-center gap-2 text-[13px] font-semibold text-[#FF7A00] active:opacity-70 transition-opacity">
             <UserAdd01Icon className="w-4 h-4" strokeWidth={1.5} />
             Ajouter un organisateur
           </button>
@@ -837,50 +824,51 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="px-5">
 
           {/* Nom */}
-          <div className="py-3">
-            <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Nom</p>
-            <input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Nom de l'événement..."
-              className="app-input"
-            />
-          </div>
+          <InputField
+            label="Nom"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Nom de l'événement..."
+          />
 
           {/* Date et heure de début */}
-          <FieldRow
+          <InputField
             label="Date et heure de début"
             value={startDateLabel ?? undefined}
             placeholder="Sélectionnez une date et heure"
-            onPress={() => { setTempStartDate(startDate); setTempStartTime(startTime || '10:00'); setShowStartDateSheet(true) }}
-            onEdit={() => { setTempStartDate(startDate); setTempStartTime(startTime || '10:00'); setShowStartDateSheet(true) }}
-            onDelete={startDate ? () => { setStartDate(''); setStartTime('') } : undefined}
+            readOnly
+            onClick={() => { setTempStartDate(startDate); setTempStartTime(startTime || '10:00'); setShowStartDateSheet(true) }}
           />
 
           {/* Ajouter une heure de fin */}
-          <div className="border-b border-[#F0F0F0] py-3">
-            <label className="flex items-center gap-2.5 cursor-pointer">
-              <div
-                onClick={() => setHasEndDate(!hasEndDate)}
-                className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${hasEndDate ? 'bg-[#FF7A00] border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
-                {hasEndDate && <Tick01Icon className="w-3 h-3 text-white" strokeWidth={2.5} />}
-              </div>
-              <span className="text-[13px] text-[#1A1A1A] font-medium">Ajouter une heure de fin</span>
-            </label>
-            {hasEndDate && (
-              <div className="mt-3">
-                <FieldRow
+          <div className="mb-4">
+            {!hasEndDate ? (
+              <button
+                onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
+                className="flex items-center gap-2 text-[13px] font-medium text-[#1A1A1A] active:opacity-70 transition-opacity"
+              >
+                <Time02Icon className="w-4 h-4 text-[#A3A3A3]" strokeWidth={1.5} />
+                Ajouter une heure de fin
+              </button>
+            ) : (
+              <div>
+                <InputField
                   label="Date et heure de fin"
                   value={endDateLabel ?? undefined}
                   placeholder="Sélectionnez une date et heure"
-                  onPress={() => { setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
-                  onEdit={() => { setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
-                  onDelete={endDate ? () => { setEndDate(''); setEndTime('') } : undefined}
+                  readOnly
+                  onClick={() => { setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
+                  rightIcons={endDate ? (
+                    <>
+                      <button onClick={(e) => { e.stopPropagation(); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }} className="p-1 active:scale-90"><PencilEdit01Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} /></button>
+                      <button onClick={(e) => { e.stopPropagation(); setEndDate(''); setEndTime(''); setHasEndDate(false) }} className="p-1 active:scale-90"><Delete01Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} /></button>
+                    </>
+                  ) : null}
                 />
                 {endDate && endTime && (
-                  <div className="flex items-center gap-1.5 mb-2 mt-1">
-                    <HugeClock className="w-3.5 h-3.5 text-[#FF7A00]" strokeWidth={1.5} />
-                    <span className="text-[12px] text-[#FF7A00] font-medium">Heure de fin ajoutée</span>
+                  <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
+                    <Time02Icon className="w-3.5 h-3.5 text-[#A3A3A3]" strokeWidth={1.5} />
+                    <span className="text-[12px] text-[#A3A3A3]">Heure de fin ajoutée</span>
                   </div>
                 )}
               </div>
@@ -888,69 +876,66 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           </div>
 
           {/* Lieu de l'événement */}
-          <FieldRow
+          <InputField
             label="Lieu de l'événement"
             value={address || city || undefined}
             placeholder="Où aura lieu l'événement ?"
-            onPress={() => setShowLocationSearch(true)}
-            onEdit={() => setShowLocationSearch(true)}
-            onDelete={address || city ? () => { setAddress(''); setCity(''); setLat(null); setLon(null) } : undefined}
+            readOnly
+            onClick={() => setShowLocationSearch(true)}
           />
 
           {/* Confidentialité */}
-          <FieldRow
+          <InputField
             label="Confidentialité"
             value={privacyLabel ?? undefined}
-            placeholder="Qui peut voir cet événement ?"
-            onPress={() => setShowPrivacySheet(true)}
-            onEdit={() => setShowPrivacySheet(true)}
-            onDelete={privacy ? () => setPrivacy(null) : undefined}
+            placeholder="Qui peut le voir ?"
+            readOnly
+            onClick={() => setShowPrivacySheet(true)}
           />
 
-          {/* Détails */}
-          <div className="py-3">
-            <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Détails</p>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Écrivez les détails ici..."
-              rows={3}
-              className="app-input-textarea"
-            />
-          </div>
+          {/* Dynamic fields (appear only after privacy is set, as per Figma) */}
+          {privacy && (
+            <div className="animate-in slide-in-from-top-2">
+              <div className="mb-4">
+                <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Détails</p>
+                <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Quels sont les détails ?"
+                  rows={4}
+                  className="w-full px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00] resize-none"
+                />
+              </div>
 
-          {/* Catégorie */}
-          <FieldRow
-            label="Catégorie"
-            value={catLabel ? catLabel.label : undefined}
-            placeholder="Aucune"
-            onPress={() => setShowCategorySheet(true)}
-            onEdit={() => setShowCategorySheet(true)}
-            onDelete={category ? () => setCategory(null) : undefined}
-          />
+              <InputField
+                label="Catégorie"
+                value={catLabel ? catLabel.label : undefined}
+                placeholder="Facultatif"
+                readOnly
+                onClick={() => setShowCategorySheet(true)}
+              />
 
-          {/* Facultatif — Places */}
-          <div className="py-3">
-            <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Places (Facultatif)</p>
-            <input
-              value={maxPlaces}
-              onChange={e => setMaxPlaces(e.target.value)}
-              type="number"
-              min={1}
-              placeholder="Nombre de places maximum..."
-              className="app-input"
-            />
-          </div>
+              <div className="mb-4">
+                <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Places (Facultatif)</p>
+                <input
+                  value={maxPlaces}
+                  onChange={e => setMaxPlaces(e.target.value)}
+                  type="number"
+                  min={1}
+                  placeholder="Nombre de places maximum..."
+                  className="w-full px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00]"
+                />
+              </div>
 
-          {/* Mode d'accès */}
-          <FieldRow
-            label="Mode d'accès"
-            value={participationLabel ?? undefined}
-            placeholder="Comment participer ?"
-            onPress={() => setShowParticipationSheet(true)}
-            onEdit={() => setShowParticipationSheet(true)}
-            onDelete={participationMode ? () => setParticipationMode(null) : undefined}
-          />
+              <InputField
+                label="Mode d'accès"
+                value={participationLabel ?? undefined}
+                placeholder="Comment participer ?"
+                readOnly
+                onClick={() => setShowParticipationSheet(true)}
+              />
+            </div>
+          )}
 
         </div>
       </div>
@@ -960,9 +945,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <button
           onClick={handleSubmit}
           disabled={loading || !canSubmit}
-          className={`w-full py-[15px] rounded-full font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${loading || !canSubmit ? 'bg-[#FFEEDB]' : 'bg-[#FF7A00]'}`}
+          className={`w-full py-[15px] rounded-[100px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${loading || !canSubmit ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+          {loading ? <div className="w-5 h-5 border-2 border-[#FFB073] border-t-white rounded-full animate-spin" /> : null}
           {loading ? "Création..." : "Suivant"}
         </button>
       </div>
@@ -1056,15 +1041,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           Choisissez qui peut voir cet événement et participer. Vous pourrez envoyer des invitations plus tard.
         </p>
         {[
-          { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invitées', emoji: '🔒' },
-          { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde au sein de Let's Out`, emoji: '🌍' },
+          { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde au sein de Let's Out`, Icon: EarthIcon },
+          { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invitées', Icon: LockIcon },
         ].map(opt => (
           <button
             key={opt.value}
             onClick={() => { setPrivacy(opt.value); setShowPrivacySheet(false) }}
             className={`w-full flex items-center gap-4 p-4 rounded-2xl border mb-3 transition-all text-left ${privacy === opt.value ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}
           >
-            <span className="text-2xl">{opt.emoji}</span>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${privacy === opt.value ? 'bg-[#FF7A00]' : 'bg-[#F2F2F2]'}`}>
+              <opt.Icon className={`w-5 h-5 ${privacy === opt.value ? 'text-white' : 'text-[#5B5B5B]'}`} strokeWidth={1.5} />
+            </div>
             <div className="flex-1">
               <p className="text-[15px] font-semibold text-[#1A1A1A]">{opt.label}</p>
               <p className="text-[12px] text-[#766F6E]">{opt.desc}</p>
