@@ -377,136 +377,90 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   }
 
   // ── SEARCH SCREEN ─────────────────────────────────────────────────────────
+  // ── SEARCH SCREEN (City Selector - Screen 2 & 3) ────────────────────────
   if (screen === 'search') {
-    return (
-      <div className="w-full h-full bg-background flex flex-col">
-        <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
-          <div className="flex items-center justify-between mb-200">
-            <button onClick={() => setScreen('list')} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
-              <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
-            </button>
-            <span className="text-[15px] font-semibold text-gray-900">Rechercher</span>
-            <div className="w-8" />
-          </div>
+    const isSearching = activeSearchInput === 'location' && mapSearch.length > 0;
+    
+    // Mock data for cities
+    const recentCities = ['Abomey-Calavi', 'Cotonou', 'Bohicon', 'Abomey'];
+    const allCities = ['Abomey', 'Abomey-Calavi', 'Adjarra', 'Adjohun', 'Aguégués', 'Allada', 'Aplahoué', 'Avrankou'];
+    const filteredCities = allCities.filter(c => c.toLowerCase().startsWith(mapSearch.toLowerCase()));
 
-          {/* Location search */}
-          <div className={`flex items-center gap-2 border rounded-full px-4 py-2.5 mb-3 transition-colors ${activeSearchInput === 'location' ? 'border-action-primary' : 'border-gray-200'}`}>
-            <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0" />
+    return (
+      <div className="w-full h-full bg-background flex flex-col z-10 relative">
+        <div className="px-5 pt-safe-6 pb-2">
+          {/* Header Search Input */}
+          <div className={`flex items-center gap-2 rounded-[16px] px-4 py-3 transition-colors ${isSearching ? 'border-action-primary border-[1.5px]' : 'border border-gray-200'}`}>
+            <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
             <input
               autoFocus
               value={mapSearch}
-              onChange={(e) => handleMapSearch(e.target.value)}
-              onFocus={() => setActiveSearchInput('location')}
-              placeholder="Saisissez une ville..."
-              className="flex-1 text-[15px] outline-none text-gray-900 placeholder:text-gray-400 border-none focus:ring-0"
+              onChange={(e) => {
+                setMapSearch(e.target.value);
+                setActiveSearchInput('location');
+              }}
+              placeholder="Rechercher une ville..."
+              className="flex-1 text-[15px] outline-none bg-transparent text-[#1B1818] placeholder:text-gray-400 font-poppins"
             />
-            {mapSearch && (
-              <button onClick={() => { handleMapSearch(''); setActiveSearchInput('location'); }}>
-                <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
-                  <X className="w-3 h-3 text-gray-500" />
-                </div>
+            {isSearching && (
+              <button onClick={() => setMapSearch('')}>
+                <X className="w-5 h-5 text-gray-400" />
               </button>
             )}
-          </div>
-
-          {/* Event keyword search */}
-          <div className={`flex items-center gap-2 border rounded-full px-4 py-2.5 transition-colors ${activeSearchInput === 'keyword' ? 'border-action-primary' : 'border-gray-200'}`}>
-            <Search className="w-5 h-5 text-gray-500 flex-shrink-0" />
-            <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onFocus={() => setActiveSearchInput('keyword')}
-              placeholder="Concert, sortie, fête..."
-              className="flex-1 text-[15px] outline-none bg-transparent text-gray-900 placeholder:text-gray-400 border-none focus:ring-0"
-            />
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pt-4">
-          {activeSearchInput === 'location' ? (
-            <div className="space-y-1">
-              {/* Position actuelle toujours visible en haut, alignée à gauche */}
-              <button className="w-full flex justify-start items-center text-left px-4 py-3 gap-2" onClick={handleMapGeolocate}>
-                <Target className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                <span className="text-[15px] text-gray-900 flex-1">Position actuelle</span>
+          {!isSearching ? (
+            // Screen 2: Empty search (Focus location)
+            <div className="animate-in fade-in duration-200">
+              {/* Active Badge */}
+              <button 
+                className="inline-flex items-center gap-1.5 bg-action-primary px-4 py-2 rounded-full mb-6"
+                onClick={() => setScreen('list')}
+              >
+                <span className="text-white text-[14px] font-semibold font-poppins">Cotonou</span>
+                <Check className="w-4 h-4 text-white" strokeWidth={3} />
               </button>
-              
-              {(() => {
-                const defaultLocs = ['Abomey, BJ', 'Abomey-Calavi, BJ', 'Cotonou, BJ', 'Ouidah, BJ', 'Porto-Novo, BJ', 'Parakou, BJ', 'Bohicon, BJ'];
-                
-                let list = mapSearch.length > 0 
-                  ? [
-                      ...defaultLocs.map(label => ({ label, lat: 0, lon: 0, isStatic: true })),
-                      ...mapSearchResults.map(r => ({ label: r.label, lat: r.lat, lon: r.lon, isStatic: false }))
-                    ]
-                  : defaultLocs.map(label => ({ label, lat: 0, lon: 0, isStatic: true }));
 
-                if (mapSearch.length > 0) {
-                  // STRICT PREFIX MATCHING (STARTS WITH)
-                  list = list.filter(loc => loc.label.toLowerCase().startsWith(mapSearch.toLowerCase()));
-                  // Supprimer les doublons
-                  list = list.filter((loc, idx, self) => self.findIndex(l => l.label === loc.label) === idx);
-                }
-
-                if (mapSearch.length > 0 && list.length === 0) {
-                  return <div className="px-4 py-3 text-[14px] text-gray-400 text-left">Aucune ville trouvée</div>;
-                }
-
-                return list.map((loc, idx) => {
-                  const isSelected = mapSearch === loc.label;
-                  return (
+              {/* Récents */}
+              <div>
+                <h3 className="text-[13px] text-gray-500 font-poppins mb-3">Récents</h3>
+                <div className="flex flex-col">
+                  {recentCities.map((city, idx) => (
                     <button
                       key={idx}
-                      className="w-full flex justify-start items-center text-left px-4 py-3 gap-2"
+                      className="w-full flex items-center gap-3 py-3 text-left active:opacity-70 transition-opacity"
                       onClick={() => {
-                        handleMapSearch(loc.label);
-                        if (!loc.isStatic && loc.lat && loc.lon) {
-                          setMapCenter([loc.lat, loc.lon]);
-                        }
-                        setActiveSearchInput('keyword');
+                        setMapSearch(city);
+                        setScreen('list');
                       }}
                     >
                       <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                      <span className="text-[15px] text-gray-900 flex-1 truncate">{loc.label}</span>
-                      {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-action-primary flex items-center justify-center flex-shrink-0 ml-auto">
-                          <Check className="w-3 h-3 text-white stroke-[3]" />
-                        </div>
-                      )}
+                      <span className="text-[15px] text-[#1B1818] font-poppins">{city}</span>
                     </button>
-                  );
-                });
-              })()}
+                  ))}
+                </div>
+              </div>
             </div>
           ) : (
-            <div className="space-y-1">
-              {searchQuery.length > 0 && keywordSuggestions.length > 0 ? (
-                keywordSuggestions.map((evt) => (
-                  <button
-                    key={evt.id}
-                    className="w-full flex items-center gap-2 px-4 py-3"
-                    onClick={() => {
-                      setSearchQuery(evt.title);
-                      setScreen('list');
-                    }}
-                  >
-                    {evt.coverUrl ? (
-                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                        <img src={evt.coverUrl} alt={evt.title} className="w-full h-full object-cover" />
-                      </div>
-                    ) : (
-                      <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                    )}
-                    <div className="flex flex-col items-start truncate">
-                      <span className="text-[15px] text-gray-900 truncate">{evt.title}</span>
-                      {evt.city && <span className="text-[12px] text-gray-400 truncate">{evt.city}</span>}
-                    </div>
-                  </button>
-                ))
-              ) : searchQuery.length > 0 ? (
-                <div className="py-8 text-center text-gray-400 text-sm">Aucun événement trouvé</div>
-              ) : (
-                <div className="py-8 text-center text-gray-400 text-sm">Tapez pour rechercher un événement</div>
+            // Screen 3: Active search
+            <div className="flex flex-col animate-in fade-in duration-200">
+              {filteredCities.map((city, idx) => (
+                <button
+                  key={idx}
+                  className="w-full flex items-center gap-3 py-3 text-left active:opacity-70 transition-opacity"
+                  onClick={() => {
+                    setMapSearch(city);
+                    setScreen('list');
+                  }}
+                >
+                  <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <span className="text-[15px] text-[#1B1818] font-poppins">{city}</span>
+                </button>
+              ))}
+              {filteredCities.length === 0 && (
+                <div className="py-4 text-center text-gray-400 text-sm font-poppins">Aucune ville trouvée</div>
               )}
             </div>
           )}
@@ -573,57 +527,110 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     );
   }
 
-  // ── MAIN LIST SCREEN ───────────────────────────────────────────────────────
+  // ── MAIN LIST SCREEN (Screen 1 & 4) ───────────────────────────────────────
+  
+  // Mock data implementation for user request
+  const currentLocation = mapSearch || 'Cotonou';
+  const isAbomey = currentLocation === 'Abomey-Calavi';
+  
+  const mockCards = isAbomey ? [
+    { id: '3', title: 'Lancement Let\'s Out', date: "Aujourd'hui • 10h10", location: "Université d'Abomey-Calavi (Abomey-Calavi)" },
+    { id: '4', title: 'Matinée Cocktail social', date: "Aujourd'hui • 09h", location: "Fidirossè Beach (Cotonou)" }
+  ] : [
+    { id: '1', title: 'Chill bouffe gratuite', date: "Aujourd'hui à 10h", location: "Cotonou • Place de l'amazone" },
+    { id: '2', title: 'Sea holidays party', date: "Samedi prochain à 09h", location: "Cotonou • Fidirossè Beach (Cotonou)" }
+  ];
+
+  const MockEventCard = ({ data }: { data: any }) => (
+    <div className="w-full bg-white rounded-[24px] overflow-hidden border border-gray-100 shadow-sm relative mb-4">
+      <div className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+      </div>
+      
+      {/* Grille transparente placeholder */}
+      <div className="w-full h-[180px] bg-[#F5F5F5] relative overflow-hidden">
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'linear-gradient(45deg, #E5E5E5 25%, transparent 25%, transparent 75%, #E5E5E5 75%, #E5E5E5), linear-gradient(45deg, #E5E5E5 25%, transparent 25%, transparent 75%, #E5E5E5 75%, #E5E5E5)',
+          backgroundSize: '20px 20px',
+          backgroundPosition: '0 0, 10px 10px'
+        }} />
+      </div>
+
+      <div className="p-4 relative">
+        <h3 className="font-poppins font-bold text-[17px] text-[#1B1818] leading-tight mb-1">{data.title}</h3>
+        <p className="font-poppins text-[13px] text-gray-500 mb-0.5">{data.date}</p>
+        <p className="font-poppins text-[13px] text-gray-500 mb-4">{data.location}</p>
+
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center">
+            <div className="flex -space-x-2">
+              <div className="w-6 h-6 rounded-full bg-gray-300 border-2 border-white" />
+              <div className="w-6 h-6 rounded-full bg-gray-400 border-2 border-white" />
+              <div className="w-6 h-6 rounded-full bg-gray-500 border-2 border-white" />
+            </div>
+            <span className="font-poppins text-[12px] font-medium text-gray-600 ml-2">+500 Participants</span>
+          </div>
+          
+          <div className="px-3 py-1 bg-[#E8F8F0] rounded-full">
+            <span className="font-poppins font-semibold text-[13px] text-[#00A35F]">Gratuit</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className={`w-full h-full flex flex-col relative ${viewMode === 'map' ? 'bg-transparent' : 'bg-background'}`}>
+    <div className={`w-full h-full flex flex-col relative bg-background`}>
 
         {/* Header & Search Bar */}
-        <div className={`px-5 pt-safe-6 pb-2 shrink-0 relative ${viewMode === 'map' ? 'z-[500] bg-white shadow-sm rounded-b-[28px]' : 'z-10 bg-background-white'}`}>
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-[22px] font-bold text-gray-900 tracking-tight">Explorez et découvrez</h1>
+        <div className={`px-5 pt-safe-6 pb-2 shrink-0 relative z-10 bg-background-white`}>
+          <div className="flex items-center justify-between mb-4 mt-2">
+            <h1 className="text-[24px] font-semibold font-poppins text-[#1B1818] tracking-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
-              <Bell className="w-[22px] h-[22px] text-gray-700" strokeWidth={2} />
+              <Bell className="w-6 h-6 text-[#1B1818]" strokeWidth={1.8} />
               <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-action-primary rounded-full border-2 border-white" />
             </button>
           </div>
 
-          <button onClick={() => setScreen('search')} className="flex items-center gap-1.5 mb-4 text-gray-700 active:opacity-70 transition-opacity">
-            <MapPin className="w-4 h-4" strokeWidth={2} />
-            <span className="text-[14px] font-semibold">{mapSearch || 'Cotonou'}</span>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+          <button onClick={() => setScreen('search')} className="flex items-center gap-1.5 mb-5 text-gray-600 active:opacity-70 transition-opacity">
+            <MapPin className="w-[18px] h-[18px]" strokeWidth={2} />
+            <span className="text-[15px] font-poppins font-medium">{currentLocation}</span>
+            <ChevronDown className="w-4 h-4 text-gray-400" strokeWidth={2} />
           </button>
 
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-3 mb-5">
             <div
-              className="flex-1 border border-gray-200 rounded-full flex items-center px-4 py-2.5 cursor-text"
-              onClick={() => {
-                hapticFeedback.impact()
-                setScreen('search')
-              }}
+              className="flex-1 border border-gray-200 rounded-[14px] flex items-center px-4 py-3 bg-white"
             >
-              <Search className="w-[18px] h-[18px] text-gray-400 mr-2 shrink-0" />
-              <span className="text-[14px] text-gray-400 truncate flex-1">Rechercher des événements</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  hapticFeedback.impact()
-                  setScreen('filter')
-                }}
-                className="ml-2 shrink-0 border-l pl-3 border-gray-200"
-              >
-                <SlidersHorizontal className="w-[18px] h-[18px] text-gray-500" />
-              </button>
+              <Search className="w-5 h-5 text-gray-400 mr-2 shrink-0" />
+              <input 
+                className="text-[15px] text-[#1B1818] font-poppins placeholder:text-gray-400 bg-transparent outline-none flex-1"
+                placeholder="Rechercher des événements"
+                readOnly
+              />
+              <div className="flex items-center gap-2 ml-2 shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    hapticFeedback.impact();
+                    setScreen('filter');
+                  }}
+                  className="p-1"
+                >
+                  <SlidersHorizontal className="w-5 h-5 text-gray-400" />
+                </button>
+                <div className="w-[1px] h-5 bg-gray-200 mx-1"></div>
+                <button
+                  onClick={() => {
+                    hapticFeedback.impact();
+                    setViewMode(viewMode === 'list' ? 'map' : 'list');
+                  }}
+                  className="p-1"
+                >
+                  <QrCode className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
             </div>
-            
-            <button
-              onClick={() => {
-                hapticFeedback.impact()
-                setViewMode(viewMode === 'list' ? 'map' : 'list')
-              }}
-              className="w-[42px] h-[42px] rounded-full border border-gray-200 flex items-center justify-center transition-colors bg-white active:bg-gray-50 shrink-0"
-            >
-              <QrCode className="w-5 h-5 text-gray-500" />
-            </button>
           </div>
 
           {/* Category chips */}
@@ -635,7 +642,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   hapticFeedback.impact()
                   setSelectedCategory(category)
                 }}
-                className={`px-4 py-1.5 rounded-full text-[13px] whitespace-nowrap font-semibold transition-colors flex-shrink-0 ${
+                className={`px-4 py-2 rounded-full text-[14px] font-poppins whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
                   selectedCategory === category
                     ? 'bg-[#FFF5ED] text-[#FF7A00]'
                     : 'bg-transparent text-gray-500'
@@ -647,57 +654,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
         </div>
 
+        {/* Content (Mocked Event List) */}
+        <div className="flex-1 overflow-y-auto px-5 pt-4 pb-[80px]">
+          {mockCards.map(card => (
+            <MockEventCard key={card.id} data={card} />
+          ))}
+        </div>
 
-
-        {/* Content (List or Map) */}
-        {viewMode === 'map' ? (
-          <Suspense fallback={
-            <div className="flex-1 flex items-center justify-center">
-              <Loader2 className="w-7 h-7 animate-spin text-action-primary" />
-            </div>
-          }>
-            <LazyExplorerMap
-              events={events}
-              mapCenter={mapCenter}
-              mapGeoLoading={mapGeoLoading}
-              onGeolocate={handleMapGeolocate}
-              onNavigate={onNavigate}
-            />
-            {/* FAB to switch back to list */}
-            <div className="absolute right-5 bottom-8 z-[900]">
-              <button
-                onClick={() => setViewMode('list')}
-                className="w-[50px] h-[50px] bg-action-primary rounded-xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-              >
-                <List className="w-6 h-6 text-white" />
-              </button>
-            </div>
-          </Suspense>
-        ) : (
-          <div className="flex-1 overflow-y-auto px-5 pt-4 space-y-200 pb-20">
-            {isLoading ? (
-              // ── Skeleton loaders — prevent layout shift ──────────────────
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-background-white border border-gray-100 rounded-3xl p-150 flex gap-200 shadow-sm animate-pulse">
-                  <div className="w-24 h-24 rounded-2xl bg-gray-200 flex-shrink-0" />
-                  <div className="flex-1 flex flex-col justify-center gap-2">
-                    <div className="h-3 bg-gray-200 rounded-full w-2/3" />
-                    <div className="h-4 bg-gray-200 rounded-full w-full" />
-                    <div className="h-3 bg-gray-100 rounded-full w-1/2" />
-                  </div>
-                </div>
-              ))
-            ) : events.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-text-secondary">Aucun événement trouvé.</p>
-              </div>
-            ) : (
-              events.map((event: Event) => (
-                <EventCard key={event.id} event={event} onNavigate={onNavigate} />
-              ))
-            )}
-          </div>
-        )}
     </div>
   );
 }
