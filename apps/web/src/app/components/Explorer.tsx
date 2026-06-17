@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List } from 'lucide-react';
-import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon } from 'hugeicons-react';
+import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon } from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { EventCard } from '@/components/shared/EventCard';
@@ -310,7 +310,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className={`w-full h-full flex flex-col relative bg-background`}>
 
         {/* Header & Search Bar */}
-        <div className={`px-5 pt-safe-6 pb-2 shrink-0 relative z-20 transition-colors duration-300 ${viewMode === 'map' ? 'bg-transparent' : 'bg-white'}`}>
+        <div className={`px-5 pt-safe-6 pb-2 shrink-0 relative z-20 bg-white`}>
           <div className="flex items-center justify-between mb-4 mt-2">
             <h1 className="text-[24px] font-semibold font-poppins text-[#1B1818] tracking-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
@@ -350,6 +350,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 <Settings04Icon className="w-[20px] h-[20px] text-[#A3A3A3]" strokeWidth={1.5} />
               </button>
             </div>
+
+            {/* Bouton Scan/QR Code */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                hapticFeedback.impact();
+                // Action future pour le scan
+              }}
+              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[#DFDFDF] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
+            >
+              <QrCode01Icon className="w-[22px] h-[22px] text-[#5B5B5B]" strokeWidth={1.5} />
+            </button>
           </div>
 
           {/* Category chips */}
@@ -375,7 +387,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
         {/* Vue Carte (Map View) */}
         {viewMode === 'map' && (
-          <div className="absolute inset-0 z-0">
+          <div className="flex-1 relative z-0 w-full h-full">
             <ExplorerMap
               events={mapEvents}
               mapCenter={isAbomey ? [6.4485, 2.3556] : [6.36536, 2.41833]}
