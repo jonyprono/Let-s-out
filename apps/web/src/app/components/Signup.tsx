@@ -412,7 +412,7 @@ export function Signup({ onBack }: SignupProps) {
         {!isGoogleMode && step === 1 && (
           <div>
             <h1 className={`${authTitle} mb-1.5`}>
-              Quel est votre numéro de<br />téléphone&nbsp;?
+              Quel est votre numéro de téléphone&nbsp;?
             </h1>
             <p className={`${authSubtitle} mb-[36px]`}>
               Vous recevrez un code de vérification<br />pour confirmer votre numéro

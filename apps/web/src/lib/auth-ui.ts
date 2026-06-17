@@ -38,7 +38,7 @@ export const authScrollArea =
 
 /** Titre principal de l'écran (gauche, grand, gras) */
 export const authTitle =
-  'font-poppins font-semibold text-[20px] leading-[24px] tracking-[-0.02em] text-[#1B1818] max-w-[358px] text-left'
+  '[font-family:var(--font-poppins)] font-semibold text-[20px] leading-[24px] tracking-[-0.02em] text-[#1B1818] max-w-[358px] text-left'
 
 /** Titre très grand pour les écrans Welcome/choix */
 export const authTitleLg =
