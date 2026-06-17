@@ -415,7 +415,8 @@ export function Signup({ onBack }: SignupProps) {
               Quel est votre numéro de téléphone&nbsp;?
             </h1>
             <p className={`${authSubtitle} mb-[36px]`}>
-              Vous recevrez un code de vérification pour confirmer votre numéro
+              Vous recevrez un code de vérification 
+              pour confirmer votre numéro
             </p>
 
             <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
