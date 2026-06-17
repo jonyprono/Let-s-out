@@ -66,7 +66,7 @@ export const EventCard = memo(function EventCard({
 }: EventCardProps) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore();
   const { user } = useAuthStore();
-  const favorite = isFavorite(event.id);
+  const favorite = isFavorite(event?.id || '');
   const [showQRModal, setShowQRModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
@@ -105,10 +105,10 @@ export const EventCard = memo(function EventCard({
     e.preventDefault();
     e.stopPropagation();
     hapticFeedback.impact();
-    if (favorite) {
+    if (favorite && event) {
       removeFavorite(event.id);
       toast.success('Retiré des favoris');
-    } else {
+    } else if (event) {
       addFavorite(event);
       toast.success('Ajouté aux favoris');
     }
@@ -319,8 +319,8 @@ export const EventCard = memo(function EventCard({
 
       {showShareModal && (
         <ShareModal
-          eventId={event.id}
-          eventTitle={event.title}
+          eventId={event?.id || ''}
+          eventTitle={event?.title || ''}
           onClose={() => setShowShareModal(false)}
         />
       )}
