@@ -46,7 +46,7 @@ function clusterEvents(events: Event[], zoom: number): Array<{
   return clusters
 }
 
-/** Custom pill badge for map markers */
+/** Custom map marker matching the mockup */
 function makePinIcon(count: number, isSelected: boolean) {
   const scale = isSelected ? 1.15 : 1;
   const shadow = isSelected
@@ -60,26 +60,30 @@ function makePinIcon(count: number, isSelected: boolean) {
     html: `
       <div style="
         transform: scale(${scale});
-        transform-origin: center center;
+        transform-origin: bottom center;
         filter: ${shadow};
         transition: transform 0.15s;
         display: inline-flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        background-color: #FF7A00;
-        border-radius: 9999px;
-        padding: 6px 14px;
-        white-space: nowrap;
+        position: relative;
       ">
         <span style="
-          color: #FFFFFF;
+          color: #FF7A00;
           font-weight: 600;
           font-size: 13px;
           font-family: 'Poppins', sans-serif;
+          white-space: nowrap;
+          margin-bottom: 2px;
+          text-shadow: 0px 1px 2px rgba(255,255,255,0.8);
         ">${text}</span>
+        <svg width="32" height="40" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="#FF7A00"/>
+          <circle cx="18" cy="18" r="7" fill="white"/>
+        </svg>
       </div>`,
-    iconSize: [0, 0], // Let content dictate size
-    iconAnchor: [0, 0], // Center the pill
+    iconSize: [80, 64],
+    iconAnchor: [40, 64],
   });
 }
 

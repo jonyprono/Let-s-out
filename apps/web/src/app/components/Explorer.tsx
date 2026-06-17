@@ -419,21 +419,22 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
         )}
 
-        {/* FAB Bouton bascule Liste/Carte */}
-        <button
-          onClick={() => {
-            hapticFeedback.impact();
-            setViewMode(viewMode === 'list' ? 'map' : 'list');
-          }}
-          className="absolute bottom-6 right-5 w-[60px] h-[60px] rounded-full bg-[#FF7A00] shadow-2xl flex items-center justify-center z-50 active:scale-95 transition-transform"
-          style={{ boxShadow: '0px 8px 24px rgba(255, 122, 0, 0.4)' }}
-        >
-          {viewMode === 'list' ? (
-            <Map className="w-[26px] h-[26px] text-white" strokeWidth={2.5} />
-          ) : (
-            <List className="w-[26px] h-[26px] text-white" strokeWidth={2.5} />
-          )}
-        </button>
+        {/* Bouton bascule Liste/Carte */}
+        <div className="absolute right-4 z-50 pointer-events-none" style={{ top: '190px' }}>
+          <button
+            onClick={() => {
+              hapticFeedback.impact();
+              setViewMode(viewMode === 'list' ? 'map' : 'list');
+            }}
+            className="w-[44px] h-[44px] rounded-[12px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform pointer-events-auto"
+          >
+            {viewMode === 'list' ? (
+              <Map className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+            ) : (
+              <List className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+            )}
+          </button>
+        </div>
     </div>
   );
 }
