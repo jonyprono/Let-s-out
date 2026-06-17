@@ -26,7 +26,6 @@ import {
   authSubtitle,
   authLabel,
   authInput,
-  authPhoneInputFlex,
   authChannelBtn,
   authChannelLabel,
 } from '@/lib/auth-ui'
@@ -254,12 +253,16 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             </p>
 
             <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
-            <div className="flex gap-2 mb-[36px]">
-              <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone() }} />
+            <div className="flex items-center w-full h-[44px] rounded-[8px] border-[1.25px] border-[#E0E0E0] bg-white focus-within:border-action-primary focus-within:ring-1 focus-within:ring-action-primary transition-all duration-200 mb-[36px]">
+              <CountryPicker 
+                value={country} 
+                onChange={(c) => { setCountry(c); resetPhone() }} 
+                className="auth-country-btn flex items-center gap-[6px] h-full pl-[12px] pr-[6px] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none"
+              />
               <input
                 type="tel" inputMode="numeric" value={phoneDisplay} onChange={handlePhoneChange}
-                placeholder="01 97 00 00 00"
-                className={`auth-phone-input ${authPhoneInputFlex}`}
+                placeholder="00 00 00 00 00"
+                className="auth-phone-input flex-1 min-w-0 h-full bg-transparent outline-none pr-[12px]"
               />
             </div>
 
