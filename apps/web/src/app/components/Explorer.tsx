@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router';
 import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target, Bell, ChevronDown, QrCode, List } from 'lucide-react';
-// import { Basketball01Icon, PaintBoardIcon, Pizza01Icon, Moon01Icon, Airplane01Icon, GameIcon, FavouriteIcon, MusicNote01Icon, StarIcon } from 'hugeicons-react';
+import { Notification03Icon } from 'hugeicons-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { apiClient } from '@/lib/api-client';
@@ -379,7 +379,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   // ── SEARCH SCREEN ─────────────────────────────────────────────────────────
   // ── SEARCH SCREEN (City Selector - Screen 2 & 3) ────────────────────────
   if (screen === 'search') {
-    const isSearching = activeSearchInput === 'location' && mapSearch.length > 0;
+    const isSearching = mapSearch.length > 0;
     
     // Mock data for cities
     const recentCities = ['Abomey-Calavi', 'Cotonou', 'Bohicon', 'Abomey'];
@@ -390,8 +390,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       <div className="w-full h-full bg-background flex flex-col z-10 relative">
         <div className="px-5 pt-safe-6 pb-2">
           {/* Header Search Input */}
-          <div className={`flex items-center gap-2 rounded-[16px] px-4 py-3 transition-colors ${isSearching ? 'border-action-primary border-[1.5px]' : 'border border-gray-200'}`}>
-            <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          <div className={`flex items-center gap-[4px] rounded-full px-4 h-[36px] bg-white transition-colors ${isSearching ? 'border-[#FF7A00] border-[1px]' : 'border border-gray-200'}`}>
+            <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
             <input
               autoFocus
               value={mapSearch}
@@ -400,11 +400,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 setActiveSearchInput('location');
               }}
               placeholder="Rechercher une ville..."
-              className="flex-1 text-[15px] outline-none bg-transparent text-[#1B1818] placeholder:text-gray-400 font-poppins"
+              className="flex-1 text-[14px] outline-none bg-transparent text-[#1B1818] placeholder:text-gray-400 font-poppins"
             />
             {isSearching && (
-              <button onClick={() => setMapSearch('')}>
-                <X className="w-5 h-5 text-gray-400" />
+              <button onClick={() => setMapSearch('')} className="p-1">
+                <X className="w-4 h-4 text-gray-400" />
               </button>
             )}
           </div>
@@ -579,8 +579,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <div className="flex items-center justify-between mb-4 mt-2">
             <h1 className="text-[24px] font-semibold font-poppins text-[#1B1818] tracking-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
-              <Bell className="w-6 h-6 text-[#1B1818]" strokeWidth={1.8} />
-              <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-action-primary rounded-full border-2 border-white" />
+              <Notification03Icon className="w-[24px] h-[24px] text-[#1B1818]" variant="stroke" strokeWidth={1.8} />
+              <div className="absolute top-0 right-0 w-[18px] h-[18px] bg-[#FF7A00] rounded-full border-[1.5px] border-white flex items-center justify-center">
+                <span className="text-[10px] font-bold text-white leading-none">5</span>
+              </div>
             </button>
           </div>
 
@@ -590,17 +592,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             <ChevronDown className="w-4 h-4 text-gray-400" strokeWidth={2} />
           </button>
 
-          <div className="flex items-center gap-3 mb-5">
+          <div className="flex items-center gap-3 mb-5 w-full max-w-[358px]">
             <div
-              className="flex-1 border border-gray-200 rounded-[14px] flex items-center px-4 py-3 bg-white"
+              className="flex-1 border border-gray-200 rounded-full flex items-center px-4 h-[36px] gap-[4px] bg-white cursor-text"
+              onClick={(e) => {
+                hapticFeedback.impact();
+                setScreen('search');
+              }}
             >
-              <Search className="w-5 h-5 text-gray-400 mr-2 shrink-0" />
-              <input 
-                className="text-[15px] text-[#1B1818] font-poppins placeholder:text-gray-400 bg-transparent outline-none flex-1"
-                placeholder="Rechercher des événements"
-                readOnly
-              />
-              <div className="flex items-center gap-2 ml-2 shrink-0">
+              <Search className="w-[16px] h-[16px] text-gray-400 shrink-0" />
+              <span className="text-[13px] text-gray-400 font-poppins flex-1">Rechercher des événements</span>
+              
+              <div className="flex items-center gap-[4px] shrink-0">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -609,17 +612,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   }}
                   className="p-1"
                 >
-                  <SlidersHorizontal className="w-5 h-5 text-gray-400" />
+                  <SlidersHorizontal className="w-[16px] h-[16px] text-gray-400" />
                 </button>
-                <div className="w-[1px] h-5 bg-gray-200 mx-1"></div>
+                <div className="w-[1px] h-[16px] bg-gray-200 mx-1"></div>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     hapticFeedback.impact();
                     setViewMode(viewMode === 'list' ? 'map' : 'list');
                   }}
                   className="p-1"
                 >
-                  <QrCode className="w-5 h-5 text-gray-400" />
+                  <QrCode className="w-[16px] h-[16px] text-gray-400" />
                 </button>
               </div>
             </div>
@@ -634,9 +638,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   hapticFeedback.impact()
                   setSelectedCategory(category)
                 }}
-                className={`px-4 py-2 rounded-full text-[14px] font-poppins whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
+                className={`px-4 py-2 rounded-full text-[13px] font-poppins whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
                   selectedCategory === category
-                    ? 'bg-[#FFF5ED] text-[#FF7A00]'
+                    ? 'bg-[#FFF2D3] text-[#FF7A00]'
                     : 'bg-transparent text-gray-500'
                 }`}
               >
