@@ -58,14 +58,14 @@ export const authLabel =
 
 /**
  * INPUT UNIFORME — toutes saisies auth identiques :
- * h-[52px], px-200, border-1px, rounded-[12px], text-[15px]
+ * h-[44px], px-[12px], border-[1.25px], rounded-[8px], text-[15px]
  */
 export const authInput =
-  'w-full h-[52px] px-200 border border-border-primary rounded-[12px] text-[15px] font-normal bg-background-white text-foreground placeholder:text-neutral-gray-400 focus:outline-none focus:border-action-primary focus:ring-1 focus:ring-inset focus:ring-action-primary transition-all duration-200'
+  'w-full h-[44px] px-[12px] border-[1.25px] border-[#E0E0E0] rounded-[8px] text-[15px] font-normal bg-background-white text-foreground placeholder:text-neutral-gray-400 focus:outline-none focus:border-action-primary focus:ring-1 focus:ring-inset focus:ring-action-primary transition-all duration-200'
 
-/** Input en flex (avec CountryPicker à gauche) */
+/** Input en flex (avec composant à gauche) */
 export const authInputFlex =
-  'flex-1 min-w-0 h-[52px] px-200 border border-border-primary rounded-[12px] text-[15px] font-normal bg-background-white text-foreground placeholder:text-neutral-gray-400 focus:outline-none focus:border-action-primary focus:ring-1 focus:ring-inset focus:ring-action-primary transition-all duration-200'
+  'flex-1 min-w-0 h-[44px] px-[12px] border-[1.25px] border-[#E0E0E0] rounded-[8px] text-[15px] font-normal bg-background-white text-foreground placeholder:text-neutral-gray-400 focus:outline-none focus:border-action-primary focus:ring-1 focus:ring-inset focus:ring-action-primary transition-all duration-200'
 
 /**
  * Input téléphone en flex — comme authInputFlex mais SANS text-[15px] ni font-normal
