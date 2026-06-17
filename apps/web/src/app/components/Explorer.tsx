@@ -388,6 +388,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         {/* Vue Carte (Map View) */}
         {viewMode === 'map' && (
           <div className="flex-1 relative z-0 w-full h-full">
+            {/* Bouton pour revenir à la Liste */}
+            <div className="absolute top-4 right-4 z-[1050]">
+              <button
+                onClick={() => {
+                  hapticFeedback.impact();
+                  setViewMode('list');
+                }}
+                className="w-[44px] h-[44px] rounded-[12px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform"
+              >
+                <List className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+              </button>
+            </div>
             <ExplorerMap
               events={mapEvents}
               mapCenter={isAbomey ? [6.4485, 2.3556] : [6.36536, 2.41833]}
@@ -416,28 +428,21 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 />
               );
             })}
+            
+            {/* Bouton pour aller sur la Carte */}
+            <div className="fixed bottom-[100px] right-5 z-[1050]">
+              <button
+                onClick={() => {
+                  hapticFeedback.impact();
+                  setViewMode('map');
+                }}
+                className="w-[44px] h-[44px] rounded-[12px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform"
+              >
+                <Map className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         )}
-
-        {/* Bouton bascule Liste/Carte */}
-        <div 
-          className="absolute right-4 z-[1050] transition-all duration-300"
-          style={{ top: viewMode === 'map' ? '195px' : 'auto', bottom: viewMode === 'list' ? '100px' : 'auto' }}
-        >
-          <button
-            onClick={() => {
-              hapticFeedback.impact();
-              setViewMode(viewMode === 'list' ? 'map' : 'list');
-            }}
-            className="w-[44px] h-[44px] rounded-[12px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform"
-          >
-            {viewMode === 'list' ? (
-              <Map className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
-            ) : (
-              <List className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
-            )}
-          </button>
-        </div>
     </div>
   );
 }
