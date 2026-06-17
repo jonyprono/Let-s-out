@@ -387,11 +387,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     const filteredCities = allCities.filter(c => c.toLowerCase().startsWith(mapSearch.toLowerCase()));
 
     return (
-      <div className="w-full h-full bg-background flex flex-col z-10 relative">
+      <div className="w-full h-full bg-[#FAFAFA] flex flex-col z-10 relative">
         <div className="px-5 pt-safe-6 pb-2">
           {/* Header Search Input */}
-          <div className={`flex items-center gap-[4px] rounded-full px-4 h-[36px] bg-white transition-colors ${isSearching ? 'border-[#FF7A00] border-[1px]' : 'border border-gray-200'}`}>
-            <Location01Icon className="w-[18px] h-[18px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
+          <div className={`flex items-center gap-[8px] rounded-full px-4 h-[44px] bg-white transition-colors shadow-sm ${isSearching ? 'border-[#FF7A00] border-[1.5px]' : 'border border-[#DFDFDF]'}`}>
+            <Location01Icon className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
             <input
               autoFocus
               value={mapSearch}
@@ -400,44 +400,44 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 setActiveSearchInput('location');
               }}
               placeholder="Rechercher une ville..."
-              className="flex-1 text-[14px] outline-none bg-transparent text-[#1B1818] placeholder:text-gray-400 font-poppins"
+              className="flex-1 text-[15px] outline-none bg-transparent text-[#1B1818] placeholder:text-[#A3A3A3] font-poppins"
             />
             {isSearching && (
-              <button onClick={() => setMapSearch('')} className="p-1">
-                <X className="w-4 h-4 text-gray-400" />
+              <button onClick={() => setMapSearch('')} className="p-1.5 rounded-full active:bg-gray-100 transition-colors">
+                <X className="w-[18px] h-[18px] text-[#A3A3A3]" strokeWidth={2} />
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pt-4">
+        <div className="flex-1 overflow-y-auto px-5 pt-4 w-full flex flex-col items-start text-left">
           {!isSearching ? (
             // Screen 2: Empty search (Focus location)
-            <div className="animate-in fade-in duration-200">
+            <div className="w-full flex flex-col items-start animate-in fade-in duration-200">
               {/* Active Badge */}
               <button 
-                className="inline-flex items-center gap-1.5 bg-action-primary px-4 py-2 rounded-full mb-6"
+                className="inline-flex items-center gap-1.5 bg-[#FF7A00] px-4 py-2.5 rounded-full mb-6 active:scale-95 transition-transform"
                 onClick={() => setScreen('list')}
               >
-                <span className="text-white text-[14px] font-semibold font-poppins">Cotonou</span>
+                <span className="text-white text-[15px] font-semibold font-poppins">Cotonou</span>
                 <Check className="w-4 h-4 text-white" strokeWidth={3} />
               </button>
 
               {/* Récents */}
-              <div>
-                <h3 className="text-[13px] text-gray-500 font-poppins mb-3">Récents</h3>
-                <div className="flex flex-col">
+              <div className="w-full">
+                <h3 className="text-[14px] text-[#6B7280] font-poppins font-medium mb-3">Récents</h3>
+                <div className="flex flex-col w-full">
                   {recentCities.map((city, idx) => (
                     <button
                       key={idx}
-                      className="w-full flex items-center gap-3 py-3 text-left active:opacity-70 transition-opacity"
+                      className="w-full flex items-center justify-start gap-3 py-3.5 text-left active:bg-gray-50 transition-colors rounded-xl px-2 -mx-2"
                       onClick={() => {
                         setMapSearch(city);
                         setScreen('list');
                       }}
                     >
-                      <Location01Icon className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
-                      <span className="text-[15px] text-[#1B1818] font-poppins">{city}</span>
+                      <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
+                      <span className="text-[16px] text-[#1B1818] font-poppins">{city}</span>
                     </button>
                   ))}
                 </div>
@@ -445,22 +445,22 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </div>
           ) : (
             // Screen 3: Active search
-            <div className="flex flex-col animate-in fade-in duration-200">
+            <div className="w-full flex flex-col items-start animate-in fade-in duration-200">
               {filteredCities.map((city, idx) => (
                 <button
                   key={idx}
-                  className="w-full flex items-center gap-3 py-3 text-left active:opacity-70 transition-opacity"
+                  className="w-full flex items-center justify-start gap-3 py-3.5 text-left active:bg-gray-50 transition-colors rounded-xl px-2 -mx-2"
                   onClick={() => {
                     setMapSearch(city);
                     setScreen('list');
                   }}
                 >
-                  <Location01Icon className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
-                  <span className="text-[15px] text-[#1B1818] font-poppins">{city}</span>
+                  <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
+                  <span className="text-[16px] text-[#1B1818] font-poppins">{city}</span>
                 </button>
               ))}
               {filteredCities.length === 0 && (
-                <div className="py-4 text-center text-gray-400 text-sm font-poppins">Aucune ville trouvée</div>
+                <div className="py-8 w-full text-center text-gray-400 text-[15px] font-poppins">Aucune ville trouvée</div>
               )}
             </div>
           )}
