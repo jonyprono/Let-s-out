@@ -8,11 +8,13 @@ export function AppLayout() {
   const isChatDetails = location.pathname.startsWith('/chat/')
   const isEventDetails = location.pathname.startsWith('/events/') && location.pathname !== '/events/create'
   const isCreateEvent = location.pathname === '/events/create'
+  const isSearchScreen = location.search.includes('screen=search')
   
   const hideBottomNav =
     isChatDetails ||
     isEventDetails ||
     isCreateEvent ||
+    isSearchScreen ||
     location.pathname === '/verify-profile' ||
     location.pathname.endsWith('/pay')
 

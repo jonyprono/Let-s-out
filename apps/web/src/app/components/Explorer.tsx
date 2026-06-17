@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { Search, ChevronLeft, X, Check, Loader2, Lock } from 'lucide-react';
 import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon } from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
@@ -44,9 +44,22 @@ type Screen = 'list' | 'filter' | 'search' | 'join';
 
 export function Explorer({ onNavigate }: ExplorerProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>(() => {
     return location.search.includes('screen=filter') ? 'filter' : 'list';
   });
+
+  // Wrapper pour passer en mode search et cacher la tab bar via l'URL
+  const openSearch = () => {
+    setScreen('search');
+    navigate({ search: '?screen=search' }, { replace: true });
+  };
+
+  // Wrapper pour revenir à la liste et réafficher la tab bar
+  const closeSearch = () => {
+    setScreen('list');
+    navigate({ search: '' }, { replace: true });
+  };
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Tout');
@@ -122,6 +135,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               </button>
             )}
           </div>
+          {/* Bouton retour */}
+          <button
+            onClick={closeSearch}
+            className="ml-3 flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center rounded-full active:bg-gray-100 transition-colors"
+          >
+            <X className="w-[20px] h-[20px] text-[#5B5B5B]" strokeWidth={2} />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pt-4 w-full">
@@ -131,7 +151,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               {/* Active Badge */}
               <button 
                 className="inline-flex items-center gap-1.5 bg-[#FF7A00] px-4 py-2.5 rounded-full mb-6 active:scale-95 transition-transform"
-                onClick={() => setScreen('list')}
+                onClick={closeSearch}
               >
                 <span className="text-white text-[15px] font-semibold font-poppins">Cotonou</span>
                 <Check className="w-4 h-4 text-white" strokeWidth={3} />
@@ -149,7 +169,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         onClick={() => {
                           saveRecentCity(city);
                           setMapSearch(city);
-                          setScreen('list');
+                          closeSearch();
                         }}
                       >
                         <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
@@ -171,7 +191,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     onClick={() => {
                       saveRecentCity(city);
                       setMapSearch(city);
-                      setScreen('list');
+                      closeSearch();
                     }}
                   >
                     <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
@@ -277,7 +297,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </button>
           </div>
 
-          <button onClick={() => setScreen('search')} className="flex items-center gap-1.5 mb-5 text-[#5B5B5B] active:opacity-70 transition-opacity">
+          <button onClick={openSearch} className="flex items-center gap-1.5 mb-5 text-[#5B5B5B] active:opacity-70 transition-opacity">
             <Location01Icon className="w-[24px] h-[24px]" strokeWidth={2} />
             <span className="text-[20px] font-poppins font-semibold">{currentLocation}</span>
             <ArrowDown01Icon className="w-[20px] h-[20px]" strokeWidth={2} />
@@ -289,7 +309,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-4 h-[44px] gap-[4px] bg-white cursor-text"
               onClick={() => {
                 hapticFeedback.impact();
-                setScreen('search');
+                openSearch();
               }}
             >
               <Search className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
