@@ -91,11 +91,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   // ── FILTER SCREEN REMOVED ────────────────────────────────────────────────
 
   // ── SEARCH SCREEN ─────────────────────────────────────────────────────────
-  // ── SEARCH SCREEN (City Selector - Screen 2 & 3) ────────────────────────
   if (screen === 'search') {
     const isSearching = mapSearch.length > 0;
-    
-    // Base de données locale de villes du Bénin pour autocomplétion instantanée
+
+    // Base de données locale de villes du Bénin
     const BENIN_CITIES = [
       'Abomey', 'Abomey-Calavi', 'Adjarra', 'Adjohun', 'Aguégués', 'Allada', 'Aplahoué', 'Avrankou',
       'Banikoara', 'Bantè', 'Bassila', 'Bembèrèkè', 'Bétérou', 'Bohicon', 'Bori', 'Boukoumbé',
@@ -115,92 +114,112 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     const filteredCities = BENIN_CITIES.filter(c => c.toLowerCase().startsWith(mapSearch.toLowerCase()));
 
     return (
-      <div className="w-full h-full bg-[#FAFAFA] flex flex-col z-10 relative">
-        <div className="px-5 pt-safe-6 pb-2">
-          {/* Header Search Input */}
-          <div className={`flex items-center gap-[8px] rounded-full px-4 h-[44px] bg-white transition-colors shadow-sm ${isSearching ? 'border-[#FF7A00] border-[1.5px]' : 'border border-[#DFDFDF]'}`}>
-            <Location01Icon className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
+      <div style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: '#FAFAFA', display: 'flex', flexDirection: 'column' }}>
+        {/* Barre de recherche */}
+        <div style={{ padding: '12px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FAFAFA' }}>
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            borderRadius: '999px',
+            padding: '0 16px',
+            height: '44px',
+            backgroundColor: 'white',
+            border: isSearching ? '1.5px solid #FF7A00' : '1px solid #DFDFDF',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
+          }}>
+            <Location01Icon style={{ width: 20, height: 20, color: '#A3A3A3', flexShrink: 0 }} strokeWidth={1.5} />
             <input
               autoFocus
               value={mapSearch}
-              onChange={(e) => {
-                setMapSearch(e.target.value);
-              }}
+              onChange={(e) => setMapSearch(e.target.value)}
               placeholder="Rechercher une ville..."
-              className="flex-1 text-[15px] outline-none bg-transparent text-[#1B1818] placeholder:text-[#A3A3A3] font-poppins"
+              style={{
+                flex: 1,
+                fontSize: 15,
+                outline: 'none',
+                background: 'transparent',
+                color: '#1B1818',
+                fontFamily: 'Poppins, sans-serif',
+                border: 'none'
+              }}
             />
             {isSearching && (
-              <button onClick={() => setMapSearch('')} className="p-1.5 rounded-full active:bg-gray-100 transition-colors">
-                <X className="w-[18px] h-[18px] text-[#A3A3A3]" strokeWidth={2} />
+              <button
+                onClick={() => setMapSearch('')}
+                style={{ padding: 6, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                <X style={{ width: 18, height: 18, color: '#A3A3A3' }} strokeWidth={2} />
               </button>
             )}
           </div>
-          {/* Bouton retour */}
+          {/* Bouton annuler */}
           <button
             onClick={closeSearch}
-            className="ml-3 flex-shrink-0 w-[44px] h-[44px] flex items-center justify-center rounded-full active:bg-gray-100 transition-colors"
+            style={{ flexShrink: 0, padding: '0 4px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#FF7A00', fontSize: 15, fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
           >
-            <X className="w-[20px] h-[20px] text-[#5B5B5B]" strokeWidth={2} />
+            Annuler
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pt-4 w-full">
+        {/* Liste des résultats */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 0' }}>
           {!isSearching ? (
-            // Screen 2: Empty search (Focus location)
-            <div className="w-full animate-in fade-in duration-200">
-              {/* Active Badge */}
-              <button 
-                className="inline-flex items-center gap-1.5 bg-[#FF7A00] px-4 py-2.5 rounded-full mb-6 active:scale-95 transition-transform"
+            // État vide — badge ville active + récents
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+              <button
                 onClick={closeSearch}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  backgroundColor: '#FF7A00', borderRadius: 999,
+                  padding: '10px 16px', border: 'none', cursor: 'pointer',
+                  marginBottom: 24
+                }}
               >
-                <span className="text-white text-[15px] font-semibold font-poppins">Cotonou</span>
-                <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                <span style={{ color: 'white', fontSize: 15, fontWeight: 600, fontFamily: 'Poppins, sans-serif' }}>Cotonou</span>
+                <Check style={{ width: 16, height: 16, color: 'white' }} strokeWidth={3} />
               </button>
 
-              {/* Récents */}
               {recentCities.length > 0 && (
-                <div className="w-full">
-                  <h3 className="text-[14px] text-[#6B7280] font-poppins font-medium mb-2">Récents</h3>
-                  <div className="flex flex-col w-full">
-                    {recentCities.map((city, idx) => (
-                      <button
-                        key={idx}
-                        className="w-full flex items-center justify-start gap-3 py-3.5 text-left active:opacity-70 transition-opacity border-b border-gray-100 last:border-0"
-                        onClick={() => {
-                          saveRecentCity(city);
-                          setMapSearch(city);
-                          closeSearch();
-                        }}
-                      >
-                        <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
-                        <span className="text-[16px] text-[#1B1818] font-poppins">{city}</span>
-                      </button>
-                    ))}
-                  </div>
+                <div style={{ width: '100%' }}>
+                  <p style={{ fontSize: 14, color: '#6B7280', fontFamily: 'Poppins, sans-serif', fontWeight: 500, marginBottom: 8 }}>Récents</p>
+                  {recentCities.map((city, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => { saveRecentCity(city); setMapSearch(city); closeSearch(); }}
+                      style={{
+                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
+                        gap: 12, padding: '14px 0', background: 'transparent', border: 'none', borderBottom: '1px solid #F3F4F6',
+                        cursor: 'pointer', textAlign: 'left'
+                      }}
+                    >
+                      <Location01Icon style={{ width: 22, height: 22, color: '#5B5B5B', flexShrink: 0 }} strokeWidth={1.5} />
+                      <span style={{ fontSize: 16, color: '#1B1818', fontFamily: 'Poppins, sans-serif' }}>{city}</span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
           ) : (
-            // Screen 3: Active search
-            <div className="w-full animate-in fade-in duration-200">
-              <div className="flex flex-col w-full">
-                {filteredCities.map((city, idx) => (
-                  <button
-                    key={idx}
-                    className="w-full flex items-center justify-start gap-3 py-3.5 text-left active:opacity-70 transition-opacity border-b border-gray-100 last:border-0"
-                    onClick={() => {
-                      saveRecentCity(city);
-                      setMapSearch(city);
-                      closeSearch();
-                    }}
-                  >
-                    <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
-                    <span className="text-[16px] text-[#1B1818] font-poppins">{city}</span>
-                  </button>
-                ))}
-              </div>
+            // Suggestions d'autocomplétion
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
+              {filteredCities.map((city, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => { saveRecentCity(city); setMapSearch(city); closeSearch(); }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
+                    gap: 12, padding: '14px 0', background: 'transparent', border: 'none', borderBottom: '1px solid #F3F4F6',
+                    cursor: 'pointer', textAlign: 'left'
+                  }}
+                >
+                  <Location01Icon style={{ width: 22, height: 22, color: '#5B5B5B', flexShrink: 0 }} strokeWidth={1.5} />
+                  <span style={{ fontSize: 16, color: '#1B1818', fontFamily: 'Poppins, sans-serif' }}>{city}</span>
+                </button>
+              ))}
               {filteredCities.length === 0 && (
-                <div className="py-8 w-full text-center text-gray-400 text-[15px] font-poppins">Aucune ville trouvée</div>
+                <p style={{ width: '100%', textAlign: 'center', padding: '32px 0', color: '#9CA3AF', fontSize: 15, fontFamily: 'Poppins, sans-serif' }}>Aucune ville trouvée</p>
               )}
             </div>
           )}
