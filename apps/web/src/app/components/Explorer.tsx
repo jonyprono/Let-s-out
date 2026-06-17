@@ -420,7 +420,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         )}
 
         {/* Bouton bascule Liste/Carte */}
-        <div className="absolute bottom-[100px] right-4 z-[1050]">
+        <div 
+          className="absolute right-4 z-[1050] transition-all duration-300"
+          style={{ top: viewMode === 'map' ? '195px' : 'auto', bottom: viewMode === 'list' ? '100px' : 'auto' }}
+        >
           <button
             onClick={() => {
               hapticFeedback.impact();
