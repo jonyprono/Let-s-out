@@ -12,7 +12,6 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 import { useNavigate } from 'react-router'
 import {
   authShell,
-  authTitle,
   authSubtitle,
   authLabel,
   authInput,
