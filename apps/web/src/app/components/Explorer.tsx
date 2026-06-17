@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List } from 'lucide-react';
-import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon } from 'hugeicons-react';
+import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon } from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { EventCard } from '@/components/shared/EventCard';
