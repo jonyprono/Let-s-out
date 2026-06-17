@@ -1,16 +1,10 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'react-router';
-import { Search, ChevronLeft, X, Check, Loader2, Lock, Target, List } from 'lucide-react';
+import { Search, ChevronLeft, X, Check, Loader2, Lock } from 'lucide-react';
 import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon } from 'hugeicons-react';
-import { useQuery } from '@tanstack/react-query';
-import { eventsApi, type Event } from '@/features/events/api';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
-import { getCurrentPosition, searchPlaces, type GeoPlace } from '@/lib/geo';
 import { EventCard } from '@/components/shared/EventCard';
-
-// ── Leaflet lazy-loaded only when Map mode is actually used ──────────────────
-const LazyExplorerMap = lazy(() => import('@/app/components/ExplorerMap'));
 interface ExplorerProps {
   onNavigate: (screen: string, id?: string) => void;
 }
@@ -55,18 +49,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   });
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeSearchInput, setActiveSearchInput] = useState<'location'|'keyword'>('location');
   const [selectedCategory, setSelectedCategory] = useState('Tout');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
-  const [filterDate, setFilterDate] = useState('soon');
-  const [filterTime, setFilterTime] = useState('all');
-  const [filterCategories, setFilterCategories] = useState<string[]>([]);
-  const [filterBudgetMax, setFilterBudgetMax] = useState(10000);
-  const [filterCustomDate, setFilterCustomDate] = useState('');
-  const [filterDistance, setFilterDistance] = useState(100);
-  const [appliedFilters, setAppliedFilters] = useState({ date: 'soon', time: 'all', categories: [] as string[], budgetMax: 10000, customDate: '', distance: 100 });
+
 
   // Historique des recherches (localStorage)
   const [recentCities, setRecentCities] = useState<string[]>(() => {
@@ -85,114 +71,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     });
   };
 
-  // Map state
-  const [mapCenter, setMapCenter] = useState<[number, number]>([6.36536, 2.41833])
-  const [mapGeoLoading, setMapGeoLoading] = useState(false)
-  const [mapSearch, setMapSearch] = useState('')
-  const [mapSearchResults, setMapSearchResults] = useState<GeoPlace[]>([])
+  const [mapSearch, setMapSearch] = useState('');
 
-  // Keyword event suggestions
-  const [keywordSuggestions, setKeywordSuggestions] = useState<Event[]>([]);
 
-  const isEnCours = selectedCategory === 'En ce moment';
-  const isWeekend = selectedCategory === 'Ce week-end';
-  const apiCategory = undefined;
-
-  const { data: eventsData, isLoading } = useQuery({
-    queryKey: ['events', 'explorer', apiCategory, searchQuery, appliedFilters, isEnCours, isWeekend],
-    queryFn: () => {
-      let dateParam: string | undefined = undefined;
-      if (appliedFilters.date === 'pick' && appliedFilters.customDate) {
-        dateParam = appliedFilters.customDate;
-      } else if (appliedFilters.date !== 'all' && appliedFilters.date !== 'soon') {
-        dateParam = appliedFilters.date;
-      } else if (isEnCours) {
-        dateParam = 'today';
-      } else if (isWeekend) {
-        dateParam = 'weekend';
-      }
-
-      return eventsApi.list({
-        status: 'PUBLISHED',
-        category: apiCategory || (appliedFilters.categories.length > 0 ? appliedFilters.categories.join(',') : undefined),
-        search: searchQuery || undefined,
-        limit: 50,
-        maxPrice: appliedFilters.budgetMax < 10000 ? appliedFilters.budgetMax : undefined,
-        date: dateParam,
-        time: appliedFilters.time !== 'all' ? appliedFilters.time : undefined,
-      }).then((r) => r.data);
-    },
-    // Always fetch — no conditions that would prevent initial load
-    staleTime: 30_000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-  });
-
-  // Backend now handles custom date filtering
-  // If "En cours" is selected, additionally filter client-side to events that have started
-  // Also filter by distance client-side if a specific distance is selected
-  const allFetchedEvents: Event[] = eventsData?.data || [];
-  const events: Event[] = allFetchedEvents.filter(e => {
-    // 1. En cours
-    if (isEnCours) {
-      const now = new Date();
-      const start = new Date(e.startAt);
-      const end = e.endAt ? new Date(e.endAt) : new Date(start.getTime() + 4 * 60 * 60 * 1000); // assume 4h duration
-      if (!(start <= now && now <= end)) return false;
-    }
-    // 2. Distance
-    if (appliedFilters.distance < 100 && e.latitude && e.longitude && mapCenter[0] && mapCenter[1]) {
-      // Haversine formula
-      const R = 6371; // km
-      const dLat = (e.latitude - mapCenter[0]) * Math.PI / 180;
-      const dLon = (e.longitude - mapCenter[1]) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(mapCenter[0] * Math.PI / 180) * Math.cos(e.latitude * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const distance = R * c;
-      if (distance > appliedFilters.distance) return false;
-    }
-    return true;
-  });
-
-  const handleMapGeolocate = async () => {
-    setMapGeoLoading(true)
-    try {
-      const pos = await getCurrentPosition()
-      setMapCenter([pos.coords.latitude, pos.coords.longitude])
-    } catch {
-      // silently ignore, keep current center
-    } finally {
-      setMapGeoLoading(false)
-    }
-  }
-
-  const handleMapSearch = async (q: string) => {
-    setMapSearch(q)
-    if (q.length < 2) { setMapSearchResults([]); return }
-    const results = await searchPlaces(q)
-    setMapSearchResults(results)
-  }
-
-  // Fonctions de filtres supprimées
-
-  // Keyword search: query events API when user types in the keyword field
-  useEffect(() => {
-    if (searchQuery.length < 1) {
-      setKeywordSuggestions([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await eventsApi.list({ search: searchQuery, status: 'PUBLISHED', limit: 8 });
-        setKeywordSuggestions(res.data?.data || res.data || []);
-      } catch {
-        setKeywordSuggestions([]);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   // ── FILTER SCREEN REMOVED ────────────────────────────────────────────────
 
@@ -381,33 +262,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     { id: '2', title: 'Sea holidays party', date: "Samedi prochain à 09h", location: "Cotonou • Fidirossè Beach (Cotonou)" }
   ];
 
-  // Prevent TS unused variable errors during mockup phase
-  void Suspense;
-  void Target;
-  void List;
-  void EventCard;
-  void LazyExplorerMap;
-  void setSearchQuery;
-  void mapGeoLoading;
-  void mapSearchResults;
-  void keywordSuggestions;
-  void isLoading;
-  void events;
-  void handleMapGeolocate;
-  void handleMapSearch;
-  void activeSearchInput;
-  void Target;
-  void List;
-  void EventCard;
-  void LazyExplorerMap;
-  void setSearchQuery;
-  void mapGeoLoading;
-  void mapSearchResults;
-  void keywordSuggestions;
-  void isLoading;
-  void events;
-  void handleMapGeolocate;
-  void handleMapSearch;
 
   return (
     <div className={`w-full h-full flex flex-col relative bg-background`}>
