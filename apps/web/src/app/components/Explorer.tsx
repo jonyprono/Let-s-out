@@ -112,7 +112,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               value={mapSearch}
               onChange={(e) => {
                 setMapSearch(e.target.value);
-                setActiveSearchInput('location');
               }}
               placeholder="Rechercher une ville..."
               className="flex-1 text-[15px] outline-none bg-transparent text-[#1B1818] placeholder:text-[#A3A3A3] font-poppins"
