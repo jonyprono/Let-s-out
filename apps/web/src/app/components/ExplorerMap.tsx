@@ -125,10 +125,16 @@ function EventMiniCard({
       className="absolute bottom-0 left-0 right-0 z-[1000] px-4 pb-6 pt-3"
       style={{ pointerEvents: 'all' }}
     >
-      <div className="bg-white rounded-[20px] shadow-2xl overflow-hidden">
+      <div 
+        onClick={() => onNavigate('event-details', event.id)}
+        className="bg-white rounded-[20px] shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+      >
         {/* Close */}
         <button
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
           className="absolute top-4 right-4 w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center z-10 active:scale-90"
         >
           <X className="w-3.5 h-3.5 text-gray-500" />
@@ -193,14 +199,6 @@ function EventMiniCard({
             </div>
           </div>
         </div>
-
-        {/* CTA */}
-        <button
-          onClick={() => onNavigate('event-details', event.id)}
-          className="w-full bg-action-primary text-white text-[13px] font-bold py-3 active:opacity-80"
-        >
-          Voir les détails
-        </button>
       </div>
     </div>
   )
