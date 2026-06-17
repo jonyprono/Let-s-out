@@ -99,6 +99,23 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [filterDistance, setFilterDistance] = useState(100);
   const [appliedFilters, setAppliedFilters] = useState({ date: 'soon', time: 'all', categories: [] as string[], budgetMax: 10000, customDate: '', distance: 100 });
 
+  // Historique des recherches (localStorage)
+  const [recentCities, setRecentCities] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('recentCities') || '[]');
+    } catch {
+      return [];
+    }
+  });
+
+  const saveRecentCity = (city: string) => {
+    setRecentCities(prev => {
+      const updated = [city, ...prev.filter(c => c !== city)].slice(0, 5);
+      localStorage.setItem('recentCities', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   // Map state
   const [mapCenter, setMapCenter] = useState<[number, number]>([6.36536, 2.41833])
   const [mapGeoLoading, setMapGeoLoading] = useState(false)
@@ -226,165 +243,31 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // ── FILTER SCREEN ─────────────────────────────────────────────────────────
-  if (screen === 'filter') {
-    return (
-      <div className="w-full h-full bg-background flex flex-col">
-        {/* Header */}
-        <div className="px-5 pt-safe-6 pb-3 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <button onClick={() => setScreen('list')} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
-              <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
-            </button>
-            <span className="text-[15px] font-semibold text-gray-900">Filtrer</span>
-            <div className="w-8" />
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-5 py-200 space-y-6" style={{ scrollbarWidth: 'none' }}>
-          {/* Date */}
-          <div>
-            <h3 className="text-[15px] font-bold text-gray-900 mb-3">Date</h3>
-            <div className="flex flex-wrap gap-2">
-              {DATE_FILTERS.map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setFilterDate(f.key)}
-                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
-                    filterDate === f.key
-                      ? 'bg-action-primary text-white border-action-primary'
-                      : 'bg-white text-gray-700 border-gray-200'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-            {/* Custom date picker shown when 'Choisir une date' is selected */}
-            {filterDate === 'pick' && (
-              <input
-                type="date"
-                value={filterCustomDate}
-                onChange={e => setFilterCustomDate(e.target.value)}
-                className="mt-3 w-full border border-gray-200 rounded-xl px-4 py-2 text-[13px] text-gray-700 focus:outline-none focus:border-action-primary"
-              />
-            )}
-          </div>
-
-          {/* Moment */}
-          <div>
-            <h3 className="text-[15px] font-bold text-gray-900 mb-3">Moment</h3>
-            <div className="flex flex-wrap gap-2">
-              {TIME_FILTERS.map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setFilterTime(f.key)}
-                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all ${
-                    filterTime === f.key
-                      ? 'bg-action-primary text-white border-action-primary'
-                      : 'bg-white text-gray-700 border-gray-200'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Catégorie */}
-          <div>
-            <h3 className="text-[15px] font-bold text-gray-900 mb-3">Catégorie</h3>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES_FILTER.map(cat => {
-                const selected = filterCategories.includes(cat.key);
-                return (
-                  <button
-                    key={cat.key}
-                    onClick={() => toggleFilterCategory(cat.key)}
-                    className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all flex items-center gap-1 ${
-                      selected
-                        ? 'bg-action-primary text-white border-action-primary'
-                        : 'bg-white text-gray-700 border-gray-200'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Budget */}
-          <div className="pb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[17px] font-bold text-gray-900">Budget</h3>
-              <span className="text-[13px] font-medium text-gray-500">
-                0 - {filterBudgetMax >= 10000 ? '10 000' : filterBudgetMax.toLocaleString('fr-FR')} F CFA
-              </span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={10000}
-              step={500}
-              value={filterBudgetMax}
-              onChange={e => setFilterBudgetMax(Number(e.target.value))}
-              className="w-full h-1 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[20px] [&::-webkit-slider-thumb]:h-[20px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-action-primary [&::-webkit-slider-thumb]:shadow-[0_2px_6px_rgba(0,0,0,0.12)] [&::-moz-range-thumb]:w-[20px] [&::-moz-range-thumb]:h-[20px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-action-primary"
-              style={{
-                background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${(filterBudgetMax / 10000) * 100}%, #E5E7EB ${(filterBudgetMax / 10000) * 100}%, #E5E7EB 100%)`
-              }}
-            />
-          </div>
-
-          {/* Distance */}
-          <div className="pb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[17px] font-bold text-gray-900">Distance</h3>
-              <span className="text-[13px] font-medium text-gray-500">
-                {filterDistance >= 100 ? "N'importe quelle distance" : `${filterDistance} km`}
-              </span>
-            </div>
-            <input
-              type="range"
-              min={1}
-              max={100}
-              step={1}
-              value={filterDistance}
-              onChange={e => setFilterDistance(Number(e.target.value))}
-              className="w-full h-1 appearance-none cursor-pointer outline-none rounded-full [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-[20px] [&::-webkit-slider-thumb]:h-[20px] [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-action-primary [&::-webkit-slider-thumb]:shadow-[0_2px_6px_rgba(0,0,0,0.12)] [&::-moz-range-thumb]:w-[20px] [&::-moz-range-thumb]:h-[20px] [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-action-primary"
-              style={{ background: `linear-gradient(to right, #FF7A00 0%, #FF7A00 ${(filterDistance / 100) * 100}%, #E5E7EB ${(filterDistance / 100) * 100}%, #E5E7EB 100%)` }}
-            />
-          </div>
-        </div>
-
-        {/* Footer buttons — sticky en bas */}
-        <div className="px-5 py-5 flex items-center gap-3 border-t border-gray-100 bg-background shrink-0">
-          <button
-            onClick={resetFilters}
-            className="px-5 py-3 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-800 active:scale-95 transition-transform"
-          >
-            Réinitialiser
-          </button>
-          <button
-            onClick={applyFilters}
-            className="flex-1 py-3 rounded-full bg-action-primary active:bg-[#E56E00] text-[13px] font-semibold text-white active:scale-[0.98] transition-all"
-          >
-            Appliquer les filtres
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // ── FILTER SCREEN REMOVED ────────────────────────────────────────────────
 
   // ── SEARCH SCREEN ─────────────────────────────────────────────────────────
   // ── SEARCH SCREEN (City Selector - Screen 2 & 3) ────────────────────────
   if (screen === 'search') {
     const isSearching = mapSearch.length > 0;
     
-    // Mock data for cities
-    const recentCities = ['Abomey-Calavi', 'Cotonou', 'Bohicon', 'Abomey'];
-    const allCities = ['Abomey', 'Abomey-Calavi', 'Adjarra', 'Adjohun', 'Aguégués', 'Allada', 'Aplahoué', 'Avrankou'];
-    const filteredCities = allCities.filter(c => c.toLowerCase().startsWith(mapSearch.toLowerCase()));
+    // Base de données locale de villes du Bénin pour autocomplétion instantanée
+    const BENIN_CITIES = [
+      'Abomey', 'Abomey-Calavi', 'Adjarra', 'Adjohun', 'Aguégués', 'Allada', 'Aplahoué', 'Avrankou',
+      'Banikoara', 'Bantè', 'Bassila', 'Bembèrèkè', 'Bétérou', 'Bohicon', 'Bori', 'Boukoumbé',
+      'Cotonou', 'Comè', 'Copargo', 'Covè',
+      'Dassa-Zoumé', 'Djougou', 'Dogbo',
+      'Gogounou', 'Grand-Popo',
+      'Kandi', 'Kérou', 'Kétou', 'Kouandé',
+      'Lokossa',
+      'Malanville', 'Matéri', 'Natitingou', 'Ndali', 'Nikki',
+      'Ouidah',
+      'Parakou', 'Pobè', 'Porga', 'Porto-Novo',
+      'Sakalou', 'Savalou', 'Savè', 'Ségbana',
+      'Tanguiéta', 'Tchaourou', 'Toffo', 'Toucountouna',
+      'Zagnanado', 'Za-Kpota', 'Zogbodomey'
+    ].sort();
+
+    const filteredCities = BENIN_CITIES.filter(c => c.toLowerCase().startsWith(mapSearch.toLowerCase()));
 
     return (
       <div className="w-full h-full bg-[#FAFAFA] flex flex-col z-10 relative">
@@ -410,10 +293,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pt-4 w-full flex flex-col items-start text-left">
+        <div className="flex-1 overflow-y-auto px-5 pt-4 w-full">
           {!isSearching ? (
             // Screen 2: Empty search (Focus location)
-            <div className="w-full flex flex-col items-start animate-in fade-in duration-200">
+            <div className="w-full animate-in fade-in duration-200">
               {/* Active Badge */}
               <button 
                 className="inline-flex items-center gap-1.5 bg-[#FF7A00] px-4 py-2.5 rounded-full mb-6 active:scale-95 transition-transform"
@@ -424,41 +307,47 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               </button>
 
               {/* Récents */}
-              <div className="w-full">
-                <h3 className="text-[14px] text-[#6B7280] font-poppins font-medium mb-3">Récents</h3>
-                <div className="flex flex-col w-full">
-                  {recentCities.map((city, idx) => (
-                    <button
-                      key={idx}
-                      className="w-full flex items-center justify-start gap-3 py-3.5 text-left active:bg-gray-50 transition-colors rounded-xl px-2 -mx-2"
-                      onClick={() => {
-                        setMapSearch(city);
-                        setScreen('list');
-                      }}
-                    >
-                      <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
-                      <span className="text-[16px] text-[#1B1818] font-poppins">{city}</span>
-                    </button>
-                  ))}
+              {recentCities.length > 0 && (
+                <div className="w-full">
+                  <h3 className="text-[14px] text-[#6B7280] font-poppins font-medium mb-2">Récents</h3>
+                  <div className="flex flex-col w-full">
+                    {recentCities.map((city, idx) => (
+                      <button
+                        key={idx}
+                        className="w-full flex items-center justify-start gap-3 py-3.5 text-left active:opacity-70 transition-opacity border-b border-gray-100 last:border-0"
+                        onClick={() => {
+                          saveRecentCity(city);
+                          setMapSearch(city);
+                          setScreen('list');
+                        }}
+                      >
+                        <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
+                        <span className="text-[16px] text-[#1B1818] font-poppins">{city}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             // Screen 3: Active search
-            <div className="w-full flex flex-col items-start animate-in fade-in duration-200">
-              {filteredCities.map((city, idx) => (
-                <button
-                  key={idx}
-                  className="w-full flex items-center justify-start gap-3 py-3.5 text-left active:bg-gray-50 transition-colors rounded-xl px-2 -mx-2"
-                  onClick={() => {
-                    setMapSearch(city);
-                    setScreen('list');
-                  }}
-                >
-                  <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
-                  <span className="text-[16px] text-[#1B1818] font-poppins">{city}</span>
-                </button>
-              ))}
+            <div className="w-full animate-in fade-in duration-200">
+              <div className="flex flex-col w-full">
+                {filteredCities.map((city, idx) => (
+                  <button
+                    key={idx}
+                    className="w-full flex items-center justify-start gap-3 py-3.5 text-left active:opacity-70 transition-opacity border-b border-gray-100 last:border-0"
+                    onClick={() => {
+                      saveRecentCity(city);
+                      setMapSearch(city);
+                      setScreen('list');
+                    }}
+                  >
+                    <Location01Icon className="w-[22px] h-[22px] text-[#5B5B5B] shrink-0" strokeWidth={1.5} />
+                    <span className="text-[16px] text-[#1B1818] font-poppins">{city}</span>
+                  </button>
+                ))}
+              </div>
               {filteredCities.length === 0 && (
                 <div className="py-8 w-full text-center text-gray-400 text-[15px] font-poppins">Aucune ville trouvée</div>
               )}
@@ -606,7 +495,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 onClick={(e) => {
                   e.stopPropagation();
                   hapticFeedback.impact();
-                  setScreen('filter');
+                  // setScreen('filter'); // Supprimé selon la demande
                 }}
                 className="p-1 shrink-0"
               >
