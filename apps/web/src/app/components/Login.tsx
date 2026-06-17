@@ -94,7 +94,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
   return (
-    <div className={authShell}>
+    <div className={`${authShell} bg-white`}>
       <div className="flex flex-col h-full px-6 pt-4 pb-4">
         
         {/* Logo */}
@@ -104,7 +104,9 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
         {/* Titres */}
         <div className="text-center mb-5 shrink-0">
-          <h1 className={authTitle}>Connectez-vous</h1>
+          <h1 className="mx-auto w-[271px] h-[32px] text-center text-[#1B1818] text-[22px] font-medium leading-[32px] tracking-normal">
+            Connectez-vous
+          </h1>
           <p className={`${authSubtitle} !mt-1`}>
             Rejoignez des événements près de vous et vivez<br/>des expériences inoubliables.
           </p>
