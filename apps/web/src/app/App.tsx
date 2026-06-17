@@ -41,7 +41,6 @@ import { LandingPage } from '@/app/components/LandingPage'
 // All screens via adapter bridge (prop-based → React Router)
 import {
   Splashscreen,
-  Welcome,
   Login,
   Signup,
   ForgotPassword,
@@ -178,7 +177,6 @@ export default function App() {
           {/* Splash + Guest only */}
           <Route element={<AuthLayout />}>
             <Route path="/app" element={<Splashscreen />} />
-            <Route path="/welcome" element={<GuestRoute><Welcome /></GuestRoute>} />
             <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
             <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
             <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />

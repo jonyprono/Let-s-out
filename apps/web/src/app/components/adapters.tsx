@@ -14,7 +14,6 @@ function PageLoader() {
 
 // ── Tiny pages kept as direct imports (< 5KB each, no benefit to lazy-load) ──
 import { Splashscreen as SplashscreenBase } from '@/app/components/Splashscreen'
-import { Welcome as WelcomeBase } from '@/app/components/Welcome'
 
 // ── Heavy pages: lazy-loaded — each gets its own JS chunk in the build ─────────
 const LoginBase         = lazy(() => import('@/app/components/Login').then(m => ({ default: m.Login })))
@@ -53,15 +52,10 @@ export function Splashscreen() {
   if (token) return null
 
   return <SplashscreenBase onComplete={() => {
-    nav('/welcome', { replace: true })
+    nav('/login', { replace: true })
   }} />
 }
 
-// ─── Welcome ──────────────────────────────────────────────────────────────────
-export function Welcome() {
-  const nav = useNavigate()
-  return <WelcomeBase onLogin={() => nav('/login')} onSignup={() => nav('/signup')} />
-}
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 export function Login() {
