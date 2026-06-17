@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { Search, ChevronLeft, X, Check, Loader2, Lock } from 'lucide-react';
+import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List } from 'lucide-react';
 import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon } from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { EventCard } from '@/components/shared/EventCard';
+import ExplorerMap from '@/app/components/ExplorerMap';
 interface ExplorerProps {
   onNavigate: (screen: string, id?: string) => void;
 }
@@ -291,12 +292,25 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     { id: '2', title: 'Sea holidays party', date: "Samedi prochain à 09h", location: "Cotonou • Fidirossè Beach (Cotonou)" }
   ];
 
+  const mapEvents = mockCards.map((card, i) => ({
+    id: card.id,
+    title: card.title,
+    city: currentLocation,
+    address: card.location,
+    latitude: isAbomey ? 6.4485 + (i * 0.002) : 6.36536 + (i * 0.002),
+    longitude: isAbomey ? 2.3556 + (i * 0.002) : 2.41833 + (i * 0.002),
+    startAt: new Date().toISOString(),
+    currentAttendees: 500,
+    participationMode: 'Gratuit',
+    coverUrl: ''
+  })) as any[];
+
 
   return (
     <div className={`w-full h-full flex flex-col relative bg-background`}>
 
         {/* Header & Search Bar */}
-        <div className={`px-5 pt-safe-6 pb-2 shrink-0 relative z-10 bg-background-white`}>
+        <div className={`px-5 pt-safe-6 pb-2 shrink-0 relative z-20 transition-colors duration-300 ${viewMode === 'map' ? 'bg-transparent' : 'bg-white'}`}>
           <div className="flex items-center justify-between mb-4 mt-2">
             <h1 className="text-[24px] font-semibold font-poppins text-[#1B1818] tracking-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
@@ -336,18 +350,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 <Settings04Icon className="w-[20px] h-[20px] text-[#A3A3A3]" strokeWidth={1.5} />
               </button>
             </div>
-
-            {/* Bouton QR Code séparé */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                hapticFeedback.impact();
-                setViewMode(viewMode === 'list' ? 'map' : 'list');
-              }}
-              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[#DFDFDF] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
-            >
-              <QrCode01Icon className="w-[22px] h-[22px] text-[#5B5B5B]" strokeWidth={1.5} />
-            </button>
           </div>
 
           {/* Category chips */}
@@ -371,24 +373,55 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
         </div>
 
-        {/* Content (Mocked Event List) */}
-        <div className="flex-1 overflow-y-auto px-5 pt-4 pb-[80px] flex flex-col items-center">
-          {mockCards.map(card => {
-            const parts = card.location.split(' • ');
-            return (
-              <EventCard
-                key={card.id}
-                name={card.title}
-                datetime={card.date}
-                city={parts[0]}
-                place={parts[1]}
-                attendeesCount="+500 Participants"
-                price="Gratuit"
-                cover={true}
-              />
-            );
-          })}
-        </div>
+        {/* Vue Carte (Map View) */}
+        {viewMode === 'map' && (
+          <div className="absolute inset-0 z-0">
+            <ExplorerMap
+              events={mapEvents}
+              mapCenter={isAbomey ? [6.4485, 2.3556] : [6.36536, 2.41833]}
+              mapGeoLoading={false}
+              onGeolocate={() => {}}
+              onNavigate={onNavigate}
+            />
+          </div>
+        )}
+
+        {/* Vue Liste (List View) */}
+        {viewMode === 'list' && (
+          <div className="flex-1 overflow-y-auto px-5 pt-4 pb-[80px] flex flex-col items-center relative z-10 bg-background">
+            {mockCards.map(card => {
+              const parts = card.location.split(' • ');
+              return (
+                <EventCard
+                  key={card.id}
+                  name={card.title}
+                  datetime={card.date}
+                  city={parts[0]}
+                  place={parts[1]}
+                  attendeesCount="+500 Participants"
+                  price="Gratuit"
+                  cover={true}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* FAB Bouton bascule Liste/Carte */}
+        <button
+          onClick={() => {
+            hapticFeedback.impact();
+            setViewMode(viewMode === 'list' ? 'map' : 'list');
+          }}
+          className="absolute bottom-6 right-5 w-[60px] h-[60px] rounded-full bg-[#FF7A00] shadow-2xl flex items-center justify-center z-50 active:scale-95 transition-transform"
+          style={{ boxShadow: '0px 8px 24px rgba(255, 122, 0, 0.4)' }}
+        >
+          {viewMode === 'list' ? (
+            <Map className="w-[26px] h-[26px] text-white" strokeWidth={2.5} />
+          ) : (
+            <List className="w-[26px] h-[26px] text-white" strokeWidth={2.5} />
+          )}
+        </button>
     </div>
   );
 }

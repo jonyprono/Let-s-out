@@ -46,44 +46,41 @@ function clusterEvents(events: Event[], zoom: number): Array<{
   return clusters
 }
 
-/** Single orange pin icon — matches Figma exactly */
+/** Custom pill badge for map markers */
 function makePinIcon(count: number, isSelected: boolean) {
-  const scale = isSelected ? 1.15 : 1
+  const scale = isSelected ? 1.15 : 1;
   const shadow = isSelected
     ? 'drop-shadow(0 4px 12px rgba(255,122,0,0.5))'
-    : 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))'
+    : 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))';
+  
+  const text = count === 1 ? '1 événement' : `${count} événements`;
 
-  if (count <= 1) {
-    return L.divIcon({
-      className: '',
-      html: `
-        <div style="transform:scale(${scale});transform-origin:bottom center;filter:${shadow};transition:transform 0.15s">
-          <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="#FF7A00"/>
-            <circle cx="18" cy="18" r="7" fill="white"/>
-          </svg>
-        </div>`,
-      iconSize: [36, 44],
-      iconAnchor: [18, 44],
-    })
-  }
-
-  // Cluster pin: pin + badge
   return L.divIcon({
     className: '',
     html: `
-      <div style="transform:scale(${scale});transform-origin:bottom center;filter:${shadow};transition:transform 0.15s;position:relative;display:inline-flex;flex-direction:column;align-items:center">
-        <div style="background:#FFF5ED;border:1.5px solid #FF7A00;border-radius:20px;padding:2px 8px;margin-bottom:2px;white-space:nowrap">
-          <span style="color:#FF7A00;font-weight:700;font-size:11px;font-family:system-ui">${count} événements</span>
-        </div>
-        <svg width="36" height="44" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="#FF7A00"/>
-          <circle cx="18" cy="18" r="7" fill="white"/>
-        </svg>
+      <div style="
+        transform: scale(${scale});
+        transform-origin: center center;
+        filter: ${shadow};
+        transition: transform 0.15s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #FF7A00;
+        border-radius: 9999px;
+        padding: 6px 14px;
+        white-space: nowrap;
+      ">
+        <span style="
+          color: #FFFFFF;
+          font-weight: 600;
+          font-size: 13px;
+          font-family: 'Poppins', sans-serif;
+        ">${text}</span>
       </div>`,
-    iconSize: [80, 64],
-    iconAnchor: [40, 64],
-  })
+    iconSize: [0, 0], // Let content dictate size
+    iconAnchor: [0, 0], // Center the pill
+  });
 }
 
 /** Listen to map zoom/click changes */
