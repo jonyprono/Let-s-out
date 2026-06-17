@@ -391,7 +391,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         <div className="px-5 pt-safe-6 pb-2">
           {/* Header Search Input */}
           <div className={`flex items-center gap-[4px] rounded-full px-4 h-[36px] bg-white transition-colors ${isSearching ? 'border-[#FF7A00] border-[1px]' : 'border border-gray-200'}`}>
-            <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <Location01Icon className="w-[18px] h-[18px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
             <input
               autoFocus
               value={mapSearch}
@@ -436,7 +436,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         setScreen('list');
                       }}
                     >
-                      <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                      <Location01Icon className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
                       <span className="text-[15px] text-[#1B1818] font-poppins">{city}</span>
                     </button>
                   ))}
@@ -455,7 +455,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     setScreen('list');
                   }}
                 >
-                  <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <Location01Icon className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
                   <span className="text-[15px] text-[#1B1818] font-poppins">{city}</span>
                 </button>
               ))}
@@ -556,7 +556,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   void handleMapGeolocate;
   void handleMapSearch;
   void activeSearchInput;
-  void Bell;
   void Target;
   void List;
   void EventCard;
