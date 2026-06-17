@@ -15,38 +15,7 @@ interface ExplorerProps {
   onNavigate: (screen: string, id?: string) => void;
 }
 
-const CATEGORIES_FILTER = [
-  { key: 'SPORT', label: 'Sports' },
-  { key: 'TECH', label: 'Tech & Pro' },
-  { key: 'MUSIC', label: 'Musique' },
-  { key: 'NIGHTLIFE', label: 'Soirées & Fêtes' },
-  { key: 'ART', label: 'Art & Théâtre' },
-  { key: 'CULTURE', label: 'Culture & Cinéma' },
-  { key: 'FOOD', label: 'Gastronomie' },
-  { key: 'LIFESTYLE', label: 'Lifestyle' },
-  { key: 'WELLNESS', label: 'Santé & Bien-être' },
-  { key: 'SCIENCE', label: 'Science' },
-  { key: 'TRAVEL', label: 'Voyages' },
-  { key: 'GAMING', label: 'Jeux' },
-  { key: 'SOCIAL', label: 'Social & Comédie' },
-];
-
-const DATE_FILTERS = [
-  { key: 'soon', label: 'Bientôt' },
-  { key: 'today', label: "Aujourd'hui" },
-  { key: 'tomorrow', label: 'Demain' },
-  { key: 'week', label: 'Cette semaine' },
-  { key: 'weekend', label: 'Ce week-end' },
-  { key: 'pick', label: 'Choisir une date' },
-];
-
-const TIME_FILTERS = [
-  { key: 'all', label: 'Tout moment' },
-  { key: 'morning', label: 'Matinée' },
-  { key: 'afternoon', label: 'Après-midi' },
-  { key: 'evening', label: 'Soirée' },
-  { key: 'night', label: 'Nuit' },
-];
+// Filtres supprimés
 
 /*
 const CATEGORY_LABELS: Record<string, string> = {
@@ -206,25 +175,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     setMapSearchResults(results)
   }
 
-  const toggleFilterCategory = (key: string) => {
-    setFilterCategories(prev =>
-      prev.includes(key) ? prev.filter(c => c !== key) : [...prev, key]
-    );
-  };
-
-  const applyFilters = () => {
-    setAppliedFilters({ date: filterDate, time: filterTime, categories: filterCategories, budgetMax: filterBudgetMax, customDate: filterCustomDate, distance: filterDistance });
-    setScreen('list');
-  };
-
-  const resetFilters = () => {
-    setFilterDate('soon');
-    setFilterTime('all');
-    setFilterCategories([]);
-    setFilterBudgetMax(10000);
-    setFilterCustomDate('');
-    setFilterDistance(100);
-  };
+  // Fonctions de filtres supprimées
 
   // Keyword search: query events API when user types in the keyword field
   useEffect(() => {
