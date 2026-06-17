@@ -555,9 +555,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   void events;
   void handleMapGeolocate;
   void handleMapSearch;
-
-  // Prevent TS unused variable errors during mockup phase
-  void Suspense;
+  void activeSearchInput;
+  void Bell;
   void Target;
   void List;
   void EventCard;
@@ -579,7 +578,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <div className="flex items-center justify-between mb-4 mt-2">
             <h1 className="text-[24px] font-semibold font-poppins text-[#1B1818] tracking-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
-              <Notification03Icon className="w-[24px] h-[24px] text-[#1B1818]" variant="stroke" strokeWidth={1.8} />
+              <Notification03Icon className="w-[24px] h-[24px] text-[#1B1818]" strokeWidth={1.8} />
               <div className="absolute top-0 right-0 w-[18px] h-[18px] bg-[#FF7A00] rounded-full border-[1.5px] border-white flex items-center justify-center">
                 <span className="text-[10px] font-bold text-white leading-none">5</span>
               </div>
@@ -595,7 +594,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <div className="flex items-center gap-3 mb-5 w-full max-w-[358px]">
             <div
               className="flex-1 border border-gray-200 rounded-full flex items-center px-4 h-[36px] gap-[4px] bg-white cursor-text"
-              onClick={(e) => {
+              onClick={() => {
                 hapticFeedback.impact();
                 setScreen('search');
               }}
