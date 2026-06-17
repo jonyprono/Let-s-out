@@ -579,6 +579,21 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     </div>
   );
 
+  // Prevent TS unused variable errors during mockup phase
+  void Suspense;
+  void Target;
+  void List;
+  void EventCard;
+  void LazyExplorerMap;
+  void setSearchQuery;
+  void mapGeoLoading;
+  void mapSearchResults;
+  void keywordSuggestions;
+  void isLoading;
+  void events;
+  void handleMapGeolocate;
+  void handleMapSearch;
+
   return (
     <div className={`w-full h-full flex flex-col relative bg-background`}>
 
