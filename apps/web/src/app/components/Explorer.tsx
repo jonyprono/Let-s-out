@@ -145,22 +145,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 border: 'none'
               }}
             />
-            {isSearching && (
-              <button
-                onClick={() => setMapSearch('')}
-                style={{ padding: 6, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                <X style={{ width: 18, height: 18, color: '#A3A3A3' }} strokeWidth={2} />
-              </button>
-            )}
+            <button
+              onClick={closeSearch}
+              style={{ padding: 6, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              <X style={{ width: 18, height: 18, color: '#A3A3A3' }} strokeWidth={2} />
+            </button>
           </div>
-          {/* Bouton annuler */}
-          <button
-            onClick={closeSearch}
-            style={{ flexShrink: 0, padding: '0 4px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#FF7A00', fontSize: 15, fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
-          >
-            Annuler
-          </button>
         </div>
 
         {/* Liste des résultats */}
