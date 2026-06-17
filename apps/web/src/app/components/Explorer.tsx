@@ -1,7 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useLocation } from 'react-router';
-import { Search, SlidersHorizontal, MapPin, ChevronLeft, X, Check, Loader2, Lock, Target, Bell, ChevronDown, QrCode, List } from 'lucide-react';
-import { Notification03Icon } from 'hugeicons-react';
+import { Search, ChevronLeft, X, Check, Loader2, Lock, Target, List } from 'lucide-react';
+import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon } from 'hugeicons-react';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { apiClient } from '@/lib/api-client';
@@ -585,47 +585,47 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </button>
           </div>
 
-          <button onClick={() => setScreen('search')} className="flex items-center gap-1.5 mb-5 text-gray-600 active:opacity-70 transition-opacity">
-            <MapPin className="w-[18px] h-[18px]" strokeWidth={2} />
-            <span className="text-[15px] font-poppins font-medium">{currentLocation}</span>
-            <ChevronDown className="w-4 h-4 text-gray-400" strokeWidth={2} />
+          <button onClick={() => setScreen('search')} className="flex items-center gap-1.5 mb-5 text-[#5B5B5B] active:opacity-70 transition-opacity">
+            <Location01Icon className="w-[24px] h-[24px]" strokeWidth={2} />
+            <span className="text-[20px] font-poppins font-semibold">{currentLocation}</span>
+            <ArrowDown01Icon className="w-[20px] h-[20px]" strokeWidth={2} />
           </button>
 
           <div className="flex items-center gap-3 mb-5 w-full max-w-[358px]">
+            {/* Champ de recherche */}
             <div
-              className="flex-1 border border-gray-200 rounded-full flex items-center px-4 h-[36px] gap-[4px] bg-white cursor-text"
+              className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-4 h-[44px] gap-[4px] bg-white cursor-text"
               onClick={() => {
                 hapticFeedback.impact();
                 setScreen('search');
               }}
             >
-              <Search className="w-[16px] h-[16px] text-gray-400 shrink-0" />
-              <span className="text-[13px] text-gray-400 font-poppins flex-1">Rechercher des événements</span>
+              <Search className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
+              <span className="text-[14px] text-[#A3A3A3] font-poppins flex-1">Rechercher des événements</span>
               
-              <div className="flex items-center gap-[4px] shrink-0">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    hapticFeedback.impact();
-                    setScreen('filter');
-                  }}
-                  className="p-1"
-                >
-                  <SlidersHorizontal className="w-[16px] h-[16px] text-gray-400" />
-                </button>
-                <div className="w-[1px] h-[16px] bg-gray-200 mx-1"></div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    hapticFeedback.impact();
-                    setViewMode(viewMode === 'list' ? 'map' : 'list');
-                  }}
-                  className="p-1"
-                >
-                  <QrCode className="w-[16px] h-[16px] text-gray-400" />
-                </button>
-              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  hapticFeedback.impact();
+                  setScreen('filter');
+                }}
+                className="p-1 shrink-0"
+              >
+                <Settings04Icon className="w-[20px] h-[20px] text-[#A3A3A3]" strokeWidth={1.5} />
+              </button>
             </div>
+
+            {/* Bouton QR Code séparé */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                hapticFeedback.impact();
+                setViewMode(viewMode === 'list' ? 'map' : 'list');
+              }}
+              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[#DFDFDF] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
+            >
+              <QrCode01Icon className="w-[22px] h-[22px] text-[#5B5B5B]" strokeWidth={1.5} />
+            </button>
           </div>
 
           {/* Category chips */}
