@@ -26,7 +26,6 @@ import {
   EarthIcon,
   LockIcon,
   Search01Icon,
-  InformationCircleIcon,
   CheckmarkCircle02Icon,
   Upload04Icon,
   Image01Icon,
@@ -420,26 +419,29 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 pb-40">
-          <div className="flex flex-col items-center pt-8">
-            {/* Icon */}
-            <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-5 ${isPublished ? 'bg-gradient-to-tr from-[#FFEB3A] to-[#4DEF8E]' : 'bg-gradient-to-tr from-[#FF7A00] to-[#FFD439]'}`}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 13L9 17L19 7" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+          <div className="flex flex-col items-center pt-8 gap-5">
+            {/* Top Section */}
+            <div className="flex flex-col items-center gap-3 w-full">
+              {/* Icon */}
+              <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-1 ${isPublished ? 'bg-gradient-to-tr from-[#FFEB3A] to-[#4DEF8E]' : 'bg-[#FF9500]'}`}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+
+              {/* Title */}
+              <h1 className={`text-[24px] font-semibold text-center ${isPublished ? 'text-[#4CAF50]' : 'text-[#FF7A00]'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>
+                {isPublished ? 'Publié !' : 'Terminé !'}
+              </h1>
+              <p className="text-[14px] text-[#766F6E] text-center max-w-[300px] leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                {isPublished
+                  ? "Votre événement a été publié avec succès. Vous pouvez maintenant le partager ou voir les détails."
+                  : "Votre événement a été bien créé. Publiez-le pour le rendre visible ou invitez vos amis à participer."}
+              </p>
             </div>
 
-            {/* Title */}
-            <h1 className={`text-[24px] font-semibold mb-3 text-center ${isPublished ? 'text-[#4CAF50]' : 'text-[#FF7A00]'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>
-              {isPublished ? 'Publié !' : 'Terminé !'}
-            </h1>
-            <p className="text-[14px] text-[#766F6E] text-center max-w-[300px] mb-8 leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
-              {isPublished
-                ? "Votre événement a été publié avec succès. Vous pouvez maintenant le partager ou voir les détails."
-                : "Votre événement a été bien créé. Publiez-le pour le rendre visible ou invitez vos amis à participer."}
-            </p>
-
             {/* Summary Card */}
-            <div className="w-full bg-white rounded-[16px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-[#F2F2F2] mb-4">
+            <div className="w-full bg-white rounded-[16px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-[#F2F2F2]">
               <h3 className="font-bold text-[15px] text-[#1A1A1A] mb-5 truncate">{title || 'Votre événement'}</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -464,7 +466,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             {/* Alert Box for Cagnotte */}
             {!isPublished && participationMode === 'cagnotte' && (
               <div className="w-full bg-[#EAF6FD] rounded-[12px] p-4 flex gap-3 items-start border border-[#DFF0FE]">
-                <InformationCircleIcon className="w-[18px] h-[18px] text-[#007AFF] shrink-0 mt-[1px]" strokeWidth={2} />
+                <div className="w-[18px] h-[18px] shrink-0 mt-[1px]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2.5L21.5 12L12 21.5L2.5 12L12 2.5Z" stroke="#007AFF" strokeWidth="2" strokeLinejoin="round" />
+                    <path d="M12 8V13M12 16H12.01" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
                 <p className="text-[12px] text-[#1A1A1A] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
                   Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
                 </p>
@@ -973,13 +980,30 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               )}
 
               <div className="mt-4 mb-4">
-                <InputField
-                  label="Date limite d'inscription"
-                  value={regEndDate ? `${formatDateFr(regEndDate)} à ${regEndTime.replace(':', 'h')}` : undefined}
-                  placeholder="Facultatif"
-                  readOnly
-                  onClick={() => { setTempRegEndDate(regEndDate || startDate); setTempRegEndTime(regEndTime || '12:00'); setShowRegEndDateSheet(true) }}
-                />
+                {!regEndDate ? (
+                  <div>
+                    <button
+                      onClick={() => { setTempRegEndDate(regEndDate || startDate); setTempRegEndTime(regEndTime || '12:00'); setShowRegEndDateSheet(true) }}
+                      className="flex items-center gap-2 px-4 py-[10px] bg-[#F8F8F8] rounded-full text-[13px] font-medium text-[#5B5B5B] active:opacity-70 transition-opacity"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="4" width="12" height="10" rx="2" fill="#F0F0F0" />
+                        <path d="M2 6C2 4.89543 2.89543 4 4 4H12C13.1046 4 14 4.89543 14 6V6.5H2V6Z" fill="#FF4B4B" />
+                        <path d="M4.5 3V5M11.5 3V5" stroke="#5B5B5B" strokeLinecap="round" />
+                      </svg>
+                      Ajouter une date limite d'inscription
+                    </button>
+                    <p className="text-[11px] text-[#A3A3A3] mt-1.5 ml-1">Facultatif</p>
+                  </div>
+                ) : (
+                  <InputField
+                    label="Date limite d'inscription"
+                    value={`${formatDateFr(regEndDate)} à ${regEndTime.replace(':', 'h')}`}
+                    placeholder="Facultatif"
+                    readOnly
+                    onClick={() => { setTempRegEndDate(regEndDate || startDate); setTempRegEndTime(regEndTime || '12:00'); setShowRegEndDateSheet(true) }}
+                  />
+                )}
               </div>
             </div>
           )}
