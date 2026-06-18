@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { X, Loader2, Share2 } from 'lucide-react';
+import { X, Copy, Share2, Download, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
 import { eventsApi } from '@/features/events/api';
-import { SafeImage } from '@/components/shared/SafeImage';
-import { shareLink } from '@/lib/utils';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface ShareModalProps {
   eventId: string;
@@ -14,117 +12,178 @@ interface ShareModalProps {
 }
 
 export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
-  const [invitingUsers, setInvitingUsers] = useState<Set<string>>(new Set());
-  const [invitedUsers, setInvitedUsers] = useState<Set<string>>(new Set());
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
-  const { data: friendsData, isLoading: friendsLoading } = useQuery({
-    queryKey: ['friends'],
-    queryFn: async () => {
-      const res = await apiClient.get('/users/me/friends', { params: { limit: 100 } });
-      return res.data;
-    },
+  // Fetch event details to get the join code
+  const { data: eventData } = useQuery({
+    queryKey: ['events', eventId],
+    queryFn: () => eventsApi.getById(eventId).then(r => r.data),
+    enabled: !!eventId,
   });
-  const friends = friendsData?.data || [];
+  const joinCode = eventData?.joinCode || '';
+  const eventLink = `https://lets-out.app/event/join/${joinCode || eventId}`;
 
-  const handleCopyLink = async () => {
-    const url = `${window.location.origin}/events/${eventId}`;
-    await shareLink(eventTitle, `Découvrez "${eventTitle}" sur Let's Out !`, url);
+  const copyCode = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(joinCode || eventId);
+      } else {
+        const el = document.createElement('textarea');
+        el.value = joinCode || eventId;
+        el.style.position = 'fixed';
+        el.style.opacity = '0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+      toast.success('Code copié !');
+    } catch {
+      toast.error('Impossible de copier le code');
+    }
+  };
+
+  const copyLink = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(eventLink);
+      } else {
+        const el = document.createElement('textarea');
+        el.value = eventLink;
+        el.style.position = 'fixed';
+        el.style.opacity = '0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+      toast.success('Lien copié !');
+    } catch {
+      toast.error('Impossible de copier le lien');
+    }
+  };
+
+  const shareNative = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: eventTitle,
+          text: `Rejoignez "${eventTitle}" sur Let's Out !`,
+          url: eventLink,
+        });
+      } catch {
+        copyLink();
+      }
+    } else {
+      copyLink();
+    }
+  };
+
+  const downloadQR = () => {
+    const svg = document.getElementById('share-qr-code');
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    canvas.width = 200;
+    canvas.height = 200;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      ctx?.drawImage(img, 0, 0);
+      const a = document.createElement('a');
+      a.download = `qr-${eventId}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+    toast.success('QR Code téléchargé !');
   };
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-      <div className="w-full max-h-[82%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300 shadow-2xl">
+      <div className="w-full max-h-[90%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300 shadow-2xl">
         {/* Handle */}
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
+          <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
+
         {/* Header */}
-        <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
-          <div>
-            <h3 className="text-[18px] font-bold text-gray-900">Partager l'événement</h3>
-            <p className="text-[12px] text-gray-400 mt-0.5">Invitez vos amis ou partagez le lien</p>
-          </div>
+        <div className="px-5 pt-3 pb-4 flex items-center justify-between flex-shrink-0">
+          <h3 className="text-[18px] font-bold text-gray-900">Partager</h3>
           <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center active:scale-95">
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
-        {/* Copy link */}
-        <div className="px-5 pt-4 pb-2 flex-shrink-0">
-          <button
-            onClick={handleCopyLink}
-            className="w-full py-3 rounded-2xl bg-action-primary text-white font-bold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-sm shadow-orange-500/20"
-          >
-            <Share2 className="w-4 h-4" />
-            Copier le lien d'invitation
-          </button>
-        </div>
+        {/* Description */}
+        <p className="px-5 text-[13px] text-gray-500 mb-5 leading-relaxed">
+          Partagez le code événement, le QR Code ou le lien avec vos amis afin de les inviter à rejoindre l'événement.
+        </p>
 
-        {/* Divider */}
-        <div className="flex items-center gap-3 px-5 py-2 flex-shrink-0">
-          <div className="flex-1 h-px bg-gray-100" />
-          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wide">ou inviter des amis</p>
-          <div className="flex-1 h-px bg-gray-100" />
-        </div>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-5 pb-8 space-y-4" style={{ scrollbarWidth: 'none' }}>
 
-        {/* Friends list */}
-        <div className="flex-1 overflow-y-auto px-5 pb-6" style={{ scrollbarWidth: 'none' }}>
-          {friendsLoading ? (
-            <div className="flex flex-col items-center justify-center py-10 gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
-              <p className="text-[13px] text-gray-400">Chargement de vos amis...</p>
+          {/* Join Code block */}
+          <div className="rounded-2xl bg-[#FFF8EE] p-5 flex flex-col items-center gap-4">
+            <span className="text-[42px] font-bold text-gray-900 tracking-widest">
+              {joinCode || eventId.slice(0, 5).toUpperCase()}
+            </span>
+            <button
+              onClick={copyCode}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform"
+            >
+              {codeCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+              {codeCopied ? 'Code copié !' : 'Copier le code'}
+              {!codeCopied && <span className="text-gray-400 ml-0.5">📋</span>}
+            </button>
+          </div>
+
+          {/* QR Code block */}
+          <div className="rounded-2xl bg-[#FFF8EE] p-5 flex flex-col items-center gap-4">
+            <div className="bg-white p-4 rounded-xl shadow-sm">
+              <QRCodeSVG
+                id="share-qr-code"
+                value={eventLink}
+                size={160}
+                level="M"
+              />
             </div>
-          ) : friends.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span className="text-2xl">👥</span>
-              </div>
-              <p className="text-gray-700 font-bold text-[15px]">Aucun ami à inviter</p>
-              <p className="text-gray-400 text-[13px] mt-1">Ajoutez des amis depuis votre profil.</p>
+            <button
+              onClick={downloadQR}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform"
+            >
+              <Download className="w-4 h-4 text-gray-500" />
+              Télécharger le QR code
+              <span className="text-gray-400">⬇</span>
+            </button>
+          </div>
+
+          {/* Link block */}
+          <div className="rounded-2xl bg-[#FFF8EE] p-4">
+            <p className="text-[13px] text-[#007AFF] font-medium mb-3 break-all">{eventLink}</p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={copyLink}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform"
+              >
+                {linkCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                {linkCopied ? 'Copié !' : 'Copier'}
+              </button>
+              <button
+                onClick={shareNative}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform"
+              >
+                <Share2 className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
+                Partager
+              </button>
             </div>
-          ) : (
-            <div className="space-y-1">
-              {friends.map((friend: any) => (
-                <div key={friend.userId} className="flex items-center gap-3 py-2">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
-                    <SafeImage
-                      src={friend.avatarUrl}
-                      alt={friend.displayName}
-                      className="w-full h-full object-cover"
-                      fallback={<div className="w-full h-full flex items-center justify-center text-lg font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>{(friend.displayName || 'A').charAt(0)}</div>}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 text-[14px] truncate">{friend.displayName}</p>
-                    <p className="text-gray-400 text-[12px]">@{friend.username}</p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      if (invitedUsers.has(friend.userId)) return;
-                      setInvitingUsers(s => new Set([...s, friend.userId]));
-                      try {
-                        await eventsApi.inviteFriends(eventId, [friend.userId]);
-                        setInvitedUsers(s => new Set([...s, friend.userId]));
-                        toast.success(`${friend.displayName} invité !`);
-                      } catch {
-                        toast.error('Erreur lors de l\'invitation');
-                      } finally {
-                        setInvitingUsers(s => { const n = new Set(s); n.delete(friend.userId); return n; });
-                      }
-                    }}
-                    disabled={invitingUsers.has(friend.userId) || invitedUsers.has(friend.userId)}
-                    className={`px-4 py-2 rounded-full text-[12px] font-bold transition-all active:scale-95 flex-shrink-0 ${
-                      invitedUsers.has(friend.userId)
-                        ? 'bg-green-100 text-green-600 border border-green-200'
-                        : 'bg-action-primary active:bg-action-primary-hover text-white shadow-sm'
-                    } disabled:opacity-60`}
-                  >
-                    {invitingUsers.has(friend.userId) ? <Loader2 className="w-4 h-4 animate-spin" /> : invitedUsers.has(friend.userId) ? '✓ Invité' : 'Inviter'}
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          </div>
+
         </div>
       </div>
     </div>
