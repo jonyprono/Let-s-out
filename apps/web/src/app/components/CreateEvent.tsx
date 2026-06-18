@@ -6,7 +6,6 @@ import {
   Location01Icon as HugeMapPin,
   Calendar01Icon as HugeCalendar,
   Clock01Icon as HugeClock,
-  UserAdd01Icon,
   UserIcon,
   ArrowLeft01Icon,
   PaintBoardIcon,
@@ -28,11 +27,12 @@ import {
   LockIcon,
   Search01Icon,
   CheckmarkCircle02Icon,
-  CircleUnlock01Icon,
-  Coins01Icon,
   Tick01Icon,
   Upload04Icon,
-  Image01Icon
+  Image01Icon,
+  LockKeyIcon,
+  Coins02Icon,
+  Calendar02Icon
 } from 'hugeicons-react'
 
 import { apiClient } from '@/lib/api-client'
@@ -163,6 +163,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [lat, setLat] = useState<number | null>(null)
   const [lon, setLon] = useState<number | null>(null)
   const [privacy, setPrivacy] = useState<'PUBLIC' | 'PRIVATE' | null>(null)
+  const [allowGuestInvites, setAllowGuestInvites] = useState(false)
   const [description, setDescription] = useState('')
   const [participationMode, setParticipationMode] = useState<string | null>(null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
@@ -744,8 +745,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {/* Add organizer button */}
           <button
             onClick={() => setShowOrganizerSearch(true)}
-            className="flex items-center gap-2 text-[13px] font-semibold text-[#FF7A00] active:opacity-70 transition-opacity">
-            <UserAdd01Icon className="w-4 h-4" strokeWidth={1.5} />
+            className="flex items-center gap-2 px-4 py-2 bg-[#F9F9F9] rounded-full text-[14px] font-medium text-[#5B5B5B] active:opacity-70 transition-opacity self-start">
+            <UserIcon className="w-[18px] h-[18px] text-[#FFB020]" fill="currentColor" strokeWidth={1.5} />
             Ajouter un organisateur
           </button>
         </div>
@@ -876,9 +877,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
               <div className="mt-2 mb-4">
                 <button
-                  className="flex items-center gap-2 text-[12px] font-medium text-[#766F6E] bg-[#F9F9F9] px-3 py-2 rounded-full active:opacity-70 transition-opacity"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F9F9] rounded-full text-[14px] font-medium text-[#5B5B5B] active:opacity-70 transition-opacity self-start"
                 >
-                  <HugeCalendar className="w-4 h-4 text-[#FF7A00]" strokeWidth={1.5} />
+                  <Calendar02Icon className="w-[18px] h-[18px] text-[#FF7A00]" strokeWidth={1.5} />
                   Ajouter une date limite d'inscription
                 </button>
               </div>
@@ -1001,27 +1002,41 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="flex flex-col">
           {[
             { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde sur ou en dehors de Let's Out`, Icon: EarthIcon },
-            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: LockIcon },
+            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: LockKeyIcon },
           ].map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => { setPrivacy(opt.value); setShowPrivacySheet(false) }}
-              className="w-full flex items-center gap-4 py-4 border-b border-[#F5F5F5] last:border-0 text-left"
-            >
-              {/* Grey circle icon */}
-              <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
-                <opt.Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} />
-              </div>
-              {/* Text */}
-              <div className="flex-1">
-                <p className="text-[15px] font-bold text-[#1A1A1A]">{opt.label}</p>
-                <p className="text-[12px] text-[#766F6E] mt-0.5">{opt.desc}</p>
-              </div>
-              {/* Radio */}
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${privacy === opt.value ? 'border-[#FF7A00]' : 'border-[#CCCCCC]'}`}>
-                {privacy === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
-              </div>
-            </button>
+            <div key={opt.value} className="flex flex-col w-full py-4 border-b border-[#F5F5F5] last:border-0">
+              <button
+                onClick={() => { setPrivacy(opt.value); if (opt.value === 'PUBLIC') setAllowGuestInvites(false); setShowPrivacySheet(false) }}
+                className="w-full flex items-center gap-4 text-left"
+              >
+                {/* Grey circle icon */}
+                <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
+                  <opt.Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} />
+                </div>
+                {/* Text */}
+                <div className="flex-1">
+                  <p className="text-[15px] font-bold text-[#1A1A1A]">{opt.label}</p>
+                  <p className="text-[12px] text-[#766F6E] mt-0.5">{opt.desc}</p>
+                </div>
+                {/* Radio */}
+                <div className={`w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors ${privacy === opt.value ? 'border-[#FF7A00]' : 'border-[#CCCCCC]'}`}>
+                  {privacy === opt.value && <div className="w-[10px] h-[10px] rounded-full bg-[#FF7A00]" />}
+                </div>
+              </button>
+              
+              {/* Toggle switch for PRIVATE */}
+              {opt.value === 'PRIVATE' && privacy === 'PRIVATE' && (
+                <div className="flex items-center justify-between mt-3 pt-1 ml-[56px]">
+                  <span className="text-[12px] text-[#5B5B5B] mr-4 leading-tight">Autoriser les participants à inviter d'autres participants</span>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setAllowGuestInvites(!allowGuestInvites); }}
+                    className={`w-9 h-5 rounded-full flex items-center px-[2px] transition-colors shrink-0 ${allowGuestInvites ? 'bg-[#FF7A00]' : 'bg-[#E5E5E5]'}`}
+                  >
+                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${allowGuestInvites ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </button>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </BottomSheet>
@@ -1057,8 +1072,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <p className="text-[13px] text-[#766F6E] mb-5">Comment participer à cet événement.</p>
         <div className="flex flex-col">
           {[
-            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: CircleUnlock01Icon },
-            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins01Icon },
+            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: LockIcon },
+            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins02Icon },
           ].map(mode => (
             <button
               key={mode.value}
@@ -1073,15 +1088,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   setEnablePool(false);
                 }
               }}
-              className={`w-full flex items-center gap-4 py-4 border-b border-[#F9F9F9] last:border-0 text-left`}
+              className={`w-full flex items-center gap-4 py-4 text-left`}
             >
-              <mode.Icon className="w-6 h-6 text-[#A3A3A3]" strokeWidth={1.5} />
+              <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
+                <mode.Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} />
+              </div>
               <div className="flex-1">
                 <p className="text-[15px] font-semibold text-[#1A1A1A]">{mode.label}</p>
                 <p className="text-[12px] text-[#766F6E]">{mode.desc}</p>
               </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${participationMode === mode.value ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
-                {participationMode === mode.value && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
+              <div className={`w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors ${participationMode === mode.value ? 'border-[#FF7A00]' : 'border-[#CCCCCC]'}`}>
+                {participationMode === mode.value && <div className="w-[10px] h-[10px] rounded-full bg-[#FF7A00]" />}
               </div>
             </button>
           ))}
