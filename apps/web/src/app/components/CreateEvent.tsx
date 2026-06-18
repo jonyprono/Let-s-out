@@ -421,8 +421,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         <div className="flex-1 flex flex-col items-center justify-center px-5 pb-32 overflow-y-auto">
           {/* Icon */}
-          <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-6 shadow-sm ${isPublished ? 'bg-gradient-to-tr from-[#98E137] to-[#F1F336]' : 'bg-[#FF7A00]'}`}>
-            <Tick01Icon className="w-8 h-8 text-white" strokeWidth={2.5} />
+          <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-6 ${isPublished ? 'bg-gradient-to-tr from-[#98E137] to-[#F1F336]' : 'bg-[#FF7A00]'}`}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 13L9 17L19 7" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </div>
 
           {/* Texts */}
