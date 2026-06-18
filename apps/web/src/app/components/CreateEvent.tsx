@@ -26,6 +26,7 @@ import {
   EarthIcon,
   LockIcon,
   Search01Icon,
+  InformationCircleIcon,
   CheckmarkCircle02Icon,
   Upload04Icon,
   Image01Icon,
@@ -401,13 +402,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
   // ── Auto-transition to publish ──────────────────────────────────────────
   useEffect(() => {
-    if (step === 'done') {
+    if (step === 'done' && participationMode !== 'cagnotte') {
       const timer = setTimeout(() => {
         handlePublish()
       }, 2500)
       return () => clearTimeout(timer)
     }
-  }, [step])
+  }, [step, participationMode])
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER — DONE or PUBLISHED screen
@@ -452,12 +453,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-[#766F6E]">Participation</span>
-                <div className={`px-2.5 py-1 rounded-[6px] text-[12px] font-bold ${participationMode === 'free' ? 'bg-[#4CAF50] text-white' : 'bg-[#FF7A00] text-white'}`}>
-                  {participationMode === 'free' ? 'Gratuite' : 'Sur cagnotte'}
+                <div className={`px-2.5 py-1 rounded-[6px] text-[12px] font-bold ${participationMode === 'free' ? 'bg-[#4CAF50] text-white' : 'bg-[#007AFF] text-white'}`}>
+                  {participationMode === 'free' ? 'Gratuite' : 'Cagnotte'}
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Alert Box for Cagnotte */}
+          {!isPublished && participationMode === 'cagnotte' && (
+            <div className="w-full mt-4 bg-[#EAF6FD] rounded-[12px] p-4 flex gap-3 items-start border border-[#DFF0FE]">
+              <InformationCircleIcon className="w-[18px] h-[18px] text-[#007AFF] shrink-0 mt-[2px]" strokeWidth={2} />
+              <p className="text-[12px] text-[#1A1A1A] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Bottom CTA */}
@@ -485,15 +496,27 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             >
               Partager l'événement
             </button>
-          ) : (
-            <button
-              onClick={handlePublish}
-              disabled={publishing}
-              className={`w-full py-[15px] rounded-[100px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${publishing ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
-            >
-              {publishing ? <div className="w-5 h-5 border-2 border-[#FFB073] border-t-white rounded-full animate-spin" /> : null}
-              {publishing ? "Publication..." : "Publier l'événement"}
-            </button>
+          ) : participationMode === 'cagnotte' ? (
+              <button
+                onClick={() => {
+                  toast.info('Redirection vers la vérification du compte...')
+                }}
+                className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all bg-[#FF7A00] text-white`}
+                style={{ fontFamily: 'Poppins, sans-serif' }}
+              >
+                Vérifier mon compte
+              </button>
+            ) : (
+              <button
+                onClick={handlePublish}
+                disabled={publishing}
+                className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${publishing ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
+                style={{ fontFamily: 'Poppins, sans-serif' }}
+              >
+                {publishing ? <div className="w-5 h-5 border-2 border-[#FFB073] border-t-white rounded-full animate-spin" /> : null}
+                {publishing ? "Publication..." : "Publier l'événement"}
+              </button>
+            )
           )}
 
           <button
