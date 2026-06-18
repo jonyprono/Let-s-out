@@ -400,6 +400,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const startDateLabel = startDate && startTime ? formatDateTime(startDate, startTime) : null
   const endDateLabel = endDate && endTime ? formatDateTime(endDate, endTime) : null
 
+  // ── Auto-transition to publish ──────────────────────────────────────────
+  useEffect(() => {
+    if (step === 'done') {
+      const timer = setTimeout(() => {
+        handlePublish()
+      }, 2500)
+      return () => clearTimeout(timer)
+    }
+  }, [step])
+
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER — DONE or PUBLISHED screen
   // ──────────────────────────────────────────────────────────────────────────
@@ -416,12 +426,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           </div>
 
           {/* Texts */}
-          <h1 className={`text-[24px] font-bold mb-3 ${isPublished ? 'text-[#4CAF50]' : 'text-[#FF7A00]'}`}>
-            {isPublished ? 'Publié !' : 'Terminé !'}
+          <h1 className={`text-[24px] font-semibold text-[#1B1818] mb-3 text-center`} style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {isPublished ? 'Félicitations !' : 'Événement créé avec succès !'}
           </h1>
-          <p className="text-[13px] text-[#766F6E] text-center max-w-[280px] mb-10 leading-[1.6]">
+          <p className="text-[14px] text-[#766F6E] text-center max-w-[300px] mb-10 leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
             {isPublished
-              ? "Votre événement est bien publié.\nPartagez-le avec vos proches et amis, et profitez ensemble!"
+              ? "Votre événement a été publié avec succès. Vous pouvez maintenant le partager ou voir les détails."
               : "Votre événement a été bien créé.\nPubliez-le pour le rendre visible ou invitez vos amis à participer."}
           </p>
 
@@ -453,8 +463,24 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="absolute bottom-0 left-0 right-0 px-5 py-6 bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA] to-transparent space-y-3">
           {isPublished ? (
             <button
-              onClick={() => { /* share logic */ }}
-              className="w-full py-[15px] rounded-[100px] bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] transition-transform"
+              onClick={async () => {
+                if (navigator.share) {
+                  try {
+                    await navigator.share({
+                      title: title || 'Mon événement',
+                      text: "Rejoignez-moi pour cet événement sur Let's Out !",
+                      url: window.location.origin + `/events/${createdEventId}`
+                    })
+                  } catch (err) {
+                    console.log('Partage annulé ou échoué', err)
+                  }
+                } else {
+                  navigator.clipboard.writeText(window.location.origin + `/events/${createdEventId}`)
+                  toast.success('Lien copié dans le presse-papiers !')
+                }
+              }}
+              className="w-full py-[15px] rounded-[100px] bg-[#FF7A00] font-semibold text-[15px] text-white active:scale-[0.98] transition-transform"
+              style={{ fontFamily: 'Poppins, sans-serif' }}
             >
               Partager l'événement
             </button>
@@ -471,7 +497,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
           <button
             onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
-            className="w-full py-[15px] rounded-[100px] border border-[#E0E0E0] bg-white text-[#1A1A1A] font-bold text-[15px] active:scale-[0.98] transition-transform"
+            className="w-full py-[15px] rounded-[100px] border border-[#E0E0E0] bg-white text-[#1B1818] font-semibold text-[15px] active:scale-[0.98] transition-transform"
+            style={{ fontFamily: 'Poppins, sans-serif' }}
           >
             Voir l'événement
           </button>
