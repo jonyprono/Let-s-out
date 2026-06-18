@@ -416,8 +416,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   if (step === 'done' || step === 'published') {
     const isPublished = step === 'published'
     return (
-      <div className="w-full h-full bg-[#FAFAFA] flex flex-col relative overflow-hidden">
-        <div className="px-5 pt-safe-6 pb-4 bg-[#FAFAFA] shrink-0" />
+      <div className={`w-full h-full flex flex-col relative overflow-hidden ${isPublished ? 'bg-[#FFFFFF]' : 'bg-[#FCFAF4]'}`}>
+        <div className={`px-5 pt-safe-6 pb-4 shrink-0 ${isPublished ? 'bg-[#FFFFFF]' : 'bg-[#FCFAF4]'}`} />
 
         <div className="flex-1 flex flex-col items-center justify-center px-5 pb-32 overflow-y-auto">
           {/* Icon */}
@@ -426,8 +426,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           </div>
 
           {/* Texts */}
-          <h1 className={`text-[24px] font-semibold text-[#1B1818] mb-3 text-center`} style={{ fontFamily: 'Poppins, sans-serif' }}>
-            {isPublished ? 'Félicitations !' : 'Événement créé avec succès !'}
+          <h1 className={`text-[24px] font-semibold mb-3 text-center ${isPublished ? 'text-[#4CAF50]' : 'text-[#FF7A00]'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>
+            {isPublished ? 'Publié !' : 'Terminé !'}
           </h1>
           <p className="text-[14px] text-[#766F6E] text-center max-w-[300px] mb-10 leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
             {isPublished
@@ -460,7 +460,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
 
         {/* Bottom CTA */}
-        <div className="absolute bottom-0 left-0 right-0 px-5 py-6 bg-gradient-to-t from-[#FAFAFA] via-[#FAFAFA] to-transparent space-y-3">
+        <div className={`absolute bottom-0 left-0 right-0 px-5 py-6 space-y-3 bg-gradient-to-t ${isPublished ? 'from-[#FFFFFF] via-[#FFFFFF]' : 'from-[#FCFAF4] via-[#FCFAF4]'} to-transparent`}>
           {isPublished ? (
             <button
               onClick={async () => {
