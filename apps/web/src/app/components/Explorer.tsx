@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List } from 'lucide-react';
-import { Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon } from 'hugeicons-react';
+import { 
+  Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon,
+  DashboardSquare01Icon, MusicNote02Icon, FootballIcon, PaintBoardIcon, Moon01Icon, RestaurantIcon
+} from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { EventCard } from '@/components/shared/EventCard';
@@ -39,7 +42,14 @@ const CATEGORY_ICONS: Record<string, React.FC<any>> = {
 */
 
 // Base category list for search tab
-const BROWSE_CATEGORIES = ['Tout', 'Pour vous', 'En ce moment', 'Ce week-end'];
+const categories = [
+  { id: 'tout', label: 'Tout', Icon: DashboardSquare01Icon },
+  { id: 'concert', label: 'Concert', Icon: MusicNote02Icon },
+  { id: 'sport', label: 'Sport', Icon: FootballIcon },
+  { id: 'art', label: 'Art', Icon: PaintBoardIcon },
+  { id: 'soiree', label: 'Soirée / Fête', Icon: Moon01Icon },
+  { id: 'gastronomie', label: 'Gastronomie', Icon: RestaurantIcon },
+];
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
 
@@ -63,7 +73,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   };
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('Tout');
+  const [selectedCategory, setSelectedCategory] = useState('tout');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
 
@@ -365,23 +375,33 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Category chips */}
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5" style={{ scrollbarWidth: 'none' }}>
-            {BROWSE_CATEGORIES.map((category) => (
-              <button
-                key={category}
-                onClick={() => {
-                  hapticFeedback.impact()
-                  setSelectedCategory(category)
-                }}
-                className={`px-4 py-2 rounded-full text-[13px] font-poppins whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
-                  selectedCategory === category
-                    ? 'bg-[#FFF2D3] text-[#FF7A00]'
-                    : 'bg-transparent text-gray-500'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+          {/* Category bar */}
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-5 px-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {categories.map((category) => {
+              const Icon = category.Icon;
+              const isActive = selectedCategory === category.id;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => {
+                    hapticFeedback.impact();
+                    setSelectedCategory(category.id);
+                  }}
+                  className="flex flex-col items-center justify-center gap-2 flex-shrink-0 active:scale-95 transition-transform"
+                >
+                  <div className={isActive ? 'text-[#FF7A00]' : 'text-[#8D8D8D]'}>
+                    <Icon className="w-6 h-6" strokeWidth={isActive ? 2 : 1.5} />
+                  </div>
+                  <span
+                    className={`text-[12px] font-poppins ${
+                      isActive ? 'text-[#FF7A00] font-medium' : 'text-[#8D8D8D] font-normal'
+                    }`}
+                  >
+                    {category.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
