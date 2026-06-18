@@ -10,18 +10,18 @@ import {
   UserIcon,
   ArrowLeft01Icon,
   PaintBoardIcon,
-  HappyIcon,
+  MaskTheater01Icon,
   FootballIcon,
-  HealthIcon,
-  Restaurant01Icon,
-  Coffee01Icon,
-  Briefcase01Icon,
-  GiftIcon,
+  HeartAddIcon,
+  ForkIcon,
+  DrinkIcon,
+  UserGroupIcon,
+  PartyIcon,
   ChurchIcon,
   ShoppingBag01Icon,
   MusicNote01Icon,
   Tv01Icon,
-  Time02Icon,
+  Clock04Icon,
   PencilEdit01Icon,
   Delete01Icon,
   EarthIcon,
@@ -30,7 +30,9 @@ import {
   CheckmarkCircle02Icon,
   CircleUnlock01Icon,
   Coins01Icon,
-  Tick01Icon
+  Tick01Icon,
+  Upload04Icon,
+  Image01Icon
 } from 'hugeicons-react'
 
 import { apiClient } from '@/lib/api-client'
@@ -54,14 +56,14 @@ interface CreateEventProps { onBack: () => void }
 // ── Categories (fidèles aux maquettes) ──────────────────────────────────────
 const CATEGORIES = [
   { label: 'Art et culture',            value: 'CULTURE',   Icon: PaintBoardIcon },
-  { label: 'Comédie',                   value: 'SOCIAL',    Icon: HappyIcon },
+  { label: 'Comédie',                   value: 'SOCIAL',    Icon: MaskTheater01Icon },
   { label: 'Sport',                     value: 'SPORT',     Icon: FootballIcon },
-  { label: 'Santé et bien-être',        value: 'WELLNESS',  Icon: HealthIcon },
-  { label: 'Cuisine et gastronomie',    value: 'FOOD',      Icon: Restaurant01Icon },
-  { label: 'Boissons',                  value: 'NIGHTLIFE', Icon: Coffee01Icon },
-  { label: 'Réseautage professionnel',  value: 'TECH',      Icon: Briefcase01Icon },
-  { label: 'Fêtes',                     value: 'NIGHTLIFE', Icon: GiftIcon },
-  { label: 'Religion',                  value: 'CULTURE',   Icon: ChurchIcon },
+  { label: 'Santé et bien-être',        value: 'WELLNESS',  Icon: HeartAddIcon },
+  { label: 'Cuisine et gastronomie',    value: 'FOOD',      Icon: ForkIcon },
+  { label: 'Boissons',                  value: 'NIGHTLIFE', Icon: DrinkIcon },
+  { label: 'Réseautage professionnel',  value: 'TECH',      Icon: UserGroupIcon },
+  { label: 'Fêtes',                     value: 'PARTIES',   Icon: PartyIcon },
+  { label: 'Religion',                  value: 'RELIGION',  Icon: ChurchIcon },
   { label: 'Shopping',                  value: 'LIFESTYLE', Icon: ShoppingBag01Icon },
   { label: 'Musique et son',            value: 'MUSIC',     Icon: MusicNote01Icon },
   { label: 'Télévision et cinéma',      value: 'ART',       Icon: Tv01Icon },
@@ -686,18 +688,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <ImageAdd01Icon className="w-8 h-8 text-[#BDBDBD]" strokeWidth={1.5} />
             </div>
           )}
-          {/* Galerie / Importer buttons */}
-          <div className="absolute bottom-3 right-3 flex gap-2">
+          {/* Galerie / Importer buttons — bottom-right, stacked vertically */}
+          <div className="absolute bottom-3 right-3 flex flex-col gap-2">
             <button
               onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] shadow-sm active:scale-95 transition-transform">
-              <ImageAdd01Icon className="w-3.5 h-3.5" strokeWidth={1.5} />
-              Galerie
+              className="flex items-center justify-between gap-3 bg-white/95 rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[#1A1A1A] shadow-sm active:scale-95 transition-transform min-w-[110px]">
+              Gallerie
+              <Image01Icon className="w-[18px] h-[18px] text-[#1A1A1A]" strokeWidth={1.5} />
             </button>
             <button
               onClick={() => fileRef.current?.click()}
-              className="flex items-center gap-1.5 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] font-semibold text-[#1A1A1A] shadow-sm active:scale-95 transition-transform">
+              className="flex items-center justify-between gap-3 bg-white/95 rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[#1A1A1A] shadow-sm active:scale-95 transition-transform min-w-[110px]">
               Importer
+              <Upload04Icon className="w-[18px] h-[18px] text-[#1A1A1A]" strokeWidth={1.5} />
             </button>
           </div>
           <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
@@ -776,7 +779,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
                     className="flex items-center gap-2 text-[13px] font-medium text-[#1A1A1A] active:opacity-70 transition-opacity"
                   >
-                    <Time02Icon className="w-4 h-4 text-[#A3A3A3]" strokeWidth={1.5} />
+                    <Clock04Icon className="w-4 h-4 text-[#A3A3A3]" strokeWidth={1.5} />
                     Ajouter une heure de fin
                   </button>
                 ) : (
@@ -796,7 +799,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     />
                     {endDate && endTime && (
                       <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
-                        <Time02Icon className="w-3.5 h-3.5 text-[#A3A3A3]" strokeWidth={1.5} />
+                        <Clock04Icon className="w-3.5 h-3.5 text-[#A3A3A3]" strokeWidth={1.5} />
                         <span className="text-[12px] text-[#A3A3A3]">Heure de fin ajoutée</span>
                       </div>
                     )}
@@ -992,30 +995,35 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       {/* ── Privacy Sheet ────────────────────────────────────────────────── */}
       <BottomSheet title="Confidentialité de l'événement" open={showPrivacySheet} onClose={() => setShowPrivacySheet(false)}>
-        <p className="text-[13px] text-[#766F6E] mb-5">
-          Choisissez qui peut voir cet événement et participer. Vous pourrez envoyer des invitations plus tard.
+        <p className="text-[14px] text-[#5B5B5B] mb-6 leading-[1.6]">
+          Choisissez qui peut voir cet événement et y participer.<br />Vous pourrez envoyer des invitations plus tard.
         </p>
-        {[
-          { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde au sein de Let's Out`, Icon: EarthIcon },
-          { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invitées', Icon: LockIcon },
-        ].map(opt => (
-          <button
-            key={opt.value}
-            onClick={() => { setPrivacy(opt.value); setShowPrivacySheet(false) }}
-            className={`w-full flex items-center gap-4 p-4 rounded-2xl border mb-3 transition-all text-left ${privacy === opt.value ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}
-          >
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${privacy === opt.value ? 'bg-[#FF7A00]' : 'bg-[#F2F2F2]'}`}>
-              <opt.Icon className={`w-5 h-5 ${privacy === opt.value ? 'text-white' : 'text-[#5B5B5B]'}`} strokeWidth={1.5} />
-            </div>
-            <div className="flex-1">
-              <p className="text-[15px] font-semibold text-[#1A1A1A]">{opt.label}</p>
-              <p className="text-[12px] text-[#766F6E]">{opt.desc}</p>
-            </div>
-            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${privacy === opt.value ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
-              {privacy === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
-            </div>
-          </button>
-        ))}
+        <div className="flex flex-col">
+          {[
+            { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde sur ou en dehors de Let's Out`, Icon: EarthIcon },
+            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: LockIcon },
+          ].map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => { setPrivacy(opt.value); setShowPrivacySheet(false) }}
+              className="w-full flex items-center gap-4 py-4 border-b border-[#F5F5F5] last:border-0 text-left"
+            >
+              {/* Grey circle icon */}
+              <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
+                <opt.Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} />
+              </div>
+              {/* Text */}
+              <div className="flex-1">
+                <p className="text-[15px] font-bold text-[#1A1A1A]">{opt.label}</p>
+                <p className="text-[12px] text-[#766F6E] mt-0.5">{opt.desc}</p>
+              </div>
+              {/* Radio */}
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${privacy === opt.value ? 'border-[#FF7A00]' : 'border-[#CCCCCC]'}`}>
+                {privacy === opt.value && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
+              </div>
+            </button>
+          ))}
+        </div>
       </BottomSheet>
 
       {/* ── Category Sheet ───────────────────────────────────────────────── */}
