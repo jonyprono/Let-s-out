@@ -473,7 +473,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
         {/* Bottom CTA */}
         <div className={`absolute bottom-0 left-0 right-0 px-5 py-6 space-y-3 bg-gradient-to-t ${isPublished ? 'from-[#FFFFFF] via-[#FFFFFF]' : 'from-[#FCFAF4] via-[#FCFAF4]'} to-transparent`}>
-          {isPublished ? (
+
+          {/* Primary action button */}
+          {isPublished && (
             <button
               onClick={async () => {
                 if (navigator.share) {
@@ -496,27 +498,28 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             >
               Partager l'événement
             </button>
-          ) : participationMode === 'cagnotte' ? (
-              <button
-                onClick={() => {
-                  toast.info('Redirection vers la vérification du compte...')
-                }}
-                className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all bg-[#FF7A00] text-white`}
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              >
-                Vérifier mon compte
-              </button>
-            ) : (
-              <button
-                onClick={handlePublish}
-                disabled={publishing}
-                className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${publishing ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              >
-                {publishing ? <div className="w-5 h-5 border-2 border-[#FFB073] border-t-white rounded-full animate-spin" /> : null}
-                {publishing ? "Publication..." : "Publier l'événement"}
-              </button>
-            )
+          )}
+
+          {!isPublished && participationMode === 'cagnotte' && (
+            <button
+              onClick={() => { toast.info('Redirection vers la vérification du compte...') }}
+              className="w-full py-[15px] rounded-[100px] bg-[#FF7A00] font-semibold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+              style={{ fontFamily: 'Poppins, sans-serif' }}
+            >
+              Vérifier mon compte
+            </button>
+          )}
+
+          {!isPublished && participationMode !== 'cagnotte' && (
+            <button
+              onClick={handlePublish}
+              disabled={publishing}
+              className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${publishing ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
+              style={{ fontFamily: 'Poppins, sans-serif' }}
+            >
+              {publishing ? <div className="w-5 h-5 border-2 border-[#FFB073] border-t-white rounded-full animate-spin" /> : null}
+              {publishing ? 'Publication...' : "Publier l'événement"}
+            </button>
           )}
 
           <button
