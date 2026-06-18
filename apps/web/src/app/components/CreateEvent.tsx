@@ -1118,42 +1118,59 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
       </BottomSheet>
 
-      {/* ── Participation Mode Sheet ─────────────────────────────────────── */}
       <BottomSheet title="Mode de participation" open={showParticipationSheet} onClose={() => setShowParticipationSheet(false)}>
         <p className="text-[13px] text-[#766F6E] mb-5">Comment participer à cet événement.</p>
         <div className="flex flex-col">
           {[
             { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: LockIcon },
             { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins02Icon },
-          ].map(mode => (
-            <button
-              key={mode.value}
-              onClick={() => {
-                setParticipationMode(mode.value);
-                setShowParticipationSheet(false);
-                if (mode.value === 'cagnotte') {
-                  setEnablePool(true);
-                  setPoolStep(1);
-                  setShowPoolModal(true);
-                } else {
-                  setEnablePool(false);
-                }
-              }}
-              className={`w-full flex items-center gap-4 py-4 text-left`}
-            >
-              <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
-                <mode.Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} />
-              </div>
-              <div className="flex-1">
-                <p className="text-[15px] font-semibold text-[#1A1A1A]">{mode.label}</p>
-                <p className="text-[12px] text-[#766F6E]">{mode.desc}</p>
-              </div>
-              <div className={`w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors ${participationMode === mode.value ? 'border-[#FF7A00]' : 'border-[#CCCCCC]'}`}>
-                {participationMode === mode.value && <div className="w-[10px] h-[10px] rounded-full bg-[#FF7A00]" />}
-              </div>
-            </button>
-          ))}
+          ].map(mode => {
+            const isCagnotte = mode.value === 'cagnotte'
+            const accentColor = isCagnotte ? '#007AFF' : '#FF7A00'
+            const isSelected = participationMode === mode.value
+            return (
+              <button
+                key={mode.value}
+                onClick={() => {
+                  setParticipationMode(mode.value);
+                  setShowParticipationSheet(false);
+                  if (mode.value === 'cagnotte') {
+                    setEnablePool(true);
+                    setPoolStep(1);
+                    setShowPoolModal(true);
+                  } else {
+                    setEnablePool(false);
+                  }
+                }}
+                className={`w-full flex items-center gap-4 py-4 text-left`}
+              >
+                <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
+                  <mode.Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[15px] font-semibold text-[#1A1A1A]">{mode.label}</p>
+                  <p className="text-[12px] text-[#766F6E]">{mode.desc}</p>
+                </div>
+                <div
+                  className="w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors"
+                  style={{ borderColor: isSelected ? accentColor : '#CCCCCC' }}
+                >
+                  {isSelected && <div className="w-[10px] h-[10px] rounded-full" style={{ backgroundColor: accentColor }} />}
+                </div>
+              </button>
+            )
+          })}
         </div>
+
+        {/* Info box shown when cagnotte is selected */}
+        {participationMode === 'cagnotte' && (
+          <div className="mt-3 bg-[#EAF6FD] rounded-[12px] p-4 flex gap-3 items-start border border-[#DFF0FE]">
+            <InformationCircleIcon className="w-[18px] h-[18px] text-[#007AFF] shrink-0 mt-[1px]" strokeWidth={2} />
+            <p className="text-[12px] text-[#1A1A1A] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
+            </p>
+          </div>
+        )}
       </BottomSheet>
 
       {/* ── Pool modal ─────────────────────────────────────────────────────── */}
