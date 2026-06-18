@@ -31,8 +31,7 @@ import {
   Upload04Icon,
   Image01Icon,
   LockKeyIcon,
-  Coins02Icon,
-  Calendar02Icon
+  Coins02Icon
 } from 'hugeicons-react'
 
 import { apiClient } from '@/lib/api-client'
@@ -176,17 +175,21 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [showCategorySheet, setShowCategorySheet] = useState(false)
   const [showStartDateSheet, setShowStartDateSheet] = useState(false)
   const [showEndDateSheet, setShowEndDateSheet] = useState(false)
+  const [showRegEndDateSheet, setShowRegEndDateSheet] = useState(false)
   const [showPrivacySheet, setShowPrivacySheet] = useState(false)
   const [showParticipationSheet, setShowParticipationSheet] = useState(false)
   const [showOrganizerSearch, setShowOrganizerSearch] = useState(false)
   const [showLocationSearch, setShowLocationSearch] = useState(false)
-  const [showPoolModal, setShowPoolModal] = useState(false)
 
   // ── Temp state for date sheets ──────────────────────────────────────────
   const [tempStartDate, setTempStartDate] = useState('')
   const [tempStartTime, setTempStartTime] = useState('10:00')
   const [tempEndDate, setTempEndDate] = useState('')
   const [tempEndTime, setTempEndTime] = useState('12:00')
+  const [regEndDate, setRegEndDate] = useState('')
+  const [regEndTime, setRegEndTime] = useState('')
+  const [tempRegEndDate, setTempRegEndDate] = useState('')
+  const [tempRegEndTime, setTempRegEndTime] = useState('12:00')
 
   // ── Location search ─────────────────────────────────────────────────────
   const [locationTab, setLocationTab] = useState<'liste' | 'carte'>('liste')
@@ -206,12 +209,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [step, setStep] = useState<'form' | 'preview' | 'done' | 'published'>('form')
   const [formStep, setFormStep] = useState<1 | 2>(1)
 
-  // ── Pool state ──────────────────────────────────────────────────────────
   const [enablePool, setEnablePool] = useState(false)
-  const [poolStep, setPoolStep] = useState(1)
   const [poolDescription, setPoolDescription] = useState('')
-  const [poolDeadline, setPoolDeadline] = useState('')
-  const [poolMode, setPoolMode] = useState<'libre' | 'minimum' | 'fixe'>('libre')
   const [poolTarget, setPoolTarget] = useState('')
   const [poolMinAmount, setPoolMinAmount] = useState('')
 
@@ -346,7 +345,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         isPrivate: privacy === 'PRIVATE',
         coverUrl,
         poolTarget: enablePool && poolTarget ? parseFloat(poolTarget) : undefined,
-        poolMode: enablePool && poolTarget ? poolMode : undefined,
+        poolMode: enablePool && poolTarget ? (poolMinAmount ? 'minimum' : 'libre') : undefined,
         poolMinAmount: enablePool && poolMinAmount ? parseFloat(poolMinAmount) : undefined,
         status: 'DRAFT',
         coHostIds: selectedCoOrgs.map(o => o.id),
@@ -374,7 +373,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     if (!eventId || !enablePool || !poolTarget) return
     await apiClient.patch(`/events/${eventId}`, {
       poolTarget: parseFloat(poolTarget),
-      poolMode,
+      poolMode: poolMinAmount ? 'minimum' : 'libre',
       poolMinAmount: poolMinAmount ? parseFloat(poolMinAmount) : undefined,
     })
   }
@@ -419,62 +418,63 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <div className={`w-full h-full flex flex-col relative overflow-hidden ${isPublished ? 'bg-[#FFFFFF]' : 'bg-[#FCFAF4]'}`}>
         <div className={`px-5 pt-safe-6 pb-4 shrink-0 ${isPublished ? 'bg-[#FFFFFF]' : 'bg-[#FCFAF4]'}`} />
 
-        <div className="flex-1 flex flex-col items-center justify-center px-5 pb-32 overflow-y-auto">
-          {/* Icon */}
-          <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-6 ${isPublished ? 'bg-gradient-to-tr from-[#FFEB3A] to-[#4DEF8E]' : 'bg-gradient-to-tr from-[#FF7A00] to-[#FFD439]'}`}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M5 13L9 17L19 7" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-5 pb-40">
+          <div className="flex flex-col items-center pt-8">
+            {/* Icon */}
+            <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-5 ${isPublished ? 'bg-gradient-to-tr from-[#FFEB3A] to-[#4DEF8E]' : 'bg-gradient-to-tr from-[#FF7A00] to-[#FFD439]'}`}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 13L9 17L19 7" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
 
-          {/* Texts */}
-          <h1 className={`text-[24px] font-semibold mb-3 text-center ${isPublished ? 'text-[#4CAF50]' : 'text-[#FF7A00]'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>
-            {isPublished ? 'Publié !' : 'Terminé !'}
-          </h1>
-          <p className="text-[14px] text-[#766F6E] text-center max-w-[300px] mb-10 leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            {isPublished
-              ? "Votre événement a été publié avec succès. Vous pouvez maintenant le partager ou voir les détails."
-              : "Votre événement a été bien créé.\nPubliez-le pour le rendre visible ou invitez vos amis à participer."}
-          </p>
+            {/* Title */}
+            <h1 className={`text-[24px] font-semibold mb-3 text-center ${isPublished ? 'text-[#4CAF50]' : 'text-[#FF7A00]'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>
+              {isPublished ? 'Publié !' : 'Terminé !'}
+            </h1>
+            <p className="text-[14px] text-[#766F6E] text-center max-w-[300px] mb-8 leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              {isPublished
+                ? "Votre événement a été publié avec succès. Vous pouvez maintenant le partager ou voir les détails."
+                : "Votre événement a été bien créé. Publiez-le pour le rendre visible ou invitez vos amis à participer."}
+            </p>
 
-          {/* Summary Card */}
-          <div className="w-full bg-white rounded-[16px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.03)] border border-[#F2F2F2]">
-            <h3 className="font-bold text-[15px] text-[#1A1A1A] mb-5 truncate">{title || 'Votre événement'}</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] text-[#766F6E]">Date</span>
-                <span className="text-[13px] font-medium text-[#1A1A1A] text-right truncate max-w-[200px]">
-                  {startDate ? `${formatDateFr(startDate)}, ${startTime.replace(':', 'h')}${endTime ? ` - ${endTime.replace(':', 'h')}` : ''}` : '—'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] text-[#766F6E]">Lieu</span>
-                <span className="text-[13px] font-medium text-[#1A1A1A] text-right truncate max-w-[200px]">{address || city || '—'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] text-[#766F6E]">Participation</span>
-                <div className={`px-2.5 py-1 rounded-[6px] text-[12px] font-bold ${participationMode === 'free' ? 'bg-[#4CAF50] text-white' : 'bg-[#007AFF] text-white'}`}>
-                  {participationMode === 'free' ? 'Gratuite' : 'Cagnotte'}
+            {/* Summary Card */}
+            <div className="w-full bg-white rounded-[16px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-[#F2F2F2] mb-4">
+              <h3 className="font-bold text-[15px] text-[#1A1A1A] mb-5 truncate">{title || 'Votre événement'}</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-[#766F6E]">Date</span>
+                  <span className="text-[13px] font-medium text-[#1A1A1A] text-right truncate max-w-[200px]">
+                    {startDate ? `${formatDateFr(startDate)}, ${startTime.replace(':', 'h')}${endTime ? ` - ${endTime.replace(':', 'h')}` : ''}` : '—'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-[#766F6E]">Lieu</span>
+                  <span className="text-[13px] font-medium text-[#1A1A1A] text-right truncate max-w-[200px]">{address || city || '—'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-[#766F6E]">Participation</span>
+                  <div className={`px-2.5 py-1 rounded-[6px] text-[12px] font-bold ${participationMode === 'free' ? 'bg-[#4CAF50] text-white' : 'bg-[#007AFF] text-white'}`}>
+                    {participationMode === 'free' ? 'Gratuite' : 'Cagnotte'}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Alert Box for Cagnotte */}
-          {!isPublished && participationMode === 'cagnotte' && (
-            <div className="w-full mt-4 bg-[#EAF6FD] rounded-[12px] p-4 flex gap-3 items-start border border-[#DFF0FE]">
-              <InformationCircleIcon className="w-[18px] h-[18px] text-[#007AFF] shrink-0 mt-[2px]" strokeWidth={2} />
-              <p className="text-[12px] text-[#1A1A1A] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
-              </p>
-            </div>
-          )}
+            {/* Alert Box for Cagnotte */}
+            {!isPublished && participationMode === 'cagnotte' && (
+              <div className="w-full bg-[#EAF6FD] rounded-[12px] p-4 flex gap-3 items-start border border-[#DFF0FE]">
+                <InformationCircleIcon className="w-[18px] h-[18px] text-[#007AFF] shrink-0 mt-[1px]" strokeWidth={2} />
+                <p className="text-[12px] text-[#1A1A1A] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                  Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bottom CTA */}
         <div className={`absolute bottom-0 left-0 right-0 px-5 py-6 space-y-3 bg-gradient-to-t ${isPublished ? 'from-[#FFFFFF] via-[#FFFFFF]' : 'from-[#FCFAF4] via-[#FCFAF4]'} to-transparent`}>
-
-          {/* Primary action button */}
           {isPublished && (
             <button
               onClick={async () => {
@@ -485,16 +485,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       text: "Rejoignez-moi pour cet événement sur Let's Out !",
                       url: window.location.origin + `/events/${createdEventId}`
                     })
-                  } catch (err) {
-                    console.log('Partage annulé ou échoué', err)
-                  }
+                  } catch (err) { console.log('Partage annulé ou échoué', err) }
                 } else {
                   navigator.clipboard.writeText(window.location.origin + `/events/${createdEventId}`)
                   toast.success('Lien copié dans le presse-papiers !')
                 }
               }}
               className="w-full py-[15px] rounded-[100px] bg-[#FF7A00] font-semibold text-[15px] text-white active:scale-[0.98] transition-transform"
-              style={{ fontFamily: 'Poppins, sans-serif' }}
             >
               Partager l'événement
             </button>
@@ -504,7 +501,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <button
               onClick={() => { toast.info('Redirection vers la vérification du compte...') }}
               className="w-full py-[15px] rounded-[100px] bg-[#FF7A00] font-semibold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
-              style={{ fontFamily: 'Poppins, sans-serif' }}
             >
               Vérifier mon compte
             </button>
@@ -515,7 +511,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               onClick={handlePublish}
               disabled={publishing}
               className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${publishing ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
-              style={{ fontFamily: 'Poppins, sans-serif' }}
             >
               {publishing ? <div className="w-5 h-5 border-2 border-[#FFB073] border-t-white rounded-full animate-spin" /> : null}
               {publishing ? 'Publication...' : "Publier l'événement"}
@@ -525,7 +520,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <button
             onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
             className="w-full py-[15px] rounded-[100px] border border-[#E0E0E0] bg-white text-[#1B1818] font-semibold text-[15px] active:scale-[0.98] transition-transform"
-            style={{ fontFamily: 'Poppins, sans-serif' }}
           >
             Voir l'événement
           </button>
@@ -929,13 +923,63 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 onClick={() => setShowParticipationSheet(true)}
               />
 
-              <div className="mt-2 mb-4">
-                <button
-                  className="flex items-center gap-2 px-4 py-2 bg-[#F9F9F9] rounded-full text-[14px] font-medium text-[#5B5B5B] active:opacity-70 transition-opacity self-start"
-                >
-                  <Calendar02Icon className="w-[18px] h-[18px] text-[#FF7A00]" strokeWidth={1.5} />
-                  Ajouter une date limite d'inscription
-                </button>
+              {/* Cagnotte inline fields — matches Figma maquette */}
+              {participationMode === 'cagnotte' && (
+                <div className="animate-in slide-in-from-top-2 space-y-0">
+
+                  {/* Montant cible */}
+                  <div className="mb-4">
+                    <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Montant cible</p>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="number" min={1} value={poolTarget}
+                        onChange={e => setPoolTarget(e.target.value)}
+                        placeholder="0"
+                        className="flex-1 px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00]"
+                      />
+                      <div className="px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
+                    </div>
+                    <p className="text-[11px] text-[#A3A3A3] mt-1.5 ml-1">Montant estimé des dépenses</p>
+                  </div>
+
+                  {/* Détails */}
+                  <div className="mb-4">
+                    <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Détails</p>
+                    <textarea
+                      value={poolDescription}
+                      onChange={e => setPoolDescription(e.target.value)}
+                      placeholder="Quels sont les détails des dépenses prévues ?"
+                      rows={4}
+                      className="w-full px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00] resize-none"
+                    />
+                  </div>
+
+                  {/* Participation minimale */}
+                  <div className="mb-2">
+                    <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Participation minimale</p>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="number" min={1} value={poolMinAmount}
+                        onChange={e => setPoolMinAmount(e.target.value)}
+                        placeholder="0"
+                        className="flex-1 px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00]"
+                      />
+                      <div className="px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
+                    </div>
+                    <p className="text-[11px] text-[#A3A3A3] mt-1.5 ml-1">Facultatif</p>
+                  </div>
+
+                </div>
+              )}
+
+              <div className="mt-4 mb-4">
+                <InputField
+                  label="Date limite d'inscription"
+                  value={regEndDate ? `${formatDateFr(regEndDate)} à ${regEndTime.replace(':', 'h')}` : undefined}
+                  placeholder="Facultatif"
+                  readOnly
+                  onClick={() => { setTempRegEndDate(regEndDate || startDate); setTempRegEndTime(regEndTime || '12:00'); setShowRegEndDateSheet(true) }}
+                />
               </div>
             </div>
           )}
@@ -1048,7 +1092,45 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
       </BottomSheet>
 
-      {/* ── Privacy Sheet ────────────────────────────────────────────────── */}
+      {/* ── Registration End Date Sheet ───────────────────────────────────── */}
+      <BottomSheet title="Date limite d'inscription" open={showRegEndDateSheet} onClose={() => setShowRegEndDateSheet(false)}>
+        <div className="space-y-4">
+          <div>
+            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Date limite</label>
+            <div className="relative">
+              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <input
+                type="date"
+                value={tempRegEndDate}
+                onChange={e => setTempRegEndDate(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
+            {tempRegEndDate && (
+              <p className="text-[13px] text-[#766F6E] mt-1.5 pl-1">{formatDateFr(tempRegEndDate)}</p>
+            )}
+          </div>
+          <div>
+            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Heure limite</label>
+            <div className="relative">
+              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <input
+                type="time"
+                value={tempRegEndTime}
+                onChange={e => setTempRegEndTime(e.target.value)}
+                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => { setRegEndDate(tempRegEndDate); setRegEndTime(tempRegEndTime); setShowRegEndDateSheet(false) }}
+          disabled={!tempRegEndDate || !tempRegEndTime}
+          className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all mt-4"
+        >
+          Confirmer
+        </button>
+      </BottomSheet>
       <BottomSheet title="Confidentialité de l'événement" open={showPrivacySheet} onClose={() => setShowPrivacySheet(false)}>
         <p className="text-[14px] text-[#5B5B5B] mb-6 leading-[1.6]">
           Choisissez qui peut voir cet événement et y participer.<br />Vous pourrez envoyer des invitations plus tard.
@@ -1137,13 +1219,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 onClick={() => {
                   setParticipationMode(mode.value);
                   setShowParticipationSheet(false);
-                  if (mode.value === 'cagnotte') {
-                    setEnablePool(true);
-                    setPoolStep(1);
-                    setShowPoolModal(true);
-                  } else {
-                    setEnablePool(false);
-                  }
+                  setEnablePool(mode.value === 'cagnotte');
                 }}
                 className={`w-full flex items-center gap-4 py-4 text-left`}
               >
@@ -1164,121 +1240,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             )
           })}
         </div>
-
-        {/* Info box shown when cagnotte is selected */}
-        {participationMode === 'cagnotte' && (
-          <div className="mt-3 bg-[#EAF6FD] rounded-[12px] p-4 flex gap-3 items-start border border-[#DFF0FE]">
-            <InformationCircleIcon className="w-[18px] h-[18px] text-[#007AFF] shrink-0 mt-[1px]" strokeWidth={2} />
-            <p className="text-[12px] text-[#1A1A1A] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
-              Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
-            </p>
-          </div>
-        )}
       </BottomSheet>
-
-      {/* ── Pool modal ─────────────────────────────────────────────────────── */}
-      {showPoolModal && (
-        <div className="absolute inset-0 z-[120] bg-white flex flex-col">
-          <div className="px-5 pt-safe-6 pb-0 flex-shrink-0">
-            <div className="flex items-center justify-center relative mb-3">
-              <button onClick={() => { if (poolStep === 1) setShowPoolModal(false); else setPoolStep(s => s - 1) }}
-                className="absolute left-0 w-8 h-8 flex items-center justify-center">
-                <ArrowLeft01Icon className="w-6 h-6 text-[#1A1A1A]" strokeWidth={2} />
-              </button>
-              <span className="text-[15px] font-semibold text-[#1A1A1A]">Ajouter cagnotte</span>
-              {enablePool && (
-                <button onClick={() => { setEnablePool(false); setPoolTarget(''); setPoolDescription(''); setShowPoolModal(false) }}
-                  className="absolute right-0 text-[12px] text-red-400 font-medium">Supprimer</button>
-              )}
-            </div>
-            <div className="flex gap-1.5 mb-2">
-              {[1,2,3].map(s => (
-                <div key={s} className={`h-1 flex-1 rounded-full transition-all ${s <= poolStep ? 'bg-[#FF7A00]' : 'bg-[#EEEEEE]'}`} />
-              ))}
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto px-5 pt-5 pb-32">
-            {poolStep === 1 && (
-              <div>
-                <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">But de la cagnotte</h2>
-                <p className="text-[13px] text-[#766F6E] mb-5">Expliquez l'objectif & le dépôt de la cagnotte</p>
-                <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Description</label>
-                <textarea value={poolDescription} onChange={e => setPoolDescription(e.target.value)}
-                  placeholder="Indiquez l'objectif..." rows={5}
-                  className="w-full px-4 py-3.5 border border-[#E0E0E0] rounded-[16px] text-[15px] focus:outline-none focus:border-[#FF7A00] resize-none" />
-              </div>
-            )}
-            {poolStep === 2 && (
-              <div>
-                <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">Objectif de collecte</h2>
-                <p className="text-[13px] text-[#766F6E] mb-5">Définissez le montant à atteindre</p>
-                <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Montant cible</label>
-                <div className="flex gap-2 items-center mb-4">
-                  <input type="number" min={1} value={poolTarget} onChange={e => setPoolTarget(e.target.value)}
-                    placeholder="150 000"
-                    className="w-full px-4 py-3.5 border border-[#E0E0E0] rounded-[16px] text-[15px] focus:outline-none focus:border-[#FF7A00] flex-1" />
-                  <div className="px-5 py-3 border border-[#E0E0E0] rounded-[16px] text-[15px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
-                </div>
-                <label className="text-[13px] font-semibold text-[#1A1A1A] mb-2 block">Date limite</label>
-                <input type="date" value={poolDeadline} onChange={e => setPoolDeadline(e.target.value)}
-                  className="w-full px-4 py-3.5 border border-[#E0E0E0] rounded-[16px] text-[15px] focus:outline-none focus:border-[#FF7A00]" />
-              </div>
-            )}
-            {poolStep === 3 && (
-              <div>
-                <h2 className="text-[20px] font-bold text-[#1A1A1A] mb-1">Mode de participation</h2>
-                <p className="text-[13px] text-[#766F6E] mb-5">Choisissez comment les participants pourront contribuer</p>
-                {['libre','minimum','fixe'].map(m => (
-                  <div key={m} className="mb-2">
-                    <button onClick={() => { setPoolMode(m as any); if(m === 'libre') setPoolMinAmount(''); }}
-                      className={`w-full flex items-center p-4 rounded-[24px] border transition-all ${poolMode === m ? 'border-[#FF7A00] bg-orange-50' : 'border-[#E0E0E0]'}`}>
-                      <span className="flex-1 text-left text-[14px] font-medium text-[#1A1A1A]">{m === 'libre' ? 'Montant libre' : m === 'minimum' ? 'Montant minimum' : 'Montant fixe'}</span>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${poolMode === m ? 'border-[#FF7A00]' : 'border-[#E0E0E0]'}`}>
-                        {poolMode === m && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
-                      </div>
-                    </button>
-                    {poolMode === m && m !== 'libre' && (
-                      <div className="mt-2 animate-in slide-in-from-top-2">
-                        <div className="flex gap-2 items-center">
-                          <input type="number" min={1} value={poolMinAmount} onChange={e => setPoolMinAmount(e.target.value)}
-                            placeholder={m === 'minimum' ? "Montant minimum (Ex: 5 000)" : "Montant fixe (Ex: 5 000)"}
-                            className="w-full px-4 py-3.5 border border-[#E0E0E0] rounded-[16px] text-[15px] focus:outline-none focus:border-[#FF7A00] flex-1" />
-                          <div className="px-5 py-3 border border-[#E0E0E0] rounded-[16px] text-[15px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 py-4">
-            <button
-              onClick={() => {
-                if (poolStep < 3) {
-                  setPoolStep(s => s + 1)
-                } else {
-                  if (poolMode !== 'libre' && !poolMinAmount) return; // Basic check, ideally with toast
-                  setEnablePool(true); setShowPoolModal(false)
-                  // Don't save to event immediately if we haven't created it yet!
-                  // We'll save when submitting the main form.
-                  toast.success('Cagnotte configurée !')
-                }
-              }}
-              disabled={(poolStep === 1 && poolDescription.trim().length < 5) || (poolStep === 2 && !poolTarget) || (poolStep === 3 && poolMode !== 'libre' && !poolMinAmount)}
-              className="w-full py-[15px] rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all">
-              {poolStep === 3 ? '✓ Confirmer la cagnotte' : 'Suivant'}
-            </button>
-          </div>
-        </div>
-      )}
 
     </div>
   )
 }
 
-// ── Map helper ───────────────────────────────────────────────────────────────
+// -- Map helper ----------------------------------------------------------------
 function MapInteractionHandler({ onMapClick }: { onMapClick: (coords: {lat: number, lng: number}) => void }) {
   useMapEvents({ click(e) { onMapClick(e.latlng) } })
   return null
 }
+
+
