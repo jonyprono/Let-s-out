@@ -27,7 +27,6 @@ import {
   LockIcon,
   Search01Icon,
   CheckmarkCircle02Icon,
-  Tick01Icon,
   Upload04Icon,
   Image01Icon,
   LockKeyIcon,
