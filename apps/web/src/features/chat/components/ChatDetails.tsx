@@ -496,7 +496,7 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[#EFEAE2] dark:bg-[#0B141A]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[#FFFFFF]">
         {isLoading ? (
           <div className="flex flex-col gap-4 py-4">
             {[1, 2, 3, 4, 5].map(i => {
