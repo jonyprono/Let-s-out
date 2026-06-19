@@ -101,22 +101,20 @@ function AudioMessage({ src }: { src: string }) {
   const waveformHeights = [4, 7, 12, 5, 14, 16, 11, 6, 9, 15, 18, 11, 7, 13, 16, 10, 5, 9, 4, 7, 10, 6];
 
   return (
-    <div className={`flex flex-col px-1 w-[220px] text-[#1B1818]`}>
-      <div className="flex items-center gap-2 py-0.5">
-        <button onClick={togglePlay} className="w-10 h-10 flex items-center justify-center active:scale-95 transition-transform flex-shrink-0 text-[#8D8D8D]">
-          {isPlaying ? <span className="w-3.5 h-3.5 bg-current rounded-sm" /> : <Play className="w-[24px] h-[24px] ml-0.5 text-current fill-current" />}
-        </button>
-        
-        <div className="flex-1 flex items-center gap-[2px] opacity-80 h-[24px]">
-          {waveformHeights.map((h, i) => (
-            <div key={i} className="w-[2.5px] bg-current rounded-full transition-all duration-100" style={{ height: `${h}px`, opacity: progress > (i / waveformHeights.length) * 100 ? 1 : 0.4 }} />
-          ))}
-        </div>
-        
-        <div className="flex items-center text-[12px] font-medium text-[#8D8D8D] ml-1">
-          <span>{formatTime(duration || 16)}</span>
-        </div>
+    <div className="flex flex-row items-center gap-[10px] w-full">
+      <button onClick={togglePlay} className="flex items-center justify-center active:scale-95 transition-transform flex-shrink-0 text-[#8D8D8D]">
+        {isPlaying ? <span className="w-3.5 h-3.5 bg-current rounded-sm" /> : <Play className="w-[20px] h-[20px] text-current fill-current" />}
+      </button>
+      
+      <div className="flex-1 flex items-center gap-[2px] opacity-80 h-[24px]">
+        {waveformHeights.map((h, i) => (
+          <div key={i} className="w-[2.5px] bg-current rounded-full transition-all duration-100" style={{ height: `${h}px`, opacity: progress > (i / waveformHeights.length) * 100 ? 1 : 0.4 }} />
+        ))}
       </div>
+      
+      <span className="text-[12px] font-medium text-[#1B1818]">
+        {formatTime(duration || 16)}
+      </span>
       <audio ref={audioRef} src={src} className="hidden" preload="metadata" />
     </div>
   )
@@ -630,12 +628,12 @@ export function ChatDetails() {
                       </div>
                     ) : isMedia ? (
                       <div
-                        className={`px-1.5 py-1.5 relative shadow-none ${
-                          isMe
-                            ? `bg-[#FFF2D3] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}`
-                            : `bg-[#F2F2F2] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`
+                        className={`relative shadow-none flex flex-col justify-center ${
+                          isAudio
+                            ? `w-[216px] h-[32px] pl-[8px] pr-[32px] gap-[10px] ${isMe ? `bg-[#FFF2D3] text-[#1B1818] rounded-[10px] ${isFirstInGroup ? 'rounded-tr-[2px]' : ''}` : `bg-[#F2F2F2] text-[#1B1818] rounded-[10px] ${isFirstInGroup ? 'rounded-tl-[2px]' : ''}`}`
+                            : `px-1.5 py-1.5 ${isMe ? `bg-[#FFF2D3] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}` : `bg-[#F2F2F2] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`}`
                         }`}
-                        style={{ maxWidth: '280px' }}
+                        style={!isAudio ? { maxWidth: '280px' } : undefined}
                       >
                         {isImage && msg.content ? (
                           <SafeImage
@@ -649,16 +647,18 @@ export function ChatDetails() {
                             <VideoMessage src={msg.content} isMe={isMe} />
                           </div>
                         ) : isAudio && msg.content ? (
-                          <AudioMessage src={msg.content} />
+                          <div className="flex-1 flex flex-col justify-center w-full mt-[-6px]">
+                            <AudioMessage src={msg.content} />
+                          </div>
                         ) : null}
                         
                         {/* Time for media */}
-                        <div className={`${isAudio ? 'px-3 pb-1' : 'absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full'}`}>
+                        <div className={`${isAudio ? 'absolute bottom-1 right-2' : 'absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full'}`}>
                           <div className={`flex items-center gap-1 justify-end`}>
-                            <span className={`text-[10px] font-medium ${isAudio ? 'text-[#8D8D8D]' : 'text-white'}`}>
+                            <span className={`text-[9px] font-medium ${isAudio ? 'text-[#8D8D8D]' : 'text-white'}`}>
                               {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                             </span>
-                            {isMe && isLastMsg && <Check className={`w-[14px] h-[14px] ${isAudio ? 'text-[#8D8D8D]' : 'text-white'}`} strokeWidth={2.5} />}
+                            {isMe && isLastMsg && <Check className={`w-[12px] h-[12px] ${isAudio ? 'text-[#8D8D8D]' : 'text-white'}`} strokeWidth={2.5} />}
                           </div>
                         </div>
                       </div>
