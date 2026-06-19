@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List } from 'lucide-react';
 import { 
-  Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon,
-  DashboardSquare01Icon, MusicNote02Icon, FootballIcon, PaintBoardIcon, Moon01Icon, RestaurantIcon
+  Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon
 } from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
@@ -41,14 +40,12 @@ const CATEGORY_ICONS: Record<string, React.FC<any>> = {
 };
 */
 
-// Base category list for search tab
-const categories = [
-  { id: 'tout', label: 'Tout', Icon: DashboardSquare01Icon },
-  { id: 'concert', label: 'Concert', Icon: MusicNote02Icon },
-  { id: 'sport', label: 'Sport', Icon: FootballIcon },
-  { id: 'art', label: 'Art', Icon: PaintBoardIcon },
-  { id: 'soiree', label: 'Soirée / Fête', Icon: Moon01Icon },
-  { id: 'gastronomie', label: 'Gastronomie', Icon: RestaurantIcon },
+// Filter tabs matching Figma
+const filterTabs = [
+  { id: 'tout', label: 'Tout' },
+  { id: 'pour-vous', label: 'Pour vous' },
+  { id: 'en-ce-moment', label: 'En ce moment' },
+  { id: 'ce-week-end', label: 'Ce week-end' },
 ];
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
@@ -320,84 +317,75 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className={`w-full h-full flex flex-col relative bg-background`}>
 
         {/* Header & Search Bar */}
-        <div className={`px-5 pt-safe-6 pb-2 shrink-0 relative z-20 bg-white`}>
-          <div className="flex items-center justify-between mb-4 mt-2">
-            <h1 className="text-[24px] font-semibold font-poppins text-[#1B1818] tracking-tight">Explorez et découvrez</h1>
+        <div className={`px-5 pt-safe-6 pb-0 shrink-0 relative z-20 bg-white`}>
+          {/* Title + Notification */}
+          <div className="flex items-center justify-between mb-2 mt-2">
+            <h1 className="text-[20px] font-bold font-poppins text-[#1B1818] leading-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
-              <Notification03Icon className="w-[24px] h-[24px] text-[#1B1818]" strokeWidth={1.8} />
-              <div className="absolute top-0 right-0 w-[18px] h-[18px] bg-[#FF7A00] rounded-full border-[1.5px] border-white flex items-center justify-center">
-                <span className="text-[10px] font-bold text-white leading-none">5</span>
-              </div>
+              <Notification03Icon className="w-[22px] h-[22px] text-[#FF7A00]" strokeWidth={1.8} />
             </button>
           </div>
 
-          <button onClick={openSearch} className="flex items-center gap-1.5 mb-5 text-[#5B5B5B] active:opacity-70 transition-opacity">
-            <Location01Icon className="w-[24px] h-[24px]" strokeWidth={2} />
-            <span className="text-[20px] font-poppins font-semibold">{currentLocation}</span>
-            <ArrowDown01Icon className="w-[20px] h-[20px]" strokeWidth={2} />
+          {/* Location */}
+          <button onClick={openSearch} className="flex items-center gap-1 mb-3 text-[#5B5B5B] active:opacity-70 transition-opacity">
+            <Location01Icon className="w-[18px] h-[18px]" strokeWidth={1.8} />
+            <span className="text-[14px] font-poppins font-medium text-[#1B1818]">{currentLocation}</span>
+            <ArrowDown01Icon className="w-[16px] h-[16px]" strokeWidth={2} />
           </button>
 
-          <div className="flex items-center gap-3 mb-5 w-full max-w-[358px]">
-            {/* Champ de recherche */}
+          {/* Search bar */}
+          <div className="flex items-center gap-2.5 mb-3 w-full">
             <div
-              className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-4 h-[44px] gap-[4px] bg-white cursor-text"
+              className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-3.5 h-[40px] gap-[8px] bg-white cursor-text"
               onClick={() => {
                 hapticFeedback.impact();
                 openSearch();
               }}
             >
-              <Search className="w-[20px] h-[20px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
-              <span className="text-[14px] text-[#A3A3A3] font-poppins flex-1">Rechercher des événements</span>
-              
+              <Search className="w-[18px] h-[18px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
+              <span className="text-[13px] text-[#A3A3A3] font-poppins flex-1">Rechercher des événements</span>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   hapticFeedback.impact();
-                  // setScreen('filter'); // Supprimé selon la demande
                 }}
-                className="p-1 shrink-0"
+                className="shrink-0"
               >
-                <Settings04Icon className="w-[20px] h-[20px] text-[#A3A3A3]" strokeWidth={1.5} />
+                <Settings04Icon className="w-[18px] h-[18px] text-[#A3A3A3]" strokeWidth={1.5} />
               </button>
             </div>
 
-            {/* Bouton Scan/QR Code */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 hapticFeedback.impact();
-                // Action future pour le scan
               }}
-              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[#DFDFDF] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
+              className="w-[40px] h-[40px] shrink-0 rounded-full border border-[#DFDFDF] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
             >
-              <QrCode01Icon className="w-[22px] h-[22px] text-[#5B5B5B]" strokeWidth={1.5} />
+              <QrCode01Icon className="w-[20px] h-[20px] text-[#5B5B5B]" strokeWidth={1.5} />
             </button>
           </div>
 
-          {/* Category chips */}
-          {/* Category bar */}
-          <div className="flex gap-4 overflow-x-auto pb-2 -mx-5 px-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {categories.map((category) => {
-              const Icon = category.Icon;
-              const isActive = selectedCategory === category.id;
+          {/* Text filter tabs */}
+          <div className="flex gap-5 overflow-x-auto pb-3 -mx-5 px-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {filterTabs.map((tab) => {
+              const isActive = selectedCategory === tab.id;
               return (
                 <button
-                  key={category.id}
+                  key={tab.id}
                   onClick={() => {
                     hapticFeedback.impact();
-                    setSelectedCategory(category.id);
+                    setSelectedCategory(tab.id);
                   }}
-                  className="flex flex-col items-center justify-center gap-2 flex-shrink-0 active:scale-95 transition-transform"
+                  className="flex-shrink-0 active:scale-95 transition-transform pb-1"
+                  style={{ borderBottom: isActive ? '2px solid #FF7A00' : '2px solid transparent' }}
                 >
-                  <div className={isActive ? 'text-[#FF7A00]' : 'text-[#8D8D8D]'}>
-                    <Icon className="w-6 h-6" strokeWidth={isActive ? 2 : 1.5} />
-                  </div>
                   <span
-                    className={`text-[12px] font-poppins ${
-                      isActive ? 'text-[#FF7A00] font-medium' : 'text-[#8D8D8D] font-normal'
+                    className={`text-[13px] font-poppins whitespace-nowrap ${
+                      isActive ? 'text-[#FF7A00] font-semibold' : 'text-[#8D8D8D] font-normal'
                     }`}
                   >
-                    {category.label}
+                    {tab.label}
                   </span>
                 </button>
               );
