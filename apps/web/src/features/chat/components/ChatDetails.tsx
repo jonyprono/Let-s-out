@@ -659,6 +659,8 @@ export function ChatDetails() {
                           </div>
                         </div>
                       </div>
+                    ) : (
+                      <div
                         className={`px-4 py-2 relative shadow-none ${
                           isMe
                             ? `bg-[#FFF3E0] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}`

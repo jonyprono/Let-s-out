@@ -1,5 +1,5 @@
 import { useState, useMemo, memo } from 'react';
-import { Search, Users, MessageCircle, Plus, X, Trash2 } from 'lucide-react';
+import { Search, Plus, X, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useConversations } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
@@ -152,41 +152,11 @@ export function Messages(_props: MessagesProps) {
             {/* Filtered Conversations */}
             {visibleConversations.length > 0 && (
               <div className="pt-3">
-                {activeFilter === 'all' && groups.length > 0 && (
-                  <>
-                    <div className="px-5 mb-2 flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-400" />
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Groupes</span>
-                    </div>
-                    <div className="space-y-1 px-4 mb-4">
-                      {groups.map(conv => (
-                        <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {activeFilter === 'all' && directs.length > 0 && (
-                  <>
-                    <div className="px-5 mb-2 flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4 text-gray-400" />
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Messages directs</span>
-                    </div>
-                    <div className="space-y-1 px-4">
-                      {directs.map(conv => (
-                        <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {activeFilter !== 'all' && (
-                  <div className="space-y-1 px-4">
-                    {visibleConversations.map(conv => (
-                      <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
-                    ))}
-                  </div>
-                )}
+                <div className="space-y-1 px-4">
+                  {visibleConversations.map(conv => (
+                    <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
+                  ))}
+                </div>
               </div>
             )}
 
