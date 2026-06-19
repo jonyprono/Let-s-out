@@ -663,7 +663,7 @@ export function ChatDetails() {
                       <div
                         className={`px-4 py-2 relative shadow-none ${
                           isMe
-                            ? `bg-[#FFF3E0] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}`
+                            ? `bg-[#FFF2D3] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}`
                             : `bg-[#F2F2F2] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`
                         }`}
                         style={{ maxWidth: '80%' }}
@@ -677,7 +677,7 @@ export function ChatDetails() {
                             {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                           </span>
                           {isMe && isLastMsg && (
-                            <Check className="w-[14px] h-[14px] text-white/90" strokeWidth={2.5} />
+                            <Check className="w-[14px] h-[14px] text-[#8D8D8D]" strokeWidth={2.5} />
                           )}
                         </div>
                       </div>
