@@ -93,6 +93,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   };
 
   const [mapSearch, setMapSearch] = useState('');
+  const [eventSearch, setEventSearch] = useState('');
 
 
 
@@ -312,6 +313,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     coverUrl: ''
   })) as any[];
 
+  const filteredEvents = mockCards.filter(card => 
+    card.title.toLowerCase().includes(eventSearch.toLowerCase()) ||
+    card.location.toLowerCase().includes(eventSearch.toLowerCase())
+  );
+
 
   return (
     <div className={`w-full h-full flex flex-col relative bg-background`}>
@@ -336,16 +342,17 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             <ArrowDown01Icon className="w-[16px] h-[16px]" strokeWidth={2} />
           </button>
 
+          {/* Search bar */}
           <div className="flex items-center gap-2.5 mb-3 w-full">
-            <div
-              className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-[12px] h-[36px] gap-[8px] bg-white cursor-text"
-              onClick={() => {
-                hapticFeedback.impact();
-                openSearch();
-              }}
-            >
+            <div className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-[12px] h-[36px] gap-[8px] bg-white cursor-text focus-within:border-[#FF7A00] transition-colors">
               <Search className="w-[18px] h-[18px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
-              <span className="text-[13px] text-[#A3A3A3] font-poppins flex-1 opacity-80">Rechercher des événements</span>
+              <input
+                type="text"
+                placeholder="Rechercher des événements"
+                value={eventSearch}
+                onChange={(e) => setEventSearch(e.target.value)}
+                className="text-[13px] text-[#1B1818] placeholder-[#A3A3A3] font-poppins flex-1 opacity-80 bg-transparent outline-none border-none"
+              />
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -423,21 +430,27 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         {/* Vue Liste (List View) */}
         {viewMode === 'list' && (
           <div className="flex-1 overflow-y-auto px-5 pt-4 pb-[80px] flex flex-col items-center relative z-10 bg-background">
-            {mockCards.map(card => {
-              const parts = card.location.split(' • ');
-              return (
-                <EventCard
-                  key={card.id}
-                  name={card.title}
-                  datetime={card.date}
-                  city={parts[0]}
-                  place={parts[1]}
-                  attendeesCount="+500 Participants"
-                  price="Gratuit"
-                  cover={true}
-                />
-              );
-            })}
+            {filteredEvents.length > 0 ? (
+              filteredEvents.map(card => {
+                const parts = card.location.split(' • ');
+                return (
+                  <EventCard
+                    key={card.id}
+                    name={card.title}
+                    datetime={card.date}
+                    city={parts[0]}
+                    place={parts[1] || ''}
+                    attendeesCount="+500 Participants"
+                    price="Gratuit"
+                    cover={true}
+                  />
+                );
+              })
+            ) : (
+              <div className="w-full text-center py-10 mt-10">
+                <p className="text-[#9CA3AF] text-[15px] font-poppins">Aucun résultat</p>
+              </div>
+            )}
             
             {/* Bouton pour aller sur la Carte */}
             <div className="fixed bottom-[100px] right-5 z-[1050]">
