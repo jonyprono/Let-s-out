@@ -19,7 +19,7 @@ export function Messages(_props: MessagesProps) {
   const [showNewConv, setShowNewConv] = useState(false);
   const [showAddFriends, setShowAddFriends] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'groups' | 'friends'>('all');
+  const [activeFilter, setActiveFilter] = useState<'discussions' | 'groups'>('discussions');
 
   const user = useAuthStore((s) => s.user);
 
@@ -74,63 +74,67 @@ export function Messages(_props: MessagesProps) {
   // Apply tab filter
   const visibleConversations = useMemo(() => {
     if (activeFilter === 'groups') return groups;
-    if (activeFilter === 'friends') return directs;
-    return filtered;
-  }, [activeFilter, filtered, groups, directs]);
+    return directs; // 'discussions' -> messages directs
+  }, [activeFilter, groups, directs]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-background">
+    <div className="w-full h-full flex flex-col bg-[#FFFFFF]" style={{ fontFamily: "'Poppins', sans-serif" }}>
 
       {/* Header */}
-      <div className="px-5 pt-4 pt-safe-4 pb-2 bg-white sticky top-0 z-20">
+      <div className="px-5 pt-4 pt-safe-4 pb-2 bg-[#FFFFFF] sticky top-0 z-20">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-[28px] font-black tracking-tight text-gray-900">Messages</h1>
+          <h1 className="text-[28px] font-semibold text-[#1B1818]">Messages</h1>
           <button className="p-2 active:scale-95 transition-transform">
             <Trash2 className="w-[22px] h-[22px] text-gray-400" />
           </button>
         </div>
 
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-6 mb-4 border-b border-gray-100">
+          {[
+            { key: 'discussions' as const, label: 'Discussions' },
+            { key: 'groups' as const, label: 'Groupes' },
+          ].map(tab => {
+            const isActive = activeFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveFilter(tab.key)}
+                className={`pb-2 text-[16px] transition-colors relative ${
+                  isActive
+                    ? 'font-semibold text-[#FF7A00]'
+                    : 'font-medium text-[#8D8D8D]'
+                }`}
+              >
+                {tab.label}
+                {isActive && (
+                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FF7A00]" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Search */}
-        <div className="bg-gray-100 rounded-full flex items-center gap-3 px-4 py-3 mb-4">
-          <Search className="w-[18px] h-[18px] text-gray-400 flex-shrink-0" />
+        <div className="bg-[#F6F6F6] border border-gray-200/50 rounded-full flex items-center gap-3 px-4 py-3 mb-2">
+          <Search className="w-[18px] h-[18px] text-[#8D8D8D] flex-shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Rechercher une conversation..."
-            className="flex-1 bg-transparent outline-none text-[14px] text-gray-900 placeholder:text-gray-500 font-medium"
+            placeholder="Rechercher des discussions"
+            className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] placeholder:text-[#8D8D8D] font-medium"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
-              <X className="w-3.5 h-3.5 text-gray-500" />
+              <X className="w-3.5 h-3.5 text-[#8D8D8D]" />
             </button>
           )}
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-2">
-          {[
-            { key: 'all' as const, label: 'Tout' },
-            { key: 'friends' as const, label: 'Ami(e)s' },
-            { key: 'groups' as const, label: 'Groupes' },
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveFilter(tab.key)}
-              className={`px-4 py-1.5 rounded-full text-[14px] font-bold transition-all active:scale-95 ${
-                activeFilter === tab.key
-                  ? 'bg-[#FF7A00] text-white shadow-sm'
-                  : 'bg-transparent text-gray-500'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
         </div>
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto pb-6" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         {isLoading ? (
           <div className="flex flex-col gap-3 p-5">
             {[1, 2, 3].map(i => (
@@ -229,7 +233,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
   return (
     <button
       onClick={onNavigate}
-      className="w-full flex items-center gap-[14px] px-5 py-3 text-left transition-colors active:bg-gray-50 bg-white"
+      className="w-full flex flex-row items-center gap-4 px-5 py-3 text-left transition-colors active:bg-gray-50 bg-[#FFFFFF] mb-1"
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
@@ -238,35 +242,34 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
             src={conv.avatarUrl}
             alt={conv.name}
             className="w-full h-full object-cover"
-            fallback={<div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-500 bg-gray-200">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
+            fallback={<div className="w-full h-full flex items-center justify-center text-xl font-semibold text-gray-500 bg-gray-200">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
           />
         </div>
-        {!conv.isGroup && (
-          <div className="absolute bottom-0 right-0 w-[14px] h-[14px] bg-[#22C55E] rounded-full border-2 border-white" />
-        )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0 py-1">
-        <div className="flex items-center justify-between mb-0.5">
-          <h3 className={`text-[15px] truncate pr-2 text-gray-900 ${hasUnread ? 'font-bold' : 'font-semibold'}`}>
-            {conv.name}
-          </h3>
-          <span className={`text-[12px] whitespace-nowrap flex-shrink-0 font-medium ${hasUnread ? 'text-[#FF7A00]' : 'text-gray-400'}`}>
-            {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <p className={`text-[13px] truncate ${hasUnread ? 'text-gray-900 font-semibold' : 'text-gray-500'} flex-1`}>
+      {/* Content Block */}
+      <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
+        <h3 className={`text-[16px] truncate text-[#1B1818] font-[600]`}>
+          {conv.name}
+        </h3>
+        <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
+          <p className="text-[14px] truncate text-[#8D8D8D]">
             {conv.lastMsgPrefix && <span className="font-medium mr-1">{conv.lastMsgPrefix}</span>}
             {conv.lastMsg}
           </p>
-          {hasUnread && (
-            <span className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-bold text-white bg-[#FF7A00]">
-              {conv.unread > 9 ? '9+' : conv.unread}
-            </span>
-          )}
         </div>
+      </div>
+
+      {/* Info Block (Right) */}
+      <div className="flex flex-col items-end justify-between flex-shrink-0 h-[44px]">
+        <span className={`text-[12px] whitespace-nowrap text-[#8D8D8D]`}>
+          {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
+        </span>
+        {hasUnread && (
+          <div className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-semibold text-white bg-[#FF7A00]">
+            {conv.unread > 9 ? '9+' : conv.unread}
+          </div>
+        )}
       </div>
     </button>
   );

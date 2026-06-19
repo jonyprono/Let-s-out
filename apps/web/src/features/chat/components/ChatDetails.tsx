@@ -386,9 +386,9 @@ export function ChatDetails() {
   }
 
   return (
-    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" onClick={() => pickerMsgId && setPickerMsgId(null)}>
+    <div className="w-full h-full bg-[#FFFFFF] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }} onClick={() => pickerMsgId && setPickerMsgId(null)}>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-50 pt-safe-only shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+      <div className="sticky top-0 z-10 bg-[#FFFFFF] border-b border-gray-100 pt-safe-only">
         <div className="h-[68px] flex items-center px-4">
           <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors active:scale-95">
             <ChevronLeft className="w-6 h-6 text-gray-900" />
@@ -561,12 +561,10 @@ export function ChatDetails() {
             return (
               <div key={msg.id}>
                 {showDateSep && (
-                  <div className="flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
-                    <span className="text-xs text-gray-400 dark:text-gray-500 font-medium capitalize px-2">
+                  <div className="flex justify-center my-4">
+                    <span className="text-[12px] bg-[#F2F2F2] text-[#8D8D8D] font-medium px-3 py-1 rounded-full">
                       {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
                     </span>
-                    <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
                   </div>
                 )}
 
@@ -661,21 +659,19 @@ export function ChatDetails() {
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <div
-                        className={`px-3.5 py-2 shadow-sm relative ${
+                        className={`px-4 py-2 relative shadow-none ${
                           isMe
-                            ? `bg-[#FFF4E5] text-gray-900 rounded-[20px] ${isFirstInGroup ? 'rounded-br-md' : ''}`
-                            : `bg-white dark:bg-[#202C33] text-gray-900 dark:text-[#E9EDEF] rounded-[20px] border border-gray-100 ${isFirstInGroup ? 'rounded-tl-md' : ''}`
+                            ? `bg-[#FFF3E0] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}`
+                            : `bg-[#F2F2F2] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`
                         }`}
-                        style={{ maxWidth: '280px' }}
+                        style={{ maxWidth: '80%' }}
                       >
                         {/* Tail for WhatsApp effect (optional, css pseudo element logic can go here or we keep it clean with corner radius) */}
                         
-                        <p className="text-[15px] leading-relaxed break-words pr-12">{msg.content}</p>
+                        <p className="text-[15px] leading-[1.4] break-words pr-12 pb-2">{msg.content}</p>
                         
-                        <div className={`absolute bottom-1 right-2 flex items-center gap-1`}>
-                          <span className={`text-[10px] font-bold ${isMe ? 'text-gray-400' : 'text-gray-400 dark:text-gray-500'}`}>
+                        <div className={`absolute bottom-1 right-3 flex items-center gap-1`}>
+                          <span className={`text-[10px] font-medium ${isMe ? 'text-[#8D8D8D]' : 'text-[#8D8D8D]'}`}>
                             {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                           </span>
                           {isMe && isLastMsg && (
@@ -718,10 +714,9 @@ export function ChatDetails() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3 flex items-end gap-3 pb-safe-bottom z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+      <div className="flex-shrink-0 bg-[#FFFFFF] px-4 py-3 flex items-center gap-3 pb-safe-bottom z-10 border-t border-[#F2F2F2]">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
-        
-        <div className="flex-1 bg-gray-50 border border-gray-200 rounded-full flex items-center px-4 py-1.5 min-h-[44px] overflow-hidden transition-all relative">
+        <div className="flex-1 bg-[#FFFFFF] border border-[#E5E5E5] rounded-full flex items-center px-4 py-2 min-h-[48px] overflow-hidden relative">
           {isRecording ? (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
@@ -733,20 +728,20 @@ export function ChatDetails() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center w-full gap-2">
+            <div className="flex items-center w-full gap-1">
               <input
                 type="text"
                 value={inputText}
                 onChange={(e) => handleTyping(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
                 placeholder="Écrire un message..."
-                className="flex-1 bg-transparent border-none text-[15px] text-gray-900 placeholder:text-gray-400 outline-none min-w-0"
+                className="flex-1 bg-transparent border-none text-[15px] text-[#1B1818] placeholder:text-[#8D8D8D] outline-none min-w-0"
               />
-              <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 active:scale-95 transition-transform">
-                <Paperclip className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#8D8D8D] active:scale-95 transition-transform">
+                <Paperclip className="w-[20px] h-[20px]" strokeWidth={2} />
               </button>
-              <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 active:scale-95 transition-transform">
-                <Camera className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#8D8D8D] active:scale-95 transition-transform mr-[-4px]">
+                <Camera className="w-[20px] h-[20px]" strokeWidth={2} />
               </button>
             </div>
           )}
@@ -755,25 +750,25 @@ export function ChatDetails() {
         {isRecording ? (
           <button
             onClick={stopRecording}
-            className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-md shadow-orange-500/20 flex-shrink-0 animate-in zoom-in duration-200"
+            className="w-[48px] h-[48px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
           >
-            <Send className="w-[20px] h-[20px] ml-1" />
+            <Send className="w-[22px] h-[22px] ml-1" />
           </button>
         ) : inputText.trim() ? (
           <button
             onClick={handleSendText}
             disabled={isUploading}
-            className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-md shadow-orange-500/20 flex-shrink-0 animate-in zoom-in duration-200"
+            className="w-[48px] h-[48px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
           >
-            <Send className="w-[20px] h-[20px] ml-1" />
+            <Send className="w-[22px] h-[22px] ml-1" />
           </button>
         ) : (
           <button
             onClick={startRecording}
             disabled={isUploading}
-            className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-md shadow-orange-500/20 flex-shrink-0 transition-transform active:scale-95"
+            className="w-[48px] h-[48px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-sm flex-shrink-0 transition-transform active:scale-95"
           >
-            <Mic className="w-[20px] h-[20px]" />
+            <Mic className="w-[22px] h-[22px]" />
           </button>
         )}
       </div>
