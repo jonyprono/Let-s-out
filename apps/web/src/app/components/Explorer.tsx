@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List } from 'lucide-react';
+import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List, Bell, QrCode, SlidersHorizontal } from 'lucide-react';
 import { 
-  Notification03Icon, Location01Icon, ArrowDown01Icon, Settings04Icon, QrCode01Icon
+  Location01Icon, ArrowDown01Icon
 } from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
@@ -322,7 +322,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <div className="flex items-center justify-between mb-2 mt-2">
             <h1 className="text-[20px] font-bold font-poppins text-[#1B1818] leading-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
-              <Notification03Icon className="w-[22px] h-[22px] text-[#FF7A00]" strokeWidth={1.8} />
+              <Bell className="w-[22px] h-[22px] text-[#1B1818]" strokeWidth={1.8} />
+              <div className="absolute top-0 right-0 w-[16px] h-[16px] bg-[#FF7A00] rounded-full border-2 border-white flex items-center justify-center translate-x-1/4 -translate-y-1/4">
+                <span className="text-[9px] font-bold text-white leading-none">5</span>
+              </div>
             </button>
           </div>
 
@@ -333,17 +336,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             <ArrowDown01Icon className="w-[16px] h-[16px]" strokeWidth={2} />
           </button>
 
-          {/* Search bar */}
           <div className="flex items-center gap-2.5 mb-3 w-full">
             <div
-              className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-3.5 h-[40px] gap-[8px] bg-white cursor-text"
+              className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-[12px] h-[36px] gap-[8px] bg-white cursor-text"
               onClick={() => {
                 hapticFeedback.impact();
                 openSearch();
               }}
             >
               <Search className="w-[18px] h-[18px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
-              <span className="text-[13px] text-[#A3A3A3] font-poppins flex-1">Rechercher des événements</span>
+              <span className="text-[13px] text-[#A3A3A3] font-poppins flex-1 opacity-80">Rechercher des événements</span>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -351,7 +353,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 }}
                 className="shrink-0"
               >
-                <Settings04Icon className="w-[18px] h-[18px] text-[#A3A3A3]" strokeWidth={1.5} />
+                <SlidersHorizontal className="w-[16px] h-[16px] text-[#A3A3A3]" strokeWidth={1.5} />
               </button>
             </div>
 
@@ -360,14 +362,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 e.stopPropagation();
                 hapticFeedback.impact();
               }}
-              className="w-[40px] h-[40px] shrink-0 rounded-full border border-[#DFDFDF] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
+              className="w-[36px] h-[36px] shrink-0 rounded-full border border-[#DFDFDF] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
             >
-              <QrCode01Icon className="w-[20px] h-[20px] text-[#5B5B5B]" strokeWidth={1.5} />
+              <QrCode className="w-[18px] h-[18px] text-[#5B5B5B]" strokeWidth={1.5} />
             </button>
           </div>
 
-          {/* Text filter tabs */}
-          <div className="flex gap-5 overflow-x-auto pb-3 -mx-5 px-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex gap-2 overflow-x-auto pb-3 -mx-5 px-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {filterTabs.map((tab) => {
               const isActive = selectedCategory === tab.id;
               return (
@@ -377,12 +378,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     hapticFeedback.impact();
                     setSelectedCategory(tab.id);
                   }}
-                  className="flex-shrink-0 active:scale-95 transition-transform pb-1"
-                  style={{ borderBottom: isActive ? '2px solid #FF7A00' : '2px solid transparent' }}
+                  className={`flex-shrink-0 active:scale-95 transition-transform px-4 py-1.5 rounded-full ${
+                    isActive ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'text-[#8D8D8D]'
+                  }`}
                 >
                   <span
                     className={`text-[13px] font-poppins whitespace-nowrap ${
-                      isActive ? 'text-[#FF7A00] font-semibold' : 'text-[#8D8D8D] font-normal'
+                      isActive ? 'font-semibold' : 'font-normal'
                     }`}
                   >
                     {tab.label}
