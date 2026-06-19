@@ -721,32 +721,32 @@ export function ChatDetails() {
       {/* Input Area */}
       <div className="flex-shrink-0 bg-[#FFFFFF] px-4 py-3 flex items-center gap-3 pb-safe-bottom z-10 border-t border-[#F2F2F2]">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
-        <div className="flex-1 bg-[#FFFFFF] border border-[#E5E5E5] rounded-full flex items-center px-4 py-2 min-h-[48px] overflow-hidden relative">
+        <div className="flex-1 h-[48px] bg-[#FCFCFC] border border-[#DFDFDF] rounded-full flex items-center px-[16px] gap-[12px] overflow-hidden relative">
           {isRecording ? (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
                 <span className="text-red-500 font-medium text-[15px]">{formatRecordingTime(recordingTime)}</span>
               </div>
-              <button onClick={cancelRecording} className="text-gray-400 hover:text-red-500 transition-colors p-2">
+              <button onClick={cancelRecording} className="text-gray-400 hover:text-red-500 transition-colors">
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>
           ) : (
-            <div className="flex items-center w-full gap-1">
+            <div className="flex items-center w-full gap-[12px] h-full">
               <input
                 type="text"
                 value={inputText}
                 onChange={(e) => handleTyping(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
                 placeholder="Écrire un message..."
-                className="flex-1 bg-transparent border-none text-[15px] text-[#1B1818] placeholder:text-[#8D8D8D] outline-none min-w-0"
+                className="flex-1 h-full bg-transparent border-none text-[14px] text-[#1B1818] placeholder:text-[#8D8D8D] outline-none min-w-0"
               />
-              <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#8D8D8D] active:scale-95 transition-transform">
+              <button onClick={() => fileInputRef.current?.click()} className="text-[#8D8D8D] active:scale-95 transition-transform flex items-center justify-center">
                 <Paperclip className="w-[20px] h-[20px]" strokeWidth={1.5} />
               </button>
               {!inputText.trim() && (
-                <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#8D8D8D] active:scale-95 transition-transform mr-[-4px]">
+                <button onClick={() => fileInputRef.current?.click()} className="text-[#8D8D8D] active:scale-95 transition-transform flex items-center justify-center">
                   <Camera className="w-[20px] h-[20px]" strokeWidth={1.5} />
                 </button>
               )}
