@@ -19,7 +19,7 @@ export function Messages(_props: MessagesProps) {
   const [showNewConv, setShowNewConv] = useState(false);
   const [showAddFriends, setShowAddFriends] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'discussions' | 'groups'>('discussions');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'friends' | 'groups'>('all');
 
   const user = useAuthStore((s) => s.user);
 
@@ -74,8 +74,9 @@ export function Messages(_props: MessagesProps) {
   // Apply tab filter
   const visibleConversations = useMemo(() => {
     if (activeFilter === 'groups') return groups;
-    return directs; // 'discussions' -> messages directs
-  }, [activeFilter, groups, directs]);
+    if (activeFilter === 'friends') return directs;
+    return filtered;
+  }, [activeFilter, filtered, groups, directs]);
 
   return (
     <div className="w-full h-full flex flex-col bg-[#FFFFFF]" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -83,16 +84,34 @@ export function Messages(_props: MessagesProps) {
       {/* Header */}
       <div className="px-5 pt-4 pt-safe-4 pb-2 bg-[#FFFFFF] sticky top-0 z-20">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-[28px] font-semibold text-[#1B1818]">Messages</h1>
-          <button className="p-2 active:scale-95 transition-transform">
-            <Trash2 className="w-[22px] h-[22px] text-gray-400" />
+          <h1 className="text-[28px] font-bold text-[#1B1818]">Messages</h1>
+          <button className="p-2 active:scale-95 transition-transform border border-gray-200 rounded-lg">
+            <Trash2 className="w-[20px] h-[20px] text-gray-400" />
           </button>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-6 mb-4 border-b border-gray-100">
+        {/* Search */}
+        <div className="bg-[#FFFFFF] border border-[#E5E5E5] rounded-full flex items-center gap-3 px-4 py-3 mb-5">
+          <Search className="w-[18px] h-[18px] text-[#8D8D8D] flex-shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Rechercher une conversation..."
+            className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] placeholder:text-[#D1D1D1] font-medium"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
+              <X className="w-3.5 h-3.5 text-[#8D8D8D]" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Tabs (Pills) */}
+        <div className="flex items-center gap-3 mb-2">
           {[
-            { key: 'discussions' as const, label: 'Discussions' },
+            { key: 'all' as const, label: 'Tout' },
+            { key: 'friends' as const, label: 'Ami(e)s' },
             { key: 'groups' as const, label: 'Groupes' },
           ].map(tab => {
             const isActive = activeFilter === tab.key;
@@ -100,36 +119,16 @@ export function Messages(_props: MessagesProps) {
               <button
                 key={tab.key}
                 onClick={() => setActiveFilter(tab.key)}
-                className={`pb-2 text-[16px] transition-colors relative ${
+                className={`px-4 py-1.5 rounded-full text-[14px] transition-colors font-medium ${
                   isActive
-                    ? 'font-semibold text-[#FF7A00]'
-                    : 'font-medium text-[#8D8D8D]'
+                    ? 'bg-[#FFF4E5] text-[#FF7A00]'
+                    : 'bg-[#FAFAFA] text-[#8D8D8D]'
                 }`}
               >
                 {tab.label}
-                {isActive && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#FF7A00]" />
-                )}
               </button>
             );
           })}
-        </div>
-
-        {/* Search */}
-        <div className="bg-[#F6F6F6] border border-gray-200/50 rounded-full flex items-center gap-3 px-4 py-3 mb-2">
-          <Search className="w-[18px] h-[18px] text-[#8D8D8D] flex-shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Rechercher des discussions"
-            className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] placeholder:text-[#8D8D8D] font-medium"
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
-              <X className="w-3.5 h-3.5 text-[#8D8D8D]" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -181,12 +180,12 @@ export function Messages(_props: MessagesProps) {
       {/* FAB (Floating Action Button) */}
       <button 
         onClick={() => setShowNewConv(true)}
-        className="absolute bottom-[90px] right-5 w-14 h-14 bg-[#FF7A00] rounded-[20px] flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform z-30"
+        className="absolute bottom-[90px] right-5 w-[50px] h-[50px] bg-[#FF7A00] rounded-[14px] flex items-center justify-center shadow-md shadow-orange-500/20 active:scale-95 transition-transform z-30"
       >
-        <div className="relative">
-          <MessageCircle className="w-[26px] h-[26px] text-white" strokeWidth={2.5} />
-          <div className="absolute top-[8px] right-[8px] w-[10px] h-[10px] bg-white rounded-full flex items-center justify-center">
-            <Plus className="w-[8px] h-[8px] text-[#FF7A00]" strokeWidth={4} />
+        <div className="relative flex items-center justify-center">
+          <MessageCircle className="w-[24px] h-[24px] text-white" strokeWidth={2} />
+          <div className="absolute top-[6px] right-[6px] w-[8px] h-[8px] bg-[#FF7A00] rounded-full flex items-center justify-center">
+            <Plus className="w-[8px] h-[8px] text-white" strokeWidth={4} />
           </div>
         </div>
       </button>
@@ -197,49 +196,49 @@ export function Messages(_props: MessagesProps) {
   );
 }
 
-// ── Memoized conversation item — prevents re-renders while typing in search ──
 const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNavigate: () => void }) {
   const hasUnread = conv.unread > 0;
   return (
     <button
       onClick={onNavigate}
-      className="w-full flex flex-row items-center gap-4 px-5 py-3 text-left transition-colors active:bg-gray-50 bg-[#FFFFFF] mb-1"
+      className="w-full flex flex-row items-center gap-[14px] px-5 py-[14px] text-left transition-colors active:bg-gray-50 bg-[#FFFFFF]"
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
-        <div className="w-[52px] h-[52px] rounded-full overflow-hidden bg-gray-100">
+        <div className="w-[50px] h-[50px] rounded-full overflow-hidden bg-gray-100">
           <SafeImage
             src={conv.avatarUrl}
             alt={conv.name}
             className="w-full h-full object-cover"
-            fallback={<div className="w-full h-full flex items-center justify-center text-xl font-semibold text-gray-500 bg-gray-200">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
+            fallback={<div className="w-full h-full flex items-center justify-center text-xl font-semibold text-gray-500 bg-[#FAFAFA]">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
           />
         </div>
+        {!conv.isGroup && (
+          <div className="absolute bottom-0 right-0 w-[12px] h-[12px] bg-[#10C836] rounded-full border-2 border-white" />
+        )}
       </div>
 
       {/* Content Block */}
-      <div className="flex-1 min-w-0 py-1 flex flex-col justify-center">
-        <h3 className={`text-[16px] truncate text-[#1B1818] font-[600]`}>
-          {conv.name}
-        </h3>
-        <div className="flex items-center gap-1.5 min-w-0 mt-0.5">
-          <p className="text-[14px] truncate text-[#8D8D8D]">
+      <div className="flex-1 min-w-0 flex flex-col justify-center">
+        <div className="flex items-center justify-between mb-[2px]">
+          <h3 className={`text-[15px] truncate text-[#1B1818] font-[600]`}>
+            {conv.name}
+          </h3>
+          <span className={`text-[11px] whitespace-nowrap text-[#8D8D8D]`}>
+            {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="text-[13px] truncate text-[#8D8D8D] pr-4">
             {conv.lastMsgPrefix && <span className="font-medium mr-1">{conv.lastMsgPrefix}</span>}
             {conv.lastMsg}
           </p>
+          {hasUnread && (
+            <div className="flex-shrink-0 min-w-[20px] h-[20px] px-[5px] rounded-full flex items-center justify-center text-[10px] font-bold text-white bg-[#FF7A00]">
+              {conv.unread > 9 ? '9+' : conv.unread}
+            </div>
+          )}
         </div>
-      </div>
-
-      {/* Info Block (Right) */}
-      <div className="flex flex-col items-end justify-between flex-shrink-0 h-[44px]">
-        <span className={`text-[12px] whitespace-nowrap text-[#8D8D8D]`}>
-          {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
-        </span>
-        {hasUnread && (
-          <div className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-semibold text-white bg-[#FF7A00]">
-            {conv.unread > 9 ? '9+' : conv.unread}
-          </div>
-        )}
       </div>
     </button>
   );
