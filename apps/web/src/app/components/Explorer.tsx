@@ -309,7 +309,22 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
   // ── MAIN LIST SCREEN (Screen 1 & 4) ───────────────────────────────────────
   
-  const mapEvents = events.map((ev, i) => ({
+  const filteredEvents = events.filter(ev => {
+    const searchLower = eventSearch.trim().toLowerCase();
+    const textMatch = searchLower === '' || 
+                        (ev.title?.toLowerCase() || '').includes(searchLower) || 
+                        (ev.city?.toLowerCase() || '').includes(searchLower) ||
+                        (ev.address?.toLowerCase() || '').includes(searchLower);
+    
+    // Pour la recherche de ville, on est plus souple sur les espaces
+    const cityMatch = currentLocation 
+      ? (ev.city || '').toLowerCase().trim() === currentLocation.toLowerCase().trim() 
+      : true;
+      
+    return textMatch && cityMatch;
+  });
+
+  const mapEvents = filteredEvents.map((ev, i) => ({
     id: ev.id,
     title: ev.title,
     city: ev.city || currentLocation,
@@ -321,15 +336,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     participationMode: ev.price === 0 ? 'Gratuit' : 'Payant',
     coverUrl: ev.coverUrl || ''
   })) as any[];
-
-  const filteredEvents = events.filter(ev => {
-    const searchMatch = (ev.title?.toLowerCase() || '').includes(eventSearch.toLowerCase()) || 
-                        (ev.city?.toLowerCase() || '').includes(eventSearch.toLowerCase()) ||
-                        (ev.address?.toLowerCase() || '').includes(eventSearch.toLowerCase());
-    const cityMatch = currentLocation ? (ev.city?.toLowerCase() === currentLocation.toLowerCase()) : true;
-    return searchMatch && cityMatch;
-  });
-
 
   return (
     <div className={`w-full h-full flex flex-col relative bg-background`}>
