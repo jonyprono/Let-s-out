@@ -664,24 +664,24 @@ export function ChatDetails() {
                       </div>
                     ) : (
                       <div
-                        className={`px-4 py-2 relative shadow-none ${
+                        className={`px-3 py-1.5 shadow-none w-fit ${
                           isMe
-                            ? `bg-[#FFF2D3] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}`
-                            : `bg-[#F2F2F2] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`
+                            ? `bg-[#FFF2D3] text-[#1B1818] rounded-[16px] ${isFirstInGroup ? 'rounded-tr-[4px]' : ''}`
+                            : `bg-[#F2F2F2] text-[#1B1818] rounded-[16px] ${isFirstInGroup ? 'rounded-tl-[4px]' : ''}`
                         }`}
                         style={{ maxWidth: '80%' }}
                       >
-                        {/* Tail for WhatsApp effect (optional, css pseudo element logic can go here or we keep it clean with corner radius) */}
-                        
-                        <p className="text-[15px] leading-[1.4] break-words pr-12 pb-2">{msg.content}</p>
-                        
-                        <div className={`absolute bottom-1 right-3 flex items-center gap-1`}>
-                          <span className={`text-[10px] font-medium ${isMe ? 'text-[#8D8D8D]' : 'text-[#8D8D8D]'}`}>
-                            {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                        <div className="text-[15px] leading-[1.3] break-words text-left">
+                          {msg.content}
+                          <span className="float-right flex items-center gap-1 ml-3 mt-[8px] mb-[-2px]">
+                            <span className="text-[10px] font-medium text-[#8D8D8D]">
+                              {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                            </span>
+                            {isMe && isLastMsg && (
+                              <Check className="w-[14px] h-[14px] text-[#8D8D8D]" strokeWidth={2.5} />
+                            )}
                           </span>
-                          {isMe && isLastMsg && (
-                            <Check className="w-[14px] h-[14px] text-[#8D8D8D]" strokeWidth={2.5} />
-                          )}
+                          <div className="clear-both" />
                         </div>
                       </div>
                     )}
