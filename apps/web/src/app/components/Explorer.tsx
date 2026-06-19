@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List, Bell, QrCode, SlidersHorizontal } from 'lucide-react';
 import { 
@@ -8,6 +8,7 @@ import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { EventCard } from '@/components/shared/EventCard';
 import ExplorerMap from '@/app/components/ExplorerMap';
+import { eventsApi, type Event } from '@/features/events/api';
 interface ExplorerProps {
   onNavigate: (screen: string, id?: string) => void;
 }
@@ -92,8 +93,22 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     });
   };
 
+  const [currentLocation, setCurrentLocation] = useState('');
   const [mapSearch, setMapSearch] = useState('');
   const [eventSearch, setEventSearch] = useState('');
+  const [events, setEvents] = useState<Event[]>([]);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await eventsApi.list();
+        setEvents(res.data.data || []);
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+      }
+    };
+    fetchEvents();
+  }, []);
 
 
 
@@ -168,18 +183,24 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           {!isSearching ? (
             // État vide — badge ville active + récents
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
-              <button
-                onClick={closeSearch}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  backgroundColor: '#FF7A00', borderRadius: 999,
-                  padding: '10px 16px', border: 'none', cursor: 'pointer',
-                  marginBottom: 24
-                }}
-              >
-                <span style={{ color: 'white', fontSize: 15, fontWeight: 600, fontFamily: 'Poppins, sans-serif' }}>Cotonou</span>
-                <Check style={{ width: 16, height: 16, color: 'white' }} strokeWidth={3} />
-              </button>
+              {currentLocation && (
+                <button
+                  onClick={() => {
+                    setCurrentLocation('');
+                    closeSearch();
+                  }}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    backgroundColor: '#FF7A00', borderRadius: 999,
+                    padding: '10px 16px', border: 'none', cursor: 'pointer',
+                    marginBottom: 24
+                  }}
+                >
+                  <Location01Icon style={{ width: 16, height: 16, color: 'white' }} strokeWidth={1.5} />
+                  <span style={{ color: 'white', fontSize: 15, fontWeight: 600, fontFamily: 'Poppins, sans-serif' }}>{currentLocation}</span>
+                  <Check style={{ width: 16, height: 16, color: 'white' }} strokeWidth={3} />
+                </button>
+              )}
 
               {recentCities.length > 0 && (
                 <div style={{ width: '100%' }}>
@@ -187,7 +208,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   {recentCities.map((city, idx) => (
                     <button
                       key={idx}
-                      onClick={() => { saveRecentCity(city); setMapSearch(city); closeSearch(); }}
+                      onClick={() => { saveRecentCity(city); setCurrentLocation(city); setMapSearch(''); closeSearch(); }}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
                         gap: 12, padding: '14px 0', background: 'transparent', border: 'none', borderBottom: '1px solid #F3F4F6',
@@ -207,7 +228,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               {filteredCities.map((city, idx) => (
                 <button
                   key={idx}
-                  onClick={() => { saveRecentCity(city); setMapSearch(city); closeSearch(); }}
+                  onClick={() => { saveRecentCity(city); setCurrentLocation(city); setMapSearch(''); closeSearch(); }}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
                     gap: 12, padding: '14px 0', background: 'transparent', border: 'none', borderBottom: '1px solid #F3F4F6',
@@ -288,35 +309,26 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
   // ── MAIN LIST SCREEN (Screen 1 & 4) ───────────────────────────────────────
   
-  // Mock data implementation for user request
-  const currentLocation = mapSearch || 'Cotonou';
-  const isAbomey = currentLocation === 'Abomey-Calavi';
-  
-  const mockCards = isAbomey ? [
-    { id: '3', title: 'Lancement Let\'s Out', date: "Aujourd'hui • 10h10", location: "Université d'Abomey-Calavi (Abomey-Calavi)" },
-    { id: '4', title: 'Matinée Cocktail social', date: "Aujourd'hui • 09h", location: "Fidirossè Beach (Cotonou)" }
-  ] : [
-    { id: '1', title: 'Chill bouffe gratuite', date: "Aujourd'hui à 10h", location: "Cotonou • Place de l'amazone" },
-    { id: '2', title: 'Sea holidays party', date: "Samedi prochain à 09h", location: "Cotonou • Fidirossè Beach (Cotonou)" }
-  ];
-
-  const mapEvents = mockCards.map((card, i) => ({
-    id: card.id,
-    title: card.title,
-    city: currentLocation,
-    address: card.location,
-    latitude: isAbomey ? 6.4485 + (i * 0.002) : 6.36536 + (i * 0.002),
-    longitude: isAbomey ? 2.3556 + (i * 0.002) : 2.41833 + (i * 0.002),
-    startAt: new Date().toISOString(),
-    currentAttendees: 500,
-    participationMode: 'Gratuit',
-    coverUrl: ''
+  const mapEvents = events.map((ev, i) => ({
+    id: ev.id,
+    title: ev.title,
+    city: ev.city || currentLocation,
+    address: ev.address || '',
+    latitude: ev.latitude || 6.36536 + (i * 0.002),
+    longitude: ev.longitude || 2.41833 + (i * 0.002),
+    startAt: ev.startAt,
+    currentAttendees: ev.currentAttendees || 0,
+    participationMode: ev.price === 0 ? 'Gratuit' : 'Payant',
+    coverUrl: ev.coverUrl || ''
   })) as any[];
 
-  const filteredEvents = mockCards.filter(card => 
-    card.title.toLowerCase().includes(eventSearch.toLowerCase()) ||
-    card.location.toLowerCase().includes(eventSearch.toLowerCase())
-  );
+  const filteredEvents = events.filter(ev => {
+    const searchMatch = (ev.title?.toLowerCase() || '').includes(eventSearch.toLowerCase()) || 
+                        (ev.city?.toLowerCase() || '').includes(eventSearch.toLowerCase()) ||
+                        (ev.address?.toLowerCase() || '').includes(eventSearch.toLowerCase());
+    const cityMatch = currentLocation ? (ev.city?.toLowerCase() === currentLocation.toLowerCase()) : true;
+    return searchMatch && cityMatch;
+  });
 
 
   return (
@@ -338,7 +350,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           {/* Location */}
           <button onClick={openSearch} className="flex items-center gap-1 mb-3 text-[#5B5B5B] active:opacity-70 transition-opacity">
             <Location01Icon className="w-[18px] h-[18px]" strokeWidth={1.8} />
-            <span className="text-[14px] font-poppins font-medium text-[#1B1818]">{currentLocation}</span>
+            <span className="text-[14px] font-poppins font-medium text-[#1B1818]">{currentLocation || 'Où allez-vous ?'}</span>
             <ArrowDown01Icon className="w-[16px] h-[16px]" strokeWidth={2} />
           </button>
 
@@ -419,7 +431,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </div>
             <ExplorerMap
               events={mapEvents}
-              mapCenter={isAbomey ? [6.4485, 2.3556] : [6.36536, 2.41833]}
+              mapCenter={currentLocation === 'Abomey-Calavi' ? [6.4485, 2.3556] : [6.36536, 2.41833]}
               mapGeoLoading={false}
               onGeolocate={() => {}}
               onNavigate={onNavigate}
@@ -431,17 +443,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         {viewMode === 'list' && (
           <div className="flex-1 overflow-y-auto px-5 pt-4 pb-[80px] flex flex-col items-center relative z-10 bg-background">
             {filteredEvents.length > 0 ? (
-              filteredEvents.map(card => {
-                const parts = card.location.split(' • ');
+              filteredEvents.map(ev => {
+                const dateObj = new Date(ev.startAt);
+                const dateStr = dateObj.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
                 return (
                   <EventCard
-                    key={card.id}
-                    name={card.title}
-                    datetime={card.date}
-                    city={parts[0]}
-                    place={parts[1] || ''}
-                    attendeesCount="+500 Participants"
-                    price="Gratuit"
+                    key={ev.id}
+                    name={ev.title}
+                    datetime={dateStr}
+                    city={ev.city || ''}
+                    place={ev.address || ''}
+                    attendeesCount={`${ev.currentAttendees || 0} Participants`}
+                    price={ev.price === 0 ? "Gratuit" : `${ev.price} ${ev.currency || 'CFA'}`}
                     cover={true}
                   />
                 );
