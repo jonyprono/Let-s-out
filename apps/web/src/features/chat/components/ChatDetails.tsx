@@ -664,21 +664,21 @@ export function ChatDetails() {
                       </div>
                     ) : (
                       <div
-                        className={`px-3 py-1.5 shadow-none w-fit ${
+                        className={`px-2.5 py-1 shadow-none w-fit ${
                           isMe
-                            ? `bg-[#FFF2D3] text-[#1B1818] rounded-[16px] ${isFirstInGroup ? 'rounded-tr-[4px]' : ''}`
-                            : `bg-[#F2F2F2] text-[#1B1818] rounded-[16px] ${isFirstInGroup ? 'rounded-tl-[4px]' : ''}`
+                            ? `bg-[#FFF2D3] text-[#1B1818] rounded-[12px] ${isFirstInGroup ? 'rounded-tr-[2px]' : ''}`
+                            : `bg-[#F2F2F2] text-[#1B1818] rounded-[12px] ${isFirstInGroup ? 'rounded-tl-[2px]' : ''}`
                         }`}
                         style={{ maxWidth: '80%' }}
                       >
-                        <div className="text-[15px] leading-[1.3] break-words text-left">
+                        <div className="text-[14px] leading-[1.3] break-words text-left">
                           {msg.content}
-                          <span className="float-right flex items-center gap-1 ml-3 mt-[8px] mb-[-2px]">
+                          <span className="float-right flex items-center gap-1 ml-2 mt-[6px] mb-[-2px]">
                             <span className="text-[10px] font-medium text-[#8D8D8D]">
                               {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                             </span>
                             {isMe && isLastMsg && (
-                              <Check className="w-[14px] h-[14px] text-[#8D8D8D]" strokeWidth={2.5} />
+                              <Check className="w-[12px] h-[12px] text-[#8D8D8D]" strokeWidth={2.5} />
                             )}
                           </span>
                           <div className="clear-both" />
