@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, ChevronLeft, XCircle, ChevronDown } from 'lucide-react'
+import { Loader2, ChevronLeft, XCircle, ChevronDown, Check } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
 import { toast } from 'sonner'
@@ -9,6 +9,13 @@ import {
   isContributionPayment,
   applyPoolContributionOptimistic,
 } from '@/lib/pool-contribution'
+
+// ── Operators ──────────────────────────────────────────────
+const OPERATORS = [
+  { id: 'mtn', label: 'MTN Momo', emoji: '🟡', prefix: '97' },
+  { id: 'moov', label: 'MOOV', emoji: '🔵', prefix: '96' },
+  { id: 'celtis', label: 'CELTIS', emoji: '🟢', prefix: '95' },
+]
 
 export function PaymentPage() {
   const { id: eventId } = useParams<{ id: string }>()
@@ -26,6 +33,9 @@ export function PaymentPage() {
   // Form state
   const [participationAmount, setParticipationAmount] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [selectedOperator, setSelectedOperator] = useState(OPERATORS[0])
+  const [showOperatorDropdown, setShowOperatorDropdown] = useState(false)
+  const operatorRef = useRef<HTMLDivElement>(null)
 
   const { data: event, isLoading: eventLoading } = useQuery({
     queryKey: ['events', eventId],
@@ -46,12 +56,22 @@ export function PaymentPage() {
 
   const netToPay = finalAmount + transactionFee
 
-  // Auto-fill amount from event price or pool
   useEffect(() => {
     if (event && !participationAmount) {
       if (event.price > 0) setParticipationAmount(String(event.price))
     }
   }, [event])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (operatorRef.current && !operatorRef.current.contains(e.target as Node)) {
+        setShowOperatorDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   const handleOpenSummary = () => {
     if (!participationAmount || Number(participationAmount) < minAmount) {
@@ -160,23 +180,17 @@ export function PaymentPage() {
   if (status === 'success') {
     const startDate = parseSafeDate(event?.startAt)
     return (
-      <div className="w-full h-full bg-white flex flex-col font-sans">
-        {/* Header */}
+      <div className="w-full h-full bg-white flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
         <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
           <button onClick={() => navigate(`/events/${eventId}`)} className="w-9 h-9 flex items-center justify-center active:scale-95">
-            <ChevronLeft className="w-5 h-5 text-gray-900" strokeWidth={2.5} />
+            <ChevronLeft className="w-5 h-5 text-[#1B1818]" strokeWidth={2} />
           </button>
-          <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 -ml-9">Rejoindre l'événement</span>
+          <span className="flex-1 text-center text-[16px] font-semibold text-[#1B1818] -ml-9">Rejoindre l'événement</span>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
-          {/* Success icon */}
           <div className="mt-12 mb-6">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #4CD964, #34C759)' }}
-            >
+            <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #4CD964, #34C759)' }}>
               <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                 <path d="M8 18L15 25L28 11" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
@@ -188,7 +202,6 @@ export function PaymentPage() {
             Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres participants.
           </p>
 
-          {/* Summary card */}
           <div className="w-full rounded-2xl border border-gray-100 bg-white shadow-sm p-5 space-y-4">
             <h2 className="text-[15px] font-bold text-gray-900">{event?.title}</h2>
             <div className="space-y-3">
@@ -214,21 +227,11 @@ export function PaymentPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div
-          className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex flex-col gap-3"
-          style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
-        >
-          <button
-            onClick={handleOpenChat}
-            className="w-full py-[14px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
-          >
+        <div className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
+          <button onClick={handleOpenChat} className="w-full py-[14px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20">
             Rejoindre le groupe
           </button>
-          <button
-            onClick={() => navigate(`/events/${eventId}`)}
-            className="w-full py-[14px] rounded-full font-bold text-[15px] text-gray-700 border border-gray-200 bg-white active:scale-95 transition-transform"
-          >
+          <button onClick={() => navigate(`/events/${eventId}`)} className="w-full py-[14px] rounded-full font-bold text-[15px] text-gray-700 border border-gray-200 bg-white active:scale-95 transition-transform">
             Retour à l'événement
           </button>
         </div>
@@ -269,125 +272,163 @@ export function PaymentPage() {
 
   // ── PAYMENT FORM ──
   return (
-    <div className="w-full h-full bg-white flex flex-col font-sans">
-      {/* Header */}
-      <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
-          <ChevronLeft className="w-5 h-5 text-gray-900" strokeWidth={2.5} />
+    <div className="w-full h-full bg-white flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
+
+      {/* ── Header ── */}
+      <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center gap-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="w-8 h-8 flex items-center justify-center active:scale-95"
+        >
+          <ChevronLeft className="w-[22px] h-[22px] text-[#1B1818]" strokeWidth={2} />
         </button>
-        <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 -ml-9">Rejoindre l'événement</span>
+        <span className="flex-1 text-center text-[16px] font-semibold text-[#1B1818] -ml-8">
+          Rejoindre l'événement
+        </span>
       </div>
 
-      {/* Form content */}
-      <div className="flex-1 overflow-y-auto px-5 pb-32" style={{ scrollbarWidth: 'none' }}>
+      {/* ── Form content ── */}
+      <div className="flex-1 overflow-y-auto px-5 pb-40" style={{ scrollbarWidth: 'none' }}>
 
-        {/* Event name + participation row */}
-        <div className="mb-6">
-          <h1 className="text-[20px] font-bold text-gray-900 mb-3">{event?.title}</h1>
-          <div className="flex items-center justify-between py-3 border-b border-gray-100">
-            <span className="text-[13px] text-gray-600">Participation</span>
-            <span className="text-[13px] font-semibold text-[#007AFF]">
-              A partir de {minAmount > 0 ? `${minAmount.toLocaleString()}F` : 'Gratuit'}
-            </span>
-          </div>
+        {/* Event name */}
+        <h1 className="text-[20px] font-bold text-[#1B1818] mt-2 mb-2">{event?.title}</h1>
+
+        {/* Participation row */}
+        <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0] mb-5">
+          <span className="text-[13px] text-[#8D8D8D]">Participation</span>
+          <span className="text-[13px] font-semibold text-[#FF7A00]">
+            A partir de {minAmount > 0 ? `${minAmount.toLocaleString()}F` : 'Gratuit'}
+          </span>
         </div>
 
-        {/* Amount field */}
-        <div className="mb-5">
-          <label className="block text-[13px] font-medium text-gray-700 mb-2">
+        {/* ── Amount field ── */}
+        <div className="mb-4">
+          <label className="block text-[13px] font-medium text-[#1B1818] mb-2">
             Montant de votre participation
           </label>
-          <div className="flex items-center border border-gray-200 rounded-[12px] overflow-hidden bg-white">
+          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white overflow-hidden h-[52px]">
             <input
               type="number"
               value={participationAmount}
               onChange={(e) => setParticipationAmount(e.target.value)}
               placeholder="0"
-              className="flex-1 px-4 py-3.5 text-[15px] text-gray-900 outline-none bg-transparent"
+              className="flex-1 px-4 text-[15px] text-[#1B1818] placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
             />
-            <span className="pr-4 text-[13px] font-semibold text-gray-500">F CFA</span>
+            <span className="pr-4 text-[13px] font-semibold text-[#8D8D8D]">F CFA</span>
           </div>
           {minAmount > 0 && (
-            <p className="text-[11px] text-gray-400 mt-1.5 ml-1">Minimum {minAmount.toLocaleString()}F</p>
+            <p className="text-[11px] text-[#8D8D8D] mt-1 ml-0.5">Minimum {minAmount.toLocaleString()}F</p>
           )}
         </div>
 
-        {/* Payment method */}
-        <div className="mb-5">
-          <label className="block text-[13px] font-medium text-gray-700 mb-2">Méthode de paiement</label>
-          <div className="flex items-center border border-gray-200 rounded-[12px] bg-white px-4 py-3.5">
-            <span className="text-lg mr-3">📱</span>
-            <span className="flex-1 text-[14px] text-gray-900">Mobile money</span>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+        {/* ── Payment method ── */}
+        <div className="mb-4">
+          <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Méthode de paiement</label>
+          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white px-4 h-[52px]">
+            <span className="text-[18px] mr-3">📱</span>
+            <span className="flex-1 text-[14px] text-[#1B1818]">Mobile money</span>
+            <ChevronDown className="w-4 h-4 text-[#8D8D8D]" />
           </div>
         </div>
 
-        {/* Operator */}
-        <div className="mb-5">
-          <label className="block text-[13px] font-medium text-gray-700 mb-2">Opérateur</label>
-          <div className="flex items-center border border-gray-200 rounded-[12px] bg-white px-4 py-3.5">
-            <span className="text-lg mr-3">🟡</span>
-            <span className="flex-1 text-[14px] text-gray-900">MTN Momo</span>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+        {/* ── Operator (real dropdown) ── */}
+        <div className="mb-4" ref={operatorRef}>
+          <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Opérateur</label>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowOperatorDropdown(!showOperatorDropdown)}
+              className="w-full flex items-center border border-[#DFDFDF] rounded-[10px] bg-white px-4 h-[52px] active:bg-gray-50 transition-colors"
+            >
+              <span className="text-[18px] mr-3">{selectedOperator.emoji}</span>
+              <span className="flex-1 text-[14px] text-[#1B1818] text-left">{selectedOperator.label}</span>
+              <ChevronDown
+                className="w-4 h-4 text-[#8D8D8D] transition-transform duration-200"
+                style={{ transform: showOperatorDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              />
+            </button>
+
+            {showOperatorDropdown && (
+              <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-30 bg-white border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                {OPERATORS.map((op) => (
+                  <button
+                    key={op.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedOperator(op)
+                      setShowOperatorDropdown(false)
+                    }}
+                    className="w-full flex items-center px-4 py-3.5 hover:bg-[#FFF8F0] transition-colors"
+                  >
+                    <span className="text-[18px] mr-3">{op.emoji}</span>
+                    <span className="flex-1 text-[14px] text-[#1B1818] text-left">{op.label}</span>
+                    {selectedOperator.id === op.id && (
+                      <Check className="w-4 h-4 text-[#FF7A00]" strokeWidth={2.5} />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Phone number */}
+        {/* ── Phone number ── */}
         <div className="mb-8">
-          <label className="block text-[13px] font-medium text-gray-700 mb-2">Numéro de téléphone</label>
-          <div className="flex items-center border border-gray-200 rounded-[12px] bg-white overflow-hidden">
-            <div className="flex items-center gap-1.5 px-3 border-r border-gray-200 py-3.5">
-              <span className="text-base">🇧🇯</span>
-              <span className="text-[13px] text-gray-700 font-medium">(229)</span>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+          <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Numéro de téléphone</label>
+          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white overflow-hidden h-[52px]">
+            <div className="flex items-center gap-1.5 px-3 border-r border-[#DFDFDF] h-full">
+              <span className="text-[16px]">🇧🇯</span>
+              <span className="text-[13px] text-[#1B1818] font-medium">(229)</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#8D8D8D]" />
             </div>
             <input
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="00 00 00 00 00"
-              className="flex-1 px-4 py-3.5 text-[14px] text-gray-900 outline-none bg-transparent"
+              className="flex-1 px-4 text-[14px] text-[#1B1818] placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
             />
           </div>
         </div>
 
       </div>
 
-      {/* Sticky footer */}
+      {/* ── Sticky footer ── */}
       <div
-        className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex flex-col items-center gap-2"
+        className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex flex-col items-center gap-2 border-t border-[#F0F0F0]"
         style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
       >
         <button
           onClick={handleOpenSummary}
-          className="w-full py-[14px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] opacity-80 active:opacity-100 active:scale-95 transition-all shadow-md shadow-orange-500/20"
+          className="w-full h-[52px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] opacity-90 active:opacity-100 active:scale-[0.98] transition-all shadow-md shadow-orange-500/20"
         >
           Rejoindre
         </button>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-gray-500 font-medium">Sécurisé PCI DSS</span>
-          <span className="text-green-500 text-xs">✓</span>
-          <span className="text-[11px] text-gray-400">Fedapay</span>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <span className="text-[11px] text-[#8D8D8D] font-medium">Sécurisé PCI DSS</span>
+          <span className="text-green-500">
+            <Check className="w-[12px] h-[12px]" strokeWidth={3} />
+          </span>
+          <span className="text-[11px] text-[#8D8D8D]">Fedapay</span>
         </div>
       </div>
 
-      {/* ── TRANSACTION SUMMARY BOTTOM SHEET ── */}
+      {/* ── Transaction Summary Bottom Sheet ── */}
       {status === 'summary' && (
         <div className="absolute inset-0 z-50 bg-black/50 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full bg-white rounded-t-[28px] shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="w-full bg-white rounded-t-[24px] shadow-2xl animate-in slide-in-from-bottom duration-300" style={{ fontFamily: 'Poppins, sans-serif' }}>
             <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-gray-200 rounded-full" />
+              <div className="w-10 h-1 bg-[#E0E0E0] rounded-full" />
             </div>
 
-            <div className="px-5 pt-4 pb-safe-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
+            <div className="px-5 pt-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
 
-              <h2 className="text-[17px] font-bold text-gray-900 mb-5 text-center">Résumé de la transaction</h2>
+              <h2 className="text-[17px] font-bold text-[#1B1818] mb-5 text-center">Résumé de la transaction</h2>
 
-              {/* Event info */}
               <div className="mb-5">
-                <h3 className="text-[16px] font-bold text-gray-900">{event?.title}</h3>
+                <h3 className="text-[16px] font-bold text-[#1B1818]">{event?.title}</h3>
                 {event?.startAt && (
-                  <p className="text-[12px] text-gray-500 mt-0.5">
+                  <p className="text-[12px] text-[#8D8D8D] mt-0.5">
                     {(() => {
                       const d = parseSafeDate(event.startAt)
                       const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
@@ -398,37 +439,36 @@ export function PaymentPage() {
                   </p>
                 )}
                 {event?.city && (
-                  <p className="text-[12px] text-gray-500">{event.address ? `${event.address}, ` : ''}{event.city}</p>
+                  <p className="text-[12px] text-[#8D8D8D]">{event.address ? `${event.address}, ` : ''}{event.city}</p>
                 )}
               </div>
 
-              {/* Phone display */}
-              <div className="flex items-center gap-2 bg-gray-50 rounded-[12px] px-4 py-3 mb-1">
-                <span className="text-base">🟡</span>
-                <span className="text-[14px] font-semibold text-gray-900 flex-1">229 {phoneNumber}</span>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
+              {/* Phone + operator */}
+              <div className="flex items-center gap-2 bg-[#F8F8F8] rounded-[10px] px-4 py-3 mb-1">
+                <span className="text-[18px]">{selectedOperator.emoji}</span>
+                <span className="text-[14px] font-semibold text-[#1B1818] flex-1">{selectedOperator.label} • 229 {phoneNumber}</span>
               </div>
-              <p className="text-[11px] text-gray-400 mb-5 text-center">Moyen sécurisé de paiement</p>
+              <p className="text-[11px] text-[#8D8D8D] mb-5 text-center">Moyen sécurisé de paiement</p>
 
-              {/* Amount breakdown */}
+              {/* Breakdown */}
               <div className="space-y-3 mb-6">
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-gray-600">Participation</span>
-                  <span className="text-[13px] font-semibold text-gray-900">{finalAmount.toLocaleString()}F</span>
+                  <span className="text-[13px] text-[#8D8D8D]">Participation</span>
+                  <span className="text-[13px] font-semibold text-[#1B1818]">{finalAmount.toLocaleString()}F</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-gray-600">Frais de transaction</span>
-                  <span className="text-[13px] font-semibold text-gray-900">{transactionFee.toLocaleString()} F</span>
+                  <span className="text-[13px] text-[#8D8D8D]">Frais de transaction</span>
+                  <span className="text-[13px] font-semibold text-[#1B1818]">{transactionFee.toLocaleString()} F</span>
                 </div>
-                <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
-                  <span className="text-[14px] font-bold text-gray-900">Net à payer</span>
-                  <span className="text-[15px] font-bold text-gray-900">{netToPay.toLocaleString()} F</span>
+                <div className="border-t border-[#F0F0F0] pt-3 flex items-center justify-between">
+                  <span className="text-[14px] font-bold text-[#1B1818]">Net à payer</span>
+                  <span className="text-[15px] font-bold text-[#1B1818]">{netToPay.toLocaleString()} F</span>
                 </div>
               </div>
 
               <button
                 onClick={handlePay}
-                className="w-full py-[14px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
+                className="w-full h-[52px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] active:scale-[0.98] transition-transform shadow-md shadow-orange-500/20"
               >
                 Payer
               </button>
