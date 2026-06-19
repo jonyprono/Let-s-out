@@ -3,7 +3,6 @@ import { useParams, useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, ChevronLeft, XCircle, ChevronDown } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
-import { chatApi } from '@/features/chat/api'
 import { eventsApi } from '@/features/events/api'
 import { toast } from 'sonner'
 import {
@@ -139,12 +138,7 @@ export function PaymentPage() {
 
   const handleOpenChat = async () => {
     if (!eventId) return
-    try {
-      const conv = await chatApi.getEventConversation(eventId)
-      navigate(`/chat/${conv.id}`)
-    } catch {
-      toast.error('Discussion introuvable.')
-    }
+    navigate(`/events/${eventId}`)
   }
 
   const parseSafeDate = (dateStr: any): Date => {

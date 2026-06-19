@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Copy, Share2, Download, Check } from 'lucide-react';
+import { Copy, Share2, Download, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi } from '@/features/events/api';
@@ -21,16 +21,17 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
     queryFn: () => eventsApi.getById(eventId).then(r => r.data),
     enabled: !!eventId,
   });
-  const joinCode = eventData?.joinCode || '';
-  const eventLink = `https://lets-out.app/event/join/${joinCode || eventId}`;
+  
+  const joinCode = eventData?.joinCode || eventId.slice(0, 5).toUpperCase();
+  const eventLink = `https://lets-out.app/event/join/${joinCode}`;
 
-  const copyCode = async () => {
+  const copyText = async (text: string, setCopied: (v: boolean) => void, successMsg: string) => {
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(joinCode || eventId);
+        await navigator.clipboard.writeText(text);
       } else {
         const el = document.createElement('textarea');
-        el.value = joinCode || eventId;
+        el.value = text;
         el.style.position = 'fixed';
         el.style.opacity = '0';
         document.body.appendChild(el);
@@ -38,35 +39,16 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
         document.execCommand('copy');
         document.body.removeChild(el);
       }
-      setCodeCopied(true);
-      setTimeout(() => setCodeCopied(false), 2000);
-      toast.success('Code copié !');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success(successMsg);
     } catch {
-      toast.error('Impossible de copier le code');
+      toast.error('Impossible de copier');
     }
   };
 
-  const copyLink = async () => {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(eventLink);
-      } else {
-        const el = document.createElement('textarea');
-        el.value = eventLink;
-        el.style.position = 'fixed';
-        el.style.opacity = '0';
-        document.body.appendChild(el);
-        el.select();
-        document.execCommand('copy');
-        document.body.removeChild(el);
-      }
-      setLinkCopied(true);
-      setTimeout(() => setLinkCopied(false), 2000);
-      toast.success('Lien copié !');
-    } catch {
-      toast.error('Impossible de copier le lien');
-    }
-  };
+  const copyCode = () => copyText(joinCode, setCodeCopied, 'Code copié !');
+  const copyLink = () => copyText(eventLink, setLinkCopied, 'Lien copié !');
 
   const shareNative = async () => {
     if (navigator.share) {
@@ -106,81 +88,82 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-      <div className="w-full max-h-[90%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300 shadow-2xl">
+      {/* Click outside to close */}
+      <div className="absolute inset-0" onClick={onClose} />
+      
+      <div className="w-full max-h-[90%] bg-white rounded-t-[28px] flex flex-col relative animate-in slide-in-from-bottom duration-300 shadow-2xl">
         {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+        <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
           <div className="w-10 h-1 bg-gray-200 rounded-full" />
         </div>
 
         {/* Header */}
-        <div className="px-5 pt-3 pb-4 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-[18px] font-bold text-gray-900">Partager</h3>
-          <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center active:scale-95">
-            <X className="w-4 h-4 text-gray-500" />
-          </button>
+        <div className="px-5 pt-2 pb-4 flex items-center justify-center flex-shrink-0 border-b border-gray-100">
+          <h3 className="text-[17px] font-bold text-gray-900">Partager</h3>
         </div>
 
-        {/* Description */}
-        <p className="px-5 text-[13px] text-gray-500 mb-5 leading-relaxed">
-          Partagez le code événement, le QR Code ou le lien avec vos amis afin de les inviter à rejoindre l'événement.
-        </p>
-
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-5 pb-8 space-y-4" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8" style={{ scrollbarWidth: 'none' }}>
+          
+          <p className="text-[13px] text-gray-800 text-center mb-6 leading-relaxed px-2">
+            Partagez le code événement, le QR Code ou le lien avec vos amis afin de les inviter à rejoindre l'événement.
+          </p>
 
-          {/* Join Code block */}
-          <div className="rounded-2xl bg-[#FFF8EE] p-5 flex flex-col items-center gap-4">
-            <span className="text-[42px] font-bold text-gray-900 tracking-widest">
-              {joinCode || eventId.slice(0, 5).toUpperCase()}
-            </span>
-            <button
-              onClick={copyCode}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform"
-            >
-              {codeCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
-              {codeCopied ? 'Code copié !' : 'Copier le code'}
-              {!codeCopied && <span className="text-gray-400 ml-0.5">📋</span>}
-            </button>
-          </div>
-
-          {/* QR Code block */}
-          <div className="rounded-2xl bg-[#FFF8EE] p-5 flex flex-col items-center gap-4">
-            <div className="bg-white p-4 rounded-xl shadow-sm">
-              <QRCodeSVG
-                id="share-qr-code"
-                value={eventLink}
-                size={160}
-                level="M"
-              />
+          <div className="space-y-4">
+            {/* Join Code block */}
+            <div className="rounded-2xl bg-[#FFF8EE] p-6 flex flex-col items-center gap-4">
+              <span className="text-[36px] font-bold text-gray-900 tracking-widest leading-none">
+                {joinCode}
+              </span>
+              <button
+                onClick={copyCode}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-800 active:scale-95 transition-transform shadow-sm"
+              >
+                {codeCopied ? 'Code copié !' : 'Copier le code'}
+                {codeCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+              </button>
             </div>
-            <button
-              onClick={downloadQR}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform"
-            >
-              <Download className="w-4 h-4 text-gray-500" />
-              Télécharger le QR code
-              <span className="text-gray-400">⬇</span>
-            </button>
-          </div>
 
-          {/* Link block */}
-          <div className="rounded-2xl bg-[#FFF8EE] p-4">
-            <p className="text-[13px] text-[#007AFF] font-medium mb-3 break-all">{eventLink}</p>
-            <div className="flex items-center gap-2">
+            {/* QR Code block */}
+            <div className="rounded-2xl bg-[#FFF8EE] p-6 flex flex-col items-center gap-5">
+              <div className="bg-white p-3 rounded-xl shadow-sm">
+                <QRCodeSVG
+                  id="share-qr-code"
+                  value={eventLink}
+                  size={120}
+                  level="M"
+                />
+              </div>
               <button
-                onClick={copyLink}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform"
+                onClick={downloadQR}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-800 active:scale-95 transition-transform shadow-sm"
               >
-                {linkCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
-                {linkCopied ? 'Copié !' : 'Copier'}
+                Télécharger le QR code
+                <Download className="w-4 h-4 text-gray-500" strokeWidth={2} />
               </button>
-              <button
-                onClick={shareNative}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform"
-              >
-                <Share2 className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
-                Partager
-              </button>
+            </div>
+
+            {/* Link block */}
+            <div className="rounded-2xl bg-[#FFF8EE] p-5 flex flex-col items-center gap-4">
+              <p className="text-[13px] text-gray-900 font-medium text-center break-all">
+                {eventLink}
+              </p>
+              <div className="flex items-center justify-center gap-3 w-full">
+                <button
+                  onClick={copyLink}
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-800 active:scale-95 transition-transform shadow-sm flex-1"
+                >
+                  {linkCopied ? 'Copié !' : 'Copier'}
+                  {linkCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                </button>
+                <button
+                  onClick={shareNative}
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-800 active:scale-95 transition-transform shadow-sm flex-1"
+                >
+                  Partager
+                  <Share2 className="w-4 h-4 text-gray-500" strokeWidth={2} />
+                </button>
+              </div>
             </div>
           </div>
 

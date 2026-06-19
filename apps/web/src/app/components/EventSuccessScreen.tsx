@@ -2,7 +2,6 @@ import { useNavigate, useParams } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
-import { chatApi } from '@/features/chat/api'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -36,13 +35,7 @@ export function EventSuccessScreen() {
   } catch {}
 
   const handleOpenChat = async () => {
-    if (!id) return
-    try {
-      const conv = await chatApi.getEventConversation(id)
-      navigate(`/chat/${conv.id}`)
-    } catch {
-      navigate('/messages')
-    }
+    navigate(`/events/${id}`)
   }
 
   return (

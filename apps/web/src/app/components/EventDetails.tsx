@@ -604,14 +604,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <>
               <button
                 onClick={handleShare}
-                className="flex-1 flex items-center justify-center gap-2 py-[14px] rounded-full font-semibold text-[14px] text-gray-900 border border-gray-200 bg-white active:scale-95 transition-transform"
+                className="flex-[0.45] flex items-center justify-center gap-2 py-[14px] rounded-full font-semibold text-[14px] text-gray-900 border border-gray-200 bg-white active:scale-95 transition-transform"
               >
                 <Share2 className="w-4 h-4" strokeWidth={1.8} />
                 Partager
               </button>
               <button
                 onClick={goToChat}
-                className="flex-1 flex items-center justify-center gap-2 py-[14px] rounded-full font-bold text-[14px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
+                className="flex-[0.55] flex items-center justify-center gap-2 py-[14px] rounded-full font-bold text-[14px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
               >
                 <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
                 Accéder au chat
@@ -798,7 +798,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
-            <div className="px-5 pt-2 pb-4 flex-shrink-0 text-center border-b border-gray-100">
+            <div className="px-5 pt-2 pb-4 flex-shrink-0 text-center">
               <h3 className="text-[17px] font-bold text-gray-900">Participants</h3>
             </div>
 
@@ -852,7 +852,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
-            <div className="px-5 pt-2 pb-4 flex-shrink-0 text-center border-b border-gray-100">
+            <div className="px-5 pt-2 pb-4 flex-shrink-0 text-center">
               <h3 className="text-[17px] font-bold text-gray-900">Contributions</h3>
             </div>
 

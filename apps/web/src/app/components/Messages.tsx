@@ -1,5 +1,5 @@
 import { useState, useMemo, memo } from 'react';
-import { Search, Users, MessageCircle, CheckCheck, Plus, UserPlus, X } from 'lucide-react';
+import { Search, Users, MessageCircle, Plus, X, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useConversations } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
@@ -71,8 +71,6 @@ export function Messages(_props: MessagesProps) {
 
   const groups = filtered.filter(c => c.isGroup);
   const directs = filtered.filter(c => !c.isGroup);
-  const totalUnread = displayConversations.reduce((acc, c) => acc + (c.unread || 0), 0);
-
   // Apply tab filter
   const visibleConversations = useMemo(() => {
     if (activeFilter === 'groups') return groups;
@@ -84,42 +82,23 @@ export function Messages(_props: MessagesProps) {
     <div className="w-full h-full flex flex-col bg-background">
 
       {/* Header */}
-      <div className="bg-card/95 backdrop-blur-md px-5 pt-4 pt-safe-4 pb-4 border-b border-border sticky top-0 z-20">
+      <div className="px-5 pt-4 pt-safe-4 pb-2 bg-white sticky top-0 z-20">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-[24px] font-black tracking-tight text-foreground">Messages</h1>
-            {totalUnread > 0 && (
-              <p className="text-[13px] font-bold text-action-primary mt-0.5 flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-action-primary animate-pulse" />
-                {totalUnread} message{totalUnread > 1 ? 's' : ''} non lu{totalUnread > 1 ? 's' : ''}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowAddFriends(true)}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:bg-gray-100 active:scale-95 bg-gray-50"
-            >
-              <UserPlus className="w-5 h-5 text-gray-700" />
-            </button>
-            <button
-              onClick={() => setShowNewConv(true)}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-transform active:scale-95 bg-orange-50 shadow-sm"
-            >
-              <Plus className="w-6 h-6 text-action-primary" />
-            </button>
-          </div>
+          <h1 className="text-[28px] font-black tracking-tight text-gray-900">Messages</h1>
+          <button className="p-2 active:scale-95 transition-transform">
+            <Trash2 className="w-[22px] h-[22px] text-gray-400" />
+          </button>
         </div>
 
         {/* Search */}
-        <div className="bg-muted/80 backdrop-blur-sm rounded-full flex items-center gap-3 px-4 py-3 border border-border focus-within:ring-2 focus-within:ring-[#FF7A00]/30 focus-within:border-action-primary/30 focus-within:bg-card transition-all shadow-sm">
-          <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <div className="bg-gray-100 rounded-full flex items-center gap-3 px-4 py-3 mb-4">
+          <Search className="w-[18px] h-[18px] text-gray-400 flex-shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Rechercher une conversation..."
-            className="flex-1 bg-transparent outline-none text-[14px] text-foreground placeholder:text-muted-foreground font-medium"
+            className="flex-1 bg-transparent outline-none text-[14px] text-gray-900 placeholder:text-gray-500 font-medium"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
@@ -129,25 +108,22 @@ export function Messages(_props: MessagesProps) {
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-2 mt-4">
+        <div className="flex items-center gap-2">
           {[
-            { key: 'all' as const, label: 'Tous', count: filtered.length },
-            { key: 'groups' as const, label: 'Groupes', count: groups.length },
-            { key: 'friends' as const, label: 'Amis', count: directs.length },
+            { key: 'all' as const, label: 'Tout' },
+            { key: 'friends' as const, label: 'Ami(e)s' },
+            { key: 'groups' as const, label: 'Groupes' },
           ].map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveFilter(tab.key)}
-              className={`relative px-4 py-2 rounded-full text-[13px] font-bold transition-all active:scale-95 ${
+              className={`px-4 py-1.5 rounded-full text-[14px] font-bold transition-all active:scale-95 ${
                 activeFilter === tab.key
-                  ? 'bg-action-primary text-white shadow-md shadow-orange-500/20'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-[#FF7A00] text-white shadow-sm'
+                  : 'bg-transparent text-gray-500'
               }`}
             >
               {tab.label}
-              {tab.count > 0 && activeFilter !== tab.key && (
-                <span className="ml-1.5 text-[11px] font-bold opacity-60">{tab.count}</span>
-              )}
             </button>
           ))}
         </div>
@@ -213,41 +189,36 @@ export function Messages(_props: MessagesProps) {
             {/* Empty/No search results */}
             {visibleConversations.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-                <div className="w-24 h-24 rounded-full mb-5 flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100 shadow-sm border border-white">
-                  {searchQuery ? <Search className="w-10 h-10 text-action-primary" /> 
-                    : activeFilter === 'groups' ? <Users className="w-10 h-10 text-action-primary" />
-                    : activeFilter === 'friends' ? <MessageCircle className="w-10 h-10 text-action-primary" />
-                    : <MessageCircle className="w-10 h-10 text-action-primary" />}
+                <div className="w-24 h-24 rounded-full mb-5 flex items-center justify-center bg-gray-50 shadow-sm border border-gray-100">
+                  <MessageCircle className="w-10 h-10 text-gray-300" />
                 </div>
                 <h3 className="text-[17px] font-bold text-gray-900 mb-2">
-                  {searchQuery ? 'Aucun résultat' 
-                    : activeFilter === 'groups' ? 'Aucun groupe'
-                    : activeFilter === 'friends' ? 'Aucune discussion'
-                    : 'Aucune conversation'}
+                  Aucune conversation
                 </h3>
                 <p className="text-[14px] text-gray-500 max-w-[250px]">
-                  {searchQuery ? `Aucune conversation ne correspond à "${searchQuery}"`
-                    : activeFilter === 'groups' ? 'Rejoignez un événement pour accéder aux discussions de groupe.'
-                    : activeFilter === 'friends' ? 'Ajoutez des amis pour commencer à discuter.'
-                    : 'Rejoignez un événement ou démarrez une discussion.'}
+                  Démarrez une discussion pour commencer.
                 </p>
-                {!searchQuery && (
-                  <button
-                    onClick={() => activeFilter === 'friends' ? setShowAddFriends(true) : setShowNewConv(true)}
-                    className="mt-6 px-6 py-3 bg-action-primary text-white rounded-full font-bold text-[14px] shadow-lg shadow-action-primary/30 active:scale-95 transition-transform"
-                  >
-                    {activeFilter === 'friends' ? 'Ajouter des amis' : 'Démarrer une discussion'}
-                  </button>
-                )}
               </div>
             )}
           </>
         )}
       </div>
 
+      {/* FAB (Floating Action Button) */}
+      <button 
+        onClick={() => setShowNewConv(true)}
+        className="absolute bottom-[90px] right-5 w-14 h-14 bg-[#FF7A00] rounded-[20px] flex items-center justify-center shadow-lg shadow-orange-500/30 active:scale-95 transition-transform z-30"
+      >
+        <div className="relative">
+          <MessageCircle className="w-[26px] h-[26px] text-white" strokeWidth={2.5} />
+          <div className="absolute top-[8px] right-[8px] w-[10px] h-[10px] bg-white rounded-full flex items-center justify-center">
+            <Plus className="w-[8px] h-[8px] text-[#FF7A00]" strokeWidth={4} />
+          </div>
+        </div>
+      </button>
+
       {showNewConv && <NewConversationModal onClose={() => setShowNewConv(false)} />}
       {showAddFriends && <AddFriendsModal onClose={() => setShowAddFriends(false)} />}
-      
     </div>
   );
 }
@@ -258,48 +229,40 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
   return (
     <button
       onClick={onNavigate}
-      className={`w-full rounded-[24px] flex items-center gap-3 p-3 text-left transition-all active:scale-[0.98] border border-transparent ${hasUnread ? 'bg-card shadow-[0_4px_20px_rgb(255,159,28,0.1)] border-action-primary/10 z-10 relative' : 'bg-card/80 hover:bg-card shadow-sm border-border/50'}`}
+      className="w-full flex items-center gap-[14px] px-5 py-3 text-left transition-colors active:bg-gray-50 bg-white"
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
-        <div className="w-14 h-14 rounded-[20px] overflow-hidden bg-gray-100 shadow-sm ring-2 ring-white">
+        <div className="w-[52px] h-[52px] rounded-full overflow-hidden bg-gray-100">
           <SafeImage
             src={conv.avatarUrl}
             alt={conv.name}
             className="w-full h-full object-cover"
-            fallback={<div className="w-full h-full flex items-center justify-center text-2xl font-bold text-white bg-orange-400">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
+            fallback={<div className="w-full h-full flex items-center justify-center text-xl font-bold text-gray-500 bg-gray-200">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
           />
         </div>
-        {conv.isGroup && (
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg flex items-center justify-center border-2 border-white shadow-sm bg-orange-400">
-            <Users className="w-2.5 h-2.5 text-white" />
-          </div>
-        )}
         {!conv.isGroup && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 rounded-full border-[3px] border-white shadow-sm" />
+          <div className="absolute bottom-0 right-0 w-[14px] h-[14px] bg-[#22C55E] rounded-full border-2 border-white" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0 py-1">
-        <div className="flex items-center justify-between mb-1">
-          <h3 className={`text-[15px] truncate pr-2 text-foreground ${hasUnread ? 'font-black' : 'font-bold'}`}>
+        <div className="flex items-center justify-between mb-0.5">
+          <h3 className={`text-[15px] truncate pr-2 text-gray-900 ${hasUnread ? 'font-bold' : 'font-semibold'}`}>
             {conv.name}
           </h3>
-          <span className={`text-[11px] whitespace-nowrap flex-shrink-0 font-bold ${hasUnread ? 'text-action-primary' : 'text-gray-400'}`}>
+          <span className={`text-[12px] whitespace-nowrap flex-shrink-0 font-medium ${hasUnread ? 'text-[#FF7A00]' : 'text-gray-400'}`}>
             {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            {!hasUnread && <CheckCheck className="w-4 h-4 text-action-primary flex-shrink-0" />}
-            <p className={`text-[13px] truncate ${hasUnread ? 'text-foreground font-bold' : 'text-muted-foreground font-medium'}`}>
-              {conv.lastMsgPrefix && <span className="font-bold text-action-primary mr-1">{conv.lastMsgPrefix}</span>}
-              {conv.lastMsg}
-            </p>
-          </div>
+          <p className={`text-[13px] truncate ${hasUnread ? 'text-gray-900 font-semibold' : 'text-gray-500'} flex-1`}>
+            {conv.lastMsgPrefix && <span className="font-medium mr-1">{conv.lastMsgPrefix}</span>}
+            {conv.lastMsg}
+          </p>
           {hasUnread && (
-            <span className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-black text-white shadow-[0_2px_10px_rgba(255,159,28,0.4)] bg-action-primary">
+            <span className="flex-shrink-0 min-w-[20px] h-[20px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-bold text-white bg-[#FF7A00]">
               {conv.unread > 9 ? '9+' : conv.unread}
             </span>
           )}

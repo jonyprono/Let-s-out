@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Send, Paperclip, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video, Mic, Trash2 } from 'lucide-react'
+import { ChevronLeft, Send, Paperclip, Camera, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video, Mic, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
@@ -663,10 +663,10 @@ export function ChatDetails() {
                       </div>
                     ) : (
                       <div
-                        className={`px-3.5 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.08)] relative ${
+                        className={`px-3.5 py-2 shadow-sm relative ${
                           isMe
-                            ? `bg-[#FF7A00] text-white rounded-[18px] ${isFirstInGroup ? 'rounded-br-sm' : ''}`
-                            : `bg-white dark:bg-[#202C33] text-gray-900 dark:text-[#E9EDEF] rounded-[18px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`
+                            ? `bg-[#FFF4E5] text-gray-900 rounded-[20px] ${isFirstInGroup ? 'rounded-br-md' : ''}`
+                            : `bg-white dark:bg-[#202C33] text-gray-900 dark:text-[#E9EDEF] rounded-[20px] border border-gray-100 ${isFirstInGroup ? 'rounded-tl-md' : ''}`
                         }`}
                         style={{ maxWidth: '280px' }}
                       >
@@ -675,7 +675,7 @@ export function ChatDetails() {
                         <p className="text-[15px] leading-relaxed break-words pr-12">{msg.content}</p>
                         
                         <div className={`absolute bottom-1 right-2 flex items-center gap-1`}>
-                          <span className={`text-[10px] font-medium ${isMe ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}`}>
+                          <span className={`text-[10px] font-bold ${isMe ? 'text-gray-400' : 'text-gray-400 dark:text-gray-500'}`}>
                             {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                           </span>
                           {isMe && isLastMsg && (
@@ -718,65 +718,64 @@ export function ChatDetails() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white border-t border-gray-100 px-4 py-3 flex items-end gap-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="p-2 mb-1 text-gray-400 hover:bg-gray-50 rounded-full transition-colors flex-shrink-0"
-          disabled={isUploading}
-        >
-          <Paperclip className="w-[22px] h-[22px]" />
-        </button>
+      <div className="flex-shrink-0 bg-white border-t border-gray-100 px-4 py-3 flex items-end gap-3 pb-safe-bottom z-10 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
         
-        <div className="flex-1 bg-[#F3F4F6] rounded-[24px] flex items-center px-2 py-1.5 min-h-[48px] overflow-hidden transition-all relative">
+        <div className="flex-1 bg-gray-50 border border-gray-200 rounded-full flex items-center px-4 py-1.5 min-h-[44px] overflow-hidden transition-all relative">
           {isRecording ? (
-            <div className="flex items-center justify-between w-full px-2">
+            <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
                 <span className="text-red-500 font-medium text-[15px]">{formatRecordingTime(recordingTime)}</span>
               </div>
-              <div className="flex items-center gap-3">
-                <button onClick={cancelRecording} className="text-gray-400 hover:text-red-500 transition-colors p-2">
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
+              <button onClick={cancelRecording} className="text-gray-400 hover:text-red-500 transition-colors p-2">
+                <Trash2 className="w-5 h-5" />
+              </button>
             </div>
           ) : (
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => handleTyping(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
-              placeholder="Écrire un message..."
-              className="flex-1 bg-transparent border-none px-3 text-[15px] text-gray-900 placeholder:text-gray-500 outline-none min-w-0"
-            />
-          )}
-
-          {isRecording ? (
-            <button
-              onClick={stopRecording}
-              className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-action-primary text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
-            >
-              <Send className="w-[18px] h-[18px] ml-0.5" />
-            </button>
-          ) : inputText.trim() ? (
-            <button
-              onClick={handleSendText}
-              disabled={isUploading}
-              className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-action-primary text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
-            >
-              <Send className="w-[18px] h-[18px] ml-0.5" />
-            </button>
-          ) : (
-            <button
-              onClick={startRecording}
-              disabled={isUploading}
-              className="w-[36px] h-[36px] rounded-full flex items-center justify-center bg-gray-300 hover:bg-gray-400 text-white flex-shrink-0 transition-colors"
-            >
-              <Mic className="w-[18px] h-[18px]" />
-            </button>
+            <div className="flex items-center w-full gap-2">
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => handleTyping(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
+                placeholder="Écrire un message..."
+                className="flex-1 bg-transparent border-none text-[15px] text-gray-900 placeholder:text-gray-400 outline-none min-w-0"
+              />
+              <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 active:scale-95 transition-transform">
+                <Paperclip className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              </button>
+              <button onClick={() => fileInputRef.current?.click()} className="p-1.5 text-gray-400 active:scale-95 transition-transform">
+                <Camera className="w-[18px] h-[18px]" strokeWidth={2.5} />
+              </button>
+            </div>
           )}
         </div>
+
+        {isRecording ? (
+          <button
+            onClick={stopRecording}
+            className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-md shadow-orange-500/20 flex-shrink-0 animate-in zoom-in duration-200"
+          >
+            <Send className="w-[20px] h-[20px] ml-1" />
+          </button>
+        ) : inputText.trim() ? (
+          <button
+            onClick={handleSendText}
+            disabled={isUploading}
+            className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-md shadow-orange-500/20 flex-shrink-0 animate-in zoom-in duration-200"
+          >
+            <Send className="w-[20px] h-[20px] ml-1" />
+          </button>
+        ) : (
+          <button
+            onClick={startRecording}
+            disabled={isUploading}
+            className="w-[44px] h-[44px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-md shadow-orange-500/20 flex-shrink-0 transition-transform active:scale-95"
+          >
+            <Mic className="w-[20px] h-[20px]" />
+          </button>
+        )}
       </div>
 
       {showContributeModal && event && hasActivePool(event) && (
