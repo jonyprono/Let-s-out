@@ -56,7 +56,7 @@ function groupReactions(reactions: any[]) {
   return Object.values(map)
 }
 
-function AudioMessage({ src, isMe }: { src: string, isMe: boolean }) {
+function AudioMessage({ src }: { src: string }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -98,20 +98,23 @@ function AudioMessage({ src, isMe }: { src: string, isMe: boolean }) {
     return `${m}:${s.toString().padStart(2, '0')}`
   }
 
+  const waveformHeights = [4, 7, 12, 5, 14, 16, 11, 6, 9, 15, 18, 11, 7, 13, 16, 10, 5, 9, 4, 7, 10, 6];
+
   return (
-    <div className={`flex flex-col px-1 w-[240px] ${isMe ? 'text-white' : 'text-gray-800'}`}>
-      <div className="flex items-center gap-3 py-1">
-        <button onClick={togglePlay} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0" style={{ background: isMe ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.05)' }}>
-          {isPlaying ? <span className="w-3 h-3 bg-current rounded-sm" /> : <Play className="w-5 h-5 ml-1 text-current fill-current" />}
+    <div className={`flex flex-col px-1 w-[220px] text-[#1B1818]`}>
+      <div className="flex items-center gap-2 py-0.5">
+        <button onClick={togglePlay} className="w-10 h-10 flex items-center justify-center active:scale-95 transition-transform flex-shrink-0 text-[#8D8D8D]">
+          {isPlaying ? <span className="w-3.5 h-3.5 bg-current rounded-sm" /> : <Play className="w-[24px] h-[24px] ml-0.5 text-current fill-current" />}
         </button>
-        <div className="flex-1 flex flex-col gap-1.5">
-          <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: isMe ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)' }}>
-            <div className="absolute top-0 left-0 h-full bg-current transition-all duration-100" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="flex justify-between items-center text-[11px] opacity-80 font-medium">
-            <span>{formatTime(audioRef.current?.currentTime || 0)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
+        
+        <div className="flex-1 flex items-center gap-[2px] opacity-80 h-[24px]">
+          {waveformHeights.map((h, i) => (
+            <div key={i} className="w-[2.5px] bg-current rounded-full transition-all duration-100" style={{ height: `${h}px`, opacity: progress > (i / waveformHeights.length) * 100 ? 1 : 0.4 }} />
+          ))}
+        </div>
+        
+        <div className="flex items-center text-[12px] font-medium text-[#8D8D8D] ml-1">
+          <span>{formatTime(duration || 16)}</span>
         </div>
       </div>
       <audio ref={audioRef} src={src} className="hidden" preload="metadata" />
@@ -627,11 +630,11 @@ export function ChatDetails() {
                       </div>
                     ) : isMedia ? (
                       <div
-                        className={`rounded-[18px] overflow-hidden shadow-sm relative ${
-                          isAudio
-                            ? isMe ? 'bg-[#FF7A00] text-white pt-2' : 'bg-white text-gray-900 pt-2'
-                            : 'bg-black p-0.5'
-                        } ${isMe ? (isFirstInGroup ? 'rounded-br-sm' : '') : (isFirstInGroup ? 'rounded-tl-sm' : '')}`}
+                        className={`px-1.5 py-1.5 relative shadow-none ${
+                          isMe
+                            ? `bg-[#FFF2D3] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}`
+                            : `bg-[#F2F2F2] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`
+                        }`}
                         style={{ maxWidth: '280px' }}
                       >
                         {isImage && msg.content ? (
@@ -646,16 +649,16 @@ export function ChatDetails() {
                             <VideoMessage src={msg.content} isMe={isMe} />
                           </div>
                         ) : isAudio && msg.content ? (
-                          <AudioMessage src={msg.content} isMe={isMe} />
+                          <AudioMessage src={msg.content} />
                         ) : null}
                         
-                        {/* Time for media (overlay for image/video, inline for audio) */}
-                        <div className={`${isAudio ? 'px-3 pb-1.5' : 'absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full'}`}>
+                        {/* Time for media */}
+                        <div className={`${isAudio ? 'px-3 pb-1' : 'absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full'}`}>
                           <div className={`flex items-center gap-1 justify-end`}>
-                            <span className={`text-[11px] font-medium ${isAudio ? (isMe ? 'text-white/80' : 'text-gray-400') : 'text-white'}`}>
+                            <span className={`text-[10px] font-medium ${isAudio ? 'text-[#8D8D8D]' : 'text-white'}`}>
                               {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                             </span>
-                            {isMe && isLastMsg && <Check className={`w-[14px] h-[14px] ${isAudio ? 'text-white/80' : 'text-white'}`} strokeWidth={2.5} />}
+                            {isMe && isLastMsg && <Check className={`w-[14px] h-[14px] ${isAudio ? 'text-[#8D8D8D]' : 'text-white'}`} strokeWidth={2.5} />}
                           </div>
                         </div>
                       </div>
@@ -740,11 +743,13 @@ export function ChatDetails() {
                 className="flex-1 bg-transparent border-none text-[15px] text-[#1B1818] placeholder:text-[#8D8D8D] outline-none min-w-0"
               />
               <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#8D8D8D] active:scale-95 transition-transform">
-                <Paperclip className="w-[20px] h-[20px]" strokeWidth={2} />
+                <Paperclip className="w-[20px] h-[20px]" strokeWidth={1.5} />
               </button>
-              <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#8D8D8D] active:scale-95 transition-transform mr-[-4px]">
-                <Camera className="w-[20px] h-[20px]" strokeWidth={2} />
-              </button>
+              {!inputText.trim() && (
+                <button onClick={() => fileInputRef.current?.click()} className="p-2 text-[#8D8D8D] active:scale-95 transition-transform mr-[-4px]">
+                  <Camera className="w-[20px] h-[20px]" strokeWidth={1.5} />
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -762,7 +767,7 @@ export function ChatDetails() {
             disabled={isUploading}
             className="w-[48px] h-[48px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
           >
-            <Send className="w-[22px] h-[22px] ml-1" />
+            <Send className="w-[22px] h-[22px] ml-1" strokeWidth={1.5} />
           </button>
         ) : (
           <button
