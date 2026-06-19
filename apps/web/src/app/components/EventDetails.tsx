@@ -355,14 +355,22 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               {event.category && (
                 <div className="mb-2">
                   <span
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold text-white"
-                    style={{ background: 'linear-gradient(135deg, #FF9B9B, #FFD700)' }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-white"
+                    style={{ background: 'linear-gradient(135deg, #FF9B9B 0%, #FFD700 100%)' }}
                   >
-                    🎉 {event.category}
+                    <span className="text-[12px]">
+                      {event.category.toLowerCase().includes('concert') || event.category.toLowerCase().includes('musique') ? '🎵' :
+                       event.category.toLowerCase().includes('sport') ? '⚽' :
+                       event.category.toLowerCase().includes('art') ? '🎨' :
+                       event.category.toLowerCase().includes('soirée') || event.category.toLowerCase().includes('fête') || event.category.toLowerCase().includes('fete') ? '🥳' :
+                       event.category.toLowerCase().includes('gastro') || event.category.toLowerCase().includes('food') ? '🍽️' :
+                       '✨'}
+                    </span>
+                    {event.category}
                   </span>
                 </div>
               )}
-              <h1 className="text-[22px] font-bold text-gray-900 leading-tight">{event.title}</h1>
+              <h1 className="text-[22px] font-extrabold text-gray-900 leading-tight">{event.title}</h1>
             </div>
 
             {/* Location & Date */}
@@ -388,14 +396,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {event.description && (
               <div>
                 <p className="text-[15px] font-bold text-gray-900 mb-2">À propos</p>
-                <p className="text-[13px] text-gray-500 leading-relaxed">
-                  {isDescriptionExpanded ? event.description : `${event.description.substring(0, 150)}${event.description.length > 150 ? '...' : ''}`}
-                  {event.description.length > 150 && (
+                <p className="text-[13px] text-gray-600 leading-relaxed">
+                  {isDescriptionExpanded
+                    ? event.description
+                    : event.description.length > 120
+                      ? event.description.substring(0, 120)
+                      : event.description}
+                  {event.description.length > 120 && (
                     <span
                       onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                      className="text-gray-900 font-medium cursor-pointer ml-1 underline"
+                      className="text-gray-900 font-semibold cursor-pointer"
                     >
-                      {isDescriptionExpanded ? 'Voir moins' : 'Voir plus'}
+                      {isDescriptionExpanded ? ' Voir moins' : '... Voir plus'}
                     </span>
                   )}
                 </p>
@@ -405,35 +417,39 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {/* Organisateur */}
             <div>
               <p className="text-[15px] font-bold text-gray-900 mb-3">Organisateur</p>
-              <div className="flex items-center gap-3">
-                <div
-                  className="cursor-pointer flex-shrink-0"
-                  onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}
-                >
-                  <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-200">
-                    <SafeImage
-                      src={organizerAvatar}
-                      alt={organizerName}
-                      className="w-full h-full object-cover"
-                      fallback={
-                        <div className="w-full h-full bg-gray-300 flex items-center justify-center text-[15px] font-bold text-gray-500">
-                          {organizerName.charAt(0).toUpperCase()}
-                        </div>
-                      }
-                    />
+              <div className="flex flex-col gap-3">
+                {/* Row 1: avatar + infos */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="cursor-pointer flex-shrink-0"
+                    onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}
+                  >
+                    <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-200">
+                      <SafeImage
+                        src={organizerAvatar}
+                        alt={organizerName}
+                        className="w-full h-full object-cover"
+                        fallback={
+                          <div className="w-full h-full bg-gray-300 flex items-center justify-center text-[15px] font-bold text-gray-500">
+                            {organizerName.charAt(0).toUpperCase()}
+                          </div>
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <p className="text-[14px] font-bold text-gray-900">{organizerName}</p>
+                      <BadgeCheck className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <p className="text-[12px] text-gray-500">
+                      {organizerFollowers} followers • {organizerEvents} événements • {organizerRating} <span className="text-[11px]">⭐</span>
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex-1">
-                  <div className="flex items-center gap-1">
-                    <p className="text-[14px] font-bold text-gray-900">{organizerName}</p>
-                    <BadgeCheck className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <p className="text-[12px] text-gray-500">
-                    {organizerFollowers} followers • {organizerEvents} événements • {organizerRating} ⭐
-                  </p>
-                </div>
-
+                {/* Row 2: action buttons (only if not the creator) */}
                 {user?.id !== event.creator?.id && (
                   <div className="flex items-center gap-2">
                     <button onClick={async (e) => {
@@ -445,8 +461,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       } catch {
                         toast.error("Impossible de démarrer la conversation");
                       }
-                    }} className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 active:scale-95 transition-transform">
-                      Message
+                    }} className="px-4 py-2 rounded-full border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 active:scale-95 transition-transform">
+                      Contacter
                     </button>
                     <button onClick={async (e) => {
                       e.stopPropagation();
@@ -461,7 +477,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           toast.error("Erreur lors de l'abonnement");
                         }
                       }
-                    }} className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 active:scale-95 transition-transform">
+                    }} className="px-4 py-2 rounded-full border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 active:scale-95 transition-transform">
                       Suivre
                     </button>
                   </div>
@@ -542,7 +558,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     {!hasJoined && minPoolAmount && (
                       <div className="flex items-center justify-between py-1">
                         <span className="text-[13px] text-gray-600">Participation</span>
-                        <span className="text-[13px] font-semibold text-[#007AFF]">A partir de {Number(minPoolAmount).toLocaleString()}F</span>
+                        <span className="text-[13px] font-bold text-[#FF7A00]">A partir de {Number(minPoolAmount).toLocaleString()}F</span>
                       </div>
                     )}
                   </div>
