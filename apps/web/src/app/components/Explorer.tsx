@@ -101,7 +101,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await eventsApi.list();
+        const res = await eventsApi.list({ limit: 500 });
         setEvents(res.data.data || []);
       } catch (err) {
         console.error('Failed to fetch events:', err);
@@ -317,10 +317,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         (ev.address?.toLowerCase() || '').includes(searchLower);
     
     // Pour la recherche de ville, on est plus souple sur les espaces
+    // Si la recherche textuelle est utilisée, on peut même bypasser le filtre de ville pour trouver l'événement spécifiquement
     const cityMatch = currentLocation 
-      ? (ev.city || '').toLowerCase().trim() === currentLocation.toLowerCase().trim() 
+      ? (!ev.city || (ev.city || '').toLowerCase().trim() === currentLocation.toLowerCase().trim())
       : true;
       
+    // Si l'utilisateur a tapé une recherche, on priorise le textMatch
+    if (searchLower !== '') {
+        return textMatch && (cityMatch || true); // On force l'affichage si ça match le texte !
+    }
+    
     return textMatch && cityMatch;
   });
 
