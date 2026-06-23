@@ -42,7 +42,7 @@ export function Login({ onLogin, onSignup }: LoginProps) {
 
         {/* Form Title */}
         <div className="mb-6">
-          <h2 className="text-2xl mb-2">Connectez-vous</h2>
+          <h2 className="text-2xl mb-2 text-primary">Connectez-vous</h2>
           <p className="text-sm text-gray-500">Entrez vos informations pour continuer</p>
         </div>
 
