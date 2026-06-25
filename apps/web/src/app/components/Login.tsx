@@ -11,9 +11,6 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 import { useNavigate } from 'react-router'
 import {
   authShell,
-  authSubtitle,
-  authLabel,
-  authInput,
 } from '@/lib/auth-ui'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { Input } from '@/components/ui/input'
@@ -142,7 +139,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
               placeholder=""
               className="pr-12"
-              rightElement={
+              icon={
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
