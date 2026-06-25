@@ -61,7 +61,7 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
         {/* Drapeau et code pays */}
         <span className="text-[18px] leading-none">{value.flag}</span>
         <span className="auth-country-btn text-[var(--color-text-primary)] font-poppins text-[14px] font-medium ml-1">
-          {value.id} ({dialCode})
+          {value.cca2} ({dialCode})
         </span>
         {/* Chevron minimaliste grisé */}
         <ArrowDown01Icon
