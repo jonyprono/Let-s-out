@@ -29,6 +29,8 @@ import {
   authChannelLabel,
 } from '@/lib/auth-ui'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
+import { Button } from '@/components/ui/button'
+import { ProgressBar } from '@/components/ui/progress-bar'
 
 const INTERESTS_LIST = [
   'Social', 'Art & Culture', 'Bien-être & Santé',
@@ -387,11 +389,8 @@ export function Signup({ onBack }: SignupProps) {
       {/* ── Header ─────────────────────────────────────── */}
       <div className="px-[1rem] pt-4 pb-0 shrink-0">
         {/* Barre de progression pleine largeur — orange, animée */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-neutral-gray-200 z-20">
-          <div
-            className="h-full bg-action-primary rounded-r-full transition-all duration-500 ease-out"
-            style={{ width: `${(step / 7) * 100}%` }}
-          />
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <ProgressBar value={step} max={7} className="h-[4px] rounded-none bg-[var(--color-background-secondary)]" />
         </div>
         <div className="flex items-center justify-center relative mb-3 mt-1">
           <button
@@ -759,14 +758,15 @@ export function Signup({ onBack }: SignupProps) {
             </span>
           </label>
         )}
-        <button
+        <Button
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="auth-primary-btn w-full min-h-[52px] h-auto py-3 px-4 rounded-full font-semibold text-[15px] flex flex-col sm:flex-row items-center justify-center gap-2 transition-all active:scale-[0.98] bg-action-primary hover:bg-action-primary-hover text-text-inverse disabled:opacity-40 break-words max-w-full text-center"
+          size="lg"
+          className="w-full rounded-full"
         >
-          {isLoading && <RefreshIcon width={20} height={20} strokeWidth={1.4} className="animate-spin shrink-0" />}
+          {isLoading && <RefreshIcon width={20} height={20} strokeWidth={1.4} className="animate-spin shrink-0 mr-2" />}
           <span className="break-words max-w-full">{buttonLabel()}</span>
-        </button>
+        </Button>
       </div>
     </div>
   )

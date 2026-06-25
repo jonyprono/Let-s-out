@@ -19,6 +19,7 @@ interface ForgotPasswordProps {
 import { COUNTRIES, Country } from '@/lib/countries'
 import { CountryPicker } from '@/components/shared/CountryPicker'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
+import { Button } from '@/components/ui/button'
 import {
   authShell,
   authTitle,
@@ -380,15 +381,16 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
       {/* ── Bottom Button ───────────────────────────── */}
       <div className="px-6 pb-5 pt-3 shrink-0 bg-background">
-        <button
+        <Button
           type="button"
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="auth-primary-btn w-full py-[17px] rounded-full font-semibold text-[15px] flex items-center justify-center gap-2 transition-all active:opacity-90 bg-action-primary text-white disabled:bg-[#FFD99A] disabled:text-white"
+          size="lg"
+          className="w-full rounded-full"
         >
-          {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+          {isLoading && <Loader2 className="w-5 h-5 animate-spin mr-2" />}
           <span>{step === 3 ? 'Réinitialiser' : 'Suivant'}</span>
-        </button>
+        </Button>
       </div>
     </div>
   )

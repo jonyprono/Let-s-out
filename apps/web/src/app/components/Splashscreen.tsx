@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
+import { Button } from '@/components/ui/button'
+import { CarouselIndicators } from '@/components/ui/progress-bar'
 
 /* ─────────────────────────────────────────────────────────────────
    Données des écrans onboarding
@@ -110,7 +112,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               {/* Passer > button for Slide 1 */}
               {current.id === 1 && (
                 <div className="w-full flex justify-end mb-[2vh]">
-                   <button onClick={onComplete} className="text-[13px] text-gray-500 font-medium tracking-wide">Passer &gt;</button>
+                   <button onClick={onComplete} className="font-poppins text-[var(--font-size-body-medium)] text-[var(--color-text-secondary)] font-medium tracking-wide">Passer &gt;</button>
                 </div>
               )}
               {current.id !== 1 && (
@@ -156,26 +158,18 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               </div>
 
               {/* Titre fort */}
-              <h2 className="text-[20px] sm:text-[22px] font-bold mb-3 text-center tracking-tight font-sans text-[#FFA800]">
+              <h2 className="font-poppins text-[var(--font-size-title-large)] font-bold mb-3 text-center tracking-tight text-[var(--color-text-brand-primary)] leading-tight">
                 <span className="block">{current.title1}</span>
                 <span className="block">{current.title2}</span>
               </h2>
-              {/* Description courte — accessible, text-center */}
-              <p className="font-['Inter_Display',sans-serif] text-[13px] sm:text-[14px] font-medium leading-[20px] sm:leading-[22px] text-center text-gray-600 dark:text-gray-400 w-full max-w-[280px] mx-auto h-auto">
+              {/* Description courte */}
+              <p className="font-poppins text-[var(--font-size-body-medium)] font-medium leading-[var(--line-height-body-medium)] text-center text-[var(--color-text-secondary)] w-full max-w-[280px] mx-auto h-auto">
                 {current.description}
               </p>
               
               {/* Pagination Dots */}
-              <div className="flex justify-center items-center gap-1.5 mt-6 mb-2">
-                {SLIDES.map((_, i) => {
-                  const isActive = (currentIndex - 1) === i;
-                  return (
-                    <div
-                      key={i}
-                      className={`h-[4px] rounded-full transition-all duration-300 ${isActive ? 'w-[24px] bg-[#FFA800]' : 'w-[4px] bg-gray-200'}`}
-                    />
-                  )
-                })}
+              <div className="mt-6 mb-2">
+                <CarouselIndicators count={SLIDES.length} activeIndex={currentIndex - 1} />
               </div>
             </motion.div>
           )}
@@ -185,13 +179,14 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="px-[1rem] pb-[1rem] sm:pb-[1.5rem] z-10 w-full max-w-[400px] mx-auto">
-          <button
+        <div className="px-[var(--spacing-200)] pb-[var(--spacing-300)] z-10 w-full max-w-[400px] mx-auto">
+          <Button
             onClick={handleNext}
-            className="w-full h-[48px] rounded-[24px] bg-[#F58220] hover:bg-[#E6781D] text-white font-semibold text-[16px] flex items-center justify-center active:scale-[0.97] transition-transform"
+            size="lg"
+            className="w-full rounded-full"
           >
             {currentIndex === onboardingScreens.length - 1 ? 'Commencer' : 'Suivant'}
-          </button>
+          </Button>
         </div>
       )}
 
