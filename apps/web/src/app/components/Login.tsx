@@ -155,7 +155,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
               <button
                 type="button"
                 onClick={onForgotPassword}
-                className="text-[var(--color-text-brand-primary)] text-[var(--font-size-body-small)] underline font-medium hover:text-[var(--color-text-brand-primary)] transition-colors focus:outline-none"
+                className="text-[#FF7A00] text-[12px] font-medium hover:opacity-80 transition-opacity focus:outline-none"
               >
                 Mot de passe oublié?
               </button>
@@ -197,7 +197,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col items-center gap-[var(--spacing-150)] shrink-0 pt-2">
           <p className="font-poppins text-[var(--font-size-body-small)] text-[var(--color-text-secondary)]">
             Vous êtes nouveau sur Let's Out ?{' '}
-            <button onClick={onSignup} className="text-[var(--color-text-brand-primary)] underline font-medium focus:outline-none hover:opacity-80">
+            <button onClick={onSignup} className="text-[#FF7A00] underline font-medium focus:outline-none hover:opacity-80">
               Inscrivez-vous
             </button>
           </p>
@@ -206,9 +206,9 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           <p className="font-poppins text-[10px] leading-tight text-center px-1 text-[var(--color-text-secondary)]">
             En continuant, vous acceptez nos{' '}
-            <button onClick={() => nav('/terms')} className="text-[var(--color-text-brand-primary)] font-normal focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
+            <button onClick={() => nav('/terms')} className="text-[#FF7A00] font-normal focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
             {' '}et notre{' '}
-            <button onClick={() => nav('/privacy')} className="text-[var(--color-text-brand-primary)] font-normal focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
+            <button onClick={() => nav('/privacy')} className="text-[#FF7A00] font-normal focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
           </p>
         </div>
 
