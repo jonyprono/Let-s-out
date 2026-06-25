@@ -210,22 +210,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           {/* Ligne séparatrice et Conditions */}
           <div className="flex flex-col items-center w-full gap-[var(--spacing-150)] mt-[var(--spacing-100)]">
             <div className="w-full h-[1px] bg-[var(--border-secondary)]" />
-            
-<<<<<<< HEAD
             <div className="font-poppins text-[11px] leading-[16px] text-center px-[4px] text-[var(--color-text-tertiary)] flex flex-wrap justify-center items-center gap-x-1">
               <span>En continuant, vous acceptez nos</span>
               <button onClick={() => nav('/terms')} className="text-[#FF991C] font-normal focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
               <span>et notre</span>
               <button onClick={() => nav('/privacy')} className="text-[#FF991C] font-normal focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
             </div>
-=======
-            <p className="font-poppins text-[var(--font-size-body-xsmall)] text-center px-[var(--spacing-200)] text-[var(--color-text-tertiary)]">
-              En continuant, vous acceptez nos{' '}
-              <button onClick={() => nav('/terms')} className="text-[var(--color-text-link)] font-normal focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
-              {' '}et notre{' '}
-              <button onClick={() => nav('/privacy')} className="text-[var(--color-text-link)] font-normal focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
-            </p>
->>>>>>> 9186dc87c0fed1088ede0b9c3a400a98ba29b8cb
           </div>
         </div>
 
