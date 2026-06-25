@@ -13,7 +13,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            "flex h-[44px] w-full rounded-[var(--radius-medium)] border border-[var(--border-default)] bg-[var(--color-background-primary)] px-[var(--spacing-200)] py-[10px] font-poppins text-[var(--font-size-body-medium)] text-[var(--color-text-primary)] transition-colors placeholder:text-[var(--color-text-placeholder)] focus-visible:outline-none focus-visible:border-[var(--border-brand-primary)] disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-[44px] w-full rounded-[8px] border border-[var(--border-default)] bg-[var(--color-background-primary)] px-[var(--spacing-200)] py-[10px] font-poppins text-[var(--font-size-body-medium)] text-[var(--color-text-primary)] transition-colors placeholder:text-[var(--color-text-placeholder)] focus-visible:outline-none focus-visible:border-[var(--border-brand-primary)] disabled:cursor-not-allowed disabled:opacity-50",
             icon && "pr-[var(--spacing-500)]",
             className
           )}
