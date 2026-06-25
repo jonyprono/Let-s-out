@@ -103,16 +103,16 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           <img 
             src="/logo.png" 
             alt="Let's Out" 
-            className="w-[96px] h-[96px] object-contain mx-auto mb-4" 
+            className="w-[72px] h-[72px] object-contain mx-auto mb-[16px]" 
           />
 
           {/* Titres */}
           <div className="flex flex-col items-center gap-[4px] w-[358px] mx-auto">
-            <h1 className="text-center text-[var(--color-text-primary)] font-poppins text-[var(--font-size-title-large)] font-semibold tracking-normal">
+            <h1 className="text-center text-[var(--color-text-primary)] font-poppins text-[22px] font-semibold tracking-normal">
               Connectez-vous
             </h1>
-            <p className="text-center text-[var(--color-text-secondary)] font-poppins text-[var(--font-size-body-medium)]">
-              Rejoignez des événements près de vous et vivez<br/>des expériences inoubliables.
+            <p className="text-center text-[#71717A] font-poppins text-[13px] leading-[20px]">
+              Rejoignez des événements près de vous et vivez des expériences inoubliables.
             </p>
           </div>
         </div>
@@ -121,7 +121,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col gap-[var(--spacing-150)] shrink-0">
           {/* Téléphone */}
           <div>
-            <label className="mb-[var(--spacing-050)] block font-poppins text-[var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)]">Numéro de téléphone</label>
+            <label className="mb-[6px] block font-poppins text-[13px] font-medium text-[var(--color-text-primary)]">Numéro de téléphone</label>
             <PhoneInputField
               country={country}
               onCountryChange={c => { setCountry(c); resetPhone() }}
@@ -133,7 +133,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Mot de passe */}
           <div>
-            <label className="mb-[var(--spacing-050)] block font-poppins text-[var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)]">Mot de passe</label>
+            <label className="mb-[6px] block font-poppins text-[13px] font-medium text-[var(--color-text-primary)]">Mot de passe</label>
             <Input
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -147,7 +147,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors focus:outline-none"
                 >
-                  {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                  {showPassword ? <Eye className="h-[18px] w-[18px]" /> : <EyeOff className="h-[18px] w-[18px]" />}
                 </button>
               }
             />
@@ -157,7 +157,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
               <button
                 type="button"
                 onClick={onForgotPassword}
-                className="text-[#FF7A00] text-[12px] font-medium hover:opacity-80 transition-opacity focus:outline-none"
+                className="text-[#FF991C] underline text-[12px] font-medium hover:opacity-80 transition-opacity focus:outline-none"
               >
                 Mot de passe oublié?
               </button>
@@ -178,7 +178,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-[var(--spacing-150)] shrink-0">
+        <div className="my-[8px] shrink-0">
           <Divider label="Ou" />
         </div>
 
@@ -198,11 +198,11 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         {/* Bas de page */}
         <div className="flex flex-col items-center shrink-0 w-full">
           {/* Nouveau sur Let's out */}
-          <div className="flex items-center justify-center gap-[8px] w-[358px] h-[36px] px-[20px] py-[8px]">
-            <span className="font-poppins text-[14px] text-[var(--color-text-secondary)]">
+          <div className="flex items-center justify-center gap-[4px] w-full max-w-[358px] h-[36px] px-[8px] py-[8px]">
+            <span className="font-poppins text-[13px] text-[var(--color-text-secondary)] whitespace-nowrap">
               Vous êtes nouveau sur Let's Out ?
             </span>
-            <button onClick={onSignup} className="font-poppins text-[14px] text-[#FF991C] underline font-medium focus:outline-none hover:opacity-80">
+            <button onClick={onSignup} className="font-poppins text-[13px] text-[#FF991C] underline font-medium focus:outline-none hover:opacity-80 whitespace-nowrap">
               Inscrivez-vous
             </button>
           </div>

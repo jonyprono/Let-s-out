@@ -8,10 +8,10 @@ export interface DividerProps extends React.HTMLAttributes<HTMLDivElement> {
 const Divider = React.forwardRef<HTMLDivElement, DividerProps>(
   ({ className, label, ...props }, ref) => {
     return (
-      <div className={cn("relative flex items-center py-[var(--spacing-200)]", className)} ref={ref} {...props}>
+      <div className={cn("relative flex items-center py-[16px]", className)} ref={ref} {...props}>
         <div className="flex-grow border-t border-[var(--border-secondary)]"></div>
         {label && (
-          <span className="shrink-0 px-[var(--spacing-150)] font-poppins text-[var(--font-size-body-small)] text-[var(--color-text-secondary)]">
+          <span className="shrink-0 px-[12px] font-poppins text-[12px] text-[#A1A1AA]">
             {label}
           </span>
         )}
