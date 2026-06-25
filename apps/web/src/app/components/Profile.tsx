@@ -11,6 +11,8 @@ import { usersApi } from '@/features/users/api';
 
 import { useNavigate, useParams } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
+import { Button } from '@/components/ui/button';
+import { ToggleButton } from '@/components/ui/toggle-button';
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
@@ -197,12 +199,14 @@ export function Profile({ onNavigate }: ProfileProps) {
                 <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-400 rounded-full border-[3px] border-white shadow-sm" />
               </div>
               {isOwnProfile && (
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setShowEditModal(true)}
-                  className="px-5 py-2.5 rounded-full text-sm font-bold text-action-primary bg-brand-orange-50 active:scale-95 transition-transform shadow-sm"
+                  className="w-auto shadow-sm absolute -bottom-5 left-1/2 -translate-x-1/2 rounded-full font-bold px-6 border-2 border-white"
                 >
                   Modifier le profil
-                </button>
+                </Button>
               )}
             </div>
 
@@ -239,27 +243,21 @@ export function Profile({ onNavigate }: ProfileProps) {
         </div>
 
         {/* Tabs navigation */}
-        <div className="overflow-x-auto hide-scrollbar mx-200 mb-5 pb-2 -mt-1 pt-1">
-          <div className="flex bg-background-white/60 backdrop-blur-sm rounded-full p-1.5 gap-1 shadow-sm border border-gray-100/50 min-w-max">
-            {TABS.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex-none px-200 py-2 rounded-full text-[12px] font-bold transition-all ${
-                  activeTab === tab.key
-                    ? 'bg-background-white text-action-primary shadow-sm ring-1 ring-gray-100/50'
-                    : 'text-text-secondary hover:text-gray-700'
-                }`}
-              >
-                {tab.label}
-                {tab.count > 0 && (
-                  <span className={`ml-1.5 text-[10px] ${activeTab === tab.key ? 'text-action-primary' : 'text-gray-400'}`}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+        <div className="overflow-x-auto hide-scrollbar mx-200 mb-5 pb-2 pt-4">
+          <ToggleButton
+            options={TABS.map(tab => ({
+              value: tab.key,
+              label: (
+                <span className="flex items-center gap-1">
+                  {tab.label}
+                  {tab.count > 0 && <span className="opacity-60 font-normal">({tab.count})</span>}
+                </span>
+              )
+            }))}
+            value={activeTab}
+            onChange={(val) => setActiveTab(val as Tab)}
+            className="w-full sm:w-auto"
+          />
         </div>
 
         {/* TAB: Events créés */}
@@ -273,13 +271,12 @@ export function Profile({ onNavigate }: ProfileProps) {
                 <p className="text-gray-900 font-bold text-[15px]">Aucun événement créé</p>
                 <p className="text-sm text-text-secondary mt-1">Vos événements créés apparaîtront ici</p>
                 {isOwnProfile && (
-                  <button
+                  <Button
                     onClick={() => onNavigate('create-event')}
-                    className="mt-6 px-6 py-150 rounded-full text-sm font-bold text-white shadow-md active:scale-95 transition-transform"
-                    style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}
+                    className="mt-6 w-auto shadow-md"
                   >
                     Créer un événement
-                  </button>
+                  </Button>
                 )}
               </div>
             ) : (
@@ -335,12 +332,13 @@ export function Profile({ onNavigate }: ProfileProps) {
                   </div>
                   {/* Bottom action bar */}
                   <div className="mt-2 flex gap-2">
-                    <button
+                    <Button
+                      variant="outline"
                       onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
-                      className="flex-1 py-150 rounded-2xl border-2 border-action-primary text-action-primary font-bold text-[13px] bg-background-white flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+                      className="flex-1 border-2 border-[var(--color-action-primary)] text-[var(--color-action-primary)] font-bold text-[13px]"
                     >
                       ✏️ Modifier & publier
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))

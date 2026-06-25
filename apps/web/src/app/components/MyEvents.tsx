@@ -8,6 +8,7 @@ import { useNotifications } from '@/features/notifications/api';
 import { EventCard } from '@/components/shared/EventCard';
 import { useFavoritesStore } from '@/stores/favorites.store';
 import { getEventParticipationMode } from '@/lib/utils';
+import { ToggleButton } from '@/components/ui/toggle-button';
 
 interface MyEventsProps {
   onNavigate: (screen: string, id?: string) => void;
@@ -106,21 +107,14 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
         </button>
       </div>
 
-      {/* ── Tabs (pill style: active = orange, inactive = plain text) ── */}
-      <div className="flex gap-3 px-5 pb-4 flex-shrink-0">
-        {TABS.map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => { hapticFeedback.impact(); setActiveTab(tab.key); }}
-            className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
-              activeTab === tab.key
-                ? 'bg-action-primary text-white'
-                : 'text-gray-500 bg-transparent'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      {/* ── Tabs (pill style) ── */}
+      <div className="px-5 pb-4 flex-shrink-0">
+        <ToggleButton
+          options={TABS.map(t => ({ label: t.label, value: t.key }))}
+          value={activeTab}
+          onChange={(val) => { hapticFeedback.impact(); setActiveTab(val as TabKey); }}
+          className="w-full flex-wrap sm:flex-nowrap"
+        />
       </div>
 
       {/* ── List ── */}

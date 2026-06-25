@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils"
 
 export interface ToggleButtonProps {
-  options: { label: string; value: string }[];
+  options: { label: React.ReactNode; value: string }[];
   value: string;
   onChange: (value: string) => void;
   className?: string;
