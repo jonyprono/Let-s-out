@@ -101,7 +101,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col items-center mt-6 mb-8 shrink-0">
           {/* Logo */}
           <img 
-            src="/logo.png" 
+            src="/logoci.png" 
             alt="Let's Out" 
             className="w-[72px] h-[72px] object-contain mx-auto mb-[16px]" 
           />
@@ -211,12 +211,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           <div className="flex flex-col items-center w-full gap-[10px] mt-2">
             <div className="w-full h-[1px] bg-[var(--border-secondary)]" />
             
-            <p className="font-poppins text-[12px] leading-[18px] text-center px-[20px] text-[var(--color-text-tertiary)]">
-              En continuant, vous acceptez nos{' '}
+            <div className="font-poppins text-[11px] leading-[16px] text-center px-[4px] text-[var(--color-text-tertiary)] flex flex-wrap justify-center items-center gap-x-1">
+              <span>En continuant, vous acceptez nos</span>
               <button onClick={() => nav('/terms')} className="text-[#FF991C] font-normal focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
-              {' '}et notre{' '}
+              <span>et notre</span>
               <button onClick={() => nav('/privacy')} className="text-[#FF991C] font-normal focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
-            </p>
+            </div>
           </div>
         </div>
 
