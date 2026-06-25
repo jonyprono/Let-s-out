@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { ViewIcon, ViewOffSlashIcon } from 'hugeicons-react'
 import { useDirectLogin, useGoogleSignIn } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { COUNTRIES, Country } from '@/lib/countries'
@@ -95,23 +95,23 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
   return (
     <div className={`${authShell} bg-white`}>
-      <div className="flex flex-col h-full px-6 pt-4 pb-4">
+      <div className="flex flex-col h-full px-6 pt-6 pb-4">
         
         {/* Header (Logo + Titres) */}
-        <div className="flex flex-col items-center mt-6 mb-8 shrink-0">
+        <div className="flex flex-col items-center mb-6 shrink-0">
           {/* Logo */}
           <img 
             src="/logoci.png" 
             alt="Let's Out" 
-            className="w-[72px] h-[72px] object-contain mx-auto mb-[16px]" 
+            className="w-[68px] h-[68px] object-contain mx-auto mb-4" 
           />
 
           {/* Titres */}
-          <div className="flex flex-col items-center gap-[var(--spacing-050)] w-full max-w-[358px] mx-auto">
-            <h1 className="text-center text-[var(--color-text-primary)] font-poppins text-[var(--font-size-title-medium)] font-semibold tracking-normal">
+          <div className="flex flex-col items-center gap-[6px] w-full max-w-[320px] mx-auto">
+            <h1 className="text-center text-[var(--color-text-primary)] font-poppins text-[22px] font-semibold leading-tight">
               Connectez-vous
             </h1>
-            <p className="text-center text-[var(--color-text-secondary)] font-poppins text-[var(--font-size-body-small)] leading-normal">
+            <p className="text-center text-[var(--color-text-secondary)] font-poppins text-[13px] leading-[20px]">
               Rejoignez des événements près de vous et vivez des expériences inoubliables.
             </p>
           </div>
@@ -147,17 +147,19 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors focus:outline-none"
                 >
-                  {showPassword ? <Eye className="h-[18px] w-[18px]" /> : <EyeOff className="h-[18px] w-[18px]" />}
+                  {showPassword
+                    ? <ViewIcon size={18} strokeWidth={1.5} />
+                    : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
                 </button>
               }
             />
             
             {/* Mot de passe oublié */}
-            <div className="text-right mt-[var(--spacing-100)]">
+            <div className="text-right mt-2">
               <button
                 type="button"
                 onClick={onForgotPassword}
-                className="text-[var(--color-text-link)] underline text-[var(--font-size-body-small)] font-medium hover:opacity-80 transition-opacity focus:outline-none"
+                className="text-[var(--color-text-link)] no-underline text-[13px] font-medium hover:opacity-80 transition-opacity focus:outline-none"
               >
                 Mot de passe oublié?
               </button>
@@ -165,7 +167,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-[var(--spacing-150)] shrink-0">
+        <div className="mt-4 shrink-0">
           {/* Bouton Se connecter */}
           <Button
             type="button"
@@ -178,7 +180,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-[var(--spacing-100)] shrink-0">
+        <div className="my-3 shrink-0">
           <Divider label="Ou" />
         </div>
 
@@ -196,25 +198,28 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex-1 min-h-0" />
 
         {/* Bas de page */}
-        <div className="flex flex-col items-center shrink-0 w-full">
+        <div className="flex flex-col items-center shrink-0 w-full gap-2">
           {/* Nouveau sur Let's out */}
-          <div className="flex items-center justify-center gap-[var(--spacing-100)] w-full max-w-[358px] min-h-[36px] px-[var(--spacing-100)] py-[var(--spacing-100)]">
-            <span className="font-poppins text-[var(--font-size-body-small)] text-[var(--color-text-secondary)] whitespace-nowrap">
+          <div className="flex items-center justify-center flex-wrap gap-x-[6px] w-full py-1">
+            <span className="font-poppins text-[13px] text-[var(--color-text-secondary)]">
               Vous êtes nouveau sur Let's Out ?
             </span>
-            <button onClick={onSignup} className="font-poppins text-[var(--font-size-body-small)] text-[var(--color-text-link)] underline font-medium focus:outline-none hover:opacity-80 whitespace-nowrap">
+            <button
+              onClick={onSignup}
+              className="font-poppins text-[13px] text-[var(--color-text-link)] no-underline font-medium focus:outline-none hover:opacity-80"
+            >
               Inscrivez-vous
             </button>
           </div>
           
           {/* Ligne séparatrice et Conditions */}
-          <div className="flex flex-col items-center w-full gap-[var(--spacing-150)] mt-[var(--spacing-100)]">
+          <div className="flex flex-col items-center w-full gap-2">
             <div className="w-full h-[1px] bg-[var(--border-secondary)]" />
-            <div className="font-poppins text-[11px] leading-[16px] text-center px-[4px] text-[var(--color-text-tertiary)] flex flex-wrap justify-center items-center gap-x-1">
+            <div className="font-poppins text-[11px] leading-[16px] text-center px-2 text-[var(--color-text-tertiary)] flex flex-wrap justify-center items-center gap-x-[3px]">
               <span>En continuant, vous acceptez nos</span>
-              <button onClick={() => nav('/terms')} className="text-[#FF991C] font-normal focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
+              <button onClick={() => nav('/terms')} className="text-[var(--color-text-link)] font-normal no-underline focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
               <span>et notre</span>
-              <button onClick={() => nav('/privacy')} className="text-[#FF991C] font-normal focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
+              <button onClick={() => nav('/privacy')} className="text-[var(--color-text-link)] font-normal no-underline focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
             </div>
           </div>
         </div>

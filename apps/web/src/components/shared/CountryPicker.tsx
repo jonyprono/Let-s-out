@@ -56,20 +56,19 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
         type="button"
         onClick={() => setOpen(v => !v)}
         className={className || "auth-country-btn flex items-center gap-[6px] h-[52px] px-[12px] border border-border-primary rounded-[12px] bg-background-white whitespace-nowrap active:opacity-80 transition-colors"}
-        style={{ minWidth: 96 }}
+        style={{ minWidth: 80 }}
       >
-        {/* Drapeau */}
+        {/* Drapeau seulement - pas de code pays texte */}
         <span className="text-[18px] leading-none">{value.flag}</span>
-        {/* Code pays + indicatif — "(229)" */}
-        <span className="auth-country-btn">
+        {/* Indicatif téléphonique — "(229)" */}
+        <span className="auth-country-btn text-[var(--color-text-primary)] font-poppins text-[14px] font-medium">
           ({dialCode})
         </span>
-        {/* Flèche Iconoir — Small 16px stroke 1 */}
+        {/* Chevron minimaliste grisé */}
         <ArrowDown01Icon
-          width={16}
-          height={16}
-          strokeWidth={1}
-          className={`text-neutral-gray-500 transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
+          size={14}
+          strokeWidth={1.5}
+          className={`text-[var(--color-text-secondary)] transition-transform duration-150 ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
