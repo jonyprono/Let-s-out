@@ -4,12 +4,12 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-full font-poppins font-semibold text-[16px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF7A00] disabled:pointer-events-none disabled:opacity-50 gap-[4px]",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-large)] font-poppins font-medium text-[var(--font-size-body-medium)] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--border-brand-primary)] disabled:pointer-events-none disabled:opacity-50 gap-[var(--spacing-050)]",
   {
     variants: {
       variant: {
         primary:
-          "bg-[#FF7A00] text-white hover:opacity-90 shadow-sm",
+          "bg-[var(--color-action-primary)] text-white hover:bg-[var(--color-action-primary-active)] shadow-sm",
         secondary:
           "bg-[var(--color-background-primary-muted)] text-[var(--color-text-brand-primary)] hover:bg-[var(--color-background-brand-tertiary)] hover:text-white",
         outline:
@@ -18,7 +18,7 @@ const buttonVariants = cva(
           "text-[var(--color-text-secondary)] hover:bg-[var(--color-background-secondary)]",
       },
       size: {
-        default: "px-[14px] py-[10px]",
+        default: "px-[var(--spacing-200)] py-[var(--spacing-150)]",
         sm: "h-[36px] px-[var(--spacing-150)] text-[var(--font-size-body-small)]",
         lg: "h-[56px] px-[var(--spacing-300)] text-[var(--font-size-title-xsmall)]",
         icon: "h-[44px] w-[44px]",
