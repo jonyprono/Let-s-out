@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, Eye, EyeOff, Loader2, Check } from 'lucide-react'
+import { ChevronLeft, Loader2 } from 'lucide-react'
+import { ViewIcon, ViewOffSlashIcon, Tick01Icon } from 'hugeicons-react'
 import { useSendOtp, useCheckTarget, useCheckOtp, useResetPassword } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
@@ -17,16 +18,16 @@ interface ForgotPasswordProps {
 }
 
 import { COUNTRIES, Country } from '@/lib/countries'
-import { CountryPicker } from '@/components/shared/CountryPicker'
+import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   authShell,
   authTitle,
   authHeader,
   authSubtitle,
   authLabel,
-  authInput,
   authChannelBtn,
   authChannelLabel,
 } from '@/lib/auth-ui'
@@ -254,16 +255,12 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             </p>
 
             <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
-            <div className="flex items-center w-full h-[44px] rounded-[8px] border-[1.25px] border-[#E0E0E0] bg-white focus-within:border-action-primary focus-within:ring-1 focus-within:ring-action-primary transition-all duration-200 mb-[36px]">
-              <CountryPicker 
-                value={country} 
-                onChange={(c) => { setCountry(c); resetPhone() }} 
-                className="auth-country-btn flex items-center gap-[6px] h-full pl-[12px] pr-[6px] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none"
-              />
-              <input
-                type="tel" inputMode="numeric" value={phoneDisplay} onChange={handlePhoneChange}
-                placeholder="00 00 00 00 00"
-                className="auth-phone-input flex-1 min-w-0 h-full bg-transparent outline-none pr-[12px]"
+            <div className="mb-[36px]">
+              <PhoneInputField
+                country={country}
+                onCountryChange={(c) => { setCountry(c); resetPhone() }}
+                phoneDisplay={phoneDisplay}
+                onPhoneChange={handlePhoneChange}
               />
             </div>
 
@@ -337,27 +334,29 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             </p>
 
             <label className={`${authLabel} mb-1.5 block`}>Mot de passe</label>
-            <div className="relative mb-5">
-              <input
+            <div className="flex flex-col gap-5 mb-5">
+              <Input
                 type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className={`${authInput} pr-12`}
+                icon={
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors">
+                    {showPassword ? <ViewIcon size={18} strokeWidth={1.5} /> : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
+                  </button>
+                }
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
 
-            <label className={`${authLabel} mb-1.5 block`}>Confirmer mot de passe</label>
-            <div className="relative mb-5">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className={`${authInput} pr-12`}
-              />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-poppins text-[13px] font-semibold text-[var(--color-text-primary)]">Confirmer mot de passe</label>
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  icon={
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors">
+                      {showConfirmPassword ? <ViewIcon size={18} strokeWidth={1.5} /> : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
+                    </button>
+                  }
+                />
+              </div>
             </div>
 
             {/* Validation rules */}
@@ -369,7 +368,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               ].map(({ ok, label }) => (
                 <div key={label} className="flex items-center gap-2">
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${ok ? 'bg-[#34C759]' : 'bg-[#E5E5E5]'}`}>
-                    <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />
+                    {ok && <Tick01Icon width={10} height={10} strokeWidth={2} className="text-white" />}
                   </div>
                   <span className={`text-[12px] ${ok ? 'text-[#34C759]' : 'text-[#888888]'}`}>{label}</span>
                 </div>
@@ -385,7 +384,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           type="button"
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="w-full rounded-full"
+          className="w-full"
         >
           {isLoading && <Loader2 className="w-5 h-5 animate-spin mr-2" />}
           <span>{step === 3 ? 'Réinitialiser' : 'Suivant'}</span>

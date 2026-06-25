@@ -3,6 +3,8 @@ import { ChevronLeft, MapPin, Loader2, User, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { COUNTRIES } from '@/lib/countries';
 import { useAuthStore } from '@/stores/auth.store';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 async function reverseGeocode(lat: number, lon: number) {
   const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'Accept-Language': 'fr' } });
@@ -173,23 +175,21 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div className="space-y-4">
               <div>
                 <label className="text-sm text-text-secondary mb-2 block">Prénom</label>
-                <input
+                <Input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Entrez votre prénom"
-                  className="app-input"
                 />
               </div>
 
               <div>
                 <label className="text-sm text-text-secondary mb-2 block">Nom</label>
-                <input
+                <Input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Entrez votre nom"
-                  className="app-input"
                 />
               </div>
 
@@ -209,11 +209,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
               <div>
                 <label className="text-sm text-text-secondary mb-2 block">Date de naissance</label>
-                <input
+                <Input
                   type="date"
                   value={birthDate}
                   onChange={(e) => setBirthDate(e.target.value)}
-                  className="app-input"
                 />
               </div>
             </div>
@@ -254,23 +253,21 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
               <div>
                 <label className="text-sm text-text-secondary mb-2 block">Ville</label>
-                <input
+                <Input
                   type="text"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="Paris, Lyon, Marseille..."
-                  className="app-input"
                 />
               </div>
 
               <div>
                 <label className="text-sm text-text-secondary mb-2 block">Quartier</label>
-                <input
+                <Input
                   type="text"
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
                   placeholder="Nom du quartier"
-                  className="app-input"
                 />
               </div>
             </div>
@@ -363,13 +360,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
       {/* Bottom Button */}
       <div className="px-6 pb-6 pt-4 border-t border-gray-100">
-        <button
+        <Button
           onClick={handleNext}
           disabled={step === 3 && selectedInterests.length < 3}
-          className="w-full bg-action-primary active:bg-action-primary-hover text-white py-3 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full"
         >
           {step === 4 ? 'Terminer' : 'Suivant'}
-        </button>
+        </Button>
       </div>
 
       {/* Progress Indicator */}

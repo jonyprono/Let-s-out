@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
-import { ArrowLeft01Icon, ViewIcon, ViewOffIcon, Tick01Icon, Location01Icon, Cancel01Icon, Calendar01Icon, RefreshIcon } from 'hugeicons-react'
+import { ArrowLeft01Icon, ViewIcon, ViewOffSlashIcon, Tick01Icon, Location01Icon, Cancel01Icon, Calendar01Icon, RefreshIcon } from 'hugeicons-react'
 import { useSendOtp, useRegister, useCheckTarget, useCheckOtp } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
@@ -24,12 +24,12 @@ import {
   authHeader,
   authSubtitle,
   authLabel,
-  authInput,
   authChannelBtn,
   authChannelLabel,
 } from '@/lib/auth-ui'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ProgressBar } from '@/components/ui/progress-bar'
 
 const INTERESTS_LIST = [
@@ -498,16 +498,16 @@ export function Signup({ onBack }: SignupProps) {
             <p className={`${authSubtitle} mb-7`}>
               Ces informations aideront vos amis à vous reconnaître et ne<br />seront visibles que sur Let's Out.
             </p>
-            <input
-              type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
-              placeholder="Nom complet"
-              className={`${authInput} mb-4`}
-            />
-            <input
-              type="text" value={pseudo} onChange={e => setPseudo(e.target.value)}
-              placeholder="Pseudo"
-              className={authInput}
-            />
+            <div className="flex flex-col gap-4">
+              <Input
+                type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
+                placeholder="Nom complet"
+              />
+              <Input
+                type="text" value={pseudo} onChange={e => setPseudo(e.target.value)}
+                placeholder="Pseudo"
+              />
+            </div>
           </div>
         )}
 
@@ -522,13 +522,11 @@ export function Signup({ onBack }: SignupProps) {
             </p>
 
             <div className="relative">
-              {/* Input texte visible — l'utilisateur peut taper sa date */}
-              <input
+              <Input
                 type="text"
                 value={birthdayText}
                 onChange={e => {
                   setBirthdayText(e.target.value)
-                  // Tentative de parsing JJ/MM/AAAA -> ISO
                   const match = e.target.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
                   if (match) {
                     setBirthday(`${match[3]}-${match[2]}-${match[1]}`)
@@ -537,10 +535,13 @@ export function Signup({ onBack }: SignupProps) {
                   }
                 }}
                 placeholder="Sélectionnez une date"
-                className={`${authInput} pr-12`}
+                icon={
+                  <button type="button" onClick={() => (document.getElementById('birthday-native') as HTMLInputElement)?.showPicker?.()} className="focus:outline-none">
+                    <Calendar01Icon size={18} strokeWidth={1.5} />
+                  </button>
+                }
               />
 
-              {/* Input date natif invisible — pour le calendar picker */}
               <input
                 type="date"
                 id="birthday-native"
@@ -556,21 +557,6 @@ export function Signup({ onBack }: SignupProps) {
                 }}
                 className="sr-only"
               />
-
-              {/* Icône calendrier — absolument à droite, ouvre le picker natif */}
-              <button
-                type="button"
-                onClick={() =>
-                  (document.getElementById('birthday-native') as HTMLInputElement)?.showPicker?.()
-                }
-                className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
-                aria-label="Choisir une date"
-              >
-                <Calendar01Icon
-                  width={20} height={20} strokeWidth={1.2}
-                  className="text-neutral-gray-400"
-                />
-              </button>
             </div>
           </div>
         )}
@@ -586,16 +572,8 @@ export function Signup({ onBack }: SignupProps) {
               Indiquez votre ville pour trouver des événements et rencontrer des amis près de vous.
             </p>
 
-            {/* Champ de recherche + dropdown autocomplete */}
             <div className="relative">
-              {/* Icône MapPin — absolue gauche */}
-              <Location01Icon
-                width={20} height={20} strokeWidth={1.2}
-                className="absolute left-4 top-[26px] -translate-y-1/2 text-neutral-gray-400 pointer-events-none z-10"
-              />
-
-              {/* Input texte */}
-              <input
+              <Input
                 type="text"
                 value={city}
                 onChange={e => {
@@ -607,29 +585,14 @@ export function Signup({ onBack }: SignupProps) {
                 }}
                 onFocus={() => citySuggestions.length > 0 && setShowCitySuggestions(true)}
                 placeholder="Sélectionnez une ville"
-                autoComplete="off"
-                className={`${authInput} pl-12 ${city ? 'pr-10' : ''}`}
-                style={{
-                  fontFamily: 'var(--font-poppins)',
-                  fontWeight: city ? 500 : 400,
-                  fontSize: '14px',
-                }}
+                icon={
+                  city ? (
+                    <button type="button" onClick={() => { setCity(''); setCitySuggestions([]); setShowCitySuggestions(false) }} className="focus:outline-none">
+                      <Cancel01Icon size={18} strokeWidth={1.5} />
+                    </button>
+                  ) : <Location01Icon size={18} strokeWidth={1.5} />
+                }
               />
-
-              {/* Icône × pour effacer */}
-              {city && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCity('')
-                    setCitySuggestions([])
-                    setShowCitySuggestions(false)
-                  }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
-                >
-                  <Cancel01Icon width={16} height={16} strokeWidth={1.4} className="text-neutral-gray-500" />
-                </button>
-              )}
 
               {/* Dropdown suggestions */}
               {showCitySuggestions && citySuggestions.length > 0 && (
@@ -698,31 +661,33 @@ export function Signup({ onBack }: SignupProps) {
             </p>
 
             <label className={`${authLabel} mb-1.5 block`}>Mot de passe</label>
-            <div className="relative mb-5">
-              <input
+            <div className="flex flex-col gap-5 mb-5">
+              <Input
                 type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className={`${authInput} pr-12`}
+                icon={
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors">
+                    {showPassword
+                      ? <ViewIcon size={18} strokeWidth={1.5} />
+                      : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
+                  </button>
+                }
               />
-              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
-                {showPassword
-                  ? <ViewIcon width={20} height={20} strokeWidth={1.2} />
-                  : <ViewOffIcon width={20} height={20} strokeWidth={1.2} />}
-              </button>
-            </div>
 
-            <label className={`${authLabel} mb-1.5 block`}>Confirmer mot de passe</label>
-            <div className="relative mb-5">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                className={`${authInput} pr-12`}
-              />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-gray-500">
-                {showConfirmPassword
-                  ? <ViewIcon width={20} height={20} strokeWidth={1.2} />
-                  : <ViewOffIcon width={20} height={20} strokeWidth={1.2} />}
-              </button>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-poppins text-[13px] font-semibold text-[var(--color-text-primary)]">Confirmer mot de passe</label>
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  icon={
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors">
+                      {showConfirmPassword
+                        ? <ViewIcon size={18} strokeWidth={1.5} />
+                        : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
+                    </button>
+                  }
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
