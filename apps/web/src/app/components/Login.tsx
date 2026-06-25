@@ -94,11 +94,11 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
   return (
-    <div className={`${authShell} bg-white`}>
-      <div className="flex flex-col h-full px-6 pt-6 pb-4">
+    <div className={`${authShell} bg-white overflow-y-auto`}>
+      <div className="flex flex-col min-h-full px-6 pt-6 pb-4">
         
         {/* Header (Logo + Titres) */}
-        <div className="flex flex-col items-center mb-6 shrink-0">
+        <div className="flex flex-col items-center mb-8 shrink-0">
           {/* Logo */}
           <img 
             src="/logoci.png" 
@@ -118,10 +118,10 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-[var(--spacing-150)] shrink-0">
+        <div className="flex flex-col gap-5 shrink-0">
           {/* Téléphone */}
           <div>
-            <label className="mb-2 block font-poppins text-[13px] font-semibold text-[var(--color-text-primary)]">Numéro de téléphone</label>
+            <label className="mb-[6px] block font-poppins text-[13px] font-medium text-[var(--color-text-primary)]">Numéro de téléphone</label>
             <PhoneInputField
               country={country}
               onCountryChange={c => { setCountry(c); resetPhone() }}
@@ -133,7 +133,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Mot de passe */}
           <div>
-            <label className="mb-2 block font-poppins text-[13px] font-semibold text-[var(--color-text-primary)]">Mot de passe</label>
+            <label className="mb-[6px] block font-poppins text-[13px] font-medium text-[var(--color-text-primary)]">Mot de passe</label>
             <Input
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -179,7 +179,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-3 shrink-0">
+        <div className="my-5 shrink-0">
           <Divider label="Ou" />
         </div>
 
