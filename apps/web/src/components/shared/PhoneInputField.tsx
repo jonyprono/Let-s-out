@@ -18,7 +18,7 @@ export function PhoneInputField({
   onEnter
 }: PhoneInputFieldProps) {
   return (
-    <div className="relative z-50 flex items-center w-full h-[48px] rounded-[8px] border border-[#E5E5E5] bg-white overflow-hidden focus-within:border-[#FF7A00] transition-colors duration-200">
+    <div className="relative z-50 flex items-center w-full h-[48px] rounded-[8px] border-[1.25px] border-[var(--border-primary)] bg-white overflow-hidden focus-within:border-[#FF7A00] transition-colors duration-200">
       <CountryPicker
         value={country}
         onChange={onCountryChange}

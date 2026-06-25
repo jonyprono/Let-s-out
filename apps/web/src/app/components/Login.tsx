@@ -107,12 +107,14 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           />
 
           {/* Titres */}
-          <h1 className="mx-auto w-[271px] h-[32px] text-center text-[var(--color-text-primary)] font-poppins text-[var(--font-size-title-large)] font-semibold leading-[32px] tracking-normal">
-            Connectez-vous
-          </h1>
-          <p className="mt-[var(--spacing-050)] text-center text-[var(--color-text-secondary)] font-poppins text-[var(--font-size-body-medium)] max-w-[280px]">
-            Rejoignez des événements près de vous et vivez<br/>des expériences inoubliables.
-          </p>
+          <div className="flex flex-col items-center gap-[4px] w-[358px] mx-auto">
+            <h1 className="text-center text-[var(--color-text-primary)] font-poppins text-[var(--font-size-title-large)] font-semibold tracking-normal">
+              Connectez-vous
+            </h1>
+            <p className="text-center text-[var(--color-text-secondary)] font-poppins text-[var(--font-size-body-medium)]">
+              Rejoignez des événements près de vous et vivez<br/>des expériences inoubliables.
+            </p>
+          </div>
         </div>
 
         {/* Formulaire */}
@@ -194,22 +196,28 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex-1 min-h-0" />
 
         {/* Bas de page */}
-        <div className="flex flex-col items-center gap-[var(--spacing-150)] shrink-0 pt-2">
-          <p className="font-poppins text-[var(--font-size-body-small)] text-[var(--color-text-secondary)]">
-            Vous êtes nouveau sur Let's Out ?{' '}
-            <button onClick={onSignup} className="text-[#FF7A00] underline font-medium focus:outline-none hover:opacity-80">
+        <div className="flex flex-col items-center shrink-0 w-full">
+          {/* Nouveau sur Let's out */}
+          <div className="flex items-center justify-center gap-[8px] w-[358px] h-[36px] px-[20px] py-[8px]">
+            <span className="font-poppins text-[14px] text-[var(--color-text-secondary)]">
+              Vous êtes nouveau sur Let's Out ?
+            </span>
+            <button onClick={onSignup} className="font-poppins text-[14px] text-[#FF991C] underline font-medium focus:outline-none hover:opacity-80">
               Inscrivez-vous
             </button>
-          </p>
+          </div>
           
-          <div className="w-full h-[1px] bg-[var(--border-secondary)]" />
-
-          <p className="font-poppins text-[10px] leading-tight text-center px-1 text-[var(--color-text-secondary)]">
-            En continuant, vous acceptez nos{' '}
-            <button onClick={() => nav('/terms')} className="text-[#FF7A00] font-normal focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
-            {' '}et notre{' '}
-            <button onClick={() => nav('/privacy')} className="text-[#FF7A00] font-normal focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
-          </p>
+          {/* Ligne séparatrice et Conditions */}
+          <div className="flex flex-col items-center w-full gap-[10px] mt-2">
+            <div className="w-full h-[1px] bg-[var(--border-secondary)]" />
+            
+            <p className="font-poppins text-[12px] leading-[18px] text-center px-[20px] text-[var(--color-text-tertiary)]">
+              En continuant, vous acceptez nos{' '}
+              <button onClick={() => nav('/terms')} className="text-[#FF991C] font-normal focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
+              {' '}et notre{' '}
+              <button onClick={() => nav('/privacy')} className="text-[#FF991C] font-normal focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
+            </p>
+          </div>
         </div>
 
       </div>
