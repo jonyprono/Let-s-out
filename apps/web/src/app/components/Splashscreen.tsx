@@ -29,8 +29,8 @@ const onboardingScreens = [
   {
     id: 3,
     type: 'slide' as const,
-    title1: 'Partagez pour',
-    title2: 'mieux profiter',
+    title1: 'Partagez pour mieux',
+    title2: 'profiter',
     description: 'Financez vos sorties en groupe via des cagnottes partagées et mutualisez les frais pour mieux en profiter ensemble',
     image: '/splash3.png',
   },
@@ -158,7 +158,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               </div>
 
               {/* Titre fort */}
-              <h2 className="font-poppins text-[var(--font-size-title-large)] font-bold mb-3 text-center tracking-tight text-[var(--color-text-brand-primary)] leading-tight">
+              <h2 className="font-poppins text-[var(--font-size-title-medium)] font-semibold mb-[var(--spacing-150)] text-center tracking-tight leading-[var(--line-height-title-medium)] bg-gradient-to-r from-[#FFA800] to-[var(--color-action-primary)] text-transparent bg-clip-text">
                 <span className="block">{current.title1}</span>
                 <span className="block">{current.title2}</span>
               </h2>
