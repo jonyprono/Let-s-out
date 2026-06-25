@@ -121,7 +121,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col gap-[var(--spacing-150)] shrink-0">
           {/* Téléphone */}
           <div>
-            <label className="mb-[var(--spacing-050)] block font-poppins text-[var(--font-size-body-small)] font-medium text-[var(--color-text-primary)]">Numéro de téléphone</label>
+            <label className="mb-2 block font-poppins text-[13px] font-semibold text-[var(--color-text-primary)]">Numéro de téléphone</label>
             <PhoneInputField
               country={country}
               onCountryChange={c => { setCountry(c); resetPhone() }}
@@ -133,7 +133,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Mot de passe */}
           <div>
-            <label className="mb-[var(--spacing-050)] block font-poppins text-[var(--font-size-body-small)] font-medium text-[var(--color-text-primary)]">Mot de passe</label>
+            <label className="mb-2 block font-poppins text-[13px] font-semibold text-[var(--color-text-primary)]">Mot de passe</label>
             <Input
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -155,11 +155,11 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             />
             
             {/* Mot de passe oublié */}
-            <div className="text-right mt-2">
+            <div className="text-right mt-[10px]">
               <button
                 type="button"
                 onClick={onForgotPassword}
-                className="text-[var(--color-text-link)] no-underline text-[13px] font-medium hover:opacity-80 transition-opacity focus:outline-none"
+                className="text-[var(--color-text-link)] text-[13px] font-medium hover:opacity-75 transition-opacity focus:outline-none"
               >
                 Mot de passe oublié?
               </button>
@@ -167,13 +167,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-4 shrink-0">
-          {/* Bouton Se connecter */}
+        <div className="mt-5 shrink-0">
+          {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
           <Button
             type="button"
             onClick={handleLogin}
             disabled={!phone.trim() || !password || logging}
-            className="w-full rounded-full"
           >
             {logging ? 'Connexion...' : 'Se connecter'}
           </Button>
@@ -198,30 +197,41 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex-1 min-h-0" />
 
         {/* Bas de page */}
-        <div className="flex flex-col items-center shrink-0 w-full gap-2">
-          {/* Nouveau sur Let's out */}
-          <div className="flex items-center justify-center flex-wrap gap-x-[6px] w-full py-1">
-            <span className="font-poppins text-[13px] text-[var(--color-text-secondary)]">
-              Vous êtes nouveau sur Let's Out ?
+        <div className="flex flex-col items-center shrink-0 w-full gap-[6px] pb-1">
+
+          {/* "Vous êtes nouveau ?" - une seule ligne, pas de chevauchement */}
+          <div className="flex items-center justify-center gap-[5px] w-full">
+            <span className="font-poppins text-[13px] text-[var(--color-text-secondary)] whitespace-nowrap">
+              Vous êtes nouveau sur Let's Out ?
             </span>
             <button
               onClick={onSignup}
-              className="font-poppins text-[13px] text-[var(--color-text-link)] no-underline font-medium focus:outline-none hover:opacity-80"
+              className="font-poppins text-[13px] font-semibold text-[var(--color-text-link)] whitespace-nowrap focus:outline-none hover:opacity-75"
             >
               Inscrivez-vous
             </button>
           </div>
-          
-          {/* Ligne séparatrice et Conditions */}
-          <div className="flex flex-col items-center w-full gap-2">
-            <div className="w-full h-[1px] bg-[var(--border-secondary)]" />
-            <div className="font-poppins text-[11px] leading-[16px] text-center px-2 text-[var(--color-text-tertiary)] flex flex-wrap justify-center items-center gap-x-[3px]">
-              <span>En continuant, vous acceptez nos</span>
-              <button onClick={() => nav('/terms')} className="text-[var(--color-text-link)] font-normal no-underline focus:outline-none hover:opacity-80">Conditions d'Utilisation</button>
-              <span>et notre</span>
-              <button onClick={() => nav('/privacy')} className="text-[var(--color-text-link)] font-normal no-underline focus:outline-none hover:opacity-80">Politique de Confidentialité</button>
-            </div>
-          </div>
+
+          {/* Ligne séparatrice */}
+          <div className="w-full h-[1px] bg-[var(--border-secondary)]" />
+
+          {/* Mentions légales - très petits caractères discrets */}
+          <p className="font-poppins text-[10px] leading-[15px] text-center text-[var(--color-text-tertiary)] px-2">
+            En continuant, vous acceptez nos{' '}
+            <button
+              onClick={() => nav('/terms')}
+              className="text-[var(--color-text-link)] font-medium focus:outline-none hover:opacity-75 inline"
+            >
+              Conditions d'Utilisation
+            </button>
+            {' '}et notre{' '}
+            <button
+              onClick={() => nav('/privacy')}
+              className="text-[var(--color-text-link)] font-medium focus:outline-none hover:opacity-75 inline"
+            >
+              Politique de Confidentialité
+            </button>
+          </p>
         </div>
 
       </div>

@@ -18,12 +18,15 @@ export function PhoneInputField({
   onEnter
 }: PhoneInputFieldProps) {
   return (
-    <div className="relative z-50 flex items-center w-full h-[48px] rounded-[8px] border-[1.25px] border-[var(--border-primary)] bg-white overflow-hidden focus-within:border-[#FF7A00] transition-colors duration-200">
+    // Aligné avec Input: h-[52px], rounded-[12px], border 1px → 2px orange au focus
+    <div className="relative z-50 flex items-center w-full h-[52px] rounded-[12px] border border-[var(--border-default)] bg-white overflow-hidden focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
       <CountryPicker
         value={country}
         onChange={onCountryChange}
-        className="flex items-center gap-[var(--spacing-100)] h-full pl-[var(--spacing-200)] pr-[var(--spacing-100)] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-medium font-poppins text-[var(--font-size-body-medium)]"
+        className="flex items-center gap-2 h-full pl-4 pr-2 bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-medium font-poppins text-[14px]"
       />
+      {/* Séparateur vertical discret */}
+      <div className="w-[1px] h-6 bg-[var(--border-default)] shrink-0" />
       <input
         type="tel"
         inputMode="numeric"
@@ -35,7 +38,7 @@ export function PhoneInputField({
           }
         }}
         placeholder="00 00 00 00 00"
-        className="flex-1 min-w-0 h-full bg-transparent outline-none pr-[var(--spacing-200)] text-[var(--font-size-body-medium)] font-medium font-poppins text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)]"
+        className="flex-1 min-w-0 h-full bg-transparent outline-none px-3 text-[14px] font-medium font-poppins text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] placeholder:font-normal"
       />
     </div>
   );

@@ -4,7 +4,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-large)] font-poppins font-medium text-[var(--font-size-body-medium)] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--border-brand-primary)] disabled:pointer-events-none disabled:opacity-50 gap-[var(--spacing-050)]",
+  // Base: h-[52px] pour être en capsule, même hauteur que les inputs, rounded-full
+  "inline-flex items-center justify-center whitespace-nowrap rounded-full h-[52px] font-poppins font-semibold text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-brand-primary)] disabled:pointer-events-none disabled:opacity-50 gap-2",
   {
     variants: {
       variant: {
@@ -18,10 +19,10 @@ const buttonVariants = cva(
           "text-[var(--color-text-secondary)] hover:bg-[var(--color-background-secondary)]",
       },
       size: {
-        default: "px-[var(--spacing-200)] py-[var(--spacing-150)]",
-        sm: "h-[36px] px-[var(--spacing-150)] text-[var(--font-size-body-small)]",
-        lg: "h-[56px] px-[var(--spacing-300)] text-[var(--font-size-title-xsmall)]",
-        icon: "h-[44px] w-[44px]",
+        default: "w-full px-6",
+        sm: "h-[38px] px-4 text-[13px]",
+        lg: "h-[56px] px-8 text-[16px]",
+        icon: "h-[44px] w-[44px] rounded-full",
       },
     },
     defaultVariants: {

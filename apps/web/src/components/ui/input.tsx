@@ -13,15 +13,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <input
           type={type}
           className={cn(
-            "flex h-[48px] w-full rounded-[var(--radius-medium)] border-[1.25px] border-[var(--border-default)] bg-[var(--color-background-primary)] px-[var(--spacing-200)] py-[var(--spacing-150)] font-poppins text-[var(--font-size-body-medium)] text-[var(--color-text-primary)] transition-colors placeholder:text-[var(--color-text-placeholder)] focus-visible:outline-none focus-visible:border-[var(--border-brand-primary)] disabled:cursor-not-allowed disabled:opacity-50",
-            icon && "pr-[var(--spacing-500)]",
+            // Dimensions identiques au champ téléphone : h-[52px], rounded-[12px], border 1.25px → 2px orange au focus
+            "flex h-[52px] w-full rounded-[12px] border border-[var(--border-default)] bg-white px-4 font-poppins text-[14px] font-medium text-[var(--color-text-primary)] transition-all duration-150 placeholder:text-[var(--color-text-placeholder)] placeholder:font-normal focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] disabled:cursor-not-allowed disabled:opacity-50",
+            icon && "pr-12",
             className
           )}
           ref={ref}
           {...props}
         />
         {icon && (
-          <div className="absolute right-[var(--spacing-150)] top-1/2 -translate-y-1/2 text-[var(--color-icon-tertiary)] flex items-center justify-center cursor-pointer">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-icon-tertiary)] flex items-center justify-center cursor-pointer">
             {icon}
           </div>
         )}
