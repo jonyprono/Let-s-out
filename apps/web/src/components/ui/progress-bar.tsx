@@ -40,7 +40,7 @@ export const CarouselIndicators = React.forwardRef<HTMLDivElement, CarouselIndic
             className={cn(
               "h-[4px] rounded-full transition-all duration-300",
               i === activeIndex
-                ? "w-[16px] bg-[var(--color-action-primary)]"
+                ? "w-[24px] bg-[var(--color-action-primary)]"
                 : "w-[4px] bg-[var(--color-background-secondary)]"
             )}
           />

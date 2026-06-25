@@ -219,7 +219,7 @@
 
   /* ── FIGMA TYPOGRAPHY TOKENS ─────────────────────────────── */
   /* Font Family */
-  --font-family-body: 'Inter Display', sans-serif;
+  --font-family-body: 'Inter', sans-serif;
   --font-family-title: 'Poppins', sans-serif;
 
   /* Font Size */
@@ -453,6 +453,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-inter: var(--font-inter);
+  --font-poppins: var(--font-poppins);
 
   /* FIGMA COLOURE PRIMITIVES */
   --color-white: var(--white);
