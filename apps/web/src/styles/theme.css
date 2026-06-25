@@ -76,17 +76,18 @@
   --sidebar-ring: oklch(0.708 0 0);
 
   /* ── FIGMA DESIGN SYSTEM PRIMITIVES ────────────────────────── */
+  /* Base */
   --white: #FFFFFF;
   --black: #000000;
-  
-  --functional-red-500: #C5221F;
-  --functional-green-positive: #00A35F;
+  --transparent: rgb(255 255 255 / 0);
 
+  /* Brand / Blue */
   --brand-blue-100: #EDF9FF;
   --brand-blue-400: #1EA5FF;
   --brand-blue-500: #007BFF;
   --brand-blue-600: #0000FF;
 
+  /* Brand / Orange */
   --brand-orange-50: #FEFEFA;
   --brand-orange-100: #FFF9EC;
   --brand-orange-200: #FFF2D3;
@@ -94,39 +95,178 @@
   --brand-orange-500: #FF7A00;
   --brand-orange-600: #FF5C00;
 
+  /* Brand / Pink */
   --brand-pink-100: #FFF1E7;
   --brand-pink-400: #FF8DA1;
   --brand-pink-500: #FF4D8D;
   --brand-pink-600: #FF355E;
 
+  /* Brand / Yellow */
   --brand-yellow-50: #FFFFFD;
-  --brand-yellow-100: #FFFE3D;
+  --brand-yellow-100: #FFFFE3;
   --brand-yellow-400: #FFDE21;
   --brand-yellow-500: #FFC300;
+  --brand-yellow-600: #FFA800;
 
+  /* Neutral */
   --neutral-gray-50: #FAFAFA;
   --neutral-gray-100: #F5F5F5;
-  --neutral-gray-200: #EEEEEE;
-  --neutral-gray-300: #E0E0E0;
-  --neutral-gray-400: #BDBDBD;
-  --neutral-gray-500: #766F6E;
-  --neutral-gray-600: #56514F;
-  --neutral-gray-700: #3A3635;
-  --neutral-gray-800: #282525;
-  --neutral-gray-900: #1B1B1B;
-  --neutral-gray-950: #0C0C09;
+  --neutral-gray-200: #E5E5E5;
+  --neutral-gray-300: #D4D4D4;
+  --neutral-gray-400: #A3A3A3;
+  --neutral-gray-500: #737373;
+  --neutral-gray-600: #525252;
+  --neutral-gray-700: #404040;
+  --neutral-gray-800: #262626;
+  --neutral-gray-900: #171717;
+  --neutral-gray-950: #0A0A0A;
+
+  /* Green */
+  --functional-green-50: #F0FDF4;
+  --functional-green-500: #22C55E;
+  --functional-green-600: #16A34A;
+
+  /* Red */
+  --functional-red-50: #FEF2F2;
+  --functional-red-500: #EF4444;
+  --functional-red-600: #DC2626;
 
   /* ── FIGMA SEMANTIC TOKENS ───────────────────────────────── */
-  --background-default: var(--brand-orange-50);
-  --background-white: var(--white);
-  --action-primary: var(--brand-orange-500);
-  --action-primary-hover: var(--brand-orange-600);
-  --text-inverse: var(--white);
-  --text-secondary: var(--neutral-gray-600);
-  --border-primary: var(--neutral-gray-300);
+  /* Backgrounds */
+  --color-background-default: var(--brand-orange-50);
+  --color-background-white: var(--white);
+  --color-background-neutral: var(--neutral-gray-500);
+  --color-background-primary: var(--white);
+  --color-background-primary-alt: var(--neutral-gray-50);
+  --color-background-secondary: var(--neutral-gray-100);
+  --color-background-brand-secondary: var(--brand-orange-400);
+  --color-background-brand-primary: var(--brand-orange-500);
+  --color-background-positive: var(--functional-green-500);
+  --color-background-negative: var(--functional-red-500);
+  --color-background-primary-muted: var(--brand-orange-200);
+  --color-background-brand-subtle: var(--brand-blue-100);
+  --color-background-highlight: var(--brand-yellow-500);
+  --color-background-brand-tertiary: var(--brand-orange-400);
+  --color-background-green: var(--functional-green-500);
 
-  /* Font family tokens */
-  --font-poppins: 'Poppins', sans-serif;
+  /* Utility */
+  --utility-brand-primary-200: var(--brand-orange-200);
+
+  /* Icons */
+  --color-icon-primary: var(--neutral-gray-900);
+  --color-icon-secondary: var(--neutral-gray-600);
+  --color-icon-tertiary: var(--neutral-gray-500);
+  --color-icon-brand-primary: var(--brand-orange-500);
+  --color-icon-brand-secondary: var(--brand-blue-500);
+  --color-icon-muted: var(--neutral-gray-400);
+  --color-icon-inverse: var(--white);
+  --color-icon-danger: var(--functional-red-500);
+
+  /* Borders */
+  --border-primary: var(--neutral-gray-300);
+  --border-secondary: var(--neutral-gray-200);
+  --border-tertiary: var(--neutral-gray-100);
+  --border-default: var(--neutral-gray-200);
+  --border-brand-primary: var(--brand-orange-500);
+
+  /* Text */
+  --color-text-primary: var(--neutral-gray-900);
+  --color-text-secondary: var(--neutral-gray-700);
+  --color-text-tertiary: var(--neutral-gray-600);
+  --text-quaternary: var(--neutral-gray-500);
+  --color-text-brand-primary: var(--brand-orange-500);
+  --color-text-brand-secondary: var(--brand-blue-500);
+  --color-text-muted: var(--neutral-gray-400);
+  --color-text-inverse: var(--white);
+  --color-text-black: var(--black);
+  --color-text-link: var(--brand-orange-400);
+  --color-text-positive: var(--functional-green-500);
+  --color-text-white: var(--white);
+  --color-text-placeholder: var(--neutral-gray-500);
+
+  /* Action */
+  --color-action-primary: var(--brand-orange-500);
+  --color-action-primary-active: var(--brand-orange-600);
+  --color-action-secondary: var(--neutral-gray-300);
+  --color-action-secondary-active: var(--neutral-gray-400);
+
+  /* Foreground */
+  --color-fg-white: var(--white);
+  --color-fg-quaternary: var(--neutral-gray-400);
+  --color-fg-tertiary: var(--neutral-gray-500);
+  --color-fg-quaternary-active: var(--neutral-gray-500);
+
+  /* ── FIGMA SPACING TOKENS ─────────────────────────────────── */
+  --spacing-0: 0px;
+  --spacing-025: 2px;
+  --spacing-050: 4px;
+  --spacing-075: 6px;
+  --spacing-100: 8px;
+  --spacing-125: 10px;
+  --spacing-150: 12px;
+  --spacing-175: 14px;
+  --spacing-200: 16px;
+  --spacing-250: 20px;
+  --spacing-300: 24px;
+  --spacing-400: 32px;
+  --spacing-450: 36px;
+  --spacing-500: 40px;
+  --spacing-600: 48px;
+  --spacing-700: 56px;
+  --spacing-800: 64px;
+  --spacing-900: 72px;
+  --spacing-1000: 80px;
+
+  /* ── FIGMA TYPOGRAPHY TOKENS ─────────────────────────────── */
+  /* Font Family */
+  --font-family-body: 'Inter Display', sans-serif;
+  --font-family-title: 'Poppins', sans-serif;
+
+  /* Font Size */
+  --font-size-body-xsmall: 10px;
+  --font-size-body-small: 12px;
+  --font-size-body-medium: 14px;
+  --font-size-body-large: 16px;
+  
+  --font-size-title-xxsmall: 14px;
+  --font-size-title-xsmall: 16px;
+  --font-size-title-small: 18px;
+  --font-size-title-medium: 20px;
+  --font-size-title-large: 24px;
+  --font-size-title-xlarge: 32px;
+
+  /* Line Height */
+  --line-height-body-xsmall: 16px;
+  --line-height-body-small: 16px;
+  --line-height-body-medium: 20px;
+  --line-height-body-large: 24px;
+
+  --line-height-title-xxsmall: 20px;
+  --line-height-title-xsmall: 20px;
+  --line-height-title-small: 20px;
+  --line-height-title-medium: 24px;
+  --line-height-title-large: 32px;
+  --line-height-title-xlarge: 40px;
+
+  /* Font Weight */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ── FIGMA SHAPE TOKENS (Border Radius) ──────────────────── */
+  --radius-none: 0px;
+  --radius-extra-small: 4px;
+  --radius-small: 8px;
+  --radius-medium: 12px;
+  --radius-large: 16px;
+  --radius-large-increased: 20px;
+  --radius-extra-large: 28px;
+  --radius-full: 1000px;
+
+  /* Font family tokens (Legacy override) */
+  --font-poppins: var(--font-family-title);
+  --font-inter: var(--font-family-body);
 
   /* Fallback aliases to bridge existing theme usages */
   --background: var(--brand-orange-50);
