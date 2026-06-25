@@ -385,7 +385,6 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           type="button"
           onClick={handleNext}
           disabled={isNextDisabled()}
-          size="lg"
           className="w-full rounded-full"
         >
           {isLoading && <Loader2 className="w-5 h-5 animate-spin mr-2" />}

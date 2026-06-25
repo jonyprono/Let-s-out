@@ -761,7 +761,6 @@ export function Signup({ onBack }: SignupProps) {
         <Button
           onClick={handleNext}
           disabled={isNextDisabled()}
-          size="lg"
           className="w-full rounded-full"
         >
           {isLoading && <RefreshIcon width={20} height={20} strokeWidth={1.4} className="animate-spin shrink-0 mr-2" />}

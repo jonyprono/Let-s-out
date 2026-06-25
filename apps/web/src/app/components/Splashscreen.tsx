@@ -182,7 +182,6 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
         <div className="px-[var(--spacing-200)] pb-[var(--spacing-300)] z-10 w-full max-w-[400px] mx-auto">
           <Button
             onClick={handleNext}
-            size="lg"
             className="w-full rounded-full"
           >
             {currentIndex === onboardingScreens.length - 1 ? 'Commencer' : 'Suivant'}

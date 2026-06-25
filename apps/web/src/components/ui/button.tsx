@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-[var(--color-action-primary)] text-[var(--color-fg-white)] hover:bg-[var(--color-action-primary-active)] shadow-sm",
+          "bg-[var(--color-action-primary)] text-white hover:bg-[var(--color-action-primary-active)] shadow-sm",
         secondary:
           "bg-[var(--color-background-primary-muted)] text-[var(--color-text-brand-primary)] hover:bg-[var(--color-background-brand-tertiary)] hover:text-white",
         outline:
@@ -18,7 +18,7 @@ const buttonVariants = cva(
           "text-[var(--color-text-secondary)] hover:bg-[var(--color-background-secondary)]",
       },
       size: {
-        default: "h-[44px] px-[var(--spacing-200)]",
+        default: "h-[48px] px-[var(--spacing-200)]",
         sm: "h-[36px] px-[var(--spacing-150)] text-[var(--font-size-body-small)]",
         lg: "h-[56px] px-[var(--spacing-300)] text-[var(--font-size-title-xsmall)]",
         icon: "h-[44px] w-[44px]",

@@ -398,22 +398,7 @@
   color: #ffffff !important;
 }
 
-/* Parcours auth : texte toujours lisible via variables sémantiques */
-.auth-flow {
-  color: var(--foreground);
-}
-
-.auth-flow h1,
-.auth-flow h2,
-.auth-flow label,
-.auth-flow p {
-  color: inherit;
-}
-
-.auth-flow .text-muted {
-  color: var(--muted-foreground);
-}
-
+/* Parcours auth overrides removed to allow utility classes to work */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

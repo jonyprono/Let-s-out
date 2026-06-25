@@ -169,7 +169,6 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             type="button"
             onClick={handleLogin}
             disabled={!phone.trim() || !password || logging}
-            size="lg"
             className="w-full rounded-full"
           >
             {logging ? 'Connexion...' : 'Se connecter'}
