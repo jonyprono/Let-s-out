@@ -11,7 +11,7 @@ const SocialButton = React.forwardRef<HTMLButtonElement, SocialButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "flex w-full items-center justify-center gap-[4px] rounded-full border-[1px] border-[var(--border-primary)] bg-white px-[14px] py-[10px] transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#FF7A00] disabled:pointer-events-none disabled:opacity-50",
+          "flex w-full items-center justify-center gap-[var(--spacing-050)] rounded-[var(--radius-large)] border-[1px] border-[var(--border-default)] bg-[var(--color-background-primary)] px-[var(--spacing-200)] py-[var(--spacing-150)] transition-colors hover:bg-[var(--color-background-secondary)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--border-brand-primary)] disabled:pointer-events-none disabled:opacity-50",
           className
         )}
         {...props}
@@ -24,7 +24,7 @@ const SocialButton = React.forwardRef<HTMLButtonElement, SocialButtonProps>(
             <path d="M12 5.34C13.62 5.34 15.06 5.89 16.2 6.98L19.37 3.8C17.45 2 14.97 1 12 1C7.7 1 3.99 3.42 2.17 7.03L5.84 9.88C6.7 7.28 9.13 5.34 12 5.34Z" fill="#EA4335"/>
           </svg>
         )}
-        <span className="font-poppins text-[16px] font-semibold text-[var(--color-text-primary)]">
+        <span className="font-poppins text-[var(--font-size-body-medium)] font-medium text-[var(--color-text-primary)]">
           {children}
         </span>
       </button>

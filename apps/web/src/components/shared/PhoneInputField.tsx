@@ -22,7 +22,7 @@ export function PhoneInputField({
       <CountryPicker
         value={country}
         onChange={onCountryChange}
-        className="flex items-center gap-[6px] h-full pl-[16px] pr-[8px] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-medium font-poppins text-[14px]"
+        className="flex items-center gap-[var(--spacing-100)] h-full pl-[var(--spacing-200)] pr-[var(--spacing-100)] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-medium font-poppins text-[var(--font-size-body-medium)]"
       />
       <input
         type="tel"
@@ -35,7 +35,7 @@ export function PhoneInputField({
           }
         }}
         placeholder="00 00 00 00 00"
-        className="flex-1 min-w-0 h-full bg-transparent outline-none pr-[16px] text-[14px] font-medium font-poppins text-[var(--color-text-primary)] placeholder:text-[#A3A3A3]"
+        className="flex-1 min-w-0 h-full bg-transparent outline-none pr-[var(--spacing-200)] text-[var(--font-size-body-medium)] font-medium font-poppins text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)]"
       />
     </div>
   );
