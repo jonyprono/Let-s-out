@@ -18,11 +18,11 @@ export function PhoneInputField({
   onEnter
 }: PhoneInputFieldProps) {
   return (
-    <div className="relative z-50 flex items-center w-full h-[44px] rounded-[8px] border-[1.25px] border-[#E0E0E0] bg-white focus-within:border-action-primary focus-within:ring-1 focus-within:ring-action-primary transition-all duration-200">
+    <div className="relative z-50 flex items-center w-full h-[44px] rounded-[var(--radius-medium)] border-[1.25px] border-[var(--border-default)] bg-[var(--color-background-primary)] focus-within:border-[var(--border-brand-primary)] focus-within:ring-1 focus-within:ring-[var(--border-brand-primary)] transition-all duration-200">
       <CountryPicker
         value={country}
         onChange={onCountryChange}
-        className="flex items-center gap-[6px] h-full pl-[16px] pr-[8px] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[#1B1818] font-medium font-poppins text-[14px] leading-[20px] tracking-[-0.02em]"
+        className="flex items-center gap-[6px] h-full pl-[16px] pr-[8px] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-medium font-poppins text-[var(--font-size-body-medium)] leading-[20px] tracking-[-0.02em]"
       />
       <input
         type="tel"
@@ -35,7 +35,7 @@ export function PhoneInputField({
           }
         }}
         placeholder="00 00 00 00 00"
-        className="flex-1 min-w-0 h-full bg-transparent outline-none pr-[16px] text-[14px] leading-[20px] tracking-[-0.02em] font-medium font-poppins text-[#1B1818] placeholder-[#A3A3A3]"
+        className="flex-1 min-w-0 h-full bg-transparent outline-none pr-[16px] text-[var(--font-size-body-medium)] leading-[20px] tracking-[-0.02em] font-medium font-poppins text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)]"
       />
     </div>
   );
