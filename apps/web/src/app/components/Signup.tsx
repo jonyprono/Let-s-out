@@ -726,7 +726,7 @@ export function Signup({ onBack }: SignupProps) {
         <Button
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="w-full rounded-full"
+          className="w-full"
         >
           {isLoading && <RefreshIcon width={20} height={20} strokeWidth={1.4} className="animate-spin shrink-0 mr-2" />}
           <span className="break-words max-w-full">{buttonLabel()}</span>

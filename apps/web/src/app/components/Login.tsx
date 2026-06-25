@@ -197,41 +197,45 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex-1 min-h-0" />
 
         {/* Bas de page */}
-        <div className="flex flex-col items-center shrink-0 w-full gap-[6px] pb-1">
+        <div className="flex flex-col items-center shrink-0 w-full pb-1">
 
-          {/* "Vous êtes nouveau ?" - une seule ligne, pas de chevauchement */}
-          <div className="flex items-center justify-center gap-[5px] w-full">
-            <span className="font-poppins text-[13px] text-[var(--color-text-secondary)] whitespace-nowrap">
-              Vous êtes nouveau sur Let's Out ?
+          {/* "Vous êtes nouveau ?" */}
+          <div className="flex items-center justify-center gap-[4px] w-full mb-[12px]">
+            <span className="font-poppins text-[13px] font-normal text-[var(--color-text-secondary)] whitespace-nowrap">
+              Vous êtes nouveau sur Let's Out ?
             </span>
             <button
               onClick={onSignup}
-              className="font-poppins text-[13px] font-semibold text-[var(--color-text-link)] whitespace-nowrap focus:outline-none hover:opacity-75"
+              className="font-poppins text-[13px] font-normal text-[var(--color-text-link)] underline whitespace-nowrap focus:outline-none hover:opacity-75"
             >
               Inscrivez-vous
             </button>
           </div>
 
           {/* Ligne séparatrice */}
-          <div className="w-full h-[1px] bg-[var(--border-secondary)]" />
+          <div className="w-full h-[1px] bg-[var(--border-secondary)] mb-[12px]" />
 
-          {/* Mentions légales - très petits caractères discrets */}
-          <p className="font-poppins text-[10px] leading-[15px] text-center text-[var(--color-text-tertiary)] px-2">
-            En continuant, vous acceptez nos{' '}
+          {/* Mentions légales - variables exactes (Body/xsmall/regular - 10/16) */}
+          <div className="w-[358px] max-w-full text-center">
+            <span className="font-poppins text-[10px] font-normal leading-[16px] text-[var(--color-text-tertiary)]">
+              En continuant, vous acceptez nos{' '}
+            </span>
             <button
               onClick={() => nav('/terms')}
-              className="text-[var(--color-text-link)] font-medium focus:outline-none hover:opacity-75 inline"
+              className="font-poppins text-[10px] font-normal leading-[16px] text-[var(--color-text-link)] focus:outline-none hover:opacity-75 inline"
             >
               Conditions d'Utilisation
             </button>
-            {' '}et notre{' '}
+            <span className="font-poppins text-[10px] font-normal leading-[16px] text-[var(--color-text-tertiary)]">
+              {' '}et notre{' '}
+            </span>
             <button
               onClick={() => nav('/privacy')}
-              className="text-[var(--color-text-link)] font-medium focus:outline-none hover:opacity-75 inline"
+              className="font-poppins text-[10px] font-normal leading-[16px] text-[var(--color-text-link)] focus:outline-none hover:opacity-75 inline"
             >
               Politique de Confidentialité
             </button>
-          </p>
+          </div>
         </div>
 
       </div>
