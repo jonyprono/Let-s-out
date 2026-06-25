@@ -23,7 +23,7 @@ export function PhoneInputField({
       <CountryPicker
         value={country}
         onChange={onCountryChange}
-        className="flex items-center gap-2 h-full pl-4 pr-2 bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-medium font-poppins text-[14px]"
+        className="flex items-center gap-2 h-full pl-3 pr-2 bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-medium font-poppins text-[14px]"
       />
       {/* Séparateur vertical discret */}
       <div className="w-[1px] h-6 bg-[var(--border-default)] shrink-0" />

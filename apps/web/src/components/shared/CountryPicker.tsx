@@ -58,11 +58,10 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
         className={className || "auth-country-btn flex items-center gap-[6px] h-[52px] px-[12px] border border-border-primary rounded-[12px] bg-background-white whitespace-nowrap active:opacity-80 transition-colors"}
         style={{ minWidth: 80 }}
       >
-        {/* Drapeau seulement - pas de code pays texte */}
+        {/* Drapeau et code pays */}
         <span className="text-[18px] leading-none">{value.flag}</span>
-        {/* Indicatif téléphonique — "(229)" */}
-        <span className="auth-country-btn text-[var(--color-text-primary)] font-poppins text-[14px] font-medium">
-          ({dialCode})
+        <span className="auth-country-btn text-[var(--color-text-primary)] font-poppins text-[14px] font-medium ml-1">
+          {value.id} ({dialCode})
         </span>
         {/* Chevron minimaliste grisé */}
         <ArrowDown01Icon
