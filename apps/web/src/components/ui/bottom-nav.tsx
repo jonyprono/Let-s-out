@@ -1,4 +1,4 @@
-import * as React from "react"
+
 import { cn } from "@/lib/utils"
 import { Home, Search, Plus, MessageSquare, User } from "lucide-react"
 
