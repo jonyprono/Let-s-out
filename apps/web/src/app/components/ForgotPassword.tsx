@@ -1,36 +1,27 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, Loader2 } from 'lucide-react'
-import { ViewIcon, ViewOffSlashIcon, Tick01Icon } from 'hugeicons-react'
+import { ViewIcon, ViewOffSlashIcon, Tick01Icon, ArrowLeft01Icon, RefreshIcon } from 'hugeicons-react'
 import { useSendOtp, useCheckTarget, useCheckOtp, useResetPassword } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { Capacitor } from '@capacitor/core'
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
-
-declare global {
-  interface Window { recaptchaVerifier: any; }
-}
-
-interface ForgotPasswordProps {
-  onBack: () => void
-  onComplete: () => void
-}
-
 import { COUNTRIES, Country } from '@/lib/countries'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-  authShell,
-  authTitle,
-  authHeader,
-  authSubtitle,
-  authLabel,
-  authChannelBtn,
-  authChannelLabel,
-} from '@/lib/auth-ui'
+
+declare global {
+  interface Window { recaptchaVerifier: any }
+}
+
+const OTP_LENGTH = 6
+
+interface ForgotPasswordProps {
+  onBack: () => void
+  onComplete: () => void
+}
 
 function formatPhone(code: string, local: string) {
   const digits = local.replace(/\s+/g, '')
@@ -52,7 +43,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
   const { displayValue: phoneDisplay, rawValue: phone, handleChange: handlePhoneChange, reset: resetPhone } = usePhoneFormatter()
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''))
   const [countdown, setCountdown] = useState(0)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -72,12 +63,14 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
 
+  // ── Countdown ────────────────────────────────────────────────
   useEffect(() => {
     if (countdown <= 0) return
     const t = setTimeout(() => setCountdown(c => c - 1), 1000)
     return () => clearTimeout(t)
   }, [countdown])
 
+  // ── Navigation ──────────────────────────────────────────────
   const handleNext = async () => {
     if (step === 1) {
       if (!phone.trim()) return
@@ -99,9 +92,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                   const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
                     setNativeVerificationId(event.verificationId)
                   })
-                  await FirebaseAuthentication.signInWithPhoneNumber({
-                    phoneNumber: fullPhone,
-                  })
+                  await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
                   setStep(2); setCountdown(59)
                   setTimeout(() => otpRefs.current[0]?.focus(), 100)
                   setTimeout(() => listener.remove(), 60000)
@@ -131,7 +122,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       })
     } else if (step === 2) {
       const codeStr = otp.join('')
-      if (codeStr.length < 6) return
+      if (codeStr.length < OTP_LENGTH) return
       if (currentChannel === 'sms' && (confirmationResult || nativeVerificationId)) {
         setIsFirebaseVerifying(true)
         try {
@@ -172,34 +163,43 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
   const handlePrev = () => { if (step === 1) onBack(); else setStep(s => s - 1) }
 
+  // ── OTP handlers ─────────────────────────────────────────────
   const handleOtpChange = (i: number, v: string) => {
     if (!/^\d*$/.test(v)) return
     const next = [...otp]; next[i] = v.slice(-1); setOtp(next)
-    if (v && i < 5) otpRefs.current[i + 1]?.focus()
+    if (v && i < OTP_LENGTH - 1) otpRefs.current[i + 1]?.focus()
   }
   const handleOtpKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus()
   }
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, OTP_LENGTH)
+    if (!pasted) return
+    e.preventDefault()
+    const next = [...otp]
+    pasted.split('').forEach((ch, idx) => { next[idx] = ch })
+    setOtp(next)
+    const focusIdx = Math.min(pasted.length, OTP_LENGTH - 1)
+    otpRefs.current[focusIdx]?.focus()
+  }
 
   const handleResend = async () => {
     if (countdown > 0) return
-    setOtp(['', '', '', '', '', ''])
+    setOtp(Array(OTP_LENGTH).fill(''))
     try {
       setIsFirebaseSending(true)
       if (Capacitor.isNativePlatform()) {
         const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
           setNativeVerificationId(event.verificationId)
         })
-        await FirebaseAuthentication.signInWithPhoneNumber({
-          phoneNumber: fullPhone,
-        })
+        await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
         setTimeout(() => listener.remove(), 60000)
-        setCountdown(59); setCurrentChannel('sms')
+        setCountdown(59)
         toast.success('Code renvoyé par SMS'); setTimeout(() => otpRefs.current[0]?.focus(), 100)
       } else {
         if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
-        setConfirmationResult(confirmation); setCountdown(59); setCurrentChannel('sms')
+        setConfirmationResult(confirmation); setCountdown(59)
         toast.success('Code renvoyé par SMS'); setTimeout(() => otpRefs.current[0]?.focus(), 100)
       }
     } catch {
@@ -212,15 +212,17 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
     } finally { setIsFirebaseSending(false) }
   }
 
+  // ── Password validation ───────────────────────────────────────
   const pwdLength = password.length >= 6
-  const pwdMixed = /[a-z]/.test(password) && /[A-Z]/.test(password)
+  const hasLower = /[a-zà-ÿ]/.test(password)
+  const hasUpper = /[A-ZÀ-Ÿ]/.test(password)
   const pwdNumber = /[0-9]/.test(password)
   const pwdMatch = password === confirmPassword && password.length > 0
-  const isPwdValid = pwdLength && pwdMixed && pwdNumber && pwdMatch
+  const isPwdValid = pwdLength && hasLower && hasUpper && pwdNumber && pwdMatch
 
   const isNextDisabled = () => {
     if (step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
-    if (step === 2) return otp.join('').length < 6 || isFirebaseVerifying || checkingOtp
+    if (step === 2) return otp.join('').length < OTP_LENGTH || isFirebaseVerifying || checkingOtp
     if (step === 3) return !isPwdValid || resetting
     return false
   }
@@ -228,34 +230,49 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const isLoading = sendingOtp || checkingTarget || isFirebaseSending || isFirebaseVerifying || checkingOtp || resetting
 
   return (
-    <div className={authShell}>
+    <div className="w-full h-full flex flex-col bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
       <div id="recaptcha-container-fp" />
 
-      {/* ── Header ─────────────────────────────────── */}
-      <div className="px-5 pt-4 pb-0 shrink-0">
-        <div className="flex items-center justify-center relative mb-4">
-          <button onClick={handlePrev} className="absolute left-0 w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
+      {/* ── Header ─────────────────────────────────────── */}
+      <div className="px-4 pt-5 pb-0 shrink-0">
+        <div className="flex items-center justify-center relative mb-3">
+          <button
+            onClick={handlePrev}
+            aria-label="Retour"
+            className="absolute left-0 w-9 h-9 flex items-center justify-center active:scale-95 transition-transform"
+          >
+            <ArrowLeft01Icon className="w-5 h-5 text-[var(--color-text-primary)]" strokeWidth={2} />
           </button>
-          <span className={authHeader}>Réinitialiser votre mot de passe</span>
+          <span className="font-poppins text-[15px] font-semibold text-[var(--color-text-primary)]">
+            Réinitialiser votre mot de passe
+          </span>
+        </div>
+        {/* Barre de progression fine */}
+        <div className="h-[3px] w-full bg-[var(--border-default)] rounded-none overflow-hidden">
+          <div
+            className="h-full bg-[var(--brand-orange-500)] transition-all duration-300"
+            style={{ width: `${(step / 3) * 100}%` }}
+          />
         </div>
       </div>
 
-      {/* ── Content ────────────────────────────────── */}
-      <div className="flex-1 px-6 pt-7 overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
+      {/* ── Content ────────────────────────────────────── */}
+      <div className="flex-1 px-5 pt-7 overflow-y-auto pb-4" style={{ scrollbarWidth: 'none' }}>
 
-        {/* STEP 1: PHONE */}
+        {/* ── STEP 1: PHONE ── */}
         {step === 1 && (
           <div>
-            <h1 className={`${authTitle} mb-1.5`}>
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
               Entrez votre numéro de téléphone
             </h1>
-            <p className={`${authSubtitle} mb-[36px]`}>
+            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
               Entrez le numéro de téléphone lié à votre compte pour recevoir un code et réinitialiser votre mot de passe.
             </p>
 
-            <label className={`${authLabel} mb-1.5 block`}>Numéro de téléphone</label>
-            <div className="mb-[36px]">
+            <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+              Numéro de téléphone
+            </label>
+            <div className="mb-8">
               <PhoneInputField
                 country={country}
                 onCountryChange={(c) => { setCountry(c); resetPhone() }}
@@ -264,17 +281,33 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               />
             </div>
 
-            <label className={`${authLabel} mb-2 block`}>Recevoir le code par</label>
+            <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-3 block">
+              Recevoir le code par
+            </label>
             <div className="flex gap-3">
-              {(['SMS', 'Whatsapp'] as const).map(ch => {
+              {(['SMS', 'Whatsapp'] as const).map((ch) => {
                 const val = ch.toLowerCase() as 'sms' | 'whatsapp'
                 const isActive = currentChannel === val
                 return (
-                  <button key={ch} type="button" onClick={() => setCurrentChannel(val)}
-                    className={authChannelBtn}>
-                    <span className={authChannelLabel}>{ch}</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isActive ? 'border-action-primary' : 'border-[#CCCCCC]'}`}>
-                      {isActive && <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />}
+                  <button
+                    key={ch}
+                    type="button"
+                    onClick={() => setCurrentChannel(val)}
+                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-[var(--border-default)] transition-colors gap-2 bg-white"
+                  >
+                    <span className="flex-1 text-left font-poppins text-[15px] font-medium text-[var(--color-text-primary)]">
+                      {ch}
+                    </span>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                        isActive
+                          ? 'border-[var(--brand-orange-500)]'
+                          : 'border-[var(--border-default)]'
+                      }`}
+                    >
+                      {isActive && (
+                        <div className="w-2.5 h-2.5 rounded-full bg-[var(--brand-orange-500)]" />
+                      )}
                     </div>
                   </button>
                 )
@@ -283,94 +316,151 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           </div>
         )}
 
-        {/* STEP 2: OTP (6 digits) */}
+        {/* ── STEP 2: OTP ── */}
         {step === 2 && (
           <div>
-            <h1 className={`${authTitle} mb-1.5`}>
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
               Quel est le code reçu&nbsp;?
             </h1>
-            <p className={`${authSubtitle} mb-7`}>
-              Code à 6 chiffres envoyé par <strong className="text-foreground">{currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</strong> au<br />
-              <strong className="text-foreground">{formatPhone(country.code, phone)}</strong>
+            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+              Code à {OTP_LENGTH} chiffres envoyé par{' '}
+              <strong className="text-[var(--color-text-primary)]">
+                {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}
+              </strong>{' '}au
+              <br />
+              <strong className="text-[var(--color-text-primary)]">
+                {formatPhone(country.code, phone)}
+              </strong>
             </p>
 
-            <div className="grid grid-cols-6 gap-2 mb-5 w-full">
+            {/* OTP boxes */}
+            <div
+              className="grid gap-3 mb-6"
+              style={{ gridTemplateColumns: `repeat(${OTP_LENGTH}, 1fr)` }}
+            >
               {otp.map((d, i) => (
                 <input
-                  key={i} ref={el => { otpRefs.current[i] = el }}
-                  type="text" inputMode="numeric" maxLength={1} value={d}
-                  onChange={e => handleOtpChange(i, e.target.value)}
-                  onKeyDown={e => handleOtpKey(i, e)}
-                  className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-card text-foreground
-                    ${d ? 'border-action-primary' : 'border-border'}
-                    focus:border-action-primary`}
+                  key={i}
+                  ref={(el) => { otpRefs.current[i] = el }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={d}
+                  onChange={(e) => handleOtpChange(i, e.target.value)}
+                  onKeyDown={(e) => handleOtpKey(i, e)}
+                  onPaste={i === 0 ? handleOtpPaste : undefined}
+                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white text-[var(--color-text-primary)] ${
+                    d
+                      ? 'border-[var(--brand-orange-500)]'
+                      : 'border-[var(--border-default)]'
+                  } focus:border-[var(--brand-orange-500)]`}
                 />
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
-              <button onClick={handleResend} disabled={countdown > 0}
-                className="flex items-center justify-center gap-2 px-[18px] py-[10px] bg-neutral-gray-100 rounded-full text-[14px] font-medium text-foreground disabled:opacity-50 active:scale-95 transition-all">
-                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+            {/* Resend */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleResend}
+                disabled={countdown > 0}
+                className="flex items-center gap-1.5 font-poppins text-[13px] text-[var(--color-text-secondary)] disabled:opacity-50 transition-opacity"
+              >
+                <RefreshIcon className="w-4 h-4" strokeWidth={2} />
                 Renvoyer le code
               </button>
               {countdown > 0 && (
-                <span className="text-[14px] font-medium text-text-secondary">
-                  dans {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
+                <span className="font-poppins text-[13px] text-[var(--color-text-secondary)]">
+                  dans{' '}
+                  {String(Math.floor(countdown / 60)).padStart(2, '0')}:
+                  {String(countdown % 60).padStart(2, '0')}
                 </span>
               )}
             </div>
           </div>
         )}
 
-        {/* STEP 3: NEW PASSWORD */}
+        {/* ── STEP 3: NEW PASSWORD ── */}
         {step === 3 && (
           <div>
-            <h1 className={`${authTitle} mb-1.5`}>Nouveau mot de passe</h1>
-            <p className={`${authSubtitle} mb-7`}>
-              Définissez un nouveau mot de passe robuste et sécurisé pour<br />protéger votre compte
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+              Nouveau mot de passe
+            </h1>
+            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-7">
+              Définissez un nouveau mot de passe robuste et sécurisé pour protéger votre compte
             </p>
 
-            <label className={`${authLabel} mb-1.5 block`}>Mot de passe</label>
             <div className="flex flex-col gap-5 mb-5">
-              <Input
-                type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                icon={
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors">
-                    {showPassword ? <ViewIcon size={18} strokeWidth={1.5} /> : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
-                  </button>
-                }
-              />
-
-              <div className="flex flex-col gap-1.5">
-                <label className="font-poppins text-[13px] font-semibold text-[var(--color-text-primary)]">Confirmer mot de passe</label>
+              {/* Mot de passe */}
+              <div>
+                <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+                  Mot de passe
+                </label>
                 <Input
-                  type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder=""
                   icon={
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors">
-                      {showConfirmPassword ? <ViewIcon size={18} strokeWidth={1.5} /> : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors"
+                    >
+                      {showPassword
+                        ? <ViewIcon size={20} strokeWidth={1.5} />
+                        : <ViewOffSlashIcon size={20} strokeWidth={1.5} />}
+                    </button>
+                  }
+                />
+              </div>
+
+              {/* Confirmer mot de passe */}
+              <div>
+                <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+                  Confirmer mot de passe
+                </label>
+                <Input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder=""
+                  icon={
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors"
+                    >
+                      {showConfirmPassword
+                        ? <ViewIcon size={20} strokeWidth={1.5} />
+                        : <ViewOffSlashIcon size={20} strokeWidth={1.5} />}
                     </button>
                   }
                 />
               </div>
             </div>
 
-            {/* Validation rules */}
-            <div className="space-y-2">
+            {/* Critères de validation */}
+            <div className="space-y-2 mb-2">
               {[
                 { ok: pwdLength, label: 'Au moins 6 caractères numériques' },
-                { ok: pwdMixed, label: 'Au moins 1 majuscule et 1 minuscule' },
+                { ok: hasLower && hasUpper, label: 'Au moins 1 majuscule et 1 minuscule' },
                 { ok: pwdNumber, label: 'Au moins 1 chiffre' },
               ].map(({ ok, label }) => (
                 <div key={label} className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${ok ? 'bg-[#34C759]' : 'bg-[#E5E5E5]'}`}>
-                    {ok && <Tick01Icon width={10} height={10} strokeWidth={2} className="text-white" />}
+                  <div
+                    className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                      ok ? 'bg-[#34C759]' : 'bg-[#E0E0E0]'
+                    }`}
+                  >
+                    {ok && <Tick01Icon width={10} height={10} strokeWidth={2.5} className="text-white" />}
                   </div>
-                  <span className={`text-[12px] ${ok ? 'text-[#34C759]' : 'text-[#888888]'}`}>{label}</span>
+                  <span
+                    className={`font-poppins text-[12px] leading-[18px] ${
+                      ok ? 'text-[#34C759]' : 'text-[var(--color-text-secondary)]'
+                    }`}
+                  >
+                    {label}
+                  </span>
                 </div>
               ))}
             </div>
@@ -379,15 +469,24 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       </div>
 
       {/* ── Bottom Button ───────────────────────────── */}
-      <div className="px-6 pb-5 pt-3 shrink-0 bg-background">
+      <div className="px-5 pb-6 pt-3 shrink-0 bg-[var(--color-background-primary)]">
         <Button
           type="button"
           onClick={handleNext}
           disabled={isNextDisabled()}
           className="w-full"
         >
-          {isLoading && <Loader2 className="w-5 h-5 animate-spin mr-2" />}
-          <span>{step === 3 ? 'Réinitialiser' : 'Suivant'}</span>
+          {isLoading && (
+            <RefreshIcon
+              width={20}
+              height={20}
+              strokeWidth={1.4}
+              className="animate-spin shrink-0 mr-2"
+            />
+          )}
+          <span className="break-words max-w-full">
+            {step === 3 ? 'Réinitialiser' : 'Suivant'}
+          </span>
         </Button>
       </div>
     </div>
