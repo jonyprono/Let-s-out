@@ -21,6 +21,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className={cn(
             // Dimensions identiques au champ téléphone : h-[var(--input-height)], rounded-[var(--input-radius)], border 1px → 2px orange au focus
             "flex h-[var(--input-height)] w-full rounded-[var(--input-radius)] border border-[var(--border-primary)] bg-white px-4 font-inter text-[14px] font-medium text-[var(--color-text-primary)] transition-all duration-150 placeholder:text-[var(--color-text-placeholder)] placeholder:font-normal focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] disabled:cursor-not-allowed disabled:opacity-50",
+            "[&::-ms-reveal]:hidden [&::-ms-clear]:hidden [&::-webkit-contacts-auto-fill-button]:hidden [&::-webkit-credentials-auto-fill-button]:hidden",
             icon && "pr-12",
             leftIcon && "pl-11",
             className

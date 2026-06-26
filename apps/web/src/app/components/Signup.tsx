@@ -2,8 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import {
   ArrowLeft01Icon,
+  EyeIcon,
+  EyeClosedIcon,
   ViewIcon,
-  ViewOffSlashIcon,
   Tick01Icon,
   Location01Icon,
   Cancel01Icon,
@@ -393,10 +394,12 @@ export function Signup({ onBack }: SignupProps) {
   }
 
   const pwdLength = password.length >= 6
-  const pwdMixed = /[a-z]/.test(password) && /[A-Z]/.test(password)
+  const pwdMixed = /[a-zà-ÿ]/i.test(password) && /[a-z]/i.test(password) // This just tests letters
+  const hasLower = /[a-zà-ÿ]/.test(password)
+  const hasUpper = /[A-ZÀ-Ÿ]/.test(password)
   const pwdNumber = /[0-9]/.test(password)
   const pwdMatch = password === confirmPassword && password.length > 0
-  const isPwdValid = pwdLength && pwdMixed && pwdNumber && pwdMatch
+  const isPwdValid = pwdLength && hasLower && hasUpper && pwdNumber && pwdMatch
 
   const isNextDisabled = () => {
     if (!isGoogleMode && step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
@@ -778,8 +781,8 @@ export function Signup({ onBack }: SignupProps) {
                       className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors"
                     >
                       {showPassword
-                        ? <ViewIcon size={18} strokeWidth={1.5} />
-                        : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
+                        ? <ViewIcon size={20} strokeWidth={1.5} />
+                        : <EyeClosedIcon size={20} strokeWidth={1.5} />}
                     </button>
                   }
                 />
@@ -802,8 +805,8 @@ export function Signup({ onBack }: SignupProps) {
                       className="focus:outline-none text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors"
                     >
                       {showConfirmPassword
-                        ? <ViewIcon size={18} strokeWidth={1.5} />
-                        : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
+                        ? <ViewIcon size={20} strokeWidth={1.5} />
+                        : <EyeClosedIcon size={20} strokeWidth={1.5} />}
                     </button>
                   }
                 />
@@ -814,7 +817,7 @@ export function Signup({ onBack }: SignupProps) {
             <div className="space-y-2 mb-2">
               {[
                 { ok: pwdLength, label: 'Au moins 6 caractères numériques' },
-                { ok: pwdMixed, label: 'Au moins 1 majuscule et 1 minuscule' },
+                { ok: hasLower && hasUpper, label: 'Au moins 1 majuscule et 1 minuscule' },
                 { ok: pwdNumber, label: 'Au moins 1 chiffre' },
               ].map(({ ok, label }) => (
                 <div key={label} className="flex items-center gap-2">
@@ -855,7 +858,7 @@ export function Signup({ onBack }: SignupProps) {
               }`}
             >
               {acceptedTerms && (
-                <Tick01Icon width={12} height={12} strokeWidth={2.5} className="text-white" />
+                <Tick01Icon width={16} height={16} strokeWidth={3.5} className="text-white" />
               )}
             </div>
             <span className="font-poppins text-[12px] leading-relaxed text-[var(--color-text-secondary)]">
