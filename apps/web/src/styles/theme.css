@@ -254,6 +254,9 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
+  /* Letter Spacing */
+  --letter-spacing-title-xlarge: -2px;  /* Figma: Title/xlarge letter-spacing -2 */
+
   /* ── FIGMA SHAPE TOKENS (Border Radius) ──────────────────── */
   --radius-none: 0px;
   --radius-extra-small: 4px;
