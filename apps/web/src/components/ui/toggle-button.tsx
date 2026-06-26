@@ -12,7 +12,7 @@ export function ToggleButton({ options, value, onChange, className }: ToggleButt
   return (
     <div
       className={cn(
-        "inline-flex h-[40px] items-center rounded-full bg-[var(--color-background-primary)] p-[var(--spacing-050)] shadow-sm border border-[var(--border-default)]",
+        "inline-flex h-[40px] items-center gap-[var(--spacing-100)]",
         className
       )}
     >
@@ -24,10 +24,10 @@ export function ToggleButton({ options, value, onChange, className }: ToggleButt
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "flex h-full items-center justify-center rounded-full px-[var(--spacing-200)] font-poppins text-[var(--font-size-body-medium)] font-medium transition-colors focus-visible:outline-none",
+              "flex h-full items-center justify-center rounded-full px-[var(--spacing-250)] font-poppins text-[var(--font-size-body-medium)] font-medium transition-colors focus-visible:outline-none",
               isActive
                 ? "bg-[var(--color-background-primary-muted)] text-[var(--color-text-brand-primary)]"
-                : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                : "bg-[var(--color-background-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
             )}
           >
             {option.label}

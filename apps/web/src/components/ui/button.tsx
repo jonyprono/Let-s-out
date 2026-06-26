@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
   // Base: h-[52px] pour être en capsule, même hauteur que les inputs, rounded-full
-  "inline-flex items-center justify-center whitespace-nowrap rounded-full h-[52px] font-poppins font-semibold text-[15px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-brand-primary)] disabled:pointer-events-none disabled:opacity-50 gap-2",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-full h-[var(--btn-height)] font-poppins font-semibold text-[16px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-brand-primary)] disabled:pointer-events-none disabled:opacity-50 gap-2",
   {
     variants: {
       variant: {
@@ -14,14 +14,14 @@ const buttonVariants = cva(
         secondary:
           "bg-[var(--color-background-primary-muted)] text-[var(--color-text-brand-primary)] hover:bg-[var(--color-background-brand-tertiary)] hover:text-white",
         outline:
-          "border border-[var(--border-default)] bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-background-secondary)]",
+          "border border-[var(--border-primary)] bg-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-background-secondary)]",
         ghost:
           "text-[var(--color-text-secondary)] hover:bg-[var(--color-background-secondary)]",
       },
       size: {
         default: "w-full px-6",
-        sm: "h-[38px] px-4 text-[13px]",
-        lg: "h-[56px] px-8 text-[16px]",
+        sm: "h-[38px] px-4 text-[14px]",
+        lg: "h-[56px] px-8 text-[18px]",
         icon: "h-[44px] w-[44px] rounded-full",
       },
     },

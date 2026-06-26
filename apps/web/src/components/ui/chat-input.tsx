@@ -1,6 +1,6 @@
 
 import { cn } from "@/lib/utils"
-import { Paperclip, Camera, Mic, Send } from "lucide-react"
+import { AttachmentIcon as Paperclip, Camera01Icon as Camera, Mic01Icon as Mic, SentIcon as Send } from "hugeicons-react"
 
 export interface ChatInputProps {
   value: string;
@@ -32,11 +32,11 @@ export function ChatInput({ value, onChange, onSend, onAttach, onCamera, onMic, 
         />
         <div className="flex items-center gap-[var(--spacing-150)] text-[var(--color-icon-secondary)]">
           <button onClick={onAttach} className="hover:text-[var(--color-icon-primary)] focus:outline-none">
-            <Paperclip className="h-5 w-5" />
+            <Paperclip width={24} height={24} strokeWidth={1.5} />
           </button>
           {!hasContent && (
             <button onClick={onCamera} className="hover:text-[var(--color-icon-primary)] focus:outline-none">
-              <Camera className="h-5 w-5" />
+              <Camera width={24} height={24} strokeWidth={1.5} />
             </button>
           )}
         </div>
@@ -46,7 +46,7 @@ export function ChatInput({ value, onChange, onSend, onAttach, onCamera, onMic, 
         onClick={hasContent ? onSend : onMic}
         className="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-full bg-[var(--color-action-primary)] text-white shadow-sm transition-transform hover:scale-105 active:scale-95 focus:outline-none"
       >
-        {hasContent ? <Send className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+        {hasContent ? <Send width={24} height={24} strokeWidth={1.5} /> : <Mic width={24} height={24} strokeWidth={1.5} />}
       </button>
     </div>
   )

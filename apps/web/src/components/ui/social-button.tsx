@@ -11,8 +11,8 @@ const SocialButton = React.forwardRef<HTMLButtonElement, SocialButtonProps>(
       <button
         ref={ref}
         className={cn(
-          // Même h-[52px] rounded-full que le bouton principal pour cohérence capsule
-          "flex w-full h-[52px] items-center justify-center gap-3 rounded-full border border-[var(--border-default)] bg-white px-6 font-poppins text-[15px] font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-brand-primary)] disabled:pointer-events-none disabled:opacity-50",
+          // Même h-[var(--btn-height)] rounded-full que le bouton principal pour cohérence capsule
+          "flex w-full h-[var(--btn-height)] items-center justify-center gap-[var(--spacing-150)] rounded-full border border-[var(--border-primary)] bg-white px-6 font-poppins text-[16px] font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-background-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-brand-primary)] disabled:pointer-events-none disabled:opacity-50",
           className
         )}
         {...props}

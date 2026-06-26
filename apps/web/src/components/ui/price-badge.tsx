@@ -15,7 +15,7 @@ const PriceBadge = React.forwardRef<HTMLDivElement, PriceBadgeProps>(
       <div
         ref={ref}
         className={cn(
-          "inline-flex items-center rounded-[var(--radius-small)] px-[var(--spacing-100)] py-[var(--spacing-025)] font-poppins text-[var(--font-size-body-small)] font-medium",
+          "inline-flex items-center rounded-[var(--radius-small)] px-[var(--spacing-150)] py-[var(--spacing-075)] font-poppins text-[14px] font-medium",
           isFree
             ? "bg-[var(--functional-green-50)] text-[var(--color-text-positive)]"
             : "bg-[var(--brand-blue-100)] text-[var(--color-text-brand-secondary)]",

@@ -4,7 +4,7 @@ import { useConversations } from '@/features/chat/api'
 
 // Custom icon: groupe d'événements (3 silhouettes)
 function EventsIcon({ active }: { active: boolean }) {
-  const color = active ? '#FF7A00' : '#4A4A4A'
+  const color = active ? 'var(--color-icon-brand-primary)' : 'var(--color-icon-tertiary)'
   return <Group width={24} height={24} strokeWidth={2} style={{ color }} />
 }
 
@@ -85,13 +85,13 @@ export function BottomNav() {
                     width={24}
                     height={24}
                     strokeWidth={active ? 1.8 : 1.5}
-                    style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
+                    style={{ color: active ? 'var(--color-icon-brand-primary)' : 'var(--color-icon-tertiary)' }}
                   />
               }
             </div>
             <span
-              className="text-[12px] font-semibold leading-none mt-1"
-              style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
+              className="text-[var(--font-size-body-small)] font-medium leading-none mt-1"
+              style={{ color: active ? 'var(--color-text-brand-primary)' : 'var(--color-text-tertiary)' }}
             >
               {tab.label}
             </span>
@@ -109,10 +109,10 @@ export function BottomNav() {
         <div
           className="flex items-center justify-center"
           style={{
-            width: 46,
-            height: 46,
-            borderRadius: 14,
-            backgroundColor: '#FF7A00',
+            width: 48,
+            height: 48,
+            borderRadius: 16,
+            backgroundColor: 'var(--color-action-primary)',
             marginBottom: 10,
           }}
         >
@@ -137,19 +137,19 @@ export function BottomNav() {
                 width={24}
                 height={24}
                 strokeWidth={active ? 1.8 : 1.5}
-                style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
+                style={{ color: active ? 'var(--color-icon-brand-primary)' : 'var(--color-icon-tertiary)' }}
               />
               {tab.path === '/messages' && totalUnread > 0 && (
                 <span
-                  className="absolute -top-1 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-[#1A1A1A]"
+                  className="absolute -top-1 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--color-background-negative)] px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-[#1A1A1A]"
                 >
                   {totalUnread > 9 ? '9+' : totalUnread}
                 </span>
               )}
             </div>
             <span
-              className="text-[12px] font-semibold leading-none mt-1"
-              style={{ color: active ? '#FF7A00' : '#4A4A4A' }}
+              className="text-[var(--font-size-body-small)] font-medium leading-none mt-1"
+              style={{ color: active ? 'var(--color-text-brand-primary)' : 'var(--color-text-tertiary)' }}
             >
               {tab.label}
             </span>

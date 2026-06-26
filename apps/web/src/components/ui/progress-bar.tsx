@@ -33,7 +33,7 @@ export interface CarouselIndicatorsProps extends React.HTMLAttributes<HTMLDivEle
 export const CarouselIndicators = React.forwardRef<HTMLDivElement, CarouselIndicatorsProps>(
   ({ className, count, activeIndex, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn("flex items-center justify-center gap-[var(--spacing-100)]", className)} {...props}>
+      <div ref={ref} className={cn("flex items-center justify-center gap-[var(--spacing-050)]", className)} {...props}>
         {Array.from({ length: count }).map((_, i) => (
           <div
             key={i}
@@ -41,7 +41,7 @@ export const CarouselIndicators = React.forwardRef<HTMLDivElement, CarouselIndic
               "h-[4px] rounded-full transition-all duration-300",
               i === activeIndex
                 ? "w-[24px] bg-[var(--color-action-primary)]"
-                : "w-[4px] bg-[var(--color-background-secondary)]"
+                : "w-[4px] bg-[var(--neutral-gray-200)]"
             )}
           />
         ))}
