@@ -15,6 +15,7 @@ import {
   Briefcase,
   MessageCircle,
 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
 import { chatApi } from '@/features/chat/api'
@@ -602,31 +603,32 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           {hasJoined ? (
             /* Participant: two buttons */
             <>
-              <button
+              <Button
+                variant="outline"
                 onClick={handleShare}
-                className="flex-[0.45] flex items-center justify-center gap-2 py-[14px] rounded-full font-semibold text-[14px] text-gray-900 border border-gray-200 bg-white active:scale-95 transition-transform"
+                className="flex-[0.45] flex items-center justify-center gap-2"
               >
                 <Share2 className="w-4 h-4" strokeWidth={1.8} />
                 Partager
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={goToChat}
-                className="flex-[0.55] flex items-center justify-center gap-2 py-[14px] rounded-full font-bold text-[14px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
+                className="flex-[0.55] flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
                 Accéder au chat
-              </button>
+              </Button>
             </>
           ) : (
             /* Non-participant: one wide button */
             !isPastEvent && (
-              <button
+              <Button
                 onClick={handleJoin}
                 disabled={joinMutation.isPending || isFull}
-                className="flex-1 flex items-center justify-center py-[14px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20 disabled:opacity-60"
+                className="flex-1"
               >
                 {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : "Rejoindre l'événement"}
-              </button>
+              </Button>
             )
           )}
         </div>
@@ -685,12 +687,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               </div>
 
               {/* CTA */}
-              <button
+              <Button
                 onClick={handleConfirmJoin}
-                className="w-full bg-[#FF7A00] text-white py-[14px] rounded-full font-bold text-[15px] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
+                className="w-full"
               >
                 {amountToPay > 0 ? 'Procéder au paiement' : 'Confirmer la participation'}
-              </button>
+              </Button>
 
             </div>
           </div>

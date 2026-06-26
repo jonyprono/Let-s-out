@@ -21,6 +21,7 @@ import { EditEmailModal } from '@/features/users/components/EditEmailModal';
 import { useLogout, useDeleteAccount } from '@/features/auth/hooks/useAuth';
 import { useSettingsStore } from '@/stores/settings.store';
 import { PreferenceSegment } from '@/components/shared/SettingsToggle';
+import { Button } from '@/components/ui/button';
 
 interface SettingsProps {
   onBack: () => void;
@@ -350,10 +351,11 @@ export function Settings({ onBack }: SettingsProps) {
         </div>
 
         {/* ── Déconnexion ─────────────────────────────────────────────────── */}
-        <button
+        <Button
+          variant="ghost"
           onClick={handleLogout}
           disabled={loggingOut}
-          className="w-full flex items-center justify-center gap-2 py-200 rounded-2xl font-semibold text-red-500 bg-red-50 dark:bg-red-500/10 active:scale-[0.98] transition-all disabled:opacity-60"
+          className="w-full flex items-center justify-center gap-2 text-red-500 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 rounded-2xl py-6"
         >
           {loggingOut ? (
             <Loader2 className="w-5 h-5 animate-spin" />
@@ -361,16 +363,17 @@ export function Settings({ onBack }: SettingsProps) {
             <LogOut className="w-5 h-5" />
           )}
           {t('settings.logout')}
-        </button>
+        </Button>
 
         {/* ── Suppression de compte ────────────────────────────────────────── */}
-        <button
+        <Button
+          variant="outline"
           onClick={() => { setDeleteStep(1); setDeleteReason(''); setShowDeleteModal(true); }}
-          className="w-full flex items-center justify-center gap-2 py-200 rounded-2xl font-semibold text-red-600 border border-red-200 dark:border-red-500/20 active:scale-[0.98] transition-all"
+          className="w-full flex items-center justify-center gap-2 text-red-600 border-red-200 dark:border-red-500/20 rounded-2xl py-6"
         >
           <Trash2 className="w-5 h-5" />
           Supprimer mon compte
-        </button>
+        </Button>
 
         <div className="text-center pb-2">
           <p className="text-[11px] text-gray-300">Let's Out • {displayName}</p>

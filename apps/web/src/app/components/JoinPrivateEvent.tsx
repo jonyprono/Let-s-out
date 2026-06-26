@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export function JoinPrivateEvent() {
   const navigate = useNavigate();
@@ -167,34 +169,35 @@ export function JoinPrivateEvent() {
         </p>
 
         <div className="w-full max-w-sm space-y-4">
-          <input
+          <Input
             type="text"
             placeholder="Ex: A1B2C3D4E5"
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
-            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-center text-xl font-mono tracking-widest font-bold focus:outline-none focus:border-action-primary uppercase"
+            className="text-center text-xl font-mono tracking-widest font-bold uppercase"
           />
           
-          <button
+          <Button
             onClick={() => handleJoin()}
             disabled={isLoading || !code.trim()}
-            className="w-full py-4 bg-action-primary text-white rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-50"
+            className="w-full"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Rejoindre l\'événement'}
-          </button>
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Rejoindre l'événement"}
+          </Button>
 
           <div className="relative py-4">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
             <div className="relative flex justify-center"><span className="bg-white px-4 text-xs text-gray-400 font-medium uppercase tracking-wider">ou</span></div>
           </div>
 
-          <button
+          <Button
+            variant="outline"
             onClick={startScan}
-            className="w-full py-4 bg-gray-900 text-white rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-center gap-2"
           >
             <Camera className="w-5 h-5" />
             Scanner le QR code
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { useUserProfile } from '@/features/users/UserProfileContext'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { Button } from '@/components/ui/button'
 
 interface FriendRequest {
   id: string
@@ -172,15 +173,17 @@ export function FriendRequests() {
                       <Loader2 className="w-5 h-5 animate-spin text-action-primary" />
                     ) : (
                       <>
-                        <button
+                        <Button
+                          size="sm"
                           onClick={() => handleAccept(req.id)}
-                          className="w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95"
-                          style={{ background: 'rgba(151,71,255,0.1)' }}
+                          className="w-10 h-10 !p-0 rounded-full flex items-center justify-center"
                           title="Accepter"
                         >
-                          <Check className="w-5 h-5" style={{ color: '#FF7A00' }} />
-                        </button>
-                        <button
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
                           onClick={() => {
                             // Simply remove from local view (optimistic)
                             toast.info('Demande ignorée')
@@ -188,11 +191,11 @@ export function FriendRequests() {
                               old ? old.filter(r => r.id !== req.id) : []
                             )
                           }}
-                          className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center transition-all active:scale-95"
+                          className="w-10 h-10 !p-0 rounded-full flex items-center justify-center"
                           title="Ignorer"
                         >
-                          <X className="w-5 h-5 text-gray-400" />
-                        </button>
+                          <X className="w-4 h-4" />
+                        </Button>
                       </>
                     )}
                   </div>
