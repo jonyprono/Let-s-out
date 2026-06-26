@@ -159,7 +159,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
               <button
                 type="button"
                 onClick={onForgotPassword}
-                className="text-[var(--color-text-link)] text-[13px] font-medium hover:opacity-75 transition-opacity focus:outline-none"
+                className="text-[var(--color-text-link)] text-[13px] font-medium underline hover:opacity-75 transition-opacity focus:outline-none"
               >
                 Mot de passe oublié?
               </button>
