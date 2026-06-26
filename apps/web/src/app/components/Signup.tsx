@@ -143,7 +143,7 @@ export function Signup({ onBack }: SignupProps) {
 
   /* ── City autocomplete — Nominatim ── */
   useEffect(() => {
-    if (!city || city.length < 2) {
+    if (!city || city.length < 1) {
       setCitySuggestions([])
       setShowCitySuggestions(false)
       return
@@ -705,7 +705,7 @@ export function Signup({ onBack }: SignupProps) {
                         setCitySuggestions([])
                         setShowCitySuggestions(false)
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[#FAFAFA] active:bg-[#F2F2F2]"
+                      className="w-full flex items-center justify-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#FAFAFA] active:bg-[#F2F2F2]"
                       style={{
                         borderBottom: idx < citySuggestions.length - 1 ? '1px solid var(--border-default)' : 'none',
                       }}
