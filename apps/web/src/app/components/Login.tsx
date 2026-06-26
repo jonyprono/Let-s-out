@@ -98,12 +98,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
       <div className="flex flex-col min-h-full px-6 pt-6 pb-4">
         
         {/* Header (Logo + Titres) */}
-        <div className="flex flex-col items-center mb-8 shrink-0">
+        <div className="flex flex-col items-center mb-5 shrink-0">
           {/* Logo */}
           <img 
             src="/logoci.png" 
             alt="Let's Out" 
-            className="w-[68px] h-[68px] object-contain mx-auto mb-4" 
+            className="w-[68px] h-[68px] object-contain mx-auto mb-2" 
           />
 
           {/* Titres */}
@@ -118,7 +118,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-5 shrink-0 w-full mt-2">
+        <div className="flex flex-col gap-4 shrink-0 w-full mt-0">
           {/* Téléphone */}
           <div>
             <label className="mb-2 block font-poppins text-[14px] font-medium text-[var(--color-text-primary)]">Numéro de téléphone</label>
@@ -155,7 +155,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             />
             
             {/* Mot de passe oublié */}
-            <div className="text-right mt-[10px]">
+            <div className="text-right mt-2">
               <button
                 type="button"
                 onClick={onForgotPassword}
@@ -167,7 +167,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-5 shrink-0">
+        <div className="mt-4 shrink-0">
           {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
           <Button
             type="button"
@@ -179,7 +179,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-5 shrink-0">
+        <div className="my-4 shrink-0">
           <Divider label="Ou" />
         </div>
 
@@ -200,7 +200,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col items-center shrink-0 w-full pb-4">
 
           {/* "Vous êtes nouveau ?" */}
-          <div className="flex items-center justify-center gap-[4px] w-full mb-6">
+          <div className="flex items-center justify-center gap-[4px] w-full mb-4">
             <span className="font-poppins text-[13px] font-normal text-[var(--color-text-secondary)] whitespace-nowrap">
               Vous êtes nouveau sur Let's Out ?
             </span>
