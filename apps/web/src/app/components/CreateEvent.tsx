@@ -101,14 +101,14 @@ function InputField({
 }) {
   return (
     <div className="mb-4">
-      <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">{label}</p>
+      <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">{label}</p>
       <div className="relative" onClick={onClick}>
         <input
           value={value || ''}
           placeholder={placeholder}
           readOnly={readOnly}
           onChange={onChange}
-          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00] ${readOnly ? 'cursor-pointer' : ''}`}
+          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''}`}
         />
         {rightIcons && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -885,13 +885,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               {privacy && (
                 <div className="animate-in slide-in-from-top-2">
                   <div className="mb-4">
-                    <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Détails</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Détails</p>
                     <textarea
                       value={description}
                       onChange={e => setDescription(e.target.value)}
                       placeholder="Quels sont les détails ?"
                       rows={4}
-                      className="w-full px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00] resize-none"
+                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)] resize-none"
                     />
                   </div>
 
@@ -910,16 +910,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {formStep === 2 && (
             <div className="animate-in slide-in-from-right-2">
               <div className="mb-4">
-                <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Participants attendus</p>
+                <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Participants attendus</p>
                 <input
                   value={maxPlaces}
                   onChange={e => setMaxPlaces(e.target.value)}
                   type="number"
                   min={1}
                   placeholder="0"
-                  className="w-full px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00]"
+                  className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)]"
                 />
-                <p className="text-[11px] text-[#A3A3A3] mt-1.5 ml-1">Facultatif</p>
+                <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
               </div>
 
               <InputField
@@ -936,44 +936,44 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
                   {/* Montant cible */}
                   <div className="mb-4">
-                    <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Montant cible</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Montant cible</p>
                     <div className="flex gap-2 items-center">
                       <input
                         type="number" min={1} value={poolTarget}
                         onChange={e => setPoolTarget(e.target.value)}
                         placeholder="0"
-                        className="flex-1 px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00]"
+                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)]"
                       />
-                      <div className="px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
+                      <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
                     </div>
-                    <p className="text-[11px] text-[#A3A3A3] mt-1.5 ml-1">Montant estimé des dépenses</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Montant estimé des dépenses</p>
                   </div>
 
                   {/* Détails */}
                   <div className="mb-4">
-                    <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Détails</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Détails</p>
                     <textarea
                       value={poolDescription}
                       onChange={e => setPoolDescription(e.target.value)}
                       placeholder="Quels sont les détails des dépenses prévues ?"
                       rows={4}
-                      className="w-full px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00] resize-none"
+                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)] resize-none"
                     />
                   </div>
 
                   {/* Participation minimale */}
                   <div className="mb-2">
-                    <p className="text-[13px] font-semibold text-[#1A1A1A] mb-1.5">Participation minimale</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Participation minimale</p>
                     <div className="flex gap-2 items-center">
                       <input
                         type="number" min={1} value={poolMinAmount}
                         onChange={e => setPoolMinAmount(e.target.value)}
                         placeholder="0"
-                        className="flex-1 px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] focus:outline-none focus:border-[#FF7A00]"
+                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)]"
                       />
-                      <div className="px-4 py-3.5 border border-[#DFDFDF] rounded-[12px] text-[15px] font-semibold text-[#766F6E] bg-[#FAFAFA] shrink-0">F CFA</div>
+                      <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
                     </div>
-                    <p className="text-[11px] text-[#A3A3A3] mt-1.5 ml-1">Facultatif</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
                   </div>
 
                 </div>
@@ -1048,7 +1048,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="date"
                 value={tempStartDate}
                 onChange={e => setTempStartDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
               />
             </div>
             {tempStartDate && (
@@ -1063,7 +1063,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempStartTime}
                 onChange={e => setTempStartTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
               />
             </div>
           </div>
@@ -1088,7 +1088,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 value={tempEndDate}
                 min={startDate}
                 onChange={e => setTempEndDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
               />
             </div>
             {tempEndDate && (
@@ -1103,7 +1103,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempEndTime}
                 onChange={e => setTempEndTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
               />
             </div>
           </div>
@@ -1127,7 +1127,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="date"
                 value={tempRegEndDate}
                 onChange={e => setTempRegEndDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
               />
             </div>
             {tempRegEndDate && (
@@ -1142,7 +1142,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempRegEndTime}
                 onChange={e => setTempRegEndTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[#E0E0E0] rounded-2xl text-[15px] text-[#1A1A1A] focus:outline-none focus:border-[#FF7A00]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
               />
             </div>
           </div>

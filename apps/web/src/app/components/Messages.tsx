@@ -79,30 +79,30 @@ export function Messages(_props: MessagesProps) {
   }, [activeFilter, filtered, groups, directs]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#FFFFFF]" style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div className="w-full h-full flex flex-col bg-[var(--color-background-primary)] font-poppins">
 
       {/* Header */}
-      <div className="px-5 pt-4 pt-safe-4 pb-2 bg-[#FFFFFF] sticky top-0 z-20">
+      <div className="px-5 pt-4 pt-safe-4 pb-2 bg-[var(--color-background-primary)] sticky top-0 z-20">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-[28px] font-bold text-[#1B1818]">Messages</h1>
-          <button className="p-2 active:scale-95 transition-transform border border-gray-200 rounded-lg">
-            <Trash2 className="w-[20px] h-[20px] text-gray-400" />
+          <h1 className="text-[28px] font-bold text-[var(--color-text-primary)]">Messages</h1>
+          <button className="p-2 active:scale-95 transition-transform border border-[var(--border-default)] rounded-lg">
+            <Trash2 className="w-[20px] h-[20px] text-[var(--color-text-muted)]" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="bg-[#FFFFFF] border border-[#E5E5E5] rounded-full flex items-center gap-3 px-4 py-3 mb-5">
-          <Search className="w-[18px] h-[18px] text-[#8D8D8D] flex-shrink-0" />
+        <div className="bg-[var(--color-background-primary)] border border-[var(--border-default)] rounded-full flex items-center gap-3 px-4 py-3 mb-5">
+          <Search className="w-[18px] h-[18px] text-[var(--color-text-tertiary)] flex-shrink-0" />
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Rechercher une conversation..."
-            className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] placeholder:text-[#D1D1D1] font-medium"
+            className="flex-1 bg-transparent outline-none text-[14px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] font-medium"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
-              <X className="w-3.5 h-3.5 text-[#8D8D8D]" />
+              <X className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
             </button>
           )}
         </div>
@@ -121,8 +121,8 @@ export function Messages(_props: MessagesProps) {
                 onClick={() => setActiveFilter(tab.key)}
                 className={`px-4 py-1.5 rounded-full text-[14px] transition-colors font-medium ${
                   isActive
-                    ? 'bg-[#FFF4E5] text-[#FF7A00]'
-                    : 'bg-[#FAFAFA] text-[#8D8D8D]'
+                    ? 'bg-[var(--brand-orange-100)] text-[var(--color-text-brand-primary)]'
+                    : 'bg-[var(--color-background-primary-alt)] text-[var(--color-text-tertiary)]'
                 }`}
               >
                 {tab.label}
@@ -180,11 +180,11 @@ export function Messages(_props: MessagesProps) {
       {/* FAB (Floating Action Button) */}
       <button 
         onClick={() => setShowNewConv(true)}
-        className="absolute bottom-[90px] right-5 w-[50px] h-[50px] bg-[#FF7A00] rounded-[14px] flex items-center justify-center shadow-md shadow-orange-500/20 active:scale-95 transition-transform z-30"
+        className="absolute bottom-[90px] right-5 w-[50px] h-[50px] bg-[var(--brand-orange-500)] rounded-[14px] flex items-center justify-center shadow-md shadow-orange-500/20 active:scale-95 transition-transform z-30"
       >
         <div className="relative flex items-center justify-center">
           <MessageCircle className="w-[24px] h-[24px] text-white" strokeWidth={2} />
-          <div className="absolute top-[6px] right-[6px] w-[8px] h-[8px] bg-[#FF7A00] rounded-full flex items-center justify-center">
+          <div className="absolute top-[6px] right-[6px] w-[8px] h-[8px] bg-[var(--brand-orange-500)] rounded-full flex items-center justify-center">
             <Plus className="w-[8px] h-[8px] text-white" strokeWidth={4} />
           </div>
         </div>
@@ -201,40 +201,40 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
   return (
     <button
       onClick={onNavigate}
-      className="w-full flex flex-row items-center gap-[14px] px-5 py-[14px] text-left transition-colors active:bg-gray-50 bg-[#FFFFFF]"
+      className="w-full flex flex-row items-center gap-[14px] px-5 py-[14px] text-left transition-colors active:bg-[var(--color-background-primary-alt)] bg-[var(--color-background-primary)]"
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">
-        <div className="w-[50px] h-[50px] rounded-full overflow-hidden bg-gray-100">
+        <div className="w-[50px] h-[50px] rounded-full overflow-hidden bg-[var(--color-background-secondary)]">
           <SafeImage
             src={conv.avatarUrl}
             alt={conv.name}
             className="w-full h-full object-cover"
-            fallback={<div className="w-full h-full flex items-center justify-center text-xl font-semibold text-gray-500 bg-[#FAFAFA]">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
+            fallback={<div className="w-full h-full flex items-center justify-center text-xl font-semibold text-[var(--color-text-tertiary)] bg-[var(--color-background-primary-alt)]">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
           />
         </div>
         {!conv.isGroup && (
-          <div className="absolute bottom-0 right-0 w-[12px] h-[12px] bg-[#10C836] rounded-full border-2 border-white" />
+          <div className="absolute bottom-0 right-0 w-[12px] h-[12px] bg-[var(--color-background-green)] rounded-full border-2 border-white" />
         )}
       </div>
 
       {/* Content Block */}
       <div className="flex-1 min-w-0 flex flex-col justify-center">
         <div className="flex items-center justify-between mb-[2px]">
-          <h3 className={`text-[15px] truncate text-[#1B1818] font-[600]`}>
+          <h3 className={`text-[15px] truncate text-[var(--color-text-primary)] font-[600]`}>
             {conv.name}
           </h3>
-          <span className={`text-[11px] whitespace-nowrap text-[#8D8D8D]`}>
+          <span className={`text-[11px] whitespace-nowrap text-[var(--color-text-tertiary)]`}>
             {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-[13px] truncate text-[#8D8D8D] pr-4">
+          <p className="text-[13px] truncate text-[var(--color-text-tertiary)] pr-4">
             {conv.lastMsgPrefix && <span className="font-medium mr-1">{conv.lastMsgPrefix}</span>}
             {conv.lastMsg}
           </p>
           {hasUnread && (
-            <div className="flex-shrink-0 min-w-[20px] h-[20px] px-[5px] rounded-full flex items-center justify-center text-[10px] font-bold text-white bg-[#FF7A00]">
+            <div className="flex-shrink-0 min-w-[20px] h-[20px] px-[5px] rounded-full flex items-center justify-center text-[10px] font-bold text-white bg-[var(--brand-orange-500)]">
               {conv.unread > 9 ? '9+' : conv.unread}
             </div>
           )}

@@ -7,6 +7,9 @@ export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement>
   isSender?: boolean;
   imageUrl?: string;
   avatarUrl?: string;
+  showSpacer?: boolean;
+  onAvatarClick?: () => void;
+  children?: React.ReactNode;
 }
 
 export function MessageBubble({
@@ -15,15 +18,23 @@ export function MessageBubble({
   isSender = false,
   imageUrl,
   avatarUrl,
+  showSpacer = false,
+  onAvatarClick,
   className,
+  children,
   ...props
 }: MessageBubbleProps) {
   return (
     <div className={cn("flex w-full gap-[var(--spacing-100)]", isSender ? "flex-row-reverse" : "flex-row", className)} {...props}>
-      {!isSender && (
-        <div className="flex w-8 flex-col justify-end">
+      {!isSender && (avatarUrl || showSpacer) && (
+        <div className="flex w-8 flex-col justify-end flex-shrink-0">
           {avatarUrl && (
-            <img src={avatarUrl} alt="avatar" className="h-8 w-8 rounded-full object-cover" />
+            <img
+              src={avatarUrl}
+              alt="avatar"
+              className={cn("h-8 w-8 rounded-full object-cover", onAvatarClick && "cursor-pointer active:opacity-75")}
+              onClick={onAvatarClick}
+            />
           )}
         </div>
       )}
@@ -45,21 +56,33 @@ export function MessageBubble({
                 : "bg-[var(--color-background-secondary)] text-[var(--color-text-primary)] rounded-tl-sm"
             )}
           >
-            <span className="mr-2">{content}</span>
-            <span className="inline-block text-[10px] text-[var(--color-text-secondary)] opacity-70 align-bottom leading-none">
-              {time}
-            </span>
+            {children ? (
+              children
+            ) : (
+              <>
+                <span className="mr-2">{content}</span>
+                <span className="inline-block text-[10px] text-[var(--color-text-secondary)] opacity-70 align-bottom leading-none">
+                  {time}
+                </span>
+              </>
+            )}
           </div>
         )}
       </div>
 
-      {isSender && (
-        <div className="flex w-8 flex-col justify-end">
+      {isSender && (avatarUrl || showSpacer) && (
+        <div className="flex w-8 flex-col justify-end flex-shrink-0">
           {avatarUrl && (
-            <img src={avatarUrl} alt="avatar" className="h-8 w-8 rounded-full object-cover" />
+            <img
+              src={avatarUrl}
+              alt="avatar"
+              className={cn("h-8 w-8 rounded-full object-cover", onAvatarClick && "cursor-pointer active:opacity-75")}
+              onClick={onAvatarClick}
+            />
           )}
         </div>
       )}
     </div>
   )
 }
+

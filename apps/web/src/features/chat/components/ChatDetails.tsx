@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Send, Paperclip, Camera, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video, Mic, Trash2 } from 'lucide-react'
+import { ChevronLeft, Send, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
@@ -17,6 +17,8 @@ import { toast } from 'sonner'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { Capacitor } from '@capacitor/core'
 import { resolveContributionAmount, computePoolStats, hasActivePool } from '@/lib/pool-contribution'
+import { MessageBubble } from '@/components/ui/message-bubble'
+import { ChatInput } from '@/components/ui/chat-input'
 
 async function saveFileLocally(file: File | Blob, name: string) {
   if (!Capacitor.isNativePlatform()) return null
@@ -569,122 +571,77 @@ export function ChatDetails() {
                   </div>
                 )}
 
-                <div className={`flex items-end gap-1.5 ${isMe ? 'flex-row-reverse' : 'flex-row'} ${isFirstInGroup ? 'mt-3' : 'mt-0.5'}`}>
-                  {/* Avatar */}
-                  {showSenderInfo ? (
-                    isFirstInGroup ? (
+                <div
+                  className="relative"
+                  onMouseDown={() => handlePressStart(msg.id)}
+                  onMouseUp={handlePressEnd}
+                  onTouchStart={() => handlePressStart(msg.id)}
+                  onTouchEnd={handlePressEnd}
+                >
+                  {showSenderInfo && isFirstInGroup && (
+                    <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-1 pl-10 pr-10`}>
                       <button
-                        className="w-7 h-7 rounded-full bg-gray-200 dark:bg-[#333333] overflow-hidden flex-shrink-0 mb-1 active:opacity-70"
-                        onClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
-                      >
-                        <SafeImage
-                          src={senderAvatar}
-                          alt={senderName}
-                          className="w-full h-full object-cover"
-                          fallback={<div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400">{senderName.charAt(0).toUpperCase()}</div>}
-                        />
-                      </button>
-                    ) : <div className="w-7 flex-shrink-0" />
-                  ) : isGroup && isMe ? <div className="w-7 flex-shrink-0" /> : null}
-
-                  {/* Bubble */}
-                  <div className={`flex flex-col max-w-[72%] ${isMe ? 'items-end' : 'items-start'} relative`}
-                    onMouseDown={() => handlePressStart(msg.id)}
-                    onMouseUp={handlePressEnd}
-                    onTouchStart={() => handlePressStart(msg.id)}
-                    onTouchEnd={handlePressEnd}
-                  >
-                    {showSenderInfo && isFirstInGroup && (
-                      <button
-                        className="text-[11px] font-semibold text-action-primary mb-0.5 ml-1 active:opacity-70"
+                        className="text-[11px] font-semibold text-action-primary active:opacity-70"
                         onClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
                       >
                         {senderName}
                       </button>
-                    )}
+                    </div>
+                  )}
 
-                    {/* Reaction emoji picker (shown on long press) */}
-                    {pickerMsgId === msg.id && (
-                      <div
-                        className={`absolute ${isMe ? 'right-0' : 'left-0'} -top-14 z-50 bg-white dark:bg-[#2A2A2A] rounded-full shadow-2xl border border-gray-100 dark:border-[#444444] flex gap-1 px-3 py-2`}
-                        onClick={e => e.stopPropagation()}
-                      >
-                        {REACTION_EMOJIS.map(emoji => (
-                          <button
-                            key={emoji}
-                            onClick={() => handleReact(msg.id, emoji)}
-                            className="text-xl active:scale-125 transition-transform hover:scale-125"
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                  {/* Reaction emoji picker (shown on long press) */}
+                  {pickerMsgId === msg.id && (
+                    <div
+                      className={`absolute ${isMe ? 'right-0' : 'left-0'} -top-14 z-50 bg-white dark:bg-[#2A2A2A] rounded-full shadow-2xl border border-gray-100 dark:border-[#444444] flex gap-1 px-3 py-2`}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      {REACTION_EMOJIS.map(emoji => (
+                        <button
+                          key={emoji}
+                          onClick={() => handleReact(msg.id, emoji)}
+                          className="text-xl active:scale-125 transition-transform hover:scale-125"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
+                  <MessageBubble
+                    isSender={isMe}
+                    time={`${format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}${isMe && isLastMsg ? ' ✓' : ''}`}
+                    avatarUrl={showSenderInfo && isFirstInGroup ? senderAvatar || undefined : undefined}
+                    showSpacer={showSenderInfo && !isFirstInGroup}
+                    onAvatarClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
+                    imageUrl={isImage && msg.content ? msg.content : undefined}
+                    content={!isMedia && !msg.isDeleted ? (msg.content ?? undefined) : undefined}
+                  >
                     {msg.isDeleted ? (
-                      <div className={`rounded-[18px] px-3.5 py-2 flex items-center gap-2 ${isMe ? 'bg-[#FF7A00]/10 border border-[#FF7A00]/20 text-[#FF7A00]' : 'bg-gray-100 border border-gray-200 text-gray-500'} italic`}>
+                      <div className="flex items-center gap-2 italic text-[#FF7A00]">
                         <Trash2 className="w-4 h-4 opacity-70" />
-                        <p className="text-[14px]">Ce message a été supprimé</p>
+                        <span className="text-[14px]">Ce message a été supprimé</span>
+                        <span className="text-[10px] text-[var(--color-text-secondary)] opacity-70 align-bottom leading-none ml-2">
+                          {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                        </span>
                       </div>
-                    ) : isMedia ? (
-                      <div
-                        className={`relative shadow-none flex flex-col justify-center ${
-                          isAudio
-                            ? `w-[216px] h-[32px] pl-[8px] pr-[32px] gap-[10px] ${isMe ? `bg-[#FFF2D3] text-[#1B1818] rounded-[10px] ${isFirstInGroup ? 'rounded-tr-[2px]' : ''}` : `bg-[#F2F2F2] text-[#1B1818] rounded-[10px] ${isFirstInGroup ? 'rounded-tl-[2px]' : ''}`}`
-                            : `px-1.5 py-1.5 ${isMe ? `bg-[#FFF2D3] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tr-sm' : ''}` : `bg-[#F2F2F2] text-[#1B1818] rounded-[20px] ${isFirstInGroup ? 'rounded-tl-sm' : ''}`}`
-                        }`}
-                        style={!isAudio ? { maxWidth: '280px' } : undefined}
-                      >
-                        {isImage && msg.content ? (
-                          <SafeImage
-                            src={msg.content}
-                            alt="photo"
-                            className="w-full object-cover rounded-[16px]"
-                            style={{ maxHeight: '350px' } as React.CSSProperties}
-                          />
-                        ) : isVideo && msg.content ? (
-                          <div className="rounded-[16px] overflow-hidden">
-                            <VideoMessage src={msg.content} isMe={isMe} />
-                          </div>
-                        ) : isAudio && msg.content ? (
-                          <div className="flex-1 flex flex-col justify-center w-full mt-[-6px]">
-                            <AudioMessage src={msg.content} />
-                          </div>
-                        ) : null}
-                        
-                        {/* Time for media */}
-                        <div className={`${isAudio ? 'absolute bottom-1 right-2' : 'absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full'}`}>
-                          <div className={`flex items-center gap-1 justify-end`}>
-                            <span className={`text-[9px] font-medium ${isAudio ? 'text-[#8D8D8D]' : 'text-white'}`}>
+                    ) : isVideo && msg.content ? (
+                      <div className="relative">
+                        <VideoMessage src={msg.content} isMe={isMe} />
+                        <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full">
+                          <div className="flex items-center gap-1 justify-end">
+                            <span className="text-[9px] font-medium text-white">
                               {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                             </span>
-                            {isMe && isLastMsg && <Check className={`w-[12px] h-[12px] ${isAudio ? 'text-[#8D8D8D]' : 'text-white'}`} strokeWidth={2.5} />}
+                            {isMe && isLastMsg && <Check className="w-[12px] h-[12px] text-white" strokeWidth={2.5} />}
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <div
-                        className={`px-2.5 py-1 shadow-none w-fit ${
-                          isMe
-                            ? `bg-[#FFF2D3] text-[#1B1818] rounded-[12px] ${isFirstInGroup ? 'rounded-tr-[2px]' : ''}`
-                            : `bg-[#F2F2F2] text-[#1B1818] rounded-[12px] ${isFirstInGroup ? 'rounded-tl-[2px]' : ''}`
-                        }`}
-                        style={{ maxWidth: '80%' }}
-                      >
-                        <div className="text-[14px] leading-[1.3] break-words text-left">
-                          {msg.content}
-                          <span className="float-right flex items-center gap-1 ml-2 mt-[6px] mb-[-2px]">
-                            <span className="text-[10px] font-medium text-[#8D8D8D]">
-                              {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
-                            </span>
-                            {isMe && isLastMsg && (
-                              <Check className="w-[12px] h-[12px] text-[#8D8D8D]" strokeWidth={2.5} />
-                            )}
-                          </span>
-                          <div className="clear-both" />
-                        </div>
+                    ) : isAudio && msg.content ? (
+                      <div className="w-[200px] flex items-center gap-2 py-1">
+                        <AudioMessage src={msg.content} />
                       </div>
-                    )}
+                    ) : null}
+                  </MessageBubble>
 
                     {/* Reactions display */}
                     {grouped.length > 0 && (
@@ -703,7 +660,6 @@ export function ChatDetails() {
                     )}
                   </div>
                 </div>
-              </div>
             )
           })
         )}
@@ -721,61 +677,34 @@ export function ChatDetails() {
       {/* Input Area */}
       <div className="flex-shrink-0 bg-[#FFFFFF] px-4 py-3 flex items-center gap-3 pb-safe-bottom z-10 border-t border-[#F2F2F2]">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
-        <div className="flex-1 h-[48px] bg-[#FCFCFC] border border-[#DFDFDF] rounded-full flex items-center px-[16px] gap-[12px] overflow-hidden relative">
-          {isRecording ? (
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-red-500 font-medium text-[15px]">{formatRecordingTime(recordingTime)}</span>
-              </div>
-              <button onClick={cancelRecording} className="text-gray-400 hover:text-red-500 transition-colors">
-                <Trash2 className="w-5 h-5" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center w-full gap-[12px] h-full">
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => handleTyping(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSendText() }}
-                placeholder="Écrire un message..."
-                className="flex-1 h-full bg-transparent border-none text-[14px] text-[#1B1818] placeholder:text-[#8D8D8D] outline-none min-w-0"
-              />
-              <button onClick={() => fileInputRef.current?.click()} className="text-[#8D8D8D] active:scale-95 transition-transform flex items-center justify-center">
-                <Paperclip className="w-[20px] h-[20px]" strokeWidth={1.5} />
-              </button>
-              {!inputText.trim() && (
-                <button onClick={() => fileInputRef.current?.click()} className="text-[#8D8D8D] active:scale-95 transition-transform flex items-center justify-center">
-                  <Camera className="w-[20px] h-[20px]" strokeWidth={1.5} />
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
         {isRecording ? (
+          <div className="flex-1 flex items-center justify-between h-[48px] bg-[#FCFCFC] border border-[#DFDFDF] rounded-full px-[16px] gap-[12px] overflow-hidden relative">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-red-500 font-medium text-[15px]">{formatRecordingTime(recordingTime)}</span>
+            </div>
+            <button onClick={cancelRecording} className="text-gray-400 hover:text-red-500 transition-colors">
+              <Trash2 className="w-5 h-5" />
+            </button>
+          </div>
+        ) : (
+          <ChatInput
+            value={inputText}
+            onChange={handleTyping}
+            onSend={handleSendText}
+            onAttach={() => fileInputRef.current?.click()}
+            onCamera={() => fileInputRef.current?.click()}
+            onMic={startRecording}
+            className="p-0 flex-1"
+          />
+        )}
+
+        {isRecording && (
           <button
             onClick={stopRecording}
             className="w-[48px] h-[48px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
           >
             <Send className="w-[22px] h-[22px] ml-1" />
-          </button>
-        ) : inputText.trim() ? (
-          <button
-            onClick={handleSendText}
-            disabled={isUploading}
-            className="w-[48px] h-[48px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"
-          >
-            <Send className="w-[22px] h-[22px] ml-1" strokeWidth={1.5} />
-          </button>
-        ) : (
-          <button
-            onClick={startRecording}
-            disabled={isUploading}
-            className="w-[48px] h-[48px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-sm flex-shrink-0 transition-transform active:scale-95"
-          >
-            <Mic className="w-[22px] h-[22px]" />
           </button>
         )}
       </div>

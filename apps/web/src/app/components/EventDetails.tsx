@@ -11,11 +11,11 @@ import {
   Check,
   BadgeCheck,
   X,
-  Heart,
   Briefcase,
   MessageCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SaveEventButton } from '@/components/ui/save-event-button'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
 import { chatApi } from '@/features/chat/api'
@@ -316,26 +316,24 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   return (
     <>
-      <div className="w-full h-full bg-white flex flex-col font-sans">
+      <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
 
         {/* Header */}
-        <div className="flex-shrink-0 bg-white z-10 px-5 pt-safe-4 pt-4 pb-3 flex items-center justify-between">
+        <div className="flex-shrink-0 bg-[var(--color-background-primary)] z-10 px-5 pt-safe-4 pt-4 pb-3 flex items-center justify-between border-b border-[var(--border-default)]">
           <button
             onClick={onBack}
             className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-900" strokeWidth={2.5} />
+            <ChevronLeft className="w-5 h-5 text-[var(--color-text-primary)]" strokeWidth={2.5} />
           </button>
 
-          <span className="text-[16px] font-semibold text-gray-900">Détails événement</span>
+          <span className="text-[16px] font-bold text-[var(--color-text-primary)]">Détails événement</span>
 
           <div className="flex items-center gap-3">
-            <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform">
-              <Share2 className="w-5 h-5 text-gray-800" strokeWidth={1.8} />
+            <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
+              <Share2 className="w-5 h-5" strokeWidth={1.8} />
             </button>
-            <button onClick={handleFavorite} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform">
-              <Heart className={`w-5 h-5 ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-800'}`} strokeWidth={1.8} />
-            </button>
+            <SaveEventButton saved={favorite} onClick={handleFavorite} className="w-9 h-9" />
           </div>
         </div>
 
