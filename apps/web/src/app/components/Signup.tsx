@@ -196,48 +196,55 @@ export function Signup({ onBack }: SignupProps) {
             : 'Le format de votre numéro de téléphone est incorrect.'
         )
       }
+      const triggerOtpSend = async () => {
+        if (currentChannel === 'sms') {
+          try {
+            setIsFirebaseSending(true)
+            if (Capacitor.isNativePlatform()) {
+              const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
+                setNativeVerificationId(event.verificationId)
+              })
+              await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
+              setStep(2); setCountdown(59)
+              setTimeout(() => otpRefs.current[0]?.focus(), 100)
+              setTimeout(() => listener.remove(), 60000)
+            } else {
+              if (!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
+              }
+              const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
+              setConfirmationResult(confirmation); setStep(2); setCountdown(59)
+              setTimeout(() => otpRefs.current[0]?.focus(), 100)
+            }
+          } catch (err: any) {
+            console.error('Firebase sending error:', err)
+            toast.error(`[Firebase Error] ${err?.message || err}`)
+            setConfirmationResult(null)
+            sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
+              onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
+              onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || "Erreur d'envoi du code") },
+            })
+          } finally { setIsFirebaseSending(false) }
+        } else {
+          sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
+            onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
+            onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || "Erreur d'envoi") },
+          })
+        }
+      }
+
       checkTarget({ target: fullPhone }, {
         onSuccess: async ({ data }) => {
           if (data.exists) {
             toast.error('Numéro ou mot de passe incorrect. Veuillez vous connecter.')
           } else {
-            if (currentChannel === 'sms') {
-              try {
-                setIsFirebaseSending(true)
-                if (Capacitor.isNativePlatform()) {
-                  const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
-                    setNativeVerificationId(event.verificationId)
-                  })
-                  await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
-                  setStep(2); setCountdown(59)
-                  setTimeout(() => otpRefs.current[0]?.focus(), 100)
-                  setTimeout(() => listener.remove(), 60000)
-                } else {
-                  if (!window.recaptchaVerifier) {
-                    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
-                  }
-                  const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
-                  setConfirmationResult(confirmation); setStep(2); setCountdown(59)
-                  setTimeout(() => otpRefs.current[0]?.focus(), 100)
-                }
-              } catch (err: any) {
-                console.error('Firebase sending error:', err)
-                toast.error(`[Firebase Error] ${err?.message || err}`)
-                setConfirmationResult(null)
-                sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
-                  onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-                  onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || "Erreur d'envoi du code") },
-                })
-              } finally { setIsFirebaseSending(false) }
-            } else {
-              sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
-                onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-                onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || "Erreur d'envoi") },
-              })
-            }
+            triggerOtpSend()
           }
         },
-        onError: () => toast.error('Erreur de vérification du numéro'),
+        onError: () => {
+          // If checkTarget fails (e.g. 404 Not Found), it means the user doesn't exist, which is good for signup!
+          triggerOtpSend()
+        },
       })
     } else if (step === 2) {
       const codeStr = otp.join('')
@@ -469,13 +476,9 @@ export function Signup({ onBack }: SignupProps) {
                     key={ch}
                     type="button"
                     onClick={() => setCurrentChannel(val)}
-                    className={`flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border transition-colors gap-2 ${
-                      isActive
-                        ? 'border-[var(--brand-orange-500)] bg-white'
-                        : 'border-[var(--border-default)] bg-white'
-                    }`}
+                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-[var(--border-default)] transition-colors gap-2 bg-white"
                   >
-                    <span className="font-poppins text-[15px] font-medium text-[var(--color-text-primary)]">
+                    <span className="flex-1 text-left font-poppins text-[15px] font-medium text-[var(--color-text-primary)]">
                       {ch}
                     </span>
                     {/* Radio indicator */}
