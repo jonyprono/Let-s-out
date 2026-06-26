@@ -98,7 +98,7 @@
   /* Brand / Pink */
   --brand-pink-100: #FFF1E7;
   --brand-pink-400: #FF8DA1;
-  --brand-pink-500: #FF4D8D;
+  --brand-pink-500: #FF4DBD;
   --brand-pink-600: #FF355E;
 
   /* Brand / Yellow */
@@ -219,7 +219,7 @@
 
   /* ── FIGMA TYPOGRAPHY TOKENS ─────────────────────────────── */
   /* Font Family */
-  --font-family-body: 'Inter', sans-serif;
+  --font-family-body: 'Inter Display', 'Inter', sans-serif;
   --font-family-title: 'Poppins', sans-serif;
 
   /* Font Size */
@@ -263,6 +263,12 @@
   --radius-large-increased: 20px;
   --radius-extra-large: 28px;
   --radius-full: 1000px;
+
+  /* ── FIGMA GRADIENT TOKENS (Illustratives) ───────────────── */
+  --gradient-brand-1: linear-gradient(45deg, #FF7EC7, #FFD048);
+  --gradient-brand-2: linear-gradient(45deg, #FFBB00, #FFF500);
+  --gradient-brand-3: linear-gradient(135deg, #FFA8A8, #FCFF00);
+  --gradient-brand-4: linear-gradient(45deg, #FF7A00, #FFD439);
 
   /* Font family tokens (Legacy override) */
   --font-poppins: var(--font-family-title);
@@ -450,18 +456,25 @@ input:-webkit-autofill:active{
   --font-inter: var(--font-inter);
   --font-poppins: var(--font-poppins);
 
-  /* FIGMA COLOURE PRIMITIVES */
+  /* FIGMA COLOR PRIMITIVES */
   --color-white: var(--white);
   --color-black: var(--black);
-  
-  --color-functional-red-500: var(--functional-red-500);
-  --color-functional-green-positive: var(--functional-green-positive);
 
+  /* Functional */
+  --color-functional-green-50: var(--functional-green-50);
+  --color-functional-green-500: var(--functional-green-500);
+  --color-functional-green-600: var(--functional-green-600);
+  --color-functional-red-50: var(--functional-red-50);
+  --color-functional-red-500: var(--functional-red-500);
+  --color-functional-red-600: var(--functional-red-600);
+
+  /* Blue */
   --color-brand-blue-100: var(--brand-blue-100);
   --color-brand-blue-400: var(--brand-blue-400);
   --color-brand-blue-500: var(--brand-blue-500);
   --color-brand-blue-600: var(--brand-blue-600);
 
+  /* Orange */
   --color-brand-orange-50: var(--brand-orange-50);
   --color-brand-orange-100: var(--brand-orange-100);
   --color-brand-orange-200: var(--brand-orange-200);
@@ -469,16 +482,20 @@ input:-webkit-autofill:active{
   --color-brand-orange-500: var(--brand-orange-500);
   --color-brand-orange-600: var(--brand-orange-600);
 
+  /* Pink */
   --color-brand-pink-100: var(--brand-pink-100);
   --color-brand-pink-400: var(--brand-pink-400);
   --color-brand-pink-500: var(--brand-pink-500);
   --color-brand-pink-600: var(--brand-pink-600);
 
+  /* Yellow */
   --color-brand-yellow-50: var(--brand-yellow-50);
   --color-brand-yellow-100: var(--brand-yellow-100);
   --color-brand-yellow-400: var(--brand-yellow-400);
   --color-brand-yellow-500: var(--brand-yellow-500);
+  --color-brand-yellow-600: var(--brand-yellow-600);
 
+  /* Gray */
   --color-neutral-gray-50: var(--neutral-gray-50);
   --color-neutral-gray-100: var(--neutral-gray-100);
   --color-neutral-gray-200: var(--neutral-gray-200);
