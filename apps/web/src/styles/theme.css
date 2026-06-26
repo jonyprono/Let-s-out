@@ -413,6 +413,17 @@ input:-webkit-autofill:active{
     -webkit-text-fill-color: var(--color-text-primary) !important;
 }
 
+/**
+ * ── ICONOGRAPHIE : Hugeicons ───────────────────────────────────────────
+ * Bibliothèque : hugeicons-react (npm)
+ * Style officiel Figma : Stroke / Rounded  ← toujours utiliser ce style
+ * Taille par défaut recommandée : 24px (strokeWidth 1.5)
+ * Taille small : 20px | Taille large : 28px
+ * Importation : import { IconName } from 'hugeicons-react'
+ * Ex. utilisés : Location01Icon, ArrowDown01Icon, ViewIcon, ViewOffSlashIcon
+ * Référence Figma : node-id=306-17742 et node-id=885-2539
+ * ───────────────────────────────────────────────────────────── */
+
 /* Parcours auth overrides removed to allow utility classes to work */
 @theme inline {
   --color-background: var(--background);
@@ -518,20 +529,33 @@ input:-webkit-autofill:active{
   --color-border-primary: var(--border-primary);
 
   /* ── STRICT SPACING SCALE (base 8px unit, exact rem values) ── */
-  --spacing-0:    0rem;
+  /* Figma token: space.XXX — all tokens from space.0 to space.1000 */
+  --spacing-0:    0rem;       /* 0px  */
   --spacing-025:  0.125rem;   /* 2px  */
   --spacing-050:  0.25rem;    /* 4px  */
   --spacing-075:  0.375rem;   /* 6px  */
-  --spacing-100:  0.5rem;     /* 8px  */
+  --spacing-100:  0.5rem;     /* 8px  — unité de base */
+  --spacing-125:  0.625rem;   /* 10px */
   --spacing-150:  0.75rem;    /* 12px */
+  --spacing-175:  0.875rem;   /* 14px */
   --spacing-200:  1rem;       /* 16px — Marge & Gutter clés */
   --spacing-250:  1.25rem;    /* 20px */
   --spacing-300:  1.5rem;     /* 24px */
   --spacing-400:  2rem;       /* 32px */
+  --spacing-450:  2.25rem;    /* 36px */
   --spacing-500:  2.5rem;     /* 40px */
   --spacing-600:  3rem;       /* 48px */
+  --spacing-700:  3.5rem;     /* 56px */
   --spacing-800:  4rem;       /* 64px */
+  --spacing-900:  4.5rem;     /* 72px */
   --spacing-1000: 5rem;       /* 80px */
+
+  /* ── GRID LAYOUT TOKENS (Figma: Horizontal + Vertical grid) ── */
+  /* Columns: 4 | Gutter: 16px | Margin: 16px | Base unit: 8px */
+  --layout-columns: 4;
+  --layout-gutter:  var(--spacing-200);   /* 16px */
+  --layout-margin:  var(--spacing-200);   /* 16px */
+  --layout-base-unit: var(--spacing-100); /* 8px — unité fondamentale */
 
   /* ── AUTH INPUT UNIFORM HEIGHT ── */
   --input-height: 3.25rem;    /* 52px — uniform for all auth inputs */
