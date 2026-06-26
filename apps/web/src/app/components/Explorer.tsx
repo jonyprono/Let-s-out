@@ -1,14 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { Search, ChevronLeft, X, Check, Loader2, Lock, Map, List, Bell, QrCode, SlidersHorizontal } from 'lucide-react';
-import { 
-  Location01Icon, ArrowDown01Icon
+import { Loader2, ChevronLeft, Lock } from 'lucide-react';
+import {
+  Location01Icon,
+  ArrowDown01Icon,
+  Search01Icon,
+  Cancel01Icon,
+  Tick01Icon,
+  Notification01Icon,
+  Setting06Icon,
+  QrCode01Icon,
+  MapsIcon,
+  ListViewIcon,
 } from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { EventCard } from '@/components/shared/EventCard';
 import ExplorerMap from '@/app/components/ExplorerMap';
 import { eventsApi, type Event } from '@/features/events/api';
+import { useNotifications } from '@/features/notifications/api';
 interface ExplorerProps {
   onNavigate: (screen: string, id?: string) => void;
 }
@@ -54,6 +64,7 @@ type Screen = 'list' | 'filter' | 'search' | 'join';
 export function Explorer({ onNavigate }: ExplorerProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: notificationsData } = useNotifications();
   const [screen, setScreen] = useState<Screen>(() => {
     return location.search.includes('screen=filter') ? 'filter' : 'list';
   });
@@ -135,7 +146,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       'Zagnanado', 'Za-Kpota', 'Zogbodomey'
     ].sort();
 
-    const filteredCities = BENIN_CITIES.filter(c => c.toLowerCase().startsWith(mapSearch.toLowerCase()));
+    // Filtre dès la 1ère lettre — contient plutôt que startsWith pour plus de souplesse
+    const filteredCities = BENIN_CITIES.filter(c =>
+      c.toLowerCase().includes(mapSearch.toLowerCase())
+    );
 
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: '#FAFAFA', display: 'flex', flexDirection: 'column' }}>
@@ -150,10 +164,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             padding: '0 16px',
             height: '44px',
             backgroundColor: 'white',
-            border: isSearching ? '1.5px solid #FF7A00' : '1px solid #DFDFDF',
+            border: isSearching ? '2px solid var(--brand-orange-500)' : '1px solid var(--border-default)',
             boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
           }}>
-            <Location01Icon style={{ width: 20, height: 20, color: '#A3A3A3', flexShrink: 0 }} strokeWidth={1.5} />
+            <Location01Icon style={{ width: 20, height: 20, color: 'var(--color-icon-secondary)', flexShrink: 0 }} strokeWidth={1.5} />
             <input
               autoFocus
               value={mapSearch}
@@ -164,17 +178,27 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 fontSize: 15,
                 outline: 'none',
                 background: 'transparent',
-                color: '#1B1818',
+                color: 'var(--color-text-primary)',
                 fontFamily: 'Poppins, sans-serif',
                 border: 'none'
               }}
             />
-            <button
-              onClick={closeSearch}
-              style={{ padding: 6, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-            >
-              <X style={{ width: 18, height: 18, color: '#A3A3A3' }} strokeWidth={2} />
-            </button>
+            {mapSearch.length > 0 && (
+              <button
+                onClick={() => setMapSearch('')}
+                style={{ padding: 4, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                <Cancel01Icon style={{ width: 18, height: 18, color: 'var(--color-icon-secondary)' }} strokeWidth={2} />
+              </button>
+            )}
+            {mapSearch.length === 0 && (
+              <button
+                onClick={closeSearch}
+                style={{ padding: 4, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                <Cancel01Icon style={{ width: 18, height: 18, color: 'var(--color-icon-secondary)' }} strokeWidth={2} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -185,45 +209,43 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
               {currentLocation && (
                 <button
-                  onClick={() => {
-                    setCurrentLocation('');
-                    closeSearch();
-                  }}
+                  onClick={() => { /* clic sur la ville active = déjà sélectionnée, on ferme */ closeSearch(); }}
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                    backgroundColor: '#FF7A00', borderRadius: 999,
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    backgroundColor: 'var(--brand-orange-500)', borderRadius: 999,
                     padding: '10px 16px', border: 'none', cursor: 'pointer',
                     marginBottom: 24
                   }}
                 >
                   <Location01Icon style={{ width: 16, height: 16, color: 'white' }} strokeWidth={1.5} />
                   <span style={{ color: 'white', fontSize: 15, fontWeight: 600, fontFamily: 'Poppins, sans-serif' }}>{currentLocation}</span>
-                  <Check style={{ width: 16, height: 16, color: 'white' }} strokeWidth={3} />
+                  <Tick01Icon style={{ width: 16, height: 16, color: 'white' }} strokeWidth={2.5} />
                 </button>
               )}
 
               {recentCities.length > 0 && (
                 <div style={{ width: '100%' }}>
-                  <p style={{ fontSize: 14, color: '#6B7280', fontFamily: 'Poppins, sans-serif', fontWeight: 500, marginBottom: 8 }}>Récents</p>
+                  <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontFamily: 'Poppins, sans-serif', fontWeight: 600, marginBottom: 8 }}>Récents</p>
                   {recentCities.map((city, idx) => (
                     <button
                       key={idx}
                       onClick={() => { saveRecentCity(city); setCurrentLocation(city); setMapSearch(''); closeSearch(); }}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
-                        gap: 12, padding: '14px 0', background: 'transparent', border: 'none', borderBottom: '1px solid #F3F4F6',
+                        gap: 12, padding: '14px 0', background: 'transparent', border: 'none',
+                        borderBottom: '1px solid var(--border-default)',
                         cursor: 'pointer', textAlign: 'left'
                       }}
                     >
-                      <Location01Icon style={{ width: 22, height: 22, color: '#5B5B5B', flexShrink: 0 }} strokeWidth={1.5} />
-                      <span style={{ fontSize: 16, color: '#1B1818', fontFamily: 'Poppins, sans-serif' }}>{city}</span>
+                      <Location01Icon style={{ width: 20, height: 20, color: 'var(--color-icon-secondary)', flexShrink: 0 }} strokeWidth={1.5} />
+                      <span style={{ fontSize: 15, color: 'var(--color-text-primary)', fontFamily: 'Poppins, sans-serif' }}>{city}</span>
                     </button>
                   ))}
                 </div>
               )}
             </div>
           ) : (
-            // Suggestions d'autocomplétion
+            // Suggestions d'autocomplétion (dès la 1ère lettre)
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
               {filteredCities.map((city, idx) => (
                 <button
@@ -231,16 +253,17 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onClick={() => { saveRecentCity(city); setCurrentLocation(city); setMapSearch(''); closeSearch(); }}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
-                    gap: 12, padding: '14px 0', background: 'transparent', border: 'none', borderBottom: '1px solid #F3F4F6',
+                    gap: 12, padding: '14px 0', background: 'transparent', border: 'none',
+                    borderBottom: '1px solid var(--border-default)',
                     cursor: 'pointer', textAlign: 'left'
                   }}
                 >
-                  <Location01Icon style={{ width: 22, height: 22, color: '#5B5B5B', flexShrink: 0 }} strokeWidth={1.5} />
-                  <span style={{ fontSize: 16, color: '#1B1818', fontFamily: 'Poppins, sans-serif' }}>{city}</span>
+                  <Location01Icon style={{ width: 20, height: 20, color: 'var(--color-icon-secondary)', flexShrink: 0 }} strokeWidth={1.5} />
+                  <span style={{ fontSize: 15, color: 'var(--color-text-primary)', fontFamily: 'Poppins, sans-serif' }}>{city}</span>
                 </button>
               ))}
               {filteredCities.length === 0 && (
-                <p style={{ width: '100%', textAlign: 'center', padding: '32px 0', color: '#9CA3AF', fontSize: 15, fontFamily: 'Poppins, sans-serif' }}>Aucune ville trouvée</p>
+                <p style={{ width: '100%', textAlign: 'center', padding: '32px 0', color: 'var(--color-text-secondary)', fontSize: 15, fontFamily: 'Poppins, sans-serif' }}>Aucune ville trouvée</p>
               )}
             </div>
           )}
@@ -308,27 +331,25 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   }
 
   // ── MAIN LIST SCREEN (Screen 1 & 4) ───────────────────────────────────────
-  
+
+  // Recherche d'événements : active dès 2 caractères ou si vide (= affiche tout)
   const filteredEvents = events.filter(ev => {
     const searchLower = eventSearch.trim().toLowerCase();
-    const textMatch = searchLower === '' || 
-                        (ev.title?.toLowerCase() || '').includes(searchLower) || 
-                        (ev.city?.toLowerCase() || '').includes(searchLower) ||
-                        (ev.address?.toLowerCase() || '').includes(searchLower);
-    
-    // Pour la recherche de ville, on est plus souple sur les espaces
-    // Si la recherche textuelle est utilisée, on peut même bypasser le filtre de ville pour trouver l'événement spécifiquement
-    const cityMatch = currentLocation 
+    const searchActive = searchLower.length >= 2;
+    const textMatch = !searchActive ||
+      (ev.title?.toLowerCase() || '').includes(searchLower) ||
+      (ev.city?.toLowerCase() || '').includes(searchLower) ||
+      (ev.address?.toLowerCase() || '').includes(searchLower);
+    const cityMatch = currentLocation
       ? (!ev.city || (ev.city || '').toLowerCase().trim() === currentLocation.toLowerCase().trim())
       : true;
-      
-    // Si l'utilisateur a tapé une recherche, on priorise le textMatch
-    if (searchLower !== '') {
-        return textMatch && (cityMatch || true); // On force l'affichage si ça match le texte !
-    }
-    
+    // Si une recherche textuelle est active, elle prend le dessus sur le filtre de ville
+    if (searchActive) return textMatch;
     return textMatch && cityMatch;
   });
+
+  // Nombre de notifications non lues (directement depuis unreadCount renvoyé par l'API)
+  const unreadNotifCount = notificationsData?.unreadCount ?? 0;
 
   const mapEvents = filteredEvents.map((ev, i) => ({
     id: ev.id,
@@ -347,35 +368,37 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className={`w-full h-full flex flex-col relative bg-background`}>
 
         {/* Header & Search Bar */}
-        <div className={`px-5 pt-safe-6 pb-0 shrink-0 relative z-20 bg-white`}>
+        <div className={`px-5 pt-safe-6 pb-0 shrink-0 relative z-20 bg-[var(--color-background-primary)]`}>
           {/* Title + Notification */}
           <div className="flex items-center justify-between mb-2 mt-2">
-            <h1 className="text-[20px] font-bold font-poppins text-[#1B1818] leading-tight">Explorez et découvrez</h1>
+            <h1 className="text-[20px] font-bold font-poppins text-[var(--color-text-primary)] leading-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
-              <Bell className="w-[22px] h-[22px] text-[#1B1818]" strokeWidth={1.8} />
-              <div className="absolute top-0 right-0 w-[16px] h-[16px] bg-[#FF7A00] rounded-full border-2 border-white flex items-center justify-center translate-x-1/4 -translate-y-1/4">
-                <span className="text-[9px] font-bold text-white leading-none">5</span>
-              </div>
+              <Notification01Icon className="w-[24px] h-[24px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
+              {unreadNotifCount > 0 && (
+                <div className="absolute top-0 right-0 w-[16px] h-[16px] bg-[var(--brand-orange-500)] rounded-full border-2 border-white flex items-center justify-center translate-x-1/4 -translate-y-1/4">
+                  <span className="text-[9px] font-bold text-white leading-none">{unreadNotifCount > 9 ? '9+' : unreadNotifCount}</span>
+                </div>
+              )}
             </button>
           </div>
 
           {/* Location */}
-          <button onClick={openSearch} className="flex items-center gap-1 mb-3 text-[#5B5B5B] active:opacity-70 transition-opacity">
-            <Location01Icon className="w-[18px] h-[18px]" strokeWidth={1.8} />
-            <span className="text-[14px] font-poppins font-medium text-[#1B1818]">{currentLocation || 'Où allez-vous ?'}</span>
-            <ArrowDown01Icon className="w-[16px] h-[16px]" strokeWidth={2} />
+          <button onClick={openSearch} className="flex items-center gap-1 mb-3 active:opacity-70 transition-opacity">
+            <Location01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.8} />
+            <span className="text-[14px] font-poppins font-medium text-[var(--color-text-primary)]">{currentLocation || 'Où allez-vous ?'}</span>
+            <ArrowDown01Icon className="w-[16px] h-[16px] text-[var(--color-icon-secondary)]" strokeWidth={2} />
           </button>
 
           {/* Search bar */}
           <div className="flex items-center gap-2.5 mb-3 w-full">
-            <div className="flex-1 border border-[#DFDFDF] rounded-full flex items-center px-[12px] h-[36px] gap-[8px] bg-white cursor-text focus-within:border-[#FF7A00] transition-colors">
-              <Search className="w-[18px] h-[18px] text-[#A3A3A3] shrink-0" strokeWidth={1.5} />
+            <div className="flex-1 border border-[var(--border-default)] rounded-full flex items-center px-[12px] h-[40px] gap-[8px] bg-white cursor-text focus-within:border-[var(--brand-orange-500)] transition-colors">
+              <Search01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
               <input
                 type="text"
                 placeholder="Rechercher des événements"
                 value={eventSearch}
                 onChange={(e) => setEventSearch(e.target.value)}
-                className="text-[13px] text-[#1B1818] placeholder-[#A3A3A3] font-poppins flex-1 opacity-80 bg-transparent outline-none border-none"
+                className="text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] font-poppins flex-1 bg-transparent outline-none border-none"
               />
               <button
                 onClick={(e) => {
@@ -384,18 +407,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 }}
                 className="shrink-0"
               >
-                <SlidersHorizontal className="w-[16px] h-[16px] text-[#A3A3A3]" strokeWidth={1.5} />
+                <Setting06Icon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
               </button>
             </div>
 
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                hapticFeedback.impact();
+                setScreen('join');
               }}
-              className="w-[36px] h-[36px] shrink-0 rounded-full border border-[#DFDFDF] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
+              className="w-[40px] h-[40px] shrink-0 rounded-full border border-[var(--border-default)] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
             >
-              <QrCode className="w-[18px] h-[18px] text-[#5B5B5B]" strokeWidth={1.5} />
+              <QrCode01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
             </button>
           </div>
 
@@ -436,9 +459,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   hapticFeedback.impact();
                   setViewMode('list');
                 }}
-                className="w-[44px] h-[44px] rounded-[12px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform"
+                className="w-[44px] h-[44px] rounded-[12px] bg-[var(--brand-orange-500)] shadow-md flex items-center justify-center active:scale-95 transition-transform"
               >
-                <List className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+                <ListViewIcon className="w-[22px] h-[22px] text-white" strokeWidth={2} />
               </button>
             </div>
             <ExplorerMap
@@ -484,9 +507,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   hapticFeedback.impact();
                   setViewMode('map');
                 }}
-                className="w-[44px] h-[44px] rounded-[12px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform"
+                className="w-[44px] h-[44px] rounded-[12px] bg-[var(--brand-orange-500)] shadow-md flex items-center justify-center active:scale-95 transition-transform"
               >
-                <Map className="w-[22px] h-[22px] text-white" strokeWidth={2.5} />
+                <MapsIcon className="w-[22px] h-[22px] text-white" strokeWidth={2} />
               </button>
             </div>
           </div>
