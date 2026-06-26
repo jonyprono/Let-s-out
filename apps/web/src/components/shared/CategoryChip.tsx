@@ -26,12 +26,13 @@ interface CategoryChipProps {
   selected?: boolean
   onClick?: () => void
   disabled?: boolean
+  showIcon?: boolean
 }
 
 /**
  * Pilule catégorie / centre d'intérêt — contrastes light & dark.
  */
-export function CategoryChip({ label, selected = false, onClick, disabled }: CategoryChipProps) {
+export function CategoryChip({ label, selected = false, onClick, disabled, showIcon = true }: CategoryChipProps) {
   const Icon = LABEL_TO_ICON[label]
 
   return (
@@ -43,16 +44,16 @@ export function CategoryChip({ label, selected = false, onClick, disabled }: Cat
         'px-4 py-2.5 rounded-full text-[13px] font-semibold transition-all duration-200 touch-sm flex items-center gap-1.5',
         'active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none',
         selected
-          ? 'bg-action-primary text-white shadow-sm'
+          ? 'bg-[var(--brand-orange-500)] text-white shadow-sm'
           : [
-              'bg-[#F4F4F5] text-[#71717A]',
+              'bg-[#F5F5F5] text-[var(--color-text-primary)]',
               'hover:bg-gray-200 hover:text-gray-900',
               'active:bg-[#E0E0E0]',
             ],
       )}
     >
-      {Icon && <Icon className="w-4 h-4" strokeWidth={2} />}
-      <span>{label}</span>
+      {showIcon && Icon && <Icon className="w-4 h-4" strokeWidth={2} />}
+      <span className={!showIcon ? 'font-poppins font-medium text-[14px]' : ''}>{label}</span>
     </button>
   )
 }

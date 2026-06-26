@@ -40,6 +40,7 @@ interface SignupProps {
 import { COUNTRIES, Country } from '@/lib/countries'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
+import { CategoryChip } from '@/components/shared/CategoryChip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ProgressBar } from '@/components/ui/progress-bar'
@@ -671,6 +672,9 @@ export function Signup({ onBack }: SignupProps) {
                 }}
                 onFocus={() => citySuggestions.length > 0 && setShowCitySuggestions(true)}
                 placeholder="Sélectionnez une ville"
+                leftIcon={
+                  <Location01Icon size={18} strokeWidth={1.5} className="text-[var(--color-icon-secondary)]" />
+                }
                 icon={
                   city ? (
                     <button
@@ -680,9 +684,7 @@ export function Signup({ onBack }: SignupProps) {
                     >
                       <Cancel01Icon size={18} strokeWidth={1.5} />
                     </button>
-                  ) : (
-                    <Location01Icon size={18} strokeWidth={1.5} className="text-[var(--color-icon-secondary)]" />
-                  )
+                  ) : null
                 }
               />
 
@@ -735,23 +737,15 @@ export function Signup({ onBack }: SignupProps) {
               Indiquez au moins un centre d'intérêt afin d'obtenir les meilleures recommandations d'activités pour vous.
             </p>
             <div className="flex flex-wrap gap-2.5">
-              {INTERESTS_LIST.map((interest) => {
-                const selected = interests.includes(interest)
-                return (
-                  <button
-                    key={interest}
-                    type="button"
-                    onClick={() => toggleInterest(interest)}
-                    className={`px-4 py-2 rounded-full font-poppins text-[14px] font-medium transition-colors ${
-                      selected
-                        ? 'bg-[var(--brand-orange-500)] text-white'
-                        : 'bg-[#F5F5F5] text-[var(--color-text-primary)]'
-                    }`}
-                  >
-                    {interest}
-                  </button>
-                )
-              })}
+              {INTERESTS_LIST.map((interest) => (
+                <CategoryChip
+                  key={interest}
+                  label={interest}
+                  showIcon={false}
+                  selected={interests.includes(interest)}
+                  onClick={() => toggleInterest(interest)}
+                />
+              ))}
             </div>
           </div>
         )}
