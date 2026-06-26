@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import {
   ArrowLeft01Icon,
-  EyeIcon,
-  EyeClosedIcon,
   ViewIcon,
+  ViewOffSlashIcon,
   Tick01Icon,
   Location01Icon,
   Cancel01Icon,
@@ -394,7 +393,6 @@ export function Signup({ onBack }: SignupProps) {
   }
 
   const pwdLength = password.length >= 6
-  const pwdMixed = /[a-zà-ÿ]/i.test(password) && /[a-z]/i.test(password) // This just tests letters
   const hasLower = /[a-zà-ÿ]/.test(password)
   const hasUpper = /[A-ZÀ-Ÿ]/.test(password)
   const pwdNumber = /[0-9]/.test(password)
@@ -782,7 +780,7 @@ export function Signup({ onBack }: SignupProps) {
                     >
                       {showPassword
                         ? <ViewIcon size={20} strokeWidth={1.5} />
-                        : <EyeClosedIcon size={20} strokeWidth={1.5} />}
+                        : <ViewOffSlashIcon size={20} strokeWidth={1.5} />}
                     </button>
                   }
                 />
@@ -806,7 +804,7 @@ export function Signup({ onBack }: SignupProps) {
                     >
                       {showConfirmPassword
                         ? <ViewIcon size={20} strokeWidth={1.5} />
-                        : <EyeClosedIcon size={20} strokeWidth={1.5} />}
+                        : <ViewOffSlashIcon size={20} strokeWidth={1.5} />}
                     </button>
                   }
                 />
