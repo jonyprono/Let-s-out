@@ -41,7 +41,7 @@ export function MessageBubble({
             className={cn(
               "relative px-[var(--spacing-200)] py-[var(--spacing-150)] font-poppins text-[var(--font-size-body-medium)] rounded-[var(--radius-large)]",
               isSender
-                ? "bg-[var(--color-background-primary-muted)] text-[var(--color-text-primary)] rounded-tr-sm"
+                ? "bg-[var(--brand-orange-100)] text-[var(--color-text-primary)] rounded-tr-sm"
                 : "bg-[var(--color-background-secondary)] text-[var(--color-text-primary)] rounded-tl-sm"
             )}
           >
