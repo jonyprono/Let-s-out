@@ -24,7 +24,7 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
   }, [])
 
   const countriesFr = useMemo(() => {
-    return COUNTRIES.map(c => {
+    const list = COUNTRIES.map(c => {
       let frName = c.name
       if (regionNames) {
         try {
@@ -35,6 +35,9 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
       }
       return { ...c, frName }
     })
+    // Ensure Benin is at the top (optional, or just sort everything)
+    // Actually, sorting alphabetically is requested
+    return list.sort((a, b) => a.frName.localeCompare(b.frName, 'fr', { sensitivity: 'base' }))
   }, [regionNames])
 
   // Diacritics removal for robust search (e.g. "benin" matches "Bénin")
@@ -51,6 +54,12 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
   useEffect(() => {
     if (open) {
       setTimeout(() => searchRef.current?.focus(), 80)
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setOpen(false)
+      }
+      document.addEventListener('keydown', handleKeyDown)
+      return () => document.removeEventListener('keydown', handleKeyDown)
     } else {
       setSearch('')
     }
