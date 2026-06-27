@@ -8,7 +8,7 @@ import {
   Cancel01Icon,
   Tick01Icon,
   Notification01Icon,
-  Settings04Icon,
+  SlidersHorizontalIcon,
   QrCode01Icon,
   MapsIcon,
   ListViewIcon,
@@ -453,7 +453,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onClick={(e) => { e.stopPropagation(); hapticFeedback.impact(); }}
                   className="shrink-0 flex items-center justify-center"
                 >
-                  <Settings04Icon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+                  <SlidersHorizontalIcon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
                 </button>
               )}
             </div>
