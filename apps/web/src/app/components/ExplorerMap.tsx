@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Loader2, Navigation, X } from 'lucide-react'
 import L from 'leaflet'
 import '@/lib/leaflet-init'
@@ -138,15 +138,12 @@ function ZoomWatcher({ onZoom, onMapClick, zoomTarget }: { onZoom: (z: number) =
     zoomend: (e) => onZoom(e.target.getZoom()),
     click: () => onMapClick(),
   })
-  
-  import('react').then(React => {
-    React.useEffect(() => {
-      if (zoomTarget) {
-        const currentZoom = map.getZoom();
-        map.flyTo([zoomTarget.lat, zoomTarget.lon], currentZoom + 2, { duration: 0.5 });
-      }
-    }, [zoomTarget, map]);
-  });
+  useEffect(() => {
+    if (zoomTarget) {
+      const currentZoom = map.getZoom();
+      map.flyTo([zoomTarget.lat, zoomTarget.lon], currentZoom + 2, { duration: 0.5 });
+    }
+  }, [zoomTarget, map]);
   
   return null
 }
