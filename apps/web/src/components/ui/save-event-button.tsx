@@ -13,15 +13,15 @@ const SaveEventButton = React.forwardRef<HTMLButtonElement, SaveEventButtonProps
         ref={ref}
         type="button"
         className={cn(
-          "flex h-[40px] w-[40px] items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--border-brand-primary)]",
+          "flex h-9 w-9 items-center justify-center rounded-full transition-colors active:scale-95",
           saved
-            ? "bg-[var(--color-action-primary)] text-[var(--color-icon-inverse)] hover:bg-[var(--color-action-primary-active)]"
-            : "bg-[var(--neutral-gray-200)] text-[var(--color-icon-secondary)] hover:bg-[var(--neutral-gray-300)]",
+            ? "bg-[var(--brand-orange-500)] text-white"
+            : "bg-gray-200 text-gray-600",
           className
         )}
         {...props}
       >
-        <Star className="h-5 w-5" fill="none" strokeWidth={2} />
+        <Star className="h-[18px] w-[18px]" strokeWidth={2} fill="none" />
       </button>
     )
   }

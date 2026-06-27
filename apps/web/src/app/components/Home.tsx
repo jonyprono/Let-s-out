@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Loader2, WifiOff, RefreshCw } from 'lucide-react';
-import { Search01Icon, SlidersHorizontalIcon, QrCode01Icon } from 'hugeicons-react';
+import { Search01Icon } from 'hugeicons-react';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
@@ -182,25 +182,13 @@ export function Home({ userData, onNavigate }: HomeProps) {
         </div>
 
         {/* Search bar */}
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center mb-4">
           <button
             onClick={() => onNavigate('explorer')}
             className="flex-1 flex items-center gap-3 px-4 py-3 bg-gray-100 rounded-full text-left active:opacity-70 transition-opacity"
           >
             <Search01Icon className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
             <span className="text-sm text-gray-400">Concerts à proximité...</span>
-          </button>
-          <button
-            onClick={() => onNavigate('explorer-filter')}
-            className="w-11 h-11 flex items-center justify-center bg-gray-100 rounded-full flex-shrink-0 active:opacity-70 transition-opacity"
-          >
-            <SlidersHorizontalIcon className="w-[18px] h-[18px] text-gray-600" strokeWidth={1.5} />
-          </button>
-          <button
-            onClick={() => onNavigate('scan-qr')}
-            className="w-11 h-11 flex items-center justify-center bg-[#FFF8F1] rounded-full flex-shrink-0 ml-1 active:opacity-70 transition-opacity"
-          >
-            <QrCode01Icon className="w-[18px] h-[18px] text-action-primary" strokeWidth={1.5} />
           </button>
         </div>
 

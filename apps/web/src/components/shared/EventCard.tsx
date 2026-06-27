@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { Share2, Star, Lock, QrCode, X, Loader2 } from 'lucide-react';
+import { Share2, Lock, QrCode, X, Loader2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { type Event, eventsApi } from '@/features/events/api';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,7 @@ import { useFavoritesStore } from '@/stores/favorites.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { getEventParticipationMode } from '@/lib/utils';
 import { ShareModal } from '@/components/shared/ShareModal';
+import { SaveEventButton } from '@/components/ui/save-event-button';
 
 interface EventCardProps {
   // Propriétés explicites exigées par la maquette
@@ -166,16 +167,11 @@ export const EventCard = memo(function EventCard({
         <div className="absolute top-3 right-3 flex gap-2 z-10">
           <button
             onClick={handleShare}
-            className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
+            className="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
           >
-            <Share2 className="w-4 h-4 text-gray-600" strokeWidth={2} />
+            <Share2 className="w-[18px] h-[18px] text-gray-600" strokeWidth={2} />
           </button>
-          <button
-            onClick={handleFavorite}
-            className="w-8 h-8 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
-          >
-            <Star className={`w-[18px] h-[18px] ${favorite ? 'text-action-primary fill-[var(--action-primary)]' : 'text-gray-600'}`} strokeWidth={favorite ? 0 : 1.8} />
-          </button>
+          <SaveEventButton saved={favorite} onClick={handleFavorite} />
         </div>
         
         {/* Private Badge */}

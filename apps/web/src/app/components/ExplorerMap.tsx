@@ -133,11 +133,21 @@ function makePinIcon(events: Event[], isSelected: boolean) {
 }
 
 /** Listen to map zoom/click changes */
-function ZoomWatcher({ onZoom, onMapClick }: { onZoom: (z: number) => void; onMapClick: () => void }) {
-  useMapEvents({
+function ZoomWatcher({ onZoom, onMapClick, zoomTarget }: { onZoom: (z: number) => void; onMapClick: () => void; zoomTarget?: {lat: number; lon: number; id: number} | null }) {
+  const map = useMapEvents({
     zoomend: (e) => onZoom(e.target.getZoom()),
     click: () => onMapClick(),
   })
+  
+  import('react').then(React => {
+    React.useEffect(() => {
+      if (zoomTarget) {
+        const currentZoom = map.getZoom();
+        map.flyTo([zoomTarget.lat, zoomTarget.lon], currentZoom + 2, { duration: 0.5 });
+      }
+    }, [zoomTarget, map]);
+  });
+  
   return null
 }
 
@@ -152,16 +162,19 @@ export default function ExplorerMap({
   const [selectedCluster, setSelectedCluster] = useState<Event[] | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [zoom, setZoom] = useState(13)
+  const [zoomTarget, setZoomTarget] = useState<{lat: number; lon: number; id: number} | null>(null)
 
   const validEvents = events.filter((e) => e.latitude && e.longitude)
   const clusters = useMemo(() => clusterEvents(validEvents, zoom), [validEvents, zoom])
 
-  const handleClusterClick = (clusterEvents: Event[]) => {
+  const handleClusterClick = (clusterEvents: Event[], lat: number, lon: number) => {
     if (clusterEvents.length === 1) {
       setSelectedEvent(clusterEvents[0])
       setSelectedCluster(null)
     } else {
-      setSelectedCluster(clusterEvents)
+      // Zoom into the cluster instead of just selecting it
+      setZoomTarget({ lat, lon, id: Date.now() })
+      setSelectedCluster(null)
       setSelectedEvent(null)
     }
   }
@@ -180,7 +193,7 @@ export default function ExplorerMap({
         style={{ width: '100%', height: '100%' }}
         zoomControl={false}
       >
-        <ZoomWatcher onZoom={setZoom} onMapClick={closeCard} />
+        <ZoomWatcher onZoom={setZoom} onMapClick={closeCard} zoomTarget={zoomTarget} />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
@@ -194,7 +207,7 @@ export default function ExplorerMap({
               key={i}
               position={[cluster.lat, cluster.lon]}
               icon={makePinIcon(cluster.events, !!isSelected)}
-              eventHandlers={{ click: () => handleClusterClick(cluster.events) }}
+              eventHandlers={{ click: () => handleClusterClick(cluster.events, cluster.lat, cluster.lon) }}
             />
           )
         })}
