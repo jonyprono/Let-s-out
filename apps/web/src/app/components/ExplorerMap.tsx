@@ -1,13 +1,10 @@
 import { useState, useMemo } from 'react'
-import { Loader2, Navigation, X, MapPin } from 'lucide-react'
+import { Loader2, Navigation, X } from 'lucide-react'
 import L from 'leaflet'
 import '@/lib/leaflet-init'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
-import { SafeImage } from '@/components/shared/SafeImage'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import type { Event } from '@/features/events/api'
-import { getEventParticipationMode } from '@/lib/utils'
+import { EventCard } from '@/components/shared/EventCard'
 
 interface ExplorerMapProps {
   events: Event[]
@@ -47,13 +44,54 @@ function clusterEvents(events: Event[], zoom: number): Array<{
 }
 
 /** Custom map marker matching the mockup */
-function makePinIcon(count: number, isSelected: boolean) {
+function makePinIcon(events: Event[], isSelected: boolean) {
+  const count = events.length;
   const scale = isSelected ? 1.15 : 1;
   const shadow = isSelected
     ? 'drop-shadow(0 4px 12px rgba(255,122,0,0.5))'
     : 'drop-shadow(0 2px 6px rgba(0,0,0,0.25))';
   
-  const text = count === 1 ? '1 événement' : `${count} événements`;
+  if (count > 1) {
+    const text = `${count} événements`;
+    return L.divIcon({
+      className: '',
+      html: `
+        <div style="
+          transform: scale(${scale});
+          transform-origin: bottom center;
+          filter: ${shadow};
+          transition: transform 0.15s;
+          display: inline-flex;
+          flex-direction: column;
+          align-items: center;
+          position: relative;
+        ">
+          <span style="
+            color: var(--brand-orange-500, #FF7A00);
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Poppins', sans-serif;
+            white-space: nowrap;
+            margin-bottom: 2px;
+            text-shadow: 0px 1px 2px rgba(255,255,255,0.8);
+          ">${text}</span>
+          <svg width="32" height="40" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="#FF7A00"/>
+            <circle cx="18" cy="18" r="7" fill="white"/>
+          </svg>
+        </div>`,
+      iconSize: [80, 64],
+      iconAnchor: [40, 64],
+    });
+  }
+
+  // Marqueur individuel avec label (carte)
+  const ev = events[0];
+  let dateStr = 'Bientôt';
+  if (ev.startAt) {
+    const dateObj = new Date(ev.startAt);
+    dateStr = dateObj.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  }
 
   return L.divIcon({
     className: '',
@@ -68,22 +106,29 @@ function makePinIcon(count: number, isSelected: boolean) {
         align-items: center;
         position: relative;
       ">
-        <span style="
-          color: #FF7A00;
-          font-weight: 600;
-          font-size: 13px;
-          font-family: 'Poppins', sans-serif;
-          white-space: nowrap;
-          margin-bottom: 2px;
-          text-shadow: 0px 1px 2px rgba(255,255,255,0.8);
-        ">${text}</span>
+        <div style="
+          background: white; 
+          border-radius: 8px; 
+          padding: 6px 10px; 
+          margin-bottom: 4px; 
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
+          display: flex; 
+          flex-direction: column; 
+          align-items: flex-start; 
+          max-width: 200px;
+        ">
+          <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${ev.title || 'Événement'}</span>
+          <span style="font-family: 'Poppins', sans-serif; font-size: 11px; color: #6B7280; white-space: nowrap;">
+            ${dateStr} • ${(ev.currentAttendees || 0)} participants
+          </span>
+        </div>
         <svg width="32" height="40" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="#FF7A00"/>
           <circle cx="18" cy="18" r="7" fill="white"/>
         </svg>
       </div>`,
-    iconSize: [80, 64],
-    iconAnchor: [40, 64],
+    iconSize: [200, 100],
+    iconAnchor: [100, 100],
   });
 }
 
@@ -96,113 +141,6 @@ function ZoomWatcher({ onZoom, onMapClick }: { onZoom: (z: number) => void; onMa
   return null
 }
 
-/** Compact event mini-card shown at bottom of map when a pin is tapped */
-function EventMiniCard({
-  event,
-  onNavigate,
-  onClose,
-}: {
-  event: Event
-  onNavigate: (s: string, id?: string) => void
-  onClose: () => void
-}) {
-  const dateStr = event.startAt
-    ? format(new Date(event.startAt), "EEEE d MMM 'à' HH'h'mm", { locale: fr })
-    : ''
-  const location = [event.city, event.address].filter(Boolean).join(' • ')
-  const participationMode = getEventParticipationMode(event as any)
-  const price = participationMode === 'Gratuit'
-    ? 'Gratuit'
-    : participationMode === 'Cagnotte'
-      ? 'Cagnotte'
-      : event.price
-        ? `${Number(event.price).toLocaleString('fr-FR')} F`
-        : participationMode
-  const isFree = participationMode === 'Gratuit'
-
-  return (
-    <div
-      className="absolute bottom-0 left-0 right-0 z-[1000] px-4 pb-6 pt-3"
-      style={{ pointerEvents: 'all' }}
-    >
-      <div 
-        onClick={() => onNavigate('event-details', event.id)}
-        className="bg-white rounded-[20px] shadow-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-      >
-        {/* Close */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-          className="absolute top-4 right-4 w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center z-10 active:scale-90"
-        >
-          <X className="w-3.5 h-3.5 text-gray-500" />
-        </button>
-
-        <div className="flex gap-3 p-3">
-          {/* Thumbnail */}
-          <div className="w-[90px] h-[80px] flex-shrink-0 rounded-xl overflow-hidden bg-gray-100">
-            <SafeImage
-              src={event.coverUrl}
-              alt={event.title}
-              className="w-full h-full"
-              fallback={
-                <div className="w-full h-full"
-                  style={{ backgroundImage: `repeating-conic-gradient(#e5e7eb 0% 25%, #f3f4f6 0% 50%)`, backgroundSize: '16px 16px' }}
-                />
-              }
-            />
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
-            <div>
-              <h3 className="text-[14px] font-bold text-gray-900 leading-tight truncate">{event.title}</h3>
-              <p className="text-[12px] text-gray-500 mt-0.5 capitalize">{dateStr}</p>
-              {location && (
-                <div className="flex items-center gap-1 mt-0.5">
-                  <MapPin className="w-3 h-3 text-gray-400 flex-shrink-0" />
-                  <p className="text-[12px] text-gray-500 truncate">{location}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between mt-2">
-              {/* Participants */}
-              <div className="flex items-center gap-1">
-                {((event as any).bookings || []).slice(0, 3).map((b: any, i: number) => (
-                  <div
-                    key={i}
-                    className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200"
-                    style={{ marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i }}
-                  >
-                    {b?.user?.profile?.avatarUrl ? (
-                      <SafeImage src={b.user.profile.avatarUrl} alt="" className="w-full h-full" />
-                    ) : (
-                      <div className="w-full h-full bg-orange-200" />
-                    )}
-                  </div>
-                ))}
-                <span className="text-[11px] text-gray-500 ml-1">
-                  {(event.currentAttendees || 0) > 0
-                    ? `+${event.currentAttendees} Participants`
-                    : 'Aucun inscrit'}
-                </span>
-              </div>
-              {/* Price */}
-              <span
-                className={`text-[12px] font-bold px-2 py-0.5 rounded-md ${isFree ? 'text-green-600 bg-green-50' : 'text-blue-600 bg-blue-50'}`}
-              >
-                {price}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function ExplorerMap({
   events,
@@ -255,29 +193,63 @@ export default function ExplorerMap({
             <Marker
               key={i}
               position={[cluster.lat, cluster.lon]}
-              icon={makePinIcon(cluster.events.length, !!isSelected)}
+              icon={makePinIcon(cluster.events, !!isSelected)}
               eventHandlers={{ click: () => handleClusterClick(cluster.events) }}
             />
           )
         })}
       </MapContainer>
 
-      {/* Bottom mini-card — single event */}
+      {/* Bottom full card — single event */}
       {selectedEvent && (
-        <EventMiniCard
-          event={selectedEvent}
-          onNavigate={onNavigate}
-          onClose={closeCard}
-        />
+        <div className="absolute bottom-20 left-0 right-0 z-[1000] px-5" style={{ pointerEvents: 'all' }}>
+          <div className="relative" onClick={() => onNavigate('event-details', selectedEvent.id)}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                closeCard();
+              }}
+              className="absolute top-4 right-4 w-7 h-7 bg-white/80 backdrop-blur rounded-full flex items-center justify-center z-20 active:scale-90 shadow-sm border border-gray-100"
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
+            <EventCard
+              name={selectedEvent.title}
+              datetime={selectedEvent.startAt ? new Date(selectedEvent.startAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + new Date(selectedEvent.startAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
+              city={selectedEvent.city || ''}
+              place={selectedEvent.address || ''}
+              attendeesCount={`${selectedEvent.currentAttendees || 0} Participants`}
+              price={selectedEvent.price === 0 ? "Gratuit" : `${selectedEvent.price} ${selectedEvent.currency || 'CFA'}`}
+              cover={true}
+            />
+          </div>
+        </div>
       )}
 
-      {/* Bottom mini-card — cluster: show first event with count */}
+      {/* Bottom full card — cluster: show first event */}
       {selectedCluster && !selectedEvent && (
-        <EventMiniCard
-          event={selectedCluster[0]}
-          onNavigate={onNavigate}
-          onClose={closeCard}
-        />
+        <div className="absolute bottom-20 left-0 right-0 z-[1000] px-5" style={{ pointerEvents: 'all' }}>
+          <div className="relative" onClick={() => onNavigate('event-details', selectedCluster[0].id)}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                closeCard();
+              }}
+              className="absolute top-4 right-4 w-7 h-7 bg-white/80 backdrop-blur rounded-full flex items-center justify-center z-20 active:scale-90 shadow-sm border border-gray-100"
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
+            <EventCard
+              name={selectedCluster[0].title}
+              datetime={selectedCluster[0].startAt ? new Date(selectedCluster[0].startAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + new Date(selectedCluster[0].startAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
+              city={selectedCluster[0].city || ''}
+              place={selectedCluster[0].address || ''}
+              attendeesCount={`${selectedCluster[0].currentAttendees || 0} Participants`}
+              price={selectedCluster[0].price === 0 ? "Gratuit" : `${selectedCluster[0].price} ${selectedCluster[0].currency || 'CFA'}`}
+              cover={true}
+            />
+          </div>
+        </div>
       )}
 
       {/* Geolocate FAB */}
