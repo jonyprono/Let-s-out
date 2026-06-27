@@ -8,7 +8,7 @@ import {
   Cancel01Icon,
   Tick01Icon,
   Notification01Icon,
-  FilterIcon,
+  Settings04Icon,
   QrCode01Icon,
   MapsIcon,
   ListViewIcon,
@@ -430,12 +430,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   : 'border-[var(--border-default)]'
               }`}
             >
-              {/* Icône à gauche : loupe au repos, pin de localisation au focus (image 2) */}
-              {eventSearchFocused || eventSearch ? (
-                <Location01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
-              ) : (
-                <Search01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
-              )}
+              <Search01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
               <input
                 type="text"
                 placeholder="Rechercher des événements"
@@ -458,7 +453,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onClick={(e) => { e.stopPropagation(); hapticFeedback.impact(); }}
                   className="shrink-0 flex items-center justify-center"
                 >
-                  <FilterIcon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+                  <Settings04Icon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
                 </button>
               )}
             </div>
@@ -487,7 +482,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   }}
                   className={`flex-1 active:scale-95 transition-all px-2 py-1.5 rounded-full text-center ${
                     isActive
-                      ? 'bg-[var(--brand-orange-500)] text-white'
+                      ? 'bg-[#FFF2D3] text-[#FF7A00]'
                       : 'bg-[#F2F2F2] text-[var(--color-text-secondary)]'
                   }`}
                 >

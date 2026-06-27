@@ -211,7 +211,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
               onClick={() => { hapticFeedback.impact(); setActiveFilter(f.key); }}
               className={`flex-1 py-1.5 rounded-full text-center transition-all active:scale-95 ${
                 activeFilter === f.key
-                  ? 'bg-[var(--brand-orange-500)] text-white'
+                  ? 'bg-[#FFF2D3] text-[#FF7A00]'
                   : 'bg-[#F2F2F2] text-[var(--color-text-secondary)]'
               }`}
             >
