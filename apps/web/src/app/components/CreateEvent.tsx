@@ -38,6 +38,7 @@ import { eventsApi } from '@/features/events/api'
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { toast } from 'sonner'
 import { searchPlaces, reverseGeocode } from '@/lib/geo'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -115,28 +116,6 @@ function InputField({
             {rightIcons}
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-// ── Bottom Sheet wrapper ─────────────────────────────────────────────────────
-function BottomSheet({ title, open, onClose, children }: {
-  title: string; open: boolean; onClose: () => void; children: React.ReactNode
-}) {
-  if (!open) return null
-  return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-      <div
-        className="relative w-full bg-white rounded-t-[24px] px-5 pt-4 pb-10 max-h-[85vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
-        style={{ boxShadow: '0 -4px 30px rgba(0,0,0,0.15)' }}
-      >
-        {/* Handle */}
-        <div className="w-10 h-1 rounded-full bg-[#E0E0E0] mx-auto mb-4" />
-        <h3 className="text-[17px] font-bold text-[#1A1A1A] text-center mb-2">{title}</h3>
-        {children}
       </div>
     </div>
   )
@@ -414,8 +393,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   if (step === 'done' || step === 'published') {
     const isPublished = step === 'published'
     return (
-      <div className={`w-full h-full flex flex-col relative overflow-hidden ${isPublished ? 'bg-[#FFFFFF]' : 'bg-[#FCFAF4]'}`}>
-        <div className={`px-5 pt-safe-6 pb-4 shrink-0 ${isPublished ? 'bg-[#FFFFFF]' : 'bg-[#FCFAF4]'}`} />
+      <div className={`w-full h-full flex flex-col relative overflow-hidden ${isPublished ? 'bg-[var(--color-background-primary)]' : 'bg-[var(--color-background-primary-alt)]'}`}>
+        <div className={`px-5 pt-safe-6 pb-4 shrink-0 ${isPublished ? 'bg-[var(--color-background-primary)]' : 'bg-[var(--color-background-primary-alt)]'}`} />
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 pb-40">
@@ -423,17 +402,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             {/* Top Section */}
             <div className="flex flex-col items-center gap-3 w-full">
               {/* Icon */}
-              <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-1 ${isPublished ? 'bg-gradient-to-tr from-[#FFEB3A] to-[#4DEF8E]' : 'bg-[#FF9500]'}`}>
+              <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-1 ${isPublished ? 'bg-gradient-to-tr from-[var(--brand-yellow-500)] to-[var(--functional-green-500)]' : 'bg-[var(--brand-orange-400)]'}`}>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
               </div>
 
               {/* Title */}
-              <h1 className={`text-[24px] font-semibold text-center ${isPublished ? 'text-[#4CAF50]' : 'text-[#FF7A00]'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <h1 className={`text-[24px] font-semibold text-center ${isPublished ? 'text-[var(--functional-green-500)]' : 'text-[var(--brand-orange-500)]'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>
                 {isPublished ? 'Publié !' : 'Terminé !'}
               </h1>
-              <p className="text-[14px] text-[#766F6E] text-center max-w-[300px] leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <p className="text-[14px] text-[var(--color-text-secondary)] text-center max-w-[300px] leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
                 {isPublished
                   ? "Votre événement a été publié avec succès. Vous pouvez maintenant le partager ou voir les détails."
                   : "Votre événement a été bien créé. Publiez-le pour le rendre visible ou invitez vos amis à participer."}
@@ -441,22 +420,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
 
             {/* Summary Card */}
-            <div className="w-full bg-white rounded-[16px] p-5 shadow-[0_2px_16px_rgba(0,0,0,0.04)] border border-[#F2F2F2]">
-              <h3 className="font-bold text-[15px] text-[#1A1A1A] mb-5 truncate">{title || 'Votre événement'}</h3>
+            <div className="w-full bg-[var(--color-background-primary)] rounded-[16px] p-5 shadow-[var(--shadow-bottom-sheet)] border border-[var(--border-tertiary)]">
+              <h3 className="font-bold text-[15px] text-[var(--color-text-primary)] mb-5 truncate">{title || 'Votre événement'}</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#766F6E]">Date</span>
-                  <span className="text-[13px] font-medium text-[#1A1A1A] text-right truncate max-w-[200px]">
+                  <span className="text-[13px] text-[var(--color-text-secondary)]">Date</span>
+                  <span className="text-[13px] font-medium text-[var(--color-text-primary)] text-right truncate max-w-[200px]">
                     {startDate ? `${formatDateFr(startDate)}, ${startTime.replace(':', 'h')}${endTime ? ` - ${endTime.replace(':', 'h')}` : ''}` : '—'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#766F6E]">Lieu</span>
-                  <span className="text-[13px] font-medium text-[#1A1A1A] text-right truncate max-w-[200px]">{address || city || '—'}</span>
+                  <span className="text-[13px] text-[var(--color-text-secondary)]">Lieu</span>
+                  <span className="text-[13px] font-medium text-[var(--color-text-primary)] text-right truncate max-w-[200px]">{address || city || '—'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#766F6E]">Participation</span>
-                  <div className={`px-2.5 py-1 rounded-[6px] text-[12px] font-bold ${participationMode === 'free' ? 'bg-[#4CAF50] text-white' : 'bg-[#007AFF] text-white'}`}>
+                  <span className="text-[13px] text-[var(--color-text-secondary)]">Participation</span>
+                  <div className={`px-2.5 py-1 rounded-[6px] text-[12px] font-bold ${participationMode === 'free' ? 'bg-[var(--functional-green-500)] text-[var(--color-text-inverse)]' : 'bg-[var(--brand-blue-500)] text-[var(--color-text-inverse)]'}`}>
                     {participationMode === 'free' ? 'Gratuite' : 'Cagnotte'}
                   </div>
                 </div>
@@ -465,14 +444,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* Alert Box for Cagnotte */}
             {!isPublished && participationMode === 'cagnotte' && (
-              <div className="w-full bg-[#EAF6FD] rounded-[12px] p-4 flex gap-3 items-start border border-[#DFF0FE]">
+              <div className="w-full bg-[var(--brand-blue-100)] rounded-[12px] p-4 flex gap-3 items-start border border-[var(--brand-blue-100)]">
                 <div className="w-[18px] h-[18px] shrink-0 mt-[1px]">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2.5L21.5 12L12 21.5L2.5 12L12 2.5Z" stroke="#007AFF" strokeWidth="2" strokeLinejoin="round" />
-                    <path d="M12 8V13M12 16H12.01" stroke="#007AFF" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M12 2.5L21.5 12L12 21.5L2.5 12L12 2.5Z" stroke="var(--brand-blue-500)" strokeWidth="2" strokeLinejoin="round" />
+                    <path d="M12 8V13M12 16H12.01" stroke="var(--brand-blue-500)" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 </div>
-                <p className="text-[12px] text-[#1A1A1A] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                <p className="text-[12px] text-[var(--color-text-primary)] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
                   Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
                 </p>
               </div>
@@ -481,7 +460,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
 
         {/* Bottom CTA */}
-        <div className={`absolute bottom-0 left-0 right-0 px-5 py-6 space-y-3 bg-gradient-to-t ${isPublished ? 'from-[#FFFFFF] via-[#FFFFFF]' : 'from-[#FCFAF4] via-[#FCFAF4]'} to-transparent`}>
+        <div className={`absolute bottom-0 left-0 right-0 px-5 py-6 space-y-3 bg-gradient-to-t ${isPublished ? 'from-[var(--color-background-primary)] via-[var(--color-background-primary)]' : 'from-[var(--color-background-alt)] via-[var(--color-background-alt)]'} to-transparent`}>
           {isPublished && (
             <button
               onClick={async () => {
@@ -498,7 +477,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   toast.success('Lien copié dans le presse-papiers !')
                 }
               }}
-              className="w-full py-[15px] rounded-[100px] bg-[#FF7A00] font-semibold text-[15px] text-white active:scale-[0.98] transition-transform"
+              className="w-full py-[15px] rounded-[100px] bg-[var(--color-action-primary)] font-semibold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] transition-transform"
             >
               Partager l'événement
             </button>
@@ -507,7 +486,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {!isPublished && participationMode === 'cagnotte' && (
             <button
               onClick={() => { toast.info('Redirection vers la vérification du compte...') }}
-              className="w-full py-[15px] rounded-[100px] bg-[#FF7A00] font-semibold text-[15px] text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+              className="w-full py-[15px] rounded-[100px] bg-[var(--color-action-primary)] font-semibold text-[15px] text-[var(--color-text-inverse)] flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
             >
               Vérifier mon compte
             </button>
@@ -517,16 +496,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <button
               onClick={handlePublish}
               disabled={publishing}
-              className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${publishing ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
+              className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${publishing ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
             >
-              {publishing ? <div className="w-5 h-5 border-2 border-[#FFB073] border-t-white rounded-full animate-spin" /> : null}
+              {publishing ? <div className="w-5 h-5 border-2 border-[var(--brand-orange-400)] border-t-transparent rounded-full animate-spin" /> : null}
               {publishing ? 'Publication...' : "Publier l'événement"}
             </button>
           )}
 
           <button
             onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
-            className="w-full py-[15px] rounded-[100px] border border-[#E0E0E0] bg-white text-[#1B1818] font-semibold text-[15px] active:scale-[0.98] transition-transform"
+            className="w-full py-[15px] rounded-[100px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[var(--color-text-primary)] font-semibold text-[15px] active:scale-[0.98] transition-transform"
           >
             Voir l'événement
           </button>
@@ -540,21 +519,21 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // ──────────────────────────────────────────────────────────────────────────
   if (showOrganizerSearch) {
     return (
-      <div className="w-full h-full bg-white flex flex-col">
-        <div className="px-5 pt-safe-6 pb-3 border-b border-[#F0F0F0] shrink-0">
+      <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col">
+        <div className="px-5 pt-safe-6 pb-3 border-b border-[var(--border-tertiary)] shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={() => setShowOrganizerSearch(false)}
-              className="w-9 h-9 rounded-full bg-[#F5F5F5] flex items-center justify-center active:scale-95 transition-transform">
-              <ArrowLeft01Icon className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2} />
+              className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center active:scale-95 transition-transform">
+              <ArrowLeft01Icon className="w-5 h-5 text-[var(--color-icon-primary)]" strokeWidth={2} />
             </button>
             <div className="flex-1 relative">
-              <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BDBDBD]" />
+              <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-icon-muted)]" />
               <input
                 autoFocus
                 value={coOrgSearch}
                 onChange={e => setCoOrgSearch(e.target.value)}
                 placeholder="Rechercher un organisateur"
-                className="w-full pl-10 pr-4 py-2.5 border border-[#E0E0E0] rounded-full text-[14px] focus:outline-none focus:border-[#FF7A00]"
+                className="w-full pl-10 pr-4 py-2.5 border border-[var(--border-default)] rounded-full text-[14px] focus:outline-none focus:border-[var(--brand-orange-500)]"
               />
             </div>
           </div>
@@ -563,24 +542,24 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {friends.filter(f => !selectedCoOrgs.find(o => o.id === (f.userId || f.id))).map((f: any) => {
             const name = f.displayName || f.username || 'Utilisateur'
             const uid = f.userId || f.id
-            const colors = ['#FF7A00', '#4CAF50', '#2196F3', '#9C27B0', '#FF5722']
+            const colors = ['var(--brand-orange-500)', 'var(--functional-green-500)', 'var(--brand-blue-500)', 'var(--brand-pink-500)', 'var(--functional-red-500)']
             const color = colors[name.charCodeAt(0) % colors.length]
             return (
-              <div key={uid} className="flex items-center justify-between py-3 border-b border-[#F5F5F5] last:border-0">
+              <div key={uid} className="flex items-center justify-between py-3 border-b border-[var(--border-tertiary)] last:border-0">
                 <div className="flex items-center gap-3">
                   {f.avatarUrl ? (
                     <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                       <SafeImage src={f.avatarUrl} alt={name} className="w-full h-full object-cover" />
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-[15px]"
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-[var(--color-text-inverse)] font-bold text-[15px]"
                       style={{ backgroundColor: color }}>
                       {name.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div>
-                    <p className="text-[14px] font-semibold text-[#1A1A1A]">{name}</p>
-                    {f.username && <p className="text-[12px] text-[#766F6E]">@{f.username}</p>}
+                    <p className="text-[14px] font-semibold text-[var(--color-text-primary)]">{name}</p>
+                    {f.username && <p className="text-[12px] text-[var(--color-text-secondary)]">@{f.username}</p>}
                   </div>
                 </div>
                 <button
@@ -588,7 +567,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     setSelectedCoOrgs(p => [...p, { id: uid, name, avatarUrl: f.avatarUrl }])
                     setShowOrganizerSearch(false)
                   }}
-                  className="text-[13px] font-semibold text-[#FF7A00] active:scale-95 transition-transform px-3 py-1 rounded-full border border-[#FF7A00]">
+                  className="text-[13px] font-semibold text-[var(--color-action-primary)] active:scale-95 transition-transform px-3 py-1 rounded-full border border-[var(--color-action-primary)]">
                   Ajouter
                 </button>
               </div>
@@ -596,9 +575,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           })}
           {friends.length === 0 && (
             <div className="flex flex-col items-center justify-center pt-16 text-center">
-              <UserIcon className="w-12 h-12 text-[#BDBDBD] mb-3" strokeWidth={1.5} />
-              <p className="text-[14px] text-[#766F6E]">Aucun ami trouvé</p>
-              <p className="text-[12px] text-[#BDBDBD] mt-1">Essayez un autre nom</p>
+              <UserIcon className="w-12 h-12 text-[var(--color-icon-muted)] mb-3" strokeWidth={1.5} />
+              <p className="text-[14px] text-[var(--color-text-secondary)]">Aucun ami trouvé</p>
+              <p className="text-[12px] text-[var(--color-text-muted)] mt-1">Essayez un autre nom</p>
             </div>
           )}
         </div>
@@ -611,30 +590,30 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // ──────────────────────────────────────────────────────────────────────────
   if (showLocationSearch) {
     return (
-      <div className="w-full h-full bg-white flex flex-col">
+      <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col">
         {/* Header with tabs */}
-        <div className="px-5 pt-safe-6 pb-0 border-b border-[#F0F0F0] shrink-0">
+        <div className="px-5 pt-safe-6 pb-0 border-b border-[var(--border-tertiary)] shrink-0">
           <div className="flex items-center gap-3 mb-3">
             <button onClick={() => setShowLocationSearch(false)}
-              className="w-9 h-9 rounded-full bg-[#F5F5F5] flex items-center justify-center active:scale-95">
-              <ArrowLeft01Icon className="w-5 h-5 text-[#1A1A1A]" strokeWidth={2} />
+              className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center active:scale-95">
+              <ArrowLeft01Icon className="w-5 h-5 text-[var(--color-icon-primary)]" strokeWidth={2} />
             </button>
             <div className="flex-1 relative">
-              <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#BDBDBD]" />
-              <input
-                autoFocus
-                value={locationQuery}
-                onChange={e => handleLocationSearch(e.target.value)}
-                placeholder="Rechercher un lieu..."
-                className="w-full pl-10 pr-4 py-2.5 border border-[#E0E0E0] rounded-full text-[14px] focus:outline-none focus:border-[#FF7A00]"
-              />
+              <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-icon-muted)]" />
+                <input
+                  autoFocus
+                  value={locationQuery}
+                  onChange={e => handleLocationSearch(e.target.value)}
+                  placeholder="Rechercher un lieu..."
+                  className="w-full pl-10 pr-4 py-2.5 border border-[var(--border-default)] rounded-full text-[14px] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                />
             </div>
           </div>
           {/* Tabs */}
           <div className="flex">
             {(['liste','carte'] as const).map(tab => (
               <button key={tab} onClick={() => setLocationTab(tab)}
-                className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${locationTab === tab ? 'border-[#FF7A00] text-[#FF7A00]' : 'border-transparent text-[#766F6E]'}`}>
+                className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${locationTab === tab ? 'border-[var(--color-action-primary)] text-[var(--color-text-brand-primary)]' : 'border-transparent text-[var(--color-text-secondary)]'}`}>
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
@@ -645,27 +624,27 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <div className="flex-1 overflow-y-auto">
             {locationSuggestions.map((s, i) => (
               <button key={i} onClick={() => selectLocation(s)}
-                className="w-full flex items-start gap-3 px-5 py-4 border-b border-[#F5F5F5] last:border-0 hover:bg-gray-50 text-left active:bg-orange-50 transition-colors">
-                <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <HugeMapPin className="w-4 h-4 text-[#FF7A00]" strokeWidth={1.5} />
+                className="w-full flex items-start gap-3 px-5 py-4 border-b border-[var(--border-tertiary)] last:border-0 hover:bg-gray-50 text-left active:bg-orange-50 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-[var(--brand-orange-100)] flex items-center justify-center shrink-0 mt-0.5">
+                  <HugeMapPin className="w-4 h-4 text-[var(--brand-orange-500)]" strokeWidth={1.5} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold text-[#1A1A1A] truncate">{s.label.split(',')[0]}</p>
-                  <p className="text-[12px] text-[#766F6E] truncate">{s.label.split(',').slice(1).join(',').trim()}</p>
+                  <p className="text-[14px] font-semibold text-[var(--color-text-primary)] truncate">{s.label.split(',')[0]}</p>
+                  <p className="text-[12px] text-[var(--color-text-secondary)] truncate">{s.label.split(',').slice(1).join(',').trim()}</p>
                 </div>
               </button>
             ))}
             {locationSuggestions.length === 0 && locationQuery.length >= 2 && (
               <div className="flex flex-col items-center justify-center pt-16">
-                <HugeMapPin className="w-12 h-12 text-[#BDBDBD] mb-3" strokeWidth={1.5} />
-                <p className="text-[14px] text-[#766F6E]">Aucun lieu trouvé</p>
+                <HugeMapPin className="w-12 h-12 text-[var(--color-icon-muted)] mb-3" strokeWidth={1.5} />
+                <p className="text-[14px] text-[var(--color-text-secondary)]">Aucun lieu trouvé</p>
               </div>
             )}
             {/* Confirm from map button */}
-            <div className="px-5 py-4 border-t border-[#F0F0F0] mt-4">
+            <div className="px-5 py-4 border-t border-[var(--border-tertiary)] mt-4">
               <button onClick={() => { setLocationTab('carte') }}
-                className="w-full py-3.5 rounded-full border border-[#E0E0E0] text-[#1A1A1A] font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-                <HugeMapPin className="w-4 h-4 text-[#FF7A00]" />
+                className="w-full py-3.5 rounded-full border border-[var(--border-default)] text-[var(--color-text-primary)] font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
+                <HugeMapPin className="w-4 h-4 text-[var(--brand-orange-500)]" />
                 Sélectionner sur la carte
               </button>
             </div>
@@ -687,9 +666,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <Marker position={[tempLat, tempLon]} draggable={true}
                 eventHandlers={{ dragend: e => { const p = e.target.getLatLng(); setTempLat(p.lat); setTempLon(p.lng) } }} />
             </MapContainer>
-            <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 pt-4 pb-8 z-[110]">
+            <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] border-t border-[var(--border-tertiary)] px-5 pt-4 pb-8 z-[110]">
               <button onClick={confirmMapLocation} disabled={isReverseGeocoding}
-                className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white flex items-center justify-center gap-2 active:scale-95 transition-all">
+                className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[15px] text-[var(--color-text-inverse)] flex items-center justify-center gap-2 active:scale-95 transition-all">
                 {isReverseGeocoding ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <CheckmarkCircle02Icon className="w-5 h-5" />}
                 {isReverseGeocoding ? "Traduction de l'adresse..." : 'Confirmer la sélection'}
               </button>
@@ -704,24 +683,24 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // RENDER — MAIN FORM
   // ──────────────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full h-full bg-white flex flex-col">
+    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col">
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="px-5 pt-safe-6 pb-4 bg-white shrink-0">
+      <div className="px-5 pt-safe-6 pb-4 bg-[var(--color-background-primary)] shrink-0">
         <div className="flex items-center justify-center relative">
           <button
             onClick={() => formStep === 2 ? setFormStep(1) : onBack()}
-            className="absolute left-0 w-8 h-8 rounded-full bg-[#F5F5F5] flex items-center justify-center active:scale-95 transition-transform"
+            className="absolute left-0 w-8 h-8 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center active:scale-95 transition-transform"
           >
-            <Cancel01Icon className="w-4 h-4 text-[#1A1A1A]" />
+            <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-primary)]" />
           </button>
-          <span className="text-[15px] font-bold text-[#1A1A1A]">Créer un événement</span>
+          <span className="text-[15px] font-bold text-[var(--color-text-primary)]">Créer un événement</span>
         </div>
       </div>
 
       {/* ── Progress bar ─────────────────────────────────────────────────── */}
-      <div className="mx-5 h-[2px] bg-[#FFF2D3] rounded-full overflow-hidden shrink-0">
-        <div className="h-full bg-[#FF7A00] rounded-full transition-all duration-300"
+      <div className="mx-5 h-[2px] bg-[var(--brand-orange-200)] rounded-full overflow-hidden shrink-0">
+        <div className="h-full bg-[var(--brand-orange-500)] rounded-full transition-all duration-300"
           style={{ width: formStep === 1 ? '50%' : '100%' }} />
       </div>
 
@@ -729,79 +708,81 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <div className="flex-1 overflow-y-auto pb-36">
 
         {/* ── Cover photo ─────────────────────────────────────────────── */}
-        <div className="relative w-full h-44 bg-[#E8E8E8] overflow-hidden">
-          {coverPreview ? (
-            <>
-              <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
-              <button
-                onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
-                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
-                <Cancel01Icon className="w-4 h-4 text-[#C5221F]" />
-              </button>
-            </>
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <ImageAdd01Icon className="w-8 h-8 text-[#BDBDBD]" strokeWidth={1.5} />
-            </div>
-          )}
+        <div className="px-5 pt-4 pb-6">
+          <div className="relative w-full h-[200px] bg-[var(--color-background-secondary)] rounded-[16px] overflow-hidden">
+            {coverPreview ? (
+              <>
+                <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
+                <button
+                  onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                  <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-danger)]" />
+                </button>
+              </>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <ImageAdd01Icon className="w-8 h-8 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
+              </div>
+            )}
           {/* Galerie / Importer buttons — bottom-right, stacked vertically */}
-          <div className="absolute bottom-3 right-3 flex flex-col gap-2">
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="flex items-center justify-between gap-3 bg-white/95 rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[#1A1A1A] shadow-sm active:scale-95 transition-transform min-w-[110px]">
-              Gallerie
-              <Image01Icon className="w-[18px] h-[18px] text-[#1A1A1A]" strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="flex items-center justify-between gap-3 bg-white/95 rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[#1A1A1A] shadow-sm active:scale-95 transition-transform min-w-[110px]">
-              Importer
-              <Upload04Icon className="w-[18px] h-[18px] text-[#1A1A1A]" strokeWidth={1.5} />
-            </button>
+            <div className="absolute bottom-3 right-3 flex flex-col gap-2">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center justify-between gap-3 bg-white/95 rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[110px]">
+                Gallerie
+                <Image01Icon className="w-[18px] h-[18px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
+              </button>
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center justify-between gap-3 bg-white/95 rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[110px]">
+                Importer
+                <Upload04Icon className="w-[18px] h-[18px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
+              </button>
+            </div>
+            <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
           </div>
-          <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
         </div>
 
         {/* ── Organizer row ────────────────────────────────────────────── */}
-        <div className="px-5 py-4 border-b border-[#F0F0F0]">
+        <div className="px-5 pb-6">
           {/* Main organizer */}
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               {me?.profile?.avatarUrl ? (
                 <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white font-bold text-[16px]">
+                <div className="w-full h-full bg-[var(--brand-orange-500)] flex items-center justify-center text-[var(--color-text-inverse)] font-bold text-[16px]">
                   {me?.profile?.displayName?.charAt(0)?.toUpperCase() || 'M'}
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-[#1A1A1A] truncate">{me?.profile?.displayName || 'Vous'}</p>
-              <p className="text-[12px] text-[#766F6E]">Organisateur de l'événement</p>
+              <p className="text-[14px] font-bold text-[var(--color-text-primary)] truncate">{me?.profile?.displayName || 'Vous'}</p>
+              <p className="text-[12px] text-[var(--color-text-secondary)]">Organisateur de l'événement</p>
             </div>
           </div>
           {/* Co-organisateurs */}
           {selectedCoOrgs.map(org => (
-            <div key={org.id} className="flex items-center gap-3 mb-3">
+            <div key={org.id} className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
                 <SafeImage src={org.avatarUrl} alt={org.name} className="w-full h-full object-cover"
-                  fallback={<div className="w-full h-full bg-[#4CAF50] flex items-center justify-center text-white font-bold text-[15px]">{org.name.charAt(0)}</div>} />
+                  fallback={<div className="w-full h-full bg-[var(--functional-green-500)] flex items-center justify-center text-[var(--color-text-inverse)] font-bold text-[15px]">{org.name.charAt(0)}</div>} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-bold text-[#1A1A1A] truncate">{org.name}</p>
-                <p className="text-[12px] text-[#766F6E]">Co-organisateur</p>
+                <p className="text-[14px] font-bold text-[var(--color-text-primary)] truncate">{org.name}</p>
+                <p className="text-[12px] text-[var(--color-text-secondary)]">Co-organisateur</p>
               </div>
               <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
-                className="w-7 h-7 rounded-full bg-[#FFF0F0] flex items-center justify-center active:scale-95">
-                <Cancel01Icon className="w-4 h-4 text-[#C5221F]" strokeWidth={1.5} />
+                className="w-7 h-7 rounded-full bg-[var(--functional-red-50)] flex items-center justify-center active:scale-95">
+                <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-danger)]" strokeWidth={1.5} />
               </button>
             </div>
           ))}
           {/* Add organizer button */}
           <button
             onClick={() => setShowOrganizerSearch(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#F9F9F9] rounded-full text-[14px] font-medium text-[#5B5B5B] active:opacity-70 transition-opacity self-start">
-            <UserIcon className="w-[18px] h-[18px] text-[#FFB020]" fill="currentColor" strokeWidth={1.5} />
+            className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-alt)] border border-[var(--border-default)] rounded-full text-[13px] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start mt-2">
+            <UserIcon className="w-4 h-4 text-[var(--brand-orange-400)]" fill="currentColor" strokeWidth={1.5} />
             Ajouter un organisateur
           </button>
         </div>
@@ -833,9 +814,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 {!hasEndDate ? (
                   <button
                     onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
-                    className="flex items-center gap-2 text-[13px] font-medium text-[#1A1A1A] active:opacity-70 transition-opacity"
+                    className="flex items-center gap-2 text-[13px] font-medium text-[var(--color-text-primary)] active:opacity-70 transition-opacity"
                   >
-                    <Clock04Icon className="w-4 h-4 text-[#A3A3A3]" strokeWidth={1.5} />
+                    <Clock04Icon className="w-4 h-4 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
                     Ajouter une heure de fin
                   </button>
                 ) : (
@@ -848,15 +829,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       onClick={() => { setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
                       rightIcons={endDate ? (
                         <>
-                          <button onClick={(e) => { e.stopPropagation(); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }} className="p-1 active:scale-90"><PencilEdit01Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} /></button>
-                          <button onClick={(e) => { e.stopPropagation(); setEndDate(''); setEndTime(''); setHasEndDate(false) }} className="p-1 active:scale-90"><Delete01Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }} className="p-1 active:scale-90"><PencilEdit01Icon className="w-5 h-5 text-[var(--color-text-secondary)]" strokeWidth={1.5} /></button>
+                          <button onClick={(e) => { e.stopPropagation(); setEndDate(''); setEndTime(''); setHasEndDate(false) }} className="p-1 active:scale-90"><Delete01Icon className="w-5 h-5 text-[var(--color-text-secondary)]" strokeWidth={1.5} /></button>
                         </>
                       ) : null}
                     />
                     {endDate && endTime && (
                       <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
-                        <Clock04Icon className="w-3.5 h-3.5 text-[#A3A3A3]" strokeWidth={1.5} />
-                        <span className="text-[12px] text-[#A3A3A3]">Heure de fin ajoutée</span>
+                        <Clock04Icon className="w-3.5 h-3.5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
+                        <span className="text-[12px] text-[var(--color-text-muted)]">Heure de fin ajoutée</span>
                       </div>
                     )}
                   </div>
@@ -984,16 +965,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <div>
                     <button
                       onClick={() => { setTempRegEndDate(regEndDate || startDate); setTempRegEndTime(regEndTime || '12:00'); setShowRegEndDateSheet(true) }}
-                      className="flex items-center gap-2 px-4 py-[10px] bg-[#F8F8F8] rounded-full text-[13px] font-medium text-[#5B5B5B] active:opacity-70 transition-opacity"
+                      className="flex items-center gap-2 px-4 py-[10px] bg-[var(--color-background-secondary)] rounded-full text-[13px] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity"
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="2" y="4" width="12" height="10" rx="2" fill="#F0F0F0" />
-                        <path d="M2 6C2 4.89543 2.89543 4 4 4H12C13.1046 4 14 4.89543 14 6V6.5H2V6Z" fill="#FF4B4B" />
-                        <path d="M4.5 3V5M11.5 3V5" stroke="#5B5B5B" strokeLinecap="round" />
+                        <rect x="2" y="4" width="12" height="10" rx="2" fill="var(--border-tertiary)" />
+                        <path d="M2 6C2 4.89543 2.89543 4 4 4H12C13.1046 4 14 4.89543 14 6V6.5H2V6Z" fill="var(--functional-red-500)" />
+                        <path d="M4.5 3V5M11.5 3V5" stroke="var(--color-text-secondary)" strokeLinecap="round" />
                       </svg>
                       Ajouter une date limite d'inscription
                     </button>
-                    <p className="text-[11px] text-[#A3A3A3] mt-1.5 ml-1">Facultatif</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
                   </div>
                 ) : (
                   <InputField
@@ -1012,12 +993,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* ── Footer CTA ───────────────────────────────────────────────────── */}
-      <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#F0F0F0] px-5 py-4">
+      <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] border-t border-[var(--border-tertiary)] px-5 py-4">
         {formStep === 1 ? (
           <button
             onClick={() => { if (canGoToStep2) setFormStep(2) }}
             disabled={!canGoToStep2}
-            className={`w-full py-[15px] rounded-[100px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${!canGoToStep2 ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
+            className={`w-full py-[15px] rounded-[100px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${!canGoToStep2 ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
           >
             Suivant
           </button>
@@ -1025,9 +1006,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <button
             onClick={handleSubmit}
             disabled={loading || !canSubmit}
-            className={`w-full py-[15px] rounded-[100px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${loading || !canSubmit ? 'bg-[#FFF3E5] text-[#FFB073]' : 'bg-[#FF7A00] text-white'}`}
+            className={`w-full py-[15px] rounded-[100px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${loading || !canSubmit ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
           >
-            {loading ? <div className="w-5 h-5 border-2 border-[#FFB073] border-t-white rounded-full animate-spin" /> : null}
+            {loading ? <div className="w-5 h-5 border-2 border-[var(--brand-orange-400)] border-t-transparent rounded-full animate-spin" /> : null}
             {loading ? "Création..." : "Créer l'événement"}
           </button>
         )}
@@ -1041,9 +1022,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <BottomSheet title="Date et heure de début" open={showStartDateSheet} onClose={() => setShowStartDateSheet(false)}>
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Date de début</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Date de début</label>
             <div className="relative">
-              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
                 type="date"
                 value={tempStartDate}
@@ -1052,13 +1033,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               />
             </div>
             {tempStartDate && (
-              <p className="text-[13px] text-[#766F6E] mt-1.5 pl-1">{formatDateFr(tempStartDate)}</p>
+              <p className="text-[13px] text-[var(--color-text-secondary)] mt-1.5 pl-1">{formatDateFr(tempStartDate)}</p>
             )}
           </div>
           <div>
-            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Heure de début</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Heure de début</label>
             <div className="relative">
-              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
                 type="time"
                 value={tempStartTime}
@@ -1070,7 +1051,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <button
             onClick={() => { setStartDate(tempStartDate); setStartTime(tempStartTime); setShowStartDateSheet(false) }}
             disabled={!tempStartDate || !tempStartTime}
-            className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
+            className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
             Terminé
           </button>
         </div>
@@ -1080,9 +1061,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <BottomSheet title="Date et heure de fin" open={showEndDateSheet} onClose={() => setShowEndDateSheet(false)}>
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Date de fin</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Date de fin</label>
             <div className="relative">
-              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
                 type="date"
                 value={tempEndDate}
@@ -1092,13 +1073,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               />
             </div>
             {tempEndDate && (
-              <p className="text-[13px] text-[#766F6E] mt-1.5 pl-1">{formatDateFr(tempEndDate)}</p>
+              <p className="text-[13px] text-[var(--color-text-secondary)] mt-1.5 pl-1">{formatDateFr(tempEndDate)}</p>
             )}
           </div>
           <div>
-            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Heure de fin</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Heure de fin</label>
             <div className="relative">
-              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
                 type="time"
                 value={tempEndTime}
@@ -1110,7 +1091,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <button
             onClick={() => { setEndDate(tempEndDate); setEndTime(tempEndTime); setShowEndDateSheet(false) }}
             disabled={!tempEndDate || !tempEndTime}
-            className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
+            className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
             Terminé
           </button>
         </div>
@@ -1120,9 +1101,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <BottomSheet title="Date limite d'inscription" open={showRegEndDateSheet} onClose={() => setShowRegEndDateSheet(false)}>
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Date limite</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Date limite</label>
             <div className="relative">
-              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
                 type="date"
                 value={tempRegEndDate}
@@ -1131,13 +1112,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               />
             </div>
             {tempRegEndDate && (
-              <p className="text-[13px] text-[#766F6E] mt-1.5 pl-1">{formatDateFr(tempRegEndDate)}</p>
+              <p className="text-[13px] text-[var(--color-text-secondary)] mt-1.5 pl-1">{formatDateFr(tempRegEndDate)}</p>
             )}
           </div>
           <div>
-            <label className="text-[12px] font-semibold text-[#766F6E] mb-1.5 block">Heure limite</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Heure limite</label>
             <div className="relative">
-              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#BDBDBD]" strokeWidth={1.5} />
+              <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
                 type="time"
                 value={tempRegEndTime}
@@ -1150,13 +1131,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <button
           onClick={() => { setRegEndDate(tempRegEndDate); setRegEndTime(tempRegEndTime); setShowRegEndDateSheet(false) }}
           disabled={!tempRegEndDate || !tempRegEndTime}
-          className="w-full py-4 rounded-full bg-[#FF7A00] font-bold text-[15px] text-white active:scale-[0.98] disabled:opacity-50 transition-all mt-4"
+          className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-4"
         >
           Confirmer
         </button>
       </BottomSheet>
       <BottomSheet title="Confidentialité de l'événement" open={showPrivacySheet} onClose={() => setShowPrivacySheet(false)}>
-        <p className="text-[14px] text-[#5B5B5B] mb-6 leading-[1.6]">
+        <p className="text-[14px] text-[var(--color-text-secondary)] mb-6 leading-[1.6]">
           Choisissez qui peut voir cet événement et y participer.<br />Vous pourrez envoyer des invitations plus tard.
         </p>
         <div className="flex flex-col">
@@ -1164,35 +1145,35 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde sur ou en dehors de Let's Out`, Icon: EarthIcon },
             { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: LockKeyIcon },
           ].map(opt => (
-            <div key={opt.value} className="flex flex-col w-full py-4 border-b border-[#F5F5F5] last:border-0">
+            <div key={opt.value} className="flex flex-col w-full py-4 border-b border-[var(--border-tertiary)] last:border-0">
               <button
                 onClick={() => { setPrivacy(opt.value); if (opt.value === 'PUBLIC') setAllowGuestInvites(false); setShowPrivacySheet(false) }}
                 className="w-full flex items-center gap-4 text-left"
               >
                 {/* Grey circle icon */}
-                <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
-                  <opt.Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} />
+                <div className="w-10 h-10 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center shrink-0">
+                  <opt.Icon className="w-5 h-5 text-[var(--color-text-secondary)]" strokeWidth={1.5} />
                 </div>
                 {/* Text */}
                 <div className="flex-1">
-                  <p className="text-[15px] font-bold text-[#1A1A1A]">{opt.label}</p>
-                  <p className="text-[12px] text-[#766F6E] mt-0.5">{opt.desc}</p>
+                  <p className="text-[15px] font-bold text-[var(--color-text-primary)]">{opt.label}</p>
+                  <p className="text-[12px] text-[var(--color-text-secondary)] mt-0.5">{opt.desc}</p>
                 </div>
                 {/* Radio */}
-                <div className={`w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors ${privacy === opt.value ? 'border-[#FF7A00]' : 'border-[#CCCCCC]'}`}>
-                  {privacy === opt.value && <div className="w-[10px] h-[10px] rounded-full bg-[#FF7A00]" />}
+                <div className={`w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors ${privacy === opt.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'}`}>
+                  {privacy === opt.value && <div className="w-[10px] h-[10px] rounded-full bg-[var(--brand-orange-500)]" />}
                 </div>
               </button>
               
               {/* Toggle switch for PRIVATE */}
               {opt.value === 'PRIVATE' && privacy === 'PRIVATE' && (
                 <div className="flex items-center justify-between mt-3 pt-1 ml-[56px]">
-                  <span className="text-[12px] text-[#5B5B5B] mr-4 leading-tight">Autoriser les participants à inviter d'autres participants</span>
+                  <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les participants à inviter d'autres participants</span>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setAllowGuestInvites(!allowGuestInvites); }}
-                    className={`w-9 h-5 rounded-full flex items-center px-[2px] transition-colors shrink-0 ${allowGuestInvites ? 'bg-[#FF7A00]' : 'bg-[#E5E5E5]'}`}
+                    className={`w-9 h-5 rounded-full flex items-center px-[2px] transition-colors shrink-0 ${allowGuestInvites ? 'bg-[var(--brand-orange-500)]' : 'bg-[var(--color-action-secondary)]'}`}
                   >
-                    <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${allowGuestInvites ? 'translate-x-4' : 'translate-x-0'}`} />
+                    <div className={`w-4 h-4 rounded-full bg-[var(--color-background-primary)] shadow-sm transition-transform ${allowGuestInvites ? 'translate-x-4' : 'translate-x-0'}`} />
                   </button>
                 </div>
               )}
@@ -1203,24 +1184,24 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       {/* ── Category Sheet ───────────────────────────────────────────────── */}
       <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
-        <div className="divide-y divide-[#F2F2F2]">
+        <div className="divide-y divide-[var(--border-tertiary)]">
           {CATEGORIES.map(cat => (
             <button
               key={cat.value}
               onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
-              className="w-full flex items-center gap-4 py-[13px] text-left active:bg-[#FAFAFA] transition-colors"
+              className="w-full flex items-center gap-4 py-[13px] text-left active:bg-[var(--color-background-secondary)] transition-colors"
             >
               {/* Icon */}
-              <div className="w-9 h-9 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
-                <cat.Icon className="w-[18px] h-[18px] text-[#3D3D3D]" strokeWidth={1.5} />
+              <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center shrink-0">
+                <cat.Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
               </div>
               {/* Label */}
-              <span className="flex-1 text-[15px] font-medium text-[#1A1A1A] text-left">{cat.label}</span>
+              <span className="flex-1 text-[15px] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
               {/* Radio */}
               <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                category === cat.value ? 'border-[#FF7A00]' : 'border-[#CCCCCC]'
+                category === cat.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
               }`}>
-                {category === cat.value && <div className="w-[11px] h-[11px] rounded-full bg-[#FF7A00]" />}
+                {category === cat.value && <div className="w-[11px] h-[11px] rounded-full bg-[var(--brand-orange-500)]" />}
               </div>
             </button>
           ))}
@@ -1228,14 +1209,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </BottomSheet>
 
       <BottomSheet title="Mode de participation" open={showParticipationSheet} onClose={() => setShowParticipationSheet(false)}>
-        <p className="text-[13px] text-[#766F6E] mb-5">Comment participer à cet événement.</p>
+        <p className="text-[13px] text-[var(--color-text-secondary)] mb-5">Comment participer à cet événement.</p>
         <div className="flex flex-col">
           {[
             { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: LockIcon },
             { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins02Icon },
           ].map(mode => {
             const isCagnotte = mode.value === 'cagnotte'
-            const accentColor = isCagnotte ? '#007AFF' : '#FF7A00'
+            const accentColor = isCagnotte ? 'var(--brand-blue-500)' : 'var(--brand-orange-500)'
             const isSelected = participationMode === mode.value
             return (
               <button
@@ -1247,16 +1228,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 }}
                 className={`w-full flex items-center gap-4 py-4 text-left`}
               >
-                <div className="w-10 h-10 rounded-full bg-[#F2F2F2] flex items-center justify-center shrink-0">
-                  <mode.Icon className="w-5 h-5 text-[#5B5B5B]" strokeWidth={1.5} />
+                <div className="w-10 h-10 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center shrink-0">
+                  <mode.Icon className="w-5 h-5 text-[var(--color-text-secondary)]" strokeWidth={1.5} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[15px] font-semibold text-[#1A1A1A]">{mode.label}</p>
-                  <p className="text-[12px] text-[#766F6E]">{mode.desc}</p>
+                  <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">{mode.label}</p>
+                  <p className="text-[12px] text-[var(--color-text-secondary)]">{mode.desc}</p>
                 </div>
                 <div
                   className="w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors"
-                  style={{ borderColor: isSelected ? accentColor : '#CCCCCC' }}
+                  style={{ borderColor: isSelected ? accentColor : 'var(--border-default)' }}
                 >
                   {isSelected && <div className="w-[10px] h-[10px] rounded-full" style={{ backgroundColor: accentColor }} />}
                 </div>
