@@ -1,31 +1,18 @@
 import { useNavigate, useLocation } from 'react-router'
-import { Home01Icon as Home, Search01Icon as Search, UserIcon as User, UserMultiple02Icon as Group, Comment01Icon as ChatBubble } from 'hugeicons-react'
+import {
+  Home01Icon as Home,
+  Search01Icon as Search,
+  User02Icon as User,
+  Comment01Icon as ChatBubble,
+} from 'hugeicons-react'
 import { useConversations } from '@/features/chat/api'
 
-// Custom icon: groupe d'événements (3 silhouettes)
-function EventsIcon({ active }: { active: boolean }) {
-  const color = active ? 'var(--color-icon-brand-primary)' : 'var(--color-icon-tertiary)'
-  return <Group width={24} height={24} strokeWidth={2} style={{ color }} />
-}
-
-// Custom icon: diamant central (bouton +)
-function DiamondPlusIcon() {
+// Icône centrale : rounded square orange avec + (conformément à la maquette Figma)
+function PlusButtonIcon() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      {/* Outline Diamond shape */}
-      <path
-        d="M12 2.5L21.5 12L12 21.5L2.5 12L12 2.5Z"
-        stroke="white"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      {/* Plus sign inside */}
-      <path
-        d="M12 8V16M8 12H16"
-        stroke="white"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <line x1="13" y1="6" x2="13" y2="20" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+      <line x1="6" y1="13" x2="20" y2="13" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
     </svg>
   )
 }
@@ -79,15 +66,12 @@ export function BottomNav() {
             aria-label={tab.label}
           >
             <div className="flex items-center justify-center w-7 h-7">
-              {tab.isCustom
-                ? <EventsIcon active={active} />
-                : <tab.icon
-                    width={24}
-                    height={24}
-                    strokeWidth={active ? 1.8 : 1.5}
-                    style={{ color: active ? 'var(--color-icon-brand-primary)' : 'var(--color-icon-tertiary)' }}
-                  />
-              }
+              <tab.icon
+                width={24}
+                height={24}
+                strokeWidth={active ? 1.8 : 1.5}
+                style={{ color: active ? 'var(--color-icon-brand-primary)' : 'var(--color-icon-tertiary)' }}
+              />
             </div>
             <span
               className="text-[var(--font-size-body-small)] font-medium leading-none mt-1"
@@ -109,14 +93,15 @@ export function BottomNav() {
         <div
           className="flex items-center justify-center"
           style={{
-            width: 48,
-            height: 48,
+            width: 52,
+            height: 52,
             borderRadius: 16,
             backgroundColor: 'var(--color-action-primary)',
-            marginBottom: 10,
+            marginBottom: 6,
+            boxShadow: '0 4px 12px rgba(255, 122, 0, 0.35)',
           }}
         >
-          <DiamondPlusIcon />
+          <PlusButtonIcon />
         </div>
       </button>
 

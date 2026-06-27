@@ -8,7 +8,7 @@ import {
   Cancel01Icon,
   Tick01Icon,
   Notification01Icon,
-  Setting06Icon,
+  FilterIcon,
   QrCode01Icon,
   MapsIcon,
   ListViewIcon,
@@ -51,12 +51,12 @@ const CATEGORY_ICONS: Record<string, React.FC<any>> = {
 };
 */
 
-// Filter tabs matching Figma
+// Filter tabs matching Figma — fonctionnels
 const filterTabs = [
-  { id: 'tout', label: 'Tout' },
-  { id: 'pour-vous', label: 'Pour vous' },
-  { id: 'en-ce-moment', label: 'En ce moment' },
-  { id: 'ce-week-end', label: 'Ce week-end' },
+  { id: 'tout',         label: 'Tout',         filter: null },
+  { id: 'pour-vous',   label: 'Pour vous',    filter: 'recommended' },
+  { id: 'en-ce-moment',label: 'En ce moment', filter: 'ongoing' },
+  { id: 'ce-week-end', label: 'Ce week-end',  filter: 'weekend' },
 ];
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
@@ -84,6 +84,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [isJoining, setIsJoining] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('tout');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [eventSearchFocused, setEventSearchFocused] = useState(false);
 
 
 
@@ -333,6 +334,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   // ── MAIN LIST SCREEN (Screen 1 & 4) ───────────────────────────────────────
 
   // Recherche d'événements : active dès 2 caractères ou si vide (= affiche tout)
+  // + filtre de catégorie par onglet actif
+  const now = new Date();
   const filteredEvents = events.filter(ev => {
     const searchLower = eventSearch.trim().toLowerCase();
     const searchActive = searchLower.length >= 2;
@@ -343,9 +346,38 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     const cityMatch = currentLocation
       ? (!ev.city || (ev.city || '').toLowerCase().trim() === currentLocation.toLowerCase().trim())
       : true;
-    // Si une recherche textuelle est active, elle prend le dessus sur le filtre de ville
-    if (searchActive) return textMatch;
-    return textMatch && cityMatch;
+
+    // Filtre par onglet actif
+    const tab = filterTabs.find(t => t.id === selectedCategory);
+    const tabFilter = tab?.filter;
+    let tabMatch = true;
+    if (tabFilter === 'ongoing') {
+      // En ce moment : a commencé et pas encore terminé
+      const start = ev.startAt ? new Date(ev.startAt) : null;
+      const end = (ev as any).endAt ? new Date((ev as any).endAt) : null;
+      tabMatch = !!start && start <= now && (!end || end >= now);
+    } else if (tabFilter === 'weekend') {
+      // Ce week-end : samedi ou dimanche prochain
+      const start = ev.startAt ? new Date(ev.startAt) : null;
+      if (start) {
+        const day = new Date();
+        const dayOfWeek = day.getDay(); // 0=dim, 6=sam
+        const daysToSat = (6 - dayOfWeek + 7) % 7 || 7;
+        const sat = new Date(day); sat.setDate(day.getDate() + daysToSat); sat.setHours(0,0,0,0);
+        const sun = new Date(sat); sun.setDate(sat.getDate() + 1); sun.setHours(23,59,59,999);
+        tabMatch = start >= sat && start <= sun;
+      } else {
+        tabMatch = false;
+      }
+    } else if (tabFilter === 'recommended') {
+      // Pour vous : événements à venir seulement
+      const start = ev.startAt ? new Date(ev.startAt) : null;
+      tabMatch = !!start && start > now;
+    }
+    // tabFilter === null = 'Tout' : pas de filtre supplémentaire
+
+    if (searchActive) return textMatch && tabMatch;
+    return textMatch && cityMatch && tabMatch;
   });
 
   // Nombre de notifications non lues (directement depuis unreadCount renvoyé par l'API)
@@ -391,24 +423,44 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
           {/* Search bar */}
           <div className="flex items-center gap-2.5 mb-3 w-full">
-            <div className="flex-1 border border-[var(--border-default)] rounded-full flex items-center px-[12px] h-[40px] gap-[8px] bg-white cursor-text focus-within:border-[var(--brand-orange-500)] transition-colors">
-              <Search01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
+            <div
+              className={`flex-1 border-2 rounded-full flex items-center px-[14px] h-[44px] gap-[10px] bg-white transition-colors ${
+                eventSearchFocused || eventSearch
+                  ? 'border-[var(--brand-orange-500)]'
+                  : 'border-[var(--border-default)]'
+              }`}
+            >
+              {/* Icône à gauche : loupe au repos, pin de localisation au focus (image 2) */}
+              {eventSearchFocused || eventSearch ? (
+                <Location01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
+              ) : (
+                <Search01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
+              )}
               <input
                 type="text"
                 placeholder="Rechercher des événements"
                 value={eventSearch}
                 onChange={(e) => setEventSearch(e.target.value)}
+                onFocus={() => setEventSearchFocused(true)}
+                onBlur={() => setEventSearchFocused(false)}
                 className="text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] font-poppins flex-1 bg-transparent outline-none border-none"
               />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  hapticFeedback.impact();
-                }}
-                className="shrink-0"
-              >
-                <Setting06Icon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
-              </button>
+              {/* X pour effacer quand du texte est saisi */}
+              {eventSearch ? (
+                <button
+                  onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}
+                  className="shrink-0 flex items-center justify-center"
+                >
+                  <Cancel01Icon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); hapticFeedback.impact(); }}
+                  className="shrink-0 flex items-center justify-center"
+                >
+                  <FilterIcon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+                </button>
+              )}
             </div>
 
             <button
@@ -416,13 +468,14 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 e.stopPropagation();
                 setScreen('join');
               }}
-              className="w-[40px] h-[40px] shrink-0 rounded-full border border-[var(--border-default)] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
+              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[var(--border-default)] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
             >
               <QrCode01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
             </button>
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-3 -mx-5 px-5" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {/* Filter chips — tous visibles sans scroll, fond gris inactif, orange actif */}
+          <div className="flex gap-1.5 pb-3" style={{ overflow: 'hidden' }}>
             {filterTabs.map((tab) => {
               const isActive = selectedCategory === tab.id;
               return (
@@ -432,15 +485,15 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     hapticFeedback.impact();
                     setSelectedCategory(tab.id);
                   }}
-                  className={`flex-shrink-0 active:scale-95 transition-transform px-4 py-1.5 rounded-full ${
-                    isActive ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'text-[#8D8D8D]'
+                  className={`flex-1 active:scale-95 transition-all px-2 py-1.5 rounded-full text-center ${
+                    isActive
+                      ? 'bg-[var(--brand-orange-500)] text-white'
+                      : 'bg-[#F2F2F2] text-[var(--color-text-secondary)]'
                   }`}
                 >
-                  <span
-                    className={`text-[13px] font-poppins whitespace-nowrap ${
-                      isActive ? 'font-semibold' : 'font-normal'
-                    }`}
-                  >
+                  <span className={`text-[12px] font-poppins whitespace-nowrap ${
+                    isActive ? 'font-semibold' : 'font-medium'
+                  }`}>
                     {tab.label}
                   </span>
                 </button>

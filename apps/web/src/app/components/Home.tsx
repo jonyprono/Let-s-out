@@ -203,19 +203,23 @@ export function Home({ userData, onNavigate }: HomeProps) {
           </button>
         </div>
 
-        {/* Filter chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+        {/* Filter chips — tous visibles sans scroll, fond gris inactif, orange actif */}
+        <div className="flex gap-1.5 pb-1" style={{ overflow: 'hidden' }}>
           {TIME_FILTERS.map((f, idx) => (
             <button
               key={`${f.key}-${idx}`}
               onClick={() => { hapticFeedback.impact(); setActiveFilter(f.key); }}
-              className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap font-medium transition-colors flex-shrink-0 ${
+              className={`flex-1 py-1.5 rounded-full text-center transition-all active:scale-95 ${
                 activeFilter === f.key
-                  ? 'bg-action-primary text-text-inverse border border-action-primary'
-                  : 'text-gray-600 border border-gray-200 bg-white'
+                  ? 'bg-[var(--brand-orange-500)] text-white'
+                  : 'bg-[#F2F2F2] text-[var(--color-text-secondary)]'
               }`}
             >
-              {f.label}
+              <span className={`text-[12px] font-poppins whitespace-nowrap font-medium ${
+                activeFilter === f.key ? 'font-semibold' : ''
+              }`}>
+                {f.label}
+              </span>
             </button>
           ))}
         </div>
