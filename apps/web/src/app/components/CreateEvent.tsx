@@ -20,7 +20,7 @@ import {
   ShoppingBag01Icon,
   MusicNote01Icon,
   Tv01Icon,
-  Clock04Icon,
+  AlarmClockIcon,
   PencilEdit01Icon,
   Delete01Icon,
   EarthIcon,
@@ -109,7 +109,7 @@ function InputField({
           placeholder={placeholder}
           readOnly={readOnly}
           onChange={onChange}
-          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''}`}
+          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''}`}
         />
         {rightIcons && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -533,7 +533,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 value={coOrgSearch}
                 onChange={e => setCoOrgSearch(e.target.value)}
                 placeholder="Rechercher un organisateur"
-                className="w-full pl-10 pr-4 py-2.5 border border-[var(--border-default)] rounded-full text-[14px] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                className="w-full pl-10 pr-4 py-2.5 border border-[var(--border-default)] rounded-full text-[14px] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
           </div>
@@ -605,7 +605,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   value={locationQuery}
                   onChange={e => handleLocationSearch(e.target.value)}
                   placeholder="Rechercher un lieu..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-[var(--border-default)] rounded-full text-[14px] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                  className="w-full pl-10 pr-4 py-2.5 border border-[var(--border-default)] rounded-full text-[14px] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
                 />
             </div>
           </div>
@@ -728,13 +728,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="absolute bottom-3 right-3 flex flex-col gap-2">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-white/95 rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[110px]">
+                className="flex items-center justify-between gap-3 bg-[var(--color-background-secondary)] rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[110px]">
                 Gallerie
                 <Image01Icon className="w-[18px] h-[18px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
               </button>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-white/95 rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[110px]">
+                className="flex items-center justify-between gap-3 bg-[var(--color-background-secondary)] rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[110px]">
                 Importer
                 <Upload04Icon className="w-[18px] h-[18px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
               </button>
@@ -781,7 +781,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {/* Add organizer button */}
           <button
             onClick={() => setShowOrganizerSearch(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-alt)] border border-[var(--border-default)] rounded-full text-[13px] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start mt-2">
+            className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[13px] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start mt-2">
             <UserIcon className="w-4 h-4 text-[var(--brand-orange-400)]" fill="currentColor" strokeWidth={1.5} />
             Ajouter un organisateur
           </button>
@@ -816,7 +816,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
                     className="flex items-center gap-2 text-[13px] font-medium text-[var(--color-text-primary)] active:opacity-70 transition-opacity"
                   >
-                    <Clock04Icon className="w-4 h-4 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
+                    <AlarmClockIcon className="w-4 h-4 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
                     Ajouter une heure de fin
                   </button>
                 ) : (
@@ -836,7 +836,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     />
                     {endDate && endTime && (
                       <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
-                        <Clock04Icon className="w-3.5 h-3.5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
+                        <AlarmClockIcon className="w-3.5 h-3.5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
                         <span className="text-[12px] text-[var(--color-text-muted)]">Heure de fin ajoutée</span>
                       </div>
                     )}
@@ -872,7 +872,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       onChange={e => setDescription(e.target.value)}
                       placeholder="Quels sont les détails ?"
                       rows={4}
-                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)] resize-none"
+                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
                     />
                   </div>
 
@@ -898,7 +898,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   type="number"
                   min={1}
                   placeholder="0"
-                  className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)]"
+                  className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                 />
                 <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
               </div>
@@ -923,7 +923,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                         type="number" min={1} value={poolTarget}
                         onChange={e => setPoolTarget(e.target.value)}
                         placeholder="0"
-                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)]"
+                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                       />
                       <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
                     </div>
@@ -938,7 +938,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       onChange={e => setPoolDescription(e.target.value)}
                       placeholder="Quels sont les détails des dépenses prévues ?"
                       rows={4}
-                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)] resize-none"
+                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
                     />
                   </div>
 
@@ -950,7 +950,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                         type="number" min={1} value={poolMinAmount}
                         onChange={e => setPoolMinAmount(e.target.value)}
                         placeholder="0"
-                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-[var(--brand-orange-500)] bg-[var(--color-background-primary)]"
+                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                       />
                       <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
                     </div>
@@ -1029,7 +1029,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="date"
                 value={tempStartDate}
                 onChange={e => setTempStartDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
             {tempStartDate && (
@@ -1044,7 +1044,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempStartTime}
                 onChange={e => setTempStartTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
           </div>
@@ -1069,7 +1069,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 value={tempEndDate}
                 min={startDate}
                 onChange={e => setTempEndDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
             {tempEndDate && (
@@ -1084,7 +1084,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempEndTime}
                 onChange={e => setTempEndTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
           </div>
@@ -1108,7 +1108,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="date"
                 value={tempRegEndDate}
                 onChange={e => setTempRegEndDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
             {tempRegEndDate && (
@@ -1123,7 +1123,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempRegEndTime}
                 onChange={e => setTempRegEndTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[var(--brand-orange-500)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
           </div>
