@@ -101,15 +101,15 @@ function InputField({
   rightIcons?: React.ReactNode
 }) {
   return (
-    <div className="mb-4">
-      <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">{label}</p>
+    <div className="mb-3">
+      <p className="text-[length:var(--font-size-body-small)] font-semibold text-[var(--color-text-primary)] mb-1">{label}</p>
       <div className="relative" onClick={onClick}>
         <input
           value={value || ''}
           placeholder={placeholder}
           readOnly={readOnly}
           onChange={onChange}
-          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''}`}
+          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''}`}
         />
         {rightIcons && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -694,22 +694,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           >
             <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-primary)]" />
           </button>
-          <span className="text-[15px] font-bold text-[var(--color-text-primary)]">Créer un événement</span>
+          <span className="text-[length:var(--font-size-title-xsmall)] font-semibold text-[var(--color-text-primary)]">Créer un événement</span>
         </div>
       </div>
 
       {/* ── Progress bar ─────────────────────────────────────────────────── */}
-      <div className="mx-5 h-[2px] bg-[var(--brand-orange-200)] rounded-full overflow-hidden shrink-0">
+      <div className="mx-5 h-[2px] bg-[var(--brand-orange-100)] rounded-full overflow-hidden shrink-0 mt-1">
         <div className="h-full bg-[var(--brand-orange-500)] rounded-full transition-all duration-300"
-          style={{ width: formStep === 1 ? '50%' : '100%' }} />
+          style={{ width: formStep === 1 ? '33%' : '100%' }} />
       </div>
 
       {/* ── Scrollable content ───────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto pb-36">
 
         {/* ── Cover photo ─────────────────────────────────────────────── */}
-        <div className="px-5 pt-4 pb-6">
-          <div className="relative w-full h-[200px] bg-[var(--color-background-secondary)] rounded-[16px] overflow-hidden">
+        <div className="px-5 pt-4 pb-4">
+          <div className="relative w-full h-[160px] bg-[var(--color-background-secondary)] rounded-[16px] overflow-hidden">
             {coverPreview ? (
               <>
                 <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
@@ -719,58 +719,44 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-danger)]" />
                 </button>
               </>
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                <ImageAdd01Icon className="w-8 h-8 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
-              </div>
-            )}
-          {/* Galerie / Importer buttons — bottom-right, stacked vertically */}
-            <div className="absolute bottom-3 right-3 flex flex-col gap-2">
+            ) : null}
+            <div className="absolute bottom-2 right-2 flex flex-col gap-2">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-[var(--color-background-secondary)] rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[110px]">
-                Gallerie
-                <Image01Icon className="w-[18px] h-[18px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
-              </button>
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-[var(--color-background-secondary)] rounded-[10px] px-3.5 py-2.5 text-[13px] font-semibold text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[110px]">
+                className="flex items-center justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[100px]">
                 Importer
-                <Upload04Icon className="w-[18px] h-[18px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
+                <Upload04Icon className="w-4 h-4 text-[var(--color-text-primary)]" strokeWidth={1.5} />
               </button>
             </div>
             <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
           </div>
         </div>
 
-        {/* ── Organizer row ────────────────────────────────────────────── */}
-        <div className="px-5 pb-6">
-          {/* Main organizer */}
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-              {me?.profile?.avatarUrl ? (
-                <SafeImage src={me.profile.avatarUrl} alt={me.profile.displayName || 'Vous'} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-[var(--brand-orange-500)] flex items-center justify-center text-[var(--color-text-inverse)] font-bold text-[16px]">
-                  {me?.profile?.displayName?.charAt(0)?.toUpperCase() || 'M'}
-                </div>
-              )}
+        {/* ── Organizer ─────────────────────────────────────────────────── */}
+        <div className="px-5 mb-4 flex flex-col gap-2">
+          {/* Main Organizer */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[var(--brand-orange-500)] text-white flex items-center justify-center font-bold text-[length:var(--font-size-title-small)] shrink-0">
+              {me?.firstName?.[0]?.toUpperCase() || 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-[var(--color-text-primary)] truncate">{me?.profile?.displayName || 'Vous'}</p>
-              <p className="text-[12px] text-[var(--color-text-secondary)]">Organisateur de l'événement</p>
+              <p className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] truncate">
+                {me?.firstName} {me?.lastName}
+              </p>
+              <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate">Organisateur de l'événement</p>
             </div>
           </div>
-          {/* Co-organisateurs */}
-          {selectedCoOrgs.map(org => (
-            <div key={org.id} className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-                <SafeImage src={org.avatarUrl} alt={org.name} className="w-full h-full object-cover"
-                  fallback={<div className="w-full h-full bg-[var(--functional-green-500)] flex items-center justify-center text-[var(--color-text-inverse)] font-bold text-[15px]">{org.name.charAt(0)}</div>} />
+          {/* Co-organizers */}
+          {selectedCoOrgs.map((org, i) => (
+            <div key={i} className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
+              <div className="w-10 h-10 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center font-bold text-[length:var(--font-size-title-small)] shrink-0">
+                {org.firstName?.[0]?.toUpperCase() || org.username?.[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-bold text-[var(--color-text-primary)] truncate">{org.name}</p>
-                <p className="text-[12px] text-[var(--color-text-secondary)]">Co-organisateur</p>
+                <p className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] truncate">
+                  {org.firstName} {org.lastName}
+                </p>
+                <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate">Co-organisateur</p>
               </div>
               <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
                 className="w-7 h-7 rounded-full bg-[var(--functional-red-50)] flex items-center justify-center active:scale-95">
@@ -781,7 +767,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {/* Add organizer button */}
           <button
             onClick={() => setShowOrganizerSearch(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[13px] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start mt-2">
+            className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start mt-1">
             <UserIcon className="w-4 h-4 text-[var(--brand-orange-400)]" fill="currentColor" strokeWidth={1.5} />
             Ajouter un organisateur
           </button>
@@ -810,13 +796,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               />
 
               {/* Ajouter une heure de fin */}
-              <div className="mb-4">
+              <div className="mb-3">
                 {!hasEndDate ? (
                   <button
                     onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
-                    className="flex items-center gap-2 text-[13px] font-medium text-[var(--color-text-primary)] active:opacity-70 transition-opacity"
+                    className="flex items-center gap-2 text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-primary)] active:opacity-70 transition-opacity"
                   >
-                    <AlarmClockIcon className="w-4 h-4 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
+                    <AlarmClockIcon className="w-[14px] h-[14px] text-[var(--color-icon-muted)]" strokeWidth={1.5} />
                     Ajouter une heure de fin
                   </button>
                 ) : (
@@ -865,14 +851,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               {/* Dynamic fields */}
               {privacy && (
                 <div className="animate-in slide-in-from-top-2">
-                  <div className="mb-4">
-                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Détails</p>
+                  <div className="mb-3">
+                    <p className="text-[length:var(--font-size-body-small)] font-semibold text-[var(--color-text-primary)] mb-1">Détails</p>
                     <textarea
                       value={description}
                       onChange={e => setDescription(e.target.value)}
                       placeholder="Quels sont les détails ?"
                       rows={4}
-                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
+                      className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
                     />
                   </div>
 
@@ -898,7 +884,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   type="number"
                   min={1}
                   placeholder="0"
-                  className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
+                  className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                 />
                 <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
               </div>
@@ -923,9 +909,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                         type="number" min={1} value={poolTarget}
                         onChange={e => setPoolTarget(e.target.value)}
                         placeholder="0"
-                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
+                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                       />
-                      <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
+                      <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
                     </div>
                     <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Montant estimé des dépenses</p>
                   </div>
@@ -938,7 +924,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       onChange={e => setPoolDescription(e.target.value)}
                       placeholder="Quels sont les détails des dépenses prévues ?"
                       rows={4}
-                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
+                      className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
                     />
                   </div>
 
@@ -950,9 +936,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                         type="number" min={1} value={poolMinAmount}
                         onChange={e => setPoolMinAmount(e.target.value)}
                         placeholder="0"
-                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
+                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                       />
-                      <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[15px] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
+                      <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
                     </div>
                     <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
                   </div>
@@ -998,7 +984,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <button
             onClick={() => { if (canGoToStep2) setFormStep(2) }}
             disabled={!canGoToStep2}
-            className={`w-full py-[15px] rounded-[100px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${!canGoToStep2 ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
+            className={`w-full py-[15px] rounded-[100px] font-bold text-[length:var(--font-size-body-medium)] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${!canGoToStep2 ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
           >
             Suivant
           </button>
@@ -1006,7 +992,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <button
             onClick={handleSubmit}
             disabled={loading || !canSubmit}
-            className={`w-full py-[15px] rounded-[100px] font-bold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${loading || !canSubmit ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
+            className={`w-full py-[15px] rounded-[100px] font-bold text-[length:var(--font-size-body-medium)] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${loading || !canSubmit ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
           >
             {loading ? <div className="w-5 h-5 border-2 border-[var(--brand-orange-400)] border-t-transparent rounded-full animate-spin" /> : null}
             {loading ? "Création..." : "Créer l'événement"}
@@ -1029,7 +1015,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="date"
                 value={tempStartDate}
                 onChange={e => setTempStartDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
             {tempStartDate && (
@@ -1044,14 +1030,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempStartTime}
                 onChange={e => setTempStartTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
           </div>
           <button
             onClick={() => { setStartDate(tempStartDate); setStartTime(tempStartTime); setShowStartDateSheet(false) }}
             disabled={!tempStartDate || !tempStartTime}
-            className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
+            className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
             Terminé
           </button>
         </div>
@@ -1069,7 +1055,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 value={tempEndDate}
                 min={startDate}
                 onChange={e => setTempEndDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
             {tempEndDate && (
@@ -1084,14 +1070,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempEndTime}
                 onChange={e => setTempEndTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
           </div>
           <button
             onClick={() => { setEndDate(tempEndDate); setEndTime(tempEndTime); setShowEndDateSheet(false) }}
             disabled={!tempEndDate || !tempEndTime}
-            className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
+            className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
             Terminé
           </button>
         </div>
@@ -1108,7 +1094,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="date"
                 value={tempRegEndDate}
                 onChange={e => setTempRegEndDate(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
             {tempRegEndDate && (
@@ -1123,7 +1109,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 type="time"
                 value={tempRegEndTime}
                 onChange={e => setTempRegEndTime(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[15px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+                className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
           </div>
@@ -1131,7 +1117,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <button
           onClick={() => { setRegEndDate(tempRegEndDate); setRegEndTime(tempRegEndTime); setShowRegEndDateSheet(false) }}
           disabled={!tempRegEndDate || !tempRegEndTime}
-          className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-4"
+          className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-4"
         >
           Confirmer
         </button>
@@ -1156,7 +1142,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </div>
                 {/* Text */}
                 <div className="flex-1">
-                  <p className="text-[15px] font-bold text-[var(--color-text-primary)]">{opt.label}</p>
+                  <p className="text-[length:var(--font-size-body-medium)] font-bold text-[var(--color-text-primary)]">{opt.label}</p>
                   <p className="text-[12px] text-[var(--color-text-secondary)] mt-0.5">{opt.desc}</p>
                 </div>
                 {/* Radio */}
@@ -1196,7 +1182,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <cat.Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
               </div>
               {/* Label */}
-              <span className="flex-1 text-[15px] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
+              <span className="flex-1 text-[length:var(--font-size-body-medium)] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
               {/* Radio */}
               <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                 category === cat.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
@@ -1232,7 +1218,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <mode.Icon className="w-5 h-5 text-[var(--color-text-secondary)]" strokeWidth={1.5} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">{mode.label}</p>
+                  <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)]">{mode.label}</p>
                   <p className="text-[12px] text-[var(--color-text-secondary)]">{mode.desc}</p>
                 </div>
                 <div
