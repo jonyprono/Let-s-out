@@ -706,8 +706,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <div className="flex-1 overflow-y-auto pb-36">
 
         {/* ── Cover photo ─────────────────────────────────────────────── */}
-        <div className="px-5 pt-4 pb-4">
-          <div className="relative w-full h-[160px] bg-[var(--color-background-secondary)] rounded-[16px] overflow-hidden">
+        <div className="px-5 pt-6 pb-4">
+          <div className="relative w-full h-[160px] bg-[#C4C4C4] rounded-[8px] overflow-hidden">
             {coverPreview ? (
               <>
                 <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
@@ -721,13 +721,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="absolute bottom-2 right-2 flex flex-col gap-2">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-white/30 backdrop-blur-md rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[100px]">
+                className="flex items-center justify-between gap-3 bg-white/20 border border-white/30 backdrop-blur-md rounded-[8px] px-3 py-1.5 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[90px]">
                 Gallerie
                 <Image01Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
               </button>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-white/30 backdrop-blur-md rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[100px]">
+                className="flex items-center justify-between gap-3 bg-white/20 border border-white/30 backdrop-blur-md rounded-[8px] px-3 py-1.5 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[90px]">
                 Importer
                 <Upload04Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
               </button>
