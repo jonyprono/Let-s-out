@@ -120,6 +120,40 @@ function InputField({
 }
 
 // ── Main Component ──────────────────────────────────────────────────────────
+const CustomClockIcon = ({ className }: { className?: string }) => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    {/* Bells */}
+    <path d="M5.5 5.5C5.5 3.5 7 2 9 2" stroke="#4F4F4F" strokeWidth="2.5" strokeLinecap="round" />
+    <path d="M14.5 5.5C14.5 3.5 13 2 11 2" stroke="#4F4F4F" strokeWidth="2.5" strokeLinecap="round" />
+    {/* Legs */}
+    <path d="M6 14.5L4 17" stroke="#4F4F4F" strokeWidth="2" strokeLinecap="round" />
+    <path d="M14 14.5L16 17" stroke="#4F4F4F" strokeWidth="2" strokeLinecap="round" />
+    {/* Face */}
+    <circle cx="10" cy="10" r="7" fill="#F2F2F2" stroke="#BDBDBD" strokeWidth="1" />
+    {/* Center Dot */}
+    <circle cx="10" cy="10" r="1.5" fill="#4F4F4F" />
+    {/* Hands */}
+    <path d="M10 10L10 6" stroke="#EB5757" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M10 10L13 12" stroke="#EB5757" strokeWidth="1.5" strokeLinecap="round" />
+    {/* Ticks */}
+    <circle cx="10" cy="4.5" r="0.5" fill="#4F4F4F" />
+    <circle cx="10" cy="15.5" r="0.5" fill="#4F4F4F" />
+    <circle cx="4.5" cy="10" r="0.5" fill="#4F4F4F" />
+    <circle cx="15.5" cy="10" r="0.5" fill="#4F4F4F" />
+    <circle cx="6.1" cy="6.1" r="0.5" fill="#4F4F4F" />
+    <circle cx="13.9" cy="13.9" r="0.5" fill="#4F4F4F" />
+    <circle cx="13.9" cy="6.1" r="0.5" fill="#4F4F4F" />
+    <circle cx="6.1" cy="13.9" r="0.5" fill="#4F4F4F" />
+  </svg>
+);
+
+const CustomUserIcon = ({ className }: { className?: string }) => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="10" cy="6.5" r="4.5" fill="#F2994A" />
+    <path d="M4 17C4 13.6863 6.68629 11 10 11C13.3137 11 16 13.6863 16 17V18H4V17Z" fill="#F2C94C" />
+  </svg>
+);
+
 export function CreateEvent({ onBack }: CreateEventProps) {
   const navigate = useNavigate()
   const location = useLocation()
@@ -706,34 +740,30 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <div className="flex-1 overflow-y-auto pb-36">
 
         {/* ── Cover photo ─────────────────────────────────────────────── */}
-        <div className="px-5 pt-6 pb-4">
-          <div className="relative w-full h-[160px] bg-[#C4C4C4] rounded-[8px] overflow-hidden">
+        <div className="flex flex-row justify-center items-center p-[12px] gap-[8px] w-[358px] h-[192px] bg-[rgba(0,0,0,0.2)] border border-[#E0E0E0] rounded-[2px] mx-auto mt-[24px] relative overflow-hidden isolate">
             {coverPreview ? (
               <>
                 <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
                 <button
                   onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm z-20">
                   <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-danger)]" />
                 </button>
               </>
             ) : null}
-            <div className="absolute bottom-2 right-2 flex flex-col gap-2">
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-white/20 border border-white/30 backdrop-blur-md rounded-[8px] px-3 py-1.5 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[90px]">
-                Gallerie
-                <Image01Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
-              </button>
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-white/20 border border-white/30 backdrop-blur-md rounded-[8px] px-3 py-1.5 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[90px]">
-                Importer
-                <Upload04Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
-              </button>
-            </div>
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="absolute right-[12px] bottom-[12px] flex flex-row justify-center items-center px-[12px] py-[8px] gap-[4px] w-[110px] h-[36px] bg-[rgba(255,255,255,0.2)] rounded-[6px] active:scale-95 transition-transform z-0">
+              <span className="w-[62px] h-[20px] font-[Poppins] font-medium text-[14px] leading-[20px] flex items-center text-white">Gallerie</span>
+              <Image01Icon className="w-[20px] h-[20px] text-white" strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="absolute right-[12px] bottom-[60px] flex flex-row justify-center items-center px-[12px] py-[8px] gap-[4px] w-[103px] h-[36px] bg-[rgba(255,255,255,0.2)] rounded-[6px] active:scale-95 transition-transform z-10">
+              <span className="w-[55px] h-[20px] font-[Poppins] font-medium text-[14px] leading-[20px] flex items-center text-white">Importer</span>
+              <Upload04Icon className="w-[20px] h-[20px] text-white" strokeWidth={1.5} />
+            </button>
             <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
-          </div>
         </div>
 
         {/* ── Organizer ─────────────────────────────────────────────────── */}
@@ -772,7 +802,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           <button
             onClick={() => setShowOrganizerSearch(true)}
             className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start mt-1">
-            <UserIcon className="w-4 h-4 text-[var(--brand-orange-400)]" fill="currentColor" strokeWidth={1.5} />
+            <CustomUserIcon />
             Ajouter un organisateur
           </button>
         </div>
@@ -806,7 +836,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
                     className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start"
                   >
-                    <span role="img" aria-label="heure de fin" className="text-[16px] leading-none">⏰</span>
+                    <CustomClockIcon />
                     Ajouter une heure de fin
                   </button>
                 ) : (
@@ -826,7 +856,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     />
                     {endDate && endTime && (
                       <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
-                        <span role="img" aria-label="heure de fin" className="text-[14px] leading-none">⏰</span>
+                        <CustomClockIcon className="w-[14px] h-[14px]" />
                         <span className="text-[12px] text-[var(--color-text-muted)]">Heure de fin ajoutée</span>
                       </div>
                     )}
