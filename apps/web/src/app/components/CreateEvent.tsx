@@ -73,6 +73,45 @@ const PARTICIPATION_MODES = [
   { value: 'cagnotte',label: 'Sur cagnotte', desc: 'Accès sur contribution à une cagnotte partagée',   emoji: '💰' },
 ]
 
+// ── Main Component ──────────────────────────────────────────────────────────
+const CustomClockIcon = ({ className }: { className?: string }) => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    {/* Bells */}
+    <path d="M4.5 6C4.5 3.5 6.5 2.5 8 2.5" stroke="#4F4F4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M15.5 6C15.5 3.5 13.5 2.5 12 2.5" stroke="#4F4F4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    {/* Legs */}
+    <path d="M6 15.5L4.5 17.5" stroke="#4F4F4F" strokeWidth="2" strokeLinecap="round" />
+    <path d="M14 15.5L15.5 17.5" stroke="#4F4F4F" strokeWidth="2" strokeLinecap="round" />
+    {/* Face */}
+    <circle cx="10" cy="10" r="7.5" fill="#F2F2F2" stroke="#BDBDBD" strokeWidth="1.5" />
+    {/* Center Dot */}
+    <circle cx="10" cy="10" r="1.5" fill="#4F4F4F" />
+    {/* Ticks (12 dots) */}
+    <circle cx="10" cy="4.5" r="0.6" fill="#4F4F4F" />
+    <circle cx="10" cy="15.5" r="0.6" fill="#4F4F4F" />
+    <circle cx="4.5" cy="10" r="0.6" fill="#4F4F4F" />
+    <circle cx="15.5" cy="10" r="0.6" fill="#4F4F4F" />
+    <circle cx="12.75" cy="5.24" r="0.6" fill="#4F4F4F" />
+    <circle cx="14.76" cy="7.25" r="0.6" fill="#4F4F4F" />
+    <circle cx="14.76" cy="12.75" r="0.6" fill="#4F4F4F" />
+    <circle cx="12.75" cy="14.76" r="0.6" fill="#4F4F4F" />
+    <circle cx="7.25" cy="14.76" r="0.6" fill="#4F4F4F" />
+    <circle cx="5.24" cy="12.75" r="0.6" fill="#4F4F4F" />
+    <circle cx="5.24" cy="7.25" r="0.6" fill="#4F4F4F" />
+    <circle cx="7.25" cy="5.24" r="0.6" fill="#4F4F4F" />
+    {/* Hands */}
+    <path d="M10 10L7.5 8" stroke="#EB5757" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M10 10L13 8.5" stroke="#EB5757" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+const CustomUserIcon = ({ className }: { className?: string }) => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="10" cy="6.5" r="4.5" fill="#F2994A" />
+    <path d="M4 17C4 13.6863 6.68629 11 10 11C13.3137 11 16 13.6863 16 17V18H4V17Z" fill="#F2C94C" />
+  </svg>
+);
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function formatDateFr(iso: string) {
   try { return format(new Date(iso + 'T00:00:00'), 'dd MMMM yyyy', { locale: fr }) }
@@ -119,12 +158,7 @@ function InputField({
   )
 }
 
-const CustomUserIcon = ({ className }: { className?: string }) => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    <circle cx="10" cy="6.5" r="4.5" fill="#F2994A" />
-    <path d="M4 17C4 13.6863 6.68629 11 10 11C13.3137 11 16 13.6863 16 17V18H4V17Z" fill="#F2C94C" />
-  </svg>
-);
+
 
 export function CreateEvent({ onBack }: CreateEventProps) {
   const navigate = useNavigate()
@@ -712,8 +746,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <div className="flex-1 overflow-y-auto pb-36">
 
         {/* ── Cover photo ─────────────────────────────────────────────── */}
-        <div className="px-5 pt-4 pb-4">
-          <div className="relative w-full h-[160px] bg-[#C4C4C4] rounded-[8px] overflow-hidden">
+        <div className="px-5 pt-4 pb-4 flex justify-center">
+          <div className="relative w-[358px] h-[192px] bg-black/20 border border-[var(--border-primary)] rounded-[2px] overflow-hidden isolate">
             {coverPreview ? (
               <>
                 <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
@@ -812,7 +846,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
                     className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start"
                   >
-                    <span role="img" aria-label="heure de fin" className="text-[16px] leading-none" style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' }}>⏰</span>
+                    <CustomClockIcon />
                     Ajouter une heure de fin
                   </button>
                 ) : (
@@ -832,7 +866,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     />
                     {endDate && endTime && (
                       <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
-                        <span role="img" aria-label="heure de fin" className="text-[14px] leading-none" style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' }}>⏰</span>
+                        <CustomClockIcon className="w-[14px] h-[14px]" />
                         <span className="text-[12px] text-[var(--color-text-muted)]">Heure de fin ajoutée</span>
                       </div>
                     )}
