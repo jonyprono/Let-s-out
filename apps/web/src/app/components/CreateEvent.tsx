@@ -119,34 +119,6 @@ function InputField({
   )
 }
 
-// ── Main Component ──────────────────────────────────────────────────────────
-const CustomClockIcon = ({ className }: { className?: string }) => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
-    {/* Bells */}
-    <path d="M5.5 5.5C5.5 3.5 7 2 9 2" stroke="#4F4F4F" strokeWidth="2.5" strokeLinecap="round" />
-    <path d="M14.5 5.5C14.5 3.5 13 2 11 2" stroke="#4F4F4F" strokeWidth="2.5" strokeLinecap="round" />
-    {/* Legs */}
-    <path d="M6 14.5L4 17" stroke="#4F4F4F" strokeWidth="2" strokeLinecap="round" />
-    <path d="M14 14.5L16 17" stroke="#4F4F4F" strokeWidth="2" strokeLinecap="round" />
-    {/* Face */}
-    <circle cx="10" cy="10" r="7" fill="#F2F2F2" stroke="#BDBDBD" strokeWidth="1" />
-    {/* Center Dot */}
-    <circle cx="10" cy="10" r="1.5" fill="#4F4F4F" />
-    {/* Hands */}
-    <path d="M10 10L10 6" stroke="#EB5757" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M10 10L13 12" stroke="#EB5757" strokeWidth="1.5" strokeLinecap="round" />
-    {/* Ticks */}
-    <circle cx="10" cy="4.5" r="0.5" fill="#4F4F4F" />
-    <circle cx="10" cy="15.5" r="0.5" fill="#4F4F4F" />
-    <circle cx="4.5" cy="10" r="0.5" fill="#4F4F4F" />
-    <circle cx="15.5" cy="10" r="0.5" fill="#4F4F4F" />
-    <circle cx="6.1" cy="6.1" r="0.5" fill="#4F4F4F" />
-    <circle cx="13.9" cy="13.9" r="0.5" fill="#4F4F4F" />
-    <circle cx="13.9" cy="6.1" r="0.5" fill="#4F4F4F" />
-    <circle cx="6.1" cy="13.9" r="0.5" fill="#4F4F4F" />
-  </svg>
-);
-
 const CustomUserIcon = ({ className }: { className?: string }) => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     <circle cx="10" cy="6.5" r="4.5" fill="#F2994A" />
@@ -840,7 +812,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
                     className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start"
                   >
-                    <CustomClockIcon />
+                    <span role="img" aria-label="heure de fin" className="text-[16px] leading-none" style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' }}>⏰</span>
                     Ajouter une heure de fin
                   </button>
                 ) : (
@@ -860,7 +832,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     />
                     {endDate && endTime && (
                       <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
-                        <CustomClockIcon className="w-[14px] h-[14px]" />
+                        <span role="img" aria-label="heure de fin" className="text-[14px] leading-none" style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' }}>⏰</span>
                         <span className="text-[12px] text-[var(--color-text-muted)]">Heure de fin ajoutée</span>
                       </div>
                     )}
