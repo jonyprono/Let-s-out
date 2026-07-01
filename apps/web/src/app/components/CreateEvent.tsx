@@ -740,7 +740,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <div className="flex-1 overflow-y-auto pb-36">
 
         {/* ── Cover photo ─────────────────────────────────────────────── */}
-        <div className="flex flex-row justify-center items-center p-[12px] gap-[8px] w-[358px] h-[192px] bg-[rgba(0,0,0,0.2)] border border-[#E0E0E0] rounded-[2px] mx-auto mt-[24px] relative overflow-hidden isolate">
+        <div className="px-5 pt-4 pb-4">
+          <div className="relative w-full h-[160px] bg-[#C4C4C4] rounded-[8px] overflow-hidden">
             {coverPreview ? (
               <>
                 <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
@@ -751,19 +752,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </button>
               </>
             ) : null}
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="absolute right-[12px] bottom-[12px] flex flex-row justify-center items-center px-[12px] py-[8px] gap-[4px] w-[110px] h-[36px] bg-[rgba(255,255,255,0.2)] rounded-[6px] active:scale-95 transition-transform z-0">
-              <span className="w-[62px] h-[20px] font-[Poppins] font-medium text-[14px] leading-[20px] flex items-center text-white">Gallerie</span>
-              <Image01Icon className="w-[20px] h-[20px] text-white" strokeWidth={1.5} />
-            </button>
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="absolute right-[12px] bottom-[60px] flex flex-row justify-center items-center px-[12px] py-[8px] gap-[4px] w-[103px] h-[36px] bg-[rgba(255,255,255,0.2)] rounded-[6px] active:scale-95 transition-transform z-10">
-              <span className="w-[55px] h-[20px] font-[Poppins] font-medium text-[14px] leading-[20px] flex items-center text-white">Importer</span>
-              <Upload04Icon className="w-[20px] h-[20px] text-white" strokeWidth={1.5} />
-            </button>
+            <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-white/30 backdrop-blur-md rounded-[6px] active:scale-95 transition-transform">
+                <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Gallerie</span>
+                <Image01Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
+              </button>
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-white/30 backdrop-blur-md rounded-[6px] active:scale-95 transition-transform">
+                <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Importer</span>
+                <Upload04Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
+              </button>
+            </div>
             <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
+          </div>
         </div>
 
         {/* ── Organizer ─────────────────────────────────────────────────── */}
