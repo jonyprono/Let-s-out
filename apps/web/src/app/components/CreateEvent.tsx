@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import {
   Cancel01Icon,
-  ImageAdd01Icon,
   Location01Icon as HugeMapPin,
   Calendar01Icon as HugeCalendar,
   Clock01Icon as HugeClock,
@@ -721,6 +720,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </>
             ) : null}
             <div className="absolute bottom-2 right-2 flex flex-col gap-2">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex items-center justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[100px]">
+                Gallerie
+                <Image01Icon className="w-4 h-4 text-[var(--color-text-primary)]" strokeWidth={1.5} />
+              </button>
               <button
                 onClick={() => fileRef.current?.click()}
                 className="flex items-center justify-between gap-3 bg-white/80 backdrop-blur-sm rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-primary)] shadow-sm active:scale-95 transition-transform min-w-[100px]">
