@@ -721,13 +721,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="absolute bottom-2 right-2 flex flex-col gap-2">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-[var(--neutral-gray-900)]/50 backdrop-blur-sm rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[100px]">
+                className="flex items-center justify-between gap-3 bg-white/30 backdrop-blur-md rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[100px]">
                 Gallerie
                 <Image01Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
               </button>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center justify-between gap-3 bg-[var(--neutral-gray-900)]/50 backdrop-blur-sm rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[100px]">
+                className="flex items-center justify-between gap-3 bg-white/30 backdrop-blur-md rounded-[10px] px-3 py-2 text-[length:var(--font-size-body-small)] font-medium text-white shadow-sm active:scale-95 transition-transform min-w-[100px]">
                 Importer
                 <Upload04Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
               </button>
@@ -806,7 +806,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     onClick={() => { setHasEndDate(true); setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
                     className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start"
                   >
-                    <span role="img" aria-label="heure de fin" className="text-[14px]">🕰️</span>
+                    <span role="img" aria-label="heure de fin" className="text-[16px] leading-none">⏰</span>
                     Ajouter une heure de fin
                   </button>
                 ) : (
@@ -826,7 +826,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     />
                     {endDate && endTime && (
                       <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
-                        <span role="img" aria-label="heure de fin" className="text-[12px]">🕰️</span>
+                        <span role="img" aria-label="heure de fin" className="text-[14px] leading-none">⏰</span>
                         <span className="text-[12px] text-[var(--color-text-muted)]">Heure de fin ajoutée</span>
                       </div>
                     )}
