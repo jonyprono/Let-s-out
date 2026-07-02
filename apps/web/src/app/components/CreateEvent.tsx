@@ -327,9 +327,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Submit ───────────────────────────────────────────────────────────────
-  const canGoToStep2 = title.trim().length >= 2 && !!startDate && !!startTime && !!category && !!(address || city) && !!privacy
-  const canSubmit = canGoToStep2 && !!participationMode
+  // ── Submit ───────────────────────────────────────────────────────────────  // Enable/disable 'Next' button
+  const canGoToStep2 = title.trim().length > 0 && !!category && !!startDate && !!startTime
+  const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
+  const canSubmit = canGoToStep2 && !!participationMode && isCagnotteValid
 
   const handleSubmit = async () => {
     if (formStep === 1) {
@@ -483,23 +484,31 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] text-[var(--color-text-secondary)]">Participation</span>
-                  <div className={`px-2.5 py-1 rounded-[6px] text-[12px] font-bold ${participationMode === 'free' ? 'bg-[var(--functional-green-500)] text-[var(--color-text-inverse)]' : 'bg-[var(--brand-blue-500)] text-[var(--color-text-inverse)]'}`}>
-                    {participationMode === 'free' ? 'Gratuite' : 'Cagnotte'}
-                  </div>
+                  {participationMode === 'free' ? (
+                    <div className="px-2.5 py-1 rounded-[6px] text-[12px] font-bold bg-[var(--functional-green-500)] text-[var(--color-text-inverse)]">
+                      Gratuite
+                    </div>
+                  ) : (
+                    <div className="px-[3px] py-[1px] rounded-[4px] w-[64px] flex items-center justify-center bg-[var(--color-cagnotte)]">
+                      <span className="text-[14px] font-medium text-white" style={{ fontFamily: 'Inter Display, sans-serif', lineHeight: '20px' }}>
+                        Cagnotte
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Alert Box for Cagnotte */}
             {!isPublished && participationMode === 'cagnotte' && (
-              <div className="w-full bg-[var(--brand-blue-100)] rounded-[12px] p-4 flex gap-3 items-start border border-[var(--brand-blue-100)]">
-                <div className="w-[18px] h-[18px] shrink-0 mt-[1px]">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2.5L21.5 12L12 21.5L2.5 12L12 2.5Z" stroke="var(--brand-blue-500)" strokeWidth="2" strokeLinejoin="round" />
-                    <path d="M12 8V13M12 16H12.01" stroke="var(--brand-blue-500)" strokeWidth="2.5" strokeLinecap="round" />
+              <div className="w-[358px] bg-[var(--color-alert-info-bg)] rounded-[8px] p-4 flex gap-3 items-start box-border">
+                <div className="w-[20px] h-[20px] shrink-0 mt-[1px]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2.5L21.5 12L12 21.5L2.5 12L12 2.5Z" stroke="var(--color-cagnotte)" strokeWidth="1.25" strokeLinejoin="round" />
+                    <path d="M12 8V13M12 16H12.01" stroke="var(--color-cagnotte)" strokeWidth="1.25" strokeLinecap="round" />
                   </svg>
                 </div>
-                <p className="text-[12px] text-[var(--color-text-primary)] leading-[1.5]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                <p className="text-[12px] font-medium text-[#404040] leading-[1.33]" style={{ fontFamily: 'Inter Display, sans-serif' }}>
                   Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
                 </p>
               </div>
@@ -532,12 +541,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           )}
 
           {!isPublished && participationMode === 'cagnotte' && (
-            <button
-              onClick={() => { toast.info('Redirection vers la vérification du compte...') }}
-              className="w-full py-[15px] rounded-[100px] bg-[var(--color-action-primary)] font-semibold text-[15px] text-[var(--color-text-inverse)] flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
-            >
-              Vérifier mon compte
-            </button>
+            <div className="flex flex-col gap-[10px] items-center w-full max-w-[358px] mx-auto">
+              <button
+                onClick={() => { toast.info('Redirection vers la vérification du compte...') }}
+                className="w-full h-[36px] rounded-[9999px] bg-[#FF991C] font-medium text-[14px] text-white flex items-center justify-center active:scale-[0.98] transition-transform"
+                style={{ fontFamily: 'Poppins, sans-serif' }}
+              >
+                Vérifier mon compte
+              </button>
+              <button
+                onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
+                className="w-full h-[36px] rounded-[9999px] border border-[#D4D4D4] bg-white text-[#404040] font-medium text-[14px] flex items-center justify-center active:scale-[0.98] transition-transform box-border"
+                style={{ fontFamily: 'Poppins, sans-serif' }}
+              >
+                Voir l'événement
+              </button>
+            </div>
           )}
 
           {!isPublished && participationMode !== 'cagnotte' && (
@@ -551,12 +570,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </button>
           )}
 
-          <button
-            onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
-            className="w-full py-[15px] rounded-[100px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[var(--color-text-primary)] font-semibold text-[15px] active:scale-[0.98] transition-transform"
-          >
-            Voir l'événement
-          </button>
+          {participationMode !== 'cagnotte' && (
+            <button
+              onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
+              className="w-full py-[15px] rounded-[100px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[var(--color-text-primary)] font-semibold text-[15px] active:scale-[0.98] transition-transform"
+            >
+              Voir l'événement
+            </button>
+          )}
         </div>
       </div>
     )
@@ -868,14 +889,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   {/* Montant cible */}
                   <div className="mb-4">
                     <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Montant cible</p>
-                    <div className="flex gap-2 items-center">
+                    <div className="relative flex items-center">
                       <input
                         type="number" min={1} value={poolTarget}
                         onChange={e => setPoolTarget(e.target.value)}
                         placeholder="0"
-                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
+                        className="w-full pl-4 pr-16 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                       />
-                      <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
+                      <span className="absolute right-4 text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] pointer-events-none">F CFA</span>
                     </div>
                     <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Montant estimé des dépenses</p>
                   </div>
@@ -895,14 +916,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   {/* Participation minimale */}
                   <div className="mb-2">
                     <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Participation minimale</p>
-                    <div className="flex gap-2 items-center">
+                    <div className="relative flex items-center">
                       <input
                         type="number" min={1} value={poolMinAmount}
                         onChange={e => setPoolMinAmount(e.target.value)}
                         placeholder="0"
-                        className="flex-1 px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
+                        className="w-full pl-4 pr-16 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                       />
-                      <div className="px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] bg-[var(--color-background-secondary)] shrink-0">F CFA</div>
+                      <span className="absolute right-4 text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] pointer-events-none">F CFA</span>
                     </div>
                     <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
                   </div>

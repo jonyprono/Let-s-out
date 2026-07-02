@@ -123,14 +123,22 @@
   --neutral-gray-900: #171717;
   --neutral-gray-950: #0A0A0A;
 
+  /* Semantic Status / Accents */
+  --functional-green-100: #E6F6ED;
+  --functional-green-500: #10B981;
+  --functional-green-600: #059669;
+  
+  --functional-red-100: #FEE2E2;
+  --functional-red-500: #EF4444;
+
+  --color-cagnotte: #007BFF;
+  --color-alert-info-bg: #EDF9FF;
+
   /* Green */
   --functional-green-50: #F0FDF4;
-  --functional-green-500: #22C55E;
-  --functional-green-600: #16A34A;
 
   /* Red */
   --functional-red-50: #FEF2F2;
-  --functional-red-500: #EF4444;
   --functional-red-600: #DC2626;
 
   /* ── FIGMA SEMANTIC TOKENS ───────────────────────────────── */
