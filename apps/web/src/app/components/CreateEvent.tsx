@@ -1204,9 +1204,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les participants à inviter d'autres participants</span>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setAllowGuestInvites(!allowGuestInvites); }}
-                    className={`w-[29px] h-[16px] rounded-[12px] flex items-center px-[2px] transition-colors shrink-0 box-border ${allowGuestInvites ? 'bg-[var(--brand-orange-500)] border-transparent' : 'bg-[#F5F5F5] border-[0.5px] border-[#E5E5E5]'}`}
+                    className={`w-[29px] h-[16px] rounded-[12px] flex items-center px-[2px] transition-colors shrink-0 box-border border-[0.5px] ${allowGuestInvites ? 'bg-[var(--brand-orange-500)] border-[var(--brand-orange-500)]' : 'bg-[#F5F5F5] border-[#E5E5E5]'}`}
                   >
-                    <div className={`w-[12px] h-[12px] rounded-full bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.06)] transition-transform ${allowGuestInvites ? 'translate-x-[13px]' : 'translate-x-0'}`} />
+                    <div className={`w-[12px] h-[12px] rounded-full bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.06)] transition-transform ${allowGuestInvites ? 'translate-x-[12px]' : 'translate-x-0'}`} />
                   </button>
                 </div>
               )}
@@ -1224,9 +1224,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
               className="w-full flex items-center gap-4 py-[13px] text-left active:bg-[var(--color-background-secondary)] transition-colors"
             >
-              {/* Icon */}
-              <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center shrink-0">
-                <cat.Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+              {/* Icon Frame */}
+              <div className="w-[32px] h-[32px] rounded-[16px] bg-[#F5F5F5] flex items-center justify-center shrink-0">
+                <cat.Icon className="w-[20px] h-[20px] text-[#737373]" strokeWidth={1.25} />
               </div>
               {/* Label */}
               <span className="flex-1 text-[length:var(--font-size-body-medium)] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
