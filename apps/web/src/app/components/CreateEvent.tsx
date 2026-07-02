@@ -32,7 +32,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
-import { UserUnlock01Icon, LockIcon, EarthIcon, PiggyBankIcon } from 'hugeicons-react'
+import { SquareUnlock01Icon, SquareLock01Icon, EarthIcon, Coins01Icon } from 'hugeicons-react'
 import { toast } from 'sonner'
 import { searchPlaces, reverseGeocode } from '@/lib/geo'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -1176,16 +1176,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="flex flex-col">
           {[
             { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde sur ou en dehors de Let's Out`, Icon: EarthIcon },
-            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: LockIcon },
+            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: SquareLock01Icon },
           ].map(opt => (
             <div key={opt.value} className="flex flex-col w-full py-4 border-b border-[var(--border-tertiary)] last:border-0">
               <button
                 onClick={() => { setPrivacy(opt.value); if (opt.value === 'PUBLIC') setAllowGuestInvites(false); setShowPrivacySheet(false) }}
                 className="w-full flex items-center gap-4 text-left"
               >
-                {/* Grey circle icon */}
-                <div className="w-10 h-10 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center shrink-0">
-                  <opt.Icon className="w-5 h-5 text-[var(--color-text-secondary)]" strokeWidth={1.5} />
+                {/* Frame icon */}
+                <div className="w-[32px] h-[32px] rounded-[16px] bg-[#F5F5F5] flex items-center justify-center shrink-0">
+                  <opt.Icon className="w-[20px] h-[20px] text-[#737373]" strokeWidth={1.25} />
                 </div>
                 {/* Text */}
                 <div className="flex-1">
@@ -1200,13 +1200,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               
               {/* Toggle switch for PRIVATE */}
               {opt.value === 'PRIVATE' && privacy === 'PRIVATE' && (
-                <div className="flex items-center justify-between mt-3 pt-1 ml-[56px]">
+                <div className="flex items-center justify-between mt-3 pt-1 ml-[48px]">
                   <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les participants à inviter d'autres participants</span>
                   <button 
                     onClick={(e) => { e.stopPropagation(); setAllowGuestInvites(!allowGuestInvites); }}
-                    className={`w-9 h-5 rounded-full flex items-center px-[2px] transition-colors shrink-0 ${allowGuestInvites ? 'bg-[var(--brand-orange-500)]' : 'bg-[var(--color-action-secondary)]'}`}
+                    className={`w-[29px] h-[16px] rounded-[12px] flex items-center px-[2px] transition-colors shrink-0 box-border ${allowGuestInvites ? 'bg-[var(--brand-orange-500)] border-transparent' : 'bg-[#F5F5F5] border-[0.5px] border-[#E5E5E5]'}`}
                   >
-                    <div className={`w-4 h-4 rounded-full bg-[var(--color-background-primary)] shadow-sm transition-transform ${allowGuestInvites ? 'translate-x-4' : 'translate-x-0'}`} />
+                    <div className={`w-[12px] h-[12px] rounded-full bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.06)] transition-transform ${allowGuestInvites ? 'translate-x-[13px]' : 'translate-x-0'}`} />
                   </button>
                 </div>
               )}
@@ -1245,8 +1245,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <p className="text-[13px] text-[var(--color-text-secondary)] mb-5">Comment participer à cet événement.</p>
         <div className="flex flex-col">
           {[
-            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: UserUnlock01Icon },
-            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: PiggyBankIcon },
+            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: SquareUnlock01Icon },
+            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins01Icon },
           ].map(mode => {
             const isSelected = participationMode === mode.value
             return (
@@ -1259,8 +1259,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 }}
                 className={`w-full flex items-center gap-4 py-4 text-left`}
               >
-                <div className="w-10 h-10 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center shrink-0">
-                  <mode.Icon className="w-5 h-5 text-[var(--color-text-secondary)]" strokeWidth={1.5} />
+                <div className="w-[32px] h-[32px] rounded-[16px] bg-[#F5F5F5] flex items-center justify-center shrink-0">
+                  <mode.Icon className="w-[20px] h-[20px] text-[#737373]" strokeWidth={1.25} />
                 </div>
                 <div className="flex-1">
                   <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)]">{mode.label}</p>
