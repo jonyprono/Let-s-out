@@ -42,6 +42,27 @@ export function PreferenceSegment({
   )
 }
 
-/** @deprecated Use PreferenceSegment */
-export const SettingsToggle = PreferenceSegment
+export interface SettingsToggleProps {
+  checked: boolean
+  onChange: (checked: boolean) => void
+}
+
+export function SettingsToggle({ checked, onChange }: SettingsToggleProps) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
+      className={`w-[44px] h-[24px] rounded-[12px] flex items-center px-[2px] transition-colors shrink-0 box-border border-[0.5px] ${
+        checked ? 'bg-[var(--brand-orange-500)] border-[var(--brand-orange-500)]' : 'bg-[#E5E7EB] border-[#E5E7EB]'
+      }`}
+    >
+      <div
+        className={`w-[20px] h-[20px] rounded-full bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.06)] transition-transform ${
+          checked ? 'translate-x-[20px]' : 'translate-x-0'
+        }`}
+      />
+    </button>
+  )
+}
+
 export const ThemeSegment = PreferenceSegment

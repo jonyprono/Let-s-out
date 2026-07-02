@@ -10,21 +10,23 @@ import {
   PaintBoardIcon,
   MaskTheater01Icon,
   FootballIcon,
-  HeartAddIcon,
-  ForkIcon,
+  HealthIcon,
+  KitchenUtensilsIcon,
   DrinkIcon,
-  UserGroupIcon,
+  MoleculesIcon,
   PartyIcon,
-  ChurchIcon,
-  ShoppingBag01Icon,
-  MusicNote01Icon,
-  Tv01Icon,
+  HandPrayerIcon,
+  ShoppingBag02Icon,
+  MusicNote03Icon,
+  CameraVideoIcon,
   PencilEdit01Icon,
   Delete01Icon,
   Search01Icon,
   Upload04Icon,
   Image01Icon
 } from 'hugeicons-react'
+
+import { SettingsToggle } from '@/components/shared/SettingsToggle'
 
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
@@ -63,15 +65,15 @@ const CATEGORIES = [
   { label: 'Art et culture',            value: 'CULTURE',   Icon: PaintBoardIcon },
   { label: 'Comédie',                   value: 'SOCIAL',    Icon: MaskTheater01Icon },
   { label: 'Sport',                     value: 'SPORT',     Icon: FootballIcon },
-  { label: 'Santé et bien-être',        value: 'WELLNESS',  Icon: HeartAddIcon },
-  { label: 'Cuisine et gastronomie',    value: 'FOOD',      Icon: ForkIcon },
+  { label: 'Santé et bien-être',        value: 'WELLNESS',  Icon: HealthIcon },
+  { label: 'Cuisine et gastronomie',    value: 'FOOD',      Icon: KitchenUtensilsIcon },
   { label: 'Boissons',                  value: 'NIGHTLIFE', Icon: DrinkIcon },
-  { label: 'Réseautage professionnel',  value: 'TECH',      Icon: UserGroupIcon },
+  { label: 'Réseautage professionnel',  value: 'TECH',      Icon: MoleculesIcon },
   { label: 'Fêtes',                     value: 'PARTIES',   Icon: PartyIcon },
-  { label: 'Religion',                  value: 'RELIGION',  Icon: ChurchIcon },
-  { label: 'Shopping',                  value: 'LIFESTYLE', Icon: ShoppingBag01Icon },
-  { label: 'Musique et son',            value: 'MUSIC',     Icon: MusicNote01Icon },
-  { label: 'Télévision et cinéma',      value: 'ART',       Icon: Tv01Icon },
+  { label: 'Religion',                  value: 'RELIGION',  Icon: HandPrayerIcon },
+  { label: 'Shopping',                  value: 'LIFESTYLE', Icon: ShoppingBag02Icon },
+  { label: 'Musique et son',            value: 'MUSIC',     Icon: MusicNote03Icon },
+  { label: 'Télévision et cinéma',      value: 'ART',       Icon: CameraVideoIcon }
 ]
 
 // ── Participation modes ──────────────────────────────────────────────────────
@@ -1202,12 +1204,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               {opt.value === 'PRIVATE' && privacy === 'PRIVATE' && (
                 <div className="flex items-center justify-between mt-3 pt-1 ml-[48px]">
                   <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les participants à inviter d'autres participants</span>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setAllowGuestInvites(!allowGuestInvites); }}
-                    className={`w-[29px] h-[16px] rounded-[12px] flex items-center px-[2px] transition-colors shrink-0 box-border border-[0.5px] ${allowGuestInvites ? 'bg-[var(--brand-orange-500)] border-[var(--brand-orange-500)]' : 'bg-[#F5F5F5] border-[#E5E5E5]'}`}
-                  >
-                    <div className={`w-[12px] h-[12px] rounded-full bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.06)] transition-transform ${allowGuestInvites ? 'translate-x-[12px]' : 'translate-x-0'}`} />
-                  </button>
+                  <SettingsToggle checked={allowGuestInvites} onChange={setAllowGuestInvites} />
                 </div>
               )}
             </div>
@@ -1224,10 +1221,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
               className="w-full flex items-center gap-4 py-[13px] text-left active:bg-[var(--color-background-secondary)] transition-colors"
             >
-              {/* Icon Frame */}
-              <div className="w-[32px] h-[32px] rounded-[16px] bg-[#F5F5F5] flex items-center justify-center shrink-0">
-                <cat.Icon className="w-[20px] h-[20px] text-[#737373]" strokeWidth={1.25} />
-              </div>
+              {/* Icon Frame - DIRECT ON WHITE AS REQUESTED */}
+              <cat.Icon className="w-[24px] h-[24px] text-[var(--color-icon-primary)] shrink-0" strokeWidth={1.5} />
               {/* Label */}
               <span className="flex-1 text-[length:var(--font-size-body-medium)] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
               {/* Radio */}
