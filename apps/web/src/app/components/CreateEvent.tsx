@@ -21,14 +21,9 @@ import {
   Tv01Icon,
   PencilEdit01Icon,
   Delete01Icon,
-  EarthIcon,
-  LockIcon,
   Search01Icon,
-  CheckmarkCircle02Icon,
   Upload04Icon,
-  Image01Icon,
-  LockKeyIcon,
-  Coins02Icon
+  Image01Icon
 } from 'hugeicons-react'
 
 import { apiClient } from '@/lib/api-client'
@@ -37,14 +32,27 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
+import { UserUnlock01Icon, LockIcon, EarthIcon, PiggyBankIcon } from 'hugeicons-react'
 import { toast } from 'sonner'
 import { searchPlaces, reverseGeocode } from '@/lib/geo'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import iconUrl from 'leaflet/dist/images/marker-icon.png'
-import iconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png'
-import shadowUrl from 'leaflet/dist/images/marker-shadow.png'
-L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl })
+
+// Helper for custom orange marker
+const customOrangeMarker = L.divIcon({
+  className: '',
+  html: `
+    <div style="transform-origin: bottom center; display: inline-flex; flex-direction: column; items-align: center; position: relative;">
+      <svg width="32" height="40" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="#FF7A00"/>
+        <circle cx="18" cy="18" r="7" fill="white"/>
+      </svg>
+    </div>
+  `,
+  iconSize: [32, 40],
+  iconAnchor: [16, 40],
+});
+
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -624,98 +632,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // RENDER — LOCATION SEARCH screen
+  // Location Search is now a BottomSheet
   // ──────────────────────────────────────────────────────────────────────────
-  if (showLocationSearch) {
-    return (
-      <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col">
-        {/* Header with tabs */}
-        <div className="px-5 pt-safe-6 pb-0 border-b border-[var(--border-tertiary)] shrink-0">
-          <div className="flex items-center gap-3 mb-3">
-            <button onClick={() => setShowLocationSearch(false)}
-              className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center active:scale-95">
-              <ArrowLeft01Icon className="w-5 h-5 text-[var(--color-icon-primary)]" strokeWidth={2} />
-            </button>
-            <div className="flex-1 relative">
-              <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-icon-muted)]" />
-                <input
-                  autoFocus
-                  value={locationQuery}
-                  onChange={e => handleLocationSearch(e.target.value)}
-                  placeholder="Rechercher un lieu..."
-                  className="w-full pl-10 pr-4 py-2.5 border border-[var(--border-default)] rounded-full text-[14px] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
-                />
-            </div>
-          </div>
-          {/* Tabs */}
-          <div className="flex">
-            {(['liste','carte'] as const).map(tab => (
-              <button key={tab} onClick={() => setLocationTab(tab)}
-                className={`flex-1 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${locationTab === tab ? 'border-[var(--color-action-primary)] text-[var(--color-text-brand-primary)]' : 'border-transparent text-[var(--color-text-secondary)]'}`}>
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {locationTab === 'liste' ? (
-          <div className="flex-1 overflow-y-auto">
-            {locationSuggestions.map((s, i) => (
-              <button key={i} onClick={() => selectLocation(s)}
-                className="w-full flex items-start gap-3 px-5 py-4 border-b border-[var(--border-tertiary)] last:border-0 hover:bg-gray-50 text-left active:bg-orange-50 transition-colors">
-                <div className="w-9 h-9 rounded-full bg-[var(--brand-orange-100)] flex items-center justify-center shrink-0 mt-0.5">
-                  <HugeMapPin className="w-4 h-4 text-[var(--brand-orange-500)]" strokeWidth={1.5} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-semibold text-[var(--color-text-primary)] truncate">{s.label.split(',')[0]}</p>
-                  <p className="text-[12px] text-[var(--color-text-secondary)] truncate">{s.label.split(',').slice(1).join(',').trim()}</p>
-                </div>
-              </button>
-            ))}
-            {locationSuggestions.length === 0 && locationQuery.length >= 2 && (
-              <div className="flex flex-col items-center justify-center pt-16">
-                <HugeMapPin className="w-12 h-12 text-[var(--color-icon-muted)] mb-3" strokeWidth={1.5} />
-                <p className="text-[14px] text-[var(--color-text-secondary)]">Aucun lieu trouvé</p>
-              </div>
-            )}
-            {/* Confirm from map button */}
-            <div className="px-5 py-4 border-t border-[var(--border-tertiary)] mt-4">
-              <button onClick={() => { setLocationTab('carte') }}
-                className="w-full py-3.5 rounded-full border border-[var(--border-default)] text-[var(--color-text-primary)] font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform">
-                <HugeMapPin className="w-4 h-4 text-[var(--brand-orange-500)]" />
-                Sélectionner sur la carte
-              </button>
-            </div>
-          </div>
-        ) : (
-          // MAP tab
-          <div className="flex-1 relative">
-            <MapContainer
-              center={[6.36536, 2.41833]} zoom={14}
-              scrollWheelZoom={true}
-              style={{ width: '100%', height: '100%' }}
-              zoomControl={false}
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <MapInteractionHandler onMapClick={coords => { setTempLat(coords.lat); setTempLon(coords.lng) }} />
-              <Marker position={[tempLat, tempLon]} draggable={true}
-                eventHandlers={{ dragend: e => { const p = e.target.getLatLng(); setTempLat(p.lat); setTempLon(p.lng) } }} />
-            </MapContainer>
-            <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] border-t border-[var(--border-tertiary)] px-5 pt-4 pb-8 z-[110]">
-              <button onClick={confirmMapLocation} disabled={isReverseGeocoding}
-                className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[15px] text-[var(--color-text-inverse)] flex items-center justify-center gap-2 active:scale-95 transition-all">
-                {isReverseGeocoding ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <CheckmarkCircle02Icon className="w-5 h-5" />}
-                {isReverseGeocoding ? "Traduction de l'adresse..." : 'Confirmer la sélection'}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER — MAIN FORM
@@ -1166,6 +1084,91 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           Confirmer
         </button>
       </BottomSheet>
+      <BottomSheet open={showLocationSearch} onClose={() => setShowLocationSearch(false)}>
+        <div className="flex flex-col h-[70vh] -mx-5 -mb-6">
+          {/* Tabs */}
+          <div className="flex border-b border-[var(--border-tertiary)] shrink-0 mb-4 px-5">
+            {(['liste','carte'] as const).map(tab => (
+              <button key={tab} onClick={() => setLocationTab(tab)}
+                className={`flex-1 py-2.5 text-[14px] font-semibold border-b-2 transition-colors ${locationTab === tab ? 'border-[var(--brand-orange-500)] text-[var(--brand-orange-500)]' : 'border-transparent text-[var(--color-text-secondary)]'}`}>
+                {tab === 'liste' ? 'Lieu' : 'Carte'}
+              </button>
+            ))}
+          </div>
+
+          {locationTab === 'liste' ? (
+            <div className="flex flex-col flex-1 overflow-y-auto px-5">
+              <div className="relative mb-4">
+                <Search01Icon className="absolute left-4 top-1/2 -translate-y-1/2 w-[20px] h-[20px] text-[var(--color-icon-secondary)]" />
+                <input
+                  autoFocus
+                  value={locationQuery}
+                  onChange={e => handleLocationSearch(e.target.value)}
+                  placeholder="Rechercher un lieu"
+                  className="w-full pl-11 pr-4 py-3 border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+                />
+              </div>
+              <div className="flex-1 bg-white">
+                {locationSuggestions.map((s, i) => (
+                  <button key={i} onClick={() => selectLocation(s)}
+                    className="w-full flex items-center gap-3 py-4 border-b border-[var(--border-tertiary)] last:border-0 hover:bg-gray-50 text-left active:bg-orange-50 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center shrink-0">
+                      <HugeMapPin className="w-5 h-5 text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)] truncate">{s.label.split(',')[0]}</p>
+                      <p className="text-[12px] text-[var(--color-text-secondary)] truncate">{s.label.split(',').slice(1).join(',').trim()}</p>
+                    </div>
+                  </button>
+                ))}
+                {locationSuggestions.length === 0 && locationQuery.length >= 2 && (
+                  <div className="flex flex-col items-center justify-center pt-10">
+                    <HugeMapPin className="w-10 h-10 text-[var(--color-icon-muted)] mb-3" strokeWidth={1.5} />
+                    <p className="text-[14px] text-[var(--color-text-secondary)]">Aucun lieu trouvé</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            // MAP tab
+            <div className="flex-1 flex flex-col relative">
+              <div className="flex-1 relative bg-gray-100">
+                <MapContainer
+                  center={[6.36536, 2.41833]} zoom={14}
+                  scrollWheelZoom={true}
+                  style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}
+                  zoomControl={false}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+                  <MapInteractionHandler onMapClick={coords => { setTempLat(coords.lat); setTempLon(coords.lng) }} />
+                  <Marker position={[tempLat, tempLon]} draggable={true} icon={customOrangeMarker}
+                    eventHandlers={{ dragend: e => { const p = e.target.getLatLng(); setTempLat(p.lat); setTempLon(p.lng) } }} />
+                </MapContainer>
+              </div>
+              <div className="bg-white border-t border-[var(--border-tertiary)] px-5 py-4 pb-6 z-[110]">
+                <div className="text-[14px] font-bold text-[var(--color-text-primary)] mb-3">Sélectionner une adresse</div>
+                <div className="flex items-center gap-3 p-3 mb-4 bg-[var(--color-background-secondary)] rounded-[12px]">
+                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                    <HugeMapPin className="w-4 h-4 text-[var(--color-icon-secondary)]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)] truncate">{address?.split(',')[0] || 'Lieu sélectionné'}</p>
+                    <p className="text-[12px] text-[var(--color-text-secondary)] truncate">{city || '...'}</p>
+                  </div>
+                </div>
+                <button onClick={confirmMapLocation} disabled={isReverseGeocoding}
+                  className="w-full py-[15px] rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] flex items-center justify-center gap-2 active:scale-95 transition-all">
+                  {isReverseGeocoding ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : null}
+                  {isReverseGeocoding ? "Traduction de l'adresse..." : 'Confirmer la sélection'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </BottomSheet>
       <BottomSheet title="Confidentialité de l'événement" open={showPrivacySheet} onClose={() => setShowPrivacySheet(false)}>
         <p className="text-[14px] text-[var(--color-text-secondary)] mb-6 leading-[1.6]">
           Choisissez qui peut voir cet événement et y participer.<br />Vous pourrez envoyer des invitations plus tard.
@@ -1173,7 +1176,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="flex flex-col">
           {[
             { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde sur ou en dehors de Let's Out`, Icon: EarthIcon },
-            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: LockKeyIcon },
+            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: LockIcon },
           ].map(opt => (
             <div key={opt.value} className="flex flex-col w-full py-4 border-b border-[var(--border-tertiary)] last:border-0">
               <button
@@ -1242,11 +1245,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <p className="text-[13px] text-[var(--color-text-secondary)] mb-5">Comment participer à cet événement.</p>
         <div className="flex flex-col">
           {[
-            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: LockIcon },
-            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins02Icon },
+            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: UserUnlock01Icon },
+            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: PiggyBankIcon },
           ].map(mode => {
-            const isCagnotte = mode.value === 'cagnotte'
-            const accentColor = isCagnotte ? 'var(--brand-blue-500)' : 'var(--brand-orange-500)'
             const isSelected = participationMode === mode.value
             return (
               <button
@@ -1267,9 +1268,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </div>
                 <div
                   className="w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors"
-                  style={{ borderColor: isSelected ? accentColor : 'var(--border-default)' }}
+                  style={{ borderColor: isSelected ? 'var(--brand-orange-500)' : 'var(--border-default)' }}
                 >
-                  {isSelected && <div className="w-[10px] h-[10px] rounded-full" style={{ backgroundColor: accentColor }} />}
+                  {isSelected && <div className="w-[10px] h-[10px] rounded-full bg-[var(--brand-orange-500)]" />}
                 </div>
               </button>
             )
