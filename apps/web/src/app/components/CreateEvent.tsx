@@ -23,7 +23,8 @@ import {
   Delete01Icon,
   Search01Icon,
   Upload04Icon,
-  Image01Icon
+  Image01Icon,
+  InformationCircleIcon
 } from 'hugeicons-react'
 
 import { SettingsToggle } from '@/components/shared/SettingsToggle'
@@ -442,16 +443,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   if (step === 'done' || step === 'published') {
     const isPublished = step === 'published'
     return (
-      <div className={`w-full h-full flex flex-col relative overflow-hidden ${isPublished ? 'bg-[var(--color-background-primary)]' : 'bg-[var(--color-background-primary-alt)]'}`}>
-        <div className={`px-5 pt-safe-6 pb-4 shrink-0 ${isPublished ? 'bg-[var(--color-background-primary)]' : 'bg-[var(--color-background-primary-alt)]'}`} />
+      <div 
+        className={`w-full h-full flex flex-col relative overflow-hidden ${isPublished ? 'bg-[var(--color-background-primary)]' : ''}`}
+        style={!isPublished ? { background: 'var(--color-bg-warm)' } : {}}
+      >
+        <div className={`px-4 pt-safe-6 pb-2 shrink-0 ${isPublished ? 'bg-[var(--color-background-primary)]' : ''}`} />
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-5 pb-40">
-          <div className="flex flex-col items-center pt-8 gap-5">
+        <div className="flex-1 overflow-y-auto px-4 pb-40">
+          <div className="flex flex-col items-center pt-3 gap-5">
             {/* Top Section */}
             <div className="flex flex-col items-center gap-3 w-full">
               {/* Icon */}
-              <div className={`w-[72px] h-[72px] rounded-full flex items-center justify-center mb-1 ${isPublished ? 'bg-gradient-to-tr from-[var(--brand-yellow-500)] to-[var(--functional-green-500)]' : 'bg-[var(--brand-orange-400)]'}`}>
+              <div 
+                className={`flex items-center justify-center mb-1 ${isPublished ? 'w-[72px] h-[72px] rounded-full bg-gradient-to-tr from-[var(--brand-yellow-500)] to-[var(--functional-green-500)]' : 'w-[80px] h-[80px] rounded-[40px]'}`}
+                style={!isPublished ? { background: 'var(--gradient-success-orange)' } : {}}
+              >
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
@@ -469,8 +476,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
 
             {/* Summary Card */}
-            <div className="w-full bg-[var(--color-background-primary)] rounded-[16px] p-5 shadow-[var(--shadow-bottom-sheet)] border border-[var(--border-tertiary)]">
-              <h3 className="font-bold text-[15px] text-[var(--color-text-primary)] mb-5 truncate">{title || 'Votre événement'}</h3>
+            <div className="w-full bg-[var(--color-background-primary)] rounded-[8px] p-4 shadow-sm border border-[var(--border-tertiary)]">
+              <h3 className="font-bold text-[15px] text-[var(--color-text-primary)] mb-4 truncate">{title || 'Votre événement'}</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] text-[var(--color-text-secondary)]">Date</span>
@@ -501,13 +508,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
             {/* Alert Box for Cagnotte */}
             {!isPublished && participationMode === 'cagnotte' && (
-              <div className="w-[358px] bg-[var(--color-alert-info-bg)] rounded-[8px] p-4 flex gap-3 items-start box-border">
-                <div className="w-[20px] h-[20px] shrink-0 mt-[1px]">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2.5L21.5 12L12 21.5L2.5 12L12 2.5Z" stroke="var(--color-cagnotte)" strokeWidth="1.25" strokeLinejoin="round" />
-                    <path d="M12 8V13M12 16H12.01" stroke="var(--color-cagnotte)" strokeWidth="1.25" strokeLinecap="round" />
-                  </svg>
-                </div>
+              <div className="w-full max-w-[358px] bg-[var(--color-alert-info-bg)] rounded-[8px] p-4 flex gap-3 items-start box-border">
+                <InformationCircleIcon className="w-[20px] h-[20px] shrink-0 text-[var(--color-cagnotte)] mt-[1px]" strokeWidth={1.5} />
                 <p className="text-[12px] font-medium text-[#404040] leading-[1.33]" style={{ fontFamily: 'Inter Display, sans-serif' }}>
                   Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
                 </p>

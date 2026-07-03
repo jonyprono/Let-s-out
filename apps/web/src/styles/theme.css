@@ -133,6 +133,8 @@
 
   --color-cagnotte: #007BFF;
   --color-alert-info-bg: #EDF9FF;
+  --color-bg-warm: linear-gradient(0deg, rgba(255, 249, 236, 0.5), rgba(255, 249, 236, 0.5)), #FFFFFF;
+  --gradient-success-orange: linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%);
 
   /* Green */
   --functional-green-50: #F0FDF4;
