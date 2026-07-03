@@ -24,7 +24,7 @@ import {
   Search01Icon,
   Upload04Icon,
   Image01Icon,
-  InformationCircleIcon
+  AlertDiamondIcon
 } from 'hugeicons-react'
 
 import { SettingsToggle } from '@/components/shared/SettingsToggle'
@@ -465,7 +465,20 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
 
               {/* Title */}
-              <h1 className={`text-[24px] font-semibold text-center ${isPublished ? 'text-[var(--functional-green-500)]' : 'text-[var(--brand-orange-500)]'}`} style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <h1 
+                className={`text-center font-semibold ${isPublished ? 'text-[var(--functional-green-500)] text-[24px]' : 'text-[20px] leading-[24px]'}`} 
+                style={
+                  isPublished 
+                    ? { fontFamily: 'Poppins, sans-serif' }
+                    : { 
+                        fontFamily: 'Poppins, sans-serif',
+                        background: 'var(--gradient-success-orange)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text'
+                      }
+                }
+              >
                 {isPublished ? 'Publié !' : 'Terminé !'}
               </h1>
               <p className="text-[14px] text-[var(--color-text-secondary)] text-center max-w-[300px] leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -509,7 +522,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             {/* Alert Box for Cagnotte */}
             {!isPublished && participationMode === 'cagnotte' && (
               <div className="w-full max-w-[358px] bg-[var(--color-alert-info-bg)] rounded-[8px] p-4 flex gap-3 items-start box-border">
-                <InformationCircleIcon className="w-[20px] h-[20px] shrink-0 text-[var(--color-cagnotte)] mt-[1px]" strokeWidth={1.5} />
+                <AlertDiamondIcon className="w-[20px] h-[20px] shrink-0 text-[var(--color-cagnotte)] mt-[1px]" strokeWidth={1.25} />
                 <p className="text-[12px] font-medium text-[#404040] leading-[1.33]" style={{ fontFamily: 'Inter Display, sans-serif' }}>
                   Votre événement contient une cagnotte. Vérifiez votre compte pour pouvoir le publier et activer la cagnotte.
                 </p>
