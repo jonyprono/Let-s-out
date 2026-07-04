@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { Shield, Loader2, Eye, EyeOff } from 'lucide-react'
+import { isFieldValid } from '@/lib/validation'
 import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -117,7 +118,7 @@ export function AdminLoginPage() {
 
           <button
             type="submit"
-            disabled={loading || target.length < 3 || password.length < 4}
+            disabled={loading || !isFieldValid(target) || password.length < 4}
             className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center disabled:opacity-50 active:scale-[0.98]"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Se connecter'}

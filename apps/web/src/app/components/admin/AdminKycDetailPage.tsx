@@ -7,6 +7,7 @@ import { kycAdminApi } from '@/features/admin/api/kyc-admin.api'
 import { KycStatusBadge } from '@/features/admin/components/KycStatusBadge'
 import { ImageLightbox } from '@/features/admin/components/ImageLightbox'
 import { resolveUploadUrl } from '@/lib/upload-url'
+import { isFieldValid } from '@/lib/validation'
 
 export function AdminKycDetailPage() {
   const { userId } = useParams<{ userId: string }>()
@@ -173,7 +174,7 @@ export function AdminKycDetailPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={rejectReason.trim().length < 3 || rejectMut.isPending}
+                  disabled={!isFieldValid(rejectReason) || rejectMut.isPending}
                   onClick={() => rejectMut.mutate(rejectReason.trim())}
                   className="flex-[2] py-4 rounded-xl bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-600 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 shadow-lg shadow-red-500/20"
                 >

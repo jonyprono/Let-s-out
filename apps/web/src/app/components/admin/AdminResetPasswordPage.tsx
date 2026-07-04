@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { Shield, Loader2, ArrowLeft, MessageCircle, Phone, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { isFieldValid } from '@/lib/validation'
 import { apiClient } from '@/lib/api-client'
 
 type Step = 1 | 2 | 3 | 4
@@ -129,7 +130,7 @@ export function AdminResetPasswordPage() {
 
             <button
               type="submit"
-              disabled={loading || target.trim().length < 3}
+              disabled={loading || !isFieldValid(target)}
               className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center disabled:opacity-50 active:scale-[0.98]"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Continuer'}

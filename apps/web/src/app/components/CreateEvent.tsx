@@ -38,6 +38,7 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { SquareUnlock01Icon, SquareLock01Icon, EarthIcon, Coins01Icon } from 'hugeicons-react'
 import { toast } from 'sonner'
 import { searchPlaces, reverseGeocode } from '@/lib/geo'
+import { isFieldValid } from '@/lib/validation'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 
@@ -138,7 +139,7 @@ function formatDateTime(date: string, time: string) {
 }
 
 function InputField({
-  label, value, placeholder, onClick, onChange, readOnly, rightIcons
+  label, value, placeholder, onClick, onChange, readOnly, rightIcons, error, errorMessage
 }: {
   label: string
   value?: string
@@ -147,6 +148,8 @@ function InputField({
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   readOnly?: boolean
   rightIcons?: React.ReactNode
+  error?: boolean
+  errorMessage?: string
 }) {
   return (
     <div className="mb-3">
@@ -157,7 +160,7 @@ function InputField({
           placeholder={placeholder}
           readOnly={readOnly}
           onChange={onChange}
-          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''}`}
+          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3 border rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''} ${error ? 'border-[var(--functional-red-500)] focus:border-[var(--functional-red-500)]' : 'border-[var(--border-default)] focus:border-[var(--border-brand-primary)]'}`}
         />
         {rightIcons && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -165,6 +168,9 @@ function InputField({
           </div>
         )}
       </div>
+      {error && errorMessage && (
+        <p className="text-[12px] text-[var(--functional-red-500)] mt-1 ml-1">{errorMessage}</p>
+      )}
     </div>
   )
 }
@@ -329,8 +335,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Submit ───────────────────────────────────────────────────────────────  // Enable/disable 'Next' button
-  const isDescriptionValid = description.trim().length === 0 || description.trim().length >= 10
-  const canGoToStep2 = title.trim().length > 0 && !!category && !!startDate && !!startTime && isDescriptionValid
+  const canGoToStep2 = isFieldValid(title) && !!startDate && !!startTime
   const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
   const canSubmit = canGoToStep2 && !!participationMode && isCagnotteValid
 
@@ -360,7 +365,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       const payload = {
         title: title.trim(),
         description: description.trim() || undefined,
-        category: category!,
+        category: category || null,
         currency: 'XOF',
         startAt,
         endAt,
@@ -787,6 +792,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Nom de l'événement..."
+                error={!isFieldValid(title)}
+                errorMessage="Ce champ est obligatoire"
               />
 
               {/* Date et heure de début */}
@@ -861,26 +868,20 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       onChange={e => setDescription(e.target.value)}
                       placeholder="Quels sont les détails ?"
                       rows={4}
-                      className={`w-full px-4 py-3 border rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 bg-[var(--color-background-primary)] resize-none ${
-                        description.length > 0 && description.trim().length < 10 
-                          ? 'border-[var(--functional-red-500)] focus:border-[var(--functional-red-500)]' 
-                          : 'border-[var(--border-default)] focus:border-[var(--border-brand-primary)]'
-                      }`}
+                      className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
                     />
-                    {description.length > 0 && description.trim().length < 10 && (
-                      <p className="text-[12px] text-[var(--functional-red-500)] mt-1 ml-1">
-                        La description doit contenir au moins 10 caractères.
-                      </p>
-                    )}
                   </div>
 
-                  <InputField
-                    label="Catégorie"
-                    value={catLabel ? catLabel.label : undefined}
-                    placeholder="Facultatif"
-                    readOnly
-                    onClick={() => setShowCategorySheet(true)}
-                  />
+                  <div className="mb-3">
+                    <InputField
+                      label="Catégorie"
+                      value={catLabel ? catLabel.label : undefined}
+                      placeholder="Facultatif"
+                      readOnly
+                      onClick={() => setShowCategorySheet(true)}
+                    />
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
+                  </div>
                 </div>
               )}
             </div>

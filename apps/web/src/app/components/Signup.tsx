@@ -43,6 +43,7 @@ import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { CategoryChip } from '@/components/shared/CategoryChip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { isFieldValid } from '@/lib/validation'
 import { ProgressBar } from '@/components/ui/progress-bar'
 
 const INTERESTS_LIST = [
@@ -402,7 +403,7 @@ export function Signup({ onBack }: SignupProps) {
   const isNextDisabled = () => {
     if (!isGoogleMode && step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
     if (!isGoogleMode && step === 2) return otp.join('').length < OTP_LENGTH || isFirebaseVerifying || checkingOtp
-    if (step === 3) return !firstName.trim()
+    if (step === 3) return !isFieldValid(firstName)
     if (step === 4) return false
     if (step === 5) return false
     if (step === 6) return interests.length === 0
@@ -581,18 +582,30 @@ export function Signup({ onBack }: SignupProps) {
               Ces informations aideront vos amis à vous reconnaître et ne seront visibles que sur Let's Out.
             </p>
             <div className="flex flex-col gap-4">
-              <Input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Nom complet"
-              />
-              <Input
-                type="text"
-                value={pseudo}
-                onChange={(e) => setPseudo(e.target.value)}
-                placeholder="Pseudo"
-              />
+              <div>
+                <Input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Nom complet"
+                  className={!isFieldValid(firstName) ? 'border-[var(--functional-red-500)] focus:border-[var(--functional-red-500)]' : ''}
+                />
+                {!isFieldValid(firstName) && (
+                  <p className="text-[12px] text-[var(--functional-red-500)] mt-1 ml-1">Ce champ est obligatoire</p>
+                )}
+              </div>
+              <div>
+                <Input
+                  type="text"
+                  value={pseudo}
+                  onChange={(e) => setPseudo(e.target.value)}
+                  placeholder="Pseudo"
+                  className={!isFieldValid(pseudo) ? 'border-[var(--functional-red-500)] focus:border-[var(--functional-red-500)]' : ''}
+                />
+                {!isFieldValid(pseudo) && (
+                  <p className="text-[12px] text-[var(--functional-red-500)] mt-1 ml-1">Ce champ est obligatoire</p>
+                )}
+              </div>
             </div>
           </div>
         )}
