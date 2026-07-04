@@ -329,7 +329,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Submit ───────────────────────────────────────────────────────────────  // Enable/disable 'Next' button
-  const canGoToStep2 = title.trim().length > 0 && !!category && !!startDate && !!startTime
+  const isDescriptionValid = description.trim().length === 0 || description.trim().length >= 10
+  const canGoToStep2 = title.trim().length > 0 && !!category && !!startDate && !!startTime && isDescriptionValid
   const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
   const canSubmit = canGoToStep2 && !!participationMode && isCagnotteValid
 
@@ -392,7 +393,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
       setStep('done')
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Erreur lors de la création')
+      const apiMsg = err?.response?.data?.message;
+      const msg = Array.isArray(apiMsg) ? apiMsg[0] : apiMsg;
+      toast.error(msg || 'Erreur lors de la création');
     } finally { setLoading(false) }
   }
 
@@ -858,8 +861,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       onChange={e => setDescription(e.target.value)}
                       placeholder="Quels sont les détails ?"
                       rows={4}
-                      className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
+                      className={`w-full px-4 py-3 border rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 bg-[var(--color-background-primary)] resize-none ${
+                        description.length > 0 && description.trim().length < 10 
+                          ? 'border-[var(--functional-red-500)] focus:border-[var(--functional-red-500)]' 
+                          : 'border-[var(--border-default)] focus:border-[var(--border-brand-primary)]'
+                      }`}
                     />
+                    {description.length > 0 && description.trim().length < 10 && (
+                      <p className="text-[12px] text-[var(--functional-red-500)] mt-1 ml-1">
+                        La description doit contenir au moins 10 caractères.
+                      </p>
+                    )}
                   </div>
 
                   <InputField
