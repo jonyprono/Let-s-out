@@ -148,8 +148,6 @@ function InputField({
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   readOnly?: boolean
   rightIcons?: React.ReactNode
-  error?: boolean
-  errorMessage?: string
 }) {
   return (
     <div className="mb-3">
@@ -160,7 +158,7 @@ function InputField({
           placeholder={placeholder}
           readOnly={readOnly}
           onChange={onChange}
-          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3 border rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''} ${error ? 'border-[var(--functional-red-500)] focus:border-[var(--functional-red-500)]' : 'border-[var(--border-default)] focus:border-[var(--border-brand-primary)]'}`}
+          className={`w-full pl-4 ${rightIcons ? 'pr-[80px]' : 'pr-4'} py-3 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] ${readOnly ? 'cursor-pointer' : ''}`}
         />
         {rightIcons && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -168,9 +166,6 @@ function InputField({
           </div>
         )}
       </div>
-      {error && errorMessage && (
-        <p className="text-[12px] text-[var(--functional-red-500)] mt-1 ml-1">{errorMessage}</p>
-      )}
     </div>
   )
 }
@@ -792,8 +787,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Nom de l'événement..."
-                error={!isFieldValid(title)}
-                errorMessage="Ce champ est obligatoire"
               />
 
               {/* Date et heure de début */}

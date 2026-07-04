@@ -582,30 +582,18 @@ export function Signup({ onBack }: SignupProps) {
               Ces informations aideront vos amis à vous reconnaître et ne seront visibles que sur Let's Out.
             </p>
             <div className="flex flex-col gap-4">
-              <div>
-                <Input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Nom complet"
-                  className={!isFieldValid(firstName) ? 'border-[var(--functional-red-500)] focus:border-[var(--functional-red-500)]' : ''}
-                />
-                {!isFieldValid(firstName) && (
-                  <p className="text-[12px] text-[var(--functional-red-500)] mt-1 ml-1">Ce champ est obligatoire</p>
-                )}
-              </div>
-              <div>
-                <Input
-                  type="text"
-                  value={pseudo}
-                  onChange={(e) => setPseudo(e.target.value)}
-                  placeholder="Pseudo"
-                  className={!isFieldValid(pseudo) ? 'border-[var(--functional-red-500)] focus:border-[var(--functional-red-500)]' : ''}
-                />
-                {!isFieldValid(pseudo) && (
-                  <p className="text-[12px] text-[var(--functional-red-500)] mt-1 ml-1">Ce champ est obligatoire</p>
-                )}
-              </div>
+              <Input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Nom complet"
+              />
+              <Input
+                type="text"
+                value={pseudo}
+                onChange={(e) => setPseudo(e.target.value)}
+                placeholder="Pseudo"
+              />
             </div>
           </div>
         )}
