@@ -64,14 +64,14 @@ interface CreateEventProps { onBack: () => void }
 // ── Categories (fidèles aux maquettes) ──────────────────────────────────────
 const CATEGORIES = [
   { label: 'Art et culture',            value: 'CULTURE',   Icon: PaintBoardIcon },
-  { label: 'Comédie',                   value: 'SOCIAL',    Icon: MaskTheater01Icon },
+  { label: 'Comédie',                   value: 'OTHER',     Icon: MaskTheater01Icon },
   { label: 'Sport',                     value: 'SPORT',     Icon: FootballIcon },
   { label: 'Santé et bien-être',        value: 'WELLNESS',  Icon: HealthIcon },
   { label: 'Cuisine et gastronomie',    value: 'FOOD',      Icon: KitchenUtensilsIcon },
   { label: 'Boissons',                  value: 'NIGHTLIFE', Icon: DrinkIcon },
-  { label: 'Réseautage professionnel',  value: 'TECH',      Icon: MoleculesIcon },
-  { label: 'Fêtes',                     value: 'PARTIES',   Icon: PartyIcon },
-  { label: 'Religion',                  value: 'RELIGION',  Icon: HandPrayerIcon },
+  { label: 'Réseautage professionnel',  value: 'SOCIAL',    Icon: MoleculesIcon },
+  { label: 'Fêtes',                     value: 'NIGHTLIFE', Icon: PartyIcon },
+  { label: 'Religion',                  value: 'OTHER',     Icon: HandPrayerIcon },
   { label: 'Shopping',                  value: 'LIFESTYLE', Icon: ShoppingBag02Icon },
   { label: 'Musique et son',            value: 'MUSIC',     Icon: MusicNote03Icon },
   { label: 'Télévision et cinéma',      value: 'ART',       Icon: CameraVideoIcon }
