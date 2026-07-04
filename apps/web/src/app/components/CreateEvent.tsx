@@ -139,7 +139,7 @@ function formatDateTime(date: string, time: string) {
 }
 
 function InputField({
-  label, value, placeholder, onClick, onChange, readOnly, rightIcons, error, errorMessage
+  label, value, placeholder, onClick, onChange, readOnly, rightIcons
 }: {
   label: string
   value?: string
