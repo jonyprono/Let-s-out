@@ -510,7 +510,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 /* ── CAGNOTTE BLOCK ── */
                 <div className="space-y-[16px] bg-[var(--color-background-alt)] p-[16px] rounded-[12px] border border-[var(--border-default)]">
                   <div className="flex items-center justify-between border-b border-[var(--border-default)] border-dashed pb-[12px]">
-                    <span className="text-[18px] font-bold font-poppins text-[var(--brand-orange-500)]">Cagnotte</span>
+                    <span className="text-[18px] font-normal text-[#FF7A00]" style={{ fontFamily: "'Mochiy Pop One', sans-serif" }}>Cagnotte</span>
                     {(hasJoined || isCreator) && (
                       <button
                         onClick={() => setShowContributionsModal(true)}
@@ -522,31 +522,30 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </div>
 
                   {/* Grid Stats */}
-                  <div className="flex flex-col gap-[8px]">
-                    <div className="flex items-center justify-between pb-[8px] border-b border-[var(--border-default)] border-dashed">
-                      <span className="text-[14px] text-[var(--color-text-secondary)]">Objectif</span>
-                      <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">{cagnoteBudget.toLocaleString()} F CFA</span>
+                  <div className="flex flex-col gap-[12px]">
+                    <div className="flex items-center justify-between pb-[12px] border-b border-[#CED1D3] border-dashed">
+                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Objectif</span>
+                      <span className="text-[14px] font-semibold font-inter text-[#007BFF]">{cagnoteBudget.toLocaleString()} F CFA</span>
                     </div>
-                    <div className="flex items-center justify-between pb-[8px] border-b border-[var(--border-default)] border-dashed">
-                      <span className="text-[14px] text-[var(--color-text-secondary)]">Collecté</span>
-                      <span className="text-[14px] font-bold text-[#22C55E]">{cagnoteCollected.toLocaleString()} F</span>
+                    <div className="flex items-center justify-between pb-[12px]">
+                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Collecté</span>
+                      <span className="text-[14px] font-bold font-inter text-[#00A35F]">{cagnoteCollected.toLocaleString()} F</span>
                     </div>
-                    <div className="flex items-center justify-between pb-[8px] border-b border-[var(--border-default)] border-dashed">
-                      <span className="text-[14px] text-[var(--color-text-secondary)]">Restant</span>
-                      <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">{cagnoteRemaining.toLocaleString()} F</span>
+                    <div className="flex items-center justify-between pb-[12px]">
+                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Restant</span>
+                      <span className="text-[14px] font-bold font-inter text-[#FF7A00]">{cagnoteRemaining.toLocaleString()} F</span>
                     </div>
-                    <div className="flex items-center justify-between pb-[8px] border-b border-[var(--border-default)] border-dashed">
-                      <span className="text-[14px] text-[var(--color-text-secondary)]">Progression</span>
-                      <div className="flex items-center gap-[8px] flex-1 max-w-[150px] justify-end">
-                        <div className="w-[100px] h-[6px] bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-[var(--brand-orange-500)] rounded-full" style={{ width: `${Math.min(100, cagnoteProgress)}%` }} />
-                        </div>
-                        <span className="text-[12px] font-semibold text-white bg-[var(--brand-orange-500)] px-[6px] py-[2px] rounded-[4px]">{cagnoteProgress}%</span>
+                    <div className="flex items-center justify-between pb-[12px]">
+                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Progression</span>
+                      <div className="flex items-center justify-center px-[3px] py-[1px] bg-[#FF7A00] rounded-[4px] min-w-[36px] h-[22px]">
+                        <span className="text-[14px] font-medium font-inter text-white">{cagnoteProgress}%</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between pt-[4px]">
-                      <span className="text-[14px] text-[var(--color-text-secondary)]">Participation</span>
-                      <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">À partir de {(minPoolAmount || 0).toLocaleString()} F CFA</span>
+                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Participation</span>
+                      <span className="text-[14px] font-normal font-inter text-[#1B1818]">
+                        A partir de <span className="text-[#007BFF] font-semibold">{(minPoolAmount || 0).toLocaleString()}F</span>
+                      </span>
                     </div>
                   </div>
 
