@@ -41,7 +41,7 @@ import {
 import { ManageEventView } from '@/app/components/ManageEventView'
 import { hapticFeedback } from '@/lib/haptics'
 import { useFavoritesStore } from '@/stores/favorites.store'
-import { ProgressBarLabeled } from '@/components/ui/progress-bar-labeled'
+
 import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
 
 interface EventDetailsProps {
@@ -402,9 +402,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {/* Organisateur */}
             <div>
               <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">Organisateur</h2>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-[12px] bg-[var(--color-background-primary)] rounded-[12px] border border-[var(--border-default)] p-[12px] shadow-sm">
                 {/* Row 1: avatar + infos */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-[12px]">
                   <div
                     className="cursor-pointer flex-shrink-0"
                     onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}
@@ -424,19 +424,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 mb-[2px]">
+                    <div className="flex items-center gap-[4px] mb-[2px]">
                       <p className="text-[14px] font-semibold font-poppins text-[var(--color-text-primary)]">{organizerName}</p>
-                      <BadgeCheck className="w-[14px] h-[14px] text-blue-500" />
+                      <BadgeCheck className="w-[14px] h-[14px] text-[#007AFF]" />
                     </div>
                     <p className="text-[12px] font-normal font-inter text-[var(--color-text-secondary)]">
-                      {organizerFollowers} followers • {organizerEvents} événements
+                      {organizerFollowers} followers • {organizerEvents} événements • 4.5 <span className="text-[#FF2E93]">★</span>
                     </p>
                   </div>
                 </div>
 
                 {/* Row 2: action buttons (only if not the creator) */}
                 {user?.id !== event.creator?.id && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-[8px]">
                     <button onClick={async (e) => {
                       e.stopPropagation();
                       if (!event.creator?.id) return;
@@ -446,8 +446,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       } catch {
                         toast.error("Impossible de démarrer la conversation");
                       }
-                    }} className="flex-1 py-1.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform">
-                      Contacter
+                    }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
+                      Message
                     </button>
                     <button onClick={async (e) => {
                       e.stopPropagation();
@@ -462,7 +462,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           toast.error("Erreur lors de l'abonnement");
                         }
                       }
-                    }} className="flex-1 py-1.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform">
+                    }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
                       Suivre
                     </button>
                   </div>
@@ -474,28 +474,28 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <div>
               <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">Participants</h2>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-[8px]">
                   {/* Stacked avatars */}
                   <div className="flex items-center -space-x-[8px]">
                     {displayedAttendees.map((booking: any, index: number) => {
                       const avatar = booking?.user?.profile?.avatarUrl
                       const name = booking?.user?.profile?.displayName || '?'
                       return (
-                        <div key={index} className="w-[32px] h-[32px] rounded-full border-2 border-white bg-[var(--color-background-secondary)] overflow-hidden">
+                        <div key={index} className="w-[32px] h-[32px] rounded-full border-2 border-white bg-[var(--color-background-secondary)] overflow-hidden relative" style={{ zIndex: 10 - index }}>
                           <SafeImage src={avatar} alt={name} className="w-full h-full object-cover" />
                         </div>
                       )
                     })}
                   </div>
                   {/* Count text */}
-                  <p className="text-[12px] text-[var(--brand-orange-500)] font-semibold font-poppins">
+                  <p className="text-[14px] text-[var(--brand-orange-500)] font-semibold font-poppins">
                     {hasJoined ? 'Vous' : ''}
                     {extraCount > 0 ? `${hasJoined ? ' +' : '+'}${extraCount} participants` : attendeeCount > 0 ? ` ${attendeeCount} participants` : ''}
                   </p>
                 </div>
                 <button
                   onClick={() => setShowParticipantsModal(true)}
-                  className="px-3 py-1.5 rounded-full border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[12px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform"
+                  className="px-[12px] py-[6px] rounded-[8px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[12px] font-medium text-[var(--color-text-secondary)] active:scale-95 transition-transform"
                 >
                   Voir la liste
                 </button>
@@ -504,17 +504,17 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
             {/* Section Participation */}
             <div>
-              <p className="text-[15px] font-bold text-gray-900 mb-3">Participation</p>
+              <p className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">Participation</p>
 
               {hasPool ? (
                 /* ── CAGNOTTE BLOCK ── */
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[20px] font-semibold font-poppins text-[var(--brand-orange-500)]">Cagnotte</span>
+                <div className="space-y-[16px] bg-[var(--color-background-alt)] p-[16px] rounded-[12px] border border-[var(--border-default)]">
+                  <div className="flex items-center justify-between border-b border-[var(--border-default)] border-dashed pb-[12px]">
+                    <span className="text-[18px] font-bold font-poppins text-[var(--brand-orange-500)]">Cagnotte</span>
                     {(hasJoined || isCreator) && (
                       <button
                         onClick={() => setShowContributionsModal(true)}
-                        className="px-3 py-1.5 rounded-full border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[12px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform"
+                        className="px-[12px] py-[6px] rounded-[8px] border border-[var(--border-default)] bg-white text-[12px] font-medium text-[var(--color-text-primary)] active:scale-95 transition-transform"
                       >
                         Voir les contributions
                       </button>
@@ -522,31 +522,32 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </div>
 
                   {/* Grid Stats */}
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-[8px]">
+                    <div className="flex items-center justify-between pb-[8px] border-b border-[var(--border-default)] border-dashed">
                       <span className="text-[14px] text-[var(--color-text-secondary)]">Objectif</span>
                       <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">{cagnoteBudget.toLocaleString()} F CFA</span>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pb-[8px] border-b border-[var(--border-default)] border-dashed">
                       <span className="text-[14px] text-[var(--color-text-secondary)]">Collecté</span>
-                      <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">{cagnoteCollected.toLocaleString()} F</span>
+                      <span className="text-[14px] font-bold text-[#22C55E]">{cagnoteCollected.toLocaleString()} F</span>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pb-[8px] border-b border-[var(--border-default)] border-dashed">
                       <span className="text-[14px] text-[var(--color-text-secondary)]">Restant</span>
                       <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">{cagnoteRemaining.toLocaleString()} F</span>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between pb-[8px] border-b border-[var(--border-default)] border-dashed">
                       <span className="text-[14px] text-[var(--color-text-secondary)]">Progression</span>
-                      <div className="w-[120px]">
-                        <ProgressBarLabeled value={cagnoteProgress} max={100} />
+                      <div className="flex items-center gap-[8px] flex-1 max-w-[150px] justify-end">
+                        <div className="w-[100px] h-[6px] bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-[var(--brand-orange-500)] rounded-full" style={{ width: `${Math.min(100, cagnoteProgress)}%` }} />
+                        </div>
+                        <span className="text-[12px] font-semibold text-white bg-[var(--brand-orange-500)] px-[6px] py-[2px] rounded-[4px]">{cagnoteProgress}%</span>
                       </div>
                     </div>
-                    {!hasJoined && minPoolAmount && (
-                      <div className="flex items-center justify-between py-1">
-                        <span className="text-[14px] text-[var(--color-text-secondary)]">Participation</span>
-                        <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">À partir de {Number(minPoolAmount).toLocaleString()} F CFA</span>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between pt-[4px]">
+                      <span className="text-[14px] text-[var(--color-text-secondary)]">Participation</span>
+                      <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">À partir de {(minPoolAmount || 0).toLocaleString()} F CFA</span>
+                    </div>
                   </div>
 
                   {/* "Contribuer à nouveau" if already joined */}
