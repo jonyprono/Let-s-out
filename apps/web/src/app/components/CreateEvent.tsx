@@ -182,6 +182,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const me = useAuthStore((state: any) => state.user)
+  const isVerified = me?.isVerified || me?.profile?.isVerified
 
   // ── Form state ──────────────────────────────────────────────────────────
   const [title, setTitle] = useState(sessionDraft?.title ?? '')
@@ -346,6 +347,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (eventData.isPrivate !== undefined) setPrivacy(eventData.isPrivate ? 'PRIVATE' : 'PUBLIC')
       if (eventData.description) setDescription(eventData.description)
       if (eventData.coverUrl) setCoverPreview(eventData.coverUrl)
+      if (eventData.poolTarget !== undefined && eventData.poolTarget !== null) {
+        setEnablePool(true)
+        setParticipationMode('cagnotte')
+        setPoolTarget(String(eventData.poolTarget))
+      }
+      if (eventData.poolMinAmount !== undefined && eventData.poolMinAmount !== null) {
+        setPoolMinAmount(String(eventData.poolMinAmount))
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -543,7 +552,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
 
             {/* Alert Box for Cagnotte */}
-            {!isPublished && participationMode === 'cagnotte' && (
+            {!isPublished && participationMode === 'cagnotte' && !isVerified && (
               <div className="w-full max-w-[358px] bg-[var(--color-alert-info-bg)] rounded-[8px] p-4 flex gap-3 items-start box-border">
                 <AlertDiamondIcon className="w-[20px] h-[20px] shrink-0 text-[var(--color-cagnotte)] mt-[1px]" strokeWidth={1.25} />
                 <p className="text-[12px] font-medium text-[#404040] leading-[1.33]" style={{ fontFamily: 'Inter Display, sans-serif' }}>
@@ -578,7 +587,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </button>
           )}
 
-          {!isPublished && participationMode === 'cagnotte' && (
+          {!isPublished && participationMode === 'cagnotte' && !isVerified && (
             <div className="flex flex-col gap-[10px] items-center w-full max-w-[358px] mx-auto">
               <button
                 onClick={() => navigate('/verify-profile')}
@@ -597,7 +606,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
           )}
 
-          {!isPublished && participationMode !== 'cagnotte' && (
+          {!isPublished && (participationMode !== 'cagnotte' || isVerified) && (
             <button
               onClick={handlePublish}
               disabled={publishing}
@@ -608,7 +617,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </button>
           )}
 
-          {participationMode !== 'cagnotte' && (
+          {(participationMode !== 'cagnotte' || isVerified) && (
             <button
               onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
               className="w-full py-[15px] rounded-[100px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[var(--color-text-primary)] font-semibold text-[15px] active:scale-[0.98] transition-transform"

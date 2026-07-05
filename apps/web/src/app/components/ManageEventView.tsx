@@ -226,13 +226,13 @@ export function ManageEventView({
 
       {/* ── Fixed bottom actions ── */}
       <div className="absolute bottom-0 left-0 right-0 bg-[#F8F9FA] px-5 pb-safe-4 pt-4 flex flex-col gap-3">
-        {/* Ajouter cagnotte */}
+        {/* Ajouter/Modifier cagnotte */}
         <button
           onClick={handleAddPool}
           className="w-full py-[14px] rounded-full border border-action-primary text-action-primary font-bold text-[14px] bg-white flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
           <PiggyBank className="w-4 h-4" />
-          Ajouter cagnotte
+          {event.poolTarget ? 'Modifier la cagnotte' : 'Ajouter cagnotte'}
         </button>
         {/* Publier l'événement */}
         <button
