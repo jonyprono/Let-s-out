@@ -62,6 +62,12 @@ import { fr } from 'date-fns/locale'
 
 interface CreateEventProps { onBack: () => void }
 
+let sessionDraft: any = null;
+
+export function clearCreateEventDraft() {
+  sessionDraft = null;
+}
+
 // ── Categories (fidèles aux maquettes) ──────────────────────────────────────
 const CATEGORIES = [
   { label: 'Art et culture',            value: 'CULTURE',   Icon: PaintBoardIcon },
@@ -178,26 +184,26 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const me = useAuthStore((state: any) => state.user)
 
   // ── Form state ──────────────────────────────────────────────────────────
-  const [title, setTitle] = useState('')
-  const [category, setCategory] = useState<string | null>(null)
-  const [startDate, setStartDate] = useState('')
-  const [startTime, setStartTime] = useState('')
-  const [hasEndDate, setHasEndDate] = useState(false)
-  const [endDate, setEndDate] = useState('')
-  const [endTime, setEndTime] = useState('')
-  const [address, setAddress] = useState('')
-  const [city, setCity] = useState('')
-  const [lat, setLat] = useState<number | null>(null)
-  const [lon, setLon] = useState<number | null>(null)
-  const [privacy, setPrivacy] = useState<'PUBLIC' | 'PRIVATE' | null>(null)
-  const [allowGuestInvites, setAllowGuestInvites] = useState(false)
-  const [description, setDescription] = useState('')
-  const [participationMode, setParticipationMode] = useState<string | null>(null)
-  const [coverFile, setCoverFile] = useState<File | null>(null)
-  const [coverPreview, setCoverPreview] = useState<string | null>(null)
-  const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>([])
-  const [maxPlaces, setMaxPlaces] = useState('')
-  const [amount, setAmount] = useState('')
+  const [title, setTitle] = useState(sessionDraft?.title ?? '')
+  const [category, setCategory] = useState<string | null>(sessionDraft?.category ?? null)
+  const [startDate, setStartDate] = useState(sessionDraft?.startDate ?? '')
+  const [startTime, setStartTime] = useState(sessionDraft?.startTime ?? '')
+  const [hasEndDate, setHasEndDate] = useState(sessionDraft?.hasEndDate ?? false)
+  const [endDate, setEndDate] = useState(sessionDraft?.endDate ?? '')
+  const [endTime, setEndTime] = useState(sessionDraft?.endTime ?? '')
+  const [address, setAddress] = useState(sessionDraft?.address ?? '')
+  const [city, setCity] = useState(sessionDraft?.city ?? '')
+  const [lat, setLat] = useState<number | null>(sessionDraft?.lat ?? null)
+  const [lon, setLon] = useState<number | null>(sessionDraft?.lon ?? null)
+  const [privacy, setPrivacy] = useState<'PUBLIC' | 'PRIVATE' | null>(sessionDraft?.privacy ?? null)
+  const [allowGuestInvites, setAllowGuestInvites] = useState(sessionDraft?.allowGuestInvites ?? false)
+  const [description, setDescription] = useState(sessionDraft?.description ?? '')
+  const [participationMode, setParticipationMode] = useState<string | null>(sessionDraft?.participationMode ?? null)
+  const [coverFile, setCoverFile] = useState<File | null>(sessionDraft?.coverFile ?? null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(sessionDraft?.coverPreview ?? null)
+  const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>(sessionDraft?.selectedCoOrgs ?? [])
+  const [maxPlaces, setMaxPlaces] = useState(sessionDraft?.maxPlaces ?? '')
+  const [amount, setAmount] = useState(sessionDraft?.amount ?? '')
 
   // ── UI state ────────────────────────────────────────────────────────────
   const [showCategorySheet, setShowCategorySheet] = useState(false)
@@ -237,10 +243,24 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [step, setStep] = useState<'form' | 'preview' | 'done' | 'published'>('form')
   const [formStep, setFormStep] = useState<1 | 2>(1)
 
-  const [enablePool, setEnablePool] = useState(false)
-  const [poolDescription, setPoolDescription] = useState('')
-  const [poolTarget, setPoolTarget] = useState('')
-  const [poolMinAmount, setPoolMinAmount] = useState('')
+  const [enablePool, setEnablePool] = useState(sessionDraft?.enablePool ?? false)
+  const [poolDescription, setPoolDescription] = useState(sessionDraft?.poolDescription ?? '')
+  const [poolTarget, setPoolTarget] = useState(sessionDraft?.poolTarget ?? '')
+  const [poolMinAmount, setPoolMinAmount] = useState(sessionDraft?.poolMinAmount ?? '')
+
+  useEffect(() => {
+    sessionDraft = {
+      title, category, startDate, startTime, hasEndDate, endDate, endTime,
+      address, city, lat, lon, privacy, allowGuestInvites, description,
+      participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
+      enablePool, poolDescription, poolTarget, poolMinAmount
+    }
+  }, [
+    title, category, startDate, startTime, hasEndDate, endDate, endTime,
+    address, city, lat, lon, privacy, allowGuestInvites, description,
+    participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
+    enablePool, poolDescription, poolTarget, poolMinAmount
+  ])
 
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -389,7 +409,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       const eventId = editEventId || res.data?.id
       setCreatedEventId(eventId)
-      localStorage.removeItem('create_event_draft')
+      clearCreateEventDraft()
       toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
       setStep('done')
     } catch (err: any) {
@@ -561,7 +581,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {!isPublished && participationMode === 'cagnotte' && (
             <div className="flex flex-col gap-[10px] items-center w-full max-w-[358px] mx-auto">
               <button
-                onClick={() => { toast.info('Redirection vers la vérification du compte...') }}
+                onClick={() => navigate('/verify-profile')}
                 className="w-full h-[36px] rounded-[9999px] bg-[#FF991C] font-medium text-[14px] text-white flex items-center justify-center active:scale-[0.98] transition-transform"
                 style={{ fontFamily: 'Poppins, sans-serif' }}
               >

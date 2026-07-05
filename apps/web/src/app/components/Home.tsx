@@ -251,7 +251,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                 {myOngoingEvents.length > 0 && (
                   <div className="pt-5 pb-2">
                     <SectionTitle>Vos événements en cours</SectionTitle>
-                    <div className="px-5 space-y-4">
+                    <div className="px-4 space-y-4">
                       {myOngoingEvents.slice(0, 1).map((event: any) => (
                         <EventCard key={event.id} event={event} onNavigate={onNavigate} />
                       ))}
@@ -264,11 +264,11 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   <div className="pt-5 pb-2">
                     <SectionTitle>Recommandé pour vous</SectionTitle>
                     {isRecommendedLoading ? (
-                      <div className="flex gap-4 overflow-x-auto px-5 pb-3" style={{ scrollbarWidth: 'none' }}>
+                      <div className="flex gap-4 overflow-x-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
                         {Array.from({ length: 3 }).map((_, i) => <EventCardSkeletonHorizontal key={i} />)}
                       </div>
                     ) : (
-                      <div className="flex gap-4 overflow-x-auto px-5 pb-3" style={{ scrollbarWidth: 'none' }}>
+                      <div className="flex gap-4 overflow-x-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
                         {recommendedEvents.map(event => (
                           <EventCard key={event.id} event={event} horizontal onNavigate={onNavigate} />
                         ))}
@@ -279,7 +279,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
                 {/* ── 3. Vertical event feed ── */}
                 {isLoading && events.length === 0 ? (
-                  <div className="px-5 pt-5 space-y-4">
+                  <div className="px-4 pt-5 space-y-4">
                     {Array.from({ length: 3 }).map((_, i) => <EventCardSkeleton key={i} />)}
                   </div>
                 ) : events.length === 0 ? (
@@ -291,7 +291,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                 ) : (
                   <>
                     {feedEvents.length > 0 && (
-                      <div className="px-5 pt-2 space-y-4">
+                      <div className="px-4 pt-2 space-y-4">
                         {feedEvents.map(event => (
                           <EventCard key={event.id} event={event} onNavigate={onNavigate} />
                         ))}
@@ -302,7 +302,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     {popularEvents.length > 0 && (
                       <div className="pt-6 pb-2">
                         <SectionTitle>Les plus populaires</SectionTitle>
-                        <div className="flex gap-4 overflow-x-auto px-5 pb-3" style={{ scrollbarWidth: 'none' }}>
+                        <div className="flex gap-4 overflow-x-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
                           {popularEvents.map(event => (
                             <EventCard key={event.id} event={event} horizontal onNavigate={onNavigate} />
                           ))}

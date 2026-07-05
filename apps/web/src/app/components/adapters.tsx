@@ -218,7 +218,7 @@ export function EventDetails() {
   const nav = useNavigate()
   return (
     <Suspense fallback={<PageLoader />}>
-      <EventDetailsBase onBack={() => nav(-1)} />
+      <EventDetailsBase onBack={() => window.history.length > 2 ? nav(-1) : nav('/explorer', { replace: true })} />
     </Suspense>
   )
 }
@@ -228,7 +228,7 @@ export function CreateEvent() {
   const nav = useNavigate()
   return (
     <Suspense fallback={<PageLoader />}>
-      <CreateEventBase onBack={() => nav(-1)} />
+      <CreateEventBase onBack={() => window.history.length > 2 ? nav(-1) : nav('/explorer', { replace: true })} />
     </Suspense>
   )
 }

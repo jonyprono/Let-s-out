@@ -40,9 +40,9 @@ import {
 } from '@/lib/pool-contribution'
 import { ManageEventView } from '@/app/components/ManageEventView'
 import { hapticFeedback } from '@/lib/haptics'
-
 import { useFavoritesStore } from '@/stores/favorites.store'
-
+import { ProgressBarLabeled } from '@/components/ui/progress-bar-labeled'
+import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
 
 interface EventDetailsProps {
   onBack: () => void
@@ -161,17 +161,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     setShowJoinModal(true)
   }
 
-  const handleConfirmJoin = () => {
-    hapticFeedback.success()
-    setShowJoinModal(false)
-    if (!event) return
-    if (event.price > 0) {
-      navigate(`/events/${id}/pay`)
-    } else {
-      joinMutation.mutate()
-    }
-  }
-
 
 
   const goToChat = async () => {
@@ -284,14 +273,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const organizerAvatar = event.creator?.profile?.avatarUrl
   const organizerFollowers = event.creator?.profile?.followersCount || 0
   const organizerEvents = event.creator?.profile?.eventsCount || 0
-  const organizerRating = 4.5
 
   const coverUrl = event.coverUrl ||
     'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&h=400&fit=crop'
 
-  const transactionFee = 50
   const amountToPay = event.price || 0
-  const netToPay = amountToPay + transactionFee
   const hasPool = hasActivePool(event)
   const { budget: cagnoteBudget, collected: cagnoteCollected, remaining: cagnoteRemaining, progress: cagnoteProgress } = computePoolStats(event)
   const participationPaid = hasPaidParticipation(event, myBookingData ?? null)
@@ -319,17 +305,17 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
 
         {/* Header */}
-        <div className="flex-shrink-0 bg-[var(--color-background-primary)] z-10 px-5 pt-safe-4 pt-4 pb-3 flex items-center justify-between border-b border-[var(--border-default)]">
+        <div className="flex-shrink-0 bg-[var(--color-background-primary)] z-10 px-4 pt-safe-4 pt-4 pb-3 flex items-center justify-between min-h-[56px] h-[60px] shadow-sm">
           <button
             onClick={onBack}
-            className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform"
+            className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform -ml-2"
           >
-            <ChevronLeft className="w-5 h-5 text-[var(--color-text-primary)]" strokeWidth={2.5} />
+            <ChevronLeft className="w-6 h-6 text-[var(--color-text-primary)]" strokeWidth={2.5} />
           </button>
 
-          <span className="text-[16px] font-bold text-[var(--color-text-primary)]">Détails événement</span>
+          <span className="text-[16px] font-semibold text-[var(--color-text-primary)] font-poppins">Détails événement</span>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 -mr-2">
             <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
               <Share2 className="w-5 h-5" strokeWidth={1.8} />
             </button>
@@ -340,62 +326,62 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto pb-28" style={{ scrollbarWidth: 'none' }}>
 
-          {/* Cover Image */}
-          <div className="mx-5">
-            <div className="h-[200px] bg-slate-100 rounded-2xl overflow-hidden relative">
+          {/* Cover Image & Title block wrapper to align them properly */}
+          <div className="flex flex-col gap-3">
+            {/* Cover Image */}
+            <div className="min-h-[200px] w-full bg-slate-100 relative mb-4">
               <SafeImage src={coverUrl} alt={event.title} className="w-full h-full object-cover" />
-            </div>
-          </div>
-
-          <div className="px-5 pt-5 pb-6 space-y-6">
-
-            {/* Title + badge */}
-            <div>
+              {/* Badge superposé en bas à gauche */}
               {event.category && (
-                <div className="mb-2">
+                <div className="absolute -bottom-3 left-4">
                   <span
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-white"
-                    style={{ background: 'linear-gradient(135deg, #FF9B9B 0%, #FFD700 100%)' }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold text-white bg-[var(--brand-orange-500)] shadow-sm"
                   >
                     <span className="text-[12px]">
                       {event.category.toLowerCase().includes('concert') || event.category.toLowerCase().includes('musique') ? '🎵' :
                        event.category.toLowerCase().includes('sport') ? '⚽' :
                        event.category.toLowerCase().includes('art') ? '🎨' :
-                       event.category.toLowerCase().includes('soirée') || event.category.toLowerCase().includes('fête') || event.category.toLowerCase().includes('fete') ? '🥳' :
+                       event.category.toLowerCase().includes('soirée') || event.category.toLowerCase().includes('fête') || event.category.toLowerCase().includes('fete') || event.category.toLowerCase().includes('nightlife') ? '🥳' :
                        event.category.toLowerCase().includes('gastro') || event.category.toLowerCase().includes('food') ? '🍽️' :
                        '✨'}
                     </span>
-                    {event.category}
+                    {event.category === 'NIGHTLIFE' ? 'Fêtes' : event.category === 'FOOD' ? 'Cuisine et gastronomie' : event.category}
                   </span>
                 </div>
               )}
-              <h1 className="text-[22px] font-extrabold text-gray-900 leading-tight">{event.title}</h1>
+            </div>
+            
+            <div className="px-4">
+
+            {/* Title */}
+            <div>
+              <h1 className="text-[20px] font-semibold font-poppins text-[#1B1818] leading-tight mb-4">{event.title}</h1>
             </div>
 
             {/* Location & Date */}
-            <div className="space-y-3">
+            <div className="flex flex-col gap-1">
               <div className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-[14px] font-medium text-gray-900">{event.city || event.address || 'Lieu non précisé'}</p>
-                  {event.address && event.city && (
-                    <p className="text-[12px] text-gray-500">{event.address}</p>
-                  )}
-                </div>
+                <MapPin className="w-[18px] h-[18px] text-[var(--color-text-secondary)] shrink-0 mt-0.5" />
+                <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] leading-snug">
+                  {event.address ? <>{event.address}<br/>{event.city}</> : (event.city || 'Lieu non précisé')}
+                </p>
               </div>
               <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
-                <p className="text-[14px] font-medium text-gray-900 capitalize">
-                  {formattedDate}, {formattedStart} – {formattedEnd}
+                <Calendar className="w-[18px] h-[18px] text-[var(--color-text-secondary)] shrink-0" />
+                <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] capitalize leading-snug">
+                  {formattedDate}, {formattedStart} - {formattedEnd}
                 </p>
               </div>
             </div>
+          </div>
+
+          <div className="px-4 pb-6 space-y-[20px] mt-4">
 
             {/* À propos */}
             {event.description && (
               <div>
-                <p className="text-[15px] font-bold text-gray-900 mb-2">À propos</p>
-                <p className="text-[13px] text-gray-600 leading-relaxed">
+                <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">À propos</h2>
+                <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] leading-relaxed">
                   {isDescriptionExpanded
                     ? event.description
                     : event.description.length > 120
@@ -404,7 +390,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   {event.description.length > 120 && (
                     <span
                       onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                      className="text-gray-900 font-semibold cursor-pointer"
+                      className="text-[var(--color-text-primary)] font-semibold cursor-pointer"
                     >
                       {isDescriptionExpanded ? ' Voir moins' : '... Voir plus'}
                     </span>
@@ -415,7 +401,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
             {/* Organisateur */}
             <div>
-              <p className="text-[15px] font-bold text-gray-900 mb-3">Organisateur</p>
+              <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">Organisateur</h2>
               <div className="flex flex-col gap-3">
                 {/* Row 1: avatar + infos */}
                 <div className="flex items-center gap-3">
@@ -423,13 +409,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     className="cursor-pointer flex-shrink-0"
                     onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}
                   >
-                    <div className="w-11 h-11 rounded-full overflow-hidden bg-gray-200">
+                    <div className="w-[40px] h-[40px] rounded-full overflow-hidden bg-gray-200">
                       <SafeImage
                         src={organizerAvatar}
                         alt={organizerName}
                         className="w-full h-full object-cover"
                         fallback={
-                          <div className="w-full h-full bg-gray-300 flex items-center justify-center text-[15px] font-bold text-gray-500">
+                          <div className="w-full h-full bg-[var(--color-background-secondary)] flex items-center justify-center text-[15px] font-bold text-[var(--color-text-secondary)]">
                             {organizerName.charAt(0).toUpperCase()}
                           </div>
                         }
@@ -438,12 +424,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 mb-0.5">
-                      <p className="text-[14px] font-bold text-gray-900">{organizerName}</p>
-                      <BadgeCheck className="w-4 h-4 text-blue-500" />
+                    <div className="flex items-center gap-1 mb-[2px]">
+                      <p className="text-[14px] font-semibold font-poppins text-[var(--color-text-primary)]">{organizerName}</p>
+                      <BadgeCheck className="w-[14px] h-[14px] text-blue-500" />
                     </div>
-                    <p className="text-[12px] text-gray-500">
-                      {organizerFollowers} followers • {organizerEvents} événements • {organizerRating} <span className="text-[11px]">⭐</span>
+                    <p className="text-[12px] font-normal font-inter text-[var(--color-text-secondary)]">
+                      {organizerFollowers} followers • {organizerEvents} événements
                     </p>
                   </div>
                 </div>
@@ -460,7 +446,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       } catch {
                         toast.error("Impossible de démarrer la conversation");
                       }
-                    }} className="px-4 py-2 rounded-full border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 active:scale-95 transition-transform">
+                    }} className="flex-1 py-1.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform">
                       Contacter
                     </button>
                     <button onClick={async (e) => {
@@ -476,7 +462,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           toast.error("Erreur lors de l'abonnement");
                         }
                       }
-                    }} className="px-4 py-2 rounded-full border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 active:scale-95 transition-transform">
+                    }} className="flex-1 py-1.5 rounded-full border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 active:scale-95 transition-transform">
                       Suivre
                     </button>
                   </div>
@@ -486,30 +472,30 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
             {/* Participants */}
             <div>
-              <p className="text-[15px] font-bold text-gray-900 mb-3">Participants</p>
+              <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">Participants</h2>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {/* Stacked avatars */}
-                  <div className="flex items-center -space-x-2">
+                  <div className="flex items-center -space-x-[8px]">
                     {displayedAttendees.map((booking: any, index: number) => {
                       const avatar = booking?.user?.profile?.avatarUrl
                       const name = booking?.user?.profile?.displayName || '?'
                       return (
-                        <div key={index} className="w-8 h-8 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
+                        <div key={index} className="w-[32px] h-[32px] rounded-full border-2 border-white bg-[var(--color-background-secondary)] overflow-hidden">
                           <SafeImage src={avatar} alt={name} className="w-full h-full object-cover" />
                         </div>
                       )
                     })}
                   </div>
                   {/* Count text */}
-                  <p className="text-[13px] text-[#007AFF] font-semibold">
+                  <p className="text-[12px] text-[var(--brand-orange-500)] font-semibold font-poppins">
                     {hasJoined ? 'Vous' : ''}
                     {extraCount > 0 ? `${hasJoined ? ' +' : '+'}${extraCount} participants` : attendeeCount > 0 ? ` ${attendeeCount} participants` : ''}
                   </p>
                 </div>
                 <button
                   onClick={() => setShowParticipantsModal(true)}
-                  className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 active:scale-95 transition-transform"
+                  className="px-3 py-1.5 rounded-full border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[12px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform"
                 >
                   Voir la liste
                 </button>
@@ -522,42 +508,43 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
               {hasPool ? (
                 /* ── CAGNOTTE BLOCK ── */
-                <div className="space-y-3">
-                  {/* Title row with optional "Voir contributions" */}
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-[22px] font-bold text-[#FF7A00]">Cagnotte</span>
+                    <span className="text-[20px] font-semibold font-poppins text-[var(--brand-orange-500)]">Cagnotte</span>
                     {(hasJoined || isCreator) && (
                       <button
                         onClick={() => setShowContributionsModal(true)}
-                        className="px-3 py-1.5 rounded-full border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 active:scale-95 transition-transform"
+                        className="px-3 py-1.5 rounded-full border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[12px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform"
                       >
                         Voir les contributions
                       </button>
                     )}
                   </div>
 
-                  {/* Stats rows */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-[13px] text-gray-600">Objectif</span>
-                      <span className="text-[13px] font-semibold text-[#007AFF]">{cagnoteBudget.toLocaleString()} F CFA</span>
+                  {/* Grid Stats */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[14px] text-[var(--color-text-secondary)]">Objectif</span>
+                      <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">{cagnoteBudget.toLocaleString()} F CFA</span>
                     </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-[13px] text-gray-600">Collecté</span>
-                      <span className="text-[13px] font-semibold text-gray-900">{cagnoteCollected.toLocaleString()} F</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[14px] text-[var(--color-text-secondary)]">Collecté</span>
+                      <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">{cagnoteCollected.toLocaleString()} F</span>
                     </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-[13px] text-gray-600">Restant</span>
-                      <span className="text-[13px] font-semibold text-gray-900">{cagnoteRemaining.toLocaleString()} F</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[14px] text-[var(--color-text-secondary)]">Restant</span>
+                      <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">{cagnoteRemaining.toLocaleString()} F</span>
                     </div>
-                    <div className="flex items-center justify-between py-1">
-                      <span className="text-[13px] text-gray-600">Progression</span>
-                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white bg-[#FF7A00]">{cagnoteProgress}%</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[14px] text-[var(--color-text-secondary)]">Progression</span>
+                      <div className="w-[120px]">
+                        <ProgressBarLabeled value={cagnoteProgress} max={100} />
+                      </div>
                     </div>
                     {!hasJoined && minPoolAmount && (
                       <div className="flex items-center justify-between py-1">
-                        <span className="text-[13px] text-gray-600">Participation</span>
-                        <span className="text-[13px] font-bold text-[#FF7A00]">A partir de {Number(minPoolAmount).toLocaleString()}F</span>
+                        <span className="text-[14px] text-[var(--color-text-secondary)]">Participation</span>
+                        <span className="text-[14px] font-bold text-[var(--brand-orange-500)]">À partir de {Number(minPoolAmount).toLocaleString()} F CFA</span>
                       </div>
                     )}
                   </div>
@@ -592,11 +579,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
           </div>
         </div>
+      </div>
 
         {/* ── Sticky Footer ── */}
         <div
-          className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex items-center gap-3"
-          style={{ paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
+          className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] px-4 pt-4 pb-safe-4 border-t border-[var(--border-default)] flex items-center gap-3 z-10"
         >
           {hasJoined ? (
             /* Participant: two buttons */
@@ -604,14 +591,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <Button
                 variant="outline"
                 onClick={handleShare}
-                className="flex-[0.45] flex items-center justify-center gap-2"
+                className="flex-[0.45] flex items-center justify-center gap-2 rounded-full font-semibold border-[var(--border-default)] text-[var(--color-text-primary)]"
               >
                 <Share2 className="w-4 h-4" strokeWidth={1.8} />
                 Partager
               </Button>
               <Button
                 onClick={goToChat}
-                className="flex-[0.55] flex items-center justify-center gap-2"
+                className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
               >
                 <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
                 Accéder au chat
@@ -623,7 +610,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <Button
                 onClick={handleJoin}
                 disabled={joinMutation.isPending || isFull}
-                className="flex-1"
+                className="flex-1 w-full rounded-full font-medium text-[14px] h-[40px] border-none transition-opacity active:scale-95 font-poppins"
+                style={{
+                  background: (joinMutation.isPending || isFull) ? 'var(--color-background-secondary)' : 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)',
+                  color: (joinMutation.isPending || isFull) ? 'var(--color-text-secondary)' : 'white'
+                }}
               >
                 {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : "Rejoindre l'événement"}
               </Button>
@@ -632,69 +623,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         </div>
       </div>
 
-      {/* ── Join confirmation modal ── */}
-      {showJoinModal && event && (
-        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full bg-white rounded-t-[28px] shadow-2xl animate-in slide-in-from-bottom duration-300">
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-gray-200 rounded-full" />
-            </div>
-            <div className="px-5 pt-4 pb-safe-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
-
-              {/* Header */}
-              <div className="flex items-center justify-between mb-5">
-                <span className="text-[18px] font-bold text-gray-900">Rejoindre l'événement</span>
-                <button
-                  onClick={() => setShowJoinModal(false)}
-                  className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center active:scale-95 transition-transform"
-                >
-                  <X className="w-4 h-4 text-gray-500" />
-                </button>
-              </div>
-
-              {/* Event info summary */}
-              <h2 className="text-[16px] font-bold text-gray-900 mb-1">{event.title}</h2>
-              <div className="flex items-center justify-between mb-5">
-                <span className="text-[13px] text-gray-500">Participation</span>
-                <span className="text-[13px] font-semibold text-[#007AFF]">
-                  {hasPool && minPoolAmount ? `A partir de ${Number(minPoolAmount).toLocaleString()}F` : amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : 'Gratuit'}
-                </span>
-              </div>
-
-              <div className="border-t border-dashed border-gray-200 my-4" />
-
-              {/* Invoice table */}
-              <div className="space-y-3 mb-6 text-[13px]">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Participation</span>
-                  <span className="font-bold text-gray-900">{amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : getEventParticipationMode(event)}</span>
-                </div>
-                {amountToPay > 0 && (
-                  <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-500">Frais de transaction</span>
-                      <span className="font-bold text-gray-900">{transactionFee.toLocaleString()} F</span>
-                    </div>
-                    <div className="border-t border-dashed border-gray-200 pt-3" />
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-900 font-bold">Net à payer</span>
-                      <span className="font-black text-gray-900 text-[16px]">{netToPay.toLocaleString()} F CFA</span>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* CTA */}
-              <Button
-                onClick={handleConfirmJoin}
-                className="w-full"
-              >
-                {amountToPay > 0 ? 'Procéder au paiement' : 'Confirmer la participation'}
-              </Button>
-
-            </div>
-          </div>
-        </div>
+      {/* ── Join Event Bottom Sheet ── */}
+      {event && (
+        <JoinEventBottomSheet
+          event={event}
+          isOpen={showJoinModal}
+          onClose={() => setShowJoinModal(false)}
+        />
       )}
 
       {showContributeModal && event && (

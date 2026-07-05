@@ -121,17 +121,11 @@ export const EventCard = memo(function EventCard({
         hapticFeedback.impact();
         if (onNavigate && event?.id) onNavigate('event-details', event.id);
       }}
-      className={`flex flex-col text-left transition-transform active:scale-[0.98] ${
-        horizontal ? 'flex-shrink-0 mr-4' : 'mb-4'
+      className={`flex flex-col text-left transition-transform active:scale-[0.98] bg-white rounded-[12px] overflow-hidden border border-[#DFDFDF] shadow-sm ${
+        horizontal ? 'flex-shrink-0 w-[85vw] max-w-[320px] mr-4' : 'w-full max-w-[390px] mx-auto mb-4'
       }`}
       style={{
-        width: '358px',
-        minHeight: '266px', // "Enserrer" autorise l'expansion si nécessaire, 266px de base
-        borderRadius: '12px',
-        backgroundColor: '#FFFFFF',
-        border: '0.5px solid #DFDFDF',
-        boxShadow: '0 1px 2px rgba(0,0,0,0.02)', // Léger relief optionnel
-        overflow: 'hidden'
+        minHeight: '266px'
       }}
     >
       {/* ── ZONE DE COUVERTURE ────────────────────────────────────────── */}

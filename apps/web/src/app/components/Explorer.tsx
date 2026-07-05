@@ -277,14 +277,14 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   if (screen === 'join') {
     return (
       <div className="w-full h-full bg-[#F8F7FF] dark:bg-[#111111] flex flex-col z-50 absolute inset-0">
-        <div className="px-5 pt-safe-6 pb-3 flex items-center gap-150">
+        <div className="px-4 pt-safe-6 pb-3 flex items-center gap-150">
           <button onClick={() => setScreen('list')} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform shadow-sm">
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
           <h2 className="text-xl font-bold text-gray-900">Rejoindre</h2>
         </div>
 
-        <div className="flex-1 px-5 pt-8 flex flex-col items-center">
+        <div className="flex-1 px-4 pt-8 flex flex-col items-center">
           <div className="w-16 h-16 bg-brand-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
             <Lock className="w-8 h-8 text-action-primary" />
           </div>
@@ -400,7 +400,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className={`w-full h-full flex flex-col relative bg-background`}>
 
         {/* Header & Search Bar */}
-        <div className={`px-5 pt-safe-6 pb-0 shrink-0 relative z-20 bg-[var(--color-background-primary)]`}>
+        <div className={`px-4 pt-safe-6 pb-0 shrink-0 relative z-20 bg-[var(--color-background-primary)]`}>
           {/* Title + Notification */}
           <div className="flex items-center justify-between mb-2 mt-2">
             <h1 className="text-[20px] font-bold font-poppins text-[var(--color-text-primary)] leading-tight">Explorez et découvrez</h1>
@@ -524,7 +524,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
         {/* Vue Liste (List View) */}
         {viewMode === 'list' && (
-          <div className="flex-1 overflow-y-auto px-5 pt-4 pb-[80px] flex flex-col items-center relative z-10 bg-background">
+          <div className="flex-1 overflow-y-auto px-4 pt-4 pb-[80px] flex flex-col relative z-10 bg-background">
             {filteredEvents.length > 0 ? (
               filteredEvents.map(ev => {
                 const dateObj = new Date(ev.startAt);

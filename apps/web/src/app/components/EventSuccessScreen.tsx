@@ -52,29 +52,25 @@ export function EventSuccessScreen() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-5 pb-40 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto px-5 pb-40 flex flex-col items-center justify-center -mt-10" style={{ scrollbarWidth: 'none' }}>
 
         {/* Success icon */}
-        <div className="mt-10 mb-5">
-          <div
-            className="w-[80px] h-[80px] rounded-full flex items-center justify-center shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #4CD964, #34C759)' }}
-          >
-            <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
-              <path d="M9 19.5L16 26.5L29.5 11.5" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
+        <div className="w-[80px] h-[80px] rounded-full flex items-center justify-center mb-6 relative">
+          <div className="absolute inset-0 rounded-full" style={{ background: 'linear-gradient(243.43deg, #4DEF8E 16.67%, #FFEB3A 83.33%)' }} />
+          <svg width="32" height="32" viewBox="0 0 38 38" fill="none" className="relative z-10">
+            <path d="M9 19.5L16 26.5L29.5 11.5" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
 
         {/* Title */}
-        <h1 className="text-[22px] font-bold text-[#2E7D32] mb-3 text-center">Participation validée !</h1>
+        <h1 className="text-[20px] font-semibold font-poppins text-[#22C55E] mb-3 text-center">Participation validée !</h1>
         <p className="text-[13px] text-gray-500 text-center mb-8 leading-relaxed px-4">
           Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres participants.
         </p>
 
         {/* Summary card */}
-        <div className="w-full rounded-2xl border border-gray-100 shadow-sm bg-white p-5">
-          <h2 className="text-[15px] font-bold text-gray-900 mb-4">{event.title}</h2>
+        <div className="w-full rounded-[8px] border border-gray-100 shadow-sm bg-white p-4">
+          <h2 className="text-[14px] font-semibold font-poppins text-gray-900 mb-4">{event.title}</h2>
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4">
               <span className="text-[13px] text-gray-500 shrink-0">Date</span>
@@ -106,13 +102,14 @@ export function EventSuccessScreen() {
       >
         <button
           onClick={handleOpenChat}
-          className="w-full py-[14px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
+          className="w-full h-[40px] rounded-full font-bold text-[14px] text-white active:scale-95 transition-transform"
+          style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }}
         >
           Rejoindre le groupe
         </button>
         <button
           onClick={() => navigate(`/events/${id}`)}
-          className="w-full py-[14px] rounded-full font-bold text-[15px] text-gray-700 border border-gray-200 bg-white active:scale-95 transition-transform"
+          className="w-full h-[40px] rounded-full font-bold text-[14px] text-gray-700 border border-[#D4D4D4] bg-white active:scale-95 transition-transform"
         >
           Retour à l'événement
         </button>
