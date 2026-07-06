@@ -5,7 +5,7 @@ import { ChevronLeft, Send, Play, MapPin, Calendar, Users, Share2, X, Check, Mor
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
-import { useConversationMessages, useConversation, chatApi, useSendMessage } from '@/features/chat/api'
+import { useConversationMessages, useConversation, chatApi, useSendMessage, useConversationPresence } from '@/features/chat/api'
 import { eventsApi } from '@/features/events/api'
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket'
 import { SafeImage } from '@/components/shared/SafeImage'
@@ -182,6 +182,7 @@ export function ChatDetails() {
     refetchOnWindowFocus: true,
   })
   const { mutate: sendMsg } = useSendMessage(id!)
+  const { data: presence } = useConversationPresence(id!)
 
   const isGroup = conversation?.isGroup ?? false
   const conversationTitle = event?.title ?? (conversation
@@ -470,9 +471,14 @@ export function ChatDetails() {
               {typingUser ? (
                 <p className="text-[13px] text-action-primary font-medium animate-pulse mt-0.5">{typingUser} écrit...</p>
               ) : isGroup ? (
-                <p className="text-[13px] font-medium text-gray-500 mt-0.5">{memberCount} participant{memberCount !== 1 ? 's' : ''}, {Math.max(1, Math.floor(memberCount * 0.4))} en ligne</p>
-              ) : (
+                <p className="text-[13px] font-medium text-gray-500 mt-0.5">
+                  {memberCount} participant{memberCount !== 1 ? 's' : ''}
+                  {presence?.onlineCount ? `, ${presence.onlineCount} en ligne` : ''}
+                </p>
+              ) : presence?.isOtherOnline ? (
                 <p className="text-[13px] font-medium text-gray-500 mt-0.5">En ligne</p>
+              ) : (
+                <p className="text-[13px] font-medium text-gray-400 mt-0.5">Hors ligne</p>
               )}
             </div>
           </button>

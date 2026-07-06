@@ -647,6 +647,36 @@ export default async function chatRoutes(app: FastifyInstance) {
 
     return reply.code(201).send({ message: 'Joined group' })
   })
+
+  // Get real-time presence for a conversation
+  app.get('/conversations/:id/presence', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+
+    const conversation = await app.prisma.conversation.findUnique({
+      where: { id },
+      include: { members: true }
+    })
+
+    if (!conversation) return reply.code(404).send({ error: 'Not found' })
+    if (!conversation.members.some((m: any) => m.userId === sub)) return reply.code(403).send({ error: 'Forbidden' })
+
+    // Count how many members (excluding the current user) are online
+    let onlineCount = 0
+    let isOtherOnline = false
+
+    conversation.members.forEach((m: any) => {
+      if (m.userId === sub) return
+      const isOnline = connections.has(m.userId) && connections.get(m.userId)!.size > 0
+      if (isOnline) {
+        onlineCount++
+        isOtherOnline = true
+      }
+    })
+
+    return reply.send({ onlineCount, isOtherOnline, totalMembers: conversation.members.length })
+  })
+
   }) // End of protected routes
 }
 

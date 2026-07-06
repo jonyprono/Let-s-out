@@ -55,6 +55,10 @@ export interface Message {
 }
 
 export const chatApi = {
+  getPresence: async (id: string): Promise<{ onlineCount: number; isOtherOnline: boolean; totalMembers: number }> => {
+    const { data } = await apiClient.get(`/chat/conversations/${id}/presence`)
+    return data
+  },
   getConversations: async (): Promise<Conversation[]> => {
     const { data } = await apiClient.get('/chat/conversations')
     return data.data
@@ -127,6 +131,15 @@ export function useConversation(conversationId: string) {
     queryKey: ['chat', 'conversation', conversationId],
     queryFn: () => chatApi.getConversation(conversationId),
     enabled: !!conversationId,
+  })
+}
+
+export function useConversationPresence(conversationId: string) {
+  return useQuery({
+    queryKey: ['chat', 'presence', conversationId],
+    queryFn: () => chatApi.getPresence(conversationId),
+    enabled: !!conversationId,
+    refetchInterval: 15000, // Refresh presence every 15 seconds
   })
 }
 
