@@ -3,8 +3,8 @@ import {
   Home04Icon as Home,
   Search01Icon as Search,
   UserCircle02Icon as User,
-  Comment01Icon as ChatBubble,
 } from 'hugeicons-react'
+import { MessageSquareMore as ChatBubble } from 'lucide-react'
 import { useConversations } from '@/features/chat/api'
 
 // Icône centrale : rounded square orange avec + (conformément à la maquette Figma)
