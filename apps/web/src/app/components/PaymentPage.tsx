@@ -404,12 +404,16 @@ export function PaymentPage() {
         >
           Rejoindre
         </button>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <span className="text-[11px] text-[#8D8D8D] font-medium">Sécurisé PCI DSS</span>
-          <span className="text-green-500">
-            <Check className="w-[12px] h-[12px]" strokeWidth={3} />
-          </span>
-          <span className="text-[11px] text-[#8D8D8D]">Fedapay</span>
+        <div className="flex flex-col items-center justify-center gap-[4px] pt-[0.25rem] w-full text-center">
+          <div className="flex items-center justify-center gap-[6px] font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
+            Sécurisé PCI DSS 
+            <div className="w-[18px] h-[18px] bg-[#00D97E] rounded-[4px] flex items-center justify-center">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+          </div>
+          <span className="text-[#6B7280] text-[clamp(11px,3vw,13px)] font-medium">Fedapay</span>
         </div>
       </div>
 

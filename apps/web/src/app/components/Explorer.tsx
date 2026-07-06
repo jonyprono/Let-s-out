@@ -155,49 +155,25 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return (
       <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col pt-safe-6">
         {/* Barre de recherche */}
-        <div className="px-[20px] py-[12px] shrink-0 flex items-center gap-[8px] bg-[#FAFAFA]">
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            borderRadius: '999px',
-            padding: '0 16px',
-            height: '44px',
-            backgroundColor: 'white',
-            border: isSearching ? '2px solid var(--brand-orange-500)' : '1px solid var(--border-default)',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
-          }}>
-            <Location01Icon style={{ width: 20, height: 20, color: 'var(--color-icon-secondary)', flexShrink: 0 }} strokeWidth={1.5} />
+        <div className="px-[20px] py-[12px] shrink-0 flex items-center w-full box-border bg-[#FAFAFA]">
+          <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white box-border shadow-sm ${
+            isSearching ? 'border-2 border-[var(--brand-orange-500)]' : 'border border-[var(--border-default)]'
+          }`}>
+            <Location01Icon className="w-[20px] h-[20px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
             <input
               autoFocus
               value={mapSearch}
               onChange={(e) => setMapSearch(e.target.value)}
               placeholder="Rechercher une ville..."
-              style={{
-                flex: 1,
-                fontSize: 15,
-                outline: 'none',
-                background: 'transparent',
-                color: 'var(--color-text-primary)',
-                fontFamily: 'Poppins, sans-serif',
-                border: 'none'
-              }}
+              className="flex-1 text-[15px] outline-none bg-transparent text-[var(--color-text-primary)] font-poppins min-w-0"
             />
-            {mapSearch.length > 0 && (
-              <button
-                onClick={() => setMapSearch('')}
-                style={{ padding: 4, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                <Cancel01Icon style={{ width: 18, height: 18, color: 'var(--color-icon-secondary)' }} strokeWidth={2} />
+            {mapSearch.length > 0 ? (
+              <button onClick={() => setMapSearch('')} className="p-1 shrink-0 flex items-center justify-center">
+                <Cancel01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={2} />
               </button>
-            )}
-            {mapSearch.length === 0 && (
-              <button
-                onClick={closeSearch}
-                style={{ padding: 4, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                <Cancel01Icon style={{ width: 18, height: 18, color: 'var(--color-icon-secondary)' }} strokeWidth={2} />
+            ) : (
+              <button onClick={closeSearch} className="p-1 shrink-0 flex items-center justify-center">
+                <Cancel01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={2} />
               </button>
             )}
           </div>
@@ -444,29 +420,19 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               {eventSearch ? (
                 <button
                   onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}
-                  className="shrink-0 flex items-center justify-center"
+                  className="shrink-0 flex items-center justify-center p-1"
                 >
-                  <Cancel01Icon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+                  <Cancel01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={2} />
                 </button>
               ) : (
                 <button
                   onClick={(e) => { e.stopPropagation(); hapticFeedback.impact(); }}
-                  className="shrink-0 flex items-center justify-center"
+                  className="shrink-0 flex items-center justify-center p-1"
                 >
-                  <SlidersHorizontalIcon className="w-[17px] h-[17px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+                  <SlidersHorizontalIcon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
                 </button>
               )}
             </div>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setScreen('join');
-              }}
-              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[var(--border-default)] bg-white flex items-center justify-center active:bg-gray-50 transition-colors"
-            >
-              <QrCode01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
-            </button>
           </div>
 
           {/* Filter chips — scrollable if they don't fit */}
