@@ -1,5 +1,5 @@
 import { useState, useMemo, memo } from 'react';
-import { Search, Plus, X, MessageCircle } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useConversations } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
