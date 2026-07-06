@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Loader2, ChevronLeft, Lock } from 'lucide-react';
+import toast from 'react-hot-toast';
 import {
   Location01Icon,
   ArrowDown01Icon,
@@ -426,7 +427,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 </button>
               ) : (
                 <button
-                  onClick={(e) => { e.stopPropagation(); hapticFeedback.impact(); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    toast('Filtres avancés bientôt disponibles', { icon: '🚧' });
+                  }}
                   className="shrink-0 flex items-center justify-center p-1"
                 >
                   <SlidersHorizontalIcon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
@@ -437,7 +441,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                hapticFeedback.impact();
                 onNavigate('scan-qr');
               }}
               className="w-[44px] h-[44px] shrink-0 rounded-full border border-[var(--border-default)] bg-white flex items-center justify-center shadow-sm active:bg-gray-50 transition-colors"
