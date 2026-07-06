@@ -252,17 +252,47 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
     >
       {/* Cover */}
       <div className="relative flex-shrink-0 w-[48px] h-[48px] flex justify-center items-center">
-        <div className="w-[48px] h-[48px] rounded-[24px] overflow-hidden bg-[#F5F5F5]">
+        <div className="w-[48px] h-[48px] rounded-[24px] overflow-hidden bg-[#F5F5F5] flex-shrink-0">
           <SafeImage
             src={conv.avatarUrl}
             alt={conv.name}
             className="w-full h-full object-cover"
-            fallback={<div className="w-full h-full flex items-center justify-center text-lg font-semibold text-[#BDBDBD]">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
+            fallback={
+              conv.isGroup ? (
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="48" height="48" rx="24" fill="#F5F5F5"/>
+                  <path d="M27 20C27 21.6568 25.6569 23 24 23C22.3431 23 21 21.6568 21 20C21 18.3432 22.3431 17 24 17C25.6569 17 27 18.3432 27 20Z" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M28 16C29.6569 16 31 17.3432 31 19C31 20.2231 30.2681 21.2752 29.2183 21.7423" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M25.7143 26H22.2857C19.9188 26 18 27.9188 18 30.2857C18 31.2325 18.7675 32 19.7143 32H28.2857C29.2325 32 30 31.2325 30 30.2857C30 27.9188 28.0812 26 25.7143 26Z" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M29.7143 25C32.0812 25 34 26.9188 34 29.2857C34 30.2325 33.2325 31 32.2857 31" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M20 16C18.3432 16 17 17.3432 17 19C17 20.2231 17.7319 21.2752 18.7817 21.7423" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M15.7143 31C14.7675 31 14 30.2325 14 29.2857C14 26.9188 15.9188 25 18.2857 25" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              ) : (
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g clipPath="url(#clip0_1415_2646)">
+                    <g clipPath="url(#clip1_1415_2646)">
+                      <rect width="48" height="48" rx="24" fill="#F5F5F5"/>
+                      <circle cx="24" cy="16" r="8" fill="#BDBDBD"/>
+                      <circle cx="24" cy="49" r="22" fill="#BDBDBD"/>
+                    </g>
+                  </g>
+                  <defs>
+                    <clipPath id="clip0_1415_2646">
+                      <rect width="48" height="48" fill="white"/>
+                    </clipPath>
+                    <clipPath id="clip1_1415_2646">
+                      <rect width="48" height="48" rx="24" fill="white"/>
+                    </clipPath>
+                  </defs>
+                </svg>
+              )
+            }
           />
         </div>
         {/* Status spot */}
         {!conv.isGroup && (
-          <div className="absolute w-[8px] h-[8px] bg-[#22C55E] rounded-full border border-white" style={{ left: '32px', top: '38px' }} />
+          <div className="absolute w-[8px] h-[8px] bg-[#22C55E] rounded-full" style={{ left: '32px', top: '38px' }} />
         )}
       </div>
 
