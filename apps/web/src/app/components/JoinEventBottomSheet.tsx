@@ -17,9 +17,9 @@ import { eventsApi } from '@/features/events/api'
 import { hapticFeedback } from '@/lib/haptics'
 
 const OPERATORS = [
-  { id: 'mtn', label: 'MTN Momo', emoji: '🟡' },
-  { id: 'moov', label: 'MOOV', emoji: '🔵' },
-  { id: 'celtis', label: 'CELTIS', emoji: '🟢' },
+  { id: 'mtn', label: 'MTN Momo', logo: '/logos/mtn.png' },
+  { id: 'moov', label: 'MOOV', logo: '/logos/moov.png' },
+  { id: 'celtis', label: 'CELTIS', logo: '/logos/celtiis.png' },
 ]
 
 export interface JoinEventBottomSheetProps {
@@ -175,10 +175,10 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
             <div className="flex flex-col gap-[6px]">
               <label className="text-[14px] font-normal font-poppins text-[#56514F]">Méthode de paiement</label>
               <div className="relative">
-                <div className="h-[44px] rounded-[6px] border border-[#E0E0E0] bg-[#FFFFFF] flex items-center px-[12px] py-[10px]">
-                  <span className="mr-[4px] w-[24px] h-[24px] flex items-center justify-center">📱</span>
-                  <span className="text-[14px] font-normal font-inter text-[#1B1818] flex-1">Mobile money</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#A3A3A3]">
+                <div className="flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-[#FFFFFF] border border-[#E0E0E0] rounded-[6px]">
+                  <img src="/logos/mobile-money.png" alt="Mobile money" className="w-6 h-6 object-contain shrink-0" />
+                  <span className="flex-1 text-[14px] font-normal font-inter text-[#1B1818] text-left">Mobile money</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#A3A3A3] shrink-0">
                     <path d="m6 9 6 6 6-6"/>
                   </svg>
                 </div>

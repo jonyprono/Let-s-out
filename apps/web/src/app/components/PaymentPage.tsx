@@ -12,9 +12,9 @@ import {
 
 // ── Operators ──────────────────────────────────────────────
 const OPERATORS = [
-  { id: 'mtn', label: 'MTN Momo', emoji: '🟡', prefix: '97' },
-  { id: 'moov', label: 'MOOV', emoji: '🔵', prefix: '96' },
-  { id: 'celtis', label: 'CELTIS', emoji: '🟢', prefix: '95' },
+  { id: 'mtn', label: 'MTN Momo', logo: '/logos/mtn.png', prefix: '97' },
+  { id: 'moov', label: 'MOOV', logo: '/logos/moov.png', prefix: '96' },
+  { id: 'celtis', label: 'CELTIS', logo: '/logos/celtiis.png', prefix: '95' },
 ]
 
 export function PaymentPage() {
@@ -324,10 +324,10 @@ export function PaymentPage() {
         {/* ── Payment method ── */}
         <div className="mb-4">
           <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Méthode de paiement</label>
-          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white px-4 h-[52px]">
-            <span className="text-[18px] mr-3">📱</span>
-            <span className="flex-1 text-[14px] text-[#1B1818]">Mobile money</span>
-            <ChevronDown className="w-4 h-4 text-[#8D8D8D]" />
+          <div className="flex flex-row items-center p-[10px] gap-[4px] w-full h-[44px] bg-white border border-[#E0E0E0] rounded-[6px]">
+            <img src="/logos/mobile-money.png" alt="Mobile money" className="w-6 h-6 object-contain shrink-0" />
+            <span className="flex-1 text-[14px] text-[#1B1818] text-left">Mobile money</span>
+            <ChevronDown className="w-4 h-4 text-[#8D8D8D] shrink-0" />
           </div>
         </div>
 
@@ -338,12 +338,12 @@ export function PaymentPage() {
             <button
               type="button"
               onClick={() => setShowOperatorDropdown(!showOperatorDropdown)}
-              className="w-full flex items-center border border-[#DFDFDF] rounded-[10px] bg-white px-4 h-[52px] active:bg-gray-50 transition-colors"
+              className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-white border border-[#E0E0E0] rounded-[6px] active:bg-gray-50 transition-colors"
             >
-              <span className="text-[18px] mr-3">{selectedOperator.emoji}</span>
+              <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
               <span className="flex-1 text-[14px] text-[#1B1818] text-left">{selectedOperator.label}</span>
               <ChevronDown
-                className="w-4 h-4 text-[#8D8D8D] transition-transform duration-200"
+                className="w-4 h-4 text-[#8D8D8D] shrink-0 transition-transform duration-200"
                 style={{ transform: showOperatorDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
               />
             </button>
@@ -358,12 +358,12 @@ export function PaymentPage() {
                       setSelectedOperator(op)
                       setShowOperatorDropdown(false)
                     }}
-                    className="w-full flex items-center px-4 py-3.5 hover:bg-[#FFF8F0] transition-colors"
+                    className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] hover:bg-[#FFF8F0] transition-colors"
                   >
-                    <span className="text-[18px] mr-3">{op.emoji}</span>
+                    <img src={op.logo} alt={op.label} className="w-6 h-6 object-contain shrink-0" />
                     <span className="flex-1 text-[14px] text-[#1B1818] text-left">{op.label}</span>
                     {selectedOperator.id === op.id && (
-                      <Check className="w-4 h-4 text-[#FF7A00]" strokeWidth={2.5} />
+                      <Check className="w-4 h-4 text-[#FF7A00] shrink-0" strokeWidth={2.5} />
                     )}
                   </button>
                 ))}
@@ -445,7 +445,7 @@ export function PaymentPage() {
 
               {/* Phone + operator */}
               <div className="flex items-center gap-2 bg-[#F8F8F8] rounded-[10px] px-4 py-3 mb-1">
-                <span className="text-[18px]">{selectedOperator.emoji}</span>
+                <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
                 <span className="text-[14px] font-semibold text-[#1B1818] flex-1">{selectedOperator.label} • 229 {phoneNumber}</span>
               </div>
               <p className="text-[11px] text-[#8D8D8D] mb-5 text-center">Moyen sécurisé de paiement</p>

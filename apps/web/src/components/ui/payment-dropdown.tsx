@@ -7,6 +7,7 @@ export interface PaymentOption {
   label: string
   icon?: React.ReactNode
   emoji?: string
+  logo?: string
 }
 
 export interface PaymentDropdownProps {
@@ -45,49 +46,47 @@ export function PaymentDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full flex items-center justify-between px-4 py-3 bg-[var(--color-background-primary)] border border-[var(--border-default)] rounded-[12px]",
-          "text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]",
-          isOpen && "border-2 border-[var(--border-brand-primary)]"
+          "w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-[#FFFFFF] border border-[#E0E0E0] rounded-[6px] active:bg-gray-50 transition-colors focus:outline-none",
+          isOpen && "border-[#FF7A00]"
         )}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-[4px] flex-1 overflow-hidden">
           {selectedOption ? (
             <>
+              {selectedOption.logo && <img src={selectedOption.logo} alt={selectedOption.label} className="w-6 h-6 object-contain shrink-0" />}
               {selectedOption.icon && <span className="flex-shrink-0">{selectedOption.icon}</span>}
               {selectedOption.emoji && <span className="flex-shrink-0">{selectedOption.emoji}</span>}
-              <span className="font-medium">{selectedOption.label}</span>
+              <span className="flex-1 text-[14px] text-[#1B1818] text-left truncate">{selectedOption.label}</span>
             </>
           ) : (
-            <span className="text-[var(--color-text-placeholder)]">{placeholder}</span>
+            <span className="flex-1 text-[14px] text-gray-400 text-left">{placeholder}</span>
           )}
         </div>
-        <ChevronDown className={cn("w-5 h-5 text-[var(--color-text-secondary)] transition-transform", isOpen && "rotate-180")} />
+        <ChevronDown className={cn("w-4 h-4 text-[#8D8D8D] shrink-0 transition-transform", isOpen && "rotate-180")} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-[var(--color-background-primary)] border border-[var(--border-default)] rounded-[12px] shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
-          <div className="max-h-60 overflow-auto py-1">
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#FFFFFF] border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+          <div className="max-h-60 overflow-auto">
             {options.map((option) => (
               <button
                 key={option.id}
                 type="button"
                 className={cn(
-                  "w-full flex items-center justify-between px-4 py-3 hover:bg-[var(--color-background-secondary)] transition-colors text-left",
-                  value === option.id && "bg-[var(--color-background-secondary)]"
+                  "w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] hover:bg-[#FFF8F0] transition-colors text-left"
                 )}
                 onClick={() => {
                   onChange(option.id)
                   setIsOpen(false)
                 }}
               >
-                <div className="flex items-center gap-2">
-                  {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
-                  {option.emoji && <span className="flex-shrink-0">{option.emoji}</span>}
-                  <span className={cn("font-medium", value === option.id ? "text-[var(--color-text-primary)]" : "text-[var(--color-text-secondary)]")}>
-                    {option.label}
-                  </span>
-                </div>
-                {value === option.id && <Check className="w-4 h-4 text-[var(--brand-orange-500)]" />}
+                {option.logo && <img src={option.logo} alt={option.label} className="w-6 h-6 object-contain shrink-0" />}
+                {option.icon && <span className="flex-shrink-0">{option.icon}</span>}
+                {option.emoji && <span className="flex-shrink-0">{option.emoji}</span>}
+                <span className="flex-1 text-[14px] text-[#1B1818] text-left">
+                  {option.label}
+                </span>
+                {value === option.id && <Check className="w-4 h-4 text-[#FF7A00] shrink-0" strokeWidth={2.5} />}
               </button>
             ))}
           </div>
