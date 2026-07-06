@@ -135,8 +135,11 @@ export const eventsApi = {
   },
   
   // Reviews
-  addReview: async (eventId: string, rating: number, comment?: string) => {
-    return apiClient.post(`/events/${eventId}/reviews`, { rating, comment })
+  getPendingEvaluations: async () => {
+    return apiClient.get<{ data: any[]; total: number }>('/events/pending-evaluations')
+  },
+  submitReview: async (eventId: string, payload: { rating: number, punctualityRating?: number, attitudeRating?: number, reliabilityRating?: number, comment?: string }) => {
+    return apiClient.post(`/events/${eventId}/reviews`, payload)
   },
   getReviews: async (eventId: string) => {
     return apiClient.get(`/events/${eventId}/reviews`)

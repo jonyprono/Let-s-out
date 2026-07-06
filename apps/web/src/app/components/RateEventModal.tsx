@@ -17,7 +17,7 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
   const qc = useQueryClient()
 
   const submitMutation = useMutation({
-    mutationFn: () => eventsApi.addReview(event.id, rating, comment),
+    mutationFn: () => eventsApi.submitReview(event.id, { rating, comment }),
     onSuccess: () => {
       toast.success('Merci pour votre avis !')
       qc.invalidateQueries({ queryKey: ['users', 'activity'] })

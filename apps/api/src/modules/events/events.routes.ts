@@ -68,6 +68,53 @@ export default async function eventsRoutes(app: FastifyInstance) {
     return reply.send({ data: events, total: events.length })
   })
 
+  // Get pending evaluations (past events attended by user, not yet reviewed)
+  app.get('/pending-evaluations', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+
+    // Find confirmed bookings for past events
+    const bookings = await app.prisma.booking.findMany({
+      where: {
+        userId: sub,
+        status: 'CONFIRMED',
+        event: {
+          endAt: { lt: new Date() },
+        },
+      },
+      include: {
+        event: {
+          include: {
+            creator: {
+              select: {
+                id: true,
+                profile: { select: { displayName: true, avatarUrl: true, username: true } }
+              }
+            }
+          }
+        }
+      },
+      orderBy: { event: { endAt: 'desc' } }
+    })
+
+    // Filter out events the user has already reviewed
+    const pendingEvents = [];
+    for (const b of bookings) {
+      const existingReview = await app.prisma.review.findUnique({
+        where: {
+          userId_eventId: {
+            userId: sub,
+            eventId: b.eventId,
+          }
+        }
+      });
+      if (!existingReview) {
+        pendingEvents.push(b.event);
+      }
+    }
+
+    return reply.send({ data: pendingEvents, total: pendingEvents.length })
+  })
+
   // List events (with filters)
   app.get('/', async (req, reply) => {
     const { category, city, status = 'PUBLISHED', limit = '20', offset = '0', search, upcoming, maxPrice, date, time, ongoing } = req.query as any
@@ -725,6 +772,53 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const review = await app.prisma.review.create({
       data: { userId: sub, eventId: id, rating, punctualityRating, attitudeRating, reliabilityRating, comment },
     })
+
+    // Compute Badges for Organizer
+    const creatorId = event.creatorId;
+    if (creatorId) {
+      const allReviewsForCreator = await app.prisma.review.findMany({
+        where: { event: { creatorId: creatorId } },
+      });
+
+      if (allReviewsForCreator.length >= 3) {
+        const punctReviews = allReviewsForCreator.filter(r => r.punctualityRating !== null && r.punctualityRating !== undefined);
+        const avgPunctuality = punctReviews.length > 0 ? punctReviews.reduce((acc, r) => acc + (r.punctualityRating || 0), 0) / punctReviews.length : 0;
+        
+        const attReviews = allReviewsForCreator.filter(r => r.attitudeRating !== null && r.attitudeRating !== undefined);
+        const avgAttitude = attReviews.length > 0 ? attReviews.reduce((acc, r) => acc + (r.attitudeRating || 0), 0) / attReviews.length : 0;
+        
+        const relReviews = allReviewsForCreator.filter(r => r.reliabilityRating !== null && r.reliabilityRating !== undefined);
+        const avgReliability = relReviews.length > 0 ? relReviews.reduce((acc, r) => acc + (r.reliabilityRating || 0), 0) / relReviews.length : 0;
+
+        const assignBadge = async (badgeName: string) => {
+          const existingBadge = await app.prisma.userBadge.findFirst({ where: { userId: creatorId, badge: badgeName } });
+          if (!existingBadge) {
+            await app.prisma.userBadge.create({ data: { userId: creatorId, badge: badgeName } });
+            // Notify the creator
+            await createAndSendNotification(app, {
+              userId: creatorId,
+              type: 'NEW_BADGE',
+              title: 'Nouveau Badge Débloqué ! 🏅',
+              body: `Félicitations, vous avez obtenu le badge "${badgeName}" grâce à vos excellentes évaluations !`,
+              data: { badgeName }
+            });
+          }
+        };
+
+        if (avgPunctuality >= 4.5) await assignBadge('Ponctuel');
+        if (avgAttitude >= 4.5) await assignBadge('Accueillant');
+        if (avgReliability >= 4.5) await assignBadge('Fiable');
+      }
+
+      // Notify organizer of a new review
+      await createAndSendNotification(app, {
+        userId: creatorId,
+        type: 'NEW_REVIEW',
+        title: 'Nouvel avis reçu 📝',
+        body: `Un participant a évalué votre événement "${event.title}".`,
+        data: { eventId: id }
+      });
+    }
 
     return reply.status(201).send({ data: review })
   })
