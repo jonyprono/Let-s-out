@@ -79,66 +79,67 @@ export function Messages(_props: MessagesProps) {
   }, [activeFilter, filtered, groups, directs]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-[var(--color-background-primary)] font-poppins">
+    <div className="w-full h-full flex flex-col bg-[#FFFFFF] font-poppins">
 
-      {/* Header */}
-      <div className="px-5 pt-4 pt-safe-4 pb-2 bg-[var(--color-background-primary)] sticky top-0 z-20">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-[28px] font-bold text-[var(--color-text-primary)]">Messages</h1>
-          <button className="p-2 active:scale-95 transition-transform border border-[var(--border-default)] rounded-lg">
-            <Trash2 className="w-[20px] h-[20px] text-[var(--color-text-muted)]" />
-          </button>
-        </div>
+      {/* Header Section */}
+      <div className="flex flex-col items-start px-[16px] pt-[10px] pb-[10px] gap-[12px] w-full bg-[#FFFFFF] sticky top-0 z-20">
+        <h1 className="text-[28px] font-bold text-[#1B1818] mb-1">Messages</h1>
 
-        {/* Search */}
-        <div className="bg-[var(--color-background-primary)] border border-[var(--border-default)] rounded-full flex items-center gap-3 px-4 py-3 mb-5">
-          <Search className="w-[18px] h-[18px] text-[var(--color-text-tertiary)] flex-shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Rechercher une conversation..."
-            className="flex-1 bg-transparent outline-none text-[14px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] font-medium"
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
-              <X className="w-3.5 h-3.5 text-[var(--color-text-tertiary)]" />
-            </button>
-          )}
-        </div>
+        {visibleConversations.length > 0 || searchQuery ? (
+          <>
+            {/* Search */}
+            <div className="w-full h-[36px] bg-[#FFFFFF] opacity-80 border border-[#D4D4D4] rounded-[1000px] flex items-center gap-[8px] px-[12px] py-[8px] box-border">
+              <Search className="w-[20px] h-[20px] text-[#A3A3A3] flex-shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Rechercher une conversation..."
+                className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] placeholder:text-[#BDBDBD] font-['Inter_Display'] min-w-0"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0">
+                  <X className="w-3.5 h-3.5 text-[#BDBDBD]" />
+                </button>
+              )}
+            </div>
 
-        {/* Filter Tabs (Pills) */}
-        <div className="flex items-center gap-3 mb-2">
-          {[
-            { key: 'all' as const, label: 'Tout' },
-            { key: 'friends' as const, label: 'Ami(e)s' },
-            { key: 'groups' as const, label: 'Groupes' },
-          ].map(tab => {
-            const isActive = activeFilter === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveFilter(tab.key)}
-                className={`px-4 py-1.5 rounded-full text-[14px] transition-colors font-medium ${
-                  isActive
-                    ? 'bg-[var(--brand-orange-100)] text-[var(--color-text-brand-primary)]'
-                    : 'bg-[var(--color-background-primary-alt)] text-[var(--color-text-tertiary)]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+            {/* Filter Tabs */}
+            <div className="w-full flex items-center gap-[4px] overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              {[
+                { key: 'all' as const, label: 'Tout' },
+                { key: 'friends' as const, label: 'Ami(e)s' },
+                { key: 'groups' as const, label: 'Groupes' },
+              ].map(tab => {
+                const isActive = activeFilter === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveFilter(tab.key)}
+                    className={`h-[32px] px-[12px] py-[8px] rounded-[1000px] flex items-center justify-center whitespace-nowrap transition-colors ${
+                      isActive
+                        ? 'bg-[#FFF2D3] text-[#FF7A00]'
+                        : 'bg-[#FAFAFA] text-[#56514F]'
+                    }`}
+                  >
+                    <span className="font-poppins font-medium text-[12px] leading-[16px]">
+                      {tab.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        ) : null}
       </div>
 
-      {/* List */}
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto flex flex-col items-center py-[16px]" style={{ scrollbarWidth: 'none' }}>
         {isLoading ? (
-          <div className="flex flex-col gap-3 p-5">
+          <div className="w-full flex flex-col gap-[16px] px-[16px]">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl p-4 flex items-center gap-3 animate-pulse">
-                <div className="w-14 h-14 rounded-2xl bg-gray-200 flex-shrink-0" />
+              <div key={i} className="w-full h-[48px] bg-white rounded-2xl flex items-center gap-[8px] animate-pulse">
+                <div className="w-[48px] h-[48px] rounded-[24px] bg-gray-200 flex-shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded-lg w-2/3" />
                   <div className="h-3 bg-gray-100 rounded-lg w-full" />
@@ -148,47 +149,84 @@ export function Messages(_props: MessagesProps) {
           </div>
         ) : (
           <>
-            {/* Filtered Conversations */}
-            {visibleConversations.length > 0 && (
-              <div className="pt-3">
-                <div className="space-y-1 px-4">
-                  {visibleConversations.map(conv => (
-                    <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
-                  ))}
-                </div>
+            {visibleConversations.length > 0 ? (
+              <div className="w-full flex flex-col gap-[16px] px-[16px]">
+                {visibleConversations.map(conv => (
+                  <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
+                ))}
               </div>
-            )}
-
-            {/* Empty/No search results */}
-            {visibleConversations.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-                <div className="w-24 h-24 rounded-full mb-5 flex items-center justify-center bg-gray-50 shadow-sm border border-gray-100">
-                  <MessageCircle className="w-10 h-10 text-gray-300" />
+            ) : (
+              /* Empty state */
+              <div className="flex flex-col items-center gap-[20px] px-[16px] w-full max-w-[358px]">
+                {/* Chat Empty Illustration */}
+                <div className="relative w-[256px] h-[110px] mx-auto flex-shrink-0">
+                  {/* Orange Bubble */}
+                  <div className="absolute left-[0px] top-[27px] w-[64px] h-[70px]">
+                    <svg viewBox="0 0 64 70" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                      <path d="M32 60C49.673 60 64 46.568 64 30C64 13.431 49.673 0 32 0C14.327 0 0 13.431 0 30C0 37.1 2.3 43.6 6 48.8L2 68L18.5 60.5C22.6 62.4 27.1 63.5 32 63.5V60Z" fill="#FF7A00"/>
+                      <circle cx="32" cy="30" r="15" stroke="white" strokeWidth="1.5" />
+                    </svg>
+                  </div>
+                  {/* Blue Bubble */}
+                  <div className="absolute left-[104px] top-[0px] w-[64px] h-[72px]">
+                    <svg viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                      <path d="M32 64C49.673 64 64 49.673 64 32C64 14.327 49.673 0 32 0C14.327 0 0 14.327 0 32C0 39.5 2.6 46.4 7 51.8L2 72L19.5 64.5C23.3 66.4 27.5 67.5 32 67.5V64Z" fill="#007BFF"/>
+                      <circle cx="20" cy="32" r="3" fill="white"/>
+                      <circle cx="32" cy="32" r="3" fill="white"/>
+                      <circle cx="44" cy="32" r="3" fill="white"/>
+                    </svg>
+                  </div>
+                  {/* Pink Bubble */}
+                  <div className="absolute left-[202px] top-[49px] w-[54px] h-[61px]">
+                    <svg viewBox="0 0 54 61" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+                      <path d="M27 54C41.911 54 54 41.911 54 27C54 12.088 41.911 0 27 0C12.088 0 0 12.088 0 27C0 33.3 2.2 39.2 6 43.7L2 61L16.5 54.5C19.7 56.1 23.2 57 27 57V54Z" fill="#FF4D8D"/>
+                      <line x1="15" y1="21" x2="39" y2="21" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                      <line x1="15" y1="28" x2="39" y2="28" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                      <line x1="15" y1="35" x2="28" y2="35" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
                 </div>
-                <h3 className="text-[17px] font-bold text-gray-900 mb-2">
-                  Aucune conversation
-                </h3>
-                <p className="text-[14px] text-gray-500 max-w-[250px]">
-                  Démarrez une discussion pour commencer.
-                </p>
+
+                {/* Text and supporting text */}
+                <div className="flex flex-col items-center gap-[8px] w-full max-w-[320px]">
+                  <h3 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] text-center">
+                    Faites le premier pas
+                  </h3>
+                  <p className="font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-center text-[#404040]">
+                    Faites connaissance, partagez vos idées ou préparez votre prochaine sortie. Il ne manque plus qu'un premier message.
+                  </p>
+                </div>
+
+                {/* Button */}
+                <button
+                  onClick={() => setShowNewConv(true)}
+                  className="mt-[16px] flex flex-row items-center justify-center gap-[4px] px-[12px] py-[8px] w-[242px] h-[36px] bg-[#FF991C] rounded-[9999px] active:scale-95 transition-transform"
+                >
+                  <MessageCircle className="w-[18px] h-[18px] text-white" />
+                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#FFFFFF]">
+                    Démarrer une conversation
+                  </span>
+                </button>
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* FAB (Floating Action Button) */}
-      <button 
-        onClick={() => setShowNewConv(true)}
-        className="absolute bottom-[90px] right-5 w-[50px] h-[50px] bg-[var(--brand-orange-500)] rounded-[14px] flex items-center justify-center shadow-md shadow-orange-500/20 active:scale-95 transition-transform z-30"
-      >
-        <div className="relative flex items-center justify-center">
-          <MessageCircle className="w-[24px] h-[24px] text-white" strokeWidth={2} />
-          <div className="absolute top-[6px] right-[6px] w-[8px] h-[8px] bg-[var(--brand-orange-500)] rounded-full flex items-center justify-center">
-            <Plus className="w-[8px] h-[8px] text-white" strokeWidth={4} />
+      {/* FAB for filled state */}
+      {visibleConversations.length > 0 && (
+        <button 
+          onClick={() => setShowNewConv(true)}
+          className="absolute bottom-[90px] right-[16px] w-[40px] h-[40px] bg-[#FF991C] rounded-[8px] flex items-center justify-center shadow-sm active:scale-95 transition-transform z-30"
+        >
+          <div className="relative flex items-center justify-center">
+            <MessageCircle className="w-[20px] h-[20px] text-white" strokeWidth={2} />
+            <div className="absolute top-[3px] right-[2px] w-[6px] h-[6px] bg-[#FF991C] rounded-full flex items-center justify-center">
+              <Plus className="w-[6px] h-[6px] text-white" strokeWidth={4} />
+            </div>
           </div>
-        </div>
-      </button>
+        </button>
+      )}
 
       {showNewConv && <NewConversationModal onClose={() => setShowNewConv(false)} />}
       {showAddFriends && <AddFriendsModal onClose={() => setShowAddFriends(false)} />}
@@ -201,41 +239,48 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
   return (
     <button
       onClick={onNavigate}
-      className="w-full flex flex-row items-center gap-[14px] px-5 py-[14px] text-left transition-colors active:bg-[var(--color-background-primary-alt)] bg-[var(--color-background-primary)]"
+      className="w-full flex flex-row items-center gap-[8px] h-[48px] text-left transition-colors active:bg-gray-50"
     >
-      {/* Avatar */}
-      <div className="relative flex-shrink-0">
-        <div className="w-[50px] h-[50px] rounded-full overflow-hidden bg-[var(--color-background-secondary)]">
+      {/* Cover */}
+      <div className="relative flex-shrink-0 w-[48px] h-[48px] flex justify-center items-center">
+        <div className="w-[48px] h-[48px] rounded-[24px] overflow-hidden bg-[#F5F5F5]">
           <SafeImage
             src={conv.avatarUrl}
             alt={conv.name}
             className="w-full h-full object-cover"
-            fallback={<div className="w-full h-full flex items-center justify-center text-xl font-semibold text-[var(--color-text-tertiary)] bg-[var(--color-background-primary-alt)]">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
+            fallback={<div className="w-full h-full flex items-center justify-center text-lg font-semibold text-[#BDBDBD]">{conv.isGroup ? '👥' : conv.name.charAt(0).toUpperCase()}</div>}
           />
         </div>
+        {/* Status spot */}
         {!conv.isGroup && (
-          <div className="absolute bottom-0 right-0 w-[12px] h-[12px] bg-[var(--color-background-green)] rounded-full border-2 border-white" />
+          <div className="absolute w-[8px] h-[8px] bg-[#22C55E] rounded-full border border-white" style={{ left: '32px', top: '38px' }} />
         )}
       </div>
 
-      {/* Content Block */}
-      <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <div className="flex items-center justify-between mb-[2px]">
-          <h3 className={`text-[15px] truncate text-[var(--color-text-primary)] font-[600]`}>
+      {/* Chat info */}
+      <div className="flex-1 min-w-0 flex flex-col gap-[2px] h-[38px] justify-center">
+        {/* Top Row */}
+        <div className="w-full flex flex-row justify-between items-center h-[20px]">
+          <h3 className="font-poppins font-medium text-[14px] leading-[20px] text-[#1B1818] truncate">
             {conv.name}
           </h3>
-          <span className={`text-[11px] whitespace-nowrap text-[var(--color-text-tertiary)]`}>
+          <span className="font-['Inter_Display'] font-normal text-[10px] leading-[16px] text-[#737373] flex-shrink-0 ml-2">
             {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
           </span>
         </div>
-        <div className="flex items-center justify-between">
-          <p className="text-[13px] truncate text-[var(--color-text-tertiary)] pr-4">
+        
+        {/* Bottom Row */}
+        <div className="w-full flex flex-row items-center gap-[8px] h-[16px]">
+          <p className="flex-1 font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-[#525252] truncate">
             {conv.lastMsgPrefix && <span className="font-medium mr-1">{conv.lastMsgPrefix}</span>}
             {conv.lastMsg}
           </p>
+          {/* Status badge */}
           {hasUnread && (
-            <div className="flex-shrink-0 min-w-[20px] h-[20px] px-[5px] rounded-full flex items-center justify-center text-[10px] font-bold text-white bg-[var(--brand-orange-500)]">
-              {conv.unread > 9 ? '9+' : conv.unread}
+            <div className="flex-shrink-0 min-w-[16px] h-[16px] px-[4px] bg-[#FF7A00] rounded-[12px] flex items-center justify-center">
+              <span className="font-['Inter_Display'] font-semibold text-[12px] leading-[16px] text-[#FFFFFF]">
+                {conv.unread > 9 ? '9+' : conv.unread}
+              </span>
             </div>
           )}
         </div>
