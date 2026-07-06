@@ -112,9 +112,17 @@ export default async function usersRoutes(app: FastifyInstance) {
   app.post('/me/kyc', async (req, reply) => {
     const { sub } = req.user as { sub: string }
     const saved: Record<string, string> = {}
+    const fields: Record<string, string> = {}
 
     try {
+      const existingProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
+      if (!existingProfile) return reply.code(404).send({ error: 'Profile not found' })
+
       for await (const part of req.parts()) {
+        if (part.type === 'field') {
+          fields[part.fieldname] = part.value as string
+          continue
+        }
         if (part.type !== 'file') continue
         const ext = path.extname(part.filename) || '.jpg'
         const filename = `${part.fieldname}-${uuidv4()}${ext}`
@@ -129,13 +137,48 @@ export default async function usersRoutes(app: FastifyInstance) {
         return reply.code(400).send({ error: 'Aucun document fourni' })
       }
 
+      // -- Validation automatique (nom et date de naissance) --
+      let isRejected = false
+      let rejectReason = ''
+
+      const kycFirstName = fields.firstName?.trim().toLowerCase() || ''
+      const kycLastName = fields.lastName?.trim().toLowerCase() || ''
+      const profileName = existingProfile.displayName.trim().toLowerCase()
+      
+      const kycBirthDateStr = fields.birthDate
+      const profileBirthDate = existingProfile.birthDate
+
+      // Vérifier le prénom
+      const nameMatches = kycFirstName.includes(profileName) || profileName.includes(kycFirstName) || kycLastName.includes(profileName) || profileName.includes(kycLastName)
+      
+      if (!nameMatches) {
+        isRejected = true
+        rejectReason = 'Le nom/prénom fourni ne correspond pas à votre profil.'
+      } else if (profileBirthDate && kycBirthDateStr) {
+        // Comparer l'année et le mois au moins, ou date exacte.
+        // On compare sous format YYYY-MM-DD
+        const kycDate = new Date(kycBirthDateStr).toISOString().split('T')[0]
+        const profDate = new Date(profileBirthDate).toISOString().split('T')[0]
+        if (kycDate !== profDate) {
+          isRejected = true
+          rejectReason = 'La date de naissance fournie ne correspond pas à celle de votre profil.'
+        }
+      }
+
+      const finalStatus = isRejected ? 'rejected' : 'pending'
+
       const profile = await app.prisma.profile.update({
         where: { userId: sub },
         data: {
-          kycStatus: 'pending',
+          kycStatus: finalStatus,
           kycSubmittedAt: new Date(),
-          kycReviewedAt: null,
-          kycRejectedReason: null,
+          kycReviewedAt: isRejected ? new Date() : null,
+          kycRejectedReason: isRejected ? rejectReason : null,
+          kycIdNumber: fields.idNumber ?? undefined,
+          kycFirstName: fields.firstName ?? undefined,
+          kycLastName: fields.lastName ?? undefined,
+          kycBirthDate: fields.birthDate ? new Date(fields.birthDate) : undefined,
+          kycCity: fields.city ?? undefined,
           kycIdFront: saved.idFront ?? undefined,
           kycIdBack: saved.idBack ?? undefined,
           kycSelfie: saved.selfie ?? undefined,
@@ -143,7 +186,7 @@ export default async function usersRoutes(app: FastifyInstance) {
         },
       })
 
-      return reply.send({ success: true, kycStatus: profile.kycStatus, documents: saved })
+      return reply.send({ success: true, kycStatus: profile.kycStatus, documents: saved, reason: rejectReason })
     } catch (err) {
       console.error('KYC Upload error', err)
       return reply.code(500).send({ error: 'Upload failed' })

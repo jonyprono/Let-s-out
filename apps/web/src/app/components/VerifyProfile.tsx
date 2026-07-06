@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth.store'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type KycStep = 1 | 2 | 3 | 4
+type KycStep = 0 | 1 | 2 | 3 | 4
 type UploadStatus = 'idle' | 'uploading' | 'done' | 'error'
 type KycStatus = 'pending' | 'verified' | 'rejected' | null
 
@@ -220,9 +220,16 @@ export function VerifyProfile() {
   const user = useAuthStore(s => s.user)
   const refreshUser = useAuthStore(s => s.refreshUser)
 
-  const [step, setStep] = useState<KycStep>(1)
-  const [previews, setPreviews] = useState<Record<KycStep, string | null>>({ 1: null, 2: null, 3: null, 4: null })
-  const [files, setFiles] = useState<Record<KycStep, File | null>>({ 1: null, 2: null, 3: null, 4: null })
+  const [step, setStep] = useState<KycStep>(0)
+  const [formData, setFormData] = useState({
+    idNumber: '',
+    firstName: '',
+    lastName: '',
+    birthDate: '',
+    city: ''
+  })
+  const [previews, setPreviews] = useState<Record<KycStep, string | null>>({ 0: null, 1: null, 2: null, 3: null, 4: null })
+  const [files, setFiles] = useState<Record<KycStep, File | null>>({ 0: null, 1: null, 2: null, 3: null, 4: null })
   const [submitStatus, setSubmitStatus] = useState<UploadStatus>('idle')
   const [isComplete, setIsComplete] = useState(false)
   const [kycStatusChecked, setKycStatusChecked] = useState(false)
@@ -258,8 +265,42 @@ export function VerifyProfile() {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
+  const validateForm = () => {
+    if (!formData.idNumber || !formData.firstName || !formData.lastName || !formData.birthDate || !formData.city) {
+      toast.error('Veuillez remplir tous les champs obligatoires')
+      return false
+    }
+
+    const kycFirstName = formData.firstName.trim().toLowerCase()
+    const kycLastName = formData.lastName.trim().toLowerCase()
+    const profileName = (user?.profile?.displayName || '').trim().toLowerCase()
+
+    const nameMatches = kycFirstName.includes(profileName) || profileName.includes(kycFirstName) || kycLastName.includes(profileName) || profileName.includes(kycLastName)
+    if (!nameMatches) {
+      toast.error('Le prénom ou nom doit correspondre au nom sur votre profil')
+      return false
+    }
+
+    if (user?.profile?.birthDate) {
+      const kycDate = new Date(formData.birthDate).toISOString().split('T')[0]
+      const profDate = new Date(user.profile.birthDate).toISOString().split('T')[0]
+      if (kycDate !== profDate) {
+        toast.error('La date de naissance doit correspondre à celle de votre profil')
+        return false
+      }
+    }
+    
+    return true
+  }
+
   const handleNext = () => {
-    if (!previews[step]) {
+    if (step === 0) {
+      if (!validateForm()) return
+      setStep(1)
+      return
+    }
+
+    if (!previews[step as 1|2|3|4]) {
       toast.error('Veuillez d\'abord prendre ou importer une photo.')
       return
     }
@@ -274,6 +315,12 @@ export function VerifyProfile() {
     setSubmitStatus('uploading')
     try {
       const fd = new FormData()
+      fd.append('idNumber', formData.idNumber)
+      fd.append('firstName', formData.firstName)
+      fd.append('lastName', formData.lastName)
+      fd.append('birthDate', formData.birthDate)
+      fd.append('city', formData.city)
+
       if (files[1]) fd.append('idFront', files[1])
       if (files[2]) fd.append('idBack', files[2])
       if (files[3]) fd.append('selfie', files[3])
@@ -349,7 +396,7 @@ export function VerifyProfile() {
         ref={fileInputRef}
         type="file"
         accept="image/*"
-        capture={currentStep.capture}
+        capture={currentStep?.capture}
         className="hidden"
         onChange={handleCapture}
       />
@@ -358,7 +405,7 @@ export function VerifyProfile() {
       <div className="px-5 pt-safe-4 pb-3 flex-shrink-0">
         <div className="flex items-center justify-center relative mb-4">
           <button
-            onClick={() => step === 1 ? navigate(-1) : setStep(s => (s - 1) as KycStep)}
+            onClick={() => step === 0 ? navigate(-1) : setStep(s => (s - 1) as KycStep)}
             className="absolute left-0 w-8 h-8 flex items-center justify-center"
           >
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-white" />
@@ -380,13 +427,45 @@ export function VerifyProfile() {
         <div className="h-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full overflow-hidden">
           <div
             className="h-full bg-action-primary rounded-full transition-all duration-500"
-            style={{ width: `${(step / totalSteps) * 100}%` }}
+            style={{ width: step === 0 ? '10%' : `${(step / totalSteps) * 100}%` }}
           />
         </div>
-        <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 text-right">Étape {step}/{totalSteps}</p>
+        {step > 0 && (
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 text-right">Étape {step}/{totalSteps}</p>
+        )}
       </div>
 
-      {/* Content */}
+      {step === 0 ? (
+        <div className="flex-1 overflow-y-auto px-5 pb-32">
+          <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2">Vos informations</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Veuillez entrer les informations exactes figurant sur votre pièce d'identité.</p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Numéro de pièce</label>
+              <input type="text" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} placeholder="Ex: 123456789" />
+            </div>
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Prénom</label>
+                <input type="text" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
+              </div>
+              <div className="flex-1">
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Nom</label>
+                <input type="text" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Date de naissance</label>
+              <input type="date" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.birthDate} onChange={e => setFormData({...formData, birthDate: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Ville de résidence</label>
+              <input type="text" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="flex-1 overflow-y-auto px-5 pb-32">
 
         {/* KYC badge */}
@@ -397,8 +476,8 @@ export function VerifyProfile() {
           </p>
         </div>
 
-        <h2 className="text-[20px] font-bold text-gray-900 dark:text-[#FFFFFF] mb-1">{currentStep.title}</h2>
-        <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">{currentStep.subtitle}</p>
+        <h2 className="text-[20px] font-bold text-gray-900 dark:text-[#FFFFFF] mb-1">{currentStep?.title}</h2>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">{currentStep?.subtitle}</p>
 
         {/* Photo preview or illustration */}
         {previews[step] ? (
@@ -420,7 +499,7 @@ export function VerifyProfile() {
         {/* Instruction tip */}
         <div className="flex items-start gap-2 mb-6 p-3 bg-[#FFF8F1] dark:bg-action-primary/5 rounded-xl border border-orange-100 dark:border-action-primary/20">
           <AlertCircle className="w-4 h-4 text-action-primary mt-0.5 flex-shrink-0" />
-          <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed">{currentStep.instruction}</p>
+          <p className="text-[12px] text-gray-600 dark:text-gray-400 leading-relaxed">{currentStep?.instruction}</p>
         </div>
 
         {/* Capture buttons */}
@@ -429,7 +508,7 @@ export function VerifyProfile() {
             onClick={() => {
               if (fileInputRef.current) {
                 fileInputRef.current.removeAttribute('capture')
-                fileInputRef.current.setAttribute('capture', currentStep.capture)
+                if (currentStep?.capture) fileInputRef.current.setAttribute('capture', currentStep.capture)
                 fileInputRef.current.click()
               }
             }}
@@ -472,6 +551,7 @@ export function VerifyProfile() {
           </button>
         )}
       </div>
+      )}
 
       {/* Bottom CTA */}
       <div
@@ -480,9 +560,9 @@ export function VerifyProfile() {
       >
         <button
           onClick={handleNext}
-          disabled={!previews[step] || submitStatus === 'uploading'}
+          disabled={(step > 0 && !previews[step as 1|2|3|4]) || submitStatus === 'uploading'}
           className={`w-full py-4 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 flex items-center justify-center gap-2 ${
-            previews[step] && submitStatus !== 'uploading'
+            (step === 0 || previews[step as 1|2|3|4]) && submitStatus !== 'uploading'
               ? 'bg-action-primary shadow-md shadow-orange-200'
               : 'bg-action-primary/30'
           }`}
@@ -504,7 +584,7 @@ export function VerifyProfile() {
               className={`rounded-full transition-all ${
                 s.id === step
                   ? 'w-6 h-2 bg-action-primary'
-                  : previews[s.id]
+                  : previews[s.id as 1|2|3|4]
                   ? 'w-2 h-2 bg-[#10B981]'
                   : 'w-2 h-2 bg-gray-200 dark:bg-[#2A2A2A]'
               }`}

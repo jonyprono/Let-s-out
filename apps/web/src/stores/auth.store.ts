@@ -22,6 +22,7 @@ export interface AuthUser {
     interests: string[]
     followersCount?: number
     eventsCount?: number
+    birthDate?: string
   }
 }
 
