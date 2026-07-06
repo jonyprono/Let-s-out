@@ -1,5 +1,5 @@
-import { useState, useMemo, memo } from 'react';
-import { Search, X } from 'lucide-react';
+import { useState, useMemo, memo, useEffect } from 'react';
+import { Search, X, Pin, PinOff } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useConversations } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
@@ -22,6 +22,32 @@ export function Messages(_props: MessagesProps) {
   const [activeFilter, setActiveFilter] = useState<'all' | 'friends' | 'groups'>('all');
 
   const user = useAuthStore((s) => s.user);
+
+  const [pinnedConvs, setPinnedConvs] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('letsout_pinned_convs');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const togglePin = (convId: string) => {
+    setPinnedConvs(prev => {
+      const newPins = prev.includes(convId) ? prev.filter(id => id !== convId) : [...prev, convId];
+      localStorage.setItem('letsout_pinned_convs', JSON.stringify(newPins));
+      return newPins;
+    });
+    setContextMenu(null);
+  };
+
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, convId: string } | null>(null);
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
 
   const displayConversations = useMemo(() => {
     return (conversations && conversations.length > 0)
@@ -57,10 +83,16 @@ export function Messages(_props: MessagesProps) {
             lastMsg,
             lastMsgPrefix,
             unread: conv.unread || 0,
+            isPinned: pinnedConvs.includes(conv.id),
           };
+        }).sort((a, b) => {
+          if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+          const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+          const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+          return timeB - timeA;
         })
       : [];
-  }, [conversations, user?.id]);
+  }, [conversations, user?.id, pinnedConvs]);
 
   // Filter by search
   const filtered = useMemo(() => {
@@ -155,7 +187,15 @@ export function Messages(_props: MessagesProps) {
             {visibleConversations.length > 0 ? (
               <div className="w-full flex flex-col gap-[16px] px-[16px]">
                 {visibleConversations.map(conv => (
-                  <ConvItem key={conv.id} conv={conv} onNavigate={() => navigate(`/chat/${conv.id}`)} />
+                  <ConvItem 
+                    key={conv.id} 
+                    conv={conv} 
+                    onNavigate={() => navigate(`/chat/${conv.id}`)} 
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setContextMenu({ x: e.clientX, y: e.clientY, convId: conv.id });
+                    }}
+                  />
                 ))}
               </div>
             ) : (
@@ -239,16 +279,43 @@ export function Messages(_props: MessagesProps) {
 
       {showNewConv && <NewConversationModal onClose={() => setShowNewConv(false)} />}
       {showAddFriends && <AddFriendsModal onClose={() => setShowAddFriends(false)} />}
+
+      {/* Context Menu for Pinning */}
+      {contextMenu && (
+        <div 
+          className="fixed z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-48 overflow-hidden animate-in fade-in zoom-in duration-200"
+          style={{ top: Math.min(contextMenu.y, window.innerHeight - 100), left: Math.min(contextMenu.x, window.innerWidth - 200) }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button 
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            onClick={() => togglePin(contextMenu.convId)}
+          >
+            {pinnedConvs.includes(contextMenu.convId) ? (
+              <>
+                <PinOff className="w-5 h-5 text-gray-500" />
+                <span className="text-[14px] font-medium text-gray-700">Désépingler</span>
+              </>
+            ) : (
+              <>
+                <Pin className="w-5 h-5 text-gray-500" />
+                <span className="text-[14px] font-medium text-gray-700">Épingler</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNavigate: () => void }) {
+const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu }: { conv: any; onNavigate: () => void; onContextMenu?: (e: React.MouseEvent) => void }) {
   const hasUnread = conv.unread > 0;
   return (
     <button
       onClick={onNavigate}
-      className="w-full flex flex-row items-center gap-[8px] h-[48px] text-left transition-colors active:bg-gray-50"
+      onContextMenu={onContextMenu}
+      className="w-full flex flex-row items-center gap-[8px] h-[48px] text-left transition-colors active:bg-gray-50 relative"
     >
       {/* Cover */}
       <div className="relative flex-shrink-0 w-[48px] h-[48px] flex justify-center items-center">
@@ -321,6 +388,9 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate }: { conv: any; onNav
                 {conv.unread > 9 ? '9+' : conv.unread}
               </span>
             </div>
+          )}
+          {conv.isPinned && !hasUnread && (
+            <Pin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 ml-1" />
           )}
         </div>
       </div>
