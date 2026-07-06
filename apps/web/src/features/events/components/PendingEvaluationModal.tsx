@@ -43,11 +43,11 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6">
+      <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto flex flex-col pt-8">
         
         {/* Header */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 shrink-0">
           <div className="w-16 h-16 mx-auto bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mb-4 text-2xl">
             ⭐
           </div>
@@ -73,10 +73,10 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
           </div>
         </div>
 
-        <hr className="border-gray-100 my-4" />
+        <hr className="border-gray-100 my-4 shrink-0" />
 
         {/* Detailed Ratings */}
-        <div className="space-y-4 mb-6">
+        <div className="space-y-4 mb-6 shrink-0">
           <p className="font-bold text-gray-800 text-center mb-2">Aidez-le à obtenir des badges :</p>
           
           <RatingRow label="Accueillant et souriant" value={attitudeRating} onChange={setAttitudeRating} icon="🤝" />
@@ -85,7 +85,7 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
         </div>
 
         {/* Comment */}
-        <div className="mb-6">
+        <div className="mb-6 shrink-0">
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
@@ -95,7 +95,7 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 shrink-0 mt-auto">
           <Button 
             onClick={handleSubmit} 
             disabled={rating === 0 || isSubmitting}
@@ -117,19 +117,19 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
 
 function RatingRow({ label, value, onChange, icon }: { label: string, value: number, onChange: (v: number) => void, icon: string }) {
   return (
-    <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100 gap-2">
       <div className="flex items-center gap-2">
         <span className="text-xl">{icon}</span>
         <span className="text-sm font-semibold text-gray-700">{label}</span>
       </div>
-      <div className="flex gap-1">
+      <div className="flex gap-1 self-start sm:self-auto">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             onClick={() => onChange(star)}
-            className={`transition-colors ${value >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+            className={`transition-colors p-1 -m-1 sm:p-0 sm:m-0 ${value >= star ? 'text-yellow-400' : 'text-gray-300'}`}
           >
-            <Star className="w-5 h-5" fill={value >= star ? "currentColor" : "none"} />
+            <Star className="w-6 h-6 sm:w-5 sm:h-5" fill={value >= star ? "currentColor" : "none"} />
           </button>
         ))}
       </div>
