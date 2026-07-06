@@ -121,7 +121,7 @@ export function JoinPrivateEvent() {
   if (isScanning) {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col bg-transparent">
-        <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
+        <div className="absolute top-0 left-0 right-0 px-6 pt-safe-6 pb-6 flex justify-between items-center z-10" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
           <button onClick={stopScan} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>

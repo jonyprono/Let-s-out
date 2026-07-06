@@ -30,7 +30,7 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
   return (
     <div className="absolute inset-0 z-[60] flex flex-col bg-white">
       {/* Header */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+      <div className="px-4 pt-safe-4 pb-3 flex items-center justify-between border-b border-gray-100">
         <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
           <X className="w-5 h-5 text-gray-900" />
         </button>
