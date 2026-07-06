@@ -104,7 +104,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
               >
                 <div className="flex items-center gap-3">
                   <div className="w-[44px] h-[44px] rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                    <SafeImage src={conv.avatarUrl} className="w-full h-full object-cover" />
+                    <SafeImage src={conv.avatarUrl} alt={conv.name} className="w-full h-full object-cover" />
                   </div>
                   <span className="font-poppins font-medium text-[15px] text-gray-900 truncate max-w-[200px] text-left">
                     {conv.name}
