@@ -453,7 +453,7 @@ export function ChatDetails() {
             }}
           >
             <div className="relative flex-shrink-0">
-              <div className="w-11 h-11 rounded-full bg-gray-100 overflow-hidden shadow-sm">
+              <div className="w-11 h-11 rounded-full bg-gray-100 overflow-hidden shadow-sm relative">
                 <SafeImage
                   src={conversationAvatar}
                   alt={conversationTitle}
@@ -465,6 +465,9 @@ export function ChatDetails() {
                   }
                 />
               </div>
+              {presence?.isOtherOnline && (
+                <div className="absolute bottom-0 right-0 w-[14px] h-[14px] bg-[#4ADE80] border-[2px] border-white dark:border-[#2A2A2A] rounded-full z-10" />
+              )}
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="font-bold text-gray-900 text-[16px] truncate leading-tight tracking-tight">{conversationTitle}</h2>
