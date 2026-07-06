@@ -3,6 +3,7 @@ import { Search, X, Loader2, UserPlus, Check } from 'lucide-react'
 import { useSearchUsers, useSendFriendRequest } from '@/features/users/api'
 import { toast } from 'sonner'
 import { useUserProfile } from '@/features/users/UserProfileContext'
+import { SafeImage } from '@/components/shared/SafeImage'
 
 interface AddFriendsModalProps {
   onClose: () => void
@@ -81,11 +82,19 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
                     onClick={() => openUserProfile(user.userId, { displayName: user.displayName, avatarUrl: user.avatarUrl })}
                     className="flex-1 flex items-center gap-3 cursor-pointer active:opacity-70 transition-opacity min-w-0"
                   >
-                    <img 
-                      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.displayName}&background=f3f4f6&color=374151`} 
-                      alt={user.displayName} 
-                      className="w-12 h-12 rounded-full object-cover shrink-0"
-                    />
+                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                      <SafeImage
+                        src={user.avatarUrl}
+                        alt={user.displayName}
+                        className="w-full h-full object-cover"
+                        fallback={
+                          <div className="w-full h-full flex items-center justify-center font-bold text-[#FFFFFF] text-lg"
+                            style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>
+                            {user.displayName.charAt(0).toUpperCase()}
+                          </div>
+                        }
+                      />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-[15px] font-bold text-gray-900 truncate">{user.displayName}</h4>
                       <p className="text-[13px] text-gray-500 truncate">@{user.username}</p>
