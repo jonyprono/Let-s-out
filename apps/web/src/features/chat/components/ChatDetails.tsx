@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Send, Play, Info, MapPin, Calendar, Users, Share2, X, Check, Phone, Video, Trash2 } from 'lucide-react'
+import { ChevronLeft, Send, Play, Info, MapPin, Calendar, Users, Share2, X, Check, MoreVertical, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
@@ -480,41 +480,16 @@ export function ChatDetails() {
           <div className="flex items-center gap-0.5">
             <button
               onClick={() => {
-                window.dispatchEvent(new CustomEvent('call:start_outgoing', {
-                  detail: { 
-                    conversationId: id, 
-                    targetUserId: isGroup ? null : otherMember?.userId, 
-                    targetName: isGroup ? undefined : otherMember?.user?.profile?.displayName,
-                    targetAvatar: isGroup ? undefined : otherMember?.user?.profile?.avatarUrl,
-                    mediaType: 'audio' 
-                  }
-                }))
+                if (!isGroup && otherMember) {
+                  openProfile(otherMember.userId, otherMember.user?.profile?.displayName, otherMember.user?.profile?.avatarUrl)
+                } else if (isGroup && event) {
+                  setShowEventInfo(true)
+                }
               }}
               className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95"
             >
-              <Phone className="w-[20px] h-[20px] text-gray-500" />
+              <MoreVertical className="w-[20px] h-[20px] text-gray-400" />
             </button>
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('call:start_outgoing', {
-                  detail: { 
-                    conversationId: id, 
-                    targetUserId: isGroup ? null : otherMember?.userId, 
-                    targetName: isGroup ? undefined : otherMember?.user?.profile?.displayName,
-                    targetAvatar: isGroup ? undefined : otherMember?.user?.profile?.avatarUrl,
-                    mediaType: 'video' 
-                  }
-                }))
-              }}
-              className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95"
-            >
-              <Video className="w-[22px] h-[22px] text-gray-500" />
-            </button>
-            {event && (
-              <button onClick={() => setShowEventInfo(true)} className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95">
-                <Info className="w-[22px] h-[22px] text-gray-400" />
-              </button>
-            )}
           </div>
         </div>
 
