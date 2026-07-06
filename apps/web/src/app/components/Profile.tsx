@@ -120,7 +120,7 @@ export function Profile({ onNavigate }: ProfileProps) {
   return (
     <div className="w-full h-full flex flex-col bg-background">
 
-      <div className="relative w-full overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, var(--action-primary) 0%, var(--color-brand-orange-400) 60%, #FFA040 100%)' }}>
+      <div className="relative w-full overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, var(--color-action-primary, #FF7A00) 0%, var(--color-brand-orange-400, #FF991C) 60%, #FFA040 100%)' }}>
         
         {/* Header */}
         <div className="px-5 pt-12 pb-3 sticky top-0 z-20 flex items-center justify-between">
@@ -150,7 +150,7 @@ export function Profile({ onNavigate }: ProfileProps) {
           <div className="flex flex-col items-center mb-5 text-center">
             <div className="relative mb-3">
               <div className="w-24 h-24 rounded-full ring-4 ring-white shadow-lg overflow-hidden bg-background-white">
-                <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>{displayName.charAt(0).toUpperCase()}</div>} />
+                <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-action-primary, #FF7A00), var(--color-brand-orange-400, #FF991C))' }}>{displayName.charAt(0).toUpperCase()}</div>} />
               </div>
               <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full border-2 border-white shadow-sm bg-yellow-400 flex items-center justify-center text-[10px] font-bold text-white">★ {viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A'}</div>
             </div>
@@ -195,7 +195,7 @@ export function Profile({ onNavigate }: ProfileProps) {
            {/* Actions */}
            {!isOwnProfile && (
              <div className="flex gap-3 mb-6">
-               <Button className="flex-1 rounded-[12px] h-12 text-[15px] font-bold shadow-sm" style={{ backgroundColor: 'var(--action-primary)' }}>+ Suivre</Button>
+               <Button className="flex-1 rounded-[12px] h-12 text-[15px] font-bold shadow-sm" style={{ backgroundColor: 'var(--color-action-primary, #FF7A00)' }}>+ Suivre</Button>
                <Button variant="outline" className="flex-1 rounded-[12px] h-12 text-[15px] font-bold shadow-sm">Message</Button>
              </div>
            )}
@@ -431,7 +431,7 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
           className="w-full h-full object-cover"
           fallback={
             <div className="w-full h-full flex items-center justify-center font-bold text-[#FFFFFF] text-lg"
-              style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>
+              style={{ background: 'linear-gradient(135deg, var(--color-action-primary, #FF7A00), var(--color-brand-orange-400, #FF991C))' }}>
               {name.charAt(0).toUpperCase()}
             </div>
           }
