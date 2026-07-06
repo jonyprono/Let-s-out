@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query'
 import { chatApi } from '@/features/chat/api'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
+import { useConversations } from '@/features/chat/api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { Button } from '@/components/ui/button'
 
@@ -64,10 +65,19 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
     }
   }
 
-  const filteredFriends = friends?.filter(f => 
-    f.displayName.toLowerCase().includes(search.toLowerCase()) || 
-    f.username.toLowerCase().includes(search.toLowerCase())
-  ) || []
+  const { data: conversations } = useConversations()
+
+  const existingDmUserIds = new Set(
+    (conversations || [])
+      .filter((c: any) => !c.isGroup)
+      .flatMap((c: any) => c.members?.map((m: any) => m.userId))
+  )
+
+  const filteredFriends = friends?.filter(f => {
+    if (existingDmUserIds.has(f.userId)) return false;
+    return f.displayName.toLowerCase().includes(search.toLowerCase()) || 
+           f.username.toLowerCase().includes(search.toLowerCase())
+  }) || []
 
   const toggleFriend = (userId: string) => {
     setSelectedFriends(prev => 
