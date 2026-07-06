@@ -9,7 +9,6 @@ import {
   Tick01Icon,
   Notification01Icon,
   SlidersHorizontalIcon,
-  QrCode01Icon,
   MapsIcon,
   ListViewIcon,
 } from 'hugeicons-react';
