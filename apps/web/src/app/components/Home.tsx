@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Loader2, WifiOff, RefreshCw } from 'lucide-react';
+import { Loader2, WifiOff, RefreshCw } from 'lucide-react';
 import { Search01Icon } from 'hugeicons-react';
+import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
@@ -170,14 +171,9 @@ export function Home({ userData, onNavigate }: HomeProps) {
           <h1 className="text-xl font-bold text-gray-900">Bienvenue, {displayName}</h1>
           <button
             onClick={() => onNavigate('notifications')}
-            className="relative w-10 h-10 flex items-center justify-center"
+            className="w-10 h-10 flex items-center justify-center -mr-2"
           >
-            <Bell className="w-6 h-6 text-gray-700" strokeWidth={1.8} />
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-action-primary text-white text-[10px] font-bold flex items-center justify-center px-1">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
+            <NotificationIconWithBadge unreadCount={unreadCount} className="w-8 h-8 text-gray-900" />
           </button>
         </div>
 

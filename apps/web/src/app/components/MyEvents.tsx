@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Bell, Loader2, Calendar, Star } from 'lucide-react';
+import { Loader2, Calendar, Star } from 'lucide-react';
+import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { hapticFeedback } from '@/lib/haptics';
@@ -94,17 +95,12 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
       {/* ── Header ── */}
       <div className="px-5 pt-6 pt-safe-6 pb-4 flex-shrink-0 flex items-center justify-between">
         <h1 className="text-[24px] font-bold text-gray-900">Mes événements</h1>
-        <button
-          onClick={() => onNavigate('notifications')}
-          className="relative w-10 h-10 flex items-center justify-center"
-        >
-          <Bell className="w-6 h-6 text-gray-700" strokeWidth={1.8} />
-          {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-action-primary text-white text-[10px] font-bold flex items-center justify-center px-1">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
+          <button
+            onClick={() => onNavigate('notifications')}
+            className="w-10 h-10 flex items-center justify-center -mr-2"
+          >
+            <NotificationIconWithBadge unreadCount={unreadCount} className="w-8 h-8 text-gray-900" />
+          </button>
       </div>
 
       {/* ── Tabs (pill style) ── */}
