@@ -82,11 +82,14 @@ export function Messages(_props: MessagesProps) {
     <div className="w-full h-full flex flex-col bg-[#FFFFFF] font-poppins">
 
       {/* Header Section */}
-      <div className="flex flex-col items-start px-[16px] pt-[10px] pb-[10px] gap-[12px] w-full bg-[#FFFFFF] sticky top-0 z-20">
-        <h1 className="text-[28px] font-bold text-[#1B1818] mb-1">Messages</h1>
+      <div className="flex flex-col items-start w-full bg-[#FFFFFF] sticky top-0 z-20">
+        {/* App bar */}
+        <div className="flex flex-row items-center px-[16px] pt-[calc(env(safe-area-inset-top)+12px)] pb-[12px] gap-[12px] w-full min-h-[56px] box-border">
+          <h1 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818]">Messages</h1>
+        </div>
 
         {visibleConversations.length > 0 || searchQuery ? (
-          <>
+          <div className="w-full flex flex-col gap-[12px] px-[16px] pb-[10px]">
             {/* Search */}
             <div className="w-full h-[36px] bg-[#FFFFFF] opacity-80 border border-[#D4D4D4] rounded-[1000px] flex items-center gap-[8px] px-[12px] py-[8px] box-border">
               <Search className="w-[20px] h-[20px] text-[#A3A3A3] flex-shrink-0" />
@@ -129,9 +132,9 @@ export function Messages(_props: MessagesProps) {
                 );
               })}
             </div>
-          </>
-        ) : null}
-      </div>
+            </div>
+          ) : null}
+        </div>
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto flex flex-col items-center py-[16px]" style={{ scrollbarWidth: 'none' }}>
