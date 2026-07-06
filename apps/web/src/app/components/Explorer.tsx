@@ -2,18 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Loader2, ChevronLeft, Lock } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  Location01Icon,
-  ArrowDown01Icon,
-  Search01Icon,
-  Cancel01Icon,
-  Tick01Icon,
-  Notification01Icon,
-  SlidersHorizontalIcon,
-  MapsIcon,
-  ListViewIcon,
-  QrCode01Icon,
-} from 'hugeicons-react';
+import { Search01Icon, Location01Icon, ArrowDown01Icon, SlidersHorizontalIcon, MapsIcon, ListViewIcon, QrCode01Icon, Cancel01Icon, Tick01Icon } from 'hugeicons-react';
+import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { EventCard } from '@/components/shared/EventCard';
@@ -381,13 +371,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           {/* Title + Notification */}
           <div className="flex items-center justify-between mb-2 mt-2 w-full min-w-0">
             <h1 className="text-[20px] font-bold font-poppins text-[var(--color-text-primary)] leading-tight">Explorez et découvrez</h1>
-            <button onClick={() => onNavigate('notifications')} className="relative p-1">
-              <Notification01Icon className="w-[24px] h-[24px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
-              {unreadNotifCount > 0 && (
-                <div className="absolute top-0 right-0 w-[16px] h-[16px] bg-[var(--brand-orange-500)] rounded-full border-2 border-white flex items-center justify-center translate-x-1/4 -translate-y-1/4">
-                  <span className="text-[9px] font-bold text-white leading-none">{unreadNotifCount > 9 ? '9+' : unreadNotifCount}</span>
-                </div>
-              )}
+            <button onClick={() => onNavigate('notifications')} className="w-10 h-10 flex items-center justify-center -mr-2">
+              <NotificationIconWithBadge unreadCount={unreadNotifCount} className="w-8 h-8 text-[var(--color-text-primary)]" />
             </button>
           </div>
 

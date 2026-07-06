@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft, Camera, Upload, CheckCircle2, Loader2, Shield, AlertCircle, Clock, BadgeCheck } from 'lucide-react'
+import { Shield, Upload, Camera, CheckCircle2, AlertCircle, ChevronLeft, Loader2, RefreshCcw, BadgeCheck, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -443,25 +445,25 @@ export function VerifyProfile() {
           <div className="space-y-4">
             <div>
               <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Numéro de pièce</label>
-              <input type="text" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} placeholder="Ex: 123456789" />
+              <Input type="text" value={formData.idNumber} onChange={e => setFormData({...formData, idNumber: e.target.value})} placeholder="Ex: 123456789" />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Prénom</label>
-                <input type="text" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
+                <Input type="text" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
               </div>
               <div className="flex-1">
                 <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Nom</label>
-                <input type="text" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+                <Input type="text" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
               </div>
             </div>
             <div>
               <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Date de naissance</label>
-              <input type="date" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.birthDate} onChange={e => setFormData({...formData, birthDate: e.target.value})} />
+              <Input type="date" value={formData.birthDate} onChange={e => setFormData({...formData, birthDate: e.target.value})} />
             </div>
             <div>
               <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Ville de résidence</label>
-              <input type="text" className="w-full p-3.5 rounded-xl border border-gray-200 dark:border-[#333] bg-gray-50 dark:bg-[#1A1A1A] text-[15px] outline-none focus:border-action-primary transition-colors" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
+              <Input type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} />
             </div>
           </div>
         </div>
@@ -545,9 +547,9 @@ export function VerifyProfile() {
               setPreviews(prev => ({ ...prev, [step]: null }))
               setFiles(prev => ({ ...prev, [step]: null }))
             }}
-            className="w-full mt-3 py-2.5 text-[13px] font-medium text-gray-500 dark:text-gray-400 text-center"
+            className="w-full mt-3 py-2.5 text-[13px] font-medium text-gray-500 dark:text-gray-400 text-center flex items-center justify-center gap-2"
           >
-            Reprendre la photo
+            <RefreshCcw className="w-3 h-3" /> Reprendre la photo
           </button>
         )}
       </div>
@@ -558,14 +560,10 @@ export function VerifyProfile() {
         className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-[#333333] px-5 pt-4"
         style={{ paddingBottom: 'max(1.25rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
       >
-        <button
+        <Button
           onClick={handleNext}
           disabled={(step > 0 && !previews[step as 1|2|3|4]) || submitStatus === 'uploading'}
-          className={`w-full py-4 rounded-full font-bold text-[16px] text-white transition-all active:scale-95 flex items-center justify-center gap-2 ${
-            (step === 0 || previews[step as 1|2|3|4]) && submitStatus !== 'uploading'
-              ? 'bg-action-primary shadow-md shadow-orange-200'
-              : 'bg-action-primary/30'
-          }`}
+          className="w-full"
         >
           {submitStatus === 'uploading' ? (
             <><Loader2 className="w-5 h-5 animate-spin" /> Envoi en cours...</>
@@ -574,7 +572,7 @@ export function VerifyProfile() {
           ) : (
             'Soumettre ma vérification'
           )}
-        </button>
+        </Button>
 
         {/* Steps dots */}
         <div className="flex items-center justify-center gap-2 mt-3">

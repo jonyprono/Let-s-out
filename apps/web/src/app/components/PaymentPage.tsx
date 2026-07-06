@@ -5,6 +5,8 @@ import { Loader2, ChevronLeft, XCircle, ChevronDown, Check } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
 import { toast } from 'sonner'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   isContributionPayment,
   applyPoolContributionOptimistic,
@@ -228,12 +230,12 @@ export function PaymentPage() {
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
-          <button onClick={handleOpenChat} className="w-full py-[14px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] active:scale-95 transition-transform shadow-md shadow-orange-500/20">
-            Rejoindre le groupe
-          </button>
-          <button onClick={() => navigate(`/events/${eventId}`)} className="w-full py-[14px] rounded-full font-bold text-[15px] text-gray-700 border border-gray-200 bg-white active:scale-95 transition-transform">
-            Retour à l'événement
-          </button>
+            <Button onClick={handleOpenChat} className="w-full">
+              Rejoindre le groupe
+            </Button>
+            <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[var(--btn-height)] rounded-full font-bold text-[15px] text-[var(--color-text-secondary)] border border-[var(--border-primary)] bg-white active:scale-95 transition-transform">
+              Retour à l'événement
+            </button>
         </div>
       </div>
     )
@@ -375,18 +377,18 @@ export function PaymentPage() {
         {/* ── Phone number ── */}
         <div className="mb-8">
           <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Numéro de téléphone</label>
-          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white overflow-hidden h-[52px]">
-            <div className="flex items-center gap-1.5 px-3 border-r border-[#DFDFDF] h-full">
+          <div className="relative">
+            <div className="absolute left-0 top-0 bottom-0 flex items-center gap-1.5 px-4 border-r border-[var(--border-primary)] z-10 bg-transparent">
               <span className="text-[16px]">🇧🇯</span>
-              <span className="text-[13px] text-[#1B1818] font-medium">(229)</span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#8D8D8D]" />
+              <span className="text-[13px] text-[var(--color-text-primary)] font-medium">(229)</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[var(--color-icon-secondary)]" />
             </div>
-            <input
+            <Input
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="00 00 00 00 00"
-              className="flex-1 px-4 text-[14px] text-[#1B1818] placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
+              placeholder="01 56 36 33"
+              className="pl-[105px]"
             />
           </div>
         </div>
@@ -398,12 +400,12 @@ export function PaymentPage() {
         className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex flex-col items-center gap-2 border-t border-[#F0F0F0]"
         style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
       >
-        <button
+        <Button
           onClick={handleOpenSummary}
-          className="w-full h-[52px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] opacity-90 active:opacity-100 active:scale-[0.98] transition-all shadow-md shadow-orange-500/20"
+          className="w-full"
         >
           Rejoindre
-        </button>
+        </Button>
         <div className="flex flex-col items-center justify-center gap-[4px] pt-[0.25rem] w-full text-center">
           <div className="flex items-center justify-center gap-[6px] font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
             Sécurisé PCI DSS 
@@ -469,12 +471,12 @@ export function PaymentPage() {
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={handlePay}
-                className="w-full h-[52px] rounded-full font-bold text-[15px] text-white bg-[#FF7A00] active:scale-[0.98] transition-transform shadow-md shadow-orange-500/20"
+                className="w-full mt-2"
               >
                 Payer
-              </button>
+              </Button>
 
             </div>
           </div>
