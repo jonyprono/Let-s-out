@@ -73,7 +73,7 @@ export function FriendRequests() {
     <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
 
       {/* Header */}
-      <div className="bg-white px-5 pt-safe-top pt-4 pb-4 border-b border-gray-100 flex items-center gap-3">
+      <div className="bg-white px-5 pt-safe-6 pb-4 border-b border-gray-100 flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
           className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0"

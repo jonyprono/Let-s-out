@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { Search, X, Check, Loader2, Users } from 'lucide-react'
 import { useFriends } from '@/features/users/api'
+import { useMutation } from '@tanstack/react-query'
+import { chatApi } from '@/features/chat/api'
+import { useNavigate } from 'react-router'
+import { toast } from 'sonner'
 
 interface NewConversationModalProps {
   onClose: () => void
@@ -10,9 +14,37 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
   const [search, setSearch] = useState('')
   const [selectedFriends, setSelectedFriends] = useState<string[]>([])
   const [groupName, setGroupName] = useState('')
-
+  const navigate = useNavigate()
 
   const { data: friends, isLoading } = useFriends()
+
+  const { mutateAsync: createDM, isPending: isCreatingDM } = useMutation({
+    mutationFn: chatApi.createDM
+  })
+
+  const { mutateAsync: createGroup, isPending: isCreatingGroup } = useMutation({
+    mutationFn: ({ name, memberIds }: { name: string, memberIds: string[] }) => chatApi.createGroup(name, memberIds)
+  })
+
+  const handleStart = async () => {
+    try {
+      if (selectedFriends.length === 1) {
+        const conv = await createDM(selectedFriends[0])
+        onClose()
+        navigate(`/messages/${conv.id}`)
+      } else {
+        if (!groupName.trim()) {
+          toast.error("Veuillez entrer un nom de groupe")
+          return
+        }
+        const conv = await createGroup({ name: groupName.trim(), memberIds: selectedFriends } as any)
+        onClose()
+        navigate(`/messages/${conv.id}`)
+      }
+    } catch (err) {
+      toast.error("Erreur lors de la création de la discussion")
+    }
+  }
 
   const filteredFriends = friends?.filter(f => 
     f.displayName.toLowerCase().includes(search.toLowerCase()) || 
@@ -129,6 +161,18 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
           </div>
         )}
       </div>
+      {/* Floating Action Button */}
+      {selectedFriends.length > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe-4">
+          <button
+            onClick={handleStart}
+            disabled={isCreatingDM || isCreatingGroup}
+            className="w-full bg-action-primary text-white font-bold text-[15px] py-3.5 rounded-full shadow-md active:scale-[0.98] transition-transform flex justify-center items-center gap-2 disabled:opacity-50"
+          >
+            {(isCreatingDM || isCreatingGroup) ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Démarrer la discussion'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

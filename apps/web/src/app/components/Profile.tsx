@@ -5,6 +5,7 @@ import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { useUserProfile } from '@/features/users/UserProfileContext';
 import { useLogout } from '@/features/auth/hooks/useAuth';
+import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
@@ -25,6 +26,7 @@ export function Profile({ onNavigate }: ProfileProps) {
   const profile = user?.profile;
   const navigate = useNavigate();
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddFriendsModal, setShowAddFriendsModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('events');
   const { username } = useParams<{ username?: string }>()
 
@@ -403,6 +405,22 @@ export function Profile({ onNavigate }: ProfileProps) {
               <ChevronRight className="w-5 h-5 text-gray-300" />
             </button>
 
+            <button
+              onClick={() => setShowAddFriendsModal(true)}
+              className="w-full bg-background-white rounded-2xl p-200 flex items-center justify-between shadow-sm mb-200 active:scale-[0.98] transition-transform border border-gray-100"
+            >
+              <div className="flex items-center gap-150">
+                <div className="w-10 h-10 rounded-full bg-action-primary/10 flex items-center justify-center">
+                  <UserPlus className="w-5 h-5 text-action-primary" />
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-[15px] text-gray-900">Rechercher des amis</p>
+                  <p className="text-[13px] text-text-secondary">Trouver de nouvelles personnes</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-300" />
+            </button>
+
             {friends.length === 0 ? (
               <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
                 <div className="w-16 h-16 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-200">
@@ -421,6 +439,7 @@ export function Profile({ onNavigate }: ProfileProps) {
       </div>
 
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
+      {showAddFriendsModal && <AddFriendsModal onClose={() => setShowAddFriendsModal(false)} />}
     </div>
   );
 }

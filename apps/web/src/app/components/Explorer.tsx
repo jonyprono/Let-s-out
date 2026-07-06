@@ -512,6 +512,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 return (
                   <EventCard
                     key={ev.id}
+                    event={ev}
+                    onNavigate={onNavigate}
                     name={ev.title}
                     datetime={dateStr}
                     city={ev.city || ''}
