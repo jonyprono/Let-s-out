@@ -30,6 +30,22 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
     })
   }
 
+  const userSvg = (
+    <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g clipPath="url(#clip0_user_info)">
+        <g clipPath="url(#clip1_user_info)">
+          <rect width="48" height="48" rx="24" fill="#F5F5F5"/>
+          <circle cx="24" cy="16" r="8" fill="#BDBDBD"/>
+          <circle cx="24" cy="49" r="22" fill="#BDBDBD"/>
+        </g>
+      </g>
+      <defs>
+        <clipPath id="clip0_user_info"><rect width="48" height="48" fill="white"/></clipPath>
+        <clipPath id="clip1_user_info"><rect width="48" height="48" rx="24" fill="white"/></clipPath>
+      </defs>
+    </svg>
+  )
+
   return (
     <div className="absolute inset-0 z-[60] flex flex-col bg-white">
       {/* Header */}
@@ -87,12 +103,7 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
                         src={user.avatarUrl}
                         alt={user.displayName}
                         className="w-full h-full object-cover"
-                        fallback={
-                          <div className="w-full h-full flex items-center justify-center font-bold text-[#FFFFFF] text-lg"
-                            style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>
-                            {user.displayName.charAt(0).toUpperCase()}
-                          </div>
-                        }
+                        fallback={userSvg}
                       />
                     </div>
                     <div className="flex-1 min-w-0">

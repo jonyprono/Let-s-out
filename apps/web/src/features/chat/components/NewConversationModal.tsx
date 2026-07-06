@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query'
 import { chatApi } from '@/features/chat/api'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
+import { SafeImage } from '@/components/shared/SafeImage'
 
 interface NewConversationModalProps {
   onClose: () => void
@@ -25,6 +26,22 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
   const { mutateAsync: createGroup, isPending: isCreatingGroup } = useMutation({
     mutationFn: ({ name, memberIds }: { name: string, memberIds: string[] }) => chatApi.createGroup(name, memberIds)
   })
+
+  const userSvg = (
+    <svg width="100%" height="100%" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g clipPath="url(#clip0_user_info)">
+        <g clipPath="url(#clip1_user_info)">
+          <rect width="48" height="48" rx="24" fill="#F5F5F5"/>
+          <circle cx="24" cy="16" r="8" fill="#BDBDBD"/>
+          <circle cx="24" cy="49" r="22" fill="#BDBDBD"/>
+        </g>
+      </g>
+      <defs>
+        <clipPath id="clip0_user_info"><rect width="48" height="48" fill="white"/></clipPath>
+        <clipPath id="clip1_user_info"><rect width="48" height="48" rx="24" fill="white"/></clipPath>
+      </defs>
+    </svg>
+  )
 
   const handleStart = async () => {
     try {
@@ -108,13 +125,14 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
             if (!friend) return null
             return (
               <div key={id} className="flex items-center gap-1.5 bg-action-primary/10 pl-1.5 pr-2.5 py-1.5 rounded-full flex-shrink-0 border border-action-primary/20">
-                {friend.avatarUrl ? (
-                  <img src={friend.avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
-                ) : (
-                  <div className="w-5 h-5 rounded-full bg-action-primary flex items-center justify-center text-[10px] text-white font-bold">
-                    {friend.displayName[0]}
-                  </div>
-                )}
+                <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 bg-white">
+                  <SafeImage
+                    src={friend.avatarUrl}
+                    alt={friend.displayName}
+                    className="w-full h-full object-cover"
+                    fallback={userSvg}
+                  />
+                </div>
                 <span className="text-[13px] font-medium text-action-primary">{friend.displayName.split(' ')[0]}</span>
                 <button onClick={() => toggleFriend(id)} className="ml-0.5"><X className="w-3.5 h-3.5 text-action-primary" /></button>
               </div>
@@ -143,11 +161,14 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
                   onClick={() => toggleFriend(friend.userId)}
                   className="w-full flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
                 >
-                  <img 
-                    src={friend.avatarUrl || `https://ui-avatars.com/api/?name=${friend.displayName}&background=f3f4f6&color=374151`} 
-                    alt={friend.displayName} 
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
+                  <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                    <SafeImage
+                      src={friend.avatarUrl}
+                      alt={friend.displayName}
+                      className="w-full h-full object-cover"
+                      fallback={userSvg}
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="text-[15px] font-bold text-gray-900 truncate">{friend.displayName}</h4>
                     <p className="text-[13px] text-gray-500 truncate">@{friend.username}</p>
