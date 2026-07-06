@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Loader2, ChevronLeft, Lock } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import {
   Location01Icon,
   ArrowDown01Icon,
