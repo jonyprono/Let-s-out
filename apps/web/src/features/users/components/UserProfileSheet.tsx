@@ -155,50 +155,52 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
 
         {/* Groupes communs */}
         {commonGroup && (
-          <div className="flex flex-col gap-2 w-full mt-2">
-            <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373]">
+          <div className="flex flex-col items-start gap-2 w-full mt-2">
+            <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] w-full text-left">
               Groupes communs
             </h3>
-            <div className="flex flex-row items-center gap-3 w-full h-[32px]">
-              <div className="w-[32px] h-[32px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
-                <SafeImage
-                  src={commonGroup.coverUrl ?? null}
-                  alt={commonGroup.title}
-                  className="w-full h-full object-cover"
-                  fallback={groupSvg}
-                />
+            <div className="flex flex-col items-start gap-1 w-full">
+              <div className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px]">
+                <div className="w-[32px] h-[32px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
+                  <SafeImage
+                    src={commonGroup.coverUrl ?? null}
+                    alt={commonGroup.title}
+                    className="w-full h-full object-cover"
+                    fallback={groupSvg}
+                  />
+                </div>
+                <span className="font-['Inter_Display'] font-medium text-[14px] leading-[20px] text-[#525252] text-left">
+                  {commonGroup.title}
+                </span>
               </div>
-              <span className="flex-1 font-['Inter_Display'] font-medium text-[14px] leading-[20px] text-[#525252] truncate">
-                {commonGroup.title}
-              </span>
             </div>
           </div>
         )}
 
         {/* Actions */}
         {!isMe && (
-          <div className="flex flex-col gap-1 w-full mt-4">
-            <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] mb-1">
+          <div className="flex flex-col items-start gap-2 w-full mt-4">
+            <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] w-full text-left">
               Actions
             </h3>
-            <div className="flex flex-col gap-[2px] w-full">
-              <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <BellOff className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+            <div className="flex flex-col items-start gap-1 w-full">
+              <button className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-center">
+                  <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Mettre en sourdine</span>
               </button>
               
-              <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+              <button className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-center">
+                  <AlertTriangle className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
               </button>
 
-              <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Ban className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+              <button className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-center">
+                  <Ban className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Bloquer</span>
               </button>

@@ -200,31 +200,31 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
         </div>
 
         {/* A propos */}
-        <div className="flex flex-col gap-1 w-full mt-2">
-          <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] mb-1">
+        <div className="flex flex-col items-start gap-2 w-full mt-2">
+          <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] w-full text-left">
             A propos
           </h3>
-          <div className="flex flex-col gap-[2px] w-full">
+          <div className="flex flex-col items-start gap-1 w-full">
             {event && (
-              <button onClick={() => navigate(`/events/${event.id}`)} className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <CalendarDays className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+              <button onClick={() => navigate(`/events/${event.id}`)} className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-center">
+                  <CalendarDays className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Voir l'événement</span>
               </button>
             )}
             
-            <button onClick={onInvite} className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-              <div className="w-5 h-5 flex items-center justify-center">
-                <UserPlus className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+            <button onClick={onInvite} className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <div className="flex items-center justify-center">
+                <UserPlus className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Inviter des amis</span>
             </button>
 
             {poolStats && (
-              <button onClick={onContribute} className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-                <div className="w-5 h-5 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+              <button onClick={onContribute} className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-center">
+                  <Wallet className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Voir la cagnotte</span>
               </button>
@@ -233,28 +233,28 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-1 w-full mt-2">
-          <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] mb-1">
+        <div className="flex flex-col items-start gap-2 w-full mt-2">
+          <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] w-full text-left">
             Actions
           </h3>
-          <div className="flex flex-col gap-[2px] w-full">
-            <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-              <div className="w-5 h-5 flex items-center justify-center">
-                <BellOff className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+          <div className="flex flex-col items-start gap-1 w-full">
+            <button className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <div className="flex items-center justify-center">
+                <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Mettre en sourdine</span>
             </button>
             
-            <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-              <div className="w-5 h-5 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+            <button className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <div className="flex items-center justify-center">
+                <AlertTriangle className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
             </button>
 
-            <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
-              <div className="w-5 h-5 flex items-center justify-center">
-                <LogOut className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+            <button className="flex flex-row items-center justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <div className="flex items-center justify-center">
+                <LogOut className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Quitter le groupe</span>
             </button>
