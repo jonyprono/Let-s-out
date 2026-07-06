@@ -1,9 +1,8 @@
-import { useState } from 'react'
-import { ChevronLeft, MapPin, Calendar, CalendarDays, Wallet, BellOff, AlertTriangle, LogOut, Users, UserPlus } from 'lucide-react'
+import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, AlertTriangle, LogOut, UserPlus } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useNavigate } from 'react-router'
-import { Conversation, ConversationMember } from '../api'
+import { Conversation } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 import { useAuthStore } from '@/stores/auth.store'
@@ -20,7 +19,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
   
-  const poolStats = event && hasActivePool(event) ? computePoolStats(event.contributions || [], event.poolTargetAmount) : null
+  const poolStats = event && hasActivePool(event) ? computePoolStats(event) : null
 
   // SVGs for fallbacks
   const groupSvg = (
@@ -95,7 +94,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                 Cagnotte
               </span>
               <span className="font-poppins font-semibold text-[14px] leading-[20px] text-[#22C55E]">
-                {event.poolTargetAmount ? `${event.poolTargetAmount.toLocaleString('fr-FR')} F CFA` : 'Sans limite'}
+                {event.poolTarget ? `${event.poolTarget.toLocaleString('fr-FR')} F CFA` : 'Sans limite'}
               </span>
             </div>
             
@@ -106,19 +105,19 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <div className="w-full h-[4px] bg-white rounded-full relative overflow-hidden">
                 <div 
                   className="absolute left-0 top-0 bottom-0 bg-[#FF991C] rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min(100, poolStats.progressPercent)}%` }} 
+                  style={{ width: `${Math.min(100, poolStats.progress)}%` }} 
                 />
               </div>
 
               {/* Details */}
               <div className="flex flex-row justify-between items-center w-full h-[22px]">
                 <span className="font-poppins font-semibold text-[14px] leading-[20px] text-[#FF7A00]">
-                  {poolStats.totalCollected.toLocaleString('fr-FR')} F CFA
+                  {poolStats.collected.toLocaleString('fr-FR')} F CFA
                 </span>
-                {event.poolTargetAmount && event.poolTargetAmount > 0 && (
+                {event.poolTarget && event.poolTarget > 0 && (
                   <div className="flex items-center justify-center px-[3px] py-[1px] h-[22px] bg-[#FF7A00] rounded-[4px]">
                     <span className="font-['Inter_Display'] font-medium text-[14px] leading-[20px] text-white">
-                      {Math.round(poolStats.progressPercent)}%
+                      {Math.round(poolStats.progress)}%
                     </span>
                   </div>
                 )}
@@ -170,7 +169,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <div key={member.userId} className="flex flex-row items-center gap-[6px] w-full h-[32px]">
                 <div className="w-[32px] h-[32px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
                   <SafeImage
-                    src={member.user?.profile?.avatarUrl}
+                    src={member.user?.profile?.avatarUrl ?? null}
                     alt={member.user?.profile?.displayName}
                     className="w-full h-full object-cover"
                     fallback={userSvg}
