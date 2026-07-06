@@ -1,8 +1,8 @@
 import { useNavigate, useLocation } from 'react-router'
 import {
-  Home01Icon as Home,
+  Home04Icon as Home,
   Search01Icon as Search,
-  User02Icon as User,
+  UserCircle02Icon as User,
   Comment01Icon as ChatBubble,
 } from 'hugeicons-react'
 import { useConversations } from '@/features/chat/api'
@@ -10,9 +10,8 @@ import { useConversations } from '@/features/chat/api'
 // Icône centrale : rounded square orange avec + (conformément à la maquette Figma)
 function PlusButtonIcon() {
   return (
-    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-      <line x1="13" y1="6" x2="13" y2="20" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
-      <line x1="6" y1="13" x2="20" y2="13" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M10 4V16M4 10H16" stroke="white" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
@@ -21,7 +20,6 @@ type NavTab = {
   path: string
   icon?: any
   label: string
-  isCustom?: boolean
 }
 
 const leftTabs: NavTab[] = [
@@ -46,103 +44,120 @@ export function BottomNav() {
 
   return (
     <nav
-      className="w-full bg-card dark:bg-[#1A1A1A] flex items-end justify-around border-t border-border dark:border-[#2A2A2A] flex-shrink-0"
+      className="w-full flex flex-col items-center flex-shrink-0"
       style={{
-        height: 'calc(64px + env(safe-area-inset-bottom))',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.05)',
+        height: 'calc(62px + env(safe-area-inset-bottom))',
+        padding: '12px 16px',
+        paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
+        background: 'rgba(255, 255, 255, 0.75)',
+        backgroundBlendMode: 'hard-light',
+        backdropFilter: 'blur(25px)',
+        WebkitBackdropFilter: 'blur(25px)',
+        borderTop: '0.333px solid rgba(0, 0, 0, 0.3)',
         zIndex: 50,
       }}
     >
-      {/* ── Left tabs ── */}
-      {leftTabs.map((tab) => {
-        const active = isActive(tab.path)
-        return (
-          <button
-            key={tab.path}
-            onClick={() => navigate(tab.path)}
-            className="flex flex-col items-center justify-end gap-[3px] pb-2"
-            style={{ flex: 1, minWidth: 0 }}
-            aria-label={tab.label}
-          >
-            <div className="flex items-center justify-center w-7 h-7">
-              <tab.icon
-                width={24}
-                height={24}
-                strokeWidth={active ? 1.8 : 1.5}
-                style={{ color: active ? 'var(--color-icon-brand-primary)' : 'var(--color-icon-tertiary)' }}
-              />
-            </div>
-            <span
-              className="text-[var(--font-size-body-small)] font-medium leading-none mt-1"
-              style={{ color: active ? 'var(--color-text-brand-primary)' : 'var(--color-text-tertiary)' }}
+      <div className="w-full max-w-[390px] mx-auto flex flex-row items-center justify-between gap-[10px]" style={{ height: '38px' }}>
+        {/* Left tabs */}
+        {leftTabs.map((tab) => {
+          const active = isActive(tab.path)
+          return (
+            <button
+              key={tab.path}
+              onClick={() => navigate(tab.path)}
+              className="flex flex-col items-center justify-center gap-[2px]"
+              style={{ width: '78px', height: '38px' }}
+              aria-label={tab.label}
             >
-              {tab.label}
-            </span>
-          </button>
-        )
-      })}
+              <div className="flex items-center justify-center w-5 h-5">
+                <tab.icon
+                  width={20}
+                  height={20}
+                  strokeWidth={1.25}
+                  color={active ? '#FF7A00' : '#56514F'}
+                />
+              </div>
+              <span
+                style={{
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '10px',
+                  lineHeight: '16px',
+                  textAlign: 'center',
+                  color: active ? '#FF7A00' : '#404040'
+                }}
+              >
+                {tab.label}
+              </span>
+            </button>
+          )
+        })}
 
-      {/* ── Central create button ── */}
-      <button
-        onClick={() => navigate('/events/create')}
-        className="flex flex-col items-center justify-end pb-2"
-        style={{ flex: 1, minWidth: 0 }}
-        aria-label="Créer un événement"
-      >
-        <div
-          className="flex items-center justify-center"
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: 16,
-            backgroundColor: 'var(--color-action-primary)',
-            marginBottom: 6,
-            boxShadow: '0 4px 12px rgba(255, 122, 0, 0.35)',
-          }}
+        {/* Central create button */}
+        <button
+          onClick={() => navigate('/events/create')}
+          className="flex flex-col items-center justify-center"
+          style={{ width: '78px', height: '32px' }}
+          aria-label="Créer un événement"
         >
-          <PlusButtonIcon />
-        </div>
-      </button>
-
-      {/* ── Right tabs ── */}
-      {rightTabs.map((tab) => {
-        const active = isActive(tab.path)
-        const IconComp = tab.icon
-        return (
-          <button
-            key={tab.path}
-            onClick={() => navigate(tab.path)}
-            className="flex flex-col items-center justify-end gap-[3px] pb-2"
-            style={{ flex: 1, minWidth: 0 }}
-            aria-label={tab.label}
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: 32,
+              height: 32,
+              background: 'linear-gradient(360deg, #FF7A00 0%, #FF991C 100%)',
+              borderRadius: 8,
+              padding: 6,
+            }}
           >
-            <div className="flex items-center justify-center w-7 h-7 relative">
-              <IconComp
-                width={24}
-                height={24}
-                strokeWidth={active ? 1.8 : 1.5}
-                style={{ color: active ? 'var(--color-icon-brand-primary)' : 'var(--color-icon-tertiary)' }}
-              />
-              {tab.path === '/messages' && totalUnread > 0 && (
-                <span
-                  className="absolute -top-1 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--color-background-negative)] px-1 text-[9px] font-bold text-white ring-2 ring-white dark:ring-[#1A1A1A]"
-                >
-                  {totalUnread > 9 ? '9+' : totalUnread}
-                </span>
-              )}
-            </div>
-            <span
-              className="text-[var(--font-size-body-small)] font-medium leading-none mt-1"
-              style={{ color: active ? 'var(--color-text-brand-primary)' : 'var(--color-text-tertiary)' }}
-            >
-              {tab.label}
-            </span>
-          </button>
-        )
-      })}
+            <PlusButtonIcon />
+          </div>
+        </button>
 
+        {/* Right tabs */}
+        {rightTabs.map((tab) => {
+          const active = isActive(tab.path)
+          return (
+            <button
+              key={tab.path}
+              onClick={() => navigate(tab.path)}
+              className="flex flex-col items-center justify-center gap-[2px]"
+              style={{ width: '78px', height: '38px' }}
+              aria-label={tab.label}
+            >
+              <div className="flex items-center justify-center w-5 h-5 relative">
+                <tab.icon
+                  width={20}
+                  height={20}
+                  strokeWidth={1.25}
+                  color={active ? '#FF7A00' : '#56514F'}
+                />
+                {tab.path === '/messages' && totalUnread > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--color-background-negative)] px-1 text-[9px] font-bold text-white ring-1 ring-white"
+                  >
+                    {totalUnread > 9 ? '9+' : totalUnread}
+                  </span>
+                )}
+              </div>
+              <span
+                style={{
+                  fontFamily: 'Poppins, sans-serif',
+                  fontWeight: 500,
+                  fontSize: '10px',
+                  lineHeight: '16px',
+                  textAlign: 'center',
+                  color: active ? '#FF7A00' : '#404040'
+                }}
+              >
+                {tab.label}
+              </span>
+            </button>
+          )
+        })}
+      </div>
     </nav>
   )
 }
+
 
