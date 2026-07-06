@@ -6,7 +6,7 @@ import { chatApi } from '@/features/chat/api'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { SafeImage } from '@/components/shared/SafeImage'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/button'
 
 interface NewConversationModalProps {
   onClose: () => void
