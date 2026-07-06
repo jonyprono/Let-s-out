@@ -82,6 +82,10 @@ export const chatApi = {
     return data
   },
 
+  deleteMessage: async (messageId: string): Promise<void> => {
+    await apiClient.delete(`/chat/messages/${messageId}`)
+  },
+
   createDM: async (userId: string): Promise<Conversation> => {
     const { data } = await apiClient.post('/chat/conversations/dm', { userId })
     return data

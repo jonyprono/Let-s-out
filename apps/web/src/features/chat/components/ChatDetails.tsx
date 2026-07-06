@@ -20,6 +20,7 @@ import { resolveContributionAmount, computePoolStats, hasActivePool } from '@/li
 import { MessageBubble } from '@/components/ui/message-bubble'
 import { ChatInput } from '@/components/ui/chat-input'
 import { GroupChatInfoSheet } from './GroupChatInfoSheet'
+import { ForwardMessageModal } from './ForwardMessageModal'
 
 async function saveFileLocally(file: File | Blob, name: string) {
   if (!Capacitor.isNativePlatform()) return null
@@ -208,6 +209,8 @@ export function ChatDetails() {
   const [showShareModal, setShowShareModal] = useState(false)
   const [showContributeModal, setShowContributeModal] = useState(false)
   const [pickerMsgId, setPickerMsgId] = useState<string | null>(null)
+  const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null)
+  const [localDeletedMessages, setLocalDeletedMessages] = useState<string[]>([])
   const [typingUser, setTypingUser] = useState<string | null>(null)
   const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
 
@@ -389,8 +392,48 @@ export function ChatDetails() {
     if (longPressTimer) clearTimeout(longPressTimer)
   }
 
+  // Message actions
+  const handleCopy = async (text: string) => {
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('Message copié')
+    } catch {
+      toast.error('Erreur lors de la copie')
+    }
+    setPickerMsgId(null)
+  }
+
+  const handleDeleteLocal = (msgId: string) => {
+    setLocalDeletedMessages(prev => [...prev, msgId])
+    setPickerMsgId(null)
+  }
+
+  const handleDeleteGlobal = async (msgId: string) => {
+    try {
+      await chatApi.deleteMessage(msgId)
+      toast.success('Message supprimé pour tout le monde')
+    } catch (e) {
+      toast.error('Erreur lors de la suppression')
+    }
+    setPickerMsgId(null)
+  }
+
+  const openForwardModal = (msg: any) => {
+    setForwardMsg({ content: msg.content, type: msg.type })
+    setPickerMsgId(null)
+  }
+
   return (
     <div className="w-full h-full bg-[#FFFFFF] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }} onClick={() => pickerMsgId && setPickerMsgId(null)}>
+      
+      {forwardMsg && (
+        <ForwardMessageModal 
+          onClose={() => setForwardMsg(null)}
+          messageContent={forwardMsg.content}
+          messageType={forwardMsg.type}
+        />
+      )}
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[#FFFFFF] border-b border-gray-100 pt-safe-6 pb-2">
         <div className="flex items-center px-4">
@@ -521,7 +564,7 @@ export function ChatDetails() {
             <p className="text-xs text-gray-300 dark:text-gray-600">Soyez le premier à écrire !</p>
           </div>
         ) : (
-          messages.map((msg, index) => {
+          messages.filter(msg => !localDeletedMessages.includes(msg.id)).map((msg, index) => {
             const isSystem = msg.type === 'SYSTEM'
             const isMe = !isSystem && msg.senderId === user?.id
             const senderName = msg.sender?.profile?.displayName ?? 'Inconnu'
@@ -592,21 +635,62 @@ export function ChatDetails() {
                     </div>
                   )}
 
-                  {/* Reaction emoji picker (shown on long press) */}
+                  {/* Context menu (shown on long press) */}
                   {pickerMsgId === msg.id && (
                     <div
-                      className={`absolute ${isMe ? 'right-0' : 'left-0'} -top-14 z-50 bg-white dark:bg-[#2A2A2A] rounded-full shadow-2xl border border-gray-100 dark:border-[#444444] flex gap-1 px-3 py-2`}
+                      className={`absolute ${isMe ? 'right-0' : 'left-0'} bottom-[100%] mb-2 z-[60] bg-white dark:bg-[#2A2A2A] rounded-2xl shadow-xl border border-gray-100 dark:border-[#444444] flex flex-col w-[200px] overflow-hidden`}
                       onClick={e => e.stopPropagation()}
                     >
-                      {REACTION_EMOJIS.map(emoji => (
+                      {/* Reactions */}
+                      <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100 dark:border-[#333333] bg-gray-50/50 dark:bg-black/20">
+                        {REACTION_EMOJIS.map(emoji => (
+                          <button
+                            key={emoji}
+                            onClick={() => handleReact(msg.id, emoji)}
+                            className="text-[18px] active:scale-125 transition-transform hover:scale-125"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex flex-col py-1">
+                        {!msg.isDeleted && msg.content && (
+                          <button
+                            onClick={() => handleCopy(msg.content!)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#333333] active:bg-gray-200 transition-colors w-full text-left"
+                          >
+                            <span className="w-4 h-4" style={{ display: 'inline-block', background: 'currentColor', maskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%229%22 y=%229%22 width=%2213%22 height=%2213%22 rx=%222%22 ry=%222%22%3E%3C/rect%3E%3Cpath d=%22M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1%22%3E%3C/path%3E%3C/svg%3E")', WebkitMaskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%229%22 y=%229%22 width=%2213%22 height=%2213%22 rx=%222%22 ry=%222%22%3E%3C/rect%3E%3Cpath d=%22M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1%22%3E%3C/path%3E%3C/svg%3E")', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} />
+                            Copier
+                          </button>
+                        )}
+                        {!msg.isDeleted && (
+                          <button
+                            onClick={() => openForwardModal(msg)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#333333] active:bg-gray-200 transition-colors w-full text-left"
+                          >
+                            <span className="w-4 h-4" style={{ display: 'inline-block', background: 'currentColor', maskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%2215 14 20 9 15 4%22%3E%3C/polyline%3E%3Cpath d=%22M4 20v-7a4 4 0 0 1 4-4h12%22%3E%3C/path%3E%3C/svg%3E")', WebkitMaskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%2215 14 20 9 15 4%22%3E%3C/polyline%3E%3Cpath d=%22M4 20v-7a4 4 0 0 1 4-4h12%22%3E%3C/path%3E%3C/svg%3E")', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} />
+                            Transférer
+                          </button>
+                        )}
                         <button
-                          key={emoji}
-                          onClick={() => handleReact(msg.id, emoji)}
-                          className="text-xl active:scale-125 transition-transform hover:scale-125"
+                          onClick={() => handleDeleteLocal(msg.id)}
+                          className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 active:bg-red-100 transition-colors w-full text-left"
                         >
-                          {emoji}
+                          <Trash2 className="w-4 h-4" />
+                          Supprimer pour moi
                         </button>
-                      ))}
+                        {isMe && !msg.isDeleted && (
+                          <button
+                            onClick={() => handleDeleteGlobal(msg.id)}
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 active:bg-red-100 transition-colors w-full text-left border-t border-gray-100 dark:border-[#333333]"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Supprimer pour tous
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
 

@@ -159,6 +159,12 @@ export function useChatSocket() {
         qc.invalidateQueries({ queryKey: ['chat', 'messages', data.message.conversationId] })
         qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
       }
+      
+      if (data.type === 'message_deleted') {
+        qc.invalidateQueries({ queryKey: ['chat', 'messages', data.messageId] }) // wait, the backend sends conversationId implicitly? Actually we don't have conversationId in the event unless we add it, wait the backend broadcasted to the conversation.
+        qc.invalidateQueries({ queryKey: ['chat', 'messages'] }) // Invalidate all messages to be safe
+        qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
+      }
 
       if (data.type === 'reaction_update') {
         qc.invalidateQueries({ queryKey: ['chat', 'messages', data.conversationId] })

@@ -530,6 +530,10 @@ export default async function chatRoutes(app: FastifyInstance) {
     if (msg.senderId !== sub) return reply.code(403).send({ error: 'Forbidden' })
 
     await app.prisma.message.update({ where: { id }, data: { isDeleted: true, content: null } })
+    
+    // Broadcast message deletion
+    broadcastToConversation(app, msg.conversationId, { type: 'message_deleted', messageId: msg.id }, sub)
+
     return reply.send({ message: 'Deleted' })
   })
 

@@ -60,7 +60,7 @@ export function MessageBubble({
               children
             ) : (
               <>
-                <span className="mr-2">{content}</span>
+                <span className="selectable-text mr-2">{content}</span>
                 <span className="inline-block text-[10px] text-[var(--color-text-secondary)] opacity-70 align-bottom leading-none">
                   {time}
                 </span>

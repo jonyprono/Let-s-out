@@ -381,7 +381,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {event.description && (
               <div>
                 <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">À propos</h2>
-                <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] leading-relaxed break-words whitespace-pre-wrap">
+                <p className="selectable-text text-[14px] font-normal font-inter text-[var(--color-text-secondary)] leading-relaxed break-words whitespace-pre-wrap">
                   {isDescriptionExpanded
                     ? event.description
                     : event.description.length > 120

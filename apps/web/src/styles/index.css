@@ -18,6 +18,15 @@ body {
   /* Smooth font rendering on iOS/Android */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevents text selection globally */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection specifically in inputs, textareas, and marked classes */
+input, textarea, .selectable-text {
+  -webkit-user-select: auto;
+  user-select: auto;
 }
 
 /* Hide scrollbar globally for mobile feel */
