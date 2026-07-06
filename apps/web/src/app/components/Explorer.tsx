@@ -153,9 +153,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     );
 
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: '#FAFAFA', display: 'flex', flexDirection: 'column' }}>
+      <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col pt-safe-6">
         {/* Barre de recherche */}
-        <div style={{ padding: '12px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#FAFAFA' }}>
+        <div className="px-[20px] py-[12px] shrink-0 flex items-center gap-[8px] bg-[#FAFAFA]">
           <div style={{
             flex: 1,
             display: 'flex',
@@ -424,7 +424,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           {/* Search bar */}
           <div className="flex items-center gap-2.5 mb-3 w-full">
             <div
-              className={`flex-1 border-2 rounded-full flex items-center px-[14px] h-[44px] gap-[10px] bg-white transition-colors ${
+              className={`flex-1 border rounded-full flex items-center px-[14px] h-[44px] gap-[8px] bg-white transition-colors ${
                 eventSearchFocused || eventSearch
                   ? 'border-[var(--brand-orange-500)]'
                   : 'border-[var(--border-default)]'
@@ -438,7 +438,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 onChange={(e) => setEventSearch(e.target.value)}
                 onFocus={() => setEventSearchFocused(true)}
                 onBlur={() => setEventSearchFocused(false)}
-                className="text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] font-poppins flex-1 bg-transparent outline-none border-none"
+                className="text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] font-poppins flex-1 bg-transparent outline-none border-none min-w-0"
               />
               {/* X pour effacer quand du texte est saisi */}
               {eventSearch ? (
@@ -469,8 +469,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </button>
           </div>
 
-          {/* Filter chips — tous visibles sans scroll, fond gris inactif, orange actif */}
-          <div className="flex gap-1.5 pb-3" style={{ overflow: 'hidden' }}>
+          {/* Filter chips — scrollable if they don't fit */}
+          <div className="flex gap-[8px] pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {filterTabs.map((tab) => {
               const isActive = selectedCategory === tab.id;
               return (
@@ -480,7 +480,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     hapticFeedback.impact();
                     setSelectedCategory(tab.id);
                   }}
-                  className={`flex-1 active:scale-95 transition-all px-2 py-1.5 rounded-full text-center ${
+                  className={`shrink-0 active:scale-95 transition-all px-4 py-1.5 rounded-[1000px] text-center ${
                     isActive
                       ? 'bg-[#FFF2D3] text-[#FF7A00]'
                       : 'bg-[#F2F2F2] text-[var(--color-text-secondary)]'

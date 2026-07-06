@@ -554,7 +554,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     <button
                       onClick={() => {
                         if (isCreator || participationPaid) {
-                          setShowContributeModal(true)
+                          navigate(`/events/${id}/pay`)
                         } else {
                           toast.info("Rejoignez l'événement avant de contribuer.")
                         }
