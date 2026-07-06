@@ -5,7 +5,7 @@ import { Loader2, ChevronLeft, XCircle, ChevronDown, Check } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
 import { toast } from 'sonner'
-import { Input } from '@/components/ui/input'
+
 import { Button } from '@/components/ui/button'
 import {
   isContributionPayment,
