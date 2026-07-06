@@ -235,14 +235,14 @@ export function ChatDetails() {
 
   // Mark as read on open + send WS read event
   useEffect(() => {
-    if (!id || messages.length === 0) return
+    if (!id || !messages || messages.length === 0) return
     chatApi.markAsRead(id).then(() => {
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
     }).catch(() => {})
 
-    const lastMsg = messages[messages.length - 1]
+    const lastMsg = messages?.[(messages?.length || 1) - 1]
     if (lastMsg) sendRead(id, lastMsg.id)
-  }, [id, messages.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, messages?.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for typing events from WebSocket (via a custom event on the queryClient)
   useEffect(() => {
@@ -541,7 +541,7 @@ export function ChatDetails() {
               </div>
             )})}
           </div>
-        ) : messages.length === 0 ? (
+        ) : !messages || messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2">
             <div className="w-14 h-14 rounded-full bg-orange-50 dark:bg-orange-50/20 flex items-center justify-center text-2xl">💬</div>
             <p className="text-sm text-gray-400 dark:text-gray-500">Aucun message pour le moment</p>
@@ -566,7 +566,7 @@ export function ChatDetails() {
             const isVideo = msg.type === 'VIDEO'
             const isAudio = msg.type === 'AUDIO'
             const isMedia = isImage || isVideo || isAudio
-            const isLastMsg = index === messages.length - 1
+            const isLastMsg = index === (messages?.length || 0) - 1
 
             const grouped = groupReactions(msg.reactions ?? [])
 

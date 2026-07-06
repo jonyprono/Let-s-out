@@ -80,8 +80,8 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               {event?.title || conversation?.name}
             </h2>
             {event?.description && (
-              <p className="font-['Inter_Display'] font-normal text-[14px] leading-[20px] text-[#737373]">
-                {event.description.slice(0, 100)}{event.description.length > 100 ? '...' : ''}
+              <p className="mt-2 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {event?.description?.slice(0, 100) || ''}{(event?.description?.length || 0) > 100 ? '...' : ''}
               </p>
             )}
           </div>
@@ -164,7 +164,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
         {/* Participants */}
         <div className="flex flex-col gap-1 w-full">
           <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] mb-1">
-            Participants ({conversation.members.length})
+            Participants ({conversation?.members?.length ?? 0})
           </h3>
           <div className="flex flex-col gap-1 w-full">
             {conversation.members.map((member) => {
