@@ -1,5 +1,5 @@
 import { useState, useMemo, memo, useEffect } from 'react';
-import { Search, X, Pin, PinOff, Bell, BellOff, CheckCircle, Circle, Trash2, CheckCircle2 } from 'lucide-react';
+import { Search, X, Pin, PinOff, Bell, BellOff, Circle, Trash2, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useConversations } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
