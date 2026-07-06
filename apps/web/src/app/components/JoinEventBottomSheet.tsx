@@ -125,8 +125,8 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
   }
 
   return (
-    <BottomSheet open={isOpen} onClose={onClose} noPadding className="h-full sm:h-[95vh] font-poppins">
-      <div className="flex flex-col h-full overflow-hidden w-full bg-white sm:rounded-t-[32px]">
+    <BottomSheet open={isOpen} onClose={onClose} noPadding className="h-[calc(100dvh-110px)] sm:h-[90vh] font-poppins">
+      <div className="flex flex-col h-full overflow-hidden w-full bg-white rounded-t-[32px]">
         {/* Custom Header (Fixed) */}
         <div className="flex-none flex items-center justify-between px-[1rem] pt-[1rem] pb-[0.75rem] border-b border-[#E0E0E0] min-h-[56px]">
           <button onClick={onClose} className="w-[32px] h-[32px] flex items-center justify-start active:scale-95 transition-transform">
