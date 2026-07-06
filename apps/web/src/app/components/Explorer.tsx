@@ -155,8 +155,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return (
       <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col pt-safe-6">
         {/* Barre de recherche */}
-        <div className="px-[20px] py-[12px] shrink-0 flex items-center self-stretch box-border bg-[#FAFAFA]">
-          <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white box-border shadow-sm ${
+        <div className="px-[20px] py-[12px] shrink-0 flex items-center self-stretch box-border w-full min-w-0 bg-[#FAFAFA]">
+          <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white box-border shadow-sm min-w-0 ${
             isSearching ? 'border-2 border-[var(--brand-orange-500)]' : 'border border-[var(--border-default)]'
           }`}>
             <Location01Icon className="w-[20px] h-[20px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
@@ -376,9 +376,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     <div className={`w-full h-full flex flex-col relative bg-background`}>
 
         {/* Header & Search Bar */}
-        <div className={`px-4 pt-safe-6 pb-0 shrink-0 relative z-20 bg-[var(--color-background-primary)]`}>
+        <div className={`px-4 pt-safe-6 pb-0 shrink-0 w-full min-w-0 box-border relative z-20 bg-[var(--color-background-primary)]`}>
           {/* Title + Notification */}
-          <div className="flex items-center justify-between mb-2 mt-2">
+          <div className="flex items-center justify-between mb-2 mt-2 w-full min-w-0">
             <h1 className="text-[20px] font-bold font-poppins text-[var(--color-text-primary)] leading-tight">Explorez et découvrez</h1>
             <button onClick={() => onNavigate('notifications')} className="relative p-1">
               <Notification01Icon className="w-[24px] h-[24px] text-[var(--color-text-primary)]" strokeWidth={1.5} />
