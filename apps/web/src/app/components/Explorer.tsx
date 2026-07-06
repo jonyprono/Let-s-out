@@ -11,6 +11,7 @@ import {
   SlidersHorizontalIcon,
   MapsIcon,
   ListViewIcon,
+  QrCode01Icon,
 } from 'hugeicons-react';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
@@ -154,7 +155,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return (
       <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col pt-safe-6">
         {/* Barre de recherche */}
-        <div className="px-[20px] py-[12px] shrink-0 flex items-center w-full box-border bg-[#FAFAFA]">
+        <div className="px-[20px] py-[12px] shrink-0 flex items-center self-stretch box-border bg-[#FAFAFA]">
           <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white box-border shadow-sm ${
             isSearching ? 'border-2 border-[var(--brand-orange-500)]' : 'border border-[var(--border-default)]'
           }`}>
@@ -397,9 +398,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </button>
 
           {/* Search bar */}
-          <div className="flex items-center gap-2.5 mb-3 w-full">
+          <div className="flex items-center gap-[10px] mb-3 self-stretch">
             <div
-              className={`flex-1 border rounded-full flex items-center px-[14px] h-[44px] gap-[8px] bg-white transition-colors ${
+              className={`flex-1 border rounded-[999px] flex items-center px-[14px] h-[44px] gap-[8px] bg-white box-border shadow-sm transition-colors ${
                 eventSearchFocused || eventSearch
                   ? 'border-[var(--brand-orange-500)]'
                   : 'border-[var(--border-default)]'
@@ -432,6 +433,17 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 </button>
               )}
             </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                hapticFeedback.impact();
+                // setScreen('join'); // Optional: Add join QR code action
+              }}
+              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[var(--border-default)] bg-white flex items-center justify-center shadow-sm active:bg-gray-50 transition-colors"
+            >
+              <QrCode01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+            </button>
           </div>
 
           {/* Filter chips — scrollable if they don't fit */}
