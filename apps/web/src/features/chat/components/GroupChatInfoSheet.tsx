@@ -66,7 +66,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
           <div className="w-[64px] h-[64px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
             <SafeImage
               src={event?.coverUrl || conversation?.avatarUrl}
-              alt={event?.title || conversation?.name}
+              alt={event?.title || conversation?.name || 'Groupe'}
               className="w-full h-full object-cover"
               fallback={groupSvg}
             />
@@ -170,7 +170,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                 <div className="w-[32px] h-[32px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
                   <SafeImage
                     src={member.user?.profile?.avatarUrl ?? null}
-                    alt={member.user?.profile?.displayName}
+                    alt={member.user?.profile?.displayName ?? 'Utilisateur'}
                     className="w-full h-full object-cover"
                     fallback={userSvg}
                   />
