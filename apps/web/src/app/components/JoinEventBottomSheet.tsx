@@ -126,7 +126,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
 
   return (
     <BottomSheet open={isOpen} onClose={onClose}>
-      <div className="px-[16px] pb-[32px] font-poppins flex flex-col gap-[20px] max-w-[390px] mx-auto w-full">
+      <div className="px-[16px] pb-[32px] font-poppins flex flex-col gap-[20px] w-full">
         
         {/* Custom Header */}
         <div className="flex items-center justify-between pb-[16px] border-b border-gray-100">
