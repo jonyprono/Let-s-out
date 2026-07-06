@@ -1,5 +1,5 @@
 import { useState, useMemo, memo, useEffect } from 'react';
-import { Search, X, Pin, PinOff } from 'lucide-react';
+import { Search, X, Pin, PinOff, Bell, BellOff, CheckCircle, Circle, Trash2, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useConversations } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
@@ -24,12 +24,19 @@ export function Messages(_props: MessagesProps) {
   const user = useAuthStore((s) => s.user);
 
   const [pinnedConvs, setPinnedConvs] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem('letsout_pinned_convs');
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
+    try { return JSON.parse(localStorage.getItem('letsout_pinned_convs') || '[]'); } catch { return []; }
+  });
+  const [mutedConvs, setMutedConvs] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('letsout_muted_convs') || '[]'); } catch { return []; }
+  });
+  const [hiddenConvs, setHiddenConvs] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('letsout_hidden_convs') || '[]'); } catch { return []; }
+  });
+  const [forceReadConvs, setForceReadConvs] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('letsout_forceread_convs') || '[]'); } catch { return []; }
+  });
+  const [forceUnreadConvs, setForceUnreadConvs] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('letsout_forceunread_convs') || '[]'); } catch { return []; }
   });
 
   const togglePin = (convId: string) => {
@@ -41,7 +48,40 @@ export function Messages(_props: MessagesProps) {
     setContextMenu(null);
   };
 
-  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, convId: string } | null>(null);
+  const toggleMute = (convId: string) => {
+    setMutedConvs(prev => {
+      const newMutes = prev.includes(convId) ? prev.filter(id => id !== convId) : [...prev, convId];
+      localStorage.setItem('letsout_muted_convs', JSON.stringify(newMutes));
+      return newMutes;
+    });
+    setContextMenu(null);
+  };
+
+  const hideConversation = (convId: string) => {
+    setHiddenConvs(prev => {
+      const newHidden = [...prev, convId];
+      localStorage.setItem('letsout_hidden_convs', JSON.stringify(newHidden));
+      return newHidden;
+    });
+    setContextMenu(null);
+  };
+
+  const toggleReadStatus = (convId: string, currentUnread: number) => {
+    const isCurrentlyUnread = forceUnreadConvs.includes(convId) || (currentUnread > 0 && !forceReadConvs.includes(convId));
+    
+    if (isCurrentlyUnread) {
+      // Mark as read
+      setForceReadConvs(prev => { const n = [...prev, convId]; localStorage.setItem('letsout_forceread_convs', JSON.stringify(n)); return n; });
+      setForceUnreadConvs(prev => { const n = prev.filter(id => id !== convId); localStorage.setItem('letsout_forceunread_convs', JSON.stringify(n)); return n; });
+    } else {
+      // Mark as unread
+      setForceUnreadConvs(prev => { const n = [...prev, convId]; localStorage.setItem('letsout_forceunread_convs', JSON.stringify(n)); return n; });
+      setForceReadConvs(prev => { const n = prev.filter(id => id !== convId); localStorage.setItem('letsout_forceread_convs', JSON.stringify(n)); return n; });
+    }
+    setContextMenu(null);
+  };
+
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, convId: string, unread: number } | null>(null);
 
   useEffect(() => {
     const closeMenu = () => setContextMenu(null);
@@ -74,6 +114,10 @@ export function Messages(_props: MessagesProps) {
             lastMsgPrefix = lastMessage.sender.profile.displayName.split(' ')[0] + ': ';
           }
 
+          let actualUnread = conv.unread || 0;
+          if (forceReadConvs.includes(conv.id)) actualUnread = 0;
+          if (forceUnreadConvs.includes(conv.id) && actualUnread === 0) actualUnread = 1;
+
           return {
             id: conv.id,
             isGroup: conv.isGroup,
@@ -82,17 +126,20 @@ export function Messages(_props: MessagesProps) {
             lastMessageAt: conv.lastMessageAt,
             lastMsg,
             lastMsgPrefix,
-            unread: conv.unread || 0,
+            unread: actualUnread,
             isPinned: pinnedConvs.includes(conv.id),
+            isMuted: mutedConvs.includes(conv.id),
           };
-        }).sort((a, b) => {
+        })
+        .filter(conv => !hiddenConvs.includes(conv.id))
+        .sort((a, b) => {
           if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
           const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
           const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
           return timeB - timeA;
         })
       : [];
-  }, [conversations, user?.id, pinnedConvs]);
+  }, [conversations, user?.id, pinnedConvs, mutedConvs, hiddenConvs, forceReadConvs, forceUnreadConvs]);
 
   // Filter by search
   const filtered = useMemo(() => {
@@ -190,10 +237,13 @@ export function Messages(_props: MessagesProps) {
                   <ConvItem 
                     key={conv.id} 
                     conv={conv} 
-                    onNavigate={() => navigate(`/chat/${conv.id}`)} 
+                    onNavigate={() => {
+                      if (forceUnreadConvs.includes(conv.id)) toggleReadStatus(conv.id, 1);
+                      navigate(`/chat/${conv.id}`)
+                    }} 
                     onContextMenu={(e) => {
                       e.preventDefault();
-                      setContextMenu({ x: e.clientX, y: e.clientY, convId: conv.id });
+                      setContextMenu({ x: e.clientX, y: e.clientY, convId: conv.id, unread: conv.unread });
                     }}
                   />
                 ))}
@@ -283,8 +333,8 @@ export function Messages(_props: MessagesProps) {
       {/* Context Menu for Pinning */}
       {contextMenu && (
         <div 
-          className="fixed z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-48 overflow-hidden animate-in fade-in zoom-in duration-200"
-          style={{ top: Math.min(contextMenu.y, window.innerHeight - 100), left: Math.min(contextMenu.x, window.innerWidth - 200) }}
+          className="fixed z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 w-60 overflow-hidden animate-in fade-in zoom-in duration-200"
+          style={{ top: Math.min(contextMenu.y, window.innerHeight - 250), left: Math.min(contextMenu.x, window.innerWidth - 240) }}
           onClick={(e) => e.stopPropagation()}
         >
           <button 
@@ -292,16 +342,42 @@ export function Messages(_props: MessagesProps) {
             onClick={() => togglePin(contextMenu.convId)}
           >
             {pinnedConvs.includes(contextMenu.convId) ? (
-              <>
-                <PinOff className="w-5 h-5 text-gray-500" />
-                <span className="text-[14px] font-medium text-gray-700">Désépingler</span>
-              </>
+              <><PinOff className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Désépingler</span></>
             ) : (
-              <>
-                <Pin className="w-5 h-5 text-gray-500" />
-                <span className="text-[14px] font-medium text-gray-700">Épingler</span>
-              </>
+              <><Pin className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Épingler</span></>
             )}
+          </button>
+          
+          <button 
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            onClick={() => toggleMute(contextMenu.convId)}
+          >
+            {mutedConvs.includes(contextMenu.convId) ? (
+              <><Bell className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Réactiver le son</span></>
+            ) : (
+              <><BellOff className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Mettre en sourdine</span></>
+            )}
+          </button>
+
+          <button 
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            onClick={() => toggleReadStatus(contextMenu.convId, contextMenu.unread)}
+          >
+            {(forceUnreadConvs.includes(contextMenu.convId) || (contextMenu.unread > 0 && !forceReadConvs.includes(contextMenu.convId))) ? (
+              <><CheckCircle2 className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Marquer comme lu</span></>
+            ) : (
+              <><Circle className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Marquer comme non lu</span></>
+            )}
+          </button>
+
+          <div className="h-[1px] bg-gray-100 w-full my-1" />
+
+          <button 
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-red-50 active:bg-red-100 transition-colors"
+            onClick={() => hideConversation(contextMenu.convId)}
+          >
+            <Trash2 className="w-[18px] h-[18px] text-red-500" />
+            <span className="text-[14px] font-medium text-red-500">Supprimer</span>
           </button>
         </div>
       )}
@@ -391,6 +467,9 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu }: { c
           )}
           {conv.isPinned && !hasUnread && (
             <Pin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 ml-1" />
+          )}
+          {conv.isMuted && (
+            <BellOff className="w-3 h-3 text-gray-400 flex-shrink-0 ml-1" />
           )}
         </div>
       </div>
