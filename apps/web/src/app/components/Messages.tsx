@@ -157,7 +157,7 @@ export function Messages(_props: MessagesProps) {
               </div>
             ) : (
               /* Empty state */
-              <div className="flex flex-col items-center gap-[20px] px-[16px] w-full max-w-[358px]">
+              <div className="flex-1 flex flex-col items-center justify-center gap-[20px] px-[16px] w-full max-w-[358px] pb-[100px]">
                 {/* Chat Empty Illustration */}
                 <div className="relative w-[256px] h-[110px] mx-auto flex-shrink-0">
                   {/* Orange Bubble */}
