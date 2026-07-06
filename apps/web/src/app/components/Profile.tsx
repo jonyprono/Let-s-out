@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Settings, LogOut, MapPin } from 'lucide-react';
+import { Settings, LogOut, MapPin, UserCheck, UserPlus, ChevronRight } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
-import { useLogout } from '@/features/auth/hooks/useAuth';
+import { useUserProfile } from '@/features/users/UserProfileContext';
 import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
+import { useLogout } from '@/features/auth/hooks/useAuth';
 
 import { useNavigate, useParams } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
 import { Button } from '@/components/ui/button';
-import { ToggleButton } from '@/components/ui/toggle-button';
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
