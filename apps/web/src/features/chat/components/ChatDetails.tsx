@@ -392,8 +392,8 @@ export function ChatDetails() {
   return (
     <div className="w-full h-full bg-[#FFFFFF] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }} onClick={() => pickerMsgId && setPickerMsgId(null)}>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#FFFFFF] border-b border-gray-100 pt-safe-only">
-        <div className="h-[68px] flex items-center px-4">
+      <div className="sticky top-0 z-10 bg-[#FFFFFF] border-b border-gray-100 pt-safe-6 pb-2">
+        <div className="flex items-center px-4">
           <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors active:scale-95">
             <ChevronLeft className="w-6 h-6 text-gray-900" />
           </button>
