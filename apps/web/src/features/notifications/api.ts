@@ -56,6 +56,16 @@ export function useMarkAllNotificationsAsRead() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: notificationsApi.markAllAsRead,
+    onMutate: () => {
+      qc.setQueriesData({ queryKey: ['notifications'] }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          unreadCount: 0,
+          data: old.data ? old.data.map((n: any) => ({ ...n, isRead: true })) : []
+        };
+      });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications'] })
     },

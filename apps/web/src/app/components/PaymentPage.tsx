@@ -11,6 +11,9 @@ import {
   isContributionPayment,
   applyPoolContributionOptimistic,
 } from '@/lib/pool-contribution'
+import { PhoneInputField } from '@/components/shared/PhoneInputField'
+import { COUNTRIES, Country } from '@/lib/countries'
+import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 
 // ── Operators ──────────────────────────────────────────────
 const OPERATORS = [
@@ -34,7 +37,13 @@ export function PaymentPage() {
 
   // Form state
   const [participationAmount, setParticipationAmount] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
+  const [country, setCountry] = useState<Country>(COUNTRIES[0])
+  const {
+    displayValue: phoneDisplay,
+    rawValue: phoneNumber,
+    handleChange: handlePhoneChange,
+    reset: resetPhone,
+  } = usePhoneFormatter()
   const [selectedOperator, setSelectedOperator] = useState(OPERATORS[0])
   const [showOperatorDropdown, setShowOperatorDropdown] = useState(false)
   const operatorRef = useRef<HTMLDivElement>(null)
@@ -377,18 +386,12 @@ export function PaymentPage() {
         {/* ── Phone number ── */}
         <div className="mb-8">
           <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Numéro de téléphone</label>
-          <div className="relative">
-            <div className="absolute left-0 top-0 bottom-0 flex items-center gap-1.5 px-4 border-r border-[var(--border-primary)] z-10 bg-transparent">
-              <span className="text-[16px]">🇧🇯</span>
-              <span className="text-[13px] text-[var(--color-text-primary)] font-medium">(229)</span>
-              <ChevronDown className="w-3.5 h-3.5 text-[var(--color-icon-secondary)]" />
-            </div>
-            <Input
-              type="tel"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="01 56 36 33"
-              className="pl-[105px]"
+          <div className="w-full">
+            <PhoneInputField
+              country={country}
+              onCountryChange={(c) => { setCountry(c); resetPhone() }}
+              phoneDisplay={phoneDisplay}
+              onPhoneChange={handlePhoneChange}
             />
           </div>
         </div>
@@ -451,7 +454,7 @@ export function PaymentPage() {
               {/* Phone + operator */}
               <div className="flex items-center gap-2 bg-[#F8F8F8] rounded-[10px] px-4 py-3 mb-1">
                 <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
-                <span className="text-[14px] font-semibold text-[#1B1818] flex-1">{selectedOperator.label} • 229 {phoneNumber}</span>
+                <span className="text-[14px] font-semibold text-[#1B1818] flex-1">{selectedOperator.label} • {country.code.replace('+', '')} {phoneDisplay}</span>
               </div>
               <p className="text-[11px] text-[#8D8D8D] mb-5 text-center">Moyen sécurisé de paiement</p>
 
