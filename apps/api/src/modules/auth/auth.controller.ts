@@ -347,7 +347,7 @@ export class AuthController {
     const payload = req.user as { sub: string }
     const user = await this.app.prisma.user.findUnique({
       where: { id: payload.sub },
-      include: { profile: true },
+      include: { profile: true, badges: true },
     })
     if (!user) return reply.code(404).send({ error: 'User not found' })
     return reply.send({ ...user, passwordHash: undefined })

@@ -317,7 +317,7 @@ export function PaymentPage() {
           <label className="block text-[13px] font-medium text-[#1B1818] mb-2">
             Montant de votre participation
           </label>
-          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white overflow-hidden h-[52px]">
+          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white overflow-hidden h-[52px] focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
             <input
               type="number"
               value={participationAmount}

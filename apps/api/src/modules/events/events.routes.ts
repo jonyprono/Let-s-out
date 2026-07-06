@@ -703,7 +703,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
   app.post('/:id/reviews', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
     const { id } = req.params as { id: string }
-    const { rating, comment } = req.body as { rating: number; comment?: string }
+    const { rating, punctualityRating, attitudeRating, reliabilityRating, comment } = req.body as { rating: number; punctualityRating?: number; attitudeRating?: number; reliabilityRating?: number; comment?: string }
 
     if (rating < 1 || rating > 5) {
       return reply.code(400).send({ error: 'Rating must be between 1 and 5' })
@@ -723,7 +723,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     if (existingReview) return reply.code(400).send({ error: 'You have already reviewed this event' })
 
     const review = await app.prisma.review.create({
-      data: { userId: sub, eventId: id, rating, comment },
+      data: { userId: sub, eventId: id, rating, punctualityRating, attitudeRating, reliabilityRating, comment },
     })
 
     return reply.status(201).send({ data: review })

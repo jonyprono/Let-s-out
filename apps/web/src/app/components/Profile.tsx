@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Settings, LogOut, MapPin, UserCheck, UserPlus, ChevronRight } from 'lucide-react';
+import { Settings, LogOut, MapPin } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
-import { useUserProfile } from '@/features/users/UserProfileContext';
 import { useLogout } from '@/features/auth/hooks/useAuth';
 import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
 import { useQuery } from '@tanstack/react-query';
@@ -30,19 +29,20 @@ export function Profile({ onNavigate }: ProfileProps) {
   const [activeTab, setActiveTab] = useState<Tab>('events');
   const { username } = useParams<{ username?: string }>()
 
-  const isOwnProfile = !username || (!!profile?.username && username === profile?.username)
+  const targetUsername = username || profile?.username;
+  const isOwnProfile = !username || (!!profile?.username && username === profile?.username);
 
   const { data: viewedProfile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: ['public-profile', username],
+    queryKey: ['public-profile', targetUsername],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/users/${username}`)
-      return data
+      const { data } = await apiClient.get(`/users/${targetUsername}`);
+      return data;
     },
-    enabled: !!username && !isOwnProfile,
-  })
+    enabled: !!targetUsername,
+  });
 
-  const displayProfile = isOwnProfile ? profile : viewedProfile
-  const targetUserId = isOwnProfile ? user?.id : (viewedProfile?.userId || viewedProfile?.user?.id)
+  const displayProfile = viewedProfile || profile;
+  const targetUserId = displayProfile?.userId || displayProfile?.user?.id;
 
   useEffect(() => {
     setActiveTab('events')
@@ -103,15 +103,6 @@ export function Profile({ onNavigate }: ProfileProps) {
   const following = followingData ?? [];
   const friends = friendsData ?? [];
 
-  // On other profiles: don't show drafts or friends tab
-  const TABS: { key: Tab; label: string; count: number }[] = [
-    { key: 'events', label: 'Événements', count: createdEvents.length } as const,
-    ...(isOwnProfile ? [{ key: 'drafts', label: 'Brouillons', count: draftEvents.length } as const] : []),
-    { key: 'followers', label: 'Abonnés', count: followers.length } as const,
-    { key: 'following', label: 'Abonnements', count: following.length } as const,
-    ...(isOwnProfile ? [{ key: 'friends', label: 'Amis', count: friends.length } as const] : []),
-  ];
-
   // Show loading state while determining own vs other profile
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
     return (
@@ -129,139 +120,116 @@ export function Profile({ onNavigate }: ProfileProps) {
   return (
     <div className="w-full h-full flex flex-col bg-background">
 
-      {/* Header */}
-      <div className="px-5 pt-12 pb-3 bg-card/95 backdrop-blur-md border-b border-border sticky top-0 z-20">
-        <div className="flex items-center justify-between">
+      <div className="relative w-full overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, var(--action-primary) 0%, var(--color-brand-orange-400) 60%, #FFA040 100%)' }}>
+        
+        {/* Header */}
+        <div className="px-5 pt-12 pb-3 sticky top-0 z-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isOwnProfile && (
-              <button
-                onClick={() => navigate(-1)}
-                className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
+              <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
               </button>
             )}
-            <h1 className="text-xl font-bold text-foreground">
-              {isOwnProfile ? 'Mon Profil' : (displayProfile?.displayName || username || 'Profil')}
-            </h1>
           </div>
           <div className="flex items-center gap-2">
             {isOwnProfile && (
-              <button
-                onClick={() => onNavigate('settings')}
-                className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <Settings className="w-5 h-5 text-text-secondary" />
+              <button onClick={() => onNavigate('settings')} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform">
+                <Settings className="w-5 h-5 text-white" />
               </button>
             )}
             {isOwnProfile && (
-              <button
-                onClick={() => doLogout()}
-                className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform bg-red-50"
-              >
-                <LogOut className="w-5 h-5 text-red-500" />
+              <button onClick={() => doLogout()} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform bg-red-500/20">
+                <LogOut className="w-5 h-5 text-white" />
               </button>
             )}
+          </div>
+        </div>
+
+        <div className="px-5 pb-5">
+          {/* Avatar + Name + Location */}
+          <div className="flex flex-col items-center mb-5 text-center">
+            <div className="relative mb-3">
+              <div className="w-24 h-24 rounded-full ring-4 ring-white shadow-lg overflow-hidden bg-background-white">
+                <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>{displayName.charAt(0).toUpperCase()}</div>} />
+              </div>
+              <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full border-2 border-white shadow-sm bg-yellow-400 flex items-center justify-center text-[10px] font-bold text-white">★ {viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A'}</div>
+            </div>
+            
+            <h2 className="text-[24px] font-bold text-white mb-1 leading-tight">{displayName}</h2>
+            {city && (
+              <div className="flex items-center justify-center gap-1.5 text-[13px] text-white/80 mb-2 font-medium">
+                <MapPin className="w-4 h-4" />
+                <span>{city}</span>
+                {memberSince && <><span className="mx-1.5">•</span><span>Membre depuis {memberSince}</span></>}
+              </div>
+            )}
+            {bio && <p className="text-[14px] text-white/90 leading-relaxed max-w-sm mx-auto">{bio}</p>}
+          </div>
+
+          {/* Stats row */}
+          <div className="flex gap-1 bg-white/20 rounded-[16px] p-2 backdrop-blur-md mb-4">
+            {[
+              { value: createdEvents.length, label: 'Créés' },
+              { value: pastEvents.length, label: 'Rejoints' },
+              { value: friends.length, label: 'Amis' },
+              { value: viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A', label: 'Note' },
+            ].map(stat => (
+              <div key={stat.label} className="flex-1 text-center py-2 flex flex-col items-center justify-center">
+                <p className="text-[20px] font-black text-white">{stat.value}</p>
+                <p className="text-[11px] font-semibold text-white/80">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+          
+          {/* Tabs */}
+          <div className="flex w-full gap-4 text-white/80 font-medium text-[15px] border-b border-white/20 pb-2">
+            <button className={`flex-1 text-center pb-2 ${activeTab === 'events' ? 'font-bold text-white border-b-2 border-white -mb-[9px]' : ''}`} onClick={() => setActiveTab('events')}>Profil</button>
+            <button className={`flex-1 text-center pb-2 ${activeTab === 'events' ? 'font-bold text-white border-b-2 border-white -mb-[9px]' : ''}`} onClick={() => setActiveTab('events')}>Événements</button>
+            <button className={`flex-1 text-center pb-2 ${activeTab === 'events' ? 'font-bold text-white border-b-2 border-white -mb-[9px]' : ''}`} onClick={() => setActiveTab('events')}>Avis</button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-8" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto bg-background-white" style={{ scrollbarWidth: 'none' }}>
+        <div className="p-5">
+           {/* Actions */}
+           {!isOwnProfile && (
+             <div className="flex gap-3 mb-6">
+               <Button className="flex-1 rounded-[12px] h-12 text-[15px] font-bold shadow-sm" style={{ backgroundColor: 'var(--action-primary)' }}>+ Suivre</Button>
+               <Button variant="outline" className="flex-1 rounded-[12px] h-12 text-[15px] font-bold shadow-sm">Message</Button>
+             </div>
+           )}
 
-        {/* Profile Card */}
-        <div className="mx-200 mt-200 mb-200 bg-background-white rounded-[24px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-50/50">
-          {/* Cover gradient */}
-          <div className="h-32 relative overflow-hidden">
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--action-primary) 0%, var(--color-brand-orange-400) 60%, #FFA040 100%)' }} />
-            <div className="absolute inset-0 bg-black/10" />
-            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-background-white/20 rounded-full blur-2xl" />
-            <div className="absolute -top-10 -left-10 w-32 h-32 bg-background-white/30 rounded-full blur-2xl" />
-          </div>
+           {/* Badges */}
+           <div className="bg-gray-50 rounded-[16px] p-4 mb-4 border border-gray-100">
+             <div className="flex justify-between items-center mb-4">
+               <h3 className="font-bold text-[15px] flex items-center gap-2">🏅 Badges</h3>
+               <button className="text-[13px] font-semibold text-blue-500">Voir tout</button>
+             </div>
+             <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+                {(viewedProfile?.user?.badges || [
+                  { badge: 'Social Star' },
+                  { badge: 'Early Adopter' },
+                  { badge: 'Music Lover' }
+                ]).map((b: any) => (
+                  <div key={b.badge} className="flex flex-col items-center flex-shrink-0 w-16">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 mb-2 shadow-sm"></div>
+                    <span className="text-[10px] font-semibold text-center text-gray-500 leading-tight">{b.badge}</span>
+                  </div>
+                ))}
+             </div>
+           </div>
 
-          <div className="px-5 pb-5">
-            {/* Avatar + edit */}
-            <div className="flex items-end justify-between -mt-12 mb-200 relative z-10">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full ring-4 ring-white/90 backdrop-blur-md shadow-lg overflow-hidden bg-background-white">
-                  <SafeImage
-                    src={displayProfile?.avatarUrl}
-                    cacheKey={(displayProfile as { updatedAt?: string })?.updatedAt || displayProfile?.avatarUrl}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    fallback={
-                      <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white"
-                        style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--color-brand-orange-400))' }}>
-                        {displayName.charAt(0).toUpperCase()}
-                      </div>
-                    }
-                  />
-                </div>
-                <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-400 rounded-full border-[3px] border-white shadow-sm" />
-              </div>
-              {isOwnProfile && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowEditModal(true)}
-                  className="w-auto shadow-sm absolute -bottom-5 left-1/2 -translate-x-1/2 rounded-full font-bold px-6 border-2 border-white"
-                >
-                  Modifier le profil
-                </Button>
-              )}
-            </div>
-
-            {/* Name, location, bio */}
-            <h2 className="text-[22px] font-bold text-gray-900 mb-1 leading-tight">{displayName}</h2>
-            {city && (
-              <div className="flex items-center gap-1.5 text-[13px] text-text-secondary mb-2.5 font-medium">
-                <MapPin className="w-4 h-4 text-action-primary" />
-                <span>{city}</span>
-                {memberSince && <><span className="mx-1.5 text-gray-300">•</span><span>Membre depuis {memberSince}</span></>}
-              </div>
-            )}
-            {bio && <p className="text-[14px] text-text-secondary leading-relaxed mb-5">{bio}</p>}
-
-            {/* Stats row */}
-            <div className="flex gap-2 pt-4 border-t border-gray-100/80">
-              {[
-                { value: createdEvents.length, label: 'Événements', color: 'var(--action-primary)', tab: 'events' as Tab },
-                { value: followers.length, label: 'Abonnés', color: 'var(--action-primary)', tab: 'followers' as Tab },
-                { value: following.length, label: 'Abonnements', color: 'var(--action-primary)', tab: 'following' as Tab },
-                ...(isOwnProfile ? [{ value: friends.length, label: 'Amis', color: 'var(--action-primary)', tab: 'friends' as Tab }] : []),
-              ].map(stat => (
-                <button
-                  key={stat.label}
-                  onClick={() => setActiveTab(stat.tab)}
-                  className={`flex-1 text-center py-2.5 rounded-[16px] transition-all active:scale-95 ${activeTab === stat.tab ? 'bg-gray-50/80 ring-1 ring-gray-100 shadow-sm' : 'hover:bg-gray-50/50'}`}
-                >
-                  <p className="text-[19px] font-black tracking-tight" style={{ color: stat.color }}>{stat.value}</p>
-                  <p className="text-[11px] font-semibold text-text-secondary mt-0.5 leading-tight">{stat.label}</p>
-                </button>
-              ))}
-            </div>
-          </div>
+           {/* Interests */}
+           <div className="bg-gray-50 rounded-[16px] p-4 mb-4 border border-gray-100">
+             <h3 className="font-bold text-[15px] flex items-center gap-2 mb-4">🎯 Mes intérêts</h3>
+             <div className="flex flex-wrap gap-2">
+                {displayProfile?.interests && displayProfile.interests.length > 0 ? displayProfile.interests.map((i: string) => (
+                  <span key={i} className="px-4 py-2 bg-orange-50 text-orange-600 text-[13px] font-bold rounded-full">{i}</span>
+                )) : <p className="text-sm text-gray-400">Aucun intérêt spécifié</p>}
+             </div>
+           </div>
         </div>
-
-        {/* Tabs navigation */}
-        <div className="overflow-x-auto hide-scrollbar mx-200 mb-5 pb-2 pt-4">
-          <ToggleButton
-            options={TABS.map(tab => ({
-              value: tab.key,
-              label: (
-                <span className="flex items-center gap-1">
-                  {tab.label}
-                  {tab.count > 0 && <span className="opacity-60 font-normal">({tab.count})</span>}
-                </span>
-              )
-            }))}
-            value={activeTab}
-            onChange={(val) => setActiveTab(val as Tab)}
-            className="w-full sm:w-auto"
-          />
-        </div>
-
         {/* TAB: Events créés */}
         {activeTab === 'events' && (
           <div className="mx-200 space-y-200">

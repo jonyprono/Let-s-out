@@ -21,6 +21,7 @@ model User {
   deletedAt        DateTime?
 
   lastSeenAt       DateTime?
+  badges           UserBadge[]
   bookings         Booking[]
   conversations    ConversationMember[]
   deviceTokens     DeviceToken[]
@@ -374,19 +375,33 @@ model Follow {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  userId    String
-  eventId   String
-  rating    Int
-  comment   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  userId            String
+  eventId           String
+  rating            Int
+  punctualityRating Float?
+  attitudeRating    Float?
+  reliabilityRating Float?
+  comment           String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  event             Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, eventId])
   @@index([eventId])
   @@map("reviews")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badge     String
+  earnedAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badge])
+  @@map("user_badges")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

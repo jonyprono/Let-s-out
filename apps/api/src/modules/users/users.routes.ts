@@ -8,6 +8,38 @@ import { v4 as uuidv4 } from 'uuid'
 import { createAndSendNotification } from '../notifications/notifications.routes'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 
+async function getDetailedStats(app: FastifyInstance, userId: string) {
+  const events = await app.prisma.event.findMany({
+    where: { creatorId: userId },
+    include: { reviews: true }
+  });
+  
+  let reviewCount = 0;
+  let totalRating = 0;
+  let punctuality = 0;
+  let attitude = 0;
+  let reliability = 0;
+  
+  for (const e of events) {
+    for (const r of e.reviews) {
+      reviewCount++;
+      totalRating += r.rating;
+      punctuality += (r.punctualityRating ?? r.rating);
+      attitude += (r.attitudeRating ?? r.rating);
+      reliability += (r.reliabilityRating ?? r.rating);
+    }
+  }
+  
+  if (reviewCount === 0) return null;
+  return {
+    reviewCount,
+    rating: totalRating / reviewCount,
+    punctuality: punctuality / reviewCount,
+    attitude: attitude / reviewCount,
+    reliability: reliability / reviewCount
+  };
+}
+
 export default async function usersRoutes(app: FastifyInstance) {
   // All routes require authentication
   app.addHook('preHandler', app.authenticate)
@@ -19,7 +51,7 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     const profile = await app.prisma.profile.findUnique({
       where: { userId },
-      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true } } },
+      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: true } } },
     })
     if (!profile) return reply.code(404).send({ error: 'User not found' })
 
@@ -41,7 +73,9 @@ export default async function usersRoutes(app: FastifyInstance) {
       }
     }
 
-    return reply.send({ ...profile, friendshipStatus })
+    const detailedStats = await getDetailedStats(app, userId)
+
+    return reply.send({ ...profile, friendshipStatus, detailedStats })
   })
 
   // Get user profile by username
@@ -51,14 +85,14 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     let profile = await app.prisma.profile.findUnique({
       where: { username },
-      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true } } },
+      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: true } } },
     })
     
     // Fallback: If username wasn't found, try treating the parameter as a userId
     if (!profile) {
       profile = await app.prisma.profile.findUnique({
         where: { userId: username },
-        include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true } } },
+        include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: true } } },
       })
     }
     
@@ -83,7 +117,9 @@ export default async function usersRoutes(app: FastifyInstance) {
       }
     }
 
-    return reply.send({ ...profile, friendshipStatus })
+    const detailedStats = await getDetailedStats(app, userId)
+
+    return reply.send({ ...profile, friendshipStatus, detailedStats })
   })
 
   // Update own profile
