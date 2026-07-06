@@ -391,16 +391,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Location */}
-          <button onClick={openSearch} className="flex items-center gap-1 mb-3 active:opacity-70 transition-opacity">
-            <Location01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.8} />
-            <span className="text-[14px] font-poppins font-medium text-[var(--color-text-primary)]">{currentLocation || 'Où allez-vous ?'}</span>
+          <button onClick={openSearch} className="flex items-center gap-1 mb-3 active:opacity-70 transition-opacity max-w-full min-w-0">
+            <Location01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.8} />
+            <span className="text-[14px] font-poppins font-medium text-[var(--color-text-primary)] truncate flex-1 text-left min-w-0">{currentLocation || 'Où allez-vous ?'}</span>
             <ArrowDown01Icon className="w-[16px] h-[16px] text-[var(--color-icon-secondary)]" strokeWidth={2} />
           </button>
 
           {/* Search bar */}
-          <div className="flex items-center gap-[10px] mb-3 self-stretch">
+          <div className="flex items-center gap-[10px] mb-3 w-full min-w-0 box-border">
             <div
-              className={`flex-1 border rounded-[999px] flex items-center px-[14px] h-[44px] gap-[8px] bg-white box-border shadow-sm transition-colors ${
+              className={`flex-1 border rounded-[999px] flex items-center px-[14px] h-[44px] gap-[8px] bg-white box-border min-w-0 shadow-sm transition-colors ${
                 eventSearchFocused || eventSearch
                   ? 'border-[var(--brand-orange-500)]'
                   : 'border-[var(--border-default)]'
