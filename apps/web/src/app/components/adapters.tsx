@@ -154,7 +154,8 @@ export function Explorer() {
           const map: Record<string, string> = {
             'home': '/home', 'messages': '/messages',
             'profile': '/profile', 'create-event': '/events/create',
-            'notifications': '/notifications'
+            'notifications': '/notifications',
+            'scan-qr': '/scan-qr'
           }
           if (screen === 'event-details' && id) nav(`/events/${id}`)
           else if (map[screen]) nav(map[screen])

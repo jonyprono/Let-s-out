@@ -438,7 +438,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               onClick={(e) => {
                 e.stopPropagation();
                 hapticFeedback.impact();
-                // setScreen('join'); // Optional: Add join QR code action
+                onNavigate('scan-qr');
               }}
               className="w-[44px] h-[44px] shrink-0 rounded-full border border-[var(--border-default)] bg-white flex items-center justify-center shadow-sm active:bg-gray-50 transition-colors"
             >
