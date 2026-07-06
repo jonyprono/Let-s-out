@@ -6,6 +6,7 @@ import { chatApi } from '@/features/chat/api'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { Button } from '@/components/ui/Button'
 
 interface NewConversationModalProps {
   onClose: () => void
@@ -48,7 +49,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
       if (selectedFriends.length === 1) {
         const conv = await createDM(selectedFriends[0])
         onClose()
-        navigate(`/messages/${conv.id}`)
+        navigate(`/chat/${conv.id}`)
       } else {
         if (!groupName.trim()) {
           toast.error("Veuillez entrer un nom de groupe")
@@ -56,7 +57,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
         }
         const conv = await createGroup({ name: groupName.trim(), memberIds: selectedFriends } as any)
         onClose()
-        navigate(`/messages/${conv.id}`)
+        navigate(`/chat/${conv.id}`)
       }
     } catch (err) {
       toast.error("Erreur lors de la création de la discussion")
@@ -184,14 +185,14 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
       </div>
       {/* Floating Action Button */}
       {selectedFriends.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe-4">
-          <button
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+          <Button
             onClick={handleStart}
             disabled={isCreatingDM || isCreatingGroup}
-            className="w-full bg-action-primary text-white font-bold text-[15px] py-3.5 rounded-full shadow-md active:scale-[0.98] transition-transform flex justify-center items-center gap-2 disabled:opacity-50"
+            className="w-full text-[16px] font-bold py-[14px]"
           >
             {(isCreatingDM || isCreatingGroup) ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Démarrer la discussion'}
-          </button>
+          </Button>
         </div>
       )}
     </div>
