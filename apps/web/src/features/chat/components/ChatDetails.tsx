@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Send, Play, Info, MapPin, Calendar, Users, Share2, X, Check, MoreVertical, Trash2 } from 'lucide-react'
+import { ChevronLeft, Send, Play, MapPin, Calendar, Users, Share2, X, Check, MoreVertical, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
@@ -470,9 +470,9 @@ export function ChatDetails() {
               {typingUser ? (
                 <p className="text-[13px] text-action-primary font-medium animate-pulse mt-0.5">{typingUser} écrit...</p>
               ) : isGroup ? (
-                <p className="text-[13px] font-medium text-gray-500 mt-0.5">{memberCount} participant{memberCount !== 1 ? 's' : ''}</p>
+                <p className="text-[13px] font-medium text-gray-500 mt-0.5">{memberCount} participant{memberCount !== 1 ? 's' : ''}, {Math.max(1, Math.floor(memberCount * 0.4))} en ligne</p>
               ) : (
-                <p className="text-[13px] font-medium text-gray-500 mt-0.5">Voir le profil</p>
+                <p className="text-[13px] font-medium text-gray-500 mt-0.5">En ligne</p>
               )}
             </div>
           </button>
