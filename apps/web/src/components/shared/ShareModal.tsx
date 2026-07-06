@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Copy, Share2, Download, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
@@ -86,7 +87,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
     toast.success('QR Code téléchargé !');
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
       {/* Click outside to close */}
       <div className="absolute inset-0" onClick={onClose} />
@@ -169,6 +170,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
 
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

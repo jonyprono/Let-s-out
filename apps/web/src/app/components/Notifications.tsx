@@ -105,6 +105,18 @@ export function Notifications({ onBack }: NotificationsProps) {
   const markReadMutation = useMarkNotificationAsRead();
   const markAllReadMutation = useMarkAllNotificationsAsRead();
 
+  // Auto-correct backend unreadCount if there are no visible active unread notifications
+  useEffect(() => {
+    if (data && data.unreadCount > 0 && activeUnreadCount === 0) {
+      markAllReadMutation.mutate();
+      // Also update local cache so it doesn't loop
+      queryClient.setQueryData(['notifications', { limit: 100, unreadOnly: false }], (old: any) => {
+        if (!old) return old;
+        return { ...old, unreadCount: 0 };
+      });
+    }
+  }, [data?.unreadCount, activeUnreadCount]);
+
   const handleNotifPress = (notif: (typeof displayedNotifications)[number]) => {
     if (!notif.isRead) markReadMutation.mutate(notif.id);
 
