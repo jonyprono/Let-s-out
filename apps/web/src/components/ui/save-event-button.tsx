@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { Star } from "lucide-react"
+import { FavouriteIcon } from "hugeicons-react"
 
 export interface SaveEventButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   saved?: boolean;
@@ -21,7 +21,7 @@ const SaveEventButton = React.forwardRef<HTMLButtonElement, SaveEventButtonProps
         )}
         {...props}
       >
-        <Star className="h-[18px] w-[18px]" strokeWidth={2} fill="none" />
+        <FavouriteIcon className="h-[18px] w-[18px]" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
       </button>
     )
   }

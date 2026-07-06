@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   MapPin,
   Calendar,
-  Share2,
   Loader2,
   Lock,
   Copy,
@@ -18,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { SaveEventButton } from '@/components/ui/save-event-button'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
+import { Share01Icon } from 'hugeicons-react'
 import { chatApi } from '@/features/chat/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
@@ -158,7 +158,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       goToChat()
       return
     }
-    setShowJoinModal(true)
+    navigate(`/events/${event?.id}/pay`)
   }
 
 
@@ -317,7 +317,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
           <div className="flex items-center gap-2 -mr-2">
             <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
-              <Share2 className="w-5 h-5" strokeWidth={1.8} />
+              <Share01Icon className="w-5 h-5" strokeWidth={1.8} />
             </button>
             <SaveEventButton saved={favorite} onClick={handleFavorite} className="w-9 h-9" />
           </div>
@@ -381,7 +381,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {event.description && (
               <div>
                 <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">À propos</h2>
-                <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] leading-relaxed">
+                <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] leading-relaxed break-words whitespace-pre-wrap">
                   {isDescriptionExpanded
                     ? event.description
                     : event.description.length > 120
@@ -593,7 +593,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 onClick={handleShare}
                 className="flex-[0.45] flex items-center justify-center gap-2 rounded-full font-semibold border-[var(--border-default)] text-[var(--color-text-primary)]"
               >
-                <Share2 className="w-4 h-4" strokeWidth={1.8} />
+                <Share01Icon className="w-4 h-4" strokeWidth={1.8} />
                 Partager
               </Button>
               <Button
