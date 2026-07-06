@@ -19,6 +19,7 @@ import { Capacitor } from '@capacitor/core'
 import { resolveContributionAmount, computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 import { MessageBubble } from '@/components/ui/message-bubble'
 import { ChatInput } from '@/components/ui/chat-input'
+import { GroupChatInfoSheet } from './GroupChatInfoSheet'
 
 async function saveFileLocally(file: File | Blob, name: string) {
   if (!Capacitor.isNativePlatform()) return null
@@ -727,60 +728,77 @@ export function ChatDetails() {
         />
       )}
 
-      {/* Event Info Modal */}
-      {showEventInfo && event && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end justify-center">
-          <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[32px] p-6 pb-10 shadow-2xl relative animate-in slide-in-from-bottom-full duration-300">
-            <div className="w-12 h-1.5 bg-gray-300 dark:bg-[#333333] rounded-full mx-auto mb-6" />
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-[17px] font-bold text-gray-900 dark:text-[#FFFFFF]">À propos</h2>
-              <button onClick={() => setShowEventInfo(false)} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center">
-                <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              </button>
-            </div>
-            
-            <div className="mb-6">
-              <h3 className="font-bold text-[17px] text-gray-900 dark:text-[#FFFFFF] mb-4">{event.title}</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  <span className="text-[14px] text-gray-600 dark:text-gray-300">
-                    {format(new Date(event.startAt), 'EEE, dd MMM yyyy • HH:mm', { locale: fr })} GMT
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  <span className="text-[14px] text-gray-600 dark:text-gray-300">{event.address || event.city || 'Lieu non précisé'}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Users className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                  <span className="text-[14px] text-gray-600 dark:text-gray-300">
-                    {event.currentAttendees ?? 0} participant{(event.currentAttendees ?? 0) > 1 ? 's' : ''}
-                  </span>
+      {/* Event Info / Group Chat Info Modal */}
+      {showEventInfo && event && conversation && (
+        conversation.isGroup ? (
+          <GroupChatInfoSheet 
+            conversation={conversation} 
+            event={event} 
+            onClose={() => setShowEventInfo(false)}
+            onInvite={() => {
+              setShowEventInfo(false)
+              setShowShareModal(true)
+            }}
+            onContribute={() => {
+              setShowEventInfo(false)
+              setShowContributeModal(true)
+            }}
+          />
+        ) : (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end justify-center">
+            <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[32px] p-6 pb-10 shadow-2xl relative animate-in slide-in-from-bottom-full duration-300">
+              <div className="w-12 h-1.5 bg-gray-300 dark:bg-[#333333] rounded-full mx-auto mb-6" />
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[17px] font-bold text-gray-900 dark:text-[#FFFFFF]">À propos</h2>
+                <button onClick={() => setShowEventInfo(false)} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center">
+                  <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                </button>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="font-bold text-[17px] text-gray-900 dark:text-[#FFFFFF] mb-4">{event.title}</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-4 h-4 text-red-500 flex-shrink-0" />
+                    <span className="text-[14px] text-gray-600 dark:text-gray-300">
+                      {format(new Date(event.startAt), 'EEE, dd MMM yyyy • HH:mm', { locale: fr })} GMT
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-4 h-4 text-red-500 flex-shrink-0" />
+                    <span className="text-[14px] text-gray-600 dark:text-gray-300">{event.address || event.city || 'Lieu non précisé'}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Users className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                    <span className="text-[14px] text-gray-600 dark:text-gray-300">
+                      {event.currentAttendees ?? 0} participant{(event.currentAttendees ?? 0) > 1 ? 's' : ''}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-3 mt-2">
-              <button
-                onClick={() => navigate(`/events/${event.id}`)}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
-              >
-                <Calendar className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-                Voir l'événement
-              </button>
-              <button
-                onClick={() => {
-                  setShowShareModal(true)
-                }}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
-              >
-                <Share2 className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-                Inviter des amis
-              </button>
+              <div className="flex gap-3 mt-2">
+                <button
+                  onClick={() => navigate(`/events/${event.id}`)}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
+                >
+                  <Calendar className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                  Voir l'événement
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEventInfo(false)
+                    setShowShareModal(true)
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
+                >
+                  <Share2 className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                  Inviter des amis
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )
       )}
 
       {showShareModal && event && (
