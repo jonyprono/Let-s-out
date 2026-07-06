@@ -13,6 +13,7 @@ import { useLogout } from '@/features/auth/hooks/useAuth';
 import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { ToggleButton } from '@/components/ui/toggle-button';
+import { getEventParticipationMode } from '@/lib/utils';
 
 
 interface ProfileProps {
@@ -374,11 +375,31 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
   }
 
   // Format price correctly
+  const mode = getEventParticipationMode(event);
   let priceStr = 'Gratuit';
   let priceType = 'entrée';
-  if (event?.price && event.price > 0) {
-    priceStr = `${event.price.toLocaleString('fr-FR')} F`;
-    priceType = 'cagnotte'; // As requested in the mockup
+
+  const cur = event?.currency || 'XOF';
+  const curSymbol = (cur === 'XOF' || cur === 'CFA' || cur === 'FCFA') ? 'F' : (cur === 'EUR' ? '€' : cur);
+
+  if (mode === 'Cagnotte') {
+    priceType = 'cagnotte';
+    if (event?.price > 0) {
+      priceStr = `${event.price.toLocaleString('fr-FR')} ${curSymbol}`;
+    } else if (event?.poolTarget > 0) {
+      priceStr = `${event.poolTarget.toLocaleString('fr-FR')} ${curSymbol}`;
+    } else {
+      priceStr = 'Libre';
+    }
+  } else if (mode === 'Tickets') {
+    priceType = 'ticket';
+    if (event?.price > 0) {
+      priceStr = `${event.price.toLocaleString('fr-FR')} ${curSymbol}`;
+    }
+  } else {
+    // Gratuit
+    priceType = 'entrée';
+    priceStr = 'Gratuit';
   }
 
   const attendeesCount = event?.currentAttendees || 0;
