@@ -3,12 +3,11 @@ import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, AlertTriangle, LogO
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useNavigate } from 'react-router'
-import { Conversation } from '../api'
+import { Conversation, ConversationMember } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 import { useAuthStore } from '@/stores/auth.store'
-import { useFriends, useSendFriendRequest } from '@/features/users/api'
-import { toast } from 'sonner'
+import { ParticipantInfoSheet } from './ParticipantInfoSheet'
 
 interface GroupChatInfoSheetProps {
   conversation: Conversation
@@ -21,19 +20,7 @@ interface GroupChatInfoSheetProps {
 export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onContribute }: GroupChatInfoSheetProps) {
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
-  const { data: friends } = useFriends()
-  const sendFriendRequest = useSendFriendRequest()
-  const [sentRequests, setSentRequests] = useState<Record<string, boolean>>({})
-
-  const handleAddFriend = async (memberId: string) => {
-    try {
-      await sendFriendRequest.mutateAsync(memberId)
-      setSentRequests(prev => ({ ...prev, [memberId]: true }))
-      toast.success("Demande d'ami envoyée")
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Erreur lors de l'envoi de la demande")
-    }
-  }
+  const [selectedMember, setSelectedMember] = useState<ConversationMember | null>(null)
   
   const poolStats = event && hasActivePool(event) ? computePoolStats(event) : null
 
@@ -183,11 +170,13 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
           <div className="flex flex-col gap-1 w-full">
             {conversation.members.map((member) => {
               const isMe = member.userId === user?.id
-              const isFriend = friends?.some(f => f.userId === member.userId)
-              const requestSent = sentRequests[member.userId]
 
               return (
-                <div key={member.userId} className="flex flex-row items-center justify-between gap-[6px] w-full h-[40px]">
+                <div 
+                  key={member.userId} 
+                  onClick={() => !isMe && setSelectedMember(member)}
+                  className={`flex flex-row items-center justify-between gap-[6px] w-full h-[40px] rounded-[8px] ${!isMe ? 'active:bg-gray-100 cursor-pointer' : ''}`}
+                >
                   <div className="flex flex-row items-center gap-[6px] flex-1 overflow-hidden">
                     <div className="w-[32px] h-[32px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
                       <SafeImage
@@ -201,25 +190,6 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                       {member.user?.profile?.displayName} {isMe ? '(Moi)' : ''}
                     </span>
                   </div>
-                  {!isMe && (
-                    isFriend ? (
-                      <div className="flex items-center justify-center p-2">
-                        <Check className="w-4 h-4 text-green-500" />
-                      </div>
-                    ) : requestSent ? (
-                      <div className="flex items-center justify-center p-2">
-                        <Clock className="w-4 h-4 text-orange-400" />
-                      </div>
-                    ) : (
-                      <button 
-                        onClick={() => handleAddFriend(member.userId)}
-                        disabled={sendFriendRequest.isPending}
-                        className="flex items-center justify-center p-2 rounded-full hover:bg-gray-100 text-orange-500 active:scale-95 transition-all"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                      </button>
-                    )
-                  )}
                 </div>
               )
             })}
@@ -288,6 +258,15 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
           </div>
         </div>
       </div>
+
+      {selectedMember && (
+        <ParticipantInfoSheet
+          member={selectedMember}
+          eventTitle={event?.title || conversation?.name}
+          eventCoverUrl={event?.coverUrl || conversation?.avatarUrl}
+          onClose={() => setSelectedMember(null)}
+        />
+      )}
     </div>
   )
 }
