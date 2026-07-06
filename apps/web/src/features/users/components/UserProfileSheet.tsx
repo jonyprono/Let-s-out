@@ -1,50 +1,37 @@
-import { X, MessageCircle, UserPlus, UserCheck, Loader2 } from 'lucide-react'
+import { ChevronLeft, BellOff, AlertTriangle, Ban, UserPlus, Check, Clock } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import { usersApi } from '@/features/users/api'
 import { useAuthStore } from '@/stores/auth.store'
-import { chatApi } from '@/features/chat/api'
 import { useNavigate } from 'react-router'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 
 interface PublicProfile {
   id: string
   userId: string
   username: string
   displayName: string
-  bio?: string
   avatarUrl?: string | null
-  city?: string
-  country?: string
-  interests: string[]
-  followersCount: number
-  eventsCount: number
-  createdAt: string
-  user?: { id: string; createdAt: string; lastSeenAt?: string }
   friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'friend'
+  user?: { id: string }
 }
 
 interface UserProfileSheetProps {
-  /** Pass userId (from DB) OR username */
   userId?: string
   username?: string
-  /** Pre-filled data to show immediately while loading */
   preview?: { displayName?: string; avatarUrl?: string | null }
+  commonGroup?: { title: string, coverUrl?: string | null }
   onClose: () => void
 }
 
-export function UserProfileSheet({ userId, username, preview, onClose }: UserProfileSheetProps) {
+export function UserProfileSheet({ userId, username, preview, commonGroup, onClose }: UserProfileSheetProps) {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const me = useAuthStore((s) => s.user)
 
   const isMe = userId ? userId === me?.id : username === me?.profile?.username
 
-  // Fetch profile — by userId or username
-  const { data: profile, isLoading } = useQuery<PublicProfile>({
+  const { data: profile } = useQuery<PublicProfile>({
     queryKey: ['user-profile', userId ?? username],
     queryFn: async () => {
       if (userId) {
@@ -55,15 +42,6 @@ export function UserProfileSheet({ userId, username, preview, onClose }: UserPro
       return data
     },
     enabled: !!(userId || username),
-  })
-
-
-  // Fetch activity (used to show member since date)
-  const resolvedUserId = profile?.userId || userId
-  useQuery({
-    queryKey: ['users', 'activity', resolvedUserId],
-    queryFn: () => usersApi.getActivity(resolvedUserId!),
-    enabled: !!resolvedUserId,
   })
 
   const sendFriendMutation = useMutation({
@@ -84,140 +62,149 @@ export function UserProfileSheet({ userId, username, preview, onClose }: UserPro
     },
   })
 
-  const handleMessage = async () => {
-    if (!profile) return
-    try {
-      const targetId = profile.userId || profile.user?.id
-      if (!targetId) return
-      const conv = await chatApi.createDM(targetId)
-      onClose()
-      navigate(`/chat/${conv.id}`)
-    } catch (e: any) {
-      toast.error('Impossible d\'ouvrir la conversation')
-    }
-  }
-
   const displayName = profile?.displayName ?? preview?.displayName ?? '...'
   const avatarUrl = profile?.avatarUrl ?? preview?.avatarUrl ?? null
-  const memberSince = profile?.user?.createdAt || profile?.createdAt
-    ? format(new Date((profile?.user?.createdAt || profile?.createdAt)!), 'MMMM yyyy', { locale: fr })
-    : null
   const friendStatus = profile?.friendshipStatus || 'none'
+  const resolvedUserId = profile?.userId || userId
+
+  const userSvg = (
+    <svg width="64" height="64" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g clipPath="url(#clip0_user_info_p)">
+        <g clipPath="url(#clip1_user_info_p)">
+          <rect width="48" height="48" rx="24" fill="#F5F5F5"/>
+          <circle cx="24" cy="16" r="8" fill="#BDBDBD"/>
+          <circle cx="24" cy="49" r="22" fill="#BDBDBD"/>
+        </g>
+      </g>
+      <defs>
+        <clipPath id="clip0_user_info_p"><rect width="48" height="48" fill="white"/></clipPath>
+        <clipPath id="clip1_user_info_p"><rect width="48" height="48" rx="24" fill="white"/></clipPath>
+      </defs>
+    </svg>
+  )
+
+  const groupSvg = (
+    <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="48" height="48" rx="24" fill="#F5F5F5"/>
+      <path d="M27 20C27 21.6568 25.6569 23 24 23C22.3431 23 21 21.6568 21 20C21 18.3432 22.3431 17 24 17C25.6569 17 27 18.3432 27 20Z" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M28 16C29.6569 16 31 17.3432 31 19C31 20.2231 30.2681 21.2752 29.2183 21.7423" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M25.7143 26H22.2857C19.9188 26 18 27.9188 18 30.2857C18 31.2325 18.7675 32 19.7143 32H28.2857C29.2325 32 30 31.2325 30 30.2857C30 27.9188 28.0812 26 25.7143 26Z" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M29.7143 25C32.0812 25 34 26.9188 34 29.2857C34 30.2325 33.2325 31 32.2857 31" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M20 16C18.3432 16 17 17.3432 17 19C17 20.2231 17.7319 21.2752 18.7817 21.7423" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M15.7143 31C14.7675 31 14 30.2325 14 29.2857C14 26.9188 15.9188 25 18.2857 25" stroke="#A3A3A3" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
 
   return (
-    /* Overlay */
-    <div
-      className="absolute inset-0 z-[60] flex items-end justify-center animate-in fade-in duration-200"
-      style={{ background: 'rgba(0,0,0,0.6)' }}
-      onClick={onClose}
-    >
-      {/* Sheet */}
-      <div
-        className="w-full max-w-md bg-white rounded-t-[32px] overflow-hidden animate-in slide-in-from-bottom duration-300 shadow-2xl"
-        style={{ maxHeight: '85vh' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-4 pb-2">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
-        </div>
+    <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto">
+      <div className="flex items-center px-4 py-2 pt-safe-6 sticky top-0 bg-white z-10">
+        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
+          <ChevronLeft className="w-6 h-6 text-gray-400" />
+        </button>
+      </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 pb-6">
-          <h2 className="text-[20px] font-bold text-gray-900 tracking-tight">Participant</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center active:scale-95 transition-transform">
-            <X className="w-4 h-4 text-gray-500" />
+      <div className="flex flex-col items-center px-4 pb-10 gap-6 max-w-md mx-auto w-full">
+        {/* Profile Info */}
+        <div className="flex flex-col items-center gap-4 w-full mt-4">
+          <div className="w-[80px] h-[80px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
+            <SafeImage
+              src={avatarUrl}
+              alt={displayName}
+              className="w-full h-full object-cover"
+              fallback={userSvg}
+            />
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <h2 className="font-poppins font-semibold text-[18px] leading-[22px] text-[#1B1818]">
+              {displayName}
+            </h2>
+            {!isMe && (
+              friendStatus === 'friend' ? (
+                <div className="flex items-center justify-center p-1">
+                  <Check className="w-5 h-5 text-green-500" />
+                </div>
+              ) : friendStatus === 'pending_sent' ? (
+                <div className="flex items-center justify-center p-1">
+                  <Clock className="w-5 h-5 text-orange-400" />
+                </div>
+              ) : (
+                <button 
+                  onClick={() => sendFriendMutation.mutate()}
+                  disabled={sendFriendMutation.isPending}
+                  className="flex items-center justify-center p-1 rounded-full hover:bg-gray-100 text-orange-500 active:scale-95 transition-all"
+                >
+                  <UserPlus className="w-5 h-5" />
+                </button>
+              )
+            )}
+          </div>
+          <button 
+            onClick={() => {
+              if (resolvedUserId) {
+                onClose()
+                navigate(`/profile/${resolvedUserId}`)
+              }
+            }}
+            className="flex flex-row justify-center items-center px-4 py-2 bg-white border border-[#E5E5E5] rounded-[8px] active:scale-95 transition-transform mt-1"
+          >
+            <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252]">
+              Voir le profil
+            </span>
           </button>
         </div>
 
-        <div className="overflow-y-auto pb-safe-4" style={{ maxHeight: 'calc(85vh - 80px)', scrollbarWidth: 'none', paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
-          {/* Profile Content */}
-          <div className="px-6">
-            <div className="flex flex-col items-center mb-6">
-              <div className="w-[88px] h-[88px] rounded-full bg-gray-100 overflow-hidden mb-4 shadow-sm border border-gray-50">
+        {/* Groupes communs */}
+        {commonGroup && (
+          <div className="flex flex-col gap-2 w-full mt-2">
+            <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373]">
+              Groupes communs
+            </h3>
+            <div className="flex flex-row items-center gap-3 w-full h-[32px]">
+              <div className="w-[32px] h-[32px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
                 <SafeImage
-                  src={avatarUrl}
-                  alt={displayName}
+                  src={commonGroup.coverUrl ?? null}
+                  alt={commonGroup.title}
                   className="w-full h-full object-cover"
-                  fallback={
-                    <div className="w-full h-full flex items-center justify-center text-[32px] font-bold text-gray-400">
-                      {displayName.charAt(0).toUpperCase()}
-                    </div>
-                  }
+                  fallback={groupSvg}
                 />
               </div>
-              <h2 className="text-[22px] font-bold text-gray-900 truncate mb-1 text-center tracking-tight">{displayName}</h2>
-              {memberSince && (
-                <p className="text-[14px] text-gray-500 font-medium mb-3">Membre depuis {memberSince}</p>
-              )}
-              {profile?.bio ? (
-                <p className="text-[15px] text-gray-600 leading-relaxed text-center max-w-[280px]">{profile.bio}</p>
-              ) : (
-                <p className="text-[14px] text-gray-400 italic text-center">Aucune biographie renseignée.</p>
-              )}
+              <span className="flex-1 font-['Inter_Display'] font-medium text-[14px] leading-[20px] text-[#525252] truncate">
+                {commonGroup.title}
+              </span>
             </div>
-
-            {/* Loading skeleton */}
-            {isLoading && !profile && (
-              <div className="space-y-3 animate-pulse flex flex-col items-center mt-6">
-                <div className="h-4 bg-gray-100 rounded w-48" />
-                <div className="h-4 bg-gray-100 rounded w-32" />
-              </div>
-            )}
           </div>
+        )}
 
-          {/* Actions — not shown for self */}
-          {!isMe && (
-            <div className="px-6 pb-4 mt-2 space-y-3">
-              <div className="flex gap-3">
-                <button
-                  onClick={handleMessage}
-                  className="flex-1 flex items-center justify-center gap-2 py-[14px] rounded-full border border-gray-200 bg-white text-gray-800 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
-                >
-                  <MessageCircle className="w-4 h-4 text-gray-700" />
-                  Message
-                </button>
-
-                <button
-                  onClick={() => {
-                    onClose()
-                    navigate(`/profile/${profile?.username || profile?.userId || userId}`)
-                  }}
-                  className="flex-1 flex items-center justify-center gap-2 py-[14px] rounded-full border border-gray-200 bg-white text-gray-800 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
-                >
-                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                  Voir profil
-                </button>
-              </div>
-
-              {/* Friend request button */}
-              {friendStatus === 'none' && (
-                <button
-                  onClick={() => sendFriendMutation.mutate()}
-                  disabled={sendFriendMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2 py-[14px] rounded-full bg-action-primary text-white font-bold text-[15px] active:scale-95 transition-transform shadow-md shadow-orange-500/20"
-                >
-                  {sendFriendMutation.isPending
-                    ? <Loader2 className="w-5 h-5 animate-spin" />
-                    : <UserPlus className="w-5 h-5" />}
-                  Ajouter en ami
-                </button>
-              )}
-              {friendStatus === 'pending_sent' && (
-                <div className="w-full flex items-center justify-center gap-2 py-[14px] rounded-full border border-gray-200 bg-gray-50 text-gray-500 font-bold text-[15px]">
-                  <UserCheck className="w-5 h-5" />
-                  Demande envoyée
+        {/* Actions */}
+        {!isMe && (
+          <div className="flex flex-col gap-1 w-full mt-4">
+            <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] mb-1">
+              Actions
+            </h3>
+            <div className="flex flex-col gap-[2px] w-full">
+              <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
+                <div className="w-5 h-5 flex items-center justify-center">
+                  <BellOff className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
                 </div>
-              )}
-              {friendStatus === 'friend' && (
-                <div className="w-full flex items-center justify-center gap-2 py-[14px] rounded-full border border-green-200 bg-green-50 text-green-600 font-bold text-[15px]">
-                  <UserCheck className="w-5 h-5" />
-                  Amis
+                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Mettre en sourdine</span>
+              </button>
+              
+              <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
+                <div className="w-5 h-5 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
                 </div>
-              )}
+                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
+              </button>
+
+              <button className="flex flex-row items-center justify-start p-2 pl-0 gap-2 w-full h-[36px] rounded-[8px] active:bg-gray-100 transition-colors">
+                <div className="w-5 h-5 flex items-center justify-center">
+                  <Ban className="w-5 h-5 text-[#737373]" strokeWidth={1.25} />
+                </div>
+                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Bloquer</span>
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )

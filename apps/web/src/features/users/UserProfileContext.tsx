@@ -10,7 +10,11 @@ import { createContext, useContext, useState, useCallback } from 'react'
 import { UserProfileSheet } from '@/features/users/components/UserProfileSheet'
 
 interface UserProfileContextValue {
-  openUserProfile: (userId: string, preview?: { displayName?: string; avatarUrl?: string | null }) => void
+  openUserProfile: (
+    userId: string, 
+    preview?: { displayName?: string; avatarUrl?: string | null },
+    commonGroup?: { title: string, coverUrl?: string | null }
+  ) => void
   closeUserProfile: () => void
 }
 
@@ -24,10 +28,18 @@ export function useUserProfile() {
 }
 
 export function UserProfileProvider({ children }: { children: React.ReactNode }) {
-  const [target, setTarget] = useState<{ userId: string; preview?: { displayName?: string; avatarUrl?: string | null } } | null>(null)
+  const [target, setTarget] = useState<{ 
+    userId: string; 
+    preview?: { displayName?: string; avatarUrl?: string | null },
+    commonGroup?: { title: string, coverUrl?: string | null }
+  } | null>(null)
 
-  const openUserProfile = useCallback((userId: string, preview?: { displayName?: string; avatarUrl?: string | null }) => {
-    setTarget({ userId, preview })
+  const openUserProfile = useCallback((
+    userId: string, 
+    preview?: { displayName?: string; avatarUrl?: string | null },
+    commonGroup?: { title: string, coverUrl?: string | null }
+  ) => {
+    setTarget({ userId, preview, commonGroup })
   }, [])
 
   const closeUserProfile = useCallback(() => {
@@ -41,6 +53,7 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
         <UserProfileSheet
           userId={target.userId}
           preview={target.preview}
+          commonGroup={target.commonGroup}
           onClose={closeUserProfile}
         />
       )}

@@ -1,13 +1,12 @@
-import { useState } from 'react'
-import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, AlertTriangle, LogOut, UserPlus, Check, Clock } from 'lucide-react'
+import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, AlertTriangle, LogOut, UserPlus } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useNavigate } from 'react-router'
-import { Conversation, ConversationMember } from '../api'
+import { Conversation } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 import { useAuthStore } from '@/stores/auth.store'
-import { ParticipantInfoSheet } from './ParticipantInfoSheet'
+import { useUserProfile } from '@/features/users/UserProfileContext'
 
 interface GroupChatInfoSheetProps {
   conversation: Conversation
@@ -20,7 +19,7 @@ interface GroupChatInfoSheetProps {
 export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onContribute }: GroupChatInfoSheetProps) {
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
-  const [selectedMember, setSelectedMember] = useState<ConversationMember | null>(null)
+  const { openUserProfile } = useUserProfile()
   
   const poolStats = event && hasActivePool(event) ? computePoolStats(event) : null
 
@@ -174,7 +173,11 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               return (
                 <div 
                   key={member.userId} 
-                  onClick={() => !isMe && setSelectedMember(member)}
+                  onClick={() => !isMe && openUserProfile(
+                    member.userId, 
+                    { displayName: member.user?.profile?.displayName, avatarUrl: member.user?.profile?.avatarUrl },
+                    { title: event?.title || conversation?.name || 'Groupe', coverUrl: event?.coverUrl || conversation?.avatarUrl }
+                  )}
                   className={`flex flex-row items-center justify-between gap-[6px] w-full h-[40px] rounded-[8px] ${!isMe ? 'active:bg-gray-100 cursor-pointer' : ''}`}
                 >
                   <div className="flex flex-row items-center gap-[6px] flex-1 overflow-hidden">
@@ -258,15 +261,6 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
           </div>
         </div>
       </div>
-
-      {selectedMember && (
-        <ParticipantInfoSheet
-          member={selectedMember}
-          eventTitle={event?.title || conversation?.name}
-          eventCoverUrl={event?.coverUrl || conversation?.avatarUrl}
-          onClose={() => setSelectedMember(null)}
-        />
-      )}
     </div>
   )
 }
