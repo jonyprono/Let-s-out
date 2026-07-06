@@ -60,7 +60,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
 
 
   return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-white">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-white">
       {/* Header */}
       <div className="px-4 pt-safe-4 pb-3 flex items-center justify-between border-b border-gray-100">
         <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100">

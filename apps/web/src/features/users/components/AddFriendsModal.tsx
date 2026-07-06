@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Search, X, Loader2, UserPlus, Check } from 'lucide-react'
 import { useSearchUsers, useSendFriendRequest } from '@/features/users/api'
 import { toast } from 'sonner'
+import { useUserProfile } from '@/features/users/UserProfileContext'
 
 interface AddFriendsModalProps {
   onClose: () => void
@@ -11,6 +12,7 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
   const [search, setSearch] = useState('')
   const { data: users, isLoading } = useSearchUsers(search)
   const { mutate: sendRequest, isPending: isSending } = useSendFriendRequest()
+  const { openUserProfile } = useUserProfile()
 
   // Track sent requests locally for immediate UI feedback
   const [sentRequests, setSentRequests] = useState<string[]>([])
@@ -75,14 +77,19 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
               
               return (
                 <div key={user.userId} className="w-full flex items-center gap-3">
-                  <img 
-                    src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.displayName}&background=f3f4f6&color=374151`} 
-                    alt={user.displayName} 
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-[15px] font-bold text-gray-900 truncate">{user.displayName}</h4>
-                    <p className="text-[13px] text-gray-500 truncate">@{user.username}</p>
+                  <div 
+                    onClick={() => openUserProfile(user.userId, { displayName: user.displayName, avatarUrl: user.avatarUrl })}
+                    className="flex-1 flex items-center gap-3 cursor-pointer active:opacity-70 transition-opacity min-w-0"
+                  >
+                    <img 
+                      src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.displayName}&background=f3f4f6&color=374151`} 
+                      alt={user.displayName} 
+                      className="w-12 h-12 rounded-full object-cover shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[15px] font-bold text-gray-900 truncate">{user.displayName}</h4>
+                      <p className="text-[13px] text-gray-500 truncate">@{user.username}</p>
+                    </div>
                   </div>
                   
                   <button 
