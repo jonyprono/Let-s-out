@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Settings, LogOut, MapPin, UserCheck, UserPlus, ChevronRight } from 'lucide-react';
+import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Star, Users, Medal, Activity } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -9,10 +9,10 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
 import { useLogout } from '@/features/auth/hooks/useAuth';
-
 import { useNavigate, useParams } from 'react-router';
-import { EventCard } from '@/components/shared/EventCard';
 import { Button } from '@/components/ui/button';
+import { ToggleButton } from '@/components/ui/toggle-button';
+
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
@@ -106,308 +106,301 @@ export function Profile({ onNavigate }: ProfileProps) {
   // Show loading state while determining own vs other profile
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-[#F8F7FF] dark:bg-[#111111]">
+      <div className="w-full h-full flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-150">
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 animate-pulse" />
-          <div className="h-4 w-32 bg-gray-100 rounded-lg animate-pulse" />
-          <div className="h-3 w-24 bg-gray-100 rounded-lg animate-pulse" />
+          <div className="w-14 h-14 rounded-2xl bg-gray-200 animate-pulse" />
+          <div className="h-4 w-32 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-3 w-24 bg-gray-200 rounded-lg animate-pulse" />
         </div>
       </div>
     );
   }
 
+  // TABS Generation
+  const TABS = [
+    { key: 'events', label: 'Événements', count: createdEvents.length } as const,
+    ...(isOwnProfile ? [{ key: 'drafts', label: 'Brouillons', count: draftEvents.length } as const] : []),
+    { key: 'followers', label: 'Abonnés', count: followers.length } as const,
+    { key: 'following', label: 'Abonnements', count: following.length } as const,
+    ...(isOwnProfile ? [{ key: 'friends', label: 'Amis', count: friends.length } as const] : []),
+  ];
+
+  const rating = viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A';
 
   return (
-    <div className="w-full h-full flex flex-col bg-background">
-
-      <div className="relative w-full overflow-hidden flex-shrink-0" style={{ background: 'linear-gradient(135deg, var(--color-action-primary, #FF7A00) 0%, var(--color-brand-orange-400, #FF991C) 60%, #FFA040 100%)' }}>
-        
-        {/* Header */}
-        <div className="px-5 pt-12 pb-3 sticky top-0 z-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {!isOwnProfile && (
-              <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {isOwnProfile && (
-              <button onClick={() => onNavigate('settings')} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center active:scale-95 transition-transform">
-                <Settings className="w-5 h-5 text-white" />
-              </button>
-            )}
-            {isOwnProfile && (
-              <button onClick={() => doLogout()} className="w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform bg-red-500/20">
-                <LogOut className="w-5 h-5 text-white" />
-              </button>
-            )}
-          </div>
+    <div className="w-full h-full flex flex-col bg-gray-50">
+      
+      {/* Header Actions */}
+      <div className="px-5 pt-12 pb-3 sticky top-0 z-20 flex items-center justify-between bg-gray-50/90 backdrop-blur-md border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          {!isOwnProfile && (
+            <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            </button>
+          )}
         </div>
-
-        <div className="px-5 pb-5">
-          {/* Avatar + Name + Location */}
-          <div className="flex flex-col items-center mb-5 text-center">
-            <div className="relative mb-3">
-              <div className="w-24 h-24 rounded-full ring-4 ring-white shadow-lg overflow-hidden bg-background-white">
-                <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white" style={{ background: 'linear-gradient(135deg, var(--color-action-primary, #FF7A00), var(--color-brand-orange-400, #FF991C))' }}>{displayName.charAt(0).toUpperCase()}</div>} />
-              </div>
-              <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full border-2 border-white shadow-sm bg-yellow-400 flex items-center justify-center text-[10px] font-bold text-white">★ {viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A'}</div>
-            </div>
-            
-            <h2 className="text-[24px] font-bold text-white mb-1 leading-tight">{displayName}</h2>
-            {city && (
-              <div className="flex items-center justify-center gap-1.5 text-[13px] text-white/80 mb-2 font-medium">
-                <MapPin className="w-4 h-4" />
-                <span>{city}</span>
-                {memberSince && <><span className="mx-1.5">•</span><span>Membre depuis {memberSince}</span></>}
-              </div>
-            )}
-            {bio && <p className="text-[14px] text-white/90 leading-relaxed max-w-sm mx-auto">{bio}</p>}
-          </div>
-
-          {/* Stats row */}
-          <div className="flex gap-1 bg-white/20 rounded-[16px] p-2 backdrop-blur-md mb-4">
-            {[
-              { value: createdEvents.length, label: 'Créés' },
-              { value: pastEvents.length, label: 'Rejoints' },
-              { value: friends.length, label: 'Amis' },
-              { value: viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A', label: 'Note' },
-            ].map(stat => (
-              <div key={stat.label} className="flex-1 text-center py-2 flex flex-col items-center justify-center">
-                <p className="text-[20px] font-black text-white">{stat.value}</p>
-                <p className="text-[11px] font-semibold text-white/80">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-          
-          {/* Tabs */}
-          <div className="flex w-full gap-4 text-white/80 font-medium text-[15px] border-b border-white/20 pb-2">
-            <button className={`flex-1 text-center pb-2 ${activeTab === 'events' ? 'font-bold text-white border-b-2 border-white -mb-[9px]' : ''}`} onClick={() => setActiveTab('events')}>Profil</button>
-            <button className={`flex-1 text-center pb-2 ${activeTab === 'events' ? 'font-bold text-white border-b-2 border-white -mb-[9px]' : ''}`} onClick={() => setActiveTab('events')}>Événements</button>
-            <button className={`flex-1 text-center pb-2 ${activeTab === 'events' ? 'font-bold text-white border-b-2 border-white -mb-[9px]' : ''}`} onClick={() => setActiveTab('events')}>Avis</button>
-          </div>
+        <div className="flex items-center gap-2">
+          {isOwnProfile && (
+            <button onClick={() => onNavigate('settings')} className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm active:scale-95 transition-transform">
+              <Settings className="w-5 h-5 text-gray-700" />
+            </button>
+          )}
+          {isOwnProfile && (
+            <button onClick={() => doLogout()} className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm active:scale-95 transition-transform text-red-500">
+              <LogOut className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-background-white" style={{ scrollbarWidth: 'none' }}>
-        <div className="p-5">
-           {/* Actions */}
-           {!isOwnProfile && (
-             <div className="flex gap-3 mb-6">
-               <Button className="flex-1 rounded-[12px] h-12 text-[15px] font-bold shadow-sm" style={{ backgroundColor: 'var(--color-action-primary, #FF7A00)' }}>+ Suivre</Button>
-               <Button variant="outline" className="flex-1 rounded-[12px] h-12 text-[15px] font-bold shadow-sm">Message</Button>
-             </div>
-           )}
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        <div className="px-5 pt-6 pb-6 bg-gray-50 flex flex-col items-center border-b border-gray-100">
+          
+          {/* Avatar & Info */}
+          <div className="relative mb-4">
+            <div className="w-[104px] h-[104px] rounded-full ring-4 ring-white shadow-md overflow-hidden bg-white">
+              <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-4xl font-bold text-gray-500 bg-gray-100">{displayName.charAt(0).toUpperCase()}</div>} />
+            </div>
+            <div className="absolute bottom-0 right-0 w-8 h-8 rounded-full border-2 border-white shadow-sm bg-yellow-400 flex items-center justify-center text-[10px] font-bold text-white">
+              ★ {rating}
+            </div>
+          </div>
+          
+          <h2 className="text-[22px] font-black text-gray-900 mb-1 leading-tight">{displayName}</h2>
+          {city && (
+            <div className="flex items-center justify-center gap-1.5 text-[13px] text-gray-500 mb-3 font-medium">
+              <MapPin className="w-3.5 h-3.5" />
+              <span>{city}</span>
+              {memberSince && <><span className="mx-1.5">•</span><span>{memberSince}</span></>}
+            </div>
+          )}
+          {bio && <p className="text-[14px] text-gray-600 leading-relaxed max-w-sm mx-auto text-center mb-5">{bio}</p>}
 
-           {/* Badges */}
-           <div className="bg-gray-50 rounded-[16px] p-4 mb-4 border border-gray-100">
-             <div className="flex justify-between items-center mb-4">
-               <h3 className="font-bold text-[15px] flex items-center gap-2">🏅 Badges</h3>
-               <button className="text-[13px] font-semibold text-blue-500">Voir tout</button>
-             </div>
-             <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
-                {(viewedProfile?.user?.badges || [
-                  { badge: 'Social Star' },
-                  { badge: 'Early Adopter' },
-                  { badge: 'Music Lover' }
-                ]).map((b: any) => (
-                  <div key={b.badge} className="flex flex-col items-center flex-shrink-0 w-16">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-purple-500 mb-2 shadow-sm"></div>
-                    <span className="text-[10px] font-semibold text-center text-gray-500 leading-tight">{b.badge}</span>
-                  </div>
-                ))}
-             </div>
-           </div>
+          {/* Actions */}
+          {!isOwnProfile && (
+            <div className="flex gap-3 w-full mb-6 max-w-xs">
+              <Button className="flex-1 rounded-full h-11 text-[14px] font-bold shadow-sm" style={{ backgroundColor: 'var(--color-action-primary, #FF7A00)' }}>+ Suivre</Button>
+              <Button variant="outline" className="flex-1 rounded-full h-11 text-[14px] font-bold shadow-sm">Message</Button>
+            </div>
+          )}
 
-           {/* Interests */}
-           <div className="bg-gray-50 rounded-[16px] p-4 mb-4 border border-gray-100">
-             <h3 className="font-bold text-[15px] flex items-center gap-2 mb-4">🎯 Mes intérêts</h3>
-             <div className="flex flex-wrap gap-2">
-                {displayProfile?.interests && displayProfile.interests.length > 0 ? displayProfile.interests.map((i: string) => (
-                  <span key={i} className="px-4 py-2 bg-orange-50 text-orange-600 text-[13px] font-bold rounded-full">{i}</span>
-                )) : <p className="text-sm text-gray-400">Aucun intérêt spécifié</p>}
-             </div>
-           </div>
+          {/* Badges & Interests (Compact) */}
+          <div className="w-full flex flex-col gap-3 mb-6">
+            {(displayProfile?.interests?.length > 0 || viewedProfile?.user?.badges?.length > 0) && (
+               <div className="flex gap-2 flex-wrap justify-center">
+                  {viewedProfile?.user?.badges?.slice(0, 2).map((b: any) => (
+                    <div key={b.badge} className="px-3 py-1.5 bg-blue-50 text-blue-700 text-[12px] font-bold rounded-full flex items-center gap-1.5 border border-blue-100/50">
+                      <Medal className="w-3.5 h-3.5" /> {b.badge}
+                    </div>
+                  ))}
+                  {displayProfile?.interests?.slice(0, 3).map((i: string) => (
+                    <div key={i} className="px-3 py-1.5 bg-orange-50 text-orange-600 text-[12px] font-bold rounded-full border border-orange-100/50">
+                      {i}
+                    </div>
+                  ))}
+               </div>
+            )}
+          </div>
+
+          {/* Stats Cards */}
+          <div className="w-full grid grid-cols-4 gap-2">
+            {[
+              { value: createdEvents.length, label: 'Créés', icon: Calendar },
+              { value: pastEvents.length, label: 'Rejoints', icon: Activity },
+              { value: friends.length, label: 'Amis', icon: Users },
+              { value: rating, label: 'Note', icon: Star },
+            ].map((stat, i) => (
+              <div key={i} className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
+                <stat.icon className="w-4 h-4 text-gray-400 mb-1" />
+                <p className="text-[16px] font-black text-gray-900 leading-none mb-1">{stat.value}</p>
+                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
         </div>
-        {/* TAB: Events créés */}
-        {activeTab === 'events' && (
-          <div className="mx-200 space-y-200">
-            {createdEvents.length === 0 ? (
-              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-brand-orange-50 rounded-full flex items-center justify-center mb-200">
-                  <span className="text-2xl">📅</span>
-                </div>
-                <p className="text-gray-900 font-bold text-[15px]">Aucun événement créé</p>
-                <p className="text-sm text-text-secondary mt-1">Vos événements créés apparaîtront ici</p>
-                {isOwnProfile && (
-                  <Button
-                    onClick={() => onNavigate('create-event')}
-                    className="mt-6 w-auto shadow-md"
-                  >
-                    Créer un événement
-                  </Button>
+
+        {/* Content Area */}
+        <div className="bg-white min-h-[500px]">
+          {/* Scrollable Tabs */}
+          <div className="w-full overflow-x-auto hide-scrollbar border-b border-gray-100 sticky top-0 bg-white/95 backdrop-blur-md z-10">
+            <div className="flex p-3 w-max gap-2 mx-auto">
+              <ToggleButton
+                options={TABS.map(t => ({ label: `${t.label} ${t.count > 0 ? `(${t.count})` : ''}`, value: t.key }))}
+                value={activeTab}
+                onChange={(val) => setActiveTab(val as Tab)}
+                className="bg-gray-50 p-1 rounded-full border border-gray-200"
+              />
+            </div>
+          </div>
+
+          <div className="p-4">
+            {/* TAB: Événements */}
+            {activeTab === 'events' && (
+              <div className="space-y-4">
+                {createdEvents.length === 0 ? (
+                  <EmptyState icon="📅" title="Aucun événement créé" subtitle="Les événements apparaîtront ici" action={isOwnProfile ? <Button onClick={() => onNavigate('create-event')}>Créer un événement</Button> : null} />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {createdEvents.map((event: any) => (
+                      <CompactEventCard key={event.id} event={event} onNavigate={onNavigate} />
+                    ))}
+                  </div>
+                )}
+                {pastEvents.length > 0 && (
+                  <>
+                    <h3 className="font-bold text-gray-900 text-lg mt-8 mb-4">Participations passées</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {pastEvents.slice(0, 3).map((event: any) => (
+                        <CompactEventCard key={event.id} event={event} onNavigate={onNavigate} />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
-            ) : (
-              createdEvents.map((event: any) => (
-                <EventCard key={event.id} event={event} onNavigate={onNavigate} />
-              ))
             )}
 
-            {/* Participated events */}
-            {pastEvents.length > 0 && (
-              <>
-                <div className="flex items-center gap-2 mt-8 mb-200">
-                  <div className="w-1 h-4 bg-gray-300 rounded-full" />
-                  <p className="text-[13px] font-bold text-gray-400 uppercase tracking-wide">Participations passées</p>
-                </div>
-                {pastEvents.slice(0, 3).map((event: any) => (
-                  <EventCard key={event.id} event={event} onNavigate={onNavigate} />
-                ))}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* TAB: Brouillons */}
-        {activeTab === 'drafts' && isOwnProfile && (
-          <div className="mx-200 space-y-200">
-            {draftEvents.length === 0 ? (
-              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-brand-orange-50 rounded-full flex items-center justify-center mb-200">
-                  <span className="text-2xl">📝</span>
-                </div>
-                <p className="text-gray-900 font-bold text-[15px]">Aucun brouillon</p>
-                <p className="text-sm text-text-secondary mt-1">Vos événements en attente apparaîtront ici</p>
-              </div>
-            ) : (
-              draftEvents.map((event: any) => (
-                <div key={event.id} className="relative">
-                  {/* Draft badge */}
-                  <div className="absolute top-3 left-3 z-10 bg-background-white/95 backdrop-blur-sm text-action-primary px-150 py-1 rounded-full text-[11px] font-black tracking-wide uppercase border border-action-primary/20 shadow-sm">
-                    Brouillon
+            {/* TAB: Brouillons */}
+            {activeTab === 'drafts' && isOwnProfile && (
+              <div className="space-y-4">
+                {draftEvents.length === 0 ? (
+                  <EmptyState icon="📝" title="Aucun brouillon" subtitle="Vos événements en attente apparaîtront ici" />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {draftEvents.map((event: any) => (
+                      <div key={event.id} className="relative group">
+                        <CompactEventCard event={event} onNavigate={onNavigate} isDraft />
+                        <div className="mt-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
+                            className="w-full text-xs h-8 border-orange-500 text-orange-500 hover:bg-orange-50"
+                          >
+                            Reprendre le brouillon
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  {/* Manage button */}
-                  <div className="absolute top-3 right-3 z-10">
-                    <button
-                      onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
-                      className="flex items-center gap-1.5 bg-action-primary active:bg-action-primary-hover text-white px-150 py-1.5 rounded-full text-[11px] font-black shadow-md active:scale-95 transition-transform"
-                    >
-                      <span>⚙</span> Gérer
-                    </button>
-                  </div>
-                  <div className="opacity-80 hover:opacity-100 transition-opacity">
-                    <EventCard event={event} onNavigate={onNavigate} />
-                  </div>
-                  {/* Bottom action bar */}
-                  <div className="mt-2 flex gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
-                      className="flex-1 border-2 border-[var(--color-action-primary)] text-[var(--color-action-primary)] font-bold text-[13px]"
-                    >
-                      ✏️ Modifier & publier
-                    </Button>
-                  </div>
-                </div>
-              ))
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {/* TAB: Followers */}
-        {activeTab === 'followers' && (
-          <div className="mx-200 space-y-2">
-            {followers.length === 0 ? (
-              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-brand-orange-50 rounded-full flex items-center justify-center mb-200">
-                  <span className="text-2xl">👥</span>
-                </div>
-                <p className="text-gray-900 font-bold text-[15px]">Aucun abonné</p>
-                <p className="text-sm text-text-secondary mt-1">Personne ne vous suit encore</p>
+            {/* TAB: Followers */}
+            {activeTab === 'followers' && (
+              <div className="space-y-3">
+                {followers.length === 0 ? (
+                  <EmptyState icon="👥" title="Aucun abonné" subtitle="Personne ne vous suit encore" />
+                ) : (
+                  followers.map((f: any) => (
+                    <UserCard key={f?.userId} user={f} type="follower" />
+                  ))
+                )}
               </div>
-            ) : (
-              followers.map((f: any) => (
-                <UserCard key={f?.userId} user={f} type="follower" />
-              ))
             )}
-          </div>
-        )}
 
-        {/* TAB: Following */}
-        {activeTab === 'following' && (
-          <div className="mx-200 space-y-2">
-            {following.length === 0 ? (
-              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-pink-50 rounded-full flex items-center justify-center mb-200">
-                  <span className="text-2xl">🔍</span>
-                </div>
-                <p className="text-gray-900 font-bold text-[15px]">Vous ne suivez personne</p>
-                <p className="text-sm text-text-secondary mt-1">Explorez des profils pour les suivre</p>
+            {/* TAB: Following */}
+            {activeTab === 'following' && (
+              <div className="space-y-3">
+                {following.length === 0 ? (
+                  <EmptyState icon="🔍" title="Vous ne suivez personne" subtitle="Explorez des profils pour les suivre" />
+                ) : (
+                  following.map((f: any) => (
+                    <UserCard key={f?.userId} user={f} type="following" />
+                  ))
+                )}
               </div>
-            ) : (
-              following.map((f: any) => (
-                <UserCard key={f?.userId} user={f} type="following" />
-              ))
             )}
-          </div>
-        )}
 
-        {/* TAB: Friends */}
-        {activeTab === 'friends' && isOwnProfile && (
-          <div className="mx-200 space-y-2">
-            <button
-              onClick={() => navigate('/friend-requests')}
-              className="w-full bg-background-white rounded-2xl p-200 flex items-center justify-between shadow-sm mb-200 active:scale-[0.98] transition-transform border border-gray-100"
-            >
-              <div className="flex items-center gap-150">
-                <div className="w-10 h-10 rounded-full bg-brand-orange-50 flex items-center justify-center">
-                  <UserPlus className="w-5 h-5 text-orange-500" />
+            {/* TAB: Friends */}
+            {activeTab === 'friends' && isOwnProfile && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    onClick={() => navigate('/friend-requests')}
+                    className="bg-white rounded-2xl p-4 flex flex-col items-center text-center shadow-sm border border-gray-100 hover:border-orange-200 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-2">
+                      <Users className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <p className="font-bold text-[13px] text-gray-900">Demandes</p>
+                  </button>
+                  <button
+                    onClick={() => setShowAddFriendsModal(true)}
+                    className="bg-white rounded-2xl p-4 flex flex-col items-center text-center shadow-sm border border-gray-100 hover:border-orange-200 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-2">
+                      <UserPlus className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <p className="font-bold text-[13px] text-gray-900">Ajouter</p>
+                  </button>
                 </div>
-                <div className="text-left">
-                  <p className="font-bold text-[15px] text-gray-900">Demandes d'amis</p>
-                  <p className="text-[13px] text-text-secondary">Gérer les demandes en attente</p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-300" />
-            </button>
 
-            <button
-              onClick={() => setShowAddFriendsModal(true)}
-              className="w-full bg-background-white rounded-2xl p-200 flex items-center justify-between shadow-sm mb-200 active:scale-[0.98] transition-transform border border-gray-100"
-            >
-              <div className="flex items-center gap-150">
-                <div className="w-10 h-10 rounded-full bg-action-primary/10 flex items-center justify-center">
-                  <UserPlus className="w-5 h-5 text-action-primary" />
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-[15px] text-gray-900">Rechercher des amis</p>
-                  <p className="text-[13px] text-text-secondary">Trouver de nouvelles personnes</p>
-                </div>
+                {friends.length === 0 ? (
+                  <EmptyState icon="🤝" title="Aucun ami" subtitle="Envoyez des demandes d'amis pour commencer" />
+                ) : (
+                  friends.map((f: any) => (
+                    <UserCard key={f?.userId} user={f} type="friend" />
+                  ))
+                )}
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-300" />
-            </button>
-
-            {friends.length === 0 ? (
-              <div className="bg-background-white rounded-[24px] p-8 text-center shadow-sm border border-gray-50/50">
-                <div className="w-16 h-16 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-200">
-                  <span className="text-2xl">🤝</span>
-                </div>
-                <p className="text-gray-900 font-bold text-[15px]">Aucun ami</p>
-                <p className="text-sm text-text-secondary mt-1">Envoyez des demandes d'amis pour commencer</p>
-              </div>
-            ) : (
-              friends.map((f: any) => (
-                <UserCard key={f?.userId} user={f} type="friend" />
-              ))
             )}
+
           </div>
-        )}
+        </div>
       </div>
 
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
       {showAddFriendsModal && <AddFriendsModal onClose={() => setShowAddFriendsModal(false)} />}
+    </div>
+  );
+}
+
+// ── Compact EventCard ─────────────────────────────────────────────────────────
+
+function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNavigate?: any; isDraft?: boolean }) {
+  return (
+    <div 
+      onClick={() => {
+        if (!isDraft && onNavigate && event?.id) onNavigate('event-details', event.id);
+      }}
+      className="flex gap-3 p-3 bg-white border border-gray-100 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+    >
+      <div className="w-[84px] h-[84px] rounded-[12px] bg-gray-100 flex-shrink-0 overflow-hidden relative">
+        <SafeImage src={event?.coverUrl} alt={event?.title || 'Event cover'} className="w-full h-full object-cover" />
+        {isDraft && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+            <span className="text-[10px] font-bold text-white uppercase tracking-wider px-2 py-1 bg-black/50 rounded-md">Brouillon</span>
+          </div>
+        )}
+      </div>
+      <div className="flex flex-col justify-center min-w-0 flex-1 py-1">
+        <h4 className="font-bold text-[15px] text-gray-900 truncate mb-1">{event?.title || 'Sans titre'}</h4>
+        <p className="text-[13px] text-gray-500 truncate mb-2">{event?.city || 'Lieu non défini'}</p>
+        <div className="flex items-center gap-2 mt-auto">
+          <div className="px-2 py-0.5 bg-gray-100 rounded-md text-[11px] font-bold text-gray-600">
+            {event?.price === 0 ? 'Gratuit' : `${event?.price || 0} CFA`}
+          </div>
+          <div className="px-2 py-0.5 bg-orange-50 rounded-md text-[11px] font-bold text-orange-600">
+            {event?.currentAttendees || 0} Part.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Empty State ───────────────────────────────────────────────────────────────
+
+function EmptyState({ icon, title, subtitle, action }: { icon: string, title: string, subtitle: string, action?: React.ReactNode }) {
+  return (
+    <div className="bg-white rounded-[24px] p-8 text-center border border-dashed border-gray-200">
+      <div className="w-14 h-14 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-3">
+        <span className="text-2xl">{icon}</span>
+      </div>
+      <p className="text-gray-900 font-bold text-[15px]">{title}</p>
+      <p className="text-sm text-gray-500 mt-1 mb-4">{subtitle}</p>
+      {action}
     </div>
   );
 }
@@ -422,7 +415,7 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
   return (
     <div 
       onClick={() => openUserProfile(user?.userId || user?.id, { displayName: name, avatarUrl: avatar })}
-      className="bg-background-white rounded-2xl p-150 flex items-center gap-150 shadow-sm active:scale-[0.98] transition-transform cursor-pointer border border-gray-50/50 hover:border-gray-100"
+      className="bg-white rounded-2xl p-3 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer border border-gray-100 hover:border-gray-200"
     >
       <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 shadow-sm ring-2 ring-white">
         <SafeImage
@@ -430,8 +423,7 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
           alt={name}
           className="w-full h-full object-cover"
           fallback={
-            <div className="w-full h-full flex items-center justify-center font-bold text-[#FFFFFF] text-lg"
-              style={{ background: 'linear-gradient(135deg, var(--color-action-primary, #FF7A00), var(--color-brand-orange-400, #FF991C))' }}>
+            <div className="w-full h-full flex items-center justify-center font-bold text-gray-500 bg-gray-100 text-lg">
               {name.charAt(0).toUpperCase()}
             </div>
           }
@@ -440,26 +432,24 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
       <div className="flex-1 min-w-0">
         <p className="font-bold text-gray-900 text-[15px] truncate">{name}</p>
         {user?.username && (
-          <p className="text-[13px] text-text-secondary truncate">@{user.username}</p>
+          <p className="text-[13px] text-gray-500 truncate">@{user.username}</p>
         )}
       </div>
       {type === 'follower' && (
-        <div className="flex-shrink-0 p-2 rounded-full bg-brand-orange-50">
-          <UserCheck className="w-4 h-4 text-action-primary" />
+        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-orange-50">
+          <UserCheck className="w-4 h-4 text-orange-500" />
         </div>
       )}
       {type === 'following' && (
-        <div className="flex-shrink-0 p-2 rounded-full bg-brand-orange-50">
-          <UserPlus className="w-4 h-4 text-action-primary" />
+        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-orange-50">
+          <UserPlus className="w-4 h-4 text-orange-500" />
         </div>
       )}
       {type === 'friend' && (
-        <div className="flex-shrink-0 p-2 rounded-full bg-brand-orange-50">
-          <UserCheck className="w-4 h-4 text-action-primary" />
+        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-orange-50">
+          <UserCheck className="w-4 h-4 text-orange-500" />
         </div>
       )}
     </div>
   );
 }
-
-
