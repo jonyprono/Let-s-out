@@ -13,10 +13,8 @@ export function BottomSheet({ title, open, onClose, children }: BottomSheetProps
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       <div
-        className="relative w-full bg-[var(--color-background-primary)] px-5 pt-4 pb-10 max-h-[85vh] overflow-y-auto"
+        className="relative w-full bg-[var(--color-background-primary)] px-5 pt-4 pb-10 h-[95vh] overflow-y-auto rounded-t-[32px]"
         style={{ 
-          borderTopLeftRadius: 'var(--radius-3xl)', 
-          borderTopRightRadius: 'var(--radius-3xl)', 
           boxShadow: 'var(--shadow-bottom-sheet)' 
         }}
         onClick={e => e.stopPropagation()}

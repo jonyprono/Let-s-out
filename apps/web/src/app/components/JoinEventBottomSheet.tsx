@@ -50,8 +50,8 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
   const parsedAmount = Number(amountStr) || 0
   const finalAmount = Math.max(parsedAmount, minAmount)
 
-
-  const isFormValid = isFree || (finalAmount >= minAmount && rawPhone.trim().length >= 8)
+  // Use parsedAmount instead of finalAmount for validation so the form is invalid if the user hasn't typed an amount >= minAmount
+  const isFormValid = isFree || (parsedAmount >= minAmount && rawPhone.trim().length >= 8)
 
   const joinMutation = useMutation({
     mutationFn: () => eventsApi.join(event.id),

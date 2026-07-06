@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button'
 import { SaveEventButton } from '@/components/ui/save-event-button'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
-import { Share01Icon } from 'hugeicons-react'
+import { Share08Icon } from 'hugeicons-react'
 import { chatApi } from '@/features/chat/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
@@ -158,7 +158,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       goToChat()
       return
     }
-    navigate(`/events/${event?.id}/pay`)
+    setShowJoinModal(true)
   }
 
 
@@ -317,7 +317,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
           <div className="flex items-center gap-2 -mr-2">
             <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
-              <Share01Icon className="w-5 h-5" strokeWidth={1.8} />
+              <Share08Icon className="w-5 h-5" strokeWidth={1.8} />
             </button>
             <SaveEventButton saved={favorite} onClick={handleFavorite} className="w-9 h-9" />
           </div>
@@ -593,7 +593,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 onClick={handleShare}
                 className="flex-[0.45] flex items-center justify-center gap-2 rounded-full font-semibold border-[var(--border-default)] text-[var(--color-text-primary)]"
               >
-                <Share01Icon className="w-4 h-4" strokeWidth={1.8} />
+                <Share08Icon className="w-4 h-4" strokeWidth={1.8} />
                 Partager
               </Button>
               <Button
