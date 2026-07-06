@@ -153,7 +153,8 @@ export function Explorer() {
         onNavigate={(screen: string, id?: string) => {
           const map: Record<string, string> = {
             'home': '/home', 'messages': '/messages',
-            'profile': '/profile', 'create-event': '/events/create'
+            'profile': '/profile', 'create-event': '/events/create',
+            'notifications': '/notifications'
           }
           if (screen === 'event-details' && id) nav(`/events/${id}`)
           else if (map[screen]) nav(map[screen])
@@ -203,7 +204,8 @@ export function Profile() {
           const map: Record<string, string> = {
             'home': '/home', 'explorer': '/explorer', 'messages': '/messages',
             'create-event': '/events/create', 'settings': '/settings',
-            'welcome': '/welcome', 'friends': '/friends'
+            'welcome': '/welcome', 'friends': '/friends',
+            'notifications': '/notifications'
           }
           if (screen === 'event-details' && id) nav(`/events/${id}`)
           else if (map[screen]) nav(map[screen])

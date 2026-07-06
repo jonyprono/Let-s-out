@@ -125,98 +125,100 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
   }
 
   return (
-    <BottomSheet open={isOpen} onClose={onClose}>
-      <div className="px-[16px] pb-[32px] font-poppins flex flex-col gap-[20px] w-full">
-        
-        {/* Custom Header */}
-        <div className="flex items-center justify-between pb-[16px] border-b border-gray-100">
-          <button onClick={onClose} className="w-[32px] h-[32px] flex items-center justify-center bg-gray-50 rounded-full active:scale-95 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-800">
+    <BottomSheet open={isOpen} onClose={onClose} noPadding className="h-full sm:h-[95vh] font-poppins">
+      <div className="flex flex-col h-full overflow-hidden w-full bg-white sm:rounded-t-[32px]">
+        {/* Custom Header (Fixed) */}
+        <div className="flex-none flex items-center justify-between px-[1rem] pt-[1rem] pb-[0.75rem] border-b border-[#E0E0E0] min-h-[56px]">
+          <button onClick={onClose} className="w-[32px] h-[32px] flex items-center justify-start active:scale-95 transition-transform">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#1B1818]">
               <path d="m15 18-6-6 6-6"/>
             </svg>
           </button>
-          <h2 className="text-[16px] font-semibold text-[#1B1818] text-center flex-1 pr-[32px]">Rejoindre l'événement</h2>
+          <h2 className="font-semibold text-[#1B1818] text-center flex-1 pr-[32px] text-[clamp(14px,4vw,16px)]">Rejoindre l'événement</h2>
         </div>
 
-        {/* Recap Section */}
-        <div className="flex flex-col p-[16px] bg-[var(--color-background-alt)] rounded-[12px] border border-[#CED1D3] gap-[16px]">
-          <span className="text-[18px] font-medium font-poppins text-[#1B1818]">{event.title}</span>
-          <div className="flex items-center justify-between border-t border-[#CED1D3] border-dashed pt-[12px]">
-            <span className="text-[14px] font-normal font-poppins text-[#404040]">Participation</span>
-            <span className="text-[14px] font-normal font-inter text-[#1B1818]">
-              {minAmount > 0 ? (
-                <>A partir de <span className="text-[#007BFF] font-semibold">{minAmount}F</span></>
-              ) : 'Gratuit'}
-            </span>
-          </div>
-        </div>
-
-        {/* Separator */}
-        {/* Payment Form */}
-        {!isFree && (
-          <div className="flex flex-col gap-[16px]">
-            <div className="flex flex-col gap-[6px]">
-              <label className="text-[14px] font-normal font-poppins text-[#56514F]">Montant de votre participation</label>
-              <div className="relative">
-                <Input
-                  type="number"
-                  value={amountStr}
-                  onChange={(e) => setAmountStr(e.target.value)}
-                  placeholder="0"
-                  className="pr-[60px] h-[40px] rounded-[6px] bg-[#FFFFFF] border border-[#E0E0E0] text-[#1B1818] font-normal font-inter text-[14px] placeholder:text-[#BDBDBD]"
-                />
-                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-normal font-inter text-[#1B1818]">
-                  F CFA
-                </span>
-              </div>
-              <span className="text-[12px] font-normal font-inter text-[#525252]">Minimum {minAmount}F</span>
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto px-[1rem] py-[1.25rem] flex flex-col gap-[1rem]">
+          {/* Recap Section */}
+          <div className="w-full flex flex-col p-[1rem] rounded-[8px] border border-dashed border-[#CED1D3] gap-[0.75rem]">
+            <span className="font-semibold text-[#1B1818] text-[clamp(14px,4vw,16px)]">{event.title}</span>
+            <div className="flex items-center justify-between border-t border-[#CED1D3] border-dashed pt-[0.75rem]">
+              <span className="font-normal text-[#56514F] text-[clamp(12px,3.5vw,14px)]">Participation</span>
+              <span className="font-normal text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
+                {minAmount > 0 ? (
+                  <>A partir de <span className="text-[#007BFF] font-bold">{minAmount}F</span></>
+                ) : 'Gratuit'}
+              </span>
             </div>
+          </div>
 
-            <div className="flex flex-col gap-[6px]">
-              <label className="text-[14px] font-normal font-poppins text-[#56514F]">Méthode de paiement</label>
-              <div className="relative">
-                <div className="flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-[#FFFFFF] border border-[#E0E0E0] rounded-[6px]">
-                  <img src="/logos/mobile-money.png" alt="Mobile money" className="w-6 h-6 object-contain shrink-0" />
-                  <span className="flex-1 text-[14px] font-normal font-inter text-[#1B1818] text-left">Mobile money</span>
+          {/* Payment Form */}
+          {!isFree && (
+            <div className="flex flex-col gap-[1rem] w-full">
+              <div className="flex flex-col">
+                <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Montant de votre participation</label>
+                <div className="relative w-full">
+                  <Input
+                    type="number"
+                    value={amountStr}
+                    onChange={(e) => setAmountStr(e.target.value)}
+                    placeholder="0"
+                    className="w-full pr-[60px] min-h-[48px] h-auto rounded-[8px] bg-white border border-[var(--border-default)] text-[#1B1818] font-normal text-[clamp(12px,3.5vw,14px)] placeholder:text-[#BDBDBD] box-border"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-normal text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
+                    F CFA
+                  </span>
+                </div>
+                <span className="text-[clamp(10px,3vw,12px)] font-normal text-[#525252] mt-[0.25rem]">Minimum {minAmount}F</span>
+              </div>
+
+              <div className="flex flex-col">
+                <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Méthode de paiement</label>
+                <div className="flex flex-row items-center px-[1rem] py-[0.75rem] gap-[8px] w-full min-h-[48px] h-auto bg-white border border-[var(--border-default)] rounded-[8px] box-border">
+                  <img src="/logos/mobile-money.png" alt="Mobile money" className="w-[20px] h-[20px] object-contain shrink-0" />
+                  <span className="flex-1 font-normal text-[#1B1818] text-[clamp(12px,3.5vw,14px)] text-left truncate">Mobile money</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#A3A3A3] shrink-0">
                     <path d="m6 9 6 6 6-6"/>
                   </svg>
                 </div>
               </div>
-            </div>
 
-            <div className="flex flex-col gap-[6px]">
-              <label className="text-[14px] font-normal font-poppins text-[#56514F]">Opérateur</label>
-              <PaymentDropdown
-                options={OPERATORS}
-                value={operatorId}
-                onChange={setOperatorId}
-              />
-            </div>
+              <div className="flex flex-col">
+                <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Opérateur</label>
+                <div className="w-full">
+                  <PaymentDropdown
+                    options={OPERATORS}
+                    value={operatorId}
+                    onChange={setOperatorId}
+                  />
+                </div>
+              </div>
 
-            <div className="flex flex-col gap-[6px]">
-              <label className="text-[14px] font-normal font-poppins text-[#1B1818]">Numéro de téléphone</label>
-              <PhoneInputField
-                country={country}
-                onCountryChange={(c) => { setCountry(c); resetPhone() }}
-                phoneDisplay={phoneDisplay}
-                onPhoneChange={handlePhoneChange}
-              />
+              <div className="flex flex-col">
+                <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Numéro de téléphone</label>
+                <div className="w-full">
+                  <PhoneInputField
+                    country={country}
+                    onCountryChange={(c) => { setCountry(c); resetPhone() }}
+                    phoneDisplay={phoneDisplay}
+                    onPhoneChange={handlePhoneChange}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Action Button */}
-        <div className="flex flex-col gap-[16px] mt-[8px]">
+        {/* Action Button & Badge (Fixed) */}
+        <div className="flex-none flex flex-col gap-[0.5rem] px-[1rem] pt-[0.5rem] pb-[1rem] bg-white border-t border-[#F5F5F5]">
           <Button
             onClick={handlePay}
             disabled={!isFormValid || isProcessing || joinMutation.isPending}
-            className="w-full h-[48px] rounded-[1000px] text-[15px] font-semibold border-none font-poppins"
+            className="w-full min-h-[44px] h-auto rounded-[1000px] py-[0.625rem] px-[1rem] font-medium text-[clamp(13px,3.5vw,14px)] text-white text-center border-none transition-colors"
             style={{
               background: (!isFormValid || isProcessing || joinMutation.isPending)
-                ? '#FBCF9E' // faded orange
+                ? 'var(--color-button-disabled, #FBCF9E)' // token désactivé
                 : 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)',
-              color: 'white'
             }}
           >
             {(isProcessing || joinMutation.isPending) ? (
@@ -224,15 +226,13 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
             ) : "Rejoindre"}
           </Button>
 
-          {/* Security Badge */}
-          <div className="flex flex-col items-center justify-center gap-[4px] text-[12px] font-medium text-gray-500 pb-[8px]">
-            <div className="flex items-center gap-[4px] font-bold text-[#1B1818]">
+          <div className="flex flex-col items-center justify-center gap-[0.25rem] py-[0.5rem] w-full text-center">
+            <div className="flex items-center gap-[4px] font-medium text-[#1B1818] text-[clamp(10px,3vw,12px)]">
               Sécurisé PCI DSS <span className="text-green-500">🛡️</span>
             </div>
-            <span className="text-gray-400">Fedapay</span>
+            <span className="text-[#A3A3A3] text-[clamp(10px,3vw,12px)] block">Fedapay</span>
           </div>
         </div>
-
       </div>
     </BottomSheet>
   )

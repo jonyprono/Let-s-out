@@ -46,17 +46,17 @@ export function PaymentDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-[#FFFFFF] border border-[#E0E0E0] rounded-[6px] active:bg-gray-50 transition-colors focus:outline-none",
+          "w-full flex flex-row items-center px-[1rem] py-[0.75rem] gap-[8px] min-h-[48px] h-auto bg-white border border-[var(--border-default)] rounded-[8px] box-border active:bg-gray-50 transition-colors focus:outline-none",
           isOpen && "border-[#FF7A00]"
         )}
       >
-        <div className="flex items-center gap-[4px] flex-1 overflow-hidden">
+        <div className="flex items-center gap-[8px] flex-1 overflow-hidden">
           {selectedOption ? (
             <>
-              {selectedOption.logo && <img src={selectedOption.logo} alt={selectedOption.label} className="w-6 h-6 object-contain shrink-0" />}
+              {selectedOption.logo && <img src={selectedOption.logo} alt={selectedOption.label} className="w-[20px] h-[20px] object-contain shrink-0" />}
               {selectedOption.icon && <span className="flex-shrink-0">{selectedOption.icon}</span>}
-              {selectedOption.emoji && <span className="flex-shrink-0">{selectedOption.emoji}</span>}
-              <span className="flex-1 text-[14px] text-[#1B1818] text-left truncate">{selectedOption.label}</span>
+              {selectedOption.emoji && <span className="flex-shrink-0 text-[20px]">{selectedOption.emoji}</span>}
+              <span className="flex-1 font-normal text-[clamp(12px,3.5vw,14px)] text-[#1B1818] text-left truncate">{selectedOption.label}</span>
             </>
           ) : (
             <span className="flex-1 text-[14px] text-gray-400 text-left">{placeholder}</span>
