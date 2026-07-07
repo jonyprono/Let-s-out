@@ -79,10 +79,11 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
         priority: 'high',
         // TTL : 30s pour les appels (inutile de livrer un appel vieux de 2 min)
         ttl: isCall ? 30_000 : 3_600_000,
-        notification: {
-          sound: isCall ? 'ringtone' : 'default', // 'ringtone.wav' must exist in res/raw (without extension)
-          channelId: isCall ? 'calls' : 'default',
-        },
+        ...(isCall && {
+          notification: {
+            sound: 'ringtone', // 'ringtone.wav' must exist in res/raw (without extension)
+          },
+        }),
       },
       apns: {
         headers: {
