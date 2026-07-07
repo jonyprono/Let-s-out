@@ -57,6 +57,7 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
   try {
     const admin = require('firebase-admin')
     const isCall = payload.isCall === true
+    const isMessage = payload.data?.type === 'NEW_MESSAGE'
 
     await admin.messaging(app).send({
       token,
@@ -81,7 +82,7 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
         notification: {
           sound: isCall ? 'ringtone' : 'default', // 'ringtone.wav' must exist in res/raw (without extension)
           channelId: isCall ? 'calls' : 'default',
-          clickAction: 'FLUTTER_NOTIFICATION_CLICK',
+          clickAction: isMessage ? 'REPLY_ACTION' : 'FLUTTER_NOTIFICATION_CLICK',
         },
       },
       apns: {
@@ -97,6 +98,7 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
             badge: 1,
             // content-available = 1 pour réveiller l'app en arrière-plan sur iOS
             'content-available': 1,
+            category: isMessage ? 'REPLY_ACTION' : undefined,
           },
         },
       },

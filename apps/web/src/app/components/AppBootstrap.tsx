@@ -14,6 +14,8 @@ import { isOnline } from '@/lib/offline'
 import { useNavigate } from 'react-router'
 import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
+import { LocalNotifications } from '@capacitor/local-notifications'
+import { chatApi } from '@/features/chat/api'
 
 export function AppBootstrap() {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -39,8 +41,54 @@ export function AppBootstrap() {
 
     // Capacitor Push Notification deep linking
     if (Capacitor.isNativePlatform()) {
+      // Configuration des Actions Locales (Pour la réponse rapide type WhatsApp)
+      LocalNotifications.registerActionTypes({
+        types: [
+          {
+            id: 'REPLY_ACTION',
+            actions: [
+              {
+                id: 'reply',
+                title: 'Répondre',
+                input: true,
+                inputPlaceholder: 'Votre message...'
+              }
+            ]
+          }
+        ]
+      })
+
+      // Écoute des actions de notifications locales
+      LocalNotifications.addListener('localNotificationActionPerformed', async (notificationAction) => {
+        const data = notificationAction.notification.extra || {};
+        
+        // Si l'utilisateur a utilisé le bouton "Répondre"
+        if (notificationAction.actionId === 'reply' && notificationAction.inputValue) {
+           const conversationId = data.conversationId;
+           if (conversationId) {
+             try {
+               await chatApi.sendMessage(conversationId, {
+                 content: notificationAction.inputValue,
+                 type: 'TEXT'
+               });
+               console.log('[LocalNotifications] Reply sent seamlessly!');
+             } catch (e) {
+               console.error('[LocalNotifications] Failed to send reply:', e);
+             }
+           }
+           return;
+        }
+
+        // Sinon, routage classique comme pour les pushs
+        handleNotificationRouting(data);
+      });
+
       PushNotifications.addListener('pushNotificationActionPerformed', (notification: any) => {
         const data = notification.notification?.data || notification.data || {}
+        handleNotificationRouting(data);
+      });
+
+      const handleNotificationRouting = (data: any) => {
 
         // ── INCOMING CALL (background) ───────────────────────────────────
         if (data?.type === 'INCOMING_CALL') {
@@ -98,7 +146,7 @@ export function AppBootstrap() {
           navigate('/friend-requests')
           return
         }
-      })
+      }
     }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
