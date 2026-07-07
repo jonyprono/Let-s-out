@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
 
 export default async function eventPayoutRoutes(app: FastifyInstance) {
   app.addHook('onRequest', async (request, reply) => {
@@ -51,7 +52,18 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       return reply.send({ data: { ...newRequest, status: 'APPROVED' }, message: 'Fonds débloqués avec succès' })
     }
 
-    // TODO: Envoyer une notification aux co-hôtes
+    if (event.coHostIds && event.coHostIds.length > 0) {
+      const coHostsToNotify = event.coHostIds.filter(id => id !== event.creatorId)
+      if (coHostsToNotify.length > 0) {
+        await createAndSendNotificationMany(app, coHostsToNotify.map(hostId => ({
+          userId: hostId,
+          type: 'SYSTEM',
+          title: 'Veuillez approuver le déblocage',
+          body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
+          data: { eventId },
+        })))
+      }
+    }
     return reply.send({ data: newRequest, message: 'Demande envoyée aux co-organisateurs' })
   })
 
@@ -92,6 +104,13 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
     if (allApproved) {
       await releaseFunds(app, eventId, event.creatorId, payoutReq.amount, event.title)
+      await createAndSendNotification(app, {
+        userId: event.creatorId,
+        type: 'SYSTEM',
+        title: '💸 Fonds débloqués',
+        body: `La cagnotte de "${event.title}" a été débloquée avec succès par vos co-organisateurs.`,
+        data: { eventId },
+      })
       return reply.send({ data: updatedReq, message: 'Approbation enregistrée. Les fonds ont été débloqués et transférés au créateur.' })
     }
 
