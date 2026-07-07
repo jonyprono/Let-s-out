@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router'
 import { Shield, Loader2, ArrowLeft, MessageCircle, Phone, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { isFieldValid } from '@/lib/validation'
 import { apiClient } from '@/lib/api-client'
+import { auth } from '@/lib/firebase'
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
+
+declare global {
+  interface Window { recaptchaVerifier: any; }
+}
 
 type Step = 1 | 2 | 3 | 4
 
@@ -19,6 +25,7 @@ export function AdminResetPasswordPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
 
   // ─── Étape 1 : Vérification identifiant ─────────────────────────────────────
   const handleCheckTarget = async (e: React.FormEvent) => {
@@ -27,11 +34,12 @@ export function AdminResetPasswordPage() {
     setError('')
     setLoading(true)
     try {
+      // Pré-vérification : L'admin existe ?
       await apiClient.post('/auth/admin-reset-password-otp', {
         target: target.trim(),
-        channel: 'whatsapp', // just a pre-check, won't actually send yet
+        channel: 'whatsapp', // Juste pour déclencher l'API
       })
-      // If we reach here without error, admin exists → go to canal selection
+      // S'il existe, l'API envoie l'OTP, mais on va l'ignorer et utiliser Firebase pour le SMS.
       setStep(2)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Identifiant introuvable.')
@@ -40,19 +48,27 @@ export function AdminResetPasswordPage() {
     }
   }
 
-  // ─── Étape 2 : Choix du canal → envoi OTP ───────────────────────────────────
-  const handleSendOtp = async (selectedChannel: 'whatsapp' | 'sms') => {
-    setChannel(selectedChannel)
+  // ─── Étape 2 : Envoi OTP via Firebase ───────────────────────────────────
+  const handleSendOtp = async () => {
+    setChannel('sms')
     setError('')
     setLoading(true)
     try {
-      await apiClient.post('/auth/admin-reset-password-otp', {
-        target: target.trim(),
-        channel: selectedChannel,
-      })
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch {}
+        window.recaptchaVerifier = undefined;
+      }
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-admin', { size: 'invisible' })
+      const confirmation = await signInWithPhoneNumber(auth, target.trim(), window.recaptchaVerifier)
+      setConfirmationResult(confirmation)
       setStep(3)
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur lors de l\'envoi du code.')
+      console.error(err)
+      setError("Erreur Firebase. Vérifiez que votre numéro commence par +229...")
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch {}
+        window.recaptchaVerifier = undefined;
+      }
     } finally {
       setLoading(false)
     }
@@ -73,13 +89,21 @@ export function AdminResetPasswordPage() {
     setError('')
     setLoading(true)
     try {
+      let idToken = ''
+      if (confirmationResult) {
+        const cred = await confirmationResult.confirm(otp)
+        idToken = await cred.user.getIdToken()
+      }
+      
       await apiClient.post('/auth/admin-reset-password', {
         target: target.trim(),
-        code: otp,
+        code: confirmationResult ? undefined : otp,
+        idToken: idToken || undefined,
         newPassword,
       })
       setStep(4)
     } catch (err: any) {
+      console.error(err)
       setError(err.response?.data?.error || 'Code invalide ou expiré.')
     } finally {
       setLoading(false)
@@ -88,6 +112,7 @@ export function AdminResetPasswordPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center p-4 relative overflow-hidden">
+      <div id="recaptcha-container-admin" />
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -155,22 +180,7 @@ export function AdminResetPasswordPage() {
             </p>
 
             <button
-              onClick={() => handleSendOtp('whatsapp')}
-              disabled={loading}
-              className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-green-500/40 rounded-2xl px-5 py-4 transition-all disabled:opacity-50 active:scale-[0.98]"
-            >
-              <div className="w-10 h-10 bg-green-500/15 text-green-400 rounded-xl flex items-center justify-center flex-shrink-0">
-                <MessageCircle className="w-5 h-5" />
-              </div>
-              <div className="text-left">
-                <p className="text-white font-semibold text-sm">WhatsApp</p>
-                <p className="text-white/40 text-xs">Recevoir le code par message WhatsApp</p>
-              </div>
-              {loading && channel === 'whatsapp' && <Loader2 className="w-4 h-4 animate-spin text-white/40 ml-auto" />}
-            </button>
-
-            <button
-              onClick={() => handleSendOtp('sms')}
+              onClick={() => handleSendOtp()}
               disabled={loading}
               className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/40 rounded-2xl px-5 py-4 transition-all disabled:opacity-50 active:scale-[0.98]"
             >
@@ -178,10 +188,10 @@ export function AdminResetPasswordPage() {
                 <Phone className="w-5 h-5" />
               </div>
               <div className="text-left">
-                <p className="text-white font-semibold text-sm">SMS</p>
-                <p className="text-white/40 text-xs">Recevoir le code par SMS</p>
+                <p className="text-white font-semibold text-sm">Continuer</p>
+                <p className="text-white/40 text-xs">Recevoir le code par SMS sécurisé</p>
               </div>
-              {loading && channel === 'sms' && <Loader2 className="w-4 h-4 animate-spin text-white/40 ml-auto" />}
+              {loading && <Loader2 className="w-4 h-4 animate-spin text-white/40 ml-auto" />}
             </button>
 
             {error && (
