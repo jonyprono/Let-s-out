@@ -98,30 +98,30 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
       <div className="flex flex-col min-h-full px-6 pt-6 pb-4">
         
         {/* Header (Logo + Titres) */}
-        <div className="flex flex-col items-center mb-5 shrink-0">
+        <div className="flex flex-col items-center shrink-0 w-[358px] max-w-full mx-auto gap-[20px] mb-8 mt-4">
           {/* Logo */}
           <img 
             src="/logoci.png" 
             alt="Let's Out" 
-            className="w-[68px] h-[68px] object-contain mx-auto mb-2" 
+            className="w-[96px] h-[96px] object-contain mx-auto" 
           />
 
           {/* Titres */}
-          <div className="flex flex-col items-center gap-[6px] w-full max-w-[320px] mx-auto">
-            <h1 className="text-center text-[var(--color-text-primary)] font-poppins text-[22px] font-semibold leading-tight">
+          <div className="flex flex-col items-center gap-[4px] w-[358px] max-w-full mx-auto">
+            <h1 className="text-center text-[#1B1818] font-poppins text-[24px] font-medium leading-[32px]">
               Connectez-vous
             </h1>
-            <p className="text-center text-[var(--color-text-secondary)] font-poppins text-[13px] leading-[20px]">
+            <p className="text-center text-[#56514F] font-inter text-[16px] font-normal leading-[24px]">
               Rejoignez des événements près de vous et vivez des expériences inoubliables.
             </p>
           </div>
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-4 shrink-0 w-full mt-0">
+        <div className="flex flex-col gap-[16px] shrink-0 w-[358px] max-w-full mx-auto">
           {/* Téléphone */}
-          <div>
-            <label className="mb-2 block font-poppins text-[14px] font-medium text-[var(--color-text-primary)]">Numéro de téléphone</label>
+          <div className="flex flex-col gap-[4px]">
+            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Numéro de téléphone</label>
             <PhoneInputField
               country={country}
               onCountryChange={c => { setCountry(c); resetPhone() }}
@@ -132,34 +132,34 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
 
           {/* Mot de passe */}
-          <div>
-            <label className="mb-2 block font-poppins text-[14px] font-medium text-[var(--color-text-primary)]">Mot de passe</label>
+          <div className="flex flex-col gap-[4px]">
+            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Mot de passe</label>
             <Input
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
               placeholder=""
-              className="pr-12"
+              className="pr-12 border-[#E0E0E0] focus-visible:ring-[#FF991C]"
               icon={
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-[var(--color-icon-secondary)] hover:text-[var(--color-icon-primary)] transition-colors focus:outline-none"
+                  className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
                 >
                   {showPassword
-                    ? <ViewIcon size={18} strokeWidth={1.5} />
-                    : <ViewOffSlashIcon size={18} strokeWidth={1.5} />}
+                    ? <ViewIcon size={20} strokeWidth={1.5} />
+                    : <ViewOffSlashIcon size={20} strokeWidth={1.5} />}
                 </button>
               }
             />
             
             {/* Mot de passe oublié */}
-            <div className="text-right mt-2">
+            <div className="text-right mt-1">
               <button
                 type="button"
                 onClick={onForgotPassword}
-                className="text-[var(--color-text-link)] text-[13px] font-medium underline hover:opacity-75 transition-opacity focus:outline-none"
+                className="text-[#FF991C] font-inter text-[14px] font-medium leading-[20px] underline hover:opacity-75 transition-opacity focus:outline-none"
               >
                 Mot de passe oublié?
               </button>
@@ -167,28 +167,30 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-4 shrink-0">
+        <div className="mt-6 shrink-0 w-[358px] max-w-full mx-auto">
           {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
           <Button
             type="button"
             onClick={handleLogin}
             disabled={!phone.trim() || !password || logging}
+            className="w-full h-[40px] bg-[#FF991C] hover:bg-[#e68a19] text-white font-poppins text-[14px] font-medium leading-[20px] rounded-full"
           >
             {logging ? 'Connexion...' : 'Se connecter'}
           </Button>
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-4 shrink-0">
-          <Divider label="Ou" />
+        <div className="my-4 shrink-0 w-[358px] max-w-full mx-auto">
+          <Divider label="Ou" className="text-[#404040] font-inter text-[12px] font-normal leading-[16px]" />
         </div>
 
         {/* Bouton Google */}
-        <div className="shrink-0">
+        <div className="shrink-0 w-[358px] max-w-full mx-auto">
           <SocialButton
             provider="google"
             onClick={handleGoogleLogin}
             disabled={googleLoading}
+            className="w-full h-[40px] rounded-full font-inter text-[14px]"
           >
             {googleLoading ? 'Connexion avec Google...' : 'Se connecter avec Google'}
           </SocialButton>
@@ -197,38 +199,42 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex-1 min-h-0" />
 
         {/* Bas de page */}
-        <div className="flex flex-col items-center shrink-0 w-full pb-4">
+        <div className="flex flex-col justify-end shrink-0 w-[358px] max-w-full mx-auto pb-4 gap-4">
+
+          <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 
           {/* "Vous êtes nouveau ?" */}
-          <div className="flex items-center justify-center gap-[4px] w-full mb-4">
-            <span className="font-poppins text-[13px] font-normal text-[var(--color-text-secondary)] whitespace-nowrap">
+          <div className="flex items-center justify-center gap-[8px] w-full mt-2">
+            <span className="font-inter text-[14px] font-normal text-[#56514F] leading-[20px] whitespace-nowrap">
               Vous êtes nouveau sur Let's Out ?
             </span>
             <button
               onClick={onSignup}
-              className="font-poppins text-[13px] font-normal text-[var(--color-text-link)] underline whitespace-nowrap focus:outline-none hover:opacity-75"
+              className="font-inter text-[14px] font-medium leading-[20px] text-[#FF991C] underline whitespace-nowrap focus:outline-none hover:opacity-75"
             >
               Inscrivez-vous
             </button>
           </div>
 
-          {/* Mentions légales - variables exactes (Body/xsmall/regular - 10/16) */}
-          <div className="w-[358px] max-w-full text-center">
-            <span className="font-poppins text-[10px] font-normal leading-[16px] text-[var(--color-text-tertiary)]">
+          <div className="w-full h-[1px] bg-[#D4D4D4] mb-2" />
+
+          {/* Mentions légales */}
+          <div className="w-full text-center">
+            <span className="font-inter text-[10px] font-normal leading-[16px] text-[#766F6E]">
               En continuant, vous acceptez nos{' '}
             </span>
             <span
               onClick={() => nav('/terms')}
-              className="font-poppins text-[10px] font-normal leading-[16px] text-[var(--color-text-link)] cursor-pointer hover:opacity-75"
+              className="font-inter text-[10px] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
             >
               Conditions d'Utilisation
             </span>
-            <span className="font-poppins text-[10px] font-normal leading-[16px] text-[var(--color-text-tertiary)]">
+            <span className="font-inter text-[10px] font-normal leading-[16px] text-[#766F6E]">
               {' '}et notre{' '}
             </span>
             <span
               onClick={() => nav('/privacy')}
-              className="font-poppins text-[10px] font-normal leading-[16px] text-[var(--color-text-link)] cursor-pointer hover:opacity-75"
+              className="font-inter text-[10px] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
             >
               Politique de Confidentialité
             </span>
