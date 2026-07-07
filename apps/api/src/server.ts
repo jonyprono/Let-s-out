@@ -74,21 +74,31 @@ async function bootstrap() {
 
     // Send a real test push if tokens exist
     let pushSent = false
+    let pushError = null
     if (tokens.length > 0) {
-      const { sendPushToUser } = await import('./services/push.service')
-      await sendPushToUser(app.prisma as any, userId, {
-        title: "🔔 Test Let's Out",
-        body: "Les notifications fonctionnent ! Cliquez pour ouvrir l'app.",
-        data: { type: 'TEST' }
-      })
-      pushSent = true
+      try {
+        const { sendPushToUser } = await import('./services/push.service')
+        await sendPushToUser(app.prisma as any, userId, {
+          title: "🔔 Test Let's Out",
+          body: "Les notifications fonctionnent ! Cliquez pour ouvrir l'app.",
+          data: { type: 'TEST' }
+        })
+        pushSent = true
+      } catch (e: any) {
+        pushError = e.message || String(e)
+      }
     }
+
+    // Refresh tokens from DB after push (in case it was deleted)
+    const tokensAfter = await app.prisma.deviceToken.findMany({ where: { userId } })
 
     return reply.send({
       userId,
-      tokensCount: tokens.length,
-      tokens: tokens.map(t => ({ platform: t.platform, preview: t.token.slice(0, 25) + '...' })),
-      pushSent
+      tokensCount: tokensAfter.length,
+      tokens: tokensAfter.map(t => ({ platform: t.platform, preview: t.token.slice(0, 25) + '...' })),
+      pushSent,
+      pushError,
+      firebaseProjectId: process.env.FIREBASE_PROJECT_ID
     })
   })
 
