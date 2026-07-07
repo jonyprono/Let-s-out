@@ -94,18 +94,18 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
   return (
-    <div className={`${authShell} bg-white overflow-y-auto`}>
-      <div className="flex flex-col min-h-full px-4 sm:px-6 py-4 justify-between w-full max-w-[390px] mx-auto">
+    <div className={`${authShell} bg-white overflow-hidden h-[100dvh] w-full flex flex-col`}>
+      <div className="flex flex-col h-full px-4 sm:px-6 pt-4 pb-2 justify-between w-full max-w-[390px] mx-auto overflow-hidden">
         
-        <div className="flex flex-col justify-center flex-1 w-full pb-4">
+        <div className="flex flex-col justify-center flex-1 w-full pb-2 min-h-0 shrink">
           
           {/* Header (Logo + Titres) */}
-          <div className="flex flex-col items-center shrink-0 w-full gap-[clamp(8px,1.5vh,20px)] mb-[clamp(12px,3vh,32px)]">
+          <div className="flex flex-col items-center shrink-0 w-full gap-[clamp(4px,1vh,12px)] mb-[clamp(8px,2vh,24px)] min-h-0">
           {/* Logo */}
           <img 
             src="/logoci.png" 
             alt="Let's Out" 
-            className="w-[clamp(60px,15vh,96px)] h-[clamp(60px,15vh,96px)] object-contain mx-auto" 
+            className="w-[clamp(48px,10vh,96px)] h-[clamp(48px,10vh,96px)] object-contain mx-auto shrink-0 min-h-0" 
           />
 
           {/* Titres */}
@@ -120,9 +120,9 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-[clamp(10px,2vh,16px)] shrink-0 w-full">
+        <div className="flex flex-col gap-[clamp(8px,1.5vh,16px)] shrink w-full min-h-0">
           {/* Téléphone */}
-          <div className="flex flex-col gap-[4px]">
+          <div className="flex flex-col gap-[2px]">
             <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Numéro de téléphone</label>
             <PhoneInputField
               country={country}
@@ -134,7 +134,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
 
           {/* Mot de passe */}
-          <div className="flex flex-col gap-[4px]">
+          <div className="flex flex-col gap-[2px]">
             <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Mot de passe</label>
             <Input
               type={showPassword ? 'text' : 'password'}
@@ -169,7 +169,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-[clamp(12px,3vh,24px)] shrink-0 w-full">
+        <div className="mt-[clamp(10px,2vh,20px)] shrink-0 w-full">
           {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
           <Button
             type="button"
@@ -182,7 +182,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-[clamp(8px,2vh,16px)] shrink-0 w-full">
+        <div className="my-[clamp(6px,1.5vh,12px)] shrink-0 w-full">
           <Divider label="Ou" className="text-[#404040] font-inter text-[12px] font-normal leading-[16px]" />
         </div>
 
@@ -201,7 +201,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Bas de page */}
-        <div className="flex flex-col justify-end shrink-0 w-full mt-auto gap-[clamp(8px,1.5vh,16px)]">
+        <div className="flex flex-col justify-end shrink-0 w-full mt-auto gap-[clamp(4px,1vh,12px)] pb-1">
 
           <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 
@@ -221,22 +221,22 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           <div className="w-full h-[1px] bg-[#D4D4D4] mb-2" />
 
           {/* Mentions légales */}
-          <div className="w-full text-center">
-            <span className="font-inter text-[10px] font-normal leading-[16px] text-[#766F6E]">
-              En continuant, vous acceptez nos{' '}
+          <div className="w-full text-center flex flex-wrap justify-center gap-x-[3px]">
+            <span className="font-inter text-[clamp(9px,2.5vw,11px)] font-normal leading-[16px] text-[#766F6E]">
+              En continuant, vous acceptez nos
             </span>
             <span
               onClick={() => nav('/terms')}
-              className="font-inter text-[10px] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
+              className="font-inter text-[clamp(9px,2.5vw,11px)] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
             >
               Conditions d'Utilisation
             </span>
-            <span className="font-inter text-[10px] font-normal leading-[16px] text-[#766F6E]">
-              {' '}et notre{' '}
+            <span className="font-inter text-[clamp(9px,2.5vw,11px)] font-normal leading-[16px] text-[#766F6E]">
+              et notre
             </span>
             <span
               onClick={() => nav('/privacy')}
-              className="font-inter text-[10px] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
+              className="font-inter text-[clamp(9px,2.5vw,11px)] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
             >
               Politique de Confidentialité
             </span>
