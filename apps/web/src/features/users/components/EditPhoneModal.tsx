@@ -238,14 +238,14 @@ export function EditPhoneModal({ onClose }: Props) {
                 <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 ml-1">
                   {t('editPhoneModal.number') || 'Nouveau numéro'}
                 </label>
-                <div className="flex gap-2">
+                <div className="w-full flex gap-2">
                   <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone(); }} />
                   <input
                     type="tel"
                     inputMode="numeric"
                     value={phoneDisplay}
                     onChange={handlePhoneChange}
-                    className="auth-phone-input flex-1 bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] outline-none focus:border-action-primary transition-all"
+                    className="auth-phone-input flex-1 w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] outline-none focus:border-action-primary transition-all"
                     placeholder="01 00 00 00 00"
                   />
                 </div>

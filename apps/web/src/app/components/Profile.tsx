@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Users, Medal, Activity } from 'lucide-react';
+import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Users, Medal, Activity, User } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -415,11 +415,11 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
       className="flex gap-4 p-4 bg-white border border-gray-100 rounded-[24px] shadow-sm hover:shadow-md transition-shadow cursor-pointer w-full items-center"
     >
       {/* Icon / Cover */}
-      <div className="w-[68px] h-[68px] rounded-[20px] bg-orange-50/50 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-orange-100/30">
+      <div className="w-[68px] h-[68px] rounded-[20px] bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-gray-200">
         {event?.coverUrl ? (
           <SafeImage src={event.coverUrl} alt={event?.title || 'Event cover'} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-3xl">🍕</span> // Placeholder if no cover
+          <Calendar className="w-8 h-8 text-gray-400" />
         )}
         {isDraft && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
@@ -439,9 +439,13 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
           {/* Participants */}
           <div className="flex items-center gap-2">
              <div className="flex -space-x-2">
-               {[0, 1, 2].map((i) => (
-                 <div key={i} className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-white shadow-sm" style={{ backgroundColor: colors[i], zIndex: 3 - i }}>
-                   {String.fromCharCode(65 + i)}
+               {(event?.attendees?.slice(0, 3) || [{}, {}, {}]).map((att: any, i: number) => (
+                 <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center overflow-hidden" style={{ zIndex: 3 - i }}>
+                   {att?.user?.profile?.avatarUrl || att?.user?.avatarUrl || att?.avatarUrl ? (
+                     <SafeImage src={att?.user?.profile?.avatarUrl || att?.user?.avatarUrl || att?.avatarUrl} className="w-full h-full object-cover" />
+                   ) : (
+                     <User className="w-3 h-3 text-gray-500" />
+                   )}
                  </div>
                ))}
              </div>
