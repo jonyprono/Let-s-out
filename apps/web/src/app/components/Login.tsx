@@ -95,12 +95,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
   return (
     <div className={`${authShell} bg-white overflow-y-auto min-h-[100dvh] w-full flex flex-col`}>
-      <div className="flex flex-col flex-1 px-4 sm:px-6 pt-6 pb-4 justify-between w-full max-w-[390px] mx-auto">
+      <div className="flex flex-col flex-1 px-4 sm:px-6 py-4 justify-between w-full max-w-[390px] mx-auto">
         
-        <div className="flex flex-col justify-center w-full pb-4">
+        <div className="flex flex-col justify-center w-full pb-2">
           
           {/* Header (Logo + Titres) */}
-          <div className="flex flex-col items-center w-full gap-2 mb-6">
+          <div className="flex flex-col items-center w-full gap-1 mb-4">
           {/* Logo */}
           <img 
             src="/logoci.png" 
@@ -120,7 +120,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-4 w-full">
+        <div className="flex flex-col gap-3 w-full">
           {/* Téléphone */}
           <div className="flex flex-col gap-1">
             <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Numéro de téléphone</label>
@@ -169,7 +169,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-6 w-full">
+        <div className="mt-4 w-full">
           {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
           <Button
             type="button"
@@ -182,7 +182,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-4 w-full">
+        <div className="my-3 w-full">
           <Divider label="Ou" className="text-[#404040] font-inter text-[12px] font-normal leading-[16px]" />
         </div>
 
@@ -201,7 +201,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Bas de page */}
-        <div className="flex flex-col justify-end w-full mt-auto gap-3 pt-6">
+        <div className="flex flex-col justify-end w-full mt-auto gap-2 pt-4">
 
           <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 
