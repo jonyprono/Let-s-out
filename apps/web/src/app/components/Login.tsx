@@ -95,17 +95,17 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
   return (
     <div className={`${authShell} bg-white overflow-y-auto min-h-[100dvh] w-full flex flex-col`}>
-      <div className="flex flex-col min-h-[550px] flex-1 px-4 sm:px-6 pt-4 pb-2 justify-between w-full max-w-[390px] mx-auto">
+      <div className="flex flex-col flex-1 px-4 sm:px-6 pt-6 pb-4 justify-between w-full max-w-[390px] mx-auto">
         
-        <div className="flex flex-col justify-center flex-1 w-full pb-2 shrink min-h-0">
+        <div className="flex flex-col justify-center w-full pb-4">
           
           {/* Header (Logo + Titres) */}
-          <div className="flex flex-col items-center shrink-0 w-full gap-[clamp(4px,1vh,12px)] mb-[clamp(8px,2vh,24px)] min-h-0">
+          <div className="flex flex-col items-center w-full gap-2 mb-6">
           {/* Logo */}
           <img 
             src="/logoci.png" 
             alt="Let's Out" 
-            className="w-[clamp(48px,10vh,96px)] h-[clamp(48px,10vh,96px)] object-contain mx-auto shrink-0 min-h-0" 
+            className="w-[80px] h-[80px] sm:w-[96px] sm:h-[96px] object-contain mx-auto" 
           />
 
           {/* Titres */}
@@ -120,9 +120,9 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-[clamp(8px,1.5vh,16px)] shrink w-full min-h-0">
+        <div className="flex flex-col gap-4 w-full">
           {/* Téléphone */}
-          <div className="flex flex-col gap-[2px]">
+          <div className="flex flex-col gap-1">
             <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Numéro de téléphone</label>
             <PhoneInputField
               country={country}
@@ -134,7 +134,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
 
           {/* Mot de passe */}
-          <div className="flex flex-col gap-[2px]">
+          <div className="flex flex-col gap-1">
             <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Mot de passe</label>
             <Input
               type={showPassword ? 'text' : 'password'}
@@ -169,7 +169,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-[clamp(10px,2vh,20px)] shrink-0 w-full">
+        <div className="mt-6 w-full">
           {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
           <Button
             type="button"
@@ -182,12 +182,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-[clamp(6px,1.5vh,12px)] shrink-0 w-full">
+        <div className="my-4 w-full">
           <Divider label="Ou" className="text-[#404040] font-inter text-[12px] font-normal leading-[16px]" />
         </div>
 
         {/* Bouton Google */}
-        <div className="shrink-0 w-full">
+        <div className="w-full">
           <SocialButton
             provider="google"
             onClick={handleGoogleLogin}
@@ -201,18 +201,18 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Bas de page */}
-        <div className="flex flex-col justify-end shrink-0 w-full mt-auto gap-[clamp(4px,1vh,12px)] pb-1">
+        <div className="flex flex-col justify-end w-full mt-auto gap-3 pt-6">
 
           <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 
           {/* "Vous êtes nouveau ?" */}
           <div className="flex items-center justify-center gap-[4px] sm:gap-[8px] w-full mt-2 text-center whitespace-nowrap overflow-hidden text-ellipsis">
-            <span className="font-inter text-[clamp(11px,3vw,14px)] font-normal text-[#56514F] leading-[20px]">
+            <span className="font-inter text-[13px] font-normal text-[#56514F] leading-[20px]">
               Vous êtes nouveau sur Let's Out ?
             </span>
             <button
               onClick={onSignup}
-              className="font-inter text-[clamp(11px,3vw,14px)] font-medium leading-[20px] text-[#FF991C] underline focus:outline-none hover:opacity-75"
+              className="font-inter text-[13px] font-medium leading-[20px] text-[#FF991C] underline focus:outline-none hover:opacity-75"
             >
               Inscrivez-vous
             </button>
@@ -222,21 +222,21 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Mentions légales */}
           <div className="w-full text-center flex flex-wrap justify-center gap-x-[3px]">
-            <span className="font-inter text-[clamp(9px,2.5vw,11px)] font-normal leading-[16px] text-[#766F6E]">
+            <span className="font-inter text-[11px] font-normal leading-[16px] text-[#766F6E]">
               En continuant, vous acceptez nos
             </span>
             <span
               onClick={() => nav('/terms')}
-              className="font-inter text-[clamp(9px,2.5vw,11px)] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
+              className="font-inter text-[11px] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
             >
               Conditions d'Utilisation
             </span>
-            <span className="font-inter text-[clamp(9px,2.5vw,11px)] font-normal leading-[16px] text-[#766F6E]">
+            <span className="font-inter text-[11px] font-normal leading-[16px] text-[#766F6E]">
               et notre
             </span>
             <span
               onClick={() => nav('/privacy')}
-              className="font-inter text-[clamp(9px,2.5vw,11px)] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
+              className="font-inter text-[11px] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
             >
               Politique de Confidentialité
             </span>
