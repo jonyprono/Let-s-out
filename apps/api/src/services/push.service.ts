@@ -12,13 +12,7 @@ let firebaseApp: any = null
 function getFirebaseApp() {
   if (firebaseApp) return firebaseApp
 
-  const serviceAccountRaw = process.env.FIREBASE_SERVICE_ACCOUNT
-  if (!serviceAccountRaw) {
-    return null
-  }
-
   try {
-    // Import lazily to avoid crash if package is not needed
     const admin = require('firebase-admin')
 
     if (admin.apps.length > 0) {
@@ -26,12 +20,37 @@ function getFirebaseApp() {
       return firebaseApp
     }
 
-    const serviceAccount = JSON.parse(serviceAccountRaw)
-    firebaseApp = admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    })
+    // Option 1: Full JSON service account (legacy / Fly.io)
+    const serviceAccountRaw = process.env.FIREBASE_SERVICE_ACCOUNT
+    if (serviceAccountRaw) {
+      const serviceAccount = JSON.parse(serviceAccountRaw)
+      firebaseApp = admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      })
+      console.log('[FCM] ✅ Initialized with FIREBASE_SERVICE_ACCOUNT')
+      return firebaseApp
+    }
 
-    return firebaseApp
+    // Option 2: Individual vars (Render)
+    const projectId = process.env.FIREBASE_PROJECT_ID
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+
+    if (projectId && clientEmail && privateKey) {
+      firebaseApp = admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          // Render escapes newlines — restore them
+          privateKey: privateKey.replace(/\\n/g, '\n'),
+        }),
+      })
+      console.log('[FCM] ✅ Initialized with FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY')
+      return firebaseApp
+    }
+
+    console.warn('[FCM] ⚠️ No Firebase credentials found. Set FIREBASE_SERVICE_ACCOUNT or FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY')
+    return null
   } catch (e) {
     console.error('[FCM] Failed to initialize Firebase Admin:', e)
     return null
