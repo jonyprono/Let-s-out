@@ -100,12 +100,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col justify-center flex-1 w-full pb-4">
           
           {/* Header (Logo + Titres) */}
-          <div className="flex flex-col items-center shrink-0 w-full gap-[12px] sm:gap-[20px] mb-6 sm:mb-8">
+          <div className="flex flex-col items-center shrink-0 w-full gap-[12px] sm:gap-[20px] mb-4 sm:mb-8">
           {/* Logo */}
           <img 
             src="/logoci.png" 
             alt="Let's Out" 
-            className="w-[96px] h-[96px] object-contain mx-auto" 
+            className="w-[72px] h-[72px] sm:w-[96px] sm:h-[96px] object-contain mx-auto" 
           />
 
           {/* Titres */}
@@ -206,13 +206,13 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 
           {/* "Vous êtes nouveau ?" */}
-          <div className="flex items-center justify-center gap-[8px] w-full mt-2">
-            <span className="font-inter text-[14px] font-normal text-[#56514F] leading-[20px] whitespace-nowrap">
+          <div className="flex flex-wrap items-center justify-center gap-[4px] sm:gap-[8px] w-full mt-2 text-center">
+            <span className="font-inter text-[14px] font-normal text-[#56514F] leading-[20px]">
               Vous êtes nouveau sur Let's Out ?
             </span>
             <button
               onClick={onSignup}
-              className="font-inter text-[14px] font-medium leading-[20px] text-[#FF991C] underline whitespace-nowrap focus:outline-none hover:opacity-75"
+              className="font-inter text-[14px] font-medium leading-[20px] text-[#FF991C] underline focus:outline-none hover:opacity-75"
             >
               Inscrivez-vous
             </button>
