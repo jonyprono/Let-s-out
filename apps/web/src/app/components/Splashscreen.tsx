@@ -71,12 +71,13 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
   return (
     <div
-      className="w-full h-full flex flex-col relative overflow-hidden"
-      style={{ backgroundColor: 'var(--background-white)' }}
+      className="w-full h-full flex flex-col relative overflow-y-auto overflow-x-hidden"
+      style={{ backgroundColor: '#FFFFFF' }}
     >
+      <div className="flex flex-col min-h-full px-6 pt-6 pb-3 justify-between w-full max-w-[390px] mx-auto">
 
       {/* ── Contenu principal ───────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-[1rem] relative z-10">
+      <div className="flex-1 flex flex-col items-center justify-center w-full relative z-10 pb-4">
         <AnimatePresence mode="wait">
 
           {/* ── ÉCRAN 0 : Logo centré sur fond blanc ──────────── */}
@@ -111,24 +112,26 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               {/* Wrapper shadow — séparé du clip pour éviter le débordement */}
               {/* Passer > button for Slide 1 */}
               {current.id === 1 && (
-                <div className="w-full flex justify-end mb-[2vh]">
-                   <button onClick={onComplete} className="font-poppins text-[var(--font-size-body-medium)] text-[var(--color-text-secondary)] font-medium tracking-wide">Passer &gt;</button>
+                <div className="w-[342px] max-w-full mx-auto flex justify-end items-center gap-[107px] mb-8 shrink-0">
+                   <button 
+                     onClick={onComplete} 
+                     className="flex items-center gap-[4px] px-1 py-2 font-poppins text-[14px] font-medium text-[#525252] focus:outline-none hover:opacity-75"
+                   >
+                     Passer
+                     <div className="w-5 h-5 rounded-full border-[1.25px] border-[#A3A3A3] ml-1 flex-shrink-0" />
+                   </button>
                 </div>
               )}
               {current.id !== 1 && (
-                <div className="w-full mb-[2vh] h-[20px]" />
+                <div className="w-[342px] max-w-full mb-8 h-[36px] shrink-0" />
               )}
 
               {/* Wrapper shadow — centré avec dimension exacte */}
               <div
-                className="w-full flex justify-center mb-[4vh]"
-                style={{
-                  paddingLeft: '1.25rem',
-                  paddingRight: '1.25rem',
-                }}
+                className="w-[342px] max-w-full flex flex-col items-center gap-[32px] shrink-0"
               >
                 <div
-                  className="shadow-sm"
+                  className=""
                   style={{
                     position: 'relative',
                     width: '100%',
@@ -155,21 +158,33 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                     }}
                   />
                 </div>
-              </div>
 
-              {/* Titre fort */}
-              <h2 className="font-poppins text-[var(--font-size-title-medium)] font-semibold mb-[var(--spacing-150)] text-center tracking-tight leading-[var(--line-height-title-medium)] bg-gradient-to-r from-[#FFA800] to-[var(--color-action-primary)] text-transparent bg-clip-text">
-                <span className="block">{current.title1}</span>
-                <span className="block">{current.title2}</span>
-              </h2>
-              {/* Description courte */}
-              <p className="font-poppins text-[var(--font-size-body-medium)] font-medium leading-[var(--line-height-body-medium)] text-center text-[var(--color-text-secondary)] w-full max-w-[280px] mx-auto h-auto">
-                {current.description}
-              </p>
+                <div className="flex flex-col items-center gap-[8px] w-full shrink-0">
+                  {/* Titre fort */}
+                  <h2 
+                    className="font-poppins text-[20px] font-semibold text-center leading-[24px] w-full max-w-[271px]"
+                    style={{
+                      background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      color: 'transparent'
+                    }}
+                  >
+                    <span className="block">{current.title1}</span>
+                    <span className="block">{current.title2}</span>
+                  </h2>
+                  
+                  {/* Description courte */}
+                  <p className="font-inter text-[14px] font-normal leading-[20px] text-center text-[#404040] w-full max-w-[288px]">
+                    {current.description}
+                  </p>
+                </div>
+              </div>
               
               {/* Pagination Dots */}
-              <div className="mt-6 mb-2">
-                <CarouselIndicators count={SLIDES.length} activeIndex={currentIndex - 1} />
+              <div className="mt-8 mb-4">
+                <CarouselIndicators count={SLIDES.length} activeIndex={currentIndex - 1} className="gap-[2px]" />
               </div>
             </motion.div>
           )}
@@ -179,16 +194,17 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="px-[var(--spacing-200)] pb-[var(--spacing-300)] z-10 w-full max-w-[400px] mx-auto">
+        <div className="flex flex-col justify-end shrink-0 w-[342px] max-w-full mx-auto pb-2 mt-auto">
           <Button
             onClick={handleNext}
-            className="w-full"
+            className="w-full h-[40px] bg-[#FF991C] hover:bg-[#e68a19] text-white font-poppins text-[14px] font-medium leading-[20px] rounded-full px-[14px] py-[10px]"
           >
             {currentIndex === onboardingScreens.length - 1 ? 'Commencer' : 'Suivant'}
           </Button>
         </div>
       )}
 
+      </div>
     </div>
   )
 }
