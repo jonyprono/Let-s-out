@@ -40,7 +40,7 @@ export function AppLayout() {
 
   return (
     <div id="app-layout-wrapper" className="h-[100dvh] w-full bg-gray-100 dark:bg-black flex items-center justify-center overflow-hidden">
-      <div id="app-layout-inner" className="w-full h-full sm:max-w-[430px] sm:h-[100dvh] sm:max-h-[932px] bg-background text-foreground overflow-hidden relative flex flex-col shadow-2xl transition-colors">
+      <div id="app-layout-inner" className="w-full h-full lg:max-w-[430px] lg:h-[100dvh] lg:max-h-[932px] bg-background text-foreground overflow-hidden relative flex flex-col shadow-2xl transition-colors">
         {/* Offline indicator — shown at the very top when no network */}
         <OfflineBanner />
         <main className="flex-1 flex flex-col overflow-hidden relative">
