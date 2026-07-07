@@ -69,7 +69,7 @@ export interface PushPayload {
 /**
  * Send a push notification to a single device token.
  */
-async function sendToToken(token: string, payload: PushPayload): Promise<boolean> {
+export async function sendToToken(token: string, payload: PushPayload): Promise<boolean> {
   const app = getFirebaseApp()
   if (!app) return false
 

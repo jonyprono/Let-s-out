@@ -11,7 +11,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
   // Demander le déblocage des fonds
   app.post<{ Params: { id: string } }>('/:id/payout/request', async (request, reply) => {
-    const userId = request.user.sub
+    const { sub: userId } = request.user as { sub: string }
     const eventId = request.params.id
 
     const event = await app.prisma.event.findUnique({
@@ -57,7 +57,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
   // Approuver le déblocage
   app.post<{ Params: { id: string } }>('/:id/payout/approve', async (request, reply) => {
-    const userId = request.user.sub
+    const { sub: userId } = request.user as { sub: string }
     const eventId = request.params.id
 
     const event = await app.prisma.event.findUnique({
