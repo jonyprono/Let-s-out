@@ -74,7 +74,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
       className="w-full h-full flex flex-col flex-1 relative overflow-y-auto overflow-x-hidden"
       style={{ backgroundColor: '#FFFFFF' }}
     >
-      <div className="flex flex-col min-h-full px-6 pt-4 pb-3 justify-between w-full max-w-[390px] mx-auto">
+      <div className="flex flex-col flex-1 px-6 pt-4 pb-3 justify-between w-full max-w-[390px] mx-auto">
 
       {/* ── En-tête (Passer) ──────────────────────────────────── */}
       {currentIndex > 0 && (
