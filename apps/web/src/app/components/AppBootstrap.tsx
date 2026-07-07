@@ -16,6 +16,7 @@ import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 import { LocalNotifications } from '@capacitor/local-notifications'
 import { chatApi } from '@/features/chat/api'
+import { apiClient } from '@/lib/api-client'
 
 export function AppBootstrap() {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -41,6 +42,49 @@ export function AppBootstrap() {
 
     // Capacitor Push Notification deep linking
     if (Capacitor.isNativePlatform()) {
+      // ── 1. RE-REGISTER FCM TOKEN at every launch ─────────────────────────
+      // Android can rotate the token — we must always keep the server up to date.
+      PushNotifications.checkPermissions().then(async (status) => {
+        if (status.receive === 'granted') {
+          // Listen for new/refreshed token and save to server
+          PushNotifications.addListener('registration', async (token) => {
+            console.log('[PushNotifications] Token:', token.value)
+            try {
+              await apiClient.post('/notifications/device-token', {
+                token: token.value,
+                platform: Capacitor.getPlatform(),
+              })
+            } catch (e) {
+              console.warn('[PushNotifications] Could not save token:', e)
+            }
+          })
+
+          // Trigger registration to get fresh token
+          await PushNotifications.register()
+        }
+      }).catch(() => {})
+
+      // ── 2. FOREGROUND notifications — show as local notification ─────────
+      // On Android, push notifications are silent when the app is in foreground.
+      // We must display them manually.
+      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
+        const data = notification.data || {}
+        // Don't show calls as local notifications — CallOverlay handles them
+        if (data.type === 'INCOMING_CALL') return
+
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: Math.floor(Math.random() * 100000),
+              title: notification.title || "Let's Out",
+              body: notification.body || '',
+              extra: data,
+              smallIcon: 'ic_launcher',
+            },
+          ],
+        }).catch(() => {})
+      })
+
       // Configuration des Actions Locales (Pour la réponse rapide type WhatsApp)
       LocalNotifications.registerActionTypes({
         types: [

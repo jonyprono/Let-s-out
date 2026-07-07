@@ -29,6 +29,11 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Push Notifications fallback channel -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="default" />
     </application>
 
     <!-- Permissions -->
@@ -36,6 +41,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
     <!-- Audio and Video Calls (WebRTC & CallKit) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />

@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 import { Geolocation } from '@capacitor/geolocation'
 import { toast } from 'sonner'
+import { apiClient } from '@/lib/api-client'
 
 interface PermissionsRequestProps {
   onComplete: () => void
@@ -30,12 +31,32 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
       }
       
       if (permStatus.receive === 'granted') {
+        // Écouter le token FCM généré et l'envoyer au serveur
+        PushNotifications.addListener('registration', async (token) => {
+          console.log('[PushNotifications] FCM Token received:', token.value)
+          try {
+            await apiClient.post('/notifications/device-token', {
+              token: token.value,
+              platform: Capacitor.getPlatform(),
+            })
+            console.log('[PushNotifications] Token registered on server ✅')
+          } catch (e) {
+            console.error('[PushNotifications] Failed to register token on server:', e)
+          }
+        })
+
+        PushNotifications.addListener('registrationError', (err) => {
+          console.error('[PushNotifications] Registration error:', err.error)
+        })
+
         const hasFirebaseConfig = !!import.meta.env.VITE_FIREBASE_API_KEY || !!import.meta.env.VITE_FIREBASE_PROJECT_ID;
         if (hasFirebaseConfig) {
           await PushNotifications.register();
         } else {
           console.warn('[PushNotifications] Firebase not configured, skipping registration to prevent crash.');
         }
+      } else {
+        toast.error('Vous devez autoriser les notifications pour recevoir des alertes.')
       }
     } catch (e) {
       console.error('Push request error', e)
