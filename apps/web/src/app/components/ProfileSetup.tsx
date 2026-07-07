@@ -154,7 +154,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       </div>
 
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-100">
+      <div className="px-6 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-4">
           {step > 1 && (
             <button onClick={() => setStep(step - 1)}>
@@ -311,7 +311,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
             <div className="flex flex-col items-center">
               {/* Avatar preview */}
               <div
-                className="w-40 h-40 rounded-full bg-gray-100 border-2 border-dashed border-border-primary flex items-center justify-center mb-4 overflow-hidden relative cursor-pointer active:scale-95 transition-transform"
+                className="w-40 h-40 rounded-full bg-gray-100 dark:bg-[#2a2a2a] border-2 border-dashed border-border-primary flex items-center justify-center mb-4 overflow-hidden relative cursor-pointer active:scale-95 transition-transform"
                 onClick={() => fileInputRef.current?.click()}
               >
                 {isUploadingPhoto ? (
@@ -359,7 +359,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       </div>
 
       {/* Bottom Button */}
-      <div className="px-6 pb-6 pt-4 border-t border-gray-100">
+      <div className="px-6 pb-6 pt-4 border-t border-gray-100 dark:border-white/10">
         <Button
           onClick={handleNext}
           disabled={step === 3 && selectedInterests.length < 3}

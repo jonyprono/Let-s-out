@@ -73,15 +73,15 @@ export function FriendRequests() {
     <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
 
       {/* Header */}
-      <div className="bg-white px-5 pt-safe-6 pb-4 border-b border-gray-100 flex items-center gap-3">
+      <div className="bg-white dark:bg-[#1A1A1A] px-5 pt-safe-6 pb-4 border-b border-gray-100 dark:border-white/10 flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0"
+          className="w-9 h-9 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center flex-shrink-0"
         >
           <ChevronLeft className="w-5 h-5 text-gray-700" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Demandes d'amis</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Demandes d'amis</h1>
           {requests.length > 0 && (
             <p className="text-xs text-gray-400">{requests.length} demande{requests.length > 1 ? 's' : ''} en attente</p>
           )}
@@ -93,11 +93,11 @@ export function FriendRequests() {
         {isLoading ? (
           <div className="flex flex-col gap-3 p-5">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl p-4 flex items-center gap-3 animate-pulse">
+              <div key={i} className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 flex items-center gap-3 animate-pulse">
                 <div className="w-14 h-14 rounded-full bg-gray-200 flex-shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded-lg w-1/3" />
-                  <div className="h-3 bg-gray-100 rounded-lg w-1/2" />
+                  <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg w-1/2" />
                 </div>
                 <div className="flex gap-2">
                   <div className="w-10 h-10 bg-gray-200 rounded-full" />
@@ -114,7 +114,7 @@ export function FriendRequests() {
             >
               <Users className="w-10 h-10" style={{ color: '#FF7A00' }} />
             </div>
-            <h3 className="text-[17px] font-bold text-gray-900 mb-2">Aucune demande en attente</h3>
+            <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2">Aucune demande en attente</h3>
             <p className="text-[13px] text-gray-400 leading-relaxed max-w-xs">
               Lorsqu'un utilisateur vous envoie une demande d'ami, elle apparaîtra ici.
             </p>
@@ -131,7 +131,7 @@ export function FriendRequests() {
               return (
                 <div
                   key={req.id}
-                  className="bg-white rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+                  className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 flex items-center gap-3 shadow-sm"
                 >
                   {/* Clickable Area for Profile */}
                   <div 
@@ -156,12 +156,12 @@ export function FriendRequests() {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[15px] text-gray-900 truncate">{displayName}</p>
+                    <p className="font-bold text-[15px] text-gray-900 dark:text-white truncate">{displayName}</p>
                     {username && (
                       <p className="text-[12px] text-gray-400 truncate">@{username}</p>
                     )}
                     {profile?.bio && (
-                      <p className="text-[12px] text-gray-500 truncate mt-0.5">{profile.bio}</p>
+                      <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate mt-0.5">{profile.bio}</p>
                     )}
                     <p className="text-[11px] text-gray-300 mt-1">{timeAgo(req.createdAt)}</p>
                   </div>

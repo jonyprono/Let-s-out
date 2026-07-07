@@ -418,8 +418,8 @@ export function Settings({ onBack }: SettingsProps) {
                     </ul>
                   </div>
                   <div className="bg-gray-50 dark:bg-[#222] rounded-2xl p-4 space-y-2">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Ce qui est conservé</p>
-                    <ul className="text-sm text-gray-500 space-y-1">
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Ce qui est conservé</p>
+                    <ul className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
                       <li>• Vos transactions et paiements (traçabilité légale)</li>
                       <li>• Les événements que vous avez créés</li>
                     </ul>

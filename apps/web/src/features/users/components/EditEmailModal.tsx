@@ -34,7 +34,7 @@ export function EditEmailModal({ onClose }: Props) {
       <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl sm:rounded-3xl p-5 shadow-xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-[#FFFFFF]">Adresse e-mail</h2>
-          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#2A2A2A] rounded-full hover:bg-gray-200 dark:hover:bg-[#333333]">
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2A2A2A] rounded-full hover:bg-gray-200 dark:hover:bg-[#333333]">
             <X size={20} />
           </button>
         </div>
@@ -52,7 +52,7 @@ export function EditEmailModal({ onClose }: Props) {
                 className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-12 py-4 text-[15px] outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
                 placeholder="votre@email.com"
               />
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400" size={20} />
             </div>
           </div>
         </div>

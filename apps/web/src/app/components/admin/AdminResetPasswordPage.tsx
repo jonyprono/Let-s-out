@@ -116,7 +116,7 @@ export function AdminResetPasswordPage() {
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-8 relative z-10 p-8 rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl">
+      <div className="w-full max-w-md space-y-8 relative z-10 p-8 rounded-3xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.02] backdrop-blur-xl">
 
         {/* Header */}
         <div className="text-center space-y-3">
@@ -142,7 +142,7 @@ export function AdminResetPasswordPage() {
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               placeholder="Email ou Numéro (ex: +229...)"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
+              className="w-full bg-white dark:bg-[#1A1A1A]/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
               autoFocus
               required
             />
@@ -182,7 +182,7 @@ export function AdminResetPasswordPage() {
             <button
               onClick={() => handleSendOtp()}
               disabled={loading}
-              className="w-full flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/40 rounded-2xl px-5 py-4 transition-all disabled:opacity-50 active:scale-[0.98]"
+              className="w-full flex items-center gap-4 bg-white dark:bg-[#1A1A1A]/5 hover:bg-white dark:bg-[#1A1A1A]/10 border border-white/10 hover:border-blue-500/40 rounded-2xl px-5 py-4 transition-all disabled:opacity-50 active:scale-[0.98]"
             >
               <div className="w-10 h-10 bg-blue-500/15 text-blue-400 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Phone className="w-5 h-5" />
@@ -219,7 +219,7 @@ export function AdminResetPasswordPage() {
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="Code de vérification (6 chiffres)"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors tracking-widest text-center text-lg font-bold"
+              className="w-full bg-white dark:bg-[#1A1A1A]/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors tracking-widest text-center text-lg font-bold"
               inputMode="numeric"
               autoFocus
               required
@@ -231,7 +231,7 @@ export function AdminResetPasswordPage() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Nouveau mot de passe (min. 6 caractères)"
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors pr-12"
+                className="w-full bg-white dark:bg-[#1A1A1A]/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors pr-12"
                 required
               />
               <button
@@ -249,7 +249,7 @@ export function AdminResetPasswordPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirmer le mot de passe"
-                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors pr-12"
+                className="w-full bg-white dark:bg-[#1A1A1A]/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors pr-12"
                 required
               />
               <button

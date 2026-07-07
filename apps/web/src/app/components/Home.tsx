@@ -39,13 +39,13 @@ function getTimeFilter(key: string): { upcoming?: boolean; status?: string; date
 // ── Skeleton loaders ───────────────────────────────────────────────────────────
 function EventCardSkeleton() {
   return (
-    <div className="w-full bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse mb-4">
+    <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 animate-pulse mb-4">
       <div className="h-44 bg-gray-200" />
       <div className="p-3 space-y-2">
         <div className="h-4 bg-gray-200 rounded-full w-3/4" />
-        <div className="h-3 bg-gray-100 rounded-full w-1/2" />
-        <div className="h-3 bg-gray-100 rounded-full w-2/3" />
-        <div className="h-6 bg-gray-100 rounded-full w-full mt-2" />
+        <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-1/2" />
+        <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-2/3" />
+        <div className="h-6 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-full mt-2" />
       </div>
     </div>
   );
@@ -53,11 +53,11 @@ function EventCardSkeleton() {
 
 function EventCardSkeletonHorizontal() {
   return (
-    <div className="flex-shrink-0 w-[280px] bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
+    <div className="flex-shrink-0 w-[280px] bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 animate-pulse">
       <div className="h-44 bg-gray-200" />
       <div className="p-3 space-y-2">
         <div className="h-4 bg-gray-200 rounded-full w-3/4" />
-        <div className="h-3 bg-gray-100 rounded-full w-1/2" />
+        <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-1/2" />
       </div>
     </div>
   );
@@ -68,7 +68,7 @@ function EventCardSkeletonHorizontal() {
 // ── Section title ──────────────────────────────────────────────────────────────
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[17px] font-bold text-gray-900 px-5 mb-3">{children}</h2>
+    <h2 className="text-[17px] font-bold text-gray-900 dark:text-white px-5 mb-3">{children}</h2>
   );
 }
 
@@ -168,12 +168,12 @@ export function Home({ userData, onNavigate }: HomeProps) {
       {/* ── Header ── */}
       <div className="px-5 pt-5 pt-safe-5 pb-3 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold text-gray-900">Bienvenue, {displayName}</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Bienvenue, {displayName}</h1>
           <button
             onClick={() => onNavigate('notifications')}
             className="w-10 h-10 flex items-center justify-center -mr-2"
           >
-            <NotificationIconWithBadge unreadCount={unreadCount} className="w-8 h-8 text-gray-900" />
+            <NotificationIconWithBadge unreadCount={unreadCount} className="w-8 h-8 text-gray-900 dark:text-white" />
           </button>
         </div>
 
@@ -181,7 +181,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
         <div className="flex items-center mb-4">
           <button
             onClick={() => onNavigate('explorer')}
-            className="flex-1 flex items-center gap-3 px-4 py-3 bg-gray-100 rounded-full text-left active:opacity-70 transition-opacity"
+            className="flex-1 flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-full text-left active:opacity-70 transition-opacity"
           >
             <Search01Icon className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
             <span className="text-sm text-gray-400">Concerts à proximité...</span>
@@ -228,8 +228,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   <WifiOff className="w-8 h-8 text-action-primary" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800 text-base mb-1">Vous êtes hors ligne</p>
-                  <p className="text-sm text-gray-500">Connectez-vous à internet pour voir les événements.</p>
+                  <p className="font-bold text-gray-800 dark:text-gray-200 text-base mb-1">Vous êtes hors ligne</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Connectez-vous à internet pour voir les événements.</p>
                 </div>
                 <button
                   onClick={() => qc.refetchQueries({ queryKey: ['events'] })}
@@ -280,8 +280,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   </div>
                 ) : events.length === 0 ? (
                   <div className="flex flex-col items-center py-14 gap-3 text-center px-8">
-                    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-2xl">📭</div>
-                    <p className="text-sm font-semibold text-gray-600">{emptyStateLabel}</p>
+                    <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-2xl">📭</div>
+                    <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{emptyStateLabel}</p>
                     <p className="text-xs text-gray-400">Essayez un autre créneau ou revenez plus tard.</p>
                   </div>
                 ) : (

@@ -56,7 +56,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
     <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center px-4 py-2 pt-safe-6 sticky top-0 bg-[#FAFAFA] z-10">
-        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
+        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
           <ChevronLeft className="w-6 h-6 text-gray-400" />
         </button>
       </div>
@@ -80,7 +80,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               {event?.title || conversation?.name}
             </h2>
             {event?.description && (
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                 {event?.description?.slice(0, 100) || ''}{(event?.description?.length || 0) > 100 ? '...' : ''}
               </p>
             )}
@@ -89,7 +89,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
 
         {/* Pot (Cagnotte) */}
         {poolStats && (
-          <div className="flex flex-col p-4 gap-4 w-full bg-[#FAFAFA] shadow-[0px_1px_2px_rgba(0,0,0,0.06)] rounded-[10px] border border-gray-100">
+          <div className="flex flex-col p-4 gap-4 w-full bg-[#FAFAFA] shadow-[0px_1px_2px_rgba(0,0,0,0.06)] rounded-[10px] border border-gray-100 dark:border-white/10">
             {/* Header */}
             <div className="flex flex-row justify-between items-center w-full h-[20px]">
               <span className="font-['Mochiy_Pop_One'] font-normal text-[14px] leading-[20px] text-[#FF7A00]">
@@ -104,7 +104,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
 
             <div className="flex flex-col gap-2 w-full">
               {/* Progress indicator */}
-              <div className="w-full h-[4px] bg-white rounded-full relative overflow-hidden">
+              <div className="w-full h-[4px] bg-white dark:bg-[#1A1A1A] rounded-full relative overflow-hidden">
                 <div 
                   className="absolute left-0 top-0 bottom-0 bg-[#FF991C] rounded-full transition-all duration-500" 
                   style={{ width: `${Math.min(100, poolStats.progress)}%` }} 
@@ -128,7 +128,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
 
             <button
               onClick={onContribute}
-              className="flex flex-row justify-center items-center p-2 gap-2 w-full h-[36px] bg-white rounded-[8px] active:scale-95 transition-transform border border-gray-100 shadow-sm"
+              className="flex flex-row justify-center items-center p-2 gap-2 w-full h-[36px] bg-white dark:bg-[#1A1A1A] rounded-[8px] active:scale-95 transition-transform border border-gray-100 dark:border-white/10 shadow-sm"
             >
               <Wallet className="w-5 h-5 text-[#219653]" />
               <span className="font-poppins font-medium text-[12px] leading-[20px] text-[#1B1818]">
@@ -178,7 +178,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                     { displayName: member.user?.profile?.displayName, avatarUrl: member.user?.profile?.avatarUrl },
                     { title: event?.title || conversation?.name || 'Groupe', coverUrl: event?.coverUrl || conversation?.avatarUrl }
                   )}
-                  className={`flex flex-row items-center justify-between gap-[6px] w-full h-[40px] rounded-[8px] ${!isMe ? 'active:bg-gray-100 cursor-pointer' : ''}`}
+                  className={`flex flex-row items-center justify-between gap-[6px] w-full h-[40px] rounded-[8px] ${!isMe ? 'active:bg-gray-100 dark:bg-[#2a2a2a] cursor-pointer' : ''}`}
                 >
                   <div className="flex flex-row items-center gap-[6px] flex-1 overflow-hidden">
                     <div className="w-[32px] h-[32px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
@@ -206,7 +206,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
           </h3>
           <div className="flex flex-col items-start gap-1 w-full">
             {event && (
-              <button onClick={() => navigate(`/events/${event.id}`)} className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <button onClick={() => navigate(`/events/${event.id}`)} className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
                 <div className="flex items-center justify-center">
                   <CalendarDays className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
@@ -214,7 +214,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               </button>
             )}
             
-            <button onClick={onInvite} className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+            <button onClick={onInvite} className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
               <div className="flex items-center justify-center">
                 <UserPlus className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
@@ -222,7 +222,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
             </button>
 
             {poolStats && (
-              <button onClick={onContribute} className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <button onClick={onContribute} className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
                 <div className="flex items-center justify-center">
                   <Wallet className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
@@ -238,21 +238,21 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
             Actions
           </h3>
           <div className="flex flex-col items-start gap-1 w-full">
-            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
               <div className="flex items-center justify-center">
                 <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Mettre en sourdine</span>
             </button>
             
-            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
               <div className="flex items-center justify-center">
                 <AlertTriangle className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
             </button>
 
-            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
               <div className="flex items-center justify-center">
                 <LogOut className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>

@@ -47,19 +47,19 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
   )
 
   return (
-    <div className="absolute inset-0 z-[60] flex flex-col bg-white">
+    <div className="absolute inset-0 z-[60] flex flex-col bg-white dark:bg-[#1A1A1A]">
       {/* Header */}
-      <div className="px-4 pt-safe-4 pb-3 flex items-center justify-between border-b border-gray-100">
-        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
-          <X className="w-5 h-5 text-gray-900" />
+      <div className="px-4 pt-safe-4 pb-3 flex items-center justify-between border-b border-gray-100 dark:border-white/10">
+        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
+          <X className="w-5 h-5 text-gray-900 dark:text-white" />
         </button>
-        <h2 className="text-[17px] font-bold text-gray-900">Ajouter des amis</h2>
+        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Ajouter des amis</h2>
         <div className="w-9" /> {/* Spacer for centering */}
       </div>
 
       {/* Search Bar */}
-      <div className="px-4 py-4 border-b border-gray-100">
-        <div className="bg-gray-100 rounded-xl flex items-center gap-2 px-3 py-2.5">
+      <div className="px-4 py-4 border-b border-gray-100 dark:border-white/10">
+        <div className="bg-gray-100 dark:bg-[#2a2a2a] rounded-xl flex items-center gap-2 px-3 py-2.5">
           <Search className="w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -75,16 +75,16 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
       <div className="flex-1 overflow-y-auto px-4 py-2">
         {search.length < 2 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-[#222222] flex items-center justify-center mb-4">
               <Search className="w-8 h-8 text-gray-300" />
             </div>
-            <p className="text-[15px] text-gray-500 font-medium">Recherchez vos amis</p>
+            <p className="text-[15px] text-gray-500 dark:text-gray-400 font-medium">Recherchez vos amis</p>
             <p className="text-[13px] text-gray-400 mt-1">Saisissez au moins 2 caractères.</p>
           </div>
         ) : isLoading ? (
           <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
         ) : users?.length === 0 ? (
-          <div className="text-center py-10 text-gray-500 text-[14px]">
+          <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-[14px]">
             Aucun utilisateur trouvé.
           </div>
         ) : (
@@ -107,8 +107,8 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-[15px] font-bold text-gray-900 truncate">{user.displayName}</h4>
-                      <p className="text-[13px] text-gray-500 truncate">@{user.username}</p>
+                      <h4 className="text-[15px] font-bold text-gray-900 dark:text-white truncate">{user.displayName}</h4>
+                      <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate">@{user.username}</p>
                     </div>
                   </div>
                   
@@ -117,7 +117,7 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
                     disabled={isSent || isSending}
                     className={`shrink-0 px-4 py-2 rounded-full text-[13px] font-bold flex items-center gap-1.5 transition-colors ${
                       isSent 
-                        ? 'bg-gray-100 text-gray-500' 
+                        ? 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400' 
                         : 'bg-action-primary text-white hover:bg-[#F09214]'
                     }`}
                   >

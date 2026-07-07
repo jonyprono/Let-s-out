@@ -53,17 +53,11 @@ export function BottomNav() {
 
   return (
     <nav
-      className="w-full flex flex-col items-center flex-shrink-0"
+      className="w-full flex flex-col items-center flex-shrink-0 bg-white/75 dark:bg-[#1A1A1A]/85 backdrop-blur-[25px] border-t border-black/30 dark:border-white/10 z-50 transition-colors"
       style={{
         height: 'calc(62px + env(safe-area-inset-bottom))',
         padding: '12px 16px',
         paddingBottom: 'calc(12px + env(safe-area-inset-bottom))',
-        background: 'rgba(255, 255, 255, 0.75)',
-        backgroundBlendMode: 'hard-light',
-        backdropFilter: 'blur(25px)',
-        WebkitBackdropFilter: 'blur(25px)',
-        borderTop: '0.333px solid rgba(0, 0, 0, 0.3)',
-        zIndex: 50,
       }}
     >
       <div className="w-full max-w-[390px] mx-auto flex flex-row items-center justify-between gap-[10px]" style={{ height: '38px' }}>
@@ -87,13 +81,13 @@ export function BottomNav() {
                 />
               </div>
               <span
+                className={active ? 'text-[#FF7A00]' : 'text-[#404040] dark:text-gray-400'}
                 style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 500,
                   fontSize: '10px',
                   lineHeight: '16px',
-                  textAlign: 'center',
-                  color: active ? '#FF7A00' : '#404040'
+                  textAlign: 'center'
                 }}
               >
                 {tab.label}
@@ -150,13 +144,13 @@ export function BottomNav() {
                 )}
               </div>
               <span
+                className={active ? 'text-[#FF7A00]' : 'text-[#404040] dark:text-gray-400'}
                 style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontWeight: 500,
                   fontSize: '10px',
                   lineHeight: '16px',
-                  textAlign: 'center',
-                  color: active ? '#FF7A00' : '#404040'
+                  textAlign: 'center'
                 }}
               >
                 {tab.label}

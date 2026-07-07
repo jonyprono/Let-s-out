@@ -102,7 +102,7 @@ export function Profile({ onNavigate }: ProfileProps) {
   // Show loading state while determining own vs other profile
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-50">
+      <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-[#222222]">
         <div className="flex flex-col items-center gap-150">
           <div className="w-14 h-14 rounded-2xl bg-gray-200 animate-pulse" />
           <div className="h-4 w-32 bg-gray-200 rounded-lg animate-pulse" />
@@ -124,25 +124,25 @@ export function Profile({ onNavigate }: ProfileProps) {
   const rating = viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A';
 
   return (
-    <div className="w-full h-full flex flex-col bg-gray-50">
+    <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-[#222222]">
       
       {/* Header Actions */}
-      <div className="px-4 pt-12 pb-2 sticky top-0 z-20 flex items-center justify-between bg-gray-50/90 backdrop-blur-md">
+      <div className="px-4 pt-12 pb-2 sticky top-0 z-20 flex items-center justify-between bg-gray-50 dark:bg-[#222222]/90 backdrop-blur-md">
         <div className="flex items-center gap-2">
           {!isOwnProfile && (
-            <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors">
+            <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A] flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm hover:bg-gray-50 dark:bg-[#222222] transition-colors">
               <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
           )}
         </div>
         <div className="flex items-center gap-2">
           {isOwnProfile && (
-            <button onClick={() => onNavigate('settings')} className="w-9 h-9 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm active:scale-95 transition-transform">
+            <button onClick={() => onNavigate('settings')} className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A] flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm active:scale-95 transition-transform">
               <Settings className="w-4 h-4 text-gray-700" />
             </button>
           )}
           {isOwnProfile && (
-            <button onClick={() => doLogout()} className="w-9 h-9 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-sm active:scale-95 transition-transform text-red-500">
+            <button onClick={() => doLogout()} className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A] flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm active:scale-95 transition-transform text-red-500">
               <LogOut className="w-4 h-4" />
             </button>
           )}
@@ -150,13 +150,13 @@ export function Profile({ onNavigate }: ProfileProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        <div className="px-5 pt-2 pb-6 bg-gray-50 flex flex-col border-b border-gray-100">
+        <div className="px-5 pt-2 pb-6 bg-gray-50 dark:bg-[#222222] flex flex-col border-b border-gray-100 dark:border-white/10">
           
           {/* Avatar & Info (Left-aligned) */}
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-shrink-0">
-              <div className="w-[84px] h-[84px] rounded-full ring-[3px] ring-white shadow-sm overflow-hidden bg-white">
-                <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-500 bg-gray-100">{displayName.charAt(0).toUpperCase()}</div>} />
+              <div className="w-[84px] h-[84px] rounded-full ring-[3px] ring-white shadow-sm overflow-hidden bg-white dark:bg-[#1A1A1A]">
+                <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2a2a2a]">{displayName.charAt(0).toUpperCase()}</div>} />
               </div>
               <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full border-2 border-white shadow-sm bg-yellow-400 flex items-center justify-center text-[9px] font-bold text-white">
                 ★ {rating}
@@ -164,9 +164,9 @@ export function Profile({ onNavigate }: ProfileProps) {
             </div>
             
             <div className="flex flex-col">
-              <h2 className="text-[20px] font-black text-gray-900 mb-0.5 leading-tight">{displayName}</h2>
+              <h2 className="text-[20px] font-black text-gray-900 dark:text-white mb-0.5 leading-tight">{displayName}</h2>
               {city && (
-                <div className="flex items-center gap-1 text-[13px] text-gray-500 font-medium">
+                <div className="flex items-center gap-1 text-[13px] text-gray-500 dark:text-gray-400 font-medium">
                   <MapPin className="w-3.5 h-3.5" />
                   <span>{city}</span>
                 </div>
@@ -174,7 +174,7 @@ export function Profile({ onNavigate }: ProfileProps) {
             </div>
           </div>
           
-          {bio && <p className="text-[13px] text-gray-600 leading-relaxed mb-4">{bio}</p>}
+          {bio && <p className="text-[13px] text-gray-600 dark:text-gray-300 leading-relaxed mb-4">{bio}</p>}
 
           {/* Badges & Interests (Compact, left-aligned) */}
           {(displayProfile?.interests?.length > 0 || viewedProfile?.user?.badges?.length > 0) && (
@@ -208,8 +208,8 @@ export function Profile({ onNavigate }: ProfileProps) {
               { value: friends.length, label: 'Amis' },
               { value: rating, label: 'Note' },
             ].map((stat, i) => (
-              <div key={i} className="bg-white px-3 py-2 rounded-[14px] shadow-sm border border-gray-100 flex flex-col items-start min-w-[70px]">
-                <p className="text-[16px] font-black text-gray-900 leading-none mb-1">{stat.value}</p>
+              <div key={i} className="bg-white dark:bg-[#1A1A1A] px-3 py-2 rounded-[14px] shadow-sm border border-gray-100 dark:border-white/10 flex flex-col items-start min-w-[70px]">
+                <p className="text-[16px] font-black text-gray-900 dark:text-white leading-none mb-1">{stat.value}</p>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">{stat.label}</p>
               </div>
             ))}
@@ -218,9 +218,9 @@ export function Profile({ onNavigate }: ProfileProps) {
         </div>
 
         {/* Content Area */}
-        <div className="bg-gray-50 min-h-[500px]">
+        <div className="bg-gray-50 dark:bg-[#222222] min-h-[500px]">
           {/* Scrollable Tabs */}
-          <div className="w-full overflow-x-auto hide-scrollbar border-b border-gray-200 sticky top-0 bg-gray-50/95 backdrop-blur-md z-10">
+          <div className="w-full overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-white/10 sticky top-0 bg-gray-50 dark:bg-[#222222]/95 backdrop-blur-md z-10">
             <div className="flex px-4 py-2 w-max gap-2">
               <ToggleButton
                 options={TABS.map(t => ({ label: `${t.label} ${t.count > 0 ? `(${t.count})` : ''}`, value: t.key }))}
@@ -238,7 +238,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 {createdEvents.length > 0 && (
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Événements proches</span>
+                    <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Événements proches</span>
                   </div>
                 )}
                 {createdEvents.length === 0 ? (
@@ -254,7 +254,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                   <>
                     <div className="flex items-center gap-2 mt-8 mb-2">
                       <Activity className="w-4 h-4 text-gray-400" />
-                      <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Participations passées</span>
+                      <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Participations passées</span>
                     </div>
                     <div className="flex flex-col gap-3">
                       {pastEvents.slice(0, 3).map((event: any) => (
@@ -324,21 +324,21 @@ export function Profile({ onNavigate }: ProfileProps) {
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <button
                     onClick={() => navigate('/friend-requests')}
-                    className="bg-white rounded-[20px] p-4 flex flex-col items-center text-center shadow-sm border border-gray-100 hover:border-orange-200 transition-colors"
+                    className="bg-white dark:bg-[#1A1A1A] rounded-[20px] p-4 flex flex-col items-center text-center shadow-sm border border-gray-100 dark:border-white/10 hover:border-orange-200 transition-colors"
                   >
                     <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-2">
                       <Users className="w-5 h-5 text-orange-500" />
                     </div>
-                    <p className="font-bold text-[13px] text-gray-900">Demandes</p>
+                    <p className="font-bold text-[13px] text-gray-900 dark:text-white">Demandes</p>
                   </button>
                   <button
                     onClick={() => setShowAddFriendsModal(true)}
-                    className="bg-white rounded-[20px] p-4 flex flex-col items-center text-center shadow-sm border border-gray-100 hover:border-orange-200 transition-colors"
+                    className="bg-white dark:bg-[#1A1A1A] rounded-[20px] p-4 flex flex-col items-center text-center shadow-sm border border-gray-100 dark:border-white/10 hover:border-orange-200 transition-colors"
                   >
                     <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-2">
                       <UserPlus className="w-5 h-5 text-orange-500" />
                     </div>
-                    <p className="font-bold text-[13px] text-gray-900">Ajouter</p>
+                    <p className="font-bold text-[13px] text-gray-900 dark:text-white">Ajouter</p>
                   </button>
                 </div>
 
@@ -411,10 +411,10 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
       onClick={() => {
         if (!isDraft && onNavigate && event?.id) onNavigate('event-details', event.id);
       }}
-      className="flex gap-4 p-4 bg-white border border-gray-100 rounded-[24px] shadow-sm hover:shadow-md transition-shadow cursor-pointer w-full items-center"
+      className="flex gap-4 p-4 bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-white/10 rounded-[24px] shadow-sm hover:shadow-md transition-shadow cursor-pointer w-full items-center"
     >
       {/* Icon / Cover */}
-      <div className="w-[68px] h-[68px] rounded-[20px] bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-gray-200">
+      <div className="w-[68px] h-[68px] rounded-[20px] bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center flex-shrink-0 overflow-hidden relative border border-gray-200 dark:border-white/10">
         {event?.coverUrl ? (
           <SafeImage src={event.coverUrl} alt={event?.title || 'Event cover'} className="w-full h-full object-cover" />
         ) : (
@@ -429,7 +429,7 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
 
       {/* Content */}
       <div className="flex flex-col flex-1 min-w-0">
-        <h4 className="font-black text-[16px] text-gray-900 truncate leading-tight mb-1">{event?.title || 'Sans titre'}</h4>
+        <h4 className="font-black text-[16px] text-gray-900 dark:text-white truncate leading-tight mb-1">{event?.title || 'Sans titre'}</h4>
         <p className="text-[13px] text-gray-400 truncate mb-3 font-medium">
           {dateStr} • {event?.city || 'Lieu non défini'}
         </p>
@@ -443,7 +443,7 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
                    {att?.user?.profile?.avatarUrl || att?.user?.avatarUrl || att?.avatarUrl ? (
                      <SafeImage src={att?.user?.profile?.avatarUrl || att?.user?.avatarUrl || att?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                    ) : (
-                     <User className="w-3 h-3 text-gray-500" />
+                     <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                    )}
                  </div>
                ))}
@@ -466,12 +466,12 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
 
 function EmptyState({ icon, title, subtitle, action }: { icon: string, title: string, subtitle: string, action?: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-[24px] p-8 text-center border border-dashed border-gray-200">
-      <div className="w-14 h-14 mx-auto bg-gray-50 rounded-full flex items-center justify-center mb-3">
+    <div className="bg-white dark:bg-[#1A1A1A] rounded-[24px] p-8 text-center border border-dashed border-gray-200 dark:border-white/10">
+      <div className="w-14 h-14 mx-auto bg-gray-50 dark:bg-[#222222] rounded-full flex items-center justify-center mb-3">
         <span className="text-2xl">{icon}</span>
       </div>
-      <p className="text-gray-900 font-bold text-[15px]">{title}</p>
-      <p className="text-sm text-gray-500 mt-1 mb-4">{subtitle}</p>
+      <p className="text-gray-900 dark:text-white font-bold text-[15px]">{title}</p>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-4">{subtitle}</p>
       {action}
     </div>
   );
@@ -487,24 +487,24 @@ function UserCard({ user, type }: { user: any; type: 'follower' | 'following' | 
   return (
     <div 
       onClick={() => openUserProfile(user?.userId || user?.id, { displayName: name, avatarUrl: avatar })}
-      className="bg-white rounded-[20px] p-3 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer border border-gray-100 hover:border-gray-200"
+      className="bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer border border-gray-100 dark:border-white/10 hover:border-gray-200 dark:border-white/10"
     >
-      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 shadow-sm ring-2 ring-white">
+      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 dark:bg-[#2a2a2a] flex-shrink-0 shadow-sm ring-2 ring-white">
         <SafeImage
           src={avatar}
           alt={name}
           className="w-full h-full object-cover"
           fallback={
-            <div className="w-full h-full flex items-center justify-center font-bold text-gray-500 bg-gray-100 text-lg">
+            <div className="w-full h-full flex items-center justify-center font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2a2a2a] text-lg">
               {name.charAt(0).toUpperCase()}
             </div>
           }
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-gray-900 text-[15px] truncate">{name}</p>
+        <p className="font-bold text-gray-900 dark:text-white text-[15px] truncate">{name}</p>
         {user?.username && (
-          <p className="text-[13px] text-gray-500 truncate">@{user.username}</p>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate">@{user.username}</p>
         )}
       </div>
       {type === 'follower' && (

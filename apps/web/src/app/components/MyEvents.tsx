@@ -94,12 +94,12 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
 
       {/* ── Header ── */}
       <div className="px-5 pt-6 pt-safe-6 pb-4 flex-shrink-0 flex items-center justify-between">
-        <h1 className="text-[24px] font-bold text-gray-900">Mes événements</h1>
+        <h1 className="text-[24px] font-bold text-gray-900 dark:text-white">Mes événements</h1>
           <button
             onClick={() => onNavigate('notifications')}
             className="w-10 h-10 flex items-center justify-center -mr-2"
           >
-            <NotificationIconWithBadge unreadCount={unreadCount} className="w-8 h-8 text-gray-900" />
+            <NotificationIconWithBadge unreadCount={unreadCount} className="w-8 h-8 text-gray-900 dark:text-white" />
           </button>
       </div>
 
@@ -121,11 +121,11 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
           </div>
         ) : currentList.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <div className="w-20 h-20 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center mb-4">
               <Calendar className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Aucun événement</h3>
-            <p className="text-gray-500 text-sm max-w-[250px]">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Aucun événement</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm max-w-[250px]">
               {activeTab === 'upcoming' && "Vous n'avez pas d'événement prévu prochainement."}
               {activeTab === 'favorites' && "Vous n'avez aucun événement en favori."}
               {activeTab === 'past' && "Vous n'avez pas encore participé à des événements."}

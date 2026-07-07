@@ -35,7 +35,7 @@ function KycPendingScreen({ onBack }: { onBack: () => void }) {
       <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs mb-2">
         Votre dossier KYC a été soumis et est en cours d'examen par notre équipe.
       </p>
-      <p className="text-[13px] text-gray-400 dark:text-gray-500 leading-relaxed max-w-xs">
+      <p className="text-[13px] text-gray-400 dark:text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs">
         Vous recevrez une notification dès que votre identité sera validée (généralement sous 24–48 h).
       </p>
       <div className="flex items-center gap-2 mt-6 px-4 py-3 bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-100 dark:border-amber-500/20 max-w-xs w-full">
@@ -100,7 +100,7 @@ function IdFrontIllustration({ captured }: { captured: boolean }) {
               <div className="h-1.5 bg-gray-200 rounded-full w-2/3" />
             </div>
           </div>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500">Recto de votre pièce d'identité</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400">Recto de votre pièce d'identité</p>
         </>
       )}
     </div>
@@ -123,7 +123,7 @@ function IdBackIllustration({ captured }: { captured: boolean }) {
             </div>
             <div className="w-8 h-5 bg-gray-100 dark:bg-[#2A2A2A] rounded border border-gray-200 dark:border-[#333333] absolute top-1 left-1.5" />
           </div>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500">Verso de votre pièce d'identité</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400">Verso de votre pièce d'identité</p>
         </>
       )}
     </div>
@@ -145,7 +145,7 @@ function SelfieIllustration({ captured }: { captured: boolean }) {
             </div>
             <div className="w-20 h-8 bg-[#FFE8D6] rounded-t-full absolute -bottom-4 left-1/2 -translate-x-1/2" />
           </div>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-4">Votre visage bien éclairé</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-4">Votre visage bien éclairé</p>
         </>
       )}
     </div>
@@ -175,7 +175,7 @@ function SelfieWithIdIllustration({ captured }: { captured: boolean }) {
               </div>
             </div>
           </div>
-          <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2">Vous tenant votre pièce d'identité</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-2">Vous tenant votre pièce d'identité</p>
         </>
       )}
     </div>
@@ -433,7 +433,7 @@ export function VerifyProfile() {
           />
         </div>
         {step > 0 && (
-          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5 text-right">Étape {step}/{totalSteps}</p>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-1.5 text-right">Étape {step}/{totalSteps}</p>
         )}
       </div>
 

@@ -47,7 +47,7 @@ export function CategoryChip({ label, selected = false, onClick, disabled, showI
           ? 'bg-[var(--brand-orange-500)] text-white shadow-sm'
           : [
               'bg-[#F5F5F5] text-[var(--color-text-primary)]',
-              'hover:bg-gray-200 hover:text-gray-900',
+              'hover:bg-gray-200 hover:text-gray-900 dark:text-white',
               'active:bg-[#E0E0E0]',
             ],
       )}

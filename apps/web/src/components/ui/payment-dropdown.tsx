@@ -46,7 +46,7 @@ export function PaymentDropdown({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full flex flex-row items-center px-[1rem] py-[0.75rem] gap-[8px] min-h-[48px] h-auto bg-white border border-[var(--border-default)] rounded-[8px] box-border active:bg-gray-50 transition-colors focus:outline-none",
+          "w-full flex flex-row items-center px-[1rem] py-[0.75rem] gap-[8px] min-h-[48px] h-auto bg-white dark:bg-[#1A1A1A] border border-[var(--border-default)] rounded-[8px] box-border active:bg-gray-50 dark:bg-[#222222] transition-colors focus:outline-none",
           isOpen && "border-[#FF7A00]"
         )}
       >
@@ -66,7 +66,7 @@ export function PaymentDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#FFFFFF] border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-50 bg-[#FFFFFF] dark:bg-[#0a0a0b] border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-100">
           <div className="max-h-60 overflow-auto">
             {options.map((option) => (
               <button

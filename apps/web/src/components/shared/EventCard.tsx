@@ -121,7 +121,7 @@ export const EventCard = memo(function EventCard({
         hapticFeedback.impact();
         if (onNavigate && event?.id) onNavigate('event-details', event.id);
       }}
-      className={`flex flex-col text-left transition-transform active:scale-[0.98] bg-white rounded-[12px] overflow-hidden border border-[#DFDFDF] shadow-sm ${
+      className={`flex flex-col text-left transition-transform active:scale-[0.98] bg-white dark:bg-[#1A1A1A] rounded-[12px] overflow-hidden border border-[#DFDFDF] shadow-sm ${
         horizontal ? 'flex-shrink-0 w-[85vw] max-w-[320px] mr-4' : 'w-full max-w-[390px] mx-auto mb-4'
       }`}
       style={{
@@ -161,9 +161,9 @@ export const EventCard = memo(function EventCard({
         <div className="absolute top-3 right-3 flex gap-2 z-10">
           <button
             onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
+            className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A]/80 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
           >
-            <Share2 className="w-[18px] h-[18px] text-gray-600" strokeWidth={2} />
+            <Share2 className="w-[18px] h-[18px] text-gray-600 dark:text-gray-300" strokeWidth={2} />
           </button>
           <SaveEventButton saved={favorite} onClick={handleFavorite} />
         </div>
@@ -198,11 +198,11 @@ export const EventCard = memo(function EventCard({
           >
             {displayTitle}
           </h3>
-          <p className="text-[13px] text-gray-500 mb-0.5 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-0.5 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
             {displayDate}
           </p>
           {displayLocation && (
-            <p className="text-[13px] text-gray-500 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
               {displayLocation}
             </p>
           )}
@@ -240,7 +240,7 @@ export const EventCard = memo(function EventCard({
               </div>
             )}
             
-            <span className="text-[12px] font-medium text-gray-600" style={{ fontFamily: 'var(--font-poppins)' }}>
+            <span className="text-[12px] font-medium text-gray-600 dark:text-gray-300" style={{ fontFamily: 'var(--font-poppins)' }}>
               {displayAttendeesCount}
             </span>
           </div>
@@ -250,7 +250,7 @@ export const EventCard = memo(function EventCard({
             <div className={`px-3 py-1 rounded-full flex items-center justify-center ${
               displayPrice.toLowerCase() === 'gratuit' || displayPrice.toLowerCase() === 'free'
                 ? 'bg-[#E8F8F0]'
-                : 'bg-gray-100'
+                : 'bg-gray-100 dark:bg-[#2a2a2a]'
             }`}>
               <span 
                 className={`text-[13px] font-semibold ${
@@ -277,27 +277,27 @@ export const EventCard = memo(function EventCard({
           <div className="bg-background-white rounded-[32px] p-8 w-full max-w-sm relative z-10 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
             <button 
               onClick={(e) => { e.stopPropagation(); setShowQRModal(false); }}
-              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-[#2a2a2a] rounded-full"
             >
               <X className="w-4 h-4 text-text-secondary" />
             </button>
             <div className="w-16 h-16 rounded-full bg-brand-orange-50 flex items-center justify-center mb-200 mt-2">
               <QrCode className="w-8 h-8 text-action-primary" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Inviter à l'événement</h3>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Inviter à l'événement</h3>
             <p className="text-sm text-text-secondary mb-8 max-w-[240px]">
               Faites scanner ce code QR pour permettre à vos proches de rejoindre l'événement privé.
             </p>
-            <div className="p-200 bg-background-white rounded-3xl border border-gray-100 shadow-sm mb-200">
+            <div className="p-200 bg-background-white rounded-3xl border border-gray-100 dark:border-white/10 shadow-sm mb-200">
               {isLoadingEvent ? (
-                <div className="w-[180px] h-[180px] bg-gray-50 flex flex-col items-center justify-center text-gray-400">
+                <div className="w-[180px] h-[180px] bg-gray-50 dark:bg-[#222222] flex flex-col items-center justify-center text-gray-400">
                   <Loader2 className="w-8 h-8 animate-spin text-[#9747FF] mb-2" />
                   <span className="text-sm font-medium">Chargement...</span>
                 </div>
               ) : joinCode ? (
                 <QRCodeSVG value={joinCode} size={180} level="M" />
               ) : (
-                <div className="w-[180px] h-[180px] bg-gray-50 flex items-center justify-center text-gray-400">
+                <div className="w-[180px] h-[180px] bg-gray-50 dark:bg-[#222222] flex items-center justify-center text-gray-400">
                   <span className="text-sm font-medium">Code indisponible</span>
                 </div>
               )}

@@ -226,7 +226,7 @@ export function EditPhoneModal({ onClose }: Props) {
           <h2 className="text-xl font-bold text-gray-900 dark:text-[#FFFFFF]">
             {step === 1 ? t('editPhoneModal.title') || 'Modifier le numéro' : 'Vérification'}
           </h2>
-          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#2A2A2A] rounded-full hover:bg-gray-200 dark:hover:bg-[#333333]">
+          <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2A2A2A] rounded-full hover:bg-gray-200 dark:hover:bg-[#333333]">
             <X size={20} />
           </button>
         </div>
@@ -249,7 +249,7 @@ export function EditPhoneModal({ onClose }: Props) {
                     placeholder="01 00 00 00 00"
                   />
                 </div>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2 ml-1">
+                <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-2 ml-1">
                   Numéro complet : <span className="font-medium text-gray-600 dark:text-gray-300">{fullPhone || '—'}</span>
                 </p>
               </div>
@@ -288,7 +288,7 @@ export function EditPhoneModal({ onClose }: Props) {
               <button
                 onClick={handleResend}
                 disabled={countdown > 0 || isLoading}
-                className="text-[13px] text-gray-400 dark:text-gray-500 disabled:opacity-50 flex items-center gap-1.5"
+                className="text-[13px] text-gray-400 dark:text-gray-500 dark:text-gray-400 disabled:opacity-50 flex items-center gap-1.5"
               >
                 Renvoyer le code{countdown > 0 && ` (${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')})`}
               </button>
@@ -297,7 +297,7 @@ export function EditPhoneModal({ onClose }: Props) {
             <div className="flex gap-3">
               <button
                 onClick={() => setStep(1)}
-                className="py-4 px-6 text-gray-500 font-bold rounded-2xl bg-gray-100 hover:bg-gray-200 active:scale-[0.98] transition-transform"
+                className="py-4 px-6 text-gray-500 dark:text-gray-400 font-bold rounded-2xl bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 active:scale-[0.98] transition-transform"
               >
                 Retour
               </button>

@@ -181,7 +181,7 @@ export function PaymentPage() {
 
   if (eventLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-white">
+      <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#1A1A1A]">
         <Loader2 className="w-8 h-8 animate-spin text-[#FF7A00]" />
       </div>
     )
@@ -191,7 +191,7 @@ export function PaymentPage() {
   if (status === 'success') {
     const startDate = parseSafeDate(event?.startAt)
     return (
-      <div className="w-full h-full bg-white flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
+      <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
         <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
           <button onClick={() => navigate(`/events/${eventId}`)} className="w-9 h-9 flex items-center justify-center active:scale-95">
             <ChevronLeft className="w-5 h-5 text-[#1B1818]" strokeWidth={2} />
@@ -209,28 +209,28 @@ export function PaymentPage() {
           </div>
 
           <h1 className="text-[22px] font-bold text-[#2E7D32] mb-2 text-center">Participation validée !</h1>
-          <p className="text-[13px] text-gray-500 text-center mb-8 px-6">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-8 px-6">
             Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres participants.
           </p>
 
-          <div className="w-full rounded-2xl border border-gray-100 bg-white shadow-sm p-5 space-y-4">
-            <h2 className="text-[15px] font-bold text-gray-900">{event?.title}</h2>
+          <div className="w-full rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] shadow-sm p-5 space-y-4">
+            <h2 className="text-[15px] font-bold text-gray-900 dark:text-white">{event?.title}</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-gray-500">Date</span>
-                <span className="text-[13px] font-semibold text-gray-900">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400">Date</span>
+                <span className="text-[13px] font-semibold text-gray-900 dark:text-white">
                   {event?.startAt ? `${startDate.getDate()} Juin ${startDate.getFullYear()}, ${String(startDate.getHours()).padStart(2, '0')}h` : '--'}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4">
-                <span className="text-[13px] text-gray-500 shrink-0">Lieu</span>
-                <span className="text-[13px] font-semibold text-gray-900 text-right">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400 shrink-0">Lieu</span>
+                <span className="text-[13px] font-semibold text-gray-900 dark:text-white text-right">
                   {event?.city ? `${event.address ? event.address + ' ' : ''}(${event.city})` : 'Lieu non précisé'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-gray-500">Votre participation</span>
-                <span className="text-[13px] font-semibold text-gray-900">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400">Votre participation</span>
+                <span className="text-[13px] font-semibold text-gray-900 dark:text-white">
                   {resolvedAmount ? `${resolvedAmount.toLocaleString()} F` : event?.price ? `${event.price.toLocaleString()} F` : 'Gratuit'}
                 </span>
               </div>
@@ -238,11 +238,11 @@ export function PaymentPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
+        <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
             <Button onClick={handleOpenChat} className="w-full">
               Rejoindre le groupe
             </Button>
-            <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[var(--btn-height)] rounded-full font-bold text-[15px] text-[var(--color-text-secondary)] border border-[var(--border-primary)] bg-white active:scale-95 transition-transform">
+            <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[var(--btn-height)] rounded-full font-bold text-[15px] text-[var(--color-text-secondary)] border border-[var(--border-primary)] bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform">
               Retour à l'événement
             </button>
         </div>
@@ -253,16 +253,16 @@ export function PaymentPage() {
   // ── ERROR STATE ──
   if (status === 'error') {
     return (
-      <div className="w-full h-full bg-white flex flex-col">
+      <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col">
         <div className="px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full active:scale-95">
+          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-gray-100 dark:bg-[#2a2a2a] rounded-full active:scale-95">
             <ChevronLeft className="w-5 h-5 text-gray-700" />
           </button>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
           <XCircle className="w-20 h-20 text-red-400" />
-          <h2 className="text-xl font-bold text-gray-900">Paiement impossible</h2>
-          <p className="text-gray-500 mb-4">Vérifiez le montant ou réessayez.</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Paiement impossible</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">Vérifiez le montant ou réessayez.</p>
           <button onClick={() => setStatus('form')} className="w-full bg-gray-900 text-white py-4 rounded-full font-bold">
             Réessayer
           </button>
@@ -274,16 +274,16 @@ export function PaymentPage() {
   // ── LOADING STATE ──
   if (status === 'loading') {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-white gap-4">
+      <div className="w-full h-full flex flex-col items-center justify-center bg-white dark:bg-[#1A1A1A] gap-4">
         <Loader2 className="w-10 h-10 text-[#FF7A00] animate-spin" />
-        <p className="text-gray-500 text-[14px]">Traitement en cours...</p>
+        <p className="text-gray-500 dark:text-gray-400 text-[14px]">Traitement en cours...</p>
       </div>
     )
   }
 
   // ── PAYMENT FORM ──
   return (
-    <div className="w-full h-full bg-white flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
+    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
 
       {/* ── Header ── */}
       <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center gap-3">
@@ -317,7 +317,7 @@ export function PaymentPage() {
           <label className="block text-[13px] font-medium text-[#1B1818] mb-2">
             Montant de votre participation
           </label>
-          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white overflow-hidden h-[52px] focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
+          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white dark:bg-[#1A1A1A] overflow-hidden h-[52px] focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
             <input
               type="number"
               value={participationAmount}
@@ -335,7 +335,7 @@ export function PaymentPage() {
         {/* ── Payment method ── */}
         <div className="mb-4">
           <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Méthode de paiement</label>
-          <div className="flex flex-row items-center p-[10px] gap-[4px] w-full h-[44px] bg-white border border-[#E0E0E0] rounded-[6px]">
+          <div className="flex flex-row items-center p-[10px] gap-[4px] w-full h-[44px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] rounded-[6px]">
             <img src="/logos/mobile-money.png" alt="Mobile money" className="w-6 h-6 object-contain shrink-0" />
             <span className="flex-1 text-[14px] text-[#1B1818] text-left">Mobile money</span>
             <ChevronDown className="w-4 h-4 text-[#8D8D8D] shrink-0" />
@@ -349,7 +349,7 @@ export function PaymentPage() {
             <button
               type="button"
               onClick={() => setShowOperatorDropdown(!showOperatorDropdown)}
-              className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-white border border-[#E0E0E0] rounded-[6px] active:bg-gray-50 transition-colors"
+              className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] rounded-[6px] active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
               <span className="flex-1 text-[14px] text-[#1B1818] text-left">{selectedOperator.label}</span>
@@ -360,7 +360,7 @@ export function PaymentPage() {
             </button>
 
             {showOperatorDropdown && (
-              <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-30 bg-white border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-30 bg-white dark:bg-[#1A1A1A] border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
                 {OPERATORS.map((op) => (
                   <button
                     key={op.id}
@@ -400,7 +400,7 @@ export function PaymentPage() {
 
       {/* ── Sticky footer ── */}
       <div
-        className="absolute bottom-0 left-0 right-0 bg-white px-5 pt-3 flex flex-col items-center gap-2 border-t border-[#F0F0F0]"
+        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col items-center gap-2 border-t border-[#F0F0F0]"
         style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
       >
         <Button
@@ -424,7 +424,7 @@ export function PaymentPage() {
       {/* ── Transaction Summary Bottom Sheet ── */}
       {status === 'summary' && (
         <div className="absolute inset-0 z-50 bg-black/50 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full bg-white rounded-t-[24px] shadow-2xl animate-in slide-in-from-bottom duration-300" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[24px] shadow-2xl animate-in slide-in-from-bottom duration-300" style={{ fontFamily: 'Poppins, sans-serif' }}>
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 bg-[#E0E0E0] rounded-full" />
             </div>

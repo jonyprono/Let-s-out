@@ -58,7 +58,7 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
 
   if (!src) {
     return (
-      <div className={`bg-gray-100 flex items-center justify-center overflow-hidden ${className ?? ''}`} style={style}>
+      <div className={`bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center overflow-hidden ${className ?? ''}`} style={style}>
         {fallback ?? <span className="text-gray-300 text-2xl">👤</span>}
       </div>
     )
@@ -66,7 +66,7 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
 
   if (error) {
     return (
-      <div className={`bg-gray-100 flex items-center justify-center overflow-hidden ${className ?? ''}`} style={style} title="Image failed to load">
+      <div className={`bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center overflow-hidden ${className ?? ''}`} style={style} title="Image failed to load">
         {fallback ?? <span className="text-gray-300 text-2xl">👤</span>}
       </div>
     )

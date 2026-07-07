@@ -446,7 +446,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       } catch {
                         toast.error("Impossible de démarrer la conversation");
                       }
-                    }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
+                    }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
                       Message
                     </button>
                     <button onClick={async (e) => {
@@ -462,7 +462,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           toast.error("Erreur lors de l'abonnement");
                         }
                       }
-                    }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
+                    }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
                       Suivre
                     </button>
                   </div>
@@ -514,7 +514,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     {(hasJoined || isCreator) && (
                       <button
                         onClick={() => setShowContributionsModal(true)}
-                        className="px-[12px] py-[6px] rounded-[8px] border border-[var(--border-default)] bg-white text-[12px] font-medium text-[var(--color-text-primary)] active:scale-95 transition-transform"
+                        className="px-[12px] py-[6px] rounded-[8px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[12px] font-medium text-[var(--color-text-primary)] active:scale-95 transition-transform"
                       >
                         Voir les contributions
                       </button>
@@ -568,8 +568,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 </div>
               ) : (
                 /* ── STANDARD PARTICIPATION BLOCK ── */
-                <div className="rounded-[14px] bg-gray-50 p-4 flex items-center justify-between">
-                  <span className="text-[14px] text-gray-900 font-medium">Montant</span>
+                <div className="rounded-[14px] bg-gray-50 dark:bg-[#222222] p-4 flex items-center justify-between">
+                  <span className="text-[14px] text-gray-900 dark:text-white font-medium">Montant</span>
                   <span className="text-[14px] font-bold text-[#007AFF]">
                     {amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : getEventParticipationMode(event)}
                   </span>
@@ -652,19 +652,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* QR Code Modal */}
       {showQRModal && event && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center px-5 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative">
-            <button onClick={() => setShowQRModal(false)} className="absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-              <X className="w-4 h-4 text-gray-500" />
+          <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-6 shadow-2xl relative">
+            <button onClick={() => setShowQRModal(false)} className="absolute top-4 right-4 w-8 h-8 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center">
+              <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-orange-50 text-action-primary rounded-full flex items-center justify-center mx-auto mb-3">
                 <Lock className="w-6 h-6" />
               </div>
-              <h3 className="text-[18px] font-bold text-gray-900 mb-1">Événement privé</h3>
-              <p className="text-[14px] text-gray-500 leading-tight">Scannez ce QR code pour rejoindre ou utilisez le code.</p>
+              <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-1">Événement privé</h3>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-tight">Scannez ce QR code pour rejoindre ou utilisez le code.</p>
             </div>
-            <div className="bg-gray-50 p-6 rounded-2xl flex flex-col items-center justify-center border border-gray-100 mb-6">
-              <div className="bg-white p-3 rounded-xl shadow-sm mb-4">
+            <div className="bg-gray-50 dark:bg-[#222222] p-6 rounded-2xl flex flex-col items-center justify-center border border-gray-100 dark:border-white/10 mb-6">
+              <div className="bg-white dark:bg-[#1A1A1A] p-3 rounded-xl shadow-sm mb-4">
                 {event.joinCode ? (
                   <QRCodeSVG value={event.joinCode} size={160} level="M" />
                 ) : (
@@ -672,7 +672,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[28px] font-mono font-bold text-gray-800 tracking-widest bg-gray-200/50 px-4 py-2 rounded-xl">
+                <span className="text-[28px] font-mono font-bold text-gray-800 dark:text-gray-200 tracking-widest bg-gray-200/50 px-4 py-2 rounded-xl">
                   {event.joinCode || '—'}
                 </span>
                 <button
@@ -699,19 +699,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* Release Pool Modal */}
       {showReleaseModal && event && (
         <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
-          <div className="w-full bg-white rounded-t-[20px] shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[20px] shadow-2xl animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
             <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-[15px] font-semibold text-gray-900">Débloquer les fonds</span>
-              <button onClick={() => setShowReleaseModal(false)} className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center">
-                <X className="w-4 h-4 text-gray-500" />
+              <span className="text-[15px] font-semibold text-gray-900 dark:text-white">Débloquer les fonds</span>
+              <button onClick={() => setShowReleaseModal(false)} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
+                <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
             <div className="px-5 pb-8">
-              <p className="text-[13px] text-gray-500 mb-5 leading-relaxed">
-                Vous êtes sur le point de débloquer la somme de <strong className="text-gray-900">{cagnoteCollected.toLocaleString()} F CFA</strong> vers votre portefeuille. Cette action est définitive.
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
+                Vous êtes sur le point de débloquer la somme de <strong className="text-gray-900 dark:text-white">{cagnoteCollected.toLocaleString()} F CFA</strong> vers votre portefeuille. Cette action est définitive.
               </p>
               <button
                 onClick={() => releasePoolMutation.mutate()}
@@ -729,12 +729,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* ── Participants Modal ── */}
       {showParticipantsModal && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[80%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="w-full h-[80%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
             <div className="px-5 pt-2 pb-4 flex-shrink-0 text-center">
-              <h3 className="text-[17px] font-bold text-gray-900">Participants</h3>
+              <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">Participants</h3>
             </div>
 
             <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
@@ -749,7 +749,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     return (
                       <button
                         key={booking.id}
-                        className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 dark:bg-[#222222] transition-colors text-left"
                         onClick={() => openUserProfile(
                           booking.user.id, 
                           { displayName: name, avatarUrl: avatar },
@@ -769,7 +769,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           />
                         </div>
                         <div className="flex items-center gap-1 flex-1">
-                          <p className="text-[14px] font-semibold text-gray-900">{name}</p>
+                          <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
                           {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
                         </div>
                       </button>
@@ -787,12 +787,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* ── Contributions Modal ── */}
       {showContributionsModal && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[80%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="w-full h-[80%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
             <div className="px-5 pt-2 pb-4 flex-shrink-0 text-center">
-              <h3 className="text-[17px] font-bold text-gray-900">Contributions</h3>
+              <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">Contributions</h3>
             </div>
 
             <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
@@ -820,11 +820,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           />
                         </div>
                         <div className="flex items-center gap-1 flex-1">
-                          <p className="text-[14px] font-semibold text-gray-900">{name}</p>
+                          <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
                           {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
                         </div>
                         {amount && (
-                          <span className="text-[13px] font-semibold text-gray-900">{Number(amount).toLocaleString()} F</span>
+                          <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{Number(amount).toLocaleString()} F</span>
                         )}
                       </div>
                     )
@@ -850,14 +850,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {/* Pending Bookings Modal (Organizer) */}
       {showPendingModal && isOrganizer && (
         <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[70%] bg-white rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+          <div className="w-full h-[70%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
-            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 flex-shrink-0">
-              <h3 className="text-[17px] font-bold text-gray-900">Demandes en attente</h3>
-              <button onClick={() => setShowPendingModal(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <X className="w-4 h-4 text-gray-500" />
+            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 dark:border-white/10 flex-shrink-0">
+              <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">Demandes en attente</h3>
+              <button onClick={() => setShowPendingModal(false)} className="w-8 h-8 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center">
+                <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-4 pb-10" style={{ scrollbarWidth: 'none' }}>
@@ -876,8 +876,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         fallback={<div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white bg-[#FF7A00]">{(booking.user.profile?.displayName || 'A').charAt(0)}</div>}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-gray-900 text-[14px]">{booking.user.profile?.displayName}</p>
-                        <p className="text-gray-500 text-[12px]">@{booking.user.profile?.username}</p>
+                        <p className="font-bold text-gray-900 dark:text-white text-[14px]">{booking.user.profile?.displayName}</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-[12px]">@{booking.user.profile?.username}</p>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
                         <button

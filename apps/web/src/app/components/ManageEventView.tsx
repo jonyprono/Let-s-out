@@ -39,12 +39,12 @@ function SectionCard({
   title, onEdit, children
 }: { title: string; onEdit: () => void; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-[16px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+    <div className="bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-white/10 rounded-[16px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-gray-900 text-[15px]">{title}</h3>
+        <h3 className="font-bold text-gray-900 dark:text-white text-[15px]">{title}</h3>
         <button
           onClick={onEdit}
-          className="text-[11px] text-gray-600 flex items-center gap-1.5 px-3 py-1 bg-white border border-gray-200 rounded-full font-bold active:scale-95 transition-transform"
+          className="text-[11px] text-gray-600 dark:text-gray-300 flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-full font-bold active:scale-95 transition-transform"
         >
           <Edit3 className="w-3.5 h-3.5" /> Modifier
         </button>
@@ -58,8 +58,8 @@ function SectionCard({
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between items-center mb-3 last:mb-0">
-      <span className="text-[14px] text-gray-500">{label}</span>
-      <span className="text-[14px] font-medium text-gray-900 text-right max-w-[200px] truncate">{value}</span>
+      <span className="text-[14px] text-gray-500 dark:text-gray-400">{label}</span>
+      <span className="text-[14px] font-medium text-gray-900 dark:text-white text-right max-w-[200px] truncate">{value}</span>
     </div>
   )
 }
@@ -97,24 +97,24 @@ export function ManageEventView({
   return (
     <div className="w-full h-full flex flex-col bg-[#F8F9FA]">
       {/* ── Header ── */}
-      <div className="px-5 pt-4 pt-safe-4 pb-2 flex items-center justify-between border-b border-gray-100 bg-white shadow-sm flex-shrink-0">
+      <div className="px-5 pt-4 pt-safe-4 pb-2 flex items-center justify-between border-b border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] shadow-sm flex-shrink-0">
         <button
           onClick={onBack}
           className="w-10 h-10 bg-[#F5F5F5] rounded-full flex items-center justify-center active:scale-95 transition-transform"
         >
-          <ChevronLeft className="w-6 h-6 text-gray-800" strokeWidth={2.5} />
+          <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
         </button>
-        <span className="text-[15px] font-bold text-gray-900">Détails événement</span>
+        <span className="text-[15px] font-bold text-gray-900 dark:text-white">Détails événement</span>
         <div className="w-10 h-10" /> {/* Spacer for centering */}
       </div>
 
       {/* ── Scrollable content ── */}
       <div className="flex-1 overflow-y-auto px-5 py-5 pb-44" style={{ scrollbarWidth: 'none' }}>
-        <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-4">{event.title}</h1>
+        <h1 className="text-[26px] font-bold text-gray-900 dark:text-white leading-tight mb-4">{event.title}</h1>
 
         {/* Info banner */}
         <div className="bg-[#EBF5FF] mb-6 p-4 rounded-[12px]">
-          <p className="text-gray-600 text-[12px] leading-relaxed">
+          <p className="text-gray-600 dark:text-gray-300 text-[12px] leading-relaxed">
             Cet événement n'est pas encore visible sur Let's Out.<br />
             Publiez-le pour le rendre accessible publiquement.<br />
             Ou ajoutez une cagnotte pour partager les frais.
@@ -143,7 +143,7 @@ export function ManageEventView({
               {event.coHosts?.map((coHost: any) => {
                 const name = coHost.profile?.displayName || 'Co-organisateur'
                 return (
-                  <div key={coHost.id} className="flex items-center gap-3 pl-2 border-l-2 border-gray-100">
+                  <div key={coHost.id} className="flex items-center gap-3 pl-2 border-l-2 border-gray-100 dark:border-white/10">
                     <SafeImage
                       src={coHost.profile?.avatarUrl}
                       alt={name}
@@ -154,7 +154,7 @@ export function ManageEventView({
                         </div>
                       }
                     />
-                    <span className="text-[13px] text-gray-600 font-medium flex items-center gap-1.5">
+                    <span className="text-[13px] text-gray-600 dark:text-gray-300 font-medium flex items-center gap-1.5">
                       {name}
                       <span className="text-[9px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-bold">Co-hôte</span>
                     </span>
@@ -177,7 +177,7 @@ export function ManageEventView({
           <SectionCard title="Informations" onEdit={() => handleEdit(1)}>
             <InfoRow label="Nom" value={event.title} />
             <div className="flex justify-between items-center">
-              <span className="text-[14px] text-gray-500">Catégories</span>
+              <span className="text-[14px] text-gray-500 dark:text-gray-400">Catégories</span>
               <div className="flex flex-wrap gap-1.5 justify-end">
                 {categories.map(cat => <CategoryPill key={cat} cat={cat} />)}
                 {categories.length === 0 && <span className="text-[14px] text-gray-400">Non spécifié</span>}
@@ -202,7 +202,7 @@ export function ManageEventView({
 
           {/* Description */}
           <SectionCard title="Description" onEdit={() => handleEdit(4)}>
-            <p className="text-[13px] text-gray-600 line-clamp-3">{event.description || 'Aucune description'}</p>
+            <p className="text-[13px] text-gray-600 dark:text-gray-300 line-clamp-3">{event.description || 'Aucune description'}</p>
             {event.description && event.description.length > 100 && (
               <span className="text-[13px] text-gray-400 underline mt-1 block cursor-pointer">Voir plus</span>
             )}
@@ -215,7 +215,7 @@ export function ManageEventView({
                 <SafeImage src={event.coverUrl} alt="Couverture" className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className="w-full h-40 rounded-[12px] bg-gray-100 flex flex-col items-center justify-center gap-2">
+              <div className="w-full h-40 rounded-[12px] bg-gray-100 dark:bg-[#2a2a2a] flex flex-col items-center justify-center gap-2">
                 <span className="text-3xl">🖼</span>
                 <span className="text-[13px] text-gray-400">Aucune image</span>
               </div>
@@ -229,7 +229,7 @@ export function ManageEventView({
         {/* Ajouter/Modifier cagnotte */}
         <button
           onClick={handleAddPool}
-          className="w-full py-[14px] rounded-full border border-action-primary text-action-primary font-bold text-[14px] bg-white flex items-center justify-center gap-2 active:scale-95 transition-transform"
+          className="w-full py-[14px] rounded-full border border-action-primary text-action-primary font-bold text-[14px] bg-white dark:bg-[#1A1A1A] flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
           <PiggyBank className="w-4 h-4" />
           {event.poolTarget ? 'Modifier la cagnotte' : 'Ajouter cagnotte'}

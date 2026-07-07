@@ -158,10 +158,10 @@ export function Messages(_props: MessagesProps) {
   }, [activeFilter, filtered, groups, directs]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#FFFFFF] font-poppins">
+    <div className="w-full h-full flex flex-col bg-[#FFFFFF] dark:bg-[#0a0a0b] font-poppins">
 
       {/* Header Section */}
-      <div className="flex flex-col items-start w-full bg-[#FFFFFF] sticky top-0 z-20">
+      <div className="flex flex-col items-start w-full bg-[#FFFFFF] dark:bg-[#0a0a0b] sticky top-0 z-20">
         {/* App bar */}
         <div className="flex flex-row items-center px-[16px] pt-[calc(env(safe-area-inset-top)+12px)] pb-[12px] gap-[12px] w-full min-h-[56px] box-border">
           <h1 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818]">Messages</h1>
@@ -170,7 +170,7 @@ export function Messages(_props: MessagesProps) {
         {visibleConversations.length > 0 || searchQuery ? (
           <div className="w-full flex flex-col gap-[12px] px-[16px] pb-[10px]">
             {/* Search */}
-            <div className="w-full h-[36px] bg-[#FFFFFF] opacity-80 border border-[#D4D4D4] rounded-[1000px] flex items-center gap-[8px] px-[12px] py-[8px] box-border">
+            <div className="w-full h-[36px] bg-[#FFFFFF] dark:bg-[#0a0a0b] opacity-80 border border-[#D4D4D4] rounded-[1000px] flex items-center gap-[8px] px-[12px] py-[8px] box-border">
               <Search className="w-[20px] h-[20px] text-[#A3A3A3] flex-shrink-0" />
               <input
                 type="text"
@@ -180,7 +180,7 @@ export function Messages(_props: MessagesProps) {
                 className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] placeholder:text-[#BDBDBD] font-['Inter_Display'] min-w-0"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0">
+                <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-100 dark:bg-[#2a2a2a] rounded-full transition-colors flex-shrink-0">
                   <X className="w-3.5 h-3.5 text-[#BDBDBD]" />
                 </button>
               )}
@@ -220,11 +220,11 @@ export function Messages(_props: MessagesProps) {
         {isLoading ? (
           <div className="w-full flex flex-col gap-[16px] px-[16px]">
             {[1, 2, 3].map(i => (
-              <div key={i} className="w-full h-[48px] bg-white rounded-2xl flex items-center gap-[8px] animate-pulse">
+              <div key={i} className="w-full h-[48px] bg-white dark:bg-[#1A1A1A] rounded-2xl flex items-center gap-[8px] animate-pulse">
                 <div className="w-[48px] h-[48px] rounded-[24px] bg-gray-200 flex-shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded-lg w-2/3" />
-                  <div className="h-3 bg-gray-100 rounded-lg w-full" />
+                  <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg w-full" />
                 </div>
               </div>
             ))}
@@ -333,44 +333,44 @@ export function Messages(_props: MessagesProps) {
       {/* Context Menu for Pinning */}
       {contextMenu && (
         <div 
-          className="fixed z-50 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 w-60 overflow-hidden animate-in fade-in zoom-in duration-200"
+          className="fixed z-50 bg-white dark:bg-[#1A1A1A] rounded-xl shadow-xl border border-gray-100 dark:border-white/10 py-1.5 w-60 overflow-hidden animate-in fade-in zoom-in duration-200"
           style={{ top: Math.min(contextMenu.y, window.innerHeight - 250), left: Math.min(contextMenu.x, window.innerWidth - 240) }}
           onClick={(e) => e.stopPropagation()}
         >
           <button 
-            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
             onClick={() => togglePin(contextMenu.convId)}
           >
             {pinnedConvs.includes(contextMenu.convId) ? (
-              <><PinOff className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Désépingler</span></>
+              <><PinOff className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Désépingler</span></>
             ) : (
-              <><Pin className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Épingler</span></>
+              <><Pin className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Épingler</span></>
             )}
           </button>
           
           <button 
-            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
             onClick={() => toggleMute(contextMenu.convId)}
           >
             {mutedConvs.includes(contextMenu.convId) ? (
-              <><Bell className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Réactiver le son</span></>
+              <><Bell className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Réactiver le son</span></>
             ) : (
-              <><BellOff className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Mettre en sourdine</span></>
+              <><BellOff className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Mettre en sourdine</span></>
             )}
           </button>
 
           <button 
-            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
             onClick={() => toggleReadStatus(contextMenu.convId, contextMenu.unread)}
           >
             {(forceUnreadConvs.includes(contextMenu.convId) || (contextMenu.unread > 0 && !forceReadConvs.includes(contextMenu.convId))) ? (
-              <><CheckCircle2 className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Marquer comme lu</span></>
+              <><CheckCircle2 className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Marquer comme lu</span></>
             ) : (
-              <><Circle className="w-[18px] h-[18px] text-gray-500" /><span className="text-[14px] font-medium text-gray-700">Marquer comme non lu</span></>
+              <><Circle className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Marquer comme non lu</span></>
             )}
           </button>
 
-          <div className="h-[1px] bg-gray-100 w-full my-1" />
+          <div className="h-[1px] bg-gray-100 dark:bg-[#2a2a2a] w-full my-1" />
 
           <button 
             className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-red-50 active:bg-red-100 transition-colors"
@@ -391,7 +391,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu }: { c
     <button
       onClick={onNavigate}
       onContextMenu={onContextMenu}
-      className="w-full flex flex-row items-center gap-[8px] h-[48px] text-left transition-colors active:bg-gray-50 relative"
+      className="w-full flex flex-row items-center gap-[8px] h-[48px] text-left transition-colors active:bg-gray-50 dark:bg-[#222222] relative"
     >
       {/* Cover */}
       <div className="relative flex-shrink-0 w-[48px] h-[48px] flex justify-center items-center">

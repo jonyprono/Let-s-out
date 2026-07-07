@@ -40,7 +40,7 @@ export function ImageLightbox({ src, label, className }: ImageLightboxProps) {
         >
           <button
             type="button"
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white dark:bg-[#1A1A1A]/10 flex items-center justify-center text-white"
             onClick={() => setOpen(false)}
           >
             <X className="w-5 h-5" />

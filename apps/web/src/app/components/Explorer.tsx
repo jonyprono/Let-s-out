@@ -147,7 +147,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col pt-safe-6">
         {/* Barre de recherche */}
         <div className="px-[20px] py-[12px] shrink-0 flex items-center self-stretch box-border w-full min-w-0 bg-[#FAFAFA]">
-          <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white box-border shadow-sm min-w-0 ${
+          <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white dark:bg-[#1A1A1A] box-border shadow-sm min-w-0 ${
             isSearching ? 'border-2 border-[var(--brand-orange-500)]' : 'border border-[var(--border-default)]'
           }`}>
             <Location01Icon className="w-[20px] h-[20px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
@@ -248,26 +248,26 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <button onClick={() => setScreen('list')} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform shadow-sm">
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
-          <h2 className="text-xl font-bold text-gray-900">Rejoindre</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Rejoindre</h2>
         </div>
 
         <div className="flex-1 px-4 pt-8 flex flex-col items-center">
           <div className="w-16 h-16 bg-brand-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
             <Lock className="w-8 h-8 text-action-primary" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2 text-center">Événement Privé</h3>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">Événement Privé</h3>
           <p className="text-text-secondary text-center mb-10 text-[15px] leading-relaxed max-w-[280px]">
             Entrez le code d'accès partagé par l'organisateur pour rejoindre cet événement.
           </p>
 
-          <div className="w-full bg-background-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+          <div className="w-full bg-background-white rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-white/10 mb-6">
             <label className="block text-sm font-bold text-gray-700 mb-150">Code d'accès</label>
             <input
               type="text"
               placeholder="Ex: a1b2c3d4"
               value={joinCode}
               onChange={(e) => setJoinCode(e.target.value)}
-              className="w-full bg-gray-50 border border-border-primary rounded-2xl px-5 py-200 text-center text-2xl tracking-widest font-mono font-bold text-gray-900 focus:outline-none focus:border-action-primary focus:ring-2 focus:ring-orange-200 transition-all uppercase"
+              className="w-full bg-gray-50 dark:bg-[#222222] border border-border-primary rounded-2xl px-5 py-200 text-center text-2xl tracking-widest font-mono font-bold text-gray-900 dark:text-white focus:outline-none focus:border-action-primary focus:ring-2 focus:ring-orange-200 transition-all uppercase"
             />
           </div>
 
@@ -386,7 +386,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           {/* Search bar */}
           <div className="flex items-center gap-[10px] mb-3 w-full min-w-0 box-border">
             <div
-              className={`flex-1 border rounded-[999px] flex items-center px-[14px] h-[44px] gap-[8px] bg-white box-border min-w-0 shadow-sm transition-colors ${
+              className={`flex-1 border rounded-[999px] flex items-center px-[14px] h-[44px] gap-[8px] bg-white dark:bg-[#1A1A1A] box-border min-w-0 shadow-sm transition-colors ${
                 eventSearchFocused || eventSearch
                   ? 'border-[var(--brand-orange-500)]'
                   : 'border-[var(--border-default)]'
@@ -428,7 +428,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 e.stopPropagation();
                 onNavigate('scan-qr');
               }}
-              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[var(--border-default)] bg-white flex items-center justify-center shadow-sm active:bg-gray-50 transition-colors"
+              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] flex items-center justify-center shadow-sm active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <QrCode01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
             </button>

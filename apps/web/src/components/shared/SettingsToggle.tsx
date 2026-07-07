@@ -57,7 +57,7 @@ export function SettingsToggle({ checked, onChange }: SettingsToggleProps) {
       }`}
     >
       <div
-        className={`w-[20px] h-[20px] rounded-full bg-white shadow-[0px_1px_2px_rgba(0,0,0,0.06)] transition-transform ${
+        className={`w-[20px] h-[20px] rounded-full bg-white dark:bg-[#1A1A1A] shadow-[0px_1px_2px_rgba(0,0,0,0.06)] transition-transform ${
           checked ? 'translate-x-[20px]' : 'translate-x-0'
         }`}
       />

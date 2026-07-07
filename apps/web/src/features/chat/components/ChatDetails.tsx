@@ -140,8 +140,8 @@ function VideoMessage({ src }: { src: string, isMe: boolean }) {
           preload="metadata" 
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <div className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-xl">
-            <Play className="w-5 h-5 text-gray-900 ml-1 fill-gray-900" />
+          <div className="w-12 h-12 rounded-full bg-white dark:bg-[#1A1A1A]/90 backdrop-blur-sm flex items-center justify-center shadow-xl">
+            <Play className="w-5 h-5 text-gray-900 dark:text-white ml-1 fill-gray-900" />
           </div>
         </div>
       </div>
@@ -153,7 +153,7 @@ function VideoMessage({ src }: { src: string, isMe: boolean }) {
         >
            <div className="flex justify-between items-center p-4 pt-safe-4 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent">
              <span className="text-white/80 text-sm font-medium">Vidéo</span>
-             <button onClick={() => setIsFullscreen(false)} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white backdrop-blur-md active:scale-95 transition-transform">
+             <button onClick={() => setIsFullscreen(false)} className="w-10 h-10 rounded-full bg-white dark:bg-[#1A1A1A]/20 flex items-center justify-center text-white backdrop-blur-md active:scale-95 transition-transform">
                <X className="w-6 h-6" />
              </button>
            </div>
@@ -426,7 +426,7 @@ export function ChatDetails() {
   }
 
   return (
-    <div className="w-full h-full bg-[#FFFFFF] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }} onClick={() => pickerMsgId && setPickerMsgId(null)}>
+    <div className="w-full h-full bg-[#FFFFFF] dark:bg-[#0a0a0b] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }} onClick={() => pickerMsgId && setPickerMsgId(null)}>
       
       {forwardMsg && (
         <ForwardMessageModal 
@@ -436,10 +436,10 @@ export function ChatDetails() {
         />
       )}
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#FFFFFF] border-b border-gray-100 pt-safe-6 pb-2">
+      <div className="sticky top-0 z-10 bg-[#FFFFFF] dark:bg-[#0a0a0b] border-b border-gray-100 dark:border-white/10 pt-safe-6 pb-2">
         <div className="flex items-center px-4">
-          <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors active:scale-95">
-            <ChevronLeft className="w-6 h-6 text-gray-900" />
+          <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 dark:bg-[#222222] rounded-full transition-colors active:scale-95">
+            <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
 
           <button
@@ -453,7 +453,7 @@ export function ChatDetails() {
             }}
           >
             <div className="relative flex-shrink-0">
-              <div className="w-11 h-11 rounded-full bg-gray-100 overflow-hidden shadow-sm relative">
+              <div className="w-11 h-11 rounded-full bg-gray-100 dark:bg-[#2a2a2a] overflow-hidden shadow-sm relative">
                 <SafeImage
                   src={conversationAvatar}
                   alt={conversationTitle}
@@ -470,16 +470,16 @@ export function ChatDetails() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="font-bold text-gray-900 text-[16px] truncate leading-tight tracking-tight">{conversationTitle}</h2>
+              <h2 className="font-bold text-gray-900 dark:text-white text-[16px] truncate leading-tight tracking-tight">{conversationTitle}</h2>
               {typingUser ? (
                 <p className="text-[13px] text-action-primary font-medium animate-pulse mt-0.5">{typingUser} écrit...</p>
               ) : isGroup ? (
-                <p className="text-[13px] font-medium text-gray-500 mt-0.5">
+                <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">
                   {memberCount} participant{memberCount !== 1 ? 's' : ''}
                   {presence?.onlineCount ? `, ${presence.onlineCount} en ligne` : ''}
                 </p>
               ) : presence?.isOtherOnline ? (
-                <p className="text-[13px] font-medium text-gray-500 mt-0.5">En ligne</p>
+                <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">En ligne</p>
               ) : (
                 <p className="text-[13px] font-medium text-gray-400 mt-0.5">Hors ligne</p>
               )}
@@ -495,7 +495,7 @@ export function ChatDetails() {
                   setShowEventInfo(true)
                 }
               }}
-              className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 rounded-full transition-colors active:scale-95"
+              className="w-10 h-10 flex items-center justify-center hover:bg-gray-50 dark:bg-[#222222] rounded-full transition-colors active:scale-95"
             >
               <MoreVertical className="w-[20px] h-[20px] text-gray-400" />
             </button>
@@ -529,7 +529,7 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[#FFFFFF]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[#FFFFFF] dark:bg-[#0a0a0b]">
         {isLoading ? (
           <div className="flex flex-col gap-4 py-4">
             {[1, 2, 3, 4, 5].map(i => {
@@ -544,8 +544,8 @@ export function ChatDetails() {
         ) : !messages || messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2">
             <div className="w-14 h-14 rounded-full bg-orange-50 dark:bg-orange-50/20 flex items-center justify-center text-2xl">💬</div>
-            <p className="text-sm text-gray-400 dark:text-gray-500">Aucun message pour le moment</p>
-            <p className="text-xs text-gray-300 dark:text-gray-600">Soyez le premier à écrire !</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 dark:text-gray-400">Aucun message pour le moment</p>
+            <p className="text-xs text-gray-300 dark:text-gray-600 dark:text-gray-300">Soyez le premier à écrire !</p>
           </div>
         ) : (
           messages.filter(msg => !localDeletedMessages.includes(msg.id)).map((msg, index) => {
@@ -576,14 +576,14 @@ export function ChatDetails() {
                   {showDateSep && (
                     <div className="flex items-center gap-3 my-4">
                       <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
-                      <span className="text-xs text-gray-400 dark:text-gray-500 font-medium capitalize px-2">
+                      <span className="text-xs text-gray-400 dark:text-gray-500 dark:text-gray-400 font-medium capitalize px-2">
                         {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
                       </span>
                       <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
                     </div>
                   )}
                   <div className="flex justify-center my-2 px-4">
-                    <p className="text-[13px] text-center text-gray-500 dark:text-gray-400 bg-gray-100/90 dark:bg-[#2A2A2A] px-4 py-2 rounded-full max-w-[90%] leading-snug">
+                    <p className="text-[13px] text-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2a2a2a]/90 dark:bg-[#2A2A2A] px-4 py-2 rounded-full max-w-[90%] leading-snug">
                       {msg.content}
                     </p>
                   </div>
@@ -626,7 +626,7 @@ export function ChatDetails() {
                       onClick={e => e.stopPropagation()}
                     >
                       {/* Reactions */}
-                      <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100 dark:border-[#333333] bg-gray-50/50 dark:bg-black/20">
+                      <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100 dark:border-[#333333] bg-gray-50 dark:bg-[#222222]/50 dark:bg-black/20">
                         {REACTION_EMOJIS.map(emoji => (
                           <button
                             key={emoji}
@@ -643,7 +643,7 @@ export function ChatDetails() {
                         {!msg.isDeleted && msg.content && (
                           <button
                             onClick={() => handleCopy(msg.content!)}
-                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#333333] active:bg-gray-200 transition-colors w-full text-left"
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-[#2a2a2a] dark:hover:bg-[#333333] active:bg-gray-200 transition-colors w-full text-left"
                           >
                             <span className="w-4 h-4" style={{ display: 'inline-block', background: 'currentColor', maskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%229%22 y=%229%22 width=%2213%22 height=%2213%22 rx=%222%22 ry=%222%22%3E%3C/rect%3E%3Cpath d=%22M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1%22%3E%3C/path%3E%3C/svg%3E")', WebkitMaskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%229%22 y=%229%22 width=%2213%22 height=%2213%22 rx=%222%22 ry=%222%22%3E%3C/rect%3E%3Cpath d=%22M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1%22%3E%3C/path%3E%3C/svg%3E")', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} />
                             Copier
@@ -652,7 +652,7 @@ export function ChatDetails() {
                         {!msg.isDeleted && (
                           <button
                             onClick={() => openForwardModal(msg)}
-                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#333333] active:bg-gray-200 transition-colors w-full text-left"
+                            className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:bg-[#2a2a2a] dark:hover:bg-[#333333] active:bg-gray-200 transition-colors w-full text-left"
                           >
                             <span className="w-4 h-4" style={{ display: 'inline-block', background: 'currentColor', maskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%2215 14 20 9 15 4%22%3E%3C/polyline%3E%3Cpath d=%22M4 20v-7a4 4 0 0 1 4-4h12%22%3E%3C/path%3E%3C/svg%3E")', WebkitMaskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%2215 14 20 9 15 4%22%3E%3C/polyline%3E%3Cpath d=%22M4 20v-7a4 4 0 0 1 4-4h12%22%3E%3C/path%3E%3C/svg%3E")', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} />
                             Transférer
@@ -724,7 +724,7 @@ export function ChatDetails() {
                             className="flex items-center gap-0.5 bg-white dark:bg-[#2A2A2A] border border-gray-200 dark:border-[#333333] rounded-full px-2 py-0.5 text-[12px] shadow-sm active:scale-95 transition-transform"
                           >
                             <span>{emoji}</span>
-                            {count > 1 && <span className="text-gray-600 font-medium text-[11px]">{count}</span>}
+                            {count > 1 && <span className="text-gray-600 dark:text-gray-300 font-medium text-[11px]">{count}</span>}
                           </button>
                         ))}
                       </div>
@@ -737,7 +737,7 @@ export function ChatDetails() {
 
         {isUploading && (
           <div className="flex justify-end">
-            <div className="bg-gray-200 text-gray-500 rounded-2xl px-4 py-2 text-sm italic animate-pulse">
+            <div className="bg-gray-200 text-gray-500 dark:text-gray-400 rounded-2xl px-4 py-2 text-sm italic animate-pulse">
               Envoi en cours...
             </div>
           </div>
@@ -746,7 +746,7 @@ export function ChatDetails() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 bg-[#FFFFFF] px-4 py-3 flex items-center gap-3 pb-safe-bottom z-10 border-t border-[#F2F2F2]">
+      <div className="flex-shrink-0 bg-[#FFFFFF] dark:bg-[#0a0a0b] px-4 py-3 flex items-center gap-3 pb-safe-bottom z-10 border-t border-[#F2F2F2]">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
         {isRecording ? (
           <div className="flex-1 flex items-center justify-between h-[48px] bg-[#FCFCFC] border border-[#DFDFDF] rounded-full px-[16px] gap-[12px] overflow-hidden relative">

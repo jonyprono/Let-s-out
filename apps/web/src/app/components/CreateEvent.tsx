@@ -598,7 +598,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </button>
               <button
                 onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
-                className="w-full h-[36px] rounded-[9999px] border border-[#D4D4D4] bg-white text-[#404040] font-medium text-[14px] flex items-center justify-center active:scale-[0.98] transition-transform box-border"
+                className="w-full h-[36px] rounded-[9999px] border border-[#D4D4D4] bg-white dark:bg-[#1A1A1A] text-[#404040] font-medium text-[14px] flex items-center justify-center active:scale-[0.98] transition-transform box-border"
                 style={{ fontFamily: 'Poppins, sans-serif' }}
               >
                 Voir l'événement
@@ -741,7 +741,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
                 <button
                   onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm z-20">
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-[#1A1A1A]/90 backdrop-blur-sm flex items-center justify-center shadow-sm z-20">
                   <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-danger)]" />
                 </button>
               </>
@@ -749,13 +749,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-white/30 backdrop-blur-md rounded-[6px] active:scale-95 transition-transform">
+                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-white dark:bg-[#1A1A1A]/30 backdrop-blur-md rounded-[6px] active:scale-95 transition-transform">
                 <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Gallerie</span>
                 <Image01Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
               </button>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-white/30 backdrop-blur-md rounded-[6px] active:scale-95 transition-transform">
+                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-white dark:bg-[#1A1A1A]/30 backdrop-blur-md rounded-[6px] active:scale-95 transition-transform">
                 <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Importer</span>
                 <Upload04Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
               </button>
@@ -1181,10 +1181,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   className="w-full pl-11 pr-4 py-3 border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
                 />
               </div>
-              <div className="flex-1 bg-white">
+              <div className="flex-1 bg-white dark:bg-[#1A1A1A]">
                 {locationSuggestions.map((s, i) => (
                   <button key={i} onClick={() => selectLocation(s)}
-                    className="w-full flex items-center gap-3 py-4 border-b border-[var(--border-tertiary)] last:border-0 hover:bg-gray-50 text-left active:bg-orange-50 transition-colors">
+                    className="w-full flex items-center gap-3 py-4 border-b border-[var(--border-tertiary)] last:border-0 hover:bg-gray-50 dark:bg-[#222222] text-left active:bg-orange-50 transition-colors">
                     <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center shrink-0">
                       <HugeMapPin className="w-5 h-5 text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
                     </div>
@@ -1205,7 +1205,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           ) : (
             // MAP tab
             <div className="flex-1 flex flex-col relative">
-              <div className="flex-1 relative bg-gray-100">
+              <div className="flex-1 relative bg-gray-100 dark:bg-[#2a2a2a]">
                 <MapContainer
                   center={[6.36536, 2.41833]} zoom={14}
                   scrollWheelZoom={true}
@@ -1221,10 +1221,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     eventHandlers={{ dragend: e => { const p = e.target.getLatLng(); setTempLat(p.lat); setTempLon(p.lng) } }} />
                 </MapContainer>
               </div>
-              <div className="bg-white border-t border-[var(--border-tertiary)] px-5 py-4 pb-6 z-[110]">
+              <div className="bg-white dark:bg-[#1A1A1A] border-t border-[var(--border-tertiary)] px-5 py-4 pb-6 z-[110]">
                 <div className="text-[14px] font-bold text-[var(--color-text-primary)] mb-3">Sélectionner une adresse</div>
                 <div className="flex items-center gap-3 p-3 mb-4 bg-[var(--color-background-secondary)] rounded-[12px]">
-                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="w-8 h-8 bg-white dark:bg-[#1A1A1A] rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <HugeMapPin className="w-4 h-4 text-[var(--color-icon-secondary)]" />
                   </div>
                   <div className="flex-1 min-w-0">

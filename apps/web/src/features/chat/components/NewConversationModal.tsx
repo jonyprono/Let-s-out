@@ -88,20 +88,20 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
 
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-white">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-[#1A1A1A]">
       {/* Header */}
-      <div className="px-4 pt-safe-4 pb-3 flex items-center justify-between border-b border-gray-100">
-        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
-          <X className="w-5 h-5 text-gray-900" />
+      <div className="px-4 pt-safe-4 pb-3 flex items-center justify-between border-b border-gray-100 dark:border-white/10">
+        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
+          <X className="w-5 h-5 text-gray-900 dark:text-white" />
         </button>
-        <h2 className="text-[17px] font-bold text-gray-900">Nouvelle discussion</h2>
+        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Nouvelle discussion</h2>
         <div className="w-9" />
       </div>
 
       {/* Group Name (if multiple selected) */}
       {selectedFriends.length > 1 && (
-        <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-white/10 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
             <Users className="w-5 h-5 text-gray-400" />
           </div>
           <input
@@ -116,7 +116,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
 
       {/* Search Bar */}
       <div className="px-4 py-3">
-        <div className="bg-gray-100 rounded-xl flex items-center gap-2 px-3 py-2">
+        <div className="bg-gray-100 dark:bg-[#2a2a2a] rounded-xl flex items-center gap-2 px-3 py-2">
           <Search className="w-4 h-4 text-gray-400" />
           <input
             type="text"
@@ -136,7 +136,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
             if (!friend) return null
             return (
               <div key={id} className="flex items-center gap-1.5 bg-action-primary/10 pl-1.5 pr-2.5 py-1.5 rounded-full flex-shrink-0 border border-action-primary/20">
-                <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 bg-white">
+                <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 bg-white dark:bg-[#1A1A1A]">
                   <SafeImage
                     src={friend.avatarUrl}
                     alt={friend.displayName}
@@ -159,7 +159,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
         {isLoading ? (
           <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
         ) : filteredFriends.length === 0 ? (
-          <div className="text-center py-10 text-gray-500 text-[14px]">
+          <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-[14px]">
             {search ? 'Aucun ami trouvé' : "Vous n'avez pas encore ajouté d'amis."}
           </div>
         ) : (
@@ -181,8 +181,8 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-[15px] font-bold text-gray-900 truncate">{friend.displayName}</h4>
-                    <p className="text-[13px] text-gray-500 truncate">@{friend.username}</p>
+                    <h4 className="text-[15px] font-bold text-gray-900 dark:text-white truncate">{friend.displayName}</h4>
+                    <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate">@{friend.username}</p>
                   </div>
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-action-primary border-action-primary' : 'border-gray-300'}`}>
                     {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
@@ -195,7 +195,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
       </div>
       {/* Floating Action Button */}
       {selectedFriends.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 pb-safe-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-white/10 pb-safe-4 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
           <Button
             onClick={handleStart}
             disabled={isCreatingDM || isCreatingGroup}

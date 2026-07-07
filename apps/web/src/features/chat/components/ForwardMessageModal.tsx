@@ -64,18 +64,18 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col h-[80vh] animate-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-[#1A1A1A] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col h-[80vh] animate-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-          <h2 className="text-[18px] font-bold text-gray-900 font-poppins">Transférer à...</h2>
-          <button onClick={onClose} className="p-2 -mr-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors active:scale-95">
+        <div className="px-5 py-4 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-white dark:bg-[#1A1A1A]">
+          <h2 className="text-[18px] font-bold text-gray-900 dark:text-white font-poppins">Transférer à...</h2>
+          <button onClick={onClose} className="p-2 -mr-2 bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 text-gray-600 dark:text-gray-300 rounded-full transition-colors active:scale-95">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="px-5 py-3 border-b border-gray-50 bg-white">
+        <div className="px-5 py-3 border-b border-gray-50 bg-white dark:bg-[#1A1A1A]">
           <div className="relative">
             <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
@@ -83,7 +83,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
               placeholder="Rechercher une discussion..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-100 text-gray-900 placeholder:text-gray-500 rounded-full py-3 pl-11 pr-4 font-inter text-[15px] outline-none focus:ring-2 focus:ring-[var(--color-action-primary)] transition-shadow"
+              className="w-full bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:text-gray-400 rounded-full py-3 pl-11 pr-4 font-inter text-[15px] outline-none focus:ring-2 focus:ring-[var(--color-action-primary)] transition-shadow"
             />
           </div>
         </div>
@@ -100,16 +100,16 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
               <button
                 key={conv.id}
                 onClick={() => toggleSelect(conv.id)}
-                className="w-full flex items-center justify-start gap-4 p-3 rounded-2xl hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                className="w-full flex items-center justify-start gap-4 p-3 rounded-2xl hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
               >
                 {/* Radio button on the left */}
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${selectedConvs.includes(conv.id) ? 'border-[#FF7A00] bg-[#FF7A00]' : 'border-gray-300'}`}>
-                  {selectedConvs.includes(conv.id) && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+                  {selectedConvs.includes(conv.id) && <div className="w-2.5 h-2.5 rounded-full bg-white dark:bg-[#1A1A1A]" />}
                 </div>
 
                 {/* Avatar and name */}
                 <div className="flex items-center gap-3">
-                  <div className="w-[44px] h-[44px] rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                  <div className="w-[44px] h-[44px] rounded-full overflow-hidden bg-gray-100 dark:bg-[#2a2a2a] flex-shrink-0">
                     <SafeImage 
                       src={conv.avatarUrl} 
                       alt={conv.name} 
@@ -143,7 +143,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
                       }
                     />
                   </div>
-                  <span className="font-poppins font-medium text-[15px] text-gray-900 truncate max-w-[200px] text-left">
+                  <span className="font-poppins font-medium text-[15px] text-gray-900 dark:text-white truncate max-w-[200px] text-left">
                     {conv.name}
                   </span>
                 </div>
@@ -154,7 +154,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
 
         {/* Footer */}
         {selectedConvs.length > 0 && (
-          <div className="p-4 border-t border-gray-100 bg-white animate-in slide-in-from-bottom-4">
+          <div className="p-4 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] animate-in slide-in-from-bottom-4">
             <button
               onClick={handleForward}
               disabled={isSending}

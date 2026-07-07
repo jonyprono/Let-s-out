@@ -36,7 +36,7 @@ export function EventSuccessScreen() {
 
 
   return (
-    <div className="w-full h-full bg-white flex flex-col font-poppins">
+    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-[16px] pb-[100px] flex flex-col items-center justify-center" style={{ scrollbarWidth: 'none' }}>
 
@@ -55,7 +55,7 @@ export function EventSuccessScreen() {
         </p>
 
         {/* Summary card */}
-        <div className="w-full rounded-[8px] border border-gray-100 bg-white p-[16px] shadow-sm max-w-[358px]">
+        <div className="w-full rounded-[8px] border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] p-[16px] shadow-sm max-w-[358px]">
           <h2 className="text-[14px] font-semibold text-[#1B1818] mb-[16px]">{event.title}</h2>
           <div className="flex flex-col gap-[12px]">
             <div className="flex items-start justify-between gap-4">
@@ -76,7 +76,7 @@ export function EventSuccessScreen() {
       </div>
 
       {/* Sticky footer */}
-      <div className="fixed bottom-0 left-0 right-0 px-[16px] py-[12px] bg-white border-t border-gray-100 max-w-[390px] mx-auto w-full z-40 pb-safe-4">
+      <div className="fixed bottom-0 left-0 right-0 px-[16px] py-[12px] bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-white/10 max-w-[390px] mx-auto w-full z-40 pb-safe-4">
         <button
           onClick={() => navigate(`/events/${id}`)}
           className="w-full h-[40px] rounded-[1000px] text-white font-medium text-[14px] active:scale-95 transition-transform"

@@ -19,7 +19,7 @@ export function PhoneInputField({
 }: PhoneInputFieldProps) {
   return (
     // Aligné avec Input: min-h-[48px], rounded-[8px], border 1px → 2px orange au focus
-    <div className="relative flex items-center w-full min-h-[48px] h-auto rounded-[8px] border border-[var(--border-default)] bg-white overflow-hidden box-border focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
+    <div className="relative flex items-center w-full min-h-[48px] h-auto rounded-[8px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] overflow-hidden box-border focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
       <CountryPicker
         value={country}
         onChange={onCountryChange}

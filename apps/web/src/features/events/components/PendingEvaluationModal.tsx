@@ -44,15 +44,15 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6">
-      <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto flex flex-col pt-8">
+      <div className="bg-white dark:bg-[#1A1A1A] rounded-3xl w-full max-w-md p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto flex flex-col pt-8">
         
         {/* Header */}
         <div className="text-center mb-6 shrink-0">
           <div className="w-16 h-16 mx-auto bg-orange-100 text-orange-500 rounded-full flex items-center justify-center mb-4 text-2xl">
             ⭐
           </div>
-          <h2 className="text-2xl font-black text-gray-900 mb-2">Comment s'est passé "{event.title}" ?</h2>
-          <p className="text-gray-500 text-sm">
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">Comment s'est passé "{event.title}" ?</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             Votre avis aide la communauté à identifier les organisateurs de confiance !
           </p>
         </div>
@@ -73,11 +73,11 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
           </div>
         </div>
 
-        <hr className="border-gray-100 my-4 shrink-0" />
+        <hr className="border-gray-100 dark:border-white/10 my-4 shrink-0" />
 
         {/* Detailed Ratings */}
         <div className="space-y-4 mb-6 shrink-0">
-          <p className="font-bold text-gray-800 text-center mb-2">Aidez-le à obtenir des badges :</p>
+          <p className="font-bold text-gray-800 dark:text-gray-200 text-center mb-2">Aidez-le à obtenir des badges :</p>
           
           <RatingRow label="Accueillant et souriant" value={attitudeRating} onChange={setAttitudeRating} icon="🤝" />
           <RatingRow label="Ponctuel (À l'heure prévue)" value={punctualityRating} onChange={setPunctualityRating} icon="⏱️" />
@@ -90,7 +90,7 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Un petit mot ? (Optionnel)"
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none h-20"
+            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none h-20"
           />
         </div>
 
@@ -105,7 +105,7 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
           </Button>
           <button 
             onClick={onClose}
-            className="text-gray-400 font-semibold text-sm hover:text-gray-600 transition-colors"
+            className="text-gray-400 font-semibold text-sm hover:text-gray-600 dark:text-gray-300 transition-colors"
           >
             Évaluer plus tard
           </button>
@@ -117,7 +117,7 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
 
 function RatingRow({ label, value, onChange, icon }: { label: string, value: number, onChange: (v: number) => void, icon: string }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100 gap-2">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-gray-50 dark:bg-[#222222] p-3 rounded-xl border border-gray-100 dark:border-white/10 gap-2">
       <div className="flex items-center gap-2">
         <span className="text-xl">{icon}</span>
         <span className="text-sm font-semibold text-gray-700">{label}</span>

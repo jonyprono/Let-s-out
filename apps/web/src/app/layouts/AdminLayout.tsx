@@ -36,7 +36,7 @@ export function AdminLayout() {
         </div>
 
         {/* Admin info */}
-        <div className="px-4 py-3 mx-3 mt-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+        <div className="px-4 py-3 mx-3 mt-4 rounded-xl bg-white dark:bg-[#1A1A1A]/[0.04] border border-white/[0.08]">
           <p className="text-[11px] text-white/40 uppercase tracking-wide font-semibold">Connecté en tant que</p>
           <p className="text-sm font-semibold mt-0.5 truncate">{user?.profile?.displayName || 'Admin'}</p>
           <p className="text-[11px] text-white/40 truncate">{user?.email || ''}</p>
@@ -53,7 +53,7 @@ export function AdminLayout() {
                 `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-action-primary/15 text-action-primary shadow-inner'
-                    : 'text-white/50 hover:bg-white/[0.06] hover:text-white'
+                    : 'text-white/50 hover:bg-white dark:bg-[#1A1A1A]/[0.06] hover:text-white'
                 }`
               }
             >
@@ -68,7 +68,7 @@ export function AdminLayout() {
           <button
             type="button"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-white/50 hover:bg-white/[0.06] hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-white/50 hover:bg-white dark:bg-[#1A1A1A]/[0.06] hover:text-white transition-colors"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             Thème
@@ -76,7 +76,7 @@ export function AdminLayout() {
           <button
             type="button"
             onClick={() => navigate('/home')}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-white/50 hover:bg-white/[0.06] hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-white/50 hover:bg-white dark:bg-[#1A1A1A]/[0.06] hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Retour à l&apos;app
@@ -115,7 +115,7 @@ export function AdminLayout() {
               end={item.end}
               className={({ isActive }) =>
                 `shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${
-                  isActive ? 'bg-action-primary text-black' : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                  isActive ? 'bg-action-primary text-black dark:text-white' : 'bg-white dark:bg-[#1A1A1A]/5 text-white/60 hover:bg-white dark:bg-[#1A1A1A]/10 hover:text-white'
                 }`
               }
             >

@@ -26,7 +26,7 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; colorClass: string; label
   FRIEND_ACCEPTED: { icon: Heart,          colorClass: 'bg-pink-50 text-pink-500',    label: 'Ami accepté' },
   PAYMENT_SUCCESS: { icon: DollarSign,     colorClass: 'bg-green-50 text-green-500',  label: 'Paiement réussi' },
   PAYMENT_FAILED:  { icon: AlertCircle,    colorClass: 'bg-red-50 text-red-500',      label: 'Paiement échoué' },
-  SYSTEM:          { icon: Bell,           colorClass: 'bg-gray-100 text-gray-500',   label: 'Système' },
+  SYSTEM:          { icon: Bell,           colorClass: 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-500 dark:text-gray-400',   label: 'Système' },
   default:         { icon: Bell,           colorClass: 'bg-orange-50 text-action-primary', label: 'Notification' },
 };
 
@@ -169,7 +169,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                 {selectedType && selectedCfg ? selectedCfg.label : 'Notifications'}
               </h1>
               {!selectedType && (
-                <p className="text-[13px] text-gray-500 font-medium">
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">
                   {viewMode === 'archived' ? `${displayedNotifications.length} archivée${displayedNotifications.length > 1 ? 's' : ''}` : `${activeUnreadCount} non lu${activeUnreadCount > 1 ? 'es' : ''}`}
                 </p>
               )}
@@ -222,11 +222,11 @@ export function Notifications({ onBack }: NotificationsProps) {
         {isLoading ? (
           <div className="flex flex-col gap-3 p-5">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 flex items-center gap-3 animate-pulse">
+              <div key={i} className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 flex items-center gap-3 animate-pulse">
                 <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-4 bg-gray-200 rounded-lg w-1/3" />
-                  <div className="h-3 bg-gray-100 rounded-lg w-3/4" />
+                  <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg w-3/4" />
                 </div>
               </div>
             ))}
@@ -261,7 +261,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                           {timeAgo(notif.createdAt)}
                         </span>
                       </div>
-                      <p className="text-[13px] text-gray-500 leading-snug line-clamp-2">{notif.body}</p>
+                      <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-snug line-clamp-2">{notif.body}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 mt-1">
                       {!notif.isRead && (
@@ -347,7 +347,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                         </span>
                       )}
                     </div>
-                    <p className="text-[13px] text-gray-500 truncate mt-0.5">{group.latestTitle}</p>
+                    <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate mt-0.5">{group.latestTitle}</p>
                     <p className="text-[11px] text-gray-400 mt-0.5">
                       {group.count} notification{group.count > 1 ? 's' : ''} · {timeAgo(group.latestAt)}
                     </p>

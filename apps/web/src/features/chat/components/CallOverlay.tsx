@@ -82,7 +82,7 @@ function RemoteVideoPlayer({ stream, mediaType, userName }: { stream: MediaStrea
       )}
       {!hasVideo && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-           <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-3">
+           <div className="w-20 h-20 rounded-full bg-white dark:bg-[#1A1A1A]/10 flex items-center justify-center mb-3">
              <span className="text-3xl font-bold text-white">{userName?.[0]?.toUpperCase() || '?'}</span>
            </div>
            <span className="text-white/80 font-medium px-4 py-1 bg-black/30 rounded-full backdrop-blur-sm">{userName || 'Participant'}</span>
@@ -147,8 +147,8 @@ export function CallOverlay() {
       >
         <div className="flex flex-col items-center pt-20 flex-1 justify-center">
           <div className="relative mb-10">
-            <div className="absolute inset-0 rounded-full bg-white/10 animate-ping scale-125" style={{ animationDuration: '2s' }} />
-            <div className="absolute inset-0 rounded-full bg-white/5 animate-ping scale-150" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
+            <div className="absolute inset-0 rounded-full bg-white dark:bg-[#1A1A1A]/10 animate-ping scale-125" style={{ animationDuration: '2s' }} />
+            <div className="absolute inset-0 rounded-full bg-white dark:bg-[#1A1A1A]/5 animate-ping scale-150" style={{ animationDuration: '2s', animationDelay: '0.5s' }} />
             <div className="w-36 h-36 rounded-full overflow-hidden ring-4 ring-white/30 shadow-2xl relative">
               <SafeImage
                 src={callerAvatar}
@@ -203,7 +203,7 @@ export function CallOverlay() {
       <div className="flex-1 relative p-2 overflow-hidden flex flex-col justify-center gap-2">
          {callStatus === 'CALLING' && streamsArray.length === 0 && (
            <div className="absolute inset-0 flex flex-col items-center justify-center">
-             <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center animate-pulse mb-6">
+             <div className="w-24 h-24 rounded-full bg-white dark:bg-[#1A1A1A]/10 flex items-center justify-center animate-pulse mb-6">
                 <Phone className="w-10 h-10 text-white/50" />
              </div>
              <h2 className="text-2xl font-bold text-white mb-2">{callerName}</h2>
@@ -266,7 +266,7 @@ export function CallOverlay() {
               setIsMuted(!muted)
             }}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
-              isMuted ? 'bg-white text-black' : 'bg-white/15 text-white backdrop-blur-md'
+              isMuted ? 'bg-white dark:bg-[#1A1A1A] text-black dark:text-white' : 'bg-white dark:bg-[#1A1A1A]/15 text-white backdrop-blur-md'
             }`}
           >
             {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
@@ -286,7 +286,7 @@ export function CallOverlay() {
               setIsVideoOff(!videoOn)
             }}
             className={`w-14 h-14 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
-              isVideoOff ? 'bg-white text-black' : 'bg-white/15 text-white backdrop-blur-md'
+              isVideoOff ? 'bg-white dark:bg-[#1A1A1A] text-black dark:text-white' : 'bg-white dark:bg-[#1A1A1A]/15 text-white backdrop-blur-md'
             }`}
           >
             {isVideoOff ? <VideoOff className="w-6 h-6" /> : <Video className="w-6 h-6" />}

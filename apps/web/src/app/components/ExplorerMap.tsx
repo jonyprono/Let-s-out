@@ -219,9 +219,9 @@ export default function ExplorerMap({
                 e.stopPropagation();
                 closeCard();
               }}
-              className="absolute top-4 right-4 w-7 h-7 bg-white/80 backdrop-blur rounded-full flex items-center justify-center z-20 active:scale-90 shadow-sm border border-gray-100"
+              className="absolute top-4 right-4 w-7 h-7 bg-white dark:bg-[#1A1A1A]/80 backdrop-blur rounded-full flex items-center justify-center z-20 active:scale-90 shadow-sm border border-gray-100 dark:border-white/10"
             >
-              <X className="w-4 h-4 text-gray-600" />
+              <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
             </button>
             <EventCard
               name={selectedEvent.title}
@@ -245,9 +245,9 @@ export default function ExplorerMap({
                 e.stopPropagation();
                 closeCard();
               }}
-              className="absolute top-4 right-4 w-7 h-7 bg-white/80 backdrop-blur rounded-full flex items-center justify-center z-20 active:scale-90 shadow-sm border border-gray-100"
+              className="absolute top-4 right-4 w-7 h-7 bg-white dark:bg-[#1A1A1A]/80 backdrop-blur rounded-full flex items-center justify-center z-20 active:scale-90 shadow-sm border border-gray-100 dark:border-white/10"
             >
-              <X className="w-4 h-4 text-gray-600" />
+              <X className="w-4 h-4 text-gray-600 dark:text-gray-300" />
             </button>
             <EventCard
               name={selectedCluster[0].title}
@@ -266,7 +266,7 @@ export default function ExplorerMap({
       <button
         onClick={onGeolocate}
         disabled={mapGeoLoading}
-        className={`absolute z-[900] w-11 h-11 bg-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform ${selectedEvent || selectedCluster ? 'bottom-52 right-4' : 'bottom-8 right-4'}`}
+        className={`absolute z-[900] w-11 h-11 bg-white dark:bg-[#1A1A1A] rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform ${selectedEvent || selectedCluster ? 'bottom-52 right-4' : 'bottom-8 right-4'}`}
       >
         {mapGeoLoading
           ? <Loader2 className="w-5 h-5 animate-spin text-action-primary" />

@@ -55,7 +55,7 @@ export function AdminKycListPage() {
       </div>
 
       {/* Controls: Search & Filters */}
-      <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center bg-white/[0.02] p-2 rounded-3xl border border-white/5 shadow-2xl backdrop-blur-xl">
+      <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center bg-white dark:bg-[#1A1A1A]/[0.02] p-2 rounded-3xl border border-white/5 shadow-2xl backdrop-blur-xl">
         <div className="flex p-1 bg-black/40 rounded-2xl w-full lg:w-auto overflow-x-auto hide-scrollbar">
           {FILTERS.map(f => (
             <button
@@ -65,7 +65,7 @@ export function AdminKycListPage() {
               className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
                 status === f.key 
                   ? 'bg-action-primary text-white shadow-lg shadow-action-primary/25' 
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
+                  : 'text-white/50 hover:text-white hover:bg-white dark:bg-[#1A1A1A]/5'
               }`}
             >
               {f.label}
@@ -85,7 +85,7 @@ export function AdminKycListPage() {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden md:block rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-2xl overflow-hidden">
+      <div className="hidden md:block rounded-3xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.02] backdrop-blur-md shadow-2xl overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/10 bg-black/20 text-left text-white/50 text-xs uppercase tracking-wider font-semibold">
@@ -104,7 +104,7 @@ export function AdminKycListPage() {
               <tr><td colSpan={5} className="px-6 py-16 text-center text-white/40 font-medium">Aucun dossier correspondant</td></tr>
             )}
             {(data?.data ?? []).map(row => (
-              <tr key={row.userId} className="hover:bg-white/[0.04] transition-colors group">
+              <tr key={row.userId} className="hover:bg-white dark:bg-[#1A1A1A]/[0.04] transition-colors group">
                 <td className="px-6 py-5">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center text-white font-bold shadow-inner">
@@ -131,7 +131,7 @@ export function AdminKycListPage() {
                 <td className="px-6 py-5 text-right">
                   <Link 
                     to={`/admin/kyc/${row.userId}`} 
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-action-primary text-white text-xs font-bold transition-all hover:shadow-lg hover:shadow-action-primary/20 active:scale-95"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white dark:bg-[#1A1A1A]/5 hover:bg-action-primary text-white text-xs font-bold transition-all hover:shadow-lg hover:shadow-action-primary/20 active:scale-95"
                   >
                     Examiner <ChevronRight className="w-3.5 h-3.5" />
                   </Link>
@@ -148,7 +148,7 @@ export function AdminKycListPage() {
           <Link
             key={row.userId}
             to={`/admin/kyc/${row.userId}`}
-            className="block rounded-3xl border border-white/10 bg-white/[0.03] p-5 active:scale-[0.98] transition-transform shadow-lg backdrop-blur-md relative overflow-hidden group"
+            className="block rounded-3xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.03] p-5 active:scale-[0.98] transition-transform shadow-lg backdrop-blur-md relative overflow-hidden group"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-action-primary/0 to-action-primary/0 group-active:from-action-primary/5 group-active:to-transparent transition-colors" />
             <div className="flex items-start justify-between gap-4 mb-4 relative z-10">
@@ -186,7 +186,7 @@ export function AdminKycListPage() {
             type="button"
             disabled={page <= 1}
             onClick={() => setPage(p => p - 1)}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 disabled:opacity-30 hover:bg-white/10 transition-colors active:scale-95 text-white"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-[#1A1A1A]/5 border border-white/10 disabled:opacity-30 hover:bg-white dark:bg-[#1A1A1A]/10 transition-colors active:scale-95 text-white"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -197,7 +197,7 @@ export function AdminKycListPage() {
             type="button"
             disabled={page >= (data?.pages ?? 1)}
             onClick={() => setPage(p => p + 1)}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 disabled:opacity-30 hover:bg-white/10 transition-colors active:scale-95 text-white"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-[#1A1A1A]/5 border border-white/10 disabled:opacity-30 hover:bg-white dark:bg-[#1A1A1A]/10 transition-colors active:scale-95 text-white"
           >
             <ChevronRight className="w-5 h-5" />
           </button>

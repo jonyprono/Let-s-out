@@ -17,7 +17,7 @@ function StatCard({
   accent: string
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-sm p-5 hover:border-white/20 transition-colors">
+    <div className="rounded-2xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.03] backdrop-blur-sm p-5 hover:border-white/20 transition-colors">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs text-white/50 font-medium uppercase tracking-wide">{label}</p>
@@ -47,7 +47,7 @@ export function AdminDashboardPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-28 rounded-2xl bg-white/5 animate-pulse" />
+            <div key={i} className="h-28 rounded-2xl bg-white dark:bg-[#1A1A1A]/5 animate-pulse" />
           ))}
         </div>
       ) : (
@@ -59,7 +59,7 @@ export function AdminDashboardPage() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.02] overflow-hidden">
+      <div className="rounded-2xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.02] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
           <h2 className="font-semibold">Activité récente</h2>
           <Link to="/admin/kyc" className="text-sm text-action-primary font-medium flex items-center gap-1 hover:underline">
@@ -74,7 +74,7 @@ export function AdminDashboardPage() {
             <Link
               key={row.userId}
               to={`/admin/kyc/${row.userId}`}
-              className="flex items-center gap-4 px-5 py-4 hover:bg-white/[0.04] transition-colors"
+              className="flex items-center gap-4 px-5 py-4 hover:bg-white dark:bg-[#1A1A1A]/[0.04] transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-action-primary/20 flex items-center justify-center text-action-primary font-bold shrink-0">
                 {row.displayName.charAt(0)}

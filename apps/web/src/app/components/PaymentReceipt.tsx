@@ -45,7 +45,7 @@ export function PaymentReceipt() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-white">
+      <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#1A1A1A]">
         <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
       </div>
     )
@@ -53,11 +53,11 @@ export function PaymentReceipt() {
 
   if (error || !booking) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-white px-8 text-center">
+      <div className="w-full h-full flex flex-col items-center justify-center bg-white dark:bg-[#1A1A1A] px-8 text-center">
         <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
           <span className="text-3xl">❌</span>
         </div>
-        <h2 className="text-lg font-bold text-gray-900 mb-2">Reçu introuvable</h2>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Reçu introuvable</h2>
         <p className="text-sm text-gray-400 mb-6">Ce reçu n'existe pas ou vous n'y avez pas accès.</p>
         <button
           onClick={() => navigate(-1)}
@@ -84,7 +84,7 @@ export function PaymentReceipt() {
   }
 
   return (
-    <div className="w-full h-full flex flex-col bg-white px-5 pt-16 pb-10">
+    <div className="w-full h-full flex flex-col bg-white dark:bg-[#1A1A1A] px-5 pt-16 pb-10">
 
       {/* Success section — centered top area */}
       <div className="flex flex-col items-center justify-center text-center mt-16 mb-10">
@@ -122,20 +122,20 @@ export function PaymentReceipt() {
           </svg>
         </div>
 
-        <h1 className="text-[22px] font-bold text-gray-900 mb-2">Participation confirmée !</h1>
-        <p className="text-[14px] text-gray-500">
+        <h1 className="text-[22px] font-bold text-gray-900 dark:text-white mb-2">Participation confirmée !</h1>
+        <p className="text-[14px] text-gray-500 dark:text-gray-400">
           Vous avez rejoint l'événement avec succès.
         </p>
       </div>
 
       {/* Event card */}
-      <div className="bg-white rounded-[20px] border border-gray-200 px-5 py-5 flex flex-col items-center text-center mb-8">
-        <h2 className="font-bold text-[18px] text-gray-900 mb-2 leading-snug">{event.title}</h2>
-        <p className="text-[13px] text-gray-500 mb-1">
+      <div className="bg-white dark:bg-[#1A1A1A] rounded-[20px] border border-gray-200 dark:border-white/10 px-5 py-5 flex flex-col items-center text-center mb-8">
+        <h2 className="font-bold text-[18px] text-gray-900 dark:text-white mb-2 leading-snug">{event.title}</h2>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-1">
           {format(new Date(event.startAt), "EEE, dd MMM yyyy", { locale: fr })} • {formattedTime} GMT
         </p>
         {(event.address || event.city) && (
-          <p className="text-[13px] text-gray-500 mb-5">
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-5">
             {event.address || ''}{event.address && event.city ? ' • ' : ''}{event.city || ''}
           </p>
         )}
@@ -151,7 +151,7 @@ export function PaymentReceipt() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(`/events/${event.id}`)}
-          className="flex-1 py-[14px] rounded-full border border-gray-300 bg-white text-gray-800 font-semibold text-[14px] active:scale-95 transition-transform"
+          className="flex-1 py-[14px] rounded-full border border-gray-300 bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-200 font-semibold text-[14px] active:scale-95 transition-transform"
         >
           Retour à l'événement
         </button>

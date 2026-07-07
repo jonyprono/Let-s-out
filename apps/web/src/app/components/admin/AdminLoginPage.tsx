@@ -62,7 +62,7 @@ export function AdminLoginPage() {
       {/* Background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/20 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-8 relative z-10 p-8 rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl">
+      <div className="w-full max-w-md space-y-8 relative z-10 p-8 rounded-3xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.02] backdrop-blur-xl">
         <div className="text-center space-y-3">
           <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-red-500/20">
             <Shield className="w-8 h-8" />
@@ -80,7 +80,7 @@ export function AdminLoginPage() {
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               placeholder="Email ou Numéro (ex: +229...)"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
+              className="w-full bg-white dark:bg-[#1A1A1A]/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
               autoFocus
               required
             />
@@ -92,7 +92,7 @@ export function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mot de passe"
-              className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
+              className="w-full bg-white dark:bg-[#1A1A1A]/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
               required
             />
             <button

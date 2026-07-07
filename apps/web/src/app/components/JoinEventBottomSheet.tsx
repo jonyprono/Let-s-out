@@ -126,7 +126,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
 
   return (
     <BottomSheet open={isOpen} onClose={onClose} noPadding className="h-[calc(100dvh-110px)] sm:h-[90vh] font-poppins">
-      <div className="flex flex-col h-full overflow-hidden w-full bg-white rounded-t-[32px]">
+      <div className="flex flex-col h-full overflow-hidden w-full bg-white dark:bg-[#1A1A1A] rounded-t-[32px]">
         {/* Custom Header (Fixed) */}
         <div className="flex-none flex items-center justify-between px-[1rem] pt-[1rem] pb-[0.75rem] border-b border-[#E0E0E0] min-h-[56px]">
           <button onClick={onClose} className="w-[32px] h-[32px] flex items-center justify-start active:scale-95 transition-transform">
@@ -163,7 +163,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
                     value={amountStr}
                     onChange={(e) => setAmountStr(e.target.value)}
                     placeholder="0"
-                    className="w-full pr-[60px] min-h-[48px] h-auto rounded-[8px] bg-white border border-[var(--border-default)] text-[#1B1818] font-normal text-[clamp(12px,3.5vw,14px)] placeholder:text-[#BDBDBD] box-border"
+                    className="w-full pr-[60px] min-h-[48px] h-auto rounded-[8px] bg-white dark:bg-[#1A1A1A] border border-[var(--border-default)] text-[#1B1818] font-normal text-[clamp(12px,3.5vw,14px)] placeholder:text-[#BDBDBD] box-border"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 font-normal text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
                     F CFA
@@ -174,7 +174,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
 
               <div className="flex flex-col">
                 <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Méthode de paiement</label>
-                <div className="flex flex-row items-center px-[1rem] py-[0.75rem] gap-[8px] w-full min-h-[48px] h-auto bg-white border border-[var(--border-default)] rounded-[8px] box-border">
+                <div className="flex flex-row items-center px-[1rem] py-[0.75rem] gap-[8px] w-full min-h-[48px] h-auto bg-white dark:bg-[#1A1A1A] border border-[var(--border-default)] rounded-[8px] box-border">
                   <img src="/logos/mobile-money.png" alt="Mobile money" className="w-[20px] h-[20px] object-contain shrink-0" />
                   <span className="flex-1 font-normal text-[#1B1818] text-[clamp(12px,3.5vw,14px)] text-left truncate">Mobile money</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#A3A3A3] shrink-0">
@@ -210,7 +210,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
         </div>
 
         {/* Action Button & Badge (Fixed) */}
-        <div className="flex-none flex flex-col gap-[0.5rem] px-[1rem] pt-[0.5rem] pb-[1rem] bg-white border-t border-[#F5F5F5]">
+        <div className="flex-none flex flex-col gap-[0.5rem] px-[1rem] pt-[0.5rem] pb-[1rem] bg-white dark:bg-[#1A1A1A] border-t border-[#F5F5F5]">
           <Button
             onClick={handlePay}
             disabled={!isFormValid || isProcessing || joinMutation.isPending}

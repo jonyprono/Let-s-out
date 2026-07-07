@@ -96,9 +96,9 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
   )
 
   return (
-    <div className="fixed inset-0 z-[60] bg-white flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto">
-      <div className="flex items-center px-4 py-2 pt-safe-6 sticky top-0 bg-white z-10">
-        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
+    <div className="fixed inset-0 z-[60] bg-white dark:bg-[#1A1A1A] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto">
+      <div className="flex items-center px-4 py-2 pt-safe-6 sticky top-0 bg-white dark:bg-[#1A1A1A] z-10">
+        <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
           <ChevronLeft className="w-6 h-6 text-gray-400" />
         </button>
       </div>
@@ -131,7 +131,7 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
                 <button 
                   onClick={() => sendFriendMutation.mutate()}
                   disabled={sendFriendMutation.isPending}
-                  className="flex items-center justify-center p-1 rounded-full hover:bg-gray-100 text-orange-500 active:scale-95 transition-all"
+                  className="flex items-center justify-center p-1 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a] text-orange-500 active:scale-95 transition-all"
                 >
                   <UserPlus className="w-5 h-5" />
                 </button>
@@ -145,7 +145,7 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
                 navigate(`/profile/${resolvedUserId}`)
               }
             }}
-            className="flex flex-row justify-center items-center px-4 py-2 bg-white border border-[#E5E5E5] rounded-[8px] active:scale-95 transition-transform mt-1"
+            className="flex flex-row justify-center items-center px-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] rounded-[8px] active:scale-95 transition-transform mt-1"
           >
             <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252]">
               Voir le profil
@@ -184,21 +184,21 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
               Actions
             </h3>
             <div className="flex flex-col items-start gap-1 w-full">
-              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
                 <div className="flex items-center justify-center">
                   <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Mettre en sourdine</span>
               </button>
               
-              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
                 <div className="flex items-center justify-center">
                   <AlertTriangle className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
               </button>
 
-              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 transition-colors">
+              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
                 <div className="flex items-center justify-center">
                   <Ban className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>

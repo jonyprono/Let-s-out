@@ -40,12 +40,12 @@ export function ParticipantAvatars({ count, max, attendees = [] }: ParticipantAv
           </div>
         ))}
         {displayCount === 0 && (
-          <div className="w-7 h-7 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full border-2 border-white bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
             <span className="text-[10px] text-gray-400 font-bold">-</span>
           </div>
         )}
       </div>
-      <span className="text-[11px] text-gray-500 font-medium">
+      <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
         {max ? `${count}/${max} Participants` : `${count} participants`}
       </span>
     </div>

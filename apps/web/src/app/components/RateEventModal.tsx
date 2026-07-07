@@ -31,23 +31,23 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-end justify-center animate-in fade-in duration-200">
-      <div className="w-full bg-white rounded-t-[24px] shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-300">
+      <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[24px] shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-300">
         <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
           <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
         </div>
         <div className="px-5 py-3 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-[18px] font-bold text-gray-900">Noter l'événement</h3>
-          <button onClick={onClose} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-            <span className="text-gray-500 font-bold leading-none">✕</span>
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">Noter l'événement</h3>
+          <button onClick={onClose} className="w-8 h-8 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center">
+            <span className="text-gray-500 dark:text-gray-400 font-bold leading-none">✕</span>
           </button>
         </div>
         
         <div className="px-5 py-4 pb-12 flex flex-col items-center overflow-y-auto max-h-[85vh]">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 mb-4 shadow-sm flex-shrink-0">
+          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gray-100 dark:bg-[#2a2a2a] mb-4 shadow-sm flex-shrink-0">
             <SafeImage src={event.coverUrl} alt={event.title} className="w-full h-full object-cover" />
           </div>
-          <h4 className="text-[16px] font-bold text-gray-900 text-center mb-1">{event.title}</h4>
-          <p className="text-[13px] text-gray-500 text-center mb-6">Comment avez-vous trouvé cet événement ?</p>
+          <h4 className="text-[16px] font-bold text-gray-900 dark:text-white text-center mb-1">{event.title}</h4>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-6">Comment avez-vous trouvé cet événement ?</p>
 
           <div className="flex gap-2 mb-8">
             {[1, 2, 3, 4, 5].map(star => (
@@ -75,7 +75,7 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
               onChange={e => setComment(e.target.value)}
               placeholder="Racontez votre expérience (optionnel)..."
               rows={4}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[14px] resize-none focus:outline-none focus:border-action-primary"
+              className="w-full px-4 py-3 bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-white/10 rounded-xl text-[14px] resize-none focus:outline-none focus:border-action-primary"
             />
           </div>
 

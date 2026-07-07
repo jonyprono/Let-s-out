@@ -36,7 +36,7 @@ export function LanguageModal({ onClose }: Props) {
           <button
             onClick={() => setSelected('fr')}
             className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
-              selected === 'fr' ? 'border-action-primary bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333333] hover:border-gray-200 dark:hover:border-[#444444]'
+              selected === 'fr' ? 'border-action-primary bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333333] hover:border-gray-200 dark:border-white/10 dark:hover:border-[#444444]'
             }`}
           >
             <span className={`font-semibold ${selected === 'fr' ? 'text-action-primary' : 'text-gray-700 dark:text-gray-300'}`}>
@@ -48,7 +48,7 @@ export function LanguageModal({ onClose }: Props) {
           <button
             onClick={() => setSelected('en')}
             className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
-              selected === 'en' ? 'border-action-primary bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333333] hover:border-gray-200 dark:hover:border-[#444444]'
+              selected === 'en' ? 'border-action-primary bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333333] hover:border-gray-200 dark:border-white/10 dark:hover:border-[#444444]'
             }`}
           >
             <span className={`font-semibold ${selected === 'en' ? 'text-action-primary' : 'text-gray-700 dark:text-gray-300'}`}>

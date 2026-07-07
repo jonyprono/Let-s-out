@@ -65,11 +65,11 @@ export function AdminKycDetailPage() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-action-primary/10 blur-[140px] rounded-full pointer-events-none -z-10" />
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-6 rounded-3xl bg-white/[0.02] border border-white/5 backdrop-blur-xl shadow-2xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-6 rounded-3xl bg-white dark:bg-[#1A1A1A]/[0.02] border border-white/5 backdrop-blur-xl shadow-2xl">
         <div className="flex items-center gap-5">
           <Link 
             to="/admin/kyc" 
-            className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 hover:bg-action-primary hover:text-white hover:border-action-primary/50 transition-all active:scale-95 group"
+            className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white dark:bg-[#1A1A1A]/5 border border-white/10 hover:bg-action-primary hover:text-white hover:border-action-primary/50 transition-all active:scale-95 group"
           >
             <ArrowLeft className="w-5 h-5 text-white/70 group-hover:text-white transition-colors" />
           </Link>
@@ -141,7 +141,7 @@ export function AdminKycDetailPage() {
                 <ImageLightbox src={doc.src} label={doc.label} />
               </div>
               <div className="px-2">
-                <span className="inline-flex px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-white/70 shadow-sm">
+                <span className="inline-flex px-3 py-1 rounded-lg bg-white dark:bg-[#1A1A1A]/5 border border-white/10 text-xs font-bold text-white/70 shadow-sm">
                   {doc.label}
                 </span>
               </div>
@@ -168,7 +168,7 @@ export function AdminKycDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowRejectForm(false)}
-                  className="flex-1 py-4 rounded-xl border border-white/10 font-bold text-sm hover:bg-white/5 transition-colors text-white/70 hover:text-white"
+                  className="flex-1 py-4 rounded-xl border border-white/10 font-bold text-sm hover:bg-white dark:bg-[#1A1A1A]/5 transition-colors text-white/70 hover:text-white"
                 >
                   Annuler
                 </button>

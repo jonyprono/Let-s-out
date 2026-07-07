@@ -89,10 +89,10 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/60 flex items-center justify-center px-6 animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-300">
+      <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-6 shadow-2xl relative animate-in zoom-in-95 duration-300">
         <button
           onClick={finish}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-300 font-bold"
         >
           Ignorer
         </button>
@@ -102,8 +102,8 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
             <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
               <Bell className="w-8 h-8 text-action-primary" />
             </div>
-            <h2 className="text-[20px] font-bold text-gray-900 mb-2">Restez informé</h2>
-            <p className="text-[14px] text-gray-500 mb-8 leading-relaxed">
+            <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2">Restez informé</h2>
+            <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
               Autorisez les notifications pour ne rater aucune invitation, message ou mise à jour de vos événements.
             </p>
             <button
@@ -120,8 +120,8 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
             <div className="w-16 h-16 bg-[#FFF4E5] rounded-full flex items-center justify-center mb-4">
               <MapPin className="w-8 h-8 text-action-primary" />
             </div>
-            <h2 className="text-[20px] font-bold text-gray-900 mb-2">Autour de vous</h2>
-            <p className="text-[14px] text-gray-500 mb-4 leading-relaxed">
+            <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2">Autour de vous</h2>
+            <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
               Activez la localisation pour découvrir les événements proches et calculer les itinéraires.
             </p>
             <button

@@ -16,7 +16,7 @@ const SaveEventButton = React.forwardRef<HTMLButtonElement, SaveEventButtonProps
           "flex h-9 w-9 items-center justify-center rounded-full transition-colors active:scale-95",
           saved
             ? "bg-[var(--brand-orange-500)] text-white"
-            : "bg-gray-200 text-gray-600",
+            : "bg-gray-200 text-gray-600 dark:text-gray-300",
           className
         )}
         {...props}

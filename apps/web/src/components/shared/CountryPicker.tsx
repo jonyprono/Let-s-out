@@ -104,10 +104,10 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
           }}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden max-h-[80vh] animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden max-h-[80vh] animate-in fade-in zoom-in-95 duration-200"
           >
             {/* Barre de recherche */}
-            <div className="px-4 py-3 border-b border-[#E0E0E0] shrink-0 bg-white">
+            <div className="px-4 py-3 border-b border-[#E0E0E0] shrink-0 bg-white dark:bg-[#1A1A1A]">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-poppins font-semibold text-[16px] text-[var(--color-text-primary)]">Choisir un pays</span>
                 <button type="button" onClick={() => setOpen(false)} className="p-1 active:scale-95 transition-transform">
@@ -133,7 +133,7 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
 
             {/* Liste des pays */}
             <div
-              className="overflow-y-auto overscroll-contain flex-1 min-h-0 bg-white"
+              className="overflow-y-auto overscroll-contain flex-1 min-h-0 bg-white dark:bg-[#1A1A1A]"
               style={{ WebkitOverflowScrolling: 'touch' }}
             >
               {filtered.length === 0 ? (

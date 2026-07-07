@@ -141,7 +141,7 @@ export function JoinPrivateEvent() {
 
         <div className="p-8 text-center bg-black/80 pb-12 z-10">
           <p className="text-white text-sm mb-6">Placez le QR code au centre du cadre</p>
-          <button onClick={stopScan} className="px-6 py-3 bg-white/20 rounded-full text-white font-bold">
+          <button onClick={stopScan} className="px-6 py-3 bg-white dark:bg-[#1A1A1A]/20 rounded-full text-white font-bold">
             Annuler
           </button>
         </div>
@@ -150,9 +150,9 @@ export function JoinPrivateEvent() {
   }
 
   return (
-    <div className="w-full h-full bg-white flex flex-col">
-      <div className="px-6 pt-safe-4 pb-4 border-b border-gray-100 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full">
+    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col">
+      <div className="px-6 pt-safe-4 pb-4 border-b border-gray-100 dark:border-white/10 flex items-center gap-3">
+        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-gray-100 dark:bg-[#2a2a2a] rounded-full">
           <ChevronLeft className="w-5 h-5 text-gray-700" />
         </button>
         <h1 className="text-[17px] font-bold text-[#1A1A1A]">Événement privé</h1>
@@ -163,8 +163,8 @@ export function JoinPrivateEvent() {
           <QrCode className="w-10 h-10 text-action-primary" />
         </div>
         
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Rejoindre via code</h2>
-        <p className="text-gray-500 mb-8 text-sm">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Rejoindre via code</h2>
+        <p className="text-gray-500 dark:text-gray-400 mb-8 text-sm">
           Entrez le code unique à 10 caractères ou scannez le QR code de l'événement.
         </p>
 
@@ -186,8 +186,8 @@ export function JoinPrivateEvent() {
           </Button>
 
           <div className="relative py-4">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-            <div className="relative flex justify-center"><span className="bg-white px-4 text-xs text-gray-400 font-medium uppercase tracking-wider">ou</span></div>
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200 dark:border-white/10" /></div>
+            <div className="relative flex justify-center"><span className="bg-white dark:bg-[#1A1A1A] px-4 text-xs text-gray-400 font-medium uppercase tracking-wider">ou</span></div>
           </div>
 
           <Button
