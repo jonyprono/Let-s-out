@@ -206,13 +206,13 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 
           {/* "Vous êtes nouveau ?" */}
-          <div className="flex flex-wrap items-center justify-center gap-[4px] sm:gap-[8px] w-full mt-2 text-center">
-            <span className="font-inter text-[14px] font-normal text-[#56514F] leading-[20px]">
+          <div className="flex items-center justify-center gap-[4px] sm:gap-[8px] w-full mt-2 text-center whitespace-nowrap overflow-hidden text-ellipsis">
+            <span className="font-inter text-[clamp(11px,3vw,14px)] font-normal text-[#56514F] leading-[20px]">
               Vous êtes nouveau sur Let's Out ?
             </span>
             <button
               onClick={onSignup}
-              className="font-inter text-[14px] font-medium leading-[20px] text-[#FF991C] underline focus:outline-none hover:opacity-75"
+              className="font-inter text-[clamp(11px,3vw,14px)] font-medium leading-[20px] text-[#FF991C] underline focus:outline-none hover:opacity-75"
             >
               Inscrivez-vous
             </button>
