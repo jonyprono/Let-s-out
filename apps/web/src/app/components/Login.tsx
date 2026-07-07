@@ -100,12 +100,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col justify-center flex-1 w-full pb-4">
           
           {/* Header (Logo + Titres) */}
-          <div className="flex flex-col items-center shrink-0 w-full gap-[12px] sm:gap-[20px] mb-4 sm:mb-8">
+          <div className="flex flex-col items-center shrink-0 w-full gap-[clamp(8px,1.5vh,20px)] mb-[clamp(12px,3vh,32px)]">
           {/* Logo */}
           <img 
             src="/logoci.png" 
             alt="Let's Out" 
-            className="w-[72px] h-[72px] sm:w-[96px] sm:h-[96px] object-contain mx-auto" 
+            className="w-[clamp(60px,15vh,96px)] h-[clamp(60px,15vh,96px)] object-contain mx-auto" 
           />
 
           {/* Titres */}
@@ -120,7 +120,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-[12px] sm:gap-[16px] shrink-0 w-full">
+        <div className="flex flex-col gap-[clamp(10px,2vh,16px)] shrink-0 w-full">
           {/* Téléphone */}
           <div className="flex flex-col gap-[4px]">
             <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Numéro de téléphone</label>
@@ -169,7 +169,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-5 sm:mt-6 shrink-0 w-full">
+        <div className="mt-[clamp(12px,3vh,24px)] shrink-0 w-full">
           {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
           <Button
             type="button"
@@ -182,7 +182,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-3 sm:my-4 shrink-0 w-full">
+        <div className="my-[clamp(8px,2vh,16px)] shrink-0 w-full">
           <Divider label="Ou" className="text-[#404040] font-inter text-[12px] font-normal leading-[16px]" />
         </div>
 
@@ -201,7 +201,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Bas de page */}
-        <div className="flex flex-col justify-end shrink-0 w-full mt-auto gap-3 sm:gap-4">
+        <div className="flex flex-col justify-end shrink-0 w-full mt-auto gap-[clamp(8px,1.5vh,16px)]">
 
           <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 
