@@ -46,6 +46,27 @@ async function bootstrap() {
   // ── Health ─────────────────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }))
 
+  // ── PUBLIC: Firebase diagnostic (no auth) ──────────────────────
+  app.get('/ping-firebase', async (_req, reply) => {
+    const hasServiceAccount = !!process.env.FIREBASE_SERVICE_ACCOUNT
+    const hasProjectId = !!process.env.FIREBASE_PROJECT_ID
+    const hasClientEmail = !!process.env.FIREBASE_CLIENT_EMAIL
+    const hasPrivateKey = !!process.env.FIREBASE_PRIVATE_KEY
+    const configured = hasServiceAccount || (hasProjectId && hasClientEmail && hasPrivateKey)
+
+    let firebaseOk = false
+    let firebaseError = ''
+    try {
+      const { sendPushToUser } = await import('./services/push.service')
+      await sendPushToUser(app.prisma as any, '__ping__', { title: 'ping', body: 'ping' })
+      firebaseOk = true
+    } catch (e: any) {
+      firebaseError = e.message
+    }
+
+    return reply.send({ configured, vars: { hasServiceAccount, hasProjectId, hasClientEmail, hasPrivateKey }, firebaseOk, firebaseError: firebaseError || undefined })
+  })
+
   // ── Database Migration (applied directly to avoid relying on Render's start command) ──
   try {
     // Ensure admins table exists and has all required columns
