@@ -78,7 +78,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* ── En-tête (Passer) ──────────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="w-[342px] max-w-full mx-auto flex justify-end items-center h-[36px] shrink-0 z-20 relative">
+        <div className="w-full max-w-[342px] mx-auto flex justify-end items-center h-[36px] shrink-0 z-20 relative">
           {currentIndex === 1 && (
             <button 
               onClick={onComplete} 
@@ -127,7 +127,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
               {/* Wrapper shadow — centré avec dimension exacte */}
               <div
-                className="w-[342px] max-w-full flex flex-col items-center gap-[32px] shrink-0"
+                className="w-full max-w-[342px] flex flex-col items-center gap-[32px] shrink-0"
               >
                 <div
                   className=""
@@ -193,7 +193,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
       {/* ── Navigation bas de page ──────────────────────────────── */}
       {currentIndex > 0 && (
-        <div className="flex flex-col justify-end shrink-0 w-[342px] max-w-full mx-auto pb-2 mt-auto">
+        <div className="flex flex-col justify-end shrink-0 w-full max-w-[342px] mx-auto pb-2 mt-auto">
           <Button
             onClick={handleNext}
             className="w-full h-[40px] bg-[#FF991C] hover:bg-[#e68a19] text-white font-poppins text-[14px] font-medium leading-[20px] rounded-full px-[14px] py-[10px]"

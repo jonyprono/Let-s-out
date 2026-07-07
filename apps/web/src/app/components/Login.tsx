@@ -95,7 +95,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
   return (
     <div className={`${authShell} bg-white overflow-y-auto min-h-[100dvh] w-full flex flex-col`}>
-      <div className="flex flex-col flex-1 px-4 sm:px-6 py-6 justify-center w-full max-w-[390px] mx-auto">
+      <div className="flex flex-col flex-1 px-4 sm:px-6 py-6 justify-center w-full max-w-full max-w-[390px] mx-auto">
         
         <div className="flex flex-col justify-center w-full pb-2">
           
