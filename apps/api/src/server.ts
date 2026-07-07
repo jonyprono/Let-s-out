@@ -67,6 +67,31 @@ async function bootstrap() {
     return reply.send({ configured, vars: { hasServiceAccount, hasProjectId, hasClientEmail, hasPrivateKey }, firebaseOk, firebaseError: firebaseError || undefined })
   })
 
+  // ── PUBLIC: Check token count + send test push by userId ────────
+  app.get('/debug-token/:userId', async (req, reply) => {
+    const { userId } = req.params as { userId: string }
+    const tokens = await app.prisma.deviceToken.findMany({ where: { userId } })
+
+    // Send a real test push if tokens exist
+    let pushSent = false
+    if (tokens.length > 0) {
+      const { sendPushToUser } = await import('./services/push.service')
+      await sendPushToUser(app.prisma as any, userId, {
+        title: "🔔 Test Let's Out",
+        body: "Les notifications fonctionnent ! Cliquez pour ouvrir l'app.",
+        data: { type: 'TEST' }
+      })
+      pushSent = true
+    }
+
+    return reply.send({
+      userId,
+      tokensCount: tokens.length,
+      tokens: tokens.map(t => ({ platform: t.platform, preview: t.token.slice(0, 25) + '...' })),
+      pushSent
+    })
+  })
+
   // ── Database Migration (applied directly to avoid relying on Render's start command) ──
   try {
     // Ensure admins table exists and has all required columns
