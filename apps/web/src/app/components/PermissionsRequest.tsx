@@ -49,12 +49,8 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
           console.error('[PushNotifications] Registration error:', err.error)
         })
 
-        const hasFirebaseConfig = !!import.meta.env.VITE_FIREBASE_API_KEY || !!import.meta.env.VITE_FIREBASE_PROJECT_ID;
-        if (hasFirebaseConfig) {
-          await PushNotifications.register();
-        } else {
-          console.warn('[PushNotifications] Firebase not configured, skipping registration to prevent crash.');
-        }
+        // Always register for push notifications. The capacitor plugin uses google-services.json, not VITE_ variables.
+        await PushNotifications.register();
       } else {
         toast.error('Vous devez autoriser les notifications pour recevoir des alertes.')
       }
