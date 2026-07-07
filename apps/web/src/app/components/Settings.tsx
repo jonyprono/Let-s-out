@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   ChevronLeft, ChevronRight, Globe, Lock, Bell, Shield, HelpCircle,
   LogOut, User, Moon, Smartphone, ExternalLink, Loader2, Clock,
-  CheckCircle2, XCircle, Trash2, AlertTriangle,
+  CheckCircle2, XCircle, Trash2, AlertTriangle, Wallet as WalletIcon,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
@@ -181,6 +181,21 @@ export function Settings({ onBack }: SettingsProps) {
                 <p className="text-[12px] text-gray-400 dark:text-text-secondary">
                   {language === 'fr' ? 'Français' : 'English'}
                 </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-300" />
+            </button>
+
+            {/* Wallet */}
+            <button 
+              onClick={() => navigate('/wallet')}
+              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.green}`}>
+                <WalletIcon className="w-5 h-5" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">Mon Portefeuille</p>
+                <p className="text-[12px] text-gray-400 dark:text-text-secondary">Gérez vos revenus et retraits</p>
               </div>
               <ChevronRight className="w-5 h-5 text-gray-300" />
             </button>

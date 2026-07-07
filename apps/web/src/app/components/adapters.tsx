@@ -34,6 +34,7 @@ const PaymentPageBase   = lazy(() => import('@/app/components/PaymentPage').then
 const FriendRequestsBase= lazy(() => import('@/app/components/FriendRequests').then(m => ({ default: m.FriendRequests })))
 const VerifyProfileBase = lazy(() => import('@/app/components/VerifyProfile').then(m => ({ default: m.VerifyProfile })))
 const PaymentReceiptBase= lazy(() => import('@/app/components/PaymentReceipt').then(m => ({ default: m.PaymentReceipt })))
+const WalletBase        = lazy(() => import('@/app/components/Wallet').then(m => ({ default: m.Wallet })))
 const FriendsListBase   = lazy(() => import('@/app/components/FriendsList').then(m => ({ default: m.FriendsList })))
 const JoinPrivateBase   = lazy(() => import('@/app/components/JoinPrivateEvent').then(m => ({ default: m.JoinPrivateEvent })))
 const EventSuccessBase  = lazy(() => import('@/app/components/EventSuccessScreen').then(m => ({ default: m.EventSuccessScreen })))
@@ -297,6 +298,15 @@ export function PaymentReceipt() {
   return (
     <Suspense fallback={<PageLoader />}>
       <PaymentReceiptBase />
+    </Suspense>
+  )
+}
+
+// ─── Wallet ──────────────────────────────────────────────────────────────────
+export function Wallet() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <WalletBase />
     </Suspense>
   )
 }

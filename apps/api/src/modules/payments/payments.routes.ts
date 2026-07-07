@@ -219,7 +219,7 @@ async function handleConfirmedBooking(
 
   const eventForPool = await app.prisma.event.findUnique({
     where: { id: eventId },
-    select: { poolTarget: true },
+    select: { poolTarget: true, creatorId: true, title: true },
   })
   const isPoolContribution = !isNewParticipant && !!(eventForPool?.poolTarget && eventForPool.poolTarget > 0)
 
@@ -234,6 +234,26 @@ async function handleConfirmedBooking(
       : []),
     ...(isPoolContribution
       ? [app.prisma.event.update({ where: { id: eventId }, data: { poolCollected: { increment: amount } } })]
+      : []),
+    // Créditer le wallet de l'organisateur
+    ...(eventForPool?.creatorId
+      ? [
+          app.prisma.wallet.upsert({
+            where: { userId: eventForPool.creatorId },
+            create: { userId: eventForPool.creatorId, balance: amount },
+            update: { balance: { increment: amount } },
+          }),
+          app.prisma.walletTransaction.create({
+            data: {
+              wallet: { connect: { userId: eventForPool.creatorId } },
+              amount,
+              type: 'DEPOSIT',
+              balanceAfter: amount, // Approximatif ou besoin de requêter le wallet avant
+              description: `Paiement reçu pour "${eventForPool.title}"`,
+              refId: eventId,
+            },
+          }),
+        ]
       : []),
   ])
 

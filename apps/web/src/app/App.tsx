@@ -62,6 +62,7 @@ import {
   VerifyProfile,
   MyEvents,
   EventSuccessScreen,
+  Wallet,
 } from '@/app/components/adapters'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
@@ -225,6 +226,7 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/wallet" element={<Wallet />} />
           </Route>
 
           {/* Fallback */}
