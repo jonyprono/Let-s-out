@@ -19,11 +19,11 @@ export function PhoneInputField({
 }: PhoneInputFieldProps) {
   return (
     // Aligné avec Input: min-h-[48px], rounded-[8px], border 1px → 2px orange au focus
-    <div className="relative flex items-center w-full min-h-[48px] h-auto rounded-[8px] border border-[var(--border-default)] bg-[var(--color-background-primary)] overflow-hidden box-border focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
+    <div className="relative flex items-center w-full min-h-[48px] h-auto rounded-[8px] border border-[var(--border-primary)] bg-[var(--color-background-primary)] overflow-hidden box-border focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
       <CountryPicker
         value={country}
         onChange={onCountryChange}
-        className="flex items-center gap-[8px] h-full pl-[1rem] pr-[0.5rem] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-normal font-poppins text-[clamp(12px,3.5vw,14px)]"
+        className="flex items-center gap-[8px] h-full pl-[1rem] pr-[0.5rem] bg-transparent whitespace-nowrap active:opacity-80 transition-colors shrink-0 outline-none text-[var(--color-text-primary)] font-semibold font-poppins text-[clamp(12px,3.5vw,14px)]"
       />
       {/* Séparateur vertical discret */}
       <div className="w-[1px] h-6 bg-[var(--border-default)] shrink-0" />
@@ -38,7 +38,7 @@ export function PhoneInputField({
           }
         }}
         placeholder="00 00 00 00 00"
-        className="flex-1 min-w-0 h-full bg-transparent outline-none px-[1rem] text-[clamp(12px,3.5vw,14px)] font-normal font-poppins text-[var(--color-text-primary)] placeholder:text-[#BDBDBD]"
+        className="flex-1 min-w-0 h-full bg-transparent outline-none px-[1rem] text-[clamp(12px,3.5vw,14px)] font-semibold font-poppins text-[var(--color-text-primary)] placeholder:text-[#BDBDBD]"
       />
     </div>
   );
