@@ -479,7 +479,7 @@ export function Signup({ onBack }: SignupProps) {
                     key={ch}
                     type="button"
                     onClick={() => setCurrentChannel(val)}
-                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-[var(--border-default)] transition-colors gap-2 bg-white dark:bg-[#1A1A1A]"
+                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-[var(--border-default)] transition-colors gap-2 bg-white"
                   >
                     <span className="flex-1 text-left font-poppins text-[15px] font-medium text-[var(--color-text-primary)]">
                       {ch}
@@ -535,7 +535,7 @@ export function Signup({ onBack }: SignupProps) {
                   value={d}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleOtpKey(i, e)}
-                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-[var(--color-text-primary)] ${
+                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white text-[var(--color-text-primary)] ${
                     d
                       ? 'border-[var(--brand-orange-500)]'
                       : 'border-[var(--border-default)]'
@@ -692,7 +692,7 @@ export function Signup({ onBack }: SignupProps) {
 
               {/* Dropdown suggestions */}
               {showCitySuggestions && citySuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 rounded-[16px] border border-[var(--border-default)] shadow-lg z-50 overflow-hidden bg-white dark:bg-[#1A1A1A]">
+                <div className="absolute top-full left-0 right-0 mt-1 rounded-[16px] border border-[var(--border-default)] shadow-lg z-50 overflow-hidden bg-white">
                   {citySearching && (
                     <div className="px-4 py-3 font-poppins text-[13px] text-[var(--color-text-secondary)]">
                       Recherche...
@@ -853,7 +853,7 @@ export function Signup({ onBack }: SignupProps) {
               className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-colors ${
                 acceptedTerms
                   ? 'bg-[var(--brand-orange-500)] border-[var(--brand-orange-500)]'
-                  : 'border-[var(--border-default)] bg-white dark:bg-[#1A1A1A]'
+                  : 'border-[var(--border-default)] bg-white'
               }`}
             >
               {acceptedTerms && (

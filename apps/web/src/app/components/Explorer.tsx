@@ -144,9 +144,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     );
 
     return (
-      <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col pt-safe-6">
+      <div className="fixed inset-0 z-50 bg-[#FAFAFA] dark:bg-[#0a0a0b] flex flex-col pt-safe-6">
         {/* Barre de recherche */}
-        <div className="px-[20px] py-[12px] shrink-0 flex items-center self-stretch box-border w-full min-w-0 bg-[#FAFAFA]">
+        <div className="px-[20px] py-[12px] shrink-0 flex items-center self-stretch box-border w-full min-w-0 bg-[#FAFAFA] dark:bg-[#0a0a0b]">
           <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white dark:bg-[#1A1A1A] box-border shadow-sm min-w-0 ${
             isSearching ? 'border-2 border-[var(--brand-orange-500)]' : 'border border-[var(--border-default)]'
           }`}>

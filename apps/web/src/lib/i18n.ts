@@ -131,6 +131,13 @@ const fr = {
   }
 };
 
+const getBrowserLanguage = () => {
+  if (typeof navigator !== 'undefined') {
+    return navigator.language.split('-')[0];
+  }
+  return 'fr';
+};
+
 i18n
   .use(initReactI18next)
   .init({
@@ -138,7 +145,7 @@ i18n
       en,
       fr
     },
-    lng: 'fr', // default language
+    lng: getBrowserLanguage(), // Automatically detect language
     fallbackLng: 'fr',
     interpolation: {
       escapeValue: false // react already safes from xss

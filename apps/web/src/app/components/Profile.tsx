@@ -102,7 +102,7 @@ export function Profile({ onNavigate }: ProfileProps) {
   // Show loading state while determining own vs other profile
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-[#222222]">
+      <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222] dark:bg-[#0a0a0b]">
         <div className="flex flex-col items-center gap-150">
           <div className="w-14 h-14 rounded-2xl bg-gray-200 animate-pulse" />
           <div className="h-4 w-32 bg-gray-200 rounded-lg animate-pulse" />
@@ -124,13 +124,13 @@ export function Profile({ onNavigate }: ProfileProps) {
   const rating = viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A';
 
   return (
-    <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-[#222222]">
+    <div className="w-full h-full flex flex-col bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222] dark:bg-[#0a0a0b]">
       
       {/* Header Actions */}
-      <div className="px-4 pt-12 pb-2 sticky top-0 z-20 flex items-center justify-between bg-gray-50 dark:bg-[#222222]/90 backdrop-blur-md">
+      <div className="px-4 pt-12 pb-2 sticky top-0 z-20 flex items-center justify-between bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222]/90 backdrop-blur-md">
         <div className="flex items-center gap-2">
           {!isOwnProfile && (
-            <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A] flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm hover:bg-gray-50 dark:bg-[#222222] transition-colors">
+            <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A] flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm hover:bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222] dark:bg-[#0a0a0b] transition-colors">
               <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
           )}
@@ -150,7 +150,7 @@ export function Profile({ onNavigate }: ProfileProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        <div className="px-5 pt-2 pb-6 bg-gray-50 dark:bg-[#222222] flex flex-col border-b border-gray-100 dark:border-white/10">
+        <div className="px-5 pt-2 pb-6 bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222] dark:bg-[#0a0a0b] flex flex-col border-b border-gray-100 dark:border-white/10">
           
           {/* Avatar & Info (Left-aligned) */}
           <div className="flex items-center gap-4 mb-4">
@@ -218,9 +218,9 @@ export function Profile({ onNavigate }: ProfileProps) {
         </div>
 
         {/* Content Area */}
-        <div className="bg-gray-50 dark:bg-[#222222] min-h-[500px]">
+        <div className="bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222] dark:bg-[#0a0a0b] min-h-[500px]">
           {/* Scrollable Tabs */}
-          <div className="w-full overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-white/10 sticky top-0 bg-gray-50 dark:bg-[#222222]/95 backdrop-blur-md z-10">
+          <div className="w-full overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-white/10 sticky top-0 bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222]/95 backdrop-blur-md z-10">
             <div className="flex px-4 py-2 w-max gap-2">
               <ToggleButton
                 options={TABS.map(t => ({ label: `${t.label} ${t.count > 0 ? `(${t.count})` : ''}`, value: t.key }))}
@@ -231,7 +231,7 @@ export function Profile({ onNavigate }: ProfileProps) {
             </div>
           </div>
 
-          <div className="p-4 bg-[#F8F9FA] min-h-screen">
+          <div className="p-4 bg-[#F8F9FA] dark:bg-[#0a0a0b] min-h-screen">
             {/* TAB: Événements */}
             {activeTab === 'events' && (
               <div className="space-y-4">
@@ -467,7 +467,7 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
 function EmptyState({ icon, title, subtitle, action }: { icon: string, title: string, subtitle: string, action?: React.ReactNode }) {
   return (
     <div className="bg-white dark:bg-[#1A1A1A] rounded-[24px] p-8 text-center border border-dashed border-gray-200 dark:border-white/10">
-      <div className="w-14 h-14 mx-auto bg-gray-50 dark:bg-[#222222] rounded-full flex items-center justify-center mb-3">
+      <div className="w-14 h-14 mx-auto bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222] dark:bg-[#0a0a0b] rounded-full flex items-center justify-center mb-3">
         <span className="text-2xl">{icon}</span>
       </div>
       <p className="text-gray-900 dark:text-white font-bold text-[15px]">{title}</p>

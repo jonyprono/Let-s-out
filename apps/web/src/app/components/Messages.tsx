@@ -180,7 +180,7 @@ export function Messages(_props: MessagesProps) {
                 className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] placeholder:text-[#BDBDBD] font-['Inter_Display'] min-w-0"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-100 dark:bg-[#2a2a2a] rounded-full transition-colors flex-shrink-0">
+                <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] rounded-full transition-colors flex-shrink-0">
                   <X className="w-3.5 h-3.5 text-[#BDBDBD]" />
                 </button>
               )}
@@ -221,10 +221,10 @@ export function Messages(_props: MessagesProps) {
           <div className="w-full flex flex-col gap-[16px] px-[16px]">
             {[1, 2, 3].map(i => (
               <div key={i} className="w-full h-[48px] bg-white dark:bg-[#1A1A1A] rounded-2xl flex items-center gap-[8px] animate-pulse">
-                <div className="w-[48px] h-[48px] rounded-[24px] bg-gray-200 flex-shrink-0" />
+                <div className="w-[48px] h-[48px] rounded-[24px] bg-gray-200 dark:bg-[#3A3A3A] flex-shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded-lg w-2/3" />
-                  <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-lg w-full" />
+                  <div className="h-4 bg-gray-200 dark:bg-[#3A3A3A] rounded-lg w-2/3" />
+                  <div className="h-3 bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] rounded-lg w-full" />
                 </div>
               </div>
             ))}
@@ -338,7 +338,7 @@ export function Messages(_props: MessagesProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <button 
-            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] transition-colors"
             onClick={() => togglePin(contextMenu.convId)}
           >
             {pinnedConvs.includes(contextMenu.convId) ? (
@@ -349,7 +349,7 @@ export function Messages(_props: MessagesProps) {
           </button>
           
           <button 
-            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] transition-colors"
             onClick={() => toggleMute(contextMenu.convId)}
           >
             {mutedConvs.includes(contextMenu.convId) ? (
@@ -360,7 +360,7 @@ export function Messages(_props: MessagesProps) {
           </button>
 
           <button 
-            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+            className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] transition-colors"
             onClick={() => toggleReadStatus(contextMenu.convId, contextMenu.unread)}
           >
             {(forceUnreadConvs.includes(contextMenu.convId) || (contextMenu.unread > 0 && !forceReadConvs.includes(contextMenu.convId))) ? (
@@ -370,7 +370,7 @@ export function Messages(_props: MessagesProps) {
             )}
           </button>
 
-          <div className="h-[1px] bg-gray-100 dark:bg-[#2a2a2a] w-full my-1" />
+          <div className="h-[1px] bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] w-full my-1" />
 
           <button 
             className="w-full px-4 py-3 text-left flex items-center gap-3 hover:bg-red-50 active:bg-red-100 transition-colors"

@@ -94,7 +94,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
   return (
-    <div className={`${authShell} bg-white dark:bg-[#1A1A1A] overflow-y-auto`}>
+    <div className={`${authShell} bg-white overflow-y-auto`}>
       <div className="flex flex-col min-h-full px-4 sm:px-6 py-4 justify-between w-full max-w-[390px] mx-auto">
         
         <div className="flex flex-col justify-center flex-1 w-full pb-4">
@@ -147,7 +147,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-gray-600 dark:text-gray-300 transition-colors focus:outline-none"
+                  className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
                 >
                   {showPassword
                     ? <ViewIcon size={20} strokeWidth={1.5} />

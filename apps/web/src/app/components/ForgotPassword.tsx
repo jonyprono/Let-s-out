@@ -293,7 +293,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                     key={ch}
                     type="button"
                     onClick={() => setCurrentChannel(val)}
-                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-[var(--border-default)] transition-colors gap-2 bg-white dark:bg-[#1A1A1A]"
+                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-[var(--border-default)] transition-colors gap-2 bg-white"
                   >
                     <span className="flex-1 text-left font-poppins text-[15px] font-medium text-[var(--color-text-primary)]">
                       {ch}
@@ -349,7 +349,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleOtpKey(i, e)}
                   onPaste={i === 0 ? handleOtpPaste : undefined}
-                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-[var(--color-text-primary)] ${
+                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white text-[var(--color-text-primary)] ${
                     d
                       ? 'border-[var(--brand-orange-500)]'
                       : 'border-[var(--border-default)]'
