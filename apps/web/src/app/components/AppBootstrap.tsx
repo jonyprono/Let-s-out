@@ -67,10 +67,11 @@ export function AppBootstrap() {
            const conversationId = data.conversationId;
            if (conversationId) {
              try {
-               await chatApi.sendMessage(conversationId, {
-                 content: notificationAction.inputValue,
-                 type: 'TEXT'
-               });
+               await chatApi.sendMessage(
+                 conversationId, 
+                 notificationAction.inputValue,
+                 'TEXT'
+               );
                console.log('[LocalNotifications] Reply sent seamlessly!');
              } catch (e) {
                console.error('[LocalNotifications] Failed to send reply:', e);
