@@ -98,7 +98,8 @@ async function bootstrap() {
       tokens: tokensAfter.map(t => ({ platform: t.platform, preview: t.token.slice(0, 25) + '...' })),
       pushSent,
       pushError,
-      firebaseProjectId: process.env.FIREBASE_PROJECT_ID
+      firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
+      firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL
     })
   })
 

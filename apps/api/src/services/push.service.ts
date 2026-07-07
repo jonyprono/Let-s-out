@@ -171,19 +171,34 @@ export async function sendPushToUser(
   }
 
   const invalidTokens: string[] = []
+  const errors: string[] = []
 
   await Promise.allSettled(
     tokens.map(async ({ token }) => {
       console.log(`[FCM] Sending to token: ${token.slice(0, 20)}...`)
-      const ok = await sendToToken(token, payload)
-      if (!ok) {
-        console.warn(`[FCM] ⚠️ Token invalid/expired: ${token.slice(0, 20)}... — will delete`)
-        invalidTokens.push(token)
-      } else {
+      
+      const app = getFirebaseApp()
+      try {
+        const admin = require('firebase-admin')
+        await admin.messaging(app).send({
+          token,
+          notification: { title: payload.title, body: payload.body },
+          data: payload.data
+        })
         console.log(`[FCM] ✅ Push sent successfully`)
+      } catch (e: any) {
+        console.warn(`[FCM] ⚠️ Token error: ${e.code || e.message}`)
+        errors.push(e.code || e.message)
+        invalidTokens.push(token)
       }
     }),
   )
+
+  if (errors.length > 0) {
+    // Clean up before throwing
+    try { await prisma.deviceToken.deleteMany({ where: { token: { in: invalidTokens } } }) } catch {}
+    throw new Error(`FCM rejected token(s): ${errors.join(', ')}`)
+  }
 
   // Clean up stale tokens
   if (invalidTokens.length > 0) {
