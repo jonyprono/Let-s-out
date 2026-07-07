@@ -2,6 +2,36 @@ import type { FastifyInstance } from 'fastify'
 import { broadcastToUser } from '../chat/chat.routes'
 
 export default async function notificationsRoutes(app: FastifyInstance) {
+
+  // PUBLIC — Diagnostic Firebase config (no auth needed)
+  app.get('/ping-firebase', async (_req, reply) => {
+    const hasServiceAccount = !!process.env.FIREBASE_SERVICE_ACCOUNT
+    const hasProjectId = !!process.env.FIREBASE_PROJECT_ID
+    const hasClientEmail = !!process.env.FIREBASE_CLIENT_EMAIL
+    const hasPrivateKey = !!process.env.FIREBASE_PRIVATE_KEY
+
+    const configured = hasServiceAccount || (hasProjectId && hasClientEmail && hasPrivateKey)
+
+    // Try to actually initialize Firebase
+    let firebaseOk = false
+    let firebaseError = ''
+    try {
+      const { sendPushToUser } = await import('../../services/push.service')
+      // sendPushToUser with dummy userId just to trigger init (won't send anything, no token in DB)
+      await sendPushToUser(app.prisma as any, '__ping__', { title: 'ping', body: 'ping' })
+      firebaseOk = true
+    } catch (e: any) {
+      firebaseError = e.message
+    }
+
+    return reply.send({
+      configured,
+      vars: { hasServiceAccount, hasProjectId, hasClientEmail, hasPrivateKey },
+      firebaseOk,
+      firebaseError: firebaseError || undefined,
+    })
+  })
+
   app.addHook('preHandler', app.authenticate)
 
   // Get notifications
