@@ -9,9 +9,9 @@ export function AuthLayout() {
       style={{ minHeight: '100dvh' }}
     >
       <div
-        className="force-light w-full sm:max-w-[430px] sm:max-h-[932px] bg-white text-black overflow-hidden relative flex flex-col sm:shadow-2xl sm:rounded-[40px]"
+        className="force-light w-full sm:max-w-[430px] sm:max-h-[932px] bg-white text-black overflow-y-auto overflow-x-hidden relative flex flex-col sm:shadow-2xl sm:rounded-[40px]"
         style={{
-          height: '100dvh',
+          minHeight: '100dvh',
           paddingTop: 'env(safe-area-inset-top)',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
