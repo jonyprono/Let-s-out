@@ -84,7 +84,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               onClick={onComplete} 
               className="flex items-center gap-1 font-poppins text-[14px] font-medium text-[#525252] focus:outline-none hover:opacity-75"
             >
-              Passer <span className="text-[#A3A3A3] text-[12px] font-bold tracking-tighter">>></span>
+              Passer <span className="text-[#A3A3A3] text-[12px] font-bold tracking-tighter">&gt;&gt;</span>
             </button>
           )}
         </div>
