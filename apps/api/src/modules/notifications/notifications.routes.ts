@@ -71,6 +71,30 @@ export default async function notificationsRoutes(app: FastifyInstance) {
     })
     return reply.send({ success: true })
   })
+
+  // DEBUG: Check registered tokens + test push
+  app.get('/debug-push', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const tokens = await app.prisma.deviceToken.findMany({ where: { userId: sub } })
+    const firebaseConfigured = !!process.env.FIREBASE_SERVICE_ACCOUNT
+
+    // Send a test push
+    if (tokens.length > 0 && firebaseConfigured) {
+      const { sendPushToUser } = await import('../../services/push.service')
+      await sendPushToUser(app.prisma as any, sub, {
+        title: "Test Push 🔔",
+        body: "Si vous voyez ça, les notifications fonctionnent !",
+        data: { type: 'TEST' }
+      })
+    }
+
+    return reply.send({
+      userId: sub,
+      firebaseConfigured,
+      tokensCount: tokens.length,
+      tokens: tokens.map(t => ({ platform: t.platform, tokenPreview: t.token.slice(0, 30) + '...' })),
+    })
+  })
 }
 
 /**

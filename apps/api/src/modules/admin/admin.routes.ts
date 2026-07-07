@@ -188,7 +188,7 @@ export default async function adminRoutes(app: FastifyInstance) {
   })
 
   // ── Gestion des Administrateurs ───────────────────────────────────
-  app.get('/admins', async (req, reply) => {
+  app.get('/admins', async (_req, reply) => {
     const admins = await app.prisma.admin.findMany({
       orderBy: { createdAt: 'desc' },
     })

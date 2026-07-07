@@ -129,6 +129,7 @@ export async function sendPushToUser(
   const app = getFirebaseApp()
   if (!app) {
     // FCM not configured — silent no-op in dev
+    console.warn('[FCM] ⚠️ Firebase not configured — FIREBASE_SERVICE_ACCOUNT env var missing. Push NOT sent.')
     return
   }
 
@@ -138,18 +139,30 @@ export async function sendPushToUser(
       where: { userId },
       select: { token: true },
     })
-  } catch {
+  } catch (e) {
+    console.error('[FCM] Failed to fetch device tokens for user', userId, e)
     return
   }
 
-  if (tokens.length === 0) return
+  console.log(`[FCM] Sending push to user ${userId} — ${tokens.length} device(s) registered`)
+
+  if (tokens.length === 0) {
+    console.warn(`[FCM] ⚠️ No device tokens for user ${userId} — notification NOT sent. User must open app and grant permission first.`)
+    return
+  }
 
   const invalidTokens: string[] = []
 
   await Promise.allSettled(
     tokens.map(async ({ token }) => {
+      console.log(`[FCM] Sending to token: ${token.slice(0, 20)}...`)
       const ok = await sendToToken(token, payload)
-      if (!ok) invalidTokens.push(token)
+      if (!ok) {
+        console.warn(`[FCM] ⚠️ Token invalid/expired: ${token.slice(0, 20)}... — will delete`)
+        invalidTokens.push(token)
+      } else {
+        console.log(`[FCM] ✅ Push sent successfully`)
+      }
     }),
   )
 
