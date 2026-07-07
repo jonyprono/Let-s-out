@@ -164,7 +164,7 @@ export function Messages(_props: MessagesProps) {
       <div className="flex flex-col items-start w-full bg-[#FFFFFF] dark:bg-[#0a0a0b] sticky top-0 z-20">
         {/* App bar */}
         <div className="flex flex-row items-center px-[16px] pt-[calc(env(safe-area-inset-top)+12px)] pb-[12px] gap-[12px] w-full min-h-[56px] box-border">
-          <h1 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818]">Messages</h1>
+          <h1 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5]">Messages</h1>
         </div>
 
         {visibleConversations.length > 0 || searchQuery ? (
@@ -177,7 +177,7 @@ export function Messages(_props: MessagesProps) {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Rechercher une conversation..."
-                className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] placeholder:text-[#BDBDBD] font-['Inter_Display'] min-w-0"
+                className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] dark:text-[#f5f5f5] placeholder:text-[#BDBDBD] font-['Inter_Display'] min-w-0"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] rounded-full transition-colors flex-shrink-0">
@@ -201,7 +201,7 @@ export function Messages(_props: MessagesProps) {
                     className={`h-[32px] px-[12px] py-[8px] rounded-[1000px] flex items-center justify-center whitespace-nowrap transition-colors ${
                       isActive
                         ? 'bg-[#FFF2D3] text-[#FF7A00]'
-                        : 'bg-[#FAFAFA] text-[#56514F]'
+                        : 'bg-[#FAFAFA] dark:bg-[#1A1A1A] text-[#56514F] dark:text-[#a3a3a3]'
                     }`}
                   >
                     <span className="font-poppins font-medium text-[12px] leading-[16px]">
@@ -285,10 +285,10 @@ export function Messages(_props: MessagesProps) {
 
                 {/* Text and supporting text */}
                 <div className="flex flex-col items-center gap-[8px] w-full max-w-[320px]">
-                  <h3 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] text-center">
+                  <h3 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5] text-center">
                     Faites le premier pas
                   </h3>
-                  <p className="font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-center text-[#404040]">
+                  <p className="font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-center text-[#404040] dark:text-[#a3a3a3]">
                     Faites connaissance, partagez vos idées ou préparez votre prochaine sortie. Il ne manque plus qu'un premier message.
                   </p>
                 </div>
@@ -443,7 +443,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu }: { c
       <div className="flex-1 min-w-0 flex flex-col gap-[2px] h-[38px] justify-center">
         {/* Top Row */}
         <div className="w-full flex flex-row justify-between items-center h-[20px]">
-          <h3 className="font-poppins font-medium text-[14px] leading-[20px] text-[#1B1818] truncate">
+          <h3 className="font-poppins font-medium text-[14px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5] truncate">
             {conv.name}
           </h3>
           <span className="font-['Inter_Display'] font-normal text-[10px] leading-[16px] text-[#737373] flex-shrink-0 ml-2">

@@ -334,9 +334,26 @@
   --sidebar-ring: oklch(0.439 0 0);
 
   /* Overwrite semantic tokens in dark mode if needed, otherwise inherit from root */
-  --background-default: #111111;
-  --background-white: #1a1a1a;
+  --color-background-default: #111111;
+  --color-background-white: #1a1a1a;
+  --color-background-primary: #111111;
+  --color-background-primary-alt: #1a1a1a;
+  --color-background-secondary: #222222;
+  --color-background-brand-subtle: #242424;
+  --color-background-primary-muted: rgba(255, 122, 0, 0.15);
+  
   --border-primary: #2a2a2a;
+  --border-secondary: #333333;
+  --border-tertiary: #404040;
+  --border-default: #2a2a2a;
+  
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #a3a3a3;
+  --color-text-tertiary: #737373;
+  --color-text-muted: #525252;
+  --color-icon-primary: #f5f5f5;
+  --color-icon-secondary: #a3a3a3;
+  --color-icon-tertiary: #737373;
 }
 
 /* Inputs — parcours auth uniquement (évite de casser les champs sur fond clair) */
