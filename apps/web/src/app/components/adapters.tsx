@@ -6,7 +6,7 @@ import { apiClient } from '@/lib/api-client'
 // ── Page loader (lightweight spinner shown between route transitions) ──────────
 function PageLoader() {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#111]">
+    <div className="w-full h-full flex items-center justify-center bg-[var(--color-background-primary)]">
       <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF7A00] animate-spin" />
     </div>
   )

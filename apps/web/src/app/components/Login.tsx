@@ -94,10 +94,10 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
   return (
-    <div className={`${authShell} bg-white overflow-hidden h-[100dvh] w-full flex flex-col`}>
-      <div className="flex flex-col h-full px-4 sm:px-6 pt-4 pb-2 justify-between w-full max-w-[390px] mx-auto overflow-hidden">
+    <div className={`${authShell} bg-white overflow-y-auto min-h-[100dvh] w-full flex flex-col`}>
+      <div className="flex flex-col min-h-[550px] flex-1 px-4 sm:px-6 pt-4 pb-2 justify-between w-full max-w-[390px] mx-auto">
         
-        <div className="flex flex-col justify-center flex-1 w-full pb-2 min-h-0 shrink">
+        <div className="flex flex-col justify-center flex-1 w-full pb-2 shrink min-h-0">
           
           {/* Header (Logo + Titres) */}
           <div className="flex flex-col items-center shrink-0 w-full gap-[clamp(4px,1vh,12px)] mb-[clamp(8px,2vh,24px)] min-h-0">
