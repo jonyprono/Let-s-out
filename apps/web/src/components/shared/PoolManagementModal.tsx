@@ -10,15 +10,23 @@ import {
 interface PoolManagementModalProps {
   event: Event
   isCreator?: boolean
+  isCoHost?: boolean
+  currentUserId?: string
   onClose: () => void
   onReleaseFunds?: () => void
+  onApproveFunds?: () => void
+  isApproving?: boolean
 }
 
 export function PoolManagementModal({
   event,
   isCreator,
+  isCoHost,
+  currentUserId,
   onClose,
   onReleaseFunds,
+  onApproveFunds,
+  isApproving,
 }: PoolManagementModalProps) {
   const { budget, collected, remaining, progress } = computePoolStats(event)
   const mode = getPoolMode(event)
@@ -83,18 +91,40 @@ export function PoolManagementModal({
           </div>
 
           {event.poolReleased && (
-            <p className="text-[13px] text-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[#222222] rounded-xl py-3 px-4">
-              Les fonds de cette cagnotte ont été débloqués par l&apos;organisateur.
+            <p className="text-[13px] text-center text-[#10B981] bg-[#10B981]/10 rounded-xl py-3 px-4 font-medium">
+              Les fonds de cette cagnotte ont été débloqués et transférés.
             </p>
           )}
 
-          {isCreator && onReleaseFunds && !event.poolReleased && (
+          {!event.poolReleased && event.payoutRequest?.status === 'PENDING' && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 space-y-3">
+              <p className="text-[13px] text-amber-800 dark:text-amber-300 text-center font-medium">
+                Demande de déblocage en attente d'approbation par les co-organisateurs.
+              </p>
+              {isCoHost && currentUserId && !event.payoutRequest.approvals.includes(currentUserId) && (
+                <button
+                  onClick={onApproveFunds}
+                  disabled={isApproving}
+                  className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-[12px] text-[14px] font-bold flex justify-center items-center gap-2 transition-colors disabled:opacity-50"
+                >
+                  Approuver le déblocage
+                </button>
+              )}
+              {isCoHost && currentUserId && event.payoutRequest.approvals.includes(currentUserId) && (
+                <p className="text-[12px] text-center text-amber-600 dark:text-amber-400">
+                  Vous avez déjà approuvé cette demande.
+                </p>
+              )}
+            </div>
+          )}
+
+          {isCreator && onReleaseFunds && !event.poolReleased && (!event.payoutRequest || event.payoutRequest.status !== 'PENDING') && (
             <button
               onClick={onReleaseFunds}
               className="w-full py-3.5 border border-action-primary text-action-primary rounded-[12px] text-[14px] font-bold flex justify-center items-center gap-2 bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
             >
               <Briefcase className="w-4 h-4" />
-              Débloquer les fonds
+              Demander le déblocage des fonds
             </button>
           )}
         </div>

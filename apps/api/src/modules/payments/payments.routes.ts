@@ -235,26 +235,8 @@ async function handleConfirmedBooking(
     ...(isPoolContribution
       ? [app.prisma.event.update({ where: { id: eventId }, data: { poolCollected: { increment: amount } } })]
       : []),
-    // Créditer le wallet de l'organisateur
-    ...(eventForPool?.creatorId
-      ? [
-          app.prisma.wallet.upsert({
-            where: { userId: eventForPool.creatorId },
-            create: { userId: eventForPool.creatorId, balance: amount },
-            update: { balance: { increment: amount } },
-          }),
-          app.prisma.walletTransaction.create({
-            data: {
-              wallet: { connect: { userId: eventForPool.creatorId } },
-              amount,
-              type: 'DEPOSIT',
-              balanceAfter: amount, // Approximatif ou besoin de requêter le wallet avant
-              description: `Paiement reçu pour "${eventForPool.title}"`,
-              refId: eventId,
-            },
-          }),
-        ]
-      : []),
+    // L'argent reste stocké dans l'événement (poolCollected).
+    // L'organisateur devra faire une demande de déblocage pour recevoir les fonds sur son Wallet.
   ])
 
   // Add to event group chat and send system message

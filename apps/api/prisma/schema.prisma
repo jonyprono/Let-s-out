@@ -171,6 +171,7 @@ model Event {
   conversation     Conversation? @relation("EventConversation")
   creator          User          @relation("EventCreator", fields: [creatorId], references: [id])
   reviews          Review[]
+  payoutRequest    EventPayoutRequest?
 
   @@index([creatorId])
   @@index([status])
@@ -532,3 +533,17 @@ model Admin {
   @@map("admins")
 }
 
+model EventPayoutRequest {
+  id          String   @id @default(cuid())
+  eventId     String   @unique
+  requestedBy String
+  amount      Float
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvals   String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_payout_requests")
+}

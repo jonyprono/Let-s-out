@@ -50,6 +50,10 @@ export interface Event {
   poolTarget?: number
   poolMode?: 'libre' | 'minimum' | 'fixe'
   poolMinAmount?: number
+  payoutRequest?: {
+    status: 'PENDING' | 'APPROVED' | 'REJECTED'
+    approvals: string[]
+  }
   poolCollected?: number
   poolReleased?: boolean
   _count?: { bookings: number }
@@ -147,7 +151,10 @@ export const eventsApi = {
   
   // Pool Release
   releasePool: async (eventId: string) => {
-    return apiClient.post(`/events/${eventId}/pool/release`)
+    return apiClient.post(`/events/${eventId}/payout/request`)
+  },
+  approvePayout: async (eventId: string) => {
+    return apiClient.post(`/events/${eventId}/payout/approve`)
   },
 
   // Upload cover

@@ -1,0 +1,140 @@
+import { FastifyInstance } from 'fastify'
+
+export default async function eventPayoutRoutes(app: FastifyInstance) {
+  app.addHook('onRequest', async (request, reply) => {
+    try {
+      await request.jwtVerify()
+    } catch (err) {
+      reply.code(401).send({ error: 'Non autorisé' })
+    }
+  })
+
+  // Demander le déblocage des fonds
+  app.post<{ Params: { id: string } }>('/:id/payout/request', async (request, reply) => {
+    const userId = request.user.sub
+    const eventId = request.params.id
+
+    const event = await app.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { payoutRequest: true },
+    })
+
+    if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
+    if (event.creatorId !== userId) return reply.code(403).send({ error: 'Seul le créateur peut demander le déblocage' })
+    if (event.poolCollected <= 0) return reply.code(400).send({ error: 'Aucun fond disponible à débloquer' })
+    if (event.payoutRequest && event.payoutRequest.status !== 'REJECTED') {
+      return reply.code(400).send({ error: 'Une demande de déblocage est déjà en cours ou a été approuvée.' })
+    }
+
+    const hasCoHosts = event.coHostIds && event.coHostIds.length > 0
+
+    const newRequest = await app.prisma.eventPayoutRequest.upsert({
+      where: { eventId },
+      create: {
+        eventId,
+        requestedBy: userId,
+        amount: event.poolCollected,
+        status: hasCoHosts ? 'PENDING' : 'APPROVED',
+        approvals: [],
+      },
+      update: {
+        requestedBy: userId,
+        amount: event.poolCollected,
+        status: hasCoHosts ? 'PENDING' : 'APPROVED',
+        approvals: [],
+      },
+    })
+
+    // S'il n'y a pas de co-hôte, on approuve directement et on transfère les fonds
+    if (!hasCoHosts) {
+      await releaseFunds(app, eventId, userId, event.poolCollected, event.title)
+      return reply.send({ data: { ...newRequest, status: 'APPROVED' }, message: 'Fonds débloqués avec succès' })
+    }
+
+    // TODO: Envoyer une notification aux co-hôtes
+    return reply.send({ data: newRequest, message: 'Demande envoyée aux co-organisateurs' })
+  })
+
+  // Approuver le déblocage
+  app.post<{ Params: { id: string } }>('/:id/payout/approve', async (request, reply) => {
+    const userId = request.user.sub
+    const eventId = request.params.id
+
+    const event = await app.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { payoutRequest: true },
+    })
+
+    if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
+    if (!event.coHostIds.includes(userId)) return reply.code(403).send({ error: 'Seul un co-organisateur peut approuver' })
+    
+    const payoutReq = event.payoutRequest
+    if (!payoutReq) return reply.code(404).send({ error: 'Aucune demande de déblocage trouvée' })
+    if (payoutReq.status !== 'PENDING') return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
+    if (payoutReq.approvals.includes(userId)) return reply.code(400).send({ error: 'Vous avez déjà approuvé cette demande' })
+
+    const updatedApprovals = [...payoutReq.approvals, userId]
+    
+    // Vérifier si tous les co-hôtes ont approuvé
+    // On enlève le creator s'il est par erreur dans coHostIds
+    const requiredCoHosts = event.coHostIds.filter(id => id !== event.creatorId)
+    const allApproved = requiredCoHosts.every(id => updatedApprovals.includes(id))
+
+    const newStatus = allApproved ? 'APPROVED' : 'PENDING'
+
+    const updatedReq = await app.prisma.eventPayoutRequest.update({
+      where: { eventId },
+      data: {
+        approvals: updatedApprovals,
+        status: newStatus,
+      },
+    })
+
+    if (allApproved) {
+      await releaseFunds(app, eventId, event.creatorId, payoutReq.amount, event.title)
+      return reply.send({ data: updatedReq, message: 'Approbation enregistrée. Les fonds ont été débloqués et transférés au créateur.' })
+    }
+
+    return reply.send({ data: updatedReq, message: 'Approbation enregistrée' })
+  })
+
+  // Récupérer le statut
+  app.get<{ Params: { id: string } }>('/:id/payout/status', async (request, reply) => {
+    const eventId = request.params.id
+    const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
+      where: { eventId },
+    })
+    
+    return reply.send({ data: payoutReq })
+  })
+}
+
+// Fonction utilitaire pour transférer l'argent de l'événement vers le Wallet du créateur
+async function releaseFunds(app: FastifyInstance, eventId: string, creatorId: string, amount: number, eventTitle: string) {
+  await app.prisma.$transaction(async (tx) => {
+    // 1. Marquer l'événement comme released (ou réinitialiser une partie de la cagnotte si besoin, ici on marque just released = true)
+    await tx.event.update({
+      where: { id: eventId },
+      data: { poolReleased: true },
+    })
+
+    // 2. Créditer le wallet
+    const wallet = await tx.wallet.upsert({
+      where: { userId: creatorId },
+      create: { userId: creatorId, balance: amount },
+      update: { balance: { increment: amount } },
+    })
+
+    // 3. Créer la transaction de wallet
+    await tx.walletTransaction.create({
+      data: {
+        walletId: wallet.id,
+        amount,
+        type: 'DEPOSIT',
+        balanceAfter: wallet.balance + amount, // Add increment to get accurate balanceAfter inside tx 
+        description: `Déblocage des fonds pour "${eventTitle}"`,
+        refId: eventId,
+      },
+    })
+  })
+}

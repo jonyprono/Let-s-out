@@ -60,6 +60,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
           select: { user: { select: { profile: { select: { avatarUrl: true } } } } },
         },
         _count: { select: { bookings: true } },
+        payoutRequest: true,
       },
       orderBy: { startAt: 'asc' },
       take: 10,
@@ -840,35 +841,4 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     return reply.send({ data: reviews, meta: { total: reviews.length, averageRating } })
   })
-
-  // ── Pool Release ────────────────────────────────────────────────────────────
-  app.post('/:id/pool/release', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const { sub } = req.user as { sub: string }
-    const { id } = req.params as { id: string }
-    
-    // Actually mode and userIds are optional logic we could add, but for now we just release the whole pool to the organizer's wallet
-    const event = await app.prisma.event.findUnique({ where: { id } })
-    if (!event) return reply.code(404).send({ error: 'Event not found' })
-    if (event.creatorId !== sub) return reply.code(403).send({ error: 'Only the creator can release funds' })
-    if (event.poolReleased) return reply.code(400).send({ error: 'Funds have already been released' })
-    if (!event.poolTarget) return reply.code(400).send({ error: 'This event has no pool target' })
-
-    // Mark as released
-    const updated = await app.prisma.event.update({
-      where: { id },
-      data: { poolReleased: true },
-    })
-
-    // Notify organizer
-    await createAndSendNotification(app, {
-      userId: sub,
-      type: 'SYSTEM',
-      title: '💸 Fonds débloqués',
-      body: `La cagnotte de "${event.title}" a été débloquée avec succès.`,
-      data: { eventId: id },
-    })
-
-    return reply.send({ data: updated })
-  })
 }
-

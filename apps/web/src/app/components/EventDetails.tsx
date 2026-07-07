@@ -138,13 +138,25 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const releasePoolMutation = useMutation({
     mutationFn: () => eventsApi.releasePool(id!),
-    onSuccess: () => {
+    onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ['events', id] })
-      toast.success('Fonds débloqués avec succès !')
+      toast.success(res.data?.message || 'Demande de déblocage envoyée !')
       setShowReleaseModal(false)
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.error || "Impossible de débloquer les fonds.")
+    }
+  })
+
+  const approvePayoutMutation = useMutation({
+    mutationFn: () => eventsApi.approvePayout(id!),
+    onSuccess: (res: any) => {
+      qc.invalidateQueries({ queryKey: ['events', id] })
+      toast.success(res.data?.message || 'Approbation enregistrée !')
+      setShowPoolManagementModal(false)
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error || "Impossible d'approuver le déblocage.")
     }
   })
 
@@ -644,8 +656,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         <PoolManagementModal
           event={event}
           isCreator={isCreator}
+          isCoHost={!!user && !!event?.coHostIds?.includes(user.id)}
+          currentUserId={user?.id}
           onClose={() => setShowPoolManagementModal(false)}
           onReleaseFunds={isCreator ? () => { setShowPoolManagementModal(false); setShowReleaseModal(true) } : undefined}
+          onApproveFunds={() => approvePayoutMutation.mutate()}
+          isApproving={approvePayoutMutation.isPending}
         />
       )}
 
