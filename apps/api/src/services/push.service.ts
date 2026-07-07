@@ -82,7 +82,6 @@ async function sendToToken(token: string, payload: PushPayload): Promise<boolean
         notification: {
           sound: isCall ? 'ringtone' : 'default', // 'ringtone.wav' must exist in res/raw (without extension)
           channelId: isCall ? 'calls' : 'default',
-          clickAction: 'FLUTTER_NOTIFICATION_CLICK',
         },
       },
       apns: {
