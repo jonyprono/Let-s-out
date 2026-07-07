@@ -109,7 +109,8 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
             <button
               onClick={requestPush}
               disabled={loading}
-              className="w-full bg-action-primary text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform"
+              style={{ backgroundColor: '#FF7F50', color: 'white', minHeight: '56px' }}
+              className="w-full mt-4 bg-action-primary text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform shadow-lg"
             >
               {loading ? 'Activation...' : 'Activer les notifications'}
             </button>
@@ -120,13 +121,14 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
               <MapPin className="w-8 h-8 text-action-primary" />
             </div>
             <h2 className="text-[20px] font-bold text-gray-900 mb-2">Autour de vous</h2>
-            <p className="text-[14px] text-gray-500 mb-8 leading-relaxed">
+            <p className="text-[14px] text-gray-500 mb-4 leading-relaxed">
               Activez la localisation pour découvrir les événements proches et calculer les itinéraires.
             </p>
             <button
               onClick={requestGeo}
               disabled={loading}
-              className="w-full bg-action-primary text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform"
+              style={{ backgroundColor: '#FF7F50', color: 'white', minHeight: '56px' }}
+              className="w-full mt-4 bg-action-primary text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform shadow-lg"
             >
               {loading ? 'Activation...' : 'Activer la localisation'}
             </button>
