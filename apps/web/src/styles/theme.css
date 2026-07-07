@@ -356,16 +356,12 @@
   --color-icon-tertiary: #737373;
 }
 
-/* Inputs — parcours auth uniquement (évite de casser les champs sur fond clair) */
-.dark .auth-flow input:not([type="checkbox"]):not([type="radio"]),
-.dark .auth-flow textarea {
-  color: #ffffff;
-  background-color: #242424;
-}
-
-.dark .auth-flow input::placeholder,
-.dark .auth-flow textarea::placeholder {
-  color: #888888;
+.force-light {
+  --color-background-primary: #ffffff !important;
+  --color-text-primary: #1B1818 !important;
+  --border-primary: #E5E5E5 !important;
+  --color-background-secondary: #f5f5f5 !important;
+  --color-text-secondary: #56514f !important;
 }
 
 /**

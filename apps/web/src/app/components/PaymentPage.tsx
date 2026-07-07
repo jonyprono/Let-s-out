@@ -194,9 +194,9 @@ export function PaymentPage() {
       <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
         <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
           <button onClick={() => navigate(`/events/${eventId}`)} className="w-9 h-9 flex items-center justify-center active:scale-95">
-            <ChevronLeft className="w-5 h-5 text-[#1B1818]" strokeWidth={2} />
+            <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
-          <span className="flex-1 text-center text-[16px] font-semibold text-[#1B1818] -ml-9">Rejoindre l'événement</span>
+          <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">Rejoindre l'événement</span>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
@@ -242,7 +242,7 @@ export function PaymentPage() {
             <Button onClick={handleOpenChat} className="w-full">
               Rejoindre le groupe
             </Button>
-            <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[var(--btn-height)] rounded-full font-bold text-[15px] text-[var(--color-text-secondary)] border border-[var(--border-primary)] bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform">
+            <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[var(--btn-height)] rounded-full font-bold text-[15px] text-gray-500 dark:text-gray-400 border border-[var(--border-primary)] bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform">
               Retour à l'événement
             </button>
         </div>
@@ -291,9 +291,9 @@ export function PaymentPage() {
           onClick={() => navigate(-1)}
           className="w-8 h-8 flex items-center justify-center active:scale-95"
         >
-          <ChevronLeft className="w-[22px] h-[22px] text-[#1B1818]" strokeWidth={2} />
+          <ChevronLeft className="w-[22px] h-[22px] text-gray-900 dark:text-white" strokeWidth={2} />
         </button>
-        <span className="flex-1 text-center text-[16px] font-semibold text-[#1B1818] -ml-8">
+        <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-8">
           Rejoindre l'événement
         </span>
       </div>
@@ -302,7 +302,7 @@ export function PaymentPage() {
       <div className="flex-1 overflow-y-auto px-5 pb-40" style={{ scrollbarWidth: 'none' }}>
 
         {/* Event name */}
-        <h1 className="text-[20px] font-bold text-[#1B1818] mt-2 mb-2">{event?.title}</h1>
+        <h1 className="text-[20px] font-bold text-gray-900 dark:text-white mt-2 mb-2">{event?.title}</h1>
 
         {/* Participation row */}
         <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0] mb-5">
@@ -314,7 +314,7 @@ export function PaymentPage() {
 
         {/* ── Amount field ── */}
         <div className="mb-4">
-          <label className="block text-[13px] font-medium text-[#1B1818] mb-2">
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">
             Montant de votre participation
           </label>
           <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white dark:bg-[#1A1A1A] overflow-hidden h-[52px] focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
@@ -323,7 +323,7 @@ export function PaymentPage() {
               value={participationAmount}
               onChange={(e) => setParticipationAmount(e.target.value)}
               placeholder="0"
-              className="flex-1 px-4 text-[15px] text-[#1B1818] placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
+              className="flex-1 px-4 text-[15px] text-gray-900 dark:text-white placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
             />
             <span className="pr-4 text-[13px] font-semibold text-[#8D8D8D]">F CFA</span>
           </div>
@@ -334,17 +334,17 @@ export function PaymentPage() {
 
         {/* ── Payment method ── */}
         <div className="mb-4">
-          <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Méthode de paiement</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Méthode de paiement</label>
           <div className="flex flex-row items-center p-[10px] gap-[4px] w-full h-[44px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] rounded-[6px]">
             <img src="/logos/mobile-money.png" alt="Mobile money" className="w-6 h-6 object-contain shrink-0" />
-            <span className="flex-1 text-[14px] text-[#1B1818] text-left">Mobile money</span>
+            <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">Mobile money</span>
             <ChevronDown className="w-4 h-4 text-[#8D8D8D] shrink-0" />
           </div>
         </div>
 
         {/* ── Operator (real dropdown) ── */}
         <div className="mb-4" ref={operatorRef}>
-          <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Opérateur</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Opérateur</label>
           <div className="relative">
             <button
               type="button"
@@ -352,7 +352,7 @@ export function PaymentPage() {
               className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] rounded-[6px] active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
               <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
-              <span className="flex-1 text-[14px] text-[#1B1818] text-left">{selectedOperator.label}</span>
+              <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">{selectedOperator.label}</span>
               <ChevronDown
                 className="w-4 h-4 text-[#8D8D8D] shrink-0 transition-transform duration-200"
                 style={{ transform: showOperatorDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
@@ -372,7 +372,7 @@ export function PaymentPage() {
                     className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] hover:bg-[#FFF8F0] transition-colors"
                   >
                     <img src={op.logo} alt={op.label} className="w-6 h-6 object-contain shrink-0" />
-                    <span className="flex-1 text-[14px] text-[#1B1818] text-left">{op.label}</span>
+                    <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">{op.label}</span>
                     {selectedOperator.id === op.id && (
                       <Check className="w-4 h-4 text-[#FF7A00] shrink-0" strokeWidth={2.5} />
                     )}
@@ -385,7 +385,7 @@ export function PaymentPage() {
 
         {/* ── Phone number ── */}
         <div className="mb-8">
-          <label className="block text-[13px] font-medium text-[#1B1818] mb-2">Numéro de téléphone</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Numéro de téléphone</label>
           <div className="w-full">
             <PhoneInputField
               country={country}
@@ -410,7 +410,7 @@ export function PaymentPage() {
           Rejoindre
         </Button>
         <div className="flex flex-col items-center justify-center gap-[4px] pt-[0.25rem] w-full text-center">
-          <div className="flex items-center justify-center gap-[6px] font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
+          <div className="flex items-center justify-center gap-[6px] font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)]">
             Sécurisé PCI DSS 
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M1.34844 0C0.990808 0 0.647828 0.142067 0.394948 0.394948C0.142067 0.647828 0 0.990808 0 1.34844V5.3061C0 11.5255 5.28169 13.5833 6.30877 13.9253C6.58912 14.0249 6.89525 14.0249 7.17559 13.9253C8.20267 13.5833 13.4844 11.5255 13.4844 5.3061V1.34844C13.4844 0.99081 13.3423 0.64783 13.0894 0.394948C12.8365 0.142067 12.4936 0 12.1359 0H1.34844Z" fill="#14CD7F"/>
@@ -431,10 +431,10 @@ export function PaymentPage() {
 
             <div className="px-5 pt-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
 
-              <h2 className="text-[17px] font-bold text-[#1B1818] mb-5 text-center">Résumé de la transaction</h2>
+              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white mb-5 text-center">Résumé de la transaction</h2>
 
               <div className="mb-5">
-                <h3 className="text-[16px] font-bold text-[#1B1818]">{event?.title}</h3>
+                <h3 className="text-[16px] font-bold text-gray-900 dark:text-white">{event?.title}</h3>
                 {event?.startAt && (
                   <p className="text-[12px] text-[#8D8D8D] mt-0.5">
                     {(() => {
@@ -454,7 +454,7 @@ export function PaymentPage() {
               {/* Phone + operator */}
               <div className="flex items-center gap-2 bg-[#F8F8F8] rounded-[10px] px-4 py-3 mb-1">
                 <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
-                <span className="text-[14px] font-semibold text-[#1B1818] flex-1">{selectedOperator.label} • {country.code.replace('+', '')} {phoneDisplay}</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white flex-1">{selectedOperator.label} • {country.code.replace('+', '')} {phoneDisplay}</span>
               </div>
               <p className="text-[11px] text-[#8D8D8D] mb-5 text-center">Moyen sécurisé de paiement</p>
 
@@ -462,15 +462,15 @@ export function PaymentPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] text-[#8D8D8D]">Participation</span>
-                  <span className="text-[13px] font-semibold text-[#1B1818]">{finalAmount.toLocaleString()}F</span>
+                  <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{finalAmount.toLocaleString()}F</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] text-[#8D8D8D]">Frais de transaction</span>
-                  <span className="text-[13px] font-semibold text-[#1B1818]">{transactionFee.toLocaleString()} F</span>
+                  <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{transactionFee.toLocaleString()} F</span>
                 </div>
                 <div className="border-t border-[#F0F0F0] pt-3 flex items-center justify-between">
-                  <span className="text-[14px] font-bold text-[#1B1818]">Net à payer</span>
-                  <span className="text-[15px] font-bold text-[#1B1818]">{netToPay.toLocaleString()} F</span>
+                  <span className="text-[14px] font-bold text-gray-900 dark:text-white">Net à payer</span>
+                  <span className="text-[15px] font-bold text-gray-900 dark:text-white">{netToPay.toLocaleString()} F</span>
                 </div>
               </div>
 

@@ -426,7 +426,7 @@ export function ChatDetails() {
   }
 
   return (
-    <div className="w-full h-full bg-[#FFFFFF] dark:bg-[#0a0a0b] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }} onClick={() => pickerMsgId && setPickerMsgId(null)}>
+    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }} onClick={() => pickerMsgId && setPickerMsgId(null)}>
       
       {forwardMsg && (
         <ForwardMessageModal 
@@ -436,7 +436,7 @@ export function ChatDetails() {
         />
       )}
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#FFFFFF] dark:bg-[#0a0a0b] border-b border-gray-100 dark:border-white/10 pt-safe-6 pb-2">
+      <div className="sticky top-0 z-10 bg-[var(--color-background-primary)] border-b border-gray-100 dark:border-white/10 pt-safe-6 pb-2">
         <div className="flex items-center px-4">
           <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 dark:bg-[#222222] rounded-full transition-colors active:scale-95">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
@@ -529,7 +529,7 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[#FFFFFF] dark:bg-[#0a0a0b]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[var(--color-background-primary)]">
         {isLoading ? (
           <div className="flex flex-col gap-4 py-4">
             {[1, 2, 3, 4, 5].map(i => {
@@ -544,8 +544,8 @@ export function ChatDetails() {
         ) : !messages || messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2">
             <div className="w-14 h-14 rounded-full bg-orange-50 dark:bg-orange-50/20 flex items-center justify-center text-2xl">💬</div>
-            <p className="text-sm text-gray-400 dark:text-gray-500 dark:text-gray-400">Aucun message pour le moment</p>
-            <p className="text-xs text-gray-300 dark:text-gray-600 dark:text-gray-300">Soyez le premier à écrire !</p>
+            <p className="text-sm text-gray-400 dark:text-gray-400">Aucun message pour le moment</p>
+            <p className="text-xs text-gray-300 dark:text-gray-400">Soyez le premier à écrire !</p>
           </div>
         ) : (
           messages.filter(msg => !localDeletedMessages.includes(msg.id)).map((msg, index) => {
@@ -576,14 +576,14 @@ export function ChatDetails() {
                   {showDateSep && (
                     <div className="flex items-center gap-3 my-4">
                       <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
-                      <span className="text-xs text-gray-400 dark:text-gray-500 dark:text-gray-400 font-medium capitalize px-2">
+                      <span className="text-xs text-gray-400 dark:text-gray-400 font-medium capitalize px-2">
                         {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
                       </span>
                       <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
                     </div>
                   )}
                   <div className="flex justify-center my-2 px-4">
-                    <p className="text-[13px] text-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2a2a2a]/90 dark:bg-[#2A2A2A] px-4 py-2 rounded-full max-w-[90%] leading-snug">
+                    <p className="text-[13px] text-center text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2a2a2a]/90 px-4 py-2 rounded-full max-w-[90%] leading-snug">
                       {msg.content}
                     </p>
                   </div>
@@ -595,7 +595,7 @@ export function ChatDetails() {
               <div key={msg.id}>
                 {showDateSep && (
                   <div className="flex justify-center my-4">
-                    <span className="text-[12px] bg-[#F2F2F2] text-[#8D8D8D] font-medium px-3 py-1 rounded-full">
+                    <span className="text-[12px] bg-[#F2F2F2] dark:bg-[#2A2A2A] text-[#8D8D8D] dark:text-[#A3A3A3] font-medium px-3 py-1 rounded-full">
                       {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
                     </span>
                   </div>
@@ -746,7 +746,7 @@ export function ChatDetails() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 bg-[#FFFFFF] dark:bg-[#0a0a0b] px-4 py-3 flex items-center gap-3 pb-safe-bottom z-10 border-t border-[#F2F2F2]">
+      <div className="flex-shrink-0 bg-[var(--color-background-primary)] px-4 py-3 flex items-center gap-3 pb-safe-bottom z-10 border-t border-[#F2F2F2]">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
         {isRecording ? (
           <div className="flex-1 flex items-center justify-between h-[48px] bg-[#FCFCFC] border border-[#DFDFDF] rounded-full px-[16px] gap-[12px] overflow-hidden relative">

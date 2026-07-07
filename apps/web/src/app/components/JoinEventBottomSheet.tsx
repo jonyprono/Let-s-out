@@ -130,21 +130,21 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
         {/* Custom Header (Fixed) */}
         <div className="flex-none flex items-center justify-between px-[1rem] pt-[1rem] pb-[0.75rem] border-b border-[#E0E0E0] min-h-[56px]">
           <button onClick={onClose} className="w-[32px] h-[32px] flex items-center justify-start active:scale-95 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#1B1818]">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900 dark:text-white">
               <path d="m15 18-6-6 6-6"/>
             </svg>
           </button>
-          <h2 className="font-semibold text-[#1B1818] text-center flex-1 pr-[32px] text-[clamp(14px,4vw,16px)]">Rejoindre l'événement</h2>
+          <h2 className="font-semibold text-gray-900 dark:text-white text-center flex-1 pr-[32px] text-[clamp(14px,4vw,16px)]">Rejoindre l'événement</h2>
         </div>
 
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-y-auto px-[1rem] py-[1.25rem] flex flex-col gap-[1rem]">
           {/* Recap Section */}
           <div className="w-full flex flex-col p-[1rem] rounded-[8px] border border-dashed border-[#CED1D3] gap-[0.75rem]">
-            <span className="font-semibold text-[#1B1818] text-[clamp(14px,4vw,16px)]">{event.title}</span>
+            <span className="font-semibold text-gray-900 dark:text-white text-[clamp(14px,4vw,16px)]">{event.title}</span>
             <div className="flex items-center justify-between border-t border-[#CED1D3] border-dashed pt-[0.75rem]">
-              <span className="font-normal text-[#56514F] text-[clamp(12px,3.5vw,14px)]">Participation</span>
-              <span className="font-normal text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
+              <span className="font-normal text-gray-500 dark:text-gray-400 text-[clamp(12px,3.5vw,14px)]">Participation</span>
+              <span className="font-normal text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)]">
                 {minAmount > 0 ? (
                   <>A partir de <span className="text-[#007BFF] font-bold">{minAmount}F</span></>
                 ) : 'Gratuit'}
@@ -156,16 +156,16 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
           {!isFree && (
             <div className="flex flex-col gap-[1rem] w-full">
               <div className="flex flex-col">
-                <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Montant de votre participation</label>
+                <label className="font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Montant de votre participation</label>
                 <div className="relative w-full">
                   <Input
                     type="number"
                     value={amountStr}
                     onChange={(e) => setAmountStr(e.target.value)}
                     placeholder="0"
-                    className="w-full pr-[60px] min-h-[48px] h-auto rounded-[8px] bg-white dark:bg-[#1A1A1A] border border-[var(--border-default)] text-[#1B1818] font-normal text-[clamp(12px,3.5vw,14px)] placeholder:text-[#BDBDBD] box-border"
+                    className="w-full pr-[60px] min-h-[48px] h-auto rounded-[8px] bg-white dark:bg-[#1A1A1A] border border-[var(--border-default)] text-gray-900 dark:text-white font-normal text-[clamp(12px,3.5vw,14px)] placeholder:text-[#BDBDBD] box-border"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-normal text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 font-normal text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)]">
                     F CFA
                   </span>
                 </div>
@@ -173,10 +173,10 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
               </div>
 
               <div className="flex flex-col">
-                <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Méthode de paiement</label>
+                <label className="font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Méthode de paiement</label>
                 <div className="flex flex-row items-center px-[1rem] py-[0.75rem] gap-[8px] w-full min-h-[48px] h-auto bg-white dark:bg-[#1A1A1A] border border-[var(--border-default)] rounded-[8px] box-border">
                   <img src="/logos/mobile-money.png" alt="Mobile money" className="w-[20px] h-[20px] object-contain shrink-0" />
-                  <span className="flex-1 font-normal text-[#1B1818] text-[clamp(12px,3.5vw,14px)] text-left truncate">Mobile money</span>
+                  <span className="flex-1 font-normal text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)] text-left truncate">Mobile money</span>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#A3A3A3] shrink-0">
                     <path d="m6 9 6 6 6-6"/>
                   </svg>
@@ -184,7 +184,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
               </div>
 
               <div className="flex flex-col">
-                <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Opérateur</label>
+                <label className="font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Opérateur</label>
                 <div className="w-full">
                   <PaymentDropdown
                     options={OPERATORS}
@@ -195,7 +195,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
               </div>
 
               <div className="flex flex-col">
-                <label className="font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Numéro de téléphone</label>
+                <label className="font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Numéro de téléphone</label>
                 <div className="w-full">
                   <PhoneInputField
                     country={country}
@@ -227,7 +227,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
           </Button>
 
           <div className="flex flex-col items-center justify-center gap-[4px] py-[0.5rem] w-full text-center">
-            <div className="flex items-center justify-center gap-[6px] font-medium text-[#1B1818] text-[clamp(12px,3.5vw,14px)]">
+            <div className="flex items-center justify-center gap-[6px] font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)]">
               Sécurisé PCI DSS 
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M1.34844 0C0.990808 0 0.647828 0.142067 0.394948 0.394948C0.142067 0.647828 0 0.990808 0 1.34844V5.3061C0 11.5255 5.28169 13.5833 6.30877 13.9253C6.58912 14.0249 6.89525 14.0249 7.17559 13.9253C8.20267 13.5833 13.4844 11.5255 13.4844 5.3061V1.34844C13.4844 0.99081 13.3423 0.64783 13.0894 0.394948C12.8365 0.142067 12.4936 0 12.1359 0H1.34844Z" fill="#14CD7F"/>

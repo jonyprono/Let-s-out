@@ -52,8 +52,8 @@ export function MessageBubble({
             className={cn(
               "relative px-[var(--spacing-200)] py-[var(--spacing-150)] font-poppins text-[var(--font-size-body-medium)] rounded-[var(--radius-large)]",
               isSender
-                ? "bg-[var(--brand-orange-100)] text-[var(--color-text-primary)] rounded-tr-sm"
-                : "bg-[var(--color-background-secondary)] text-[var(--color-text-primary)] rounded-tl-sm"
+                ? "bg-[var(--brand-orange-100)] text-[#1B1818] dark:bg-[var(--brand-orange-500)] dark:text-white rounded-tr-sm"
+                : "bg-[var(--color-background-secondary)] text-[#1B1818] dark:text-white rounded-tl-sm"
             )}
           >
             {children ? (

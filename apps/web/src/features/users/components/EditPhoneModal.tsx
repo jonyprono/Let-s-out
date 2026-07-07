@@ -223,7 +223,7 @@ export function EditPhoneModal({ onClose }: Props) {
       <div id="recaptcha-container-phone-edit" />
       <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl sm:rounded-3xl p-5 shadow-xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-[#FFFFFF]">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {step === 1 ? t('editPhoneModal.title') || 'Modifier le numéro' : 'Vérification'}
           </h2>
           <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2A2A2A] rounded-full hover:bg-gray-200 dark:hover:bg-[#333333]">

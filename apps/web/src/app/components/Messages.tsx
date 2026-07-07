@@ -200,7 +200,7 @@ export function Messages(_props: MessagesProps) {
                     onClick={() => setActiveFilter(tab.key)}
                     className={`h-[32px] px-[12px] py-[8px] rounded-[1000px] flex items-center justify-center whitespace-nowrap transition-colors ${
                       isActive
-                        ? 'bg-[#FFF2D3] text-[#FF7A00]'
+                        ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
                         : 'bg-[#FAFAFA] dark:bg-[#1A1A1A] text-[#56514F] dark:text-[#a3a3a3]'
                     }`}
                   >
@@ -391,7 +391,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu }: { c
     <button
       onClick={onNavigate}
       onContextMenu={onContextMenu}
-      className="w-full flex flex-row items-center gap-[8px] h-[48px] text-left transition-colors active:bg-gray-50 dark:bg-[#222222] relative"
+      className="w-full flex flex-row items-center gap-[8px] h-[48px] text-left transition-colors hover:bg-gray-50/50 active:bg-gray-50 dark:hover:bg-white/5 dark:active:bg-white/10 relative px-[8px] -mx-[8px] rounded-[12px]"
     >
       {/* Cover */}
       <div className="relative flex-shrink-0 w-[48px] h-[48px] flex justify-center items-center">
