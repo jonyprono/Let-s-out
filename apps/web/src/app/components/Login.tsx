@@ -95,10 +95,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
   return (
     <div className={`${authShell} bg-white overflow-y-auto`}>
-      <div className="flex flex-col min-h-full px-6 pt-6 pb-4">
+      <div className="flex flex-col min-h-full px-4 sm:px-6 py-4 justify-between w-full max-w-[390px] mx-auto">
         
-        {/* Header (Logo + Titres) */}
-        <div className="flex flex-col items-center shrink-0 w-[358px] max-w-full mx-auto gap-[20px] mb-8 mt-4">
+        <div className="flex flex-col justify-center flex-1 w-full pb-4">
+          
+          {/* Header (Logo + Titres) */}
+          <div className="flex flex-col items-center shrink-0 w-full gap-[12px] sm:gap-[20px] mb-6 sm:mb-8">
           {/* Logo */}
           <img 
             src="/logoci.png" 
@@ -107,8 +109,8 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           />
 
           {/* Titres */}
-          <div className="flex flex-col items-center gap-[4px] w-[358px] max-w-full mx-auto">
-            <h1 className="text-center text-[#1B1818] font-poppins text-[24px] font-medium leading-[32px]">
+          <div className="flex flex-col items-center gap-[4px] w-full">
+            <h1 className="text-center text-[#1B1818] font-poppins text-[22px] sm:text-[24px] font-medium leading-tight sm:leading-[32px]">
               Connectez-vous
             </h1>
             <p className="text-center text-[#56514F] font-inter text-[16px] font-normal leading-[24px]">
@@ -118,7 +120,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Formulaire */}
-        <div className="flex flex-col gap-[16px] shrink-0 w-[358px] max-w-full mx-auto">
+        <div className="flex flex-col gap-[12px] sm:gap-[16px] shrink-0 w-full">
           {/* Téléphone */}
           <div className="flex flex-col gap-[4px]">
             <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Numéro de téléphone</label>
@@ -167,7 +169,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           </div>
         </div>
 
-        <div className="mt-6 shrink-0 w-[358px] max-w-full mx-auto">
+        <div className="mt-5 sm:mt-6 shrink-0 w-full">
           {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
           <Button
             type="button"
@@ -180,12 +182,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Séparateur Ou */}
-        <div className="my-4 shrink-0 w-[358px] max-w-full mx-auto">
+        <div className="my-3 sm:my-4 shrink-0 w-full">
           <Divider label="Ou" className="text-[#404040] font-inter text-[12px] font-normal leading-[16px]" />
         </div>
 
         {/* Bouton Google */}
-        <div className="shrink-0 w-[358px] max-w-full mx-auto">
+        <div className="shrink-0 w-full">
           <SocialButton
             provider="google"
             onClick={handleGoogleLogin}
@@ -195,11 +197,11 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             {googleLoading ? 'Connexion avec Google...' : 'Se connecter avec Google'}
           </SocialButton>
         </div>
-
-        <div className="flex-1 min-h-0" />
+        
+        </div>
 
         {/* Bas de page */}
-        <div className="flex flex-col justify-end shrink-0 w-[358px] max-w-full mx-auto pb-4 gap-4">
+        <div className="flex flex-col justify-end shrink-0 w-full mt-auto gap-3 sm:gap-4">
 
           <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 
