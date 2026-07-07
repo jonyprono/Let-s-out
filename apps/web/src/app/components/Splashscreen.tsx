@@ -71,10 +71,24 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
   return (
     <div
-      className="w-full h-full flex flex-col relative overflow-y-auto overflow-x-hidden"
+      className="w-full h-full flex flex-col flex-1 relative overflow-y-auto overflow-x-hidden"
       style={{ backgroundColor: '#FFFFFF' }}
     >
-      <div className="flex flex-col min-h-full px-6 pt-6 pb-3 justify-between w-full max-w-[390px] mx-auto">
+      <div className="flex flex-col min-h-full px-6 pt-4 pb-3 justify-between w-full max-w-[390px] mx-auto">
+
+      {/* ── En-tête (Passer) ──────────────────────────────────── */}
+      {currentIndex > 0 && (
+        <div className="w-[342px] max-w-full mx-auto flex justify-end items-center h-[36px] shrink-0 z-20 relative">
+          {currentIndex === 1 && (
+            <button 
+              onClick={onComplete} 
+              className="flex items-center gap-1 font-poppins text-[14px] font-medium text-[#525252] focus:outline-none hover:opacity-75"
+            >
+              Passer <span className="text-[#A3A3A3] text-[12px] font-bold tracking-tighter">>></span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── Contenu principal ───────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center w-full relative z-10 pb-4">
@@ -109,22 +123,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
               transition={{ duration: 0.28, ease: 'easeOut' }}
               className="flex flex-col items-center w-full"
             >
-              {/* Wrapper shadow — séparé du clip pour éviter le débordement */}
-              {/* Passer > button for Slide 1 */}
-              {current.id === 1 && (
-                <div className="w-[342px] max-w-full mx-auto flex justify-end items-center gap-[107px] mb-8 shrink-0">
-                   <button 
-                     onClick={onComplete} 
-                     className="flex items-center gap-[4px] px-1 py-2 font-poppins text-[14px] font-medium text-[#525252] focus:outline-none hover:opacity-75"
-                   >
-                     Passer
-                     <div className="w-5 h-5 rounded-full border-[1.25px] border-[#A3A3A3] ml-1 flex-shrink-0" />
-                   </button>
-                </div>
-              )}
-              {current.id !== 1 && (
-                <div className="w-[342px] max-w-full mb-8 h-[36px] shrink-0" />
-              )}
+              {/* Removed old Passer button */}
 
               {/* Wrapper shadow — centré avec dimension exacte */}
               <div
