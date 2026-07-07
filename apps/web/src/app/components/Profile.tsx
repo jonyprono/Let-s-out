@@ -404,8 +404,7 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
 
   const attendeesCount = event?.currentAttendees || 0;
   
-  // Fake colors for avatars
-  const colors = ['#FF991C', '#3B82F6', '#EC4899', '#10B981'];
+  // Fake colors for avatars removed as we now use real avatars
 
   return (
     <div 
@@ -442,7 +441,7 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
                {(event?.attendees?.slice(0, 3) || [{}, {}, {}]).map((att: any, i: number) => (
                  <div key={i} className="w-5 h-5 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center overflow-hidden" style={{ zIndex: 3 - i }}>
                    {att?.user?.profile?.avatarUrl || att?.user?.avatarUrl || att?.avatarUrl ? (
-                     <SafeImage src={att?.user?.profile?.avatarUrl || att?.user?.avatarUrl || att?.avatarUrl} className="w-full h-full object-cover" />
+                     <SafeImage src={att?.user?.profile?.avatarUrl || att?.user?.avatarUrl || att?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                    ) : (
                      <User className="w-3 h-3 text-gray-500" />
                    )}

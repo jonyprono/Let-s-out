@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Shield, Loader2, ArrowLeft, MessageCircle, Phone, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Shield, Loader2, ArrowLeft, Phone, Eye, EyeOff, CheckCircle } from 'lucide-react'
 import { isFieldValid } from '@/lib/validation'
 import { apiClient } from '@/lib/api-client'
 import { auth } from '@/lib/firebase'
