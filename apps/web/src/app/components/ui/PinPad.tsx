@@ -52,7 +52,7 @@ export function PinPad({
   }
 
   return (
-    <div className="flex flex-col items-center justify-between w-full h-full pb-8">
+    <div className="flex flex-col items-center w-full flex-1 pb-8">
       <div className="text-center mt-6 mb-8">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{title}</h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm">{subtitle}</p>
@@ -108,7 +108,7 @@ export function PinPad({
       </div>
 
       {footer && (
-        <div className="mt-8 w-full text-center">
+        <div className="mt-auto pt-8 w-full text-center">
           {footer}
         </div>
       )}

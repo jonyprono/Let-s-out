@@ -187,7 +187,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="w-full max-w-[400px] h-[500px]"
+            className="w-full max-w-[400px] flex flex-col flex-1"
           >
             {step === 'VERIFY' && (
               <PinPad 
