@@ -70,8 +70,9 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         callback_url: `${process.env.PUBLIC_API_URL}/api/v1/payments/fedapay/callback`,
         customer: {
           firstname: user.profile?.displayName?.split(' ')[0] || 'Utilisateur',
-          lastname: user.profile?.displayName?.split(' ').slice(1).join(' ') || '',
-          phone_number: { number: user.phone?.replace(/^\+229/, '') || '', country: 'BJ' },
+          lastname: user.profile?.displayName?.split(' ').slice(1).join(' ') || 'Anonyme',
+          email: user.email || `${user.id}@letsout.app`,
+          ...(user.phone ? { phone_number: { number: user.phone.replace(/^\+229/, ''), country: 'BJ' } } : {}),
         },
         metadata: JSON.stringify({ eventId, userId: sub }),
       }),
