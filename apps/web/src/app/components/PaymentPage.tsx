@@ -134,23 +134,35 @@ export function PaymentPage() {
             },
           }).open()
 
-          // Convert FedaPay overlay to bottom sheet
-          setTimeout(() => {
+          // Convert FedaPay overlay to bottom sheet using a robust poller
+          let attempts = 0;
+          const styleInterval = setInterval(() => {
+            attempts++;
+            if (attempts > 20) {
+              clearInterval(styleInterval);
+              return;
+            }
+
             // Find FedaPay's fixed overlay (direct child of body)
             const fedaEl = Array.from(document.querySelectorAll('body > div')).find(el => {
               const s = window.getComputedStyle(el);
-              return s.position === 'fixed' && parseInt(s.zIndex || '0') > 100;
+              return s.position === 'fixed' && parseInt(s.zIndex || '0') > 100 && el.id !== 'fedapay-backdrop';
             }) as HTMLElement | undefined;
 
-            if (fedaEl) {
+            if (fedaEl && !fedaEl.dataset.styledAsSheet) {
+              clearInterval(styleInterval);
+              fedaEl.dataset.styledAsSheet = 'true';
+
               // Create a dark backdrop above the content but below the sheet
-              const backdrop = document.createElement('div');
-              backdrop.id = 'fedapay-backdrop';
-              backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;transition:opacity 0.3s;';
-              backdrop.onclick = () => {
-                fedaEl.click?.();
-              };
-              document.body.appendChild(backdrop);
+              if (!document.getElementById('fedapay-backdrop')) {
+                const backdrop = document.createElement('div');
+                backdrop.id = 'fedapay-backdrop';
+                backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;transition:opacity 0.3s;';
+                backdrop.onclick = () => {
+                  fedaEl.click?.();
+                };
+                document.body.appendChild(backdrop);
+              }
 
               // Style the FedaPay container as a bottom sheet
               fedaEl.style.cssText = [
@@ -160,8 +172,8 @@ export function PaymentPage() {
                 'left: 0 !important',
                 'right: 0 !important',
                 'width: 100% !important',
-                'height: 88vh !important',
-                'max-height: 88vh !important',
+                'height: 85dvh !important',
+                'max-height: 85dvh !important',
                 'border-radius: 20px 20px 0 0 !important',
                 'overflow: hidden !important',
                 'z-index: 9999 !important',
@@ -188,7 +200,7 @@ export function PaymentPage() {
                 iframe.style.cssText = 'width:100%!important;height:100%!important;border:none!important;';
               }
             }
-          }, 400)
+          }, 100)
         }
       }
     } catch (err: any) {

@@ -110,18 +110,30 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
             },
           }).open()
 
-          // Convert FedaPay overlay to bottom sheet
-          setTimeout(() => {
+          // Convert FedaPay overlay to bottom sheet using a robust poller
+          let attempts = 0;
+          const styleInterval = setInterval(() => {
+            attempts++;
+            if (attempts > 20) {
+              clearInterval(styleInterval);
+              return;
+            }
+
             const fedaEl = Array.from(document.querySelectorAll('body > div')).find(el => {
               const s = window.getComputedStyle(el);
-              return s.position === 'fixed' && parseInt(s.zIndex || '0') > 100;
+              return s.position === 'fixed' && parseInt(s.zIndex || '0') > 100 && el.id !== 'fedapay-backdrop';
             }) as HTMLElement | undefined;
 
-            if (fedaEl) {
-              const backdrop = document.createElement('div');
-              backdrop.id = 'fedapay-backdrop';
-              backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;';
-              document.body.appendChild(backdrop);
+            if (fedaEl && !fedaEl.dataset.styledAsSheet) {
+              clearInterval(styleInterval);
+              fedaEl.dataset.styledAsSheet = 'true';
+
+              if (!document.getElementById('fedapay-backdrop')) {
+                const backdrop = document.createElement('div');
+                backdrop.id = 'fedapay-backdrop';
+                backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;';
+                document.body.appendChild(backdrop);
+              }
 
               fedaEl.style.cssText = [
                 'position: fixed !important',
@@ -130,8 +142,8 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
                 'left: 0 !important',
                 'right: 0 !important',
                 'width: 100% !important',
-                'height: 88vh !important',
-                'max-height: 88vh !important',
+                'height: 85dvh !important',
+                'max-height: 85dvh !important',
                 'border-radius: 20px 20px 0 0 !important',
                 'overflow: hidden !important',
                 'z-index: 9999 !important',
@@ -156,7 +168,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
                 iframe.style.cssText = 'width:100%!important;height:100%!important;border:none!important;';
               }
             }
-          }, 400)
+          }, 100)
 
         }
       }
