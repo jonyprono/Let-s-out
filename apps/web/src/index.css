@@ -1,0 +1,3 @@
+
+/* FedaPay Mobile Fix */
+#fedapay-checkout-iframe, iframe[name='fedapay-checkout-iframe'] { padding-top: env(safe-area-inset-top, 40px) !important; }

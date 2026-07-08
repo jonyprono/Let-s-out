@@ -22,7 +22,7 @@ export function WalletPinManager({ onVerified }: WalletPinManagerProps) {
   const { data: status, isLoading } = useQuery({
     queryKey: ['wallet-pin-status'],
     queryFn: async () => {
-      const res = await apiClient.get<{ isConfigured: boolean }>('/pin/status')
+      const res = await apiClient.get<{ isConfigured: boolean }>('/wallet/pin/status')
       return res.data
     }
   })
@@ -35,7 +35,7 @@ export function WalletPinManager({ onVerified }: WalletPinManagerProps) {
 
   const verifyMutation = useMutation({
     mutationFn: async (p: string) => {
-      const res = await apiClient.post<{ success: boolean; token: string }>('/pin/verify', { pin: p })
+      const res = await apiClient.post<{ success: boolean; token: string }>('/wallet/pin/verify', { pin: p })
       return res.data
     },
     onSuccess: (data) => {
@@ -49,7 +49,7 @@ export function WalletPinManager({ onVerified }: WalletPinManagerProps) {
 
   const setupMutation = useMutation({
     mutationFn: async (p: string) => {
-      const res = await apiClient.post<{ success: boolean; token: string }>('/pin/setup', { pin: p })
+      const res = await apiClient.post<{ success: boolean; token: string }>('/wallet/pin/setup', { pin: p })
       return res.data
     },
     onSuccess: (data) => {

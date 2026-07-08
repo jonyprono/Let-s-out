@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Lock } from 'lucide-react'
 import { WalletPinManager } from './WalletPinManager'
+import { useAuthStore } from '@/stores/auth.store'
 
 interface WalletData {
   id: string
@@ -28,6 +29,7 @@ interface WalletTransaction {
 
 export function Wallet() {
   const queryClient = useQueryClient()
+  const user = useAuthStore((s) => s.user)
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
   const [pinToken, setPinToken] = useState<string | null>(null)
 
@@ -91,6 +93,31 @@ export function Wallet() {
   }
 
   const navigate = useNavigate()
+
+  if (user?.profile?.kycStatus !== 'verified') {
+    return (
+      <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full`}>
+        <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 h-14 flex items-center border-b border-gray-100 dark:border-gray-800">
+          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+            <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
+          </button>
+          <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Mon Portefeuille</h1>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <Lock className="w-8 h-8 text-gray-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Accès restreint</h2>
+          <p className="text-gray-500 dark:text-gray-400">
+            Votre profil n'est pas encore vérifié. Vous devez vérifier votre identité pour accéder au portefeuille.
+          </p>
+          <Button onClick={() => navigate('/settings')} className="mt-4 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] h-12 px-6">
+            Vérifier mon profil
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   if (!pinToken) {
     return <WalletPinManager onVerified={setPinToken} />
