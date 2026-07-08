@@ -90,10 +90,15 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       { method: 'POST', headers: { Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}` } },
     )
     const tokenData = (await tokenRes.json()) as any
+    const finalToken = tokenData['v1/token']?.token || tokenData.v1?.token || tokenData.token
+
+    if (!finalToken) {
+      return reply.code(500).send({ error: `FedaPay token extraction failed. Response: ${JSON.stringify(tokenData)}` })
+    }
 
     return reply.send({
       devMode: false,
-      transactionToken: tokenData.token,
+      transactionToken: finalToken,
       publicKey: process.env.FEDAPAY_PUBLIC_KEY,
       amount: finalAmount,
       currency: event.currency || 'XOF',
