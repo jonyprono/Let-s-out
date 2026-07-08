@@ -102,11 +102,61 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
               if (resp.reason === FedaPay.DIALOG_DISMISSED) {
                 toast.error('Paiement annulé')
                 setIsProcessing(false)
+                document.getElementById('fedapay-backdrop')?.remove()
               } else {
+                document.getElementById('fedapay-backdrop')?.remove()
                 onPaymentSuccess()
               }
             },
           }).open()
+
+          // Convert FedaPay overlay to bottom sheet
+          setTimeout(() => {
+            const fedaEl = Array.from(document.querySelectorAll('body > div')).find(el => {
+              const s = window.getComputedStyle(el);
+              return s.position === 'fixed' && parseInt(s.zIndex || '0') > 100;
+            }) as HTMLElement | undefined;
+
+            if (fedaEl) {
+              const backdrop = document.createElement('div');
+              backdrop.id = 'fedapay-backdrop';
+              backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;';
+              document.body.appendChild(backdrop);
+
+              fedaEl.style.cssText = [
+                'position: fixed !important',
+                'top: auto !important',
+                'bottom: 0 !important',
+                'left: 0 !important',
+                'right: 0 !important',
+                'width: 100% !important',
+                'height: 88vh !important',
+                'max-height: 88vh !important',
+                'border-radius: 20px 20px 0 0 !important',
+                'overflow: hidden !important',
+                'z-index: 9999 !important',
+                'box-shadow: 0 -8px 32px rgba(0,0,0,0.25) !important',
+                'animation: slideUpSheet 0.35s cubic-bezier(0.32,0.72,0,1) !important',
+              ].join(';');
+
+              if (!document.getElementById('fedapay-sheet-style')) {
+                const styleEl = document.createElement('style');
+                styleEl.id = 'fedapay-sheet-style';
+                styleEl.textContent = `
+                  @keyframes slideUpSheet {
+                    from { transform: translateY(100%); }
+                    to   { transform: translateY(0); }
+                  }
+                `;
+                document.head.appendChild(styleEl);
+              }
+
+              const iframe = fedaEl.querySelector('iframe') as HTMLElement | null;
+              if (iframe) {
+                iframe.style.cssText = 'width:100%!important;height:100%!important;border:none!important;';
+              }
+            }
+          }, 400)
 
         }
       }
