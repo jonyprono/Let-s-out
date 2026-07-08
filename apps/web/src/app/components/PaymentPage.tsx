@@ -132,20 +132,39 @@ export function PaymentPage() {
           }).open()
 
           // FedaPay Mobile Overlap Fix
-          setTimeout(() => {
-            const bodyChildren = document.body.children;
-            for (let i = bodyChildren.length - 1; i >= 0; i--) {
-              const el = bodyChildren[i] as HTMLElement;
-              if (el.tagName === 'DIV' || el.tagName === 'IFRAME') {
-                const style = window.getComputedStyle(el);
-                if (style.position === 'fixed' && parseInt(style.zIndex || '0') > 100) {
-                  el.style.setProperty('top', '48px', 'important');
-                  el.style.setProperty('height', 'calc(100% - 48px)', 'important');
-                  break;
+          const observer = new MutationObserver((mutations) => {
+            mutations.forEach(mutation => {
+              mutation.addedNodes.forEach(node => {
+                if (node.nodeType === 1) {
+                  const el = node as HTMLElement;
+                  
+                  // Try styling iframe
+                  if (el.tagName === 'IFRAME') {
+                    el.style.setProperty('margin-top', '48px', 'important');
+                    el.style.setProperty('height', 'calc(100% - 48px)', 'important');
+                  } else {
+                    const iframes = el.querySelectorAll('iframe');
+                    iframes.forEach(iframe => {
+                      iframe.style.setProperty('margin-top', '48px', 'important');
+                      iframe.style.setProperty('height', 'calc(100% - 48px)', 'important');
+                    });
+                  }
+
+                  // Also style the wrapper if it has high z-index
+                  if (el.tagName === 'DIV') {
+                    const style = window.getComputedStyle(el);
+                    if (style.position === 'fixed' || style.position === 'absolute') {
+                       if (parseInt(style.zIndex || '0') > 50) {
+                         el.style.setProperty('padding-top', '48px', 'important');
+                       }
+                    }
+                  }
                 }
-              }
-            }
-          }, 800)
+              })
+            })
+          });
+          observer.observe(document.body, { childList: true, subtree: true });
+          setTimeout(() => observer.disconnect(), 15000);
         }
       }
     } catch (err: any) {
