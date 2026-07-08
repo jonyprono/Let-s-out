@@ -45,30 +45,6 @@ export default async function walletRoutes(app: FastifyInstance) {
     return reply.send({ success: true, token })
   })
 
-  app.post('/pin/change', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const { sub } = req.user as { sub: string }
-    const { oldPin, newPin } = req.body as { oldPin: string, newPin: string }
-    
-    if (!newPin || newPin.length !== 5) return reply.code(400).send({ error: 'Le nouveau code PIN doit contenir exactement 5 chiffres' })
-
-    const user = await app.prisma.user.findUnique({ where: { id: sub } })
-    if (!user?.walletPinHash) return reply.code(400).send({ error: 'Aucun code PIN à modifier' })
-
-    const valid = await bcrypt.compare(oldPin, user.walletPinHash)
-    if (!valid) return reply.code(400).send({ error: 'Ancien code PIN incorrect' })
-
-    const salt = await bcrypt.genSalt(10)
-    const hash = await bcrypt.hash(newPin, salt)
-
-    await app.prisma.user.update({
-      where: { id: sub },
-      data: { walletPinHash: hash, walletPinSalt: salt }
-    })
-    
-    const token = app.jwt.sign({ sub, purpose: 'wallet_access' }, { expiresIn: '15m' })
-    return reply.send({ success: true, token })
-  })
-
   app.post('/pin/verify', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
     const { pin } = req.body as { pin: string }
