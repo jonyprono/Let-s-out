@@ -107,6 +107,22 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
               }
             },
           }).open()
+
+          // FedaPay Mobile Overlap Fix
+          setTimeout(() => {
+            const bodyChildren = document.body.children;
+            for (let i = bodyChildren.length - 1; i >= 0; i--) {
+              const el = bodyChildren[i] as HTMLElement;
+              if (el.tagName === 'DIV' || el.tagName === 'IFRAME') {
+                const style = window.getComputedStyle(el);
+                if (style.position === 'fixed' && parseInt(style.zIndex || '0') > 100) {
+                  el.style.setProperty('top', '48px', 'important');
+                  el.style.setProperty('height', 'calc(100% - 48px)', 'important');
+                  break;
+                }
+              }
+            }
+          }, 800)
         }
       }
     } catch (err: any) {
