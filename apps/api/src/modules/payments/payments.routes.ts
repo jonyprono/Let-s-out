@@ -78,7 +78,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       }),
     })
     const txData = (await txRes.json()) as any
-    if (!txRes.ok) return reply.code(500).send({ error: txData.message || 'Erreur FedaPay' })
+    if (!txRes.ok) return reply.code(500).send({ error: `FedaPay: ${JSON.stringify(txData)}` })
 
     const tokenRes = await fetch(
       `https://api.fedapay.com/v1/transactions/${txData.v1.transaction.id}/token`,
