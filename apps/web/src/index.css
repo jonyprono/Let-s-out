@@ -1,6 +1,8 @@
 
 /* FedaPay Mobile Safe-Area Fix */
-/* Target any fixed overlay injected by FedaPay into the body */
+/* On mobile, FedaPay switches to a full-screen native-like layout with its own
+   header bar. The iframe starts at y=0 so it overlaps the status bar.
+   Fix: push the FedaPay container DOWN by 48px using top, not padding-top. */
 @media (max-width: 768px) {
   /* FedaPay named iframes */
   iframe[src*='fedapay'], 
@@ -13,26 +15,16 @@
   }
 
   /* Any fixed-positioned div injected directly into body (FedaPay pattern) */
-  body > div[style*="z-index: 9"],
-  body > div[style*="z-index:9"],
-  body > div[style*="z-index: 99"],
-  body > div[style*="z-index: 999"],
-  body > div[style*="z-index: 9999"],
   body > div[style*="position: fixed"],
   body > div[style*="position:fixed"] {
-    padding-top: 48px !important;
-    box-sizing: border-box !important;
+    top: 48px !important;
+    height: calc(100% - 48px) !important;
   }
 
   body > div[style*="position: fixed"] > iframe,
-  body > div[style*="position:fixed"] > iframe,
-  body > div[style*="z-index: 9"] > iframe,
-  body > div[style*="z-index:9"] > iframe,
-  body > div[style*="z-index: 99"] > iframe,
-  body > div[style*="z-index: 999"] > iframe,
-  body > div[style*="z-index: 9999"] > iframe {
-    height: calc(100% - 48px) !important;
-    max-height: calc(100% - 48px) !important;
+  body > div[style*="position:fixed"] > iframe {
+    height: 100% !important;
+    max-height: 100% !important;
   }
 }
 

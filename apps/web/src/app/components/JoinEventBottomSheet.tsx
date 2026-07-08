@@ -108,29 +108,38 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
             },
           }).open()
 
-          // FedaPay Mobile Overlap Fix: inject a persistent style tag
+          // FedaPay Mobile Overlap Fix: inject a persistent style tag + JS fallback
           const existingFix = document.getElementById('fedapay-safe-area-fix');
           if (!existingFix) {
             const fixStyle = document.createElement('style');
             fixStyle.id = 'fedapay-safe-area-fix';
             fixStyle.innerHTML = `
-              /* Push FedaPay modal below status bar */
-              body > div[style*="z-index"],
-              body > div[style*="position: fixed"],
-              body > div[style*="position:fixed"] {
-                padding-top: 48px !important;
-                box-sizing: border-box !important;
-              }
-              body > div[style*="z-index"] > iframe,
-              body > div[style*="position: fixed"] > iframe,
-              body > div[style*="position:fixed"] > iframe,
-              body > iframe {
-                height: calc(100% - 48px) !important;
-                max-height: calc(100% - 48px) !important;
+              @media (max-width: 768px) {
+                body > div[style*="position: fixed"],
+                body > div[style*="position:fixed"] {
+                  top: 48px !important;
+                  height: calc(100% - 48px) !important;
+                }
+                body > div[style*="position: fixed"] > iframe,
+                body > div[style*="position:fixed"] > iframe {
+                  height: 100% !important;
+                  max-height: 100% !important;
+                }
               }
             `;
             document.head.appendChild(fixStyle);
           }
+          // JS fallback: directly set top on any new fixed element
+          setTimeout(() => {
+            const allDivs = Array.from(document.querySelectorAll('body > div'));
+            allDivs.forEach(el => {
+              const computed = window.getComputedStyle(el);
+              if (computed.position === 'fixed' && parseInt(computed.zIndex || '0') > 50) {
+                (el as HTMLElement).style.setProperty('top', '48px', 'important');
+                (el as HTMLElement).style.setProperty('height', 'calc(100% - 48px)', 'important');
+              }
+            });
+          }, 300);
         }
       }
     } catch (err: any) {
