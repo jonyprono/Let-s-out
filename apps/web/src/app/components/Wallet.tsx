@@ -10,6 +10,7 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router'
 import { ChevronLeft } from 'lucide-react'
+import { WalletPinManager } from './WalletPinManager'
 
 interface WalletData {
   id: string
@@ -28,21 +29,26 @@ interface WalletTransaction {
 export function Wallet() {
   const queryClient = useQueryClient()
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
+  const [pinToken, setPinToken] = useState<string | null>(null)
 
   // Fetch Wallet Balance
   const { data: wallet, isLoading: isLoadingWallet } = useQuery({
-    queryKey: ['wallet'],
+    queryKey: ['wallet', pinToken],
     queryFn: async () => {
-      const res = await apiClient.get<{ data: WalletData }>('/wallet')
+      if (!pinToken) return null
+      const res = await apiClient.get<{ data: WalletData }>('/wallet', { headers: { 'x-wallet-pin-token': pinToken } })
       return res.data.data
     },
+    enabled: !!pinToken,
+    enabled: !!pinToken,
   })
 
   // Fetch Transactions
   const { data: transactions, isLoading: isLoadingTx } = useQuery({
-    queryKey: ['wallet-transactions'],
+    queryKey: ['wallet-transactions', pinToken],
     queryFn: async () => {
-      const res = await apiClient.get<{ data: WalletTransaction[] }>('/wallet/transactions')
+      if (!pinToken) return null
+      const res = await apiClient.get<{ data: WalletTransaction[] }>('/wallet/transactions', { headers: { 'x-wallet-pin-token': pinToken } })
       return res.data.data
     },
   })
@@ -50,7 +56,7 @@ export function Wallet() {
   // Payout Mutation
   const withdrawMutation = useMutation({
     mutationFn: async (payload: { amount: number; phone: string; network: string }) => {
-      const res = await apiClient.post('/wallet/payout', payload)
+      const res = await apiClient.post('/wallet/payout', payload, { headers: { 'x-wallet-pin-token': pinToken } })
       return res.data
     },
     onSuccess: () => {
@@ -85,6 +91,10 @@ export function Wallet() {
   }
 
   const navigate = useNavigate()
+
+  if (!pinToken) {
+    return <WalletPinManager onVerified={setPinToken} />
+  }
 
   return (
     <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full overflow-y-auto`}>

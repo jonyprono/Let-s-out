@@ -20,6 +20,11 @@ model User {
   updatedAt        DateTime             @updatedAt
   deletedAt        DateTime?
 
+  walletPinHash        String?
+  walletPinSalt        String?
+  walletPinAttempts    Int                  @default(0)
+  walletPinLockedUntil DateTime?
+
   lastSeenAt       DateTime?
   badges           UserBadge[]
   bookings         Booking[]
