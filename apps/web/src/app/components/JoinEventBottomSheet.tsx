@@ -108,27 +108,6 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
             },
           }).open()
 
-          // FedaPay Mobile Overlap Fix: nuclear option
-          // Directly rewrite the style attribute string every 50ms to defeat any !important inline styles
-          if (window.innerWidth <= 900) {
-            const forceFedaPayDown = () => {
-              const divs = document.querySelectorAll('body > div');
-              divs.forEach(node => {
-                const el = node as HTMLElement;
-                const styleAttr = el.getAttribute('style') || '';
-                const isFixed = styleAttr.includes('fixed') || window.getComputedStyle(el).position === 'fixed';
-                if (isFixed) {
-                  let newStyle = styleAttr
-                    .replace(/top\s*:[^;]+;?/gi, '')
-                    .replace(/height\s*:[^;]+;?/gi, '');
-                  newStyle += '; top: 48px; height: calc(100% - 48px);';
-                  el.setAttribute('style', newStyle);
-                }
-              });
-            };
-            const fixInterval = setInterval(forceFedaPayDown, 50);
-            setTimeout(() => clearInterval(fixInterval), 20000);
-          }
         }
       }
     } catch (err: any) {
