@@ -531,6 +531,7 @@ export function Signup({ onBack }: SignupProps) {
                   ref={(el) => { otpRefs.current[i] = el }}
                   type="text"
                   inputMode="numeric"
+                  autoComplete="one-time-code"
                   maxLength={1}
                   value={d}
                   onChange={(e) => handleOtpChange(i, e.target.value)}

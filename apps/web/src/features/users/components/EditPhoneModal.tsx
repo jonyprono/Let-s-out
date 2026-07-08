@@ -275,7 +275,7 @@ export function EditPhoneModal({ onClose }: Props) {
                 {otp.map((d, i) => (
                   <input
                     key={i} ref={el => { otpRefs.current[i] = el; }}
-                    type="text" inputMode="numeric" maxLength={1} value={d}
+                    type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={1} value={d}
                     onChange={e => handleOtpChange(i, e.target.value)}
                     onKeyDown={e => handleOtpKey(i, e)}
                     className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white dark:bg-[#222222] text-gray-900 dark:text-white
