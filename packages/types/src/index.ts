@@ -44,6 +44,7 @@ export interface Profile {
   latitude?: number
   longitude?: number
   birthDate?: string
+  kycStatus?: string
   interests: string[]
   isPublic: boolean
   followersCount: number
