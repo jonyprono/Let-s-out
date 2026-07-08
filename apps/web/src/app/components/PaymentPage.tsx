@@ -131,40 +131,29 @@ export function PaymentPage() {
             },
           }).open()
 
-          // FedaPay Mobile Overlap Fix
-          const observer = new MutationObserver((mutations) => {
-            mutations.forEach(mutation => {
-              mutation.addedNodes.forEach(node => {
-                if (node.nodeType === 1) {
-                  const el = node as HTMLElement;
-                  
-                  // Try styling iframe
-                  if (el.tagName === 'IFRAME') {
-                    el.style.setProperty('margin-top', '48px', 'important');
-                    el.style.setProperty('height', 'calc(100% - 48px)', 'important');
-                  } else {
-                    const iframes = el.querySelectorAll('iframe');
-                    iframes.forEach(iframe => {
-                      iframe.style.setProperty('margin-top', '48px', 'important');
-                      iframe.style.setProperty('height', 'calc(100% - 48px)', 'important');
-                    });
-                  }
-
-                  // Also style the wrapper if it has high z-index
-                  if (el.tagName === 'DIV') {
-                    const style = window.getComputedStyle(el);
-                    if (style.position === 'fixed' || style.position === 'absolute') {
-                       if (parseInt(style.zIndex || '0') > 50) {
-                         el.style.setProperty('padding-top', '48px', 'important');
-                       }
-                    }
-                  }
-                }
-              })
-            })
-          });
-          observer.observe(document.body, { childList: true, subtree: true });
-          setTimeout(() => observer.disconnect(), 15000);
+          // FedaPay Mobile Overlap Fix: inject a persistent style tag
+          const existingFix = document.getElementById('fedapay-safe-area-fix');
+          if (!existingFix) {
+            const style = document.createElement('style');
+            style.id = 'fedapay-safe-area-fix';
+            style.innerHTML = `
+              /* Push FedaPay modal below status bar */
+              body > div[style*="z-index"],
+              body > div[style*="position: fixed"],
+              body > div[style*="position:fixed"] {
+                padding-top: 48px !important;
+                box-sizing: border-box !important;
+              }
+              body > div[style*="z-index"] > iframe,
+              body > div[style*="position: fixed"] > iframe,
+              body > div[style*="position:fixed"] > iframe,
+              body > iframe {
+                height: calc(100% - 48px) !important;
+                max-height: calc(100% - 48px) !important;
+              }
+            `;
+            document.head.appendChild(style);
+          }
         }
       }
     } catch (err: any) {

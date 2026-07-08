@@ -1,11 +1,38 @@
 
-/* FedaPay Mobile Fix */
+/* FedaPay Mobile Safe-Area Fix */
+/* Target any fixed overlay injected by FedaPay into the body */
 @media (max-width: 768px) {
+  /* FedaPay named iframes */
   iframe[src*='fedapay'], 
   iframe[id*='fedapay'],
   iframe[name*='fedapay'],
-  div[id*='fedapay'] { 
+  div[id*='fedapay'],
+  div[class*='fedapay'] { 
     top: 48px !important;
     height: calc(100% - 48px) !important;
   }
+
+  /* Any fixed-positioned div injected directly into body (FedaPay pattern) */
+  body > div[style*="z-index: 9"],
+  body > div[style*="z-index:9"],
+  body > div[style*="z-index: 99"],
+  body > div[style*="z-index: 999"],
+  body > div[style*="z-index: 9999"],
+  body > div[style*="position: fixed"],
+  body > div[style*="position:fixed"] {
+    padding-top: 48px !important;
+    box-sizing: border-box !important;
+  }
+
+  body > div[style*="position: fixed"] > iframe,
+  body > div[style*="position:fixed"] > iframe,
+  body > div[style*="z-index: 9"] > iframe,
+  body > div[style*="z-index:9"] > iframe,
+  body > div[style*="z-index: 99"] > iframe,
+  body > div[style*="z-index: 999"] > iframe,
+  body > div[style*="z-index: 9999"] > iframe {
+    height: calc(100% - 48px) !important;
+    max-height: calc(100% - 48px) !important;
+  }
 }
+
