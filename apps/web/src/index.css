@@ -1,6 +1,8 @@
 
 /* FedaPay Mobile Fix */
-#fedapay-checkout-iframe, iframe[name='fedapay-checkout-iframe'] { 
-  top: env(safe-area-inset-top, 40px) !important;
-  height: calc(100% - env(safe-area-inset-top, 40px)) !important;
+@media (max-width: 768px) {
+  #fedapay-checkout-iframe, iframe[name='fedapay-checkout-iframe'] { 
+    top: 48px !important;
+    height: calc(100% - 48px) !important;
+  }
 }
