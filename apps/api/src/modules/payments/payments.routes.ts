@@ -80,7 +80,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     const txData = (await txRes.json()) as any
     if (!txRes.ok) return reply.code(500).send({ error: `FedaPay: ${JSON.stringify(txData)}` })
 
-    const transactionId = txData.v1?.transaction?.id || txData.transaction?.id || txData.id
+    const transactionId = txData['v1/transaction']?.id || txData.v1?.transaction?.id || txData.transaction?.id || txData.id
     if (!transactionId) {
       return reply.code(500).send({ error: `No transaction id found. FedaPay response: ${JSON.stringify(txData)}` })
     }
