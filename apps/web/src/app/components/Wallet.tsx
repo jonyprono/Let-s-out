@@ -40,7 +40,6 @@ export function Wallet() {
       return res.data.data
     },
     enabled: !!pinToken,
-    enabled: !!pinToken,
   })
 
   // Fetch Transactions
@@ -51,6 +50,7 @@ export function Wallet() {
       const res = await apiClient.get<{ data: WalletTransaction[] }>('/wallet/transactions', { headers: { 'x-wallet-pin-token': pinToken } })
       return res.data.data
     },
+    enabled: !!pinToken,
   })
 
   // Payout Mutation
