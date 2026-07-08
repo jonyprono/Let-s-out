@@ -41,6 +41,7 @@ async function bootstrap() {
   await app.register(import('./modules/chat/upload.routes'), { prefix: '/api/v1/chat' })
   await app.register(import('./modules/notifications/notifications.routes'), { prefix: '/api/v1/notifications' })
   await app.register(import('./modules/payments/payments.routes'), { prefix: '/api/v1/payments' })
+  await app.register(import('./modules/payments/wallet.routes'), { prefix: '/api/v1/wallet' })
   await app.register(import('./modules/admin/admin.routes'), { prefix: '/api/v1/admin' })
 
   // ── Health ─────────────────────────────────────────────────────

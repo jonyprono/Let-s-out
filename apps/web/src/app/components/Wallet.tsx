@@ -97,7 +97,7 @@ export function Wallet() {
   if (user?.profile?.kycStatus !== 'verified') {
     return (
       <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full`}>
-        <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 h-14 flex items-center border-b border-gray-100 dark:border-gray-800">
+        <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 flex items-center border-b border-gray-100 dark:border-gray-800" style={{ paddingTop: 'env(safe-area-inset-top)', height: 'calc(3.5rem + env(safe-area-inset-top))' }}>
           <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
@@ -126,7 +126,7 @@ export function Wallet() {
   return (
     <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full overflow-y-auto`}>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 h-14 flex items-center border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 flex items-center border-b border-gray-100 dark:border-gray-800" style={{ paddingTop: 'env(safe-area-inset-top)', height: 'calc(3.5rem + env(safe-area-inset-top))' }}>
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
           <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
         </button>
