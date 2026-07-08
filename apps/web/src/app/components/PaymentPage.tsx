@@ -189,7 +189,7 @@ export function PaymentPage() {
               }
             }
           }, 400)
-
+        }
       }
     } catch (err: any) {
       setStatus('error')
