@@ -18,7 +18,9 @@ export interface AuthUser {
     coverUrl?: string
     updatedAt?: string
     city?: string
+    country?: string
     isPublic?: boolean
+    kycStatus?: string
     interests: string[]
     followersCount?: number
     eventsCount?: number
