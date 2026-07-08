@@ -9,23 +9,50 @@ import { ThemeProvider, useTheme } from 'next-themes'
 
 function CapacitorThemeSync() {
   const { resolvedTheme } = useTheme()
+  const location = useLocation()
 
   useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      const updateStatusBar = async () => {
-        try {
-          if (resolvedTheme === 'dark') {
-            await StatusBar.setStyle({ style: Style.Dark })
-          } else {
-            await StatusBar.setStyle({ style: Style.Light })
-          }
-        } catch (e) {
-          console.warn('Failed to update status bar style:', e)
+    if (!Capacitor.isNativePlatform()) return
+
+    const isDark = resolvedTheme === 'dark'
+
+    // Icon style: dark background = white icons (Style.Dark), light background = dark icons (Style.Light)
+    const style = isDark ? Style.Dark : Style.Light
+
+    // Try to read the actual background color from the top element in the DOM
+    // This adapts automatically to each screen without hardcoding
+    const getBgColor = () => {
+      // Try to find the main app inner wrapper first
+      const appInner = document.getElementById('app-layout-inner')
+      if (appInner) {
+        const computed = window.getComputedStyle(appInner)
+        const bg = computed.backgroundColor
+        // Convert rgb(r,g,b) to #rrggbb
+        const match = bg.match(/(\d+),\s*(\d+),\s*(\d+)/)
+        if (match) {
+          const r = parseInt(match[1]).toString(16).padStart(2, '0')
+          const g = parseInt(match[2]).toString(16).padStart(2, '0')
+          const b = parseInt(match[3]).toString(16).padStart(2, '0')
+          return `#${r}${g}${b}`
         }
       }
-      updateStatusBar()
+      // Fallback to theme-based colors
+      return isDark ? '#1a1a1a' : '#ffffff'
     }
-  }, [resolvedTheme])
+
+    // Wait a tick for the DOM to update after navigation
+    const timer = setTimeout(async () => {
+      try {
+        const bgColor = getBgColor()
+        await StatusBar.setStyle({ style })
+        await StatusBar.setBackgroundColor({ color: bgColor })
+      } catch (e) {
+        console.warn('StatusBar update failed:', e)
+      }
+    }, 50)
+
+    return () => clearTimeout(timer)
+  }, [resolvedTheme, location.pathname])
 
   return null
 }
