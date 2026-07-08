@@ -15,7 +15,7 @@ interface WalletPinManagerProps {
 
 export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPinManagerProps) {
   const navigate = useNavigate()
-  const [step, setStep] = useState<'LOADING' | 'VERIFY' | 'SETUP_1' | 'SETUP_2'>('LOADING')
+  const [step, setStep] = useState<'LOADING' | 'VERIFY' | 'SETUP_1' | 'SETUP_2' | 'RESET_AUTH' | 'RESET_OTP'>('LOADING')
   const [pin, setPin] = useState('')
   const [tempPin, setTempPin] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -96,6 +96,42 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
     }
   })
 
+  const [password, setPassword] = useState('')
+  const [otp, setOtp] = useState('')
+
+  const requestOtpMutation = useMutation({
+    mutationFn: async (pwd: string) => {
+      const res = await apiClient.post<{ success: boolean; message: string }>('/wallet/pin/reset/request-otp', { password: pwd })
+      return res.data
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || 'Code envoyé')
+      setStep('RESET_OTP')
+      setError(null)
+    },
+    onError: (err: any) => {
+      setError(err.response?.data?.message || err.response?.data?.error || 'Erreur')
+    }
+  })
+
+  const verifyOtpMutation = useMutation({
+    mutationFn: async (code: string) => {
+      const res = await apiClient.post<{ success: boolean }>('/wallet/pin/reset/verify', { otp: code })
+      return res.data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wallet-pin-status'] })
+      toast.success('Code PIN réinitialisé, veuillez en créer un nouveau')
+      setPin('')
+      setTempPin('')
+      setStep('SETUP_1')
+      setError(null)
+    },
+    onError: (err: any) => {
+      setError(err.response?.data?.error || 'Code incorrect')
+    }
+  })
+
   const [newPinTemp, setNewPinTemp] = useState('')
 
   const handlePinComplete = (completedPin: string) => {
@@ -162,7 +198,71 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                 isLoading={verifyMutation.isPending}
                 title="Saisir votre code PIN"
                 subtitle="Accès sécurisé à votre portefeuille"
+                footer={
+                  <button 
+                    onClick={() => {
+                      setStep('RESET_AUTH')
+                      setError(null)
+                    }} 
+                    className="text-sm font-semibold text-[#FF991C] hover:underline"
+                  >
+                    Code PIN oublié ?
+                  </button>
+                }
               />
+            )}
+            {step === 'RESET_AUTH' && (
+              <div className="flex flex-col items-center justify-center w-full h-full pb-8 pt-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Réinitialisation</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 text-center px-4">
+                  Pour des raisons de sécurité, veuillez saisir le mot de passe de votre compte.
+                </p>
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Mot de passe"
+                  className="w-[80%] px-4 py-3 bg-white dark:bg-[#18181b] border border-gray-200 dark:border-gray-800 rounded-[16px] outline-none focus:border-[#FF991C]"
+                />
+                {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
+                
+                <button
+                  onClick={() => requestOtpMutation.mutate(password)}
+                  disabled={!password || requestOtpMutation.isPending}
+                  className="w-[80%] mt-8 h-12 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] font-semibold disabled:opacity-50 flex items-center justify-center"
+                >
+                  {requestOtpMutation.isPending ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Continuer'}
+                </button>
+                <button onClick={() => { setStep('VERIFY'); setError(null) }} className="mt-4 text-sm text-gray-500 hover:underline">Annuler</button>
+              </div>
+            )}
+            {step === 'RESET_OTP' && (
+              <div className="flex flex-col items-center justify-center w-full h-full pb-8 pt-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Code de validation</h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 text-center px-4">
+                  Saisissez le code à 6 chiffres envoyé par SMS.
+                </p>
+                <input 
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  value={otp}
+                  onChange={e => setOtp(e.target.value)}
+                  placeholder="123456"
+                  maxLength={6}
+                  className="w-[80%] text-center text-2xl tracking-widest px-4 py-3 bg-white dark:bg-[#18181b] border border-gray-200 dark:border-gray-800 rounded-[16px] outline-none focus:border-[#FF991C]"
+                />
+                {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
+                
+                <button
+                  onClick={() => verifyOtpMutation.mutate(otp)}
+                  disabled={otp.length < 5 || verifyOtpMutation.isPending}
+                  className="w-[80%] mt-8 h-12 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] font-semibold disabled:opacity-50 flex items-center justify-center"
+                >
+                  {verifyOtpMutation.isPending ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Valider'}
+                </button>
+                <button onClick={() => { setStep('VERIFY'); setError(null) }} className="mt-4 text-sm text-gray-500 hover:underline">Annuler</button>
+              </div>
             )}
             {step === 'SETUP_1' && (
               <PinPad 

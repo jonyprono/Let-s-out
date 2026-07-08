@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import type { FastifyInstance } from 'fastify'
+import { AuthService } from '../auth/auth.service'
 
 export default async function walletRoutes(app: FastifyInstance) {
   // Middleware to verify wallet PIN token
@@ -43,6 +44,54 @@ export default async function walletRoutes(app: FastifyInstance) {
 
     const token = app.jwt.sign({ sub, purpose: 'wallet_access' }, { expiresIn: '15m' })
     return reply.send({ success: true, token })
+  })
+
+  app.post('/pin/reset/request-otp', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { password } = req.body as { password?: string }
+
+    const user = await app.prisma.user.findUnique({ where: { id: sub } })
+    
+    if (user?.passwordHash) {
+      if (!password) {
+        return reply.code(403).send({ error: 'PASSWORD_REQUIRED', message: 'Veuillez saisir votre mot de passe pour réinitialiser le code PIN' })
+      }
+      const isValid = await bcrypt.compare(password, user.passwordHash)
+      if (!isValid) {
+        return reply.code(403).send({ error: 'Mot de passe incorrect' })
+      }
+    }
+
+    if (!user?.phone) {
+      return reply.code(400).send({ error: 'Numéro de téléphone introuvable pour envoyer l\'OTP' })
+    }
+
+    const authService = new AuthService(app.prisma, app.redis)
+    await authService.generateAndSendOtp(user.phone, 'phone', 'sms')
+
+    return reply.send({ success: true, message: 'Un code OTP a été envoyé par SMS' })
+  })
+
+  app.post('/pin/reset/verify', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { otp } = req.body as { otp: string }
+
+    const user = await app.prisma.user.findUnique({ where: { id: sub } })
+    if (!user?.phone) return reply.code(400).send({ error: 'Numéro de téléphone introuvable' })
+
+    const authService = new AuthService(app.prisma, app.redis)
+    const isValid = await authService.verifyOtp(user.phone, otp)
+
+    if (!isValid) {
+      return reply.code(403).send({ error: 'Code OTP invalide ou expiré' })
+    }
+
+    await app.prisma.user.update({
+      where: { id: sub },
+      data: { walletPinHash: null, walletPinSalt: null, walletPinAttempts: 0, walletPinLockedUntil: null }
+    })
+
+    return reply.send({ success: true })
   })
 
   app.post('/pin/verify', { preHandler: [app.authenticate] }, async (req, reply) => {

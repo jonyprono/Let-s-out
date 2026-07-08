@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { randomBytes } from 'crypto'
 import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
+import { EmailService } from '../../services/email.service'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -529,6 +530,30 @@ export default async function eventsRoutes(app: FastifyInstance) {
         })
       }
     } catch (e) { app.log.warn(`Failed to send join notification: ${e}`) }
+
+    if (!event.requiresApproval) {
+      try {
+        const user = await app.prisma.user.findUnique({ where: { id: sub } })
+        const payer = await app.prisma.profile.findUnique({ where: { userId: sub } })
+        
+        if (user?.email && event) {
+          const emailService = new EmailService()
+          await emailService.sendTicketEmail({
+            to: user.email,
+            userName: payer?.displayName || 'Cher utilisateur',
+            eventName: event.title,
+            eventDate: event.startAt,
+            location: event.address || event.city || 'Lieu non spécifié',
+            bookingId: booking.id,
+            price: 0,
+            quantity: 1,
+            coverImage: event.coverUrl || undefined,
+          })
+        }
+      } catch (err) {
+        app.log.error(`Failed to send email ticket for free booking ${booking.id}: ${err}`)
+      }
+    }
 
     return reply.code(201).send(booking)
   })

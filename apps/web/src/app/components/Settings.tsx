@@ -16,7 +16,6 @@ import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { LanguageModal } from '@/features/users/components/LanguageModal';
 import { ChangePasswordModal } from '@/features/users/components/ChangePasswordModal';
 import { PrivacyModal } from '@/features/users/components/PrivacyModal';
-import { WalletPinManager } from './WalletPinManager';
 import { EditPhoneModal } from '@/features/users/components/EditPhoneModal';
 import { EditEmailModal } from '@/features/users/components/EditEmailModal';
 import { useLogout, useDeleteAccount } from '@/features/auth/hooks/useAuth';
@@ -49,7 +48,7 @@ export function Settings({ onBack }: SettingsProps) {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showWalletPinModal, setShowWalletPinModal] = useState(false);
+
   const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'rejected' | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
@@ -265,20 +264,6 @@ export function Settings({ onBack }: SettingsProps) {
             </button>
 
             <button 
-              onClick={() => setShowWalletPinModal(true)}
-              className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
-            >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClasses.orange}`}>
-                <WalletIcon className="w-5 h-5" />
-              </div>
-              <div className="flex-1 text-left">
-                <p className="text-[14px] font-medium text-gray-900 dark:text-[#FFFFFF]">Code PIN du portefeuille</p>
-                <p className="text-[12px] text-gray-400 dark:text-text-secondary">Modifier votre code secret à 5 chiffres</p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-300" />
-            </button>
-
-            <button 
               onClick={() => navigate('/verify-profile')}
               className="w-full flex items-center gap-150 px-200 py-200 active:bg-gray-50 dark:bg-[#222222] transition-colors"
             >
@@ -417,16 +402,6 @@ export function Settings({ onBack }: SettingsProps) {
       {showPrivacyModal && <PrivacyModal onClose={() => setShowPrivacyModal(false)} />}
       {showPhoneModal && <EditPhoneModal onClose={() => setShowPhoneModal(false)} />}
       {showEmailModal && <EditEmailModal onClose={() => setShowEmailModal(false)} />}
-
-      {showWalletPinModal && (
-        <div className="fixed inset-0 z-[100] bg-background">
-          <WalletPinManager 
-            isChangeMode={true} 
-            onClose={() => setShowWalletPinModal(false)} 
-            onVerified={() => setShowWalletPinModal(false)} 
-          />
-        </div>
-      )}
 
       {/* ── Modale de suppression de compte ─────────────────────────────── */}
       {showDeleteModal && createPortal(

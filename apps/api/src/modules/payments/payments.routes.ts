@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { createAndSendNotification } from '../notifications/notifications.routes'
+import { EmailService } from '../../services/email.service'
 export default async function paymentsRoutes(app: FastifyInstance) {
 
   // Initier une transaction FedaPay
@@ -312,6 +313,30 @@ async function handleConfirmedBooking(
         data: { eventId, contributorId: userId, amount: String(amount) },
       })
     }
+  }
+
+  // Envoi de l'email de reçu (Ticket)
+  try {
+    const user = await app.prisma.user.findUnique({ where: { id: userId } })
+    const fullEvent = await app.prisma.event.findUnique({ where: { id: eventId } })
+    const payer = await app.prisma.profile.findUnique({ where: { userId } })
+    
+    if (user?.email && fullEvent) {
+      const emailService = new EmailService()
+      await emailService.sendTicketEmail({
+        to: user.email,
+        userName: payer?.displayName || 'Cher utilisateur',
+        eventName: fullEvent.title,
+        eventDate: fullEvent.startAt,
+        location: fullEvent.address || fullEvent.city || 'Lieu non spécifié',
+        bookingId: booking.id,
+        price: amount,
+        quantity: 1,
+        coverImage: fullEvent.coverUrl || undefined,
+      })
+    }
+  } catch (err) {
+    app.log.error(`Failed to send email ticket for booking ${booking.id}: ${err}`)
   }
 
   return booking

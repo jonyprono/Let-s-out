@@ -32,6 +32,7 @@ export function Wallet() {
   const user = useAuthStore((s) => s.user)
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
   const [pinToken, setPinToken] = useState<string | null>(null)
+  const [showWalletPinModal, setShowWalletPinModal] = useState(false)
 
   // Fetch Wallet Balance
   const { data: wallet, isLoading: isLoadingWallet } = useQuery({
@@ -126,11 +127,14 @@ export function Wallet() {
   return (
     <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full overflow-y-auto`}>
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
+      <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
           <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
         </button>
-        <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Mon Portefeuille</h1>
+        <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white">Mon Portefeuille</h1>
+        <button onClick={() => setShowWalletPinModal(true)} className="p-2 -mr-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Lock className="w-5 h-5 text-gray-900 dark:text-white" />
+        </button>
       </div>
       
       <div className="flex flex-col flex-1 px-4 sm:px-6 py-6 w-full max-w-[430px] mx-auto gap-6">
@@ -291,6 +295,17 @@ export function Wallet() {
           </form>
         </div>
       </BottomSheet>
+
+      {/* Modals */}
+      {showWalletPinModal && (
+        <div className="fixed inset-0 z-[100] bg-[#F9FAFB] dark:bg-[#09090b]">
+          <WalletPinManager 
+            isChangeMode={true}
+            onClose={() => setShowWalletPinModal(false)} 
+            onVerified={() => setShowWalletPinModal(false)} 
+          />
+        </div>
+      )}
     </div>
   )
 }

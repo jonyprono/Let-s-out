@@ -11,6 +11,7 @@ interface PinPadProps {
   subtitle?: string
   error?: string | null
   isLoading?: boolean
+  footer?: React.ReactNode
 }
 
 export function PinPad({
@@ -21,7 +22,8 @@ export function PinPad({
   title = 'Saisir le code PIN',
   subtitle = 'Entrez votre code de sécurité',
   error,
-  isLoading
+  isLoading,
+  footer
 }: PinPadProps) {
   const [shake, setShake] = useState(false)
 
@@ -104,6 +106,12 @@ export function PinPad({
           <Delete className="w-6 h-6" />
         </button>
       </div>
+
+      {footer && (
+        <div className="mt-8 w-full text-center">
+          {footer}
+        </div>
+      )}
     </div>
   )
 }
