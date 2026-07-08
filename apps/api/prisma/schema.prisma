@@ -161,6 +161,8 @@ model Event {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   poolTarget       Float?
+  poolDescription  String?
+  registrationDeadline DateTime?
   poolMode         String?       // libre | minimum | fixe
   poolMinAmount    Float?
   joinCode         String?       @unique

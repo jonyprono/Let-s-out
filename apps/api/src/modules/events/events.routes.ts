@@ -26,6 +26,8 @@ const CreateEventSchema = z.object({
   coverUrl: z.string().optional(),
   coHostIds: z.array(z.string()).optional(),
   poolTarget: z.number().optional(),
+  poolDescription: z.string().optional(),
+  registrationDeadline: z.string().datetime().optional(),
   poolMode: z.enum(['libre', 'minimum', 'fixe']).optional(),
   poolMinAmount: z.number().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED']).default('PUBLISHED'),

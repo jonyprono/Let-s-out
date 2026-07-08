@@ -221,8 +221,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [tempStartTime, setTempStartTime] = useState('10:00')
   const [tempEndDate, setTempEndDate] = useState('')
   const [tempEndTime, setTempEndTime] = useState('12:00')
-  const [regEndDate, setRegEndDate] = useState('')
-  const [regEndTime, setRegEndTime] = useState('')
+  const [regEndDate, setRegEndDate] = useState(sessionDraft?.regEndDate ?? '')
+  const [regEndTime, setRegEndTime] = useState(sessionDraft?.regEndTime ?? '')
   const [tempRegEndDate, setTempRegEndDate] = useState('')
   const [tempRegEndTime, setTempRegEndTime] = useState('12:00')
 
@@ -252,12 +252,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   useEffect(() => {
     sessionDraft = {
       title, category, startDate, startTime, hasEndDate, endDate, endTime,
+      regEndDate, regEndTime,
       address, city, lat, lon, privacy, allowGuestInvites, description,
       participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
       enablePool, poolDescription, poolTarget, poolMinAmount
     }
   }, [
     title, category, startDate, startTime, hasEndDate, endDate, endTime,
+    regEndDate, regEndTime,
     address, city, lat, lon, privacy, allowGuestInvites, description,
     participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
     enablePool, poolDescription, poolTarget, poolMinAmount
@@ -355,6 +357,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (eventData.poolMinAmount !== undefined && eventData.poolMinAmount !== null) {
         setPoolMinAmount(String(eventData.poolMinAmount))
       }
+      if (eventData.poolDescription) setPoolDescription(eventData.poolDescription)
+      if (eventData.registrationDeadline) {
+        const rd = new Date(eventData.registrationDeadline)
+        setRegEndDate(rd.toISOString().split('T')[0])
+        setRegEndTime(rd.toISOString().split('T')[1].slice(0, 5))
+      }
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -405,6 +413,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         poolTarget: enablePool && poolTarget ? parseFloat(poolTarget) : undefined,
         poolMode: enablePool && poolTarget ? (poolMinAmount ? 'minimum' : 'libre') : undefined,
         poolMinAmount: enablePool && poolMinAmount ? parseFloat(poolMinAmount) : undefined,
+        poolDescription: enablePool && poolDescription ? poolDescription.trim() : undefined,
+        registrationDeadline: regEndDate && regEndTime ? new Date(`${regEndDate}T${regEndTime}`).toISOString() : undefined,
         status: 'DRAFT',
         coHostIds: selectedCoOrgs.map(o => o.id),
       }
@@ -418,7 +428,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       const eventId = editEventId || res.data?.id
       setCreatedEventId(eventId)
-      clearCreateEventDraft()
       toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
       setStep('done')
     } catch (err: any) {
@@ -445,6 +454,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     try {
       if (enablePool && poolTarget) await savePoolToEvent()
       await apiClient.put(`/events/${eventId}/publish`)
+      clearCreateEventDraft()
       toast.success('🎉 Événement publié avec succès !')
       setStep('published')
     } catch (err: any) {
@@ -749,15 +759,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-white dark:bg-[#1A1A1A]/30 backdrop-blur-md rounded-[6px] active:scale-95 transition-transform">
+                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-black/40 hover:bg-black/50 backdrop-blur-md rounded-[6px] active:scale-95 transition-all border border-white/20">
                 <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Gallerie</span>
-                <Image01Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
+                <Image01Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
               </button>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-white dark:bg-[#1A1A1A]/30 backdrop-blur-md rounded-[6px] active:scale-95 transition-transform">
+                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-[var(--brand-orange-500)] hover:bg-[var(--brand-orange-600)] shadow-md rounded-[6px] active:scale-95 transition-all">
                 <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Importer</span>
-                <Upload04Icon className="w-5 h-5 text-white" strokeWidth={1.5} />
+                <Upload04Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
               </button>
             </div>
             <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
