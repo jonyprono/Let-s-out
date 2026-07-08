@@ -67,7 +67,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         description: `Participation : ${event.title}`,
         amount: finalAmount,
         currency: { iso: event.currency || 'XOF' },
-        callback_url: `${process.env.PUBLIC_API_URL}/api/v1/payments/fedapay/callback`,
+        callback_url: `${process.env.PUBLIC_API_URL || 'https://let-s-out.vercel.app'}/api/v1/payments/fedapay/callback`,
         customer: {
           firstname: user.profile?.displayName?.split(' ')[0] || 'Utilisateur',
           lastname: user.profile?.displayName?.split(' ').slice(1).join(' ') || 'Anonyme',

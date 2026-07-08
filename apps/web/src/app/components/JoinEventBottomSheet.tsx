@@ -45,7 +45,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
 
   const isFree = event.price === 0 && !event.poolTarget
 
-  const minAmount = event.poolMinAmount || event.price || 0
+  const minAmount = isFree ? 0 : Math.max(100, event.poolMinAmount || event.price || 0)
   
   const parsedAmount = Number(amountStr) || 0
   const finalAmount = Math.max(parsedAmount, minAmount)
