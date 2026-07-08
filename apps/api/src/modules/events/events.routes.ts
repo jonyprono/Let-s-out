@@ -227,6 +227,23 @@ export default async function eventsRoutes(app: FastifyInstance) {
     return reply.send({ data: events, total })
   })
 
+  // Helper to get rating
+  const getUserRating = async (userId: string) => {
+    const events = await app.prisma.event.findMany({
+      where: { creatorId: userId },
+      include: { reviews: true }
+    })
+    let reviewCount = 0
+    let totalRating = 0
+    for (const e of events) {
+      for (const r of e.reviews) {
+        reviewCount++
+        totalRating += r.rating
+      }
+    }
+    return reviewCount > 0 ? Number((totalRating / reviewCount).toFixed(1)) : 0
+  }
+
   // Get single event
   app.get('/:id', async (req, reply) => {
     const { id } = req.params as { id: string }
@@ -239,14 +256,36 @@ export default async function eventsRoutes(app: FastifyInstance) {
     })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
 
+    const creatorRating = await getUserRating(event.creatorId)
+    const eventWithRating = {
+      ...event,
+      creator: {
+        ...event.creator,
+        profile: {
+          ...event.creator.profile,
+          rating: creatorRating
+        }
+      }
+    }
+
     // Fetch co-hosts if any
-    let eventWithCoHosts = { ...event, coHosts: [] as any[] }
+    let eventWithCoHosts = { ...eventWithRating, coHosts: [] as any[] }
     if (event.coHostIds && event.coHostIds.length > 0) {
       const coHosts = await app.prisma.user.findMany({
         where: { id: { in: event.coHostIds } },
         select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true, followersCount: true, eventsCount: true } } }
       })
-      eventWithCoHosts.coHosts = coHosts
+      const coHostsWithRating = await Promise.all(coHosts.map(async (coHost) => {
+        const rating = await getUserRating(coHost.id)
+        return {
+          ...coHost,
+          profile: {
+            ...coHost.profile,
+            rating
+          }
+        }
+      }))
+      eventWithCoHosts.coHosts = coHostsWithRating
     }
 
     // Increment view count (fire-and-forget, don't fail if this fails)

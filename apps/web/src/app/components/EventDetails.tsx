@@ -283,8 +283,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const organizerName = event.creator?.profile?.displayName || 'Organisateur'
   const organizerAvatar = event.creator?.profile?.avatarUrl
-  const organizerFollowers = event.creator?.profile?.followersCount || 0
-  const organizerEvents = event.creator?.profile?.eventsCount || 0
 
   const coverUrl = event.coverUrl ||
     'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&h=400&fit=crop'
@@ -411,75 +409,88 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               </div>
             )}
 
-            {/* Organisateur */}
+            {/* Organisateurs */}
             <div>
-              <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">Organisateur</h2>
-              <div className="flex flex-col gap-[12px] bg-[var(--color-background-primary)] rounded-[12px] border border-[var(--border-default)] p-[12px] shadow-sm">
-                {/* Row 1: avatar + infos */}
-                <div className="flex items-center gap-[12px]">
-                  <div
-                    className="cursor-pointer flex-shrink-0"
-                    onClick={() => event.creator && openUserProfile(event.creator.id, { displayName: organizerName, avatarUrl: organizerAvatar })}
-                  >
-                    <div className="w-[40px] h-[40px] rounded-full overflow-hidden bg-gray-200">
-                      <SafeImage
-                        src={organizerAvatar}
-                        alt={organizerName}
-                        className="w-full h-full object-cover"
-                        fallback={
-                          <div className="w-full h-full bg-[var(--color-background-secondary)] flex items-center justify-center text-[15px] font-bold text-[var(--color-text-secondary)]">
-                            {organizerName.charAt(0).toUpperCase()}
+              <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">
+                {event.coHosts && event.coHosts.length > 0 ? 'Organisateurs' : 'Organisateur'}
+              </h2>
+              <div className="flex flex-col gap-[16px]">
+                {[event.creator, ...(event.coHosts || [])].filter(Boolean).map((org: any) => {
+                  const orgName = org.profile?.displayName || 'Organisateur';
+                  const orgAvatar = org.profile?.avatarUrl;
+                  const orgFollowers = org.profile?.followersCount || 0;
+                  const orgEvents = org.profile?.eventsCount || 0;
+                  const orgRating = org.profile?.rating || 0;
+                  
+                  return (
+                    <div key={org.id} className="flex flex-col gap-[12px] bg-[var(--color-background-primary)] rounded-[12px] border border-[var(--border-default)] p-[12px] shadow-sm">
+                      {/* Row 1: avatar + infos */}
+                      <div className="flex items-center gap-[12px]">
+                        <div
+                          className="cursor-pointer flex-shrink-0"
+                          onClick={() => openUserProfile(org.id, { displayName: orgName, avatarUrl: orgAvatar })}
+                        >
+                          <div className="w-[40px] h-[40px] rounded-full overflow-hidden bg-gray-200">
+                            <SafeImage
+                              src={orgAvatar}
+                              alt={orgName}
+                              className="w-full h-full object-cover"
+                              fallback={
+                                <div className="w-full h-full bg-[var(--color-background-secondary)] flex items-center justify-center text-[15px] font-bold text-[var(--color-text-secondary)]">
+                                  {orgName.charAt(0).toUpperCase()}
+                                </div>
+                              }
+                            />
                           </div>
-                        }
-                      />
-                    </div>
-                  </div>
+                        </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-[4px] mb-[2px]">
-                      <p className="text-[14px] font-semibold font-poppins text-[var(--color-text-primary)]">{organizerName}</p>
-                      <BadgeCheck className="w-[14px] h-[14px] text-[#007AFF]" />
-                    </div>
-                    <p className="text-[12px] font-normal font-inter text-[var(--color-text-secondary)]">
-                      {organizerFollowers} followers • {organizerEvents} événements • 4.5 <span className="text-[#FF2E93]">★</span>
-                    </p>
-                  </div>
-                </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-[4px] mb-[2px]">
+                            <p className="text-[14px] font-semibold font-poppins text-[var(--color-text-primary)]">{orgName}</p>
+                            <BadgeCheck className="w-[14px] h-[14px] text-[#007AFF]" />
+                          </div>
+                          <p className="text-[12px] font-normal font-inter text-[var(--color-text-secondary)]">
+                            {orgFollowers} followers • {orgEvents} événements {orgRating > 0 && <span>• {orgRating} <span className="text-[#FF2E93]">★</span></span>}
+                          </p>
+                        </div>
+                      </div>
 
-                {/* Row 2: action buttons (only if not the creator) */}
-                {user?.id !== event.creator?.id && (
-                  <div className="flex items-center gap-[8px]">
-                    <button onClick={async (e) => {
-                      e.stopPropagation();
-                      if (!event.creator?.id) return;
-                      try {
-                        const conv = await chatApi.createDM(event.creator.id);
-                        navigate(`/chat/${conv.id}`);
-                      } catch {
-                        toast.error("Impossible de démarrer la conversation");
-                      }
-                    }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
-                      Message
-                    </button>
-                    <button onClick={async (e) => {
-                      e.stopPropagation();
-                      if (!event.creator?.id) return;
-                      try {
-                        await usersApi.followUser(event.creator.id);
-                        toast.success("Vous suivez maintenant cet organisateur !");
-                      } catch (err: any) {
-                        if (err?.response?.status === 400) {
-                          toast.error("Vous suivez déjà cet organisateur.");
-                        } else {
-                          toast.error("Erreur lors de l'abonnement");
-                        }
-                      }
-                    }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
-                      Suivre
-                    </button>
-                  </div>
-                )}
+                      {/* Row 2: action buttons (only if not the current user) */}
+                      {user?.id !== org.id && (
+                        <div className="flex items-center gap-[8px]">
+                          <button onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              const conv = await chatApi.createDM(org.id);
+                              navigate(`/chat/${conv.id}`);
+                            } catch {
+                              toast.error("Impossible de démarrer la conversation");
+                            }
+                          }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
+                            Message
+                          </button>
+                          <button onClick={async (e) => {
+                            e.stopPropagation();
+                            try {
+                              await usersApi.followUser(org.id);
+                              toast.success("Vous suivez maintenant cet organisateur !");
+                            } catch (err: any) {
+                              if (err?.response?.status === 400) {
+                                toast.error("Vous suivez déjà cet organisateur.");
+                              } else {
+                                toast.error("Erreur lors de l'abonnement");
+                              }
+                            }
+                          }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
+                            Suivre
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
             </div>
 
             {/* Participants */}
