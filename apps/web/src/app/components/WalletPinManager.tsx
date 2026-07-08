@@ -10,7 +10,7 @@ import { auth } from '@/lib/firebase'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 import { Capacitor } from '@capacitor/core'
-import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useAuthStore } from '@/stores/auth.store'
 
 interface WalletPinManagerProps {
   onVerified?: (token: string) => void
@@ -25,7 +25,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
   const [tempPin, setTempPin] = useState('')
   const [error, setError] = useState<string | null>(null)
   
-  const { user } = useAuth()
+  const user = useAuthStore(s => s.user)
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
   const [nativeVerificationId, setNativeVerificationId] = useState<string>('')
   const [isFirebaseSending, setIsFirebaseSending] = useState(false)

@@ -295,6 +295,7 @@ export function EditPhoneModal({ onClose }: Props) {
                 </div>
               </div>
             </div>
+            <button
               onClick={handleSendCode}
               disabled={isLoading || !phone || phone.replace(/\s+/g, '').length < 6}
               className="w-full py-4 flex items-center justify-center text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform disabled:opacity-50"
