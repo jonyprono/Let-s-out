@@ -6,6 +6,11 @@ import { PinPad } from './ui/PinPad'
 import { ChevronLeft } from 'lucide-react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
+import { auth } from '@/lib/firebase'
+import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
+import { Capacitor } from '@capacitor/core'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 
 interface WalletPinManagerProps {
   onVerified?: (token: string) => void
@@ -19,6 +24,12 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
   const [pin, setPin] = useState('')
   const [tempPin, setTempPin] = useState('')
   const [error, setError] = useState<string | null>(null)
+  
+  const { user } = useAuth()
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null)
+  const [nativeVerificationId, setNativeVerificationId] = useState<string>('')
+  const [isFirebaseSending, setIsFirebaseSending] = useState(false)
+  const [isFirebaseVerifying, setIsFirebaseVerifying] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -102,13 +113,54 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
 
   const requestOtpMutation = useMutation({
     mutationFn: async ({ pwd, channel }: { pwd: string; channel: 'sms' | 'whatsapp' }) => {
+      // Pour Firebase (SMS), on vérifie d'abord le mot de passe via l'endpoint request-otp
       const res = await apiClient.post<{ success: boolean; message: string }>('/wallet/pin/reset/request-otp', { password: pwd, channel })
       return res.data
     },
-    onSuccess: (data) => {
-      toast.success(data.message || 'Code envoyé')
-      setStep('RESET_OTP')
-      setError(null)
+    onSuccess: async (data, variables) => {
+      if (variables.channel === 'whatsapp') {
+        toast.success(data.message || 'Code envoyé')
+        setStep('RESET_OTP')
+        setError(null)
+      } else {
+        // Envoi SMS via Firebase
+        if (!user?.phone) {
+          toast.error('Numéro de téléphone introuvable')
+          return
+        }
+        try {
+          setIsFirebaseSending(true)
+          if (window.recaptchaVerifier) {
+            try { window.recaptchaVerifier.clear() } catch {}
+            window.recaptchaVerifier = undefined
+          }
+
+          if (Capacitor.isNativePlatform()) {
+            const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
+              setNativeVerificationId(event.verificationId)
+            })
+            await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: user.phone })
+            setStep('RESET_OTP')
+            setError(null)
+            setTimeout(() => listener.remove(), 60000)
+          } else {
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-wallet', { size: 'invisible' })
+            const confirmation = await signInWithPhoneNumber(auth, user.phone, window.recaptchaVerifier)
+            setConfirmationResult(confirmation)
+            setStep('RESET_OTP')
+            setError(null)
+          }
+        } catch (err: any) {
+          console.error('Firebase sending error:', err)
+          toast.error(err.message || "Erreur d'envoi du SMS")
+          if (window.recaptchaVerifier) {
+            try { window.recaptchaVerifier.clear() } catch {}
+            window.recaptchaVerifier = undefined
+          }
+        } finally {
+          setIsFirebaseSending(false)
+        }
+      }
     },
     onError: (err: any) => {
       setError(err.response?.data?.message || err.response?.data?.error || 'Erreur')
@@ -116,8 +168,8 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
   })
 
   const verifyOtpMutation = useMutation({
-    mutationFn: async (code: string) => {
-      const res = await apiClient.post<{ success: boolean }>('/wallet/pin/reset/verify', { otp: code })
+    mutationFn: async (payload: { otp?: string; idToken?: string }) => {
+      const res = await apiClient.post<{ success: boolean }>('/wallet/pin/reset/verify', payload)
       return res.data
     },
     onSuccess: () => {
@@ -132,6 +184,36 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
       setError(err.response?.data?.error || 'Code incorrect')
     }
   })
+
+  const handleVerifyOtp = async () => {
+    if (otp.length < 6) return
+    
+    if (currentChannel === 'sms' && (confirmationResult || nativeVerificationId)) {
+      setIsFirebaseVerifying(true)
+      try {
+        if (Capacitor.isNativePlatform() && nativeVerificationId) {
+          await FirebaseAuthentication.confirmVerificationCode({
+            verificationId: nativeVerificationId,
+            verificationCode: otp,
+          })
+          const tokenResult = await FirebaseAuthentication.getIdToken()
+          if (tokenResult.token) {
+            verifyOtpMutation.mutate({ idToken: tokenResult.token })
+          }
+        } else if (confirmationResult) {
+          const result = await confirmationResult.confirm(otp)
+          const token = await result.user.getIdToken()
+          verifyOtpMutation.mutate({ idToken: token })
+        }
+      } catch (err: any) {
+        toast.error('Code incorrect ou expiré')
+      } finally {
+        setIsFirebaseVerifying(false)
+      }
+    } else {
+      verifyOtpMutation.mutate({ otp })
+    }
+  }
 
   const [newPinTemp, setNewPinTemp] = useState('')
 
@@ -172,6 +254,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
 
   return (
     <div className="flex flex-col min-h-[100dvh] w-full bg-[#F9FAFB] dark:bg-[#09090b]">
+      <div id="recaptcha-container-wallet" />
       <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
         <button onClick={() => onClose ? onClose() : navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
           <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
@@ -252,10 +335,10 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
 
                 <button
                   onClick={() => requestOtpMutation.mutate({ pwd: password, channel: currentChannel })}
-                  disabled={!password || requestOtpMutation.isPending}
+                  disabled={!password || requestOtpMutation.isPending || isFirebaseSending}
                   className="w-[80%] mt-8 h-12 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] font-semibold disabled:opacity-50 flex items-center justify-center"
                 >
-                  {requestOtpMutation.isPending ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Continuer'}
+                  {(requestOtpMutation.isPending || isFirebaseSending) ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Continuer'}
                 </button>
                 <button onClick={() => { setStep('VERIFY'); setError(null) }} className="mt-4 text-sm text-gray-500 hover:underline">Annuler</button>
               </div>
@@ -279,11 +362,11 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                 {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
                 
                 <button
-                  onClick={() => verifyOtpMutation.mutate(otp)}
-                  disabled={otp.length < 5 || verifyOtpMutation.isPending}
+                  onClick={handleVerifyOtp}
+                  disabled={otp.length < 6 || verifyOtpMutation.isPending || isFirebaseVerifying}
                   className="w-[80%] mt-8 h-12 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] font-semibold disabled:opacity-50 flex items-center justify-center"
                 >
-                  {verifyOtpMutation.isPending ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Valider'}
+                  {(verifyOtpMutation.isPending || isFirebaseVerifying) ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Vérifier'}
                 </button>
                 <button onClick={() => { setStep('VERIFY'); setError(null) }} className="mt-4 text-sm text-gray-500 hover:underline">Annuler</button>
               </div>

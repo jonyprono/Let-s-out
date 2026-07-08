@@ -74,13 +74,19 @@ export default async function walletRoutes(app: FastifyInstance) {
 
   app.post('/pin/reset/verify', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { otp } = req.body as { otp: string }
+    const { otp, idToken } = req.body as { otp?: string; idToken?: string }
 
     const user = await app.prisma.user.findUnique({ where: { id: sub } })
     if (!user?.phone) return reply.code(400).send({ error: 'Numéro de téléphone introuvable' })
 
     const authService = new AuthService(app.prisma, app.redis)
-    const isValid = await authService.verifyOtp(user.phone, otp)
+    let isValid = false
+
+    if (idToken) {
+      isValid = await authService.verifyFirebaseToken(idToken, user.phone)
+    } else if (otp) {
+      isValid = await authService.verifyOtp(user.phone, otp)
+    }
 
     if (!isValid) {
       return reply.code(403).send({ error: 'Code OTP invalide ou expiré' })
