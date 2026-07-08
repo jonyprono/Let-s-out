@@ -99,6 +99,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     return reply.send({
       devMode: false,
       transactionToken: finalToken,
+      transactionId: transactionId,
       publicKey: process.env.FEDAPAY_PUBLIC_KEY,
       amount: finalAmount,
       currency: event.currency || 'XOF',

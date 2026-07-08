@@ -97,7 +97,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
           const FedaPay = (window as any).FedaPay
           FedaPay.init({
             public_key: data.publicKey,
-            transaction: { token: data.transactionToken },
+            transaction: { id: data.transactionId, token: data.transactionToken, amount: data.amount, description: data.description },
             onComplete: (resp: any) => {
               if (resp.reason === FedaPay.DIALOG_DISMISSED) {
                 toast.error('Paiement annulé')
