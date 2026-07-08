@@ -40,6 +40,7 @@ export function EditPhoneModal({ onClose }: Props) {
   const [nativeVerificationId, setNativeVerificationId] = useState<string>('');
   const [isFirebaseSending, setIsFirebaseSending] = useState(false);
   const [isFirebaseVerifying, setIsFirebaseVerifying] = useState(false);
+  const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp'>('whatsapp');
 
   // Build full phone exactly like Signup.tsx
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`;
@@ -56,17 +57,31 @@ export function EditPhoneModal({ onClose }: Props) {
       return;
     }
 
-    // If same number, no need to re-verify
     if (fullPhone === user?.phone) {
       toast.success(t('editPhoneModal.success') || 'Numéro à jour');
       onClose();
       return;
     }
 
+    if (currentChannel === 'whatsapp') {
+      setIsFirebaseSending(true);
+      sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
+        onSuccess: () => {
+          setStep(2);
+          setCountdown(59);
+          setTimeout(() => otpRefs.current[0]?.focus(), 100);
+          setIsFirebaseSending(false);
+        },
+        onError: (e: any) => {
+          setIsFirebaseSending(false);
+          toast.error(e?.response?.data?.message || "Erreur lors de l'envoi du code");
+        }
+      });
+      return;
+    }
+
     try {
       setIsFirebaseSending(true);
-
-      // Always clear stale recaptcha verifier to avoid "already rendered" errors
       if (window.recaptchaVerifier) {
         try { window.recaptchaVerifier.clear(); } catch {}
         window.recaptchaVerifier = undefined;
@@ -91,13 +106,11 @@ export function EditPhoneModal({ onClose }: Props) {
       }
     } catch (err: any) {
       console.error('Firebase phone send error:', err);
-      // Clean up stale verifier
       if (window.recaptchaVerifier) {
         try { window.recaptchaVerifier.clear(); } catch {}
         window.recaptchaVerifier = undefined;
       }
       setConfirmationResult(null);
-      // Fallback to backend OTP (same as Signup)
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
         onSuccess: () => {
           setStep(2);
@@ -253,9 +266,35 @@ export function EditPhoneModal({ onClose }: Props) {
                   Numéro complet : <span className="font-medium text-gray-600 dark:text-gray-300">{fullPhone || '—'}</span>
                 </p>
               </div>
-            </div>
 
-            <button
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 ml-1">
+                  Moyen de réception
+                </label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setCurrentChannel('whatsapp')}
+                    className={`flex-1 py-3 rounded-xl border transition-colors flex items-center justify-center font-medium ${
+                      currentChannel === 'whatsapp'
+                        ? 'border-[#FF991C] bg-[#FFF8F1] text-[#FF991C]'
+                        : 'border-gray-200 dark:border-[#333333] text-gray-500'
+                    }`}
+                  >
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => setCurrentChannel('sms')}
+                    className={`flex-1 py-3 rounded-xl border transition-colors flex items-center justify-center font-medium ${
+                      currentChannel === 'sms'
+                        ? 'border-[#FF991C] bg-[#FFF8F1] text-[#FF991C]'
+                        : 'border-gray-200 dark:border-[#333333] text-gray-500'
+                    }`}
+                  >
+                    SMS
+                  </button>
+                </div>
+              </div>
+            </div>
               onClick={handleSendCode}
               disabled={isLoading || !phone || phone.replace(/\s+/g, '').length < 6}
               className="w-full py-4 flex items-center justify-center text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform disabled:opacity-50"

@@ -48,7 +48,7 @@ export default async function walletRoutes(app: FastifyInstance) {
 
   app.post('/pin/reset/request-otp', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { password } = req.body as { password?: string }
+    const { password, channel = 'sms' } = req.body as { password?: string; channel?: 'sms' | 'whatsapp' }
 
     const user = await app.prisma.user.findUnique({ where: { id: sub } })
     
@@ -67,9 +67,9 @@ export default async function walletRoutes(app: FastifyInstance) {
     }
 
     const authService = new AuthService(app.prisma, app.redis)
-    await authService.generateAndSendOtp(user.phone, 'phone', 'sms')
+    await authService.generateAndSendOtp(user.phone, 'phone', channel)
 
-    return reply.send({ success: true, message: 'Un code OTP a été envoyé par SMS' })
+    return reply.send({ success: true, message: `Un code OTP a été envoyé via ${channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}` })
   })
 
   app.post('/pin/reset/verify', { preHandler: [app.authenticate] }, async (req, reply) => {

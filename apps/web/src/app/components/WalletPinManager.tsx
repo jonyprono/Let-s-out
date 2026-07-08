@@ -98,10 +98,11 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
 
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
+  const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp'>('whatsapp')
 
   const requestOtpMutation = useMutation({
-    mutationFn: async (pwd: string) => {
-      const res = await apiClient.post<{ success: boolean; message: string }>('/wallet/pin/reset/request-otp', { password: pwd })
+    mutationFn: async ({ pwd, channel }: { pwd: string; channel: 'sms' | 'whatsapp' }) => {
+      const res = await apiClient.post<{ success: boolean; message: string }>('/wallet/pin/reset/request-otp', { password: pwd, channel })
       return res.data
     },
     onSuccess: (data) => {
@@ -226,8 +227,31 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                 />
                 {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
                 
+                <div className="flex gap-3 w-[80%] mt-4">
+                  <button
+                    onClick={() => setCurrentChannel('whatsapp')}
+                    className={`flex-1 py-3 rounded-[12px] border transition-colors flex items-center justify-center font-medium ${
+                      currentChannel === 'whatsapp'
+                        ? 'border-[#FF991C] bg-[#FFF8F1] text-[#FF991C]'
+                        : 'border-gray-200 dark:border-gray-800 text-gray-500'
+                    }`}
+                  >
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => setCurrentChannel('sms')}
+                    className={`flex-1 py-3 rounded-[12px] border transition-colors flex items-center justify-center font-medium ${
+                      currentChannel === 'sms'
+                        ? 'border-[#FF991C] bg-[#FFF8F1] text-[#FF991C]'
+                        : 'border-gray-200 dark:border-gray-800 text-gray-500'
+                    }`}
+                  >
+                    SMS
+                  </button>
+                </div>
+
                 <button
-                  onClick={() => requestOtpMutation.mutate(password)}
+                  onClick={() => requestOtpMutation.mutate({ pwd: password, channel: currentChannel })}
                   disabled={!password || requestOtpMutation.isPending}
                   className="w-[80%] mt-8 h-12 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] font-semibold disabled:opacity-50 flex items-center justify-center"
                 >
@@ -240,7 +264,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
               <div className="flex flex-col items-center justify-center w-full h-full pb-8 pt-6">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Code de validation</h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 text-center px-4">
-                  Saisissez le code à 6 chiffres envoyé par SMS.
+                  Saisissez le code à 6 chiffres envoyé par {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}.
                 </p>
                 <input 
                   type="text"
