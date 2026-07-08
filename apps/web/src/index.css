@@ -1,7 +1,10 @@
 
 /* FedaPay Mobile Fix */
 @media (max-width: 768px) {
-  #fedapay-checkout-iframe, iframe[name='fedapay-checkout-iframe'] { 
+  iframe[src*='fedapay'], 
+  iframe[id*='fedapay'],
+  iframe[name*='fedapay'],
+  div[id*='fedapay'] { 
     top: 48px !important;
     height: calc(100% - 48px) !important;
   }
