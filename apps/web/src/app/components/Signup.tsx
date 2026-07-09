@@ -8,7 +8,6 @@ import {
   Location01Icon,
   Cancel01Icon,
   Calendar01Icon,
-  RefreshIcon,
 } from 'hugeicons-react'
 import {
   useSendOtp,
