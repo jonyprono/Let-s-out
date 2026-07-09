@@ -6,7 +6,7 @@ import { apiClient } from '@/lib/api-client'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getEventParticipationMode } from '@/lib/utils'
-import { useAuthStore } from '@/features/auth/store'
+import { useAuthStore } from '@/stores/auth.store'
 import { clearCreateEventDraft } from './CreateEvent'
 
 interface ManageEventViewProps {
