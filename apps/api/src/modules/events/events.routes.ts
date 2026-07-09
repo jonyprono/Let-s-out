@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 const CreateEventSchema = z.object({
   title: z.string().min(3).max(100),
-  description: z.string().min(10).max(5000),
+  description: z.string().min(3).max(5000),
   category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM']).nullable().optional().transform(v => v || 'OTHER'),
   maxAttendees: z.number().int().positive().optional(),
   price: z.number().min(0).default(0),

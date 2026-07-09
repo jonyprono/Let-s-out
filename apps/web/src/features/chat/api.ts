@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
+import { useAuthStore } from '@/stores/auth.store'
 
 export interface ConversationMember {
   userId: string
@@ -166,9 +167,46 @@ export function useDiscoverGroups(limit = 10, search?: string) {
 
 export function useSendMessage(conversationId: string) {
   const qc = useQueryClient()
+  const { user } = useAuthStore()
   return useMutation({
     mutationFn: ({ content, type }: { content: string; type?: string }) =>
       chatApi.sendMessage(conversationId, content, type),
+    onMutate: async ({ content, type }) => {
+      // Cancel in-flight queries
+      await qc.cancelQueries({ queryKey: ['chat', 'messages', conversationId] })
+      // Snapshot previous value
+      const prev = qc.getQueryData<Message[]>(['chat', 'messages', conversationId])
+      // Optimistically insert message
+      const optimisticMsg: Message = {
+        id: `optimistic-${Date.now()}`,
+        content,
+        type: type || 'TEXT',
+        senderId: user?.id || '',
+        conversationId,
+        createdAt: new Date().toISOString(),
+        isDeleted: false,
+        reactions: [],
+        sender: {
+          id: user?.id,
+          profile: {
+            username: '',
+            displayName: '',
+            avatarUrl: null,
+          },
+        },
+        _optimistic: true,
+      } as any
+      qc.setQueryData<Message[]>(['chat', 'messages', conversationId], (old = []) => [
+        ...old,
+        optimisticMsg,
+      ])
+      return { prev }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prev) {
+        qc.setQueryData(['chat', 'messages', conversationId], context.prev)
+      }
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['chat', 'messages', conversationId] })
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })

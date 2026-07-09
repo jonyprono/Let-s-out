@@ -211,7 +211,23 @@ export function ChatDetails() {
   const [showContributeModal, setShowContributeModal] = useState(false)
   const [pickerMsgId, setPickerMsgId] = useState<string | null>(null)
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null)
-  const [localDeletedMessages, setLocalDeletedMessages] = useState<string[]>([])
+  const [localDeletedMessages, setLocalDeletedMessagesState] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`deleted-messages-${id}`)
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
+  })
+
+  const setLocalDeletedMessages = (updater: string[] | ((prev: string[]) => string[])) => {
+    setLocalDeletedMessagesState(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`deleted-messages-${id}`, JSON.stringify(next))
+      }
+      return next
+    })
+  }
   const [typingUser, setTypingUser] = useState<string | null>(null)
   const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
 
@@ -227,6 +243,7 @@ export function ChatDetails() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isCancelledRef = useRef(false)
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -290,6 +307,7 @@ export function ChatDetails() {
   // Voice Notes
   const startRecording = async () => {
     try {
+      isCancelledRef.current = false
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const recorder = new MediaRecorder(stream)
       mediaRecorderRef.current = recorder
@@ -301,6 +319,8 @@ export function ChatDetails() {
 
       recorder.onstop = async () => {
         stream.getTracks().forEach(track => track.stop())
+        if (isCancelledRef.current) return
+        
         if (audioChunksRef.current.length > 0) {
           const mimeType = recorder.mimeType || 'audio/webm'
           const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
@@ -355,6 +375,7 @@ export function ChatDetails() {
 
   const cancelRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      isCancelledRef.current = true
       audioChunksRef.current = [] // clear chunks to prevent upload
       mediaRecorderRef.current.stop()
       setIsRecording(false)
@@ -529,7 +550,7 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[var(--color-background-primary)]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[var(--color-background-primary)]" style={{ paddingBottom: 'calc(140px + env(safe-area-inset-bottom, 0px))' }}>
         {isLoading ? (
           <div className="flex flex-col gap-4 py-4">
             {[1, 2, 3, 4, 5].map(i => {
@@ -745,8 +766,8 @@ export function ChatDetails() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="flex-shrink-0 bg-[var(--color-background-primary)] px-4 py-3 flex items-center gap-3 pb-safe-bottom z-10 border-t border-[#F2F2F2]">
+      {/* Input Area — fixed above bottom navigation */}
+      <div className="fixed left-0 right-0 z-20 bg-[var(--color-background-primary)] border-t border-[#F2F2F2] px-4 py-3 flex items-center gap-3" style={{ bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
         {isRecording ? (
           <div className="flex-1 flex items-center justify-between h-[48px] bg-[#FCFCFC] border border-[#DFDFDF] rounded-full px-[16px] gap-[12px] overflow-hidden relative">
