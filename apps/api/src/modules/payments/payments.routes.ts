@@ -234,7 +234,7 @@ async function handleConfirmedBooking(
     where: { id: eventId },
     select: { poolTarget: true, creatorId: true, title: true },
   })
-  const isPoolContribution = !isNewParticipant && !!(eventForPool?.poolTarget && eventForPool.poolTarget > 0)
+  const isPoolContribution = !!(eventForPool?.poolTarget && eventForPool.poolTarget > 0)
 
   const [booking] = await app.prisma.$transaction([
     app.prisma.booking.upsert({
