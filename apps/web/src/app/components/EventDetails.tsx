@@ -773,8 +773,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       )}
 
       {/* ── Attendees Modal ── */}
-      {showAttendeesModal && (
-        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200" onClick={() => setShowAttendeesModal(false)}>
+      {showParticipantsModal && (
+        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200" onClick={() => setShowParticipantsModal(false)}>
           <div className="w-full h-[80%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />

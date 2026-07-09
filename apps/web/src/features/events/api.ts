@@ -26,6 +26,8 @@ export interface Event {
   tags: string[]
   viewCount: number
   createdAt: string
+  poolDescription?: string
+  registrationDeadline?: string
   creator: {
     id: string
     profile?: { 
