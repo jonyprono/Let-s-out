@@ -579,7 +579,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </div>
 
                   {/* Bouton Gérer la cagnotte pour les organisateurs */}
-                  {isOrganizer && new Date() > new Date(event?.joinDeadline || event?.startAt || new Date()) && (
+                  {isOrganizer && new Date() > new Date(event?.startAt || new Date()) && (
                     <button
                       onClick={() => setShowPoolManagementModal(true)}
                       className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] bg-orange-50 text-[14px] font-medium text-[#FF7A00] active:scale-95 transition-transform"
