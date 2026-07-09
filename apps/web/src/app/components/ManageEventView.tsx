@@ -81,7 +81,8 @@ export function ManageEventView({
   const handlePublish = async () => {
     // Vérification de profil obligatoire pour les événements payants ou cagnotte
     const needsVerification = (event.price && event.price > 0) || (event.poolTarget && event.poolTarget > 0)
-    if (needsVerification && !user?.profile?.isVerified) {
+    const isVerified = (user as any)?.isVerified || (user as any)?.profile?.isVerified
+    if (needsVerification && !isVerified) {
       toast.error("Votre compte doit être vérifié pour publier un événement payant ou avec cagnotte.")
       navigate('/verify-profile')
       return
