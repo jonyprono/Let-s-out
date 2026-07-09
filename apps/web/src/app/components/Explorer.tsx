@@ -513,7 +513,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         city={ev.city || ''}
                         place={ev.address || ''}
                         attendeesCount={`${ev.currentAttendees || 0} Participants`}
-                        price={ev.price === 0 ? "Gratuit" : `${ev.price} ${ev.currency || 'CFA'}`}
                         cover={true}
                       />
                     );

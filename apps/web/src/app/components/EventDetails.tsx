@@ -11,13 +11,12 @@ import {
   BadgeCheck,
   X,
   Briefcase,
-  MessageCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SaveEventButton } from '@/components/ui/save-event-button'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
-import { Share08Icon } from 'hugeicons-react'
+import { Share08Icon, Comment01Icon } from 'hugeicons-react'
 import { chatApi } from '@/features/chat/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
@@ -641,7 +640,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   onClick={goToChat}
                   className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
                 >
-                  <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
+                  <Comment01Icon className="w-4 h-4" strokeWidth={1.8} />
                   Accéder au chat
                 </Button>
               )}

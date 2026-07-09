@@ -246,24 +246,25 @@ export const EventCard = memo(function EventCard({
           </div>
 
           {/* Badge Prix */}
-          {badge ?? (
-            <div className={`px-3 py-1 rounded-full flex items-center justify-center ${
-              displayPrice.toLowerCase() === 'gratuit' || displayPrice.toLowerCase() === 'free'
-                ? 'bg-[#E8F8F0]'
-                : 'bg-gray-100 dark:bg-[#2a2a2a]'
-            }`}>
-              <span 
-                className={`text-[13px] font-semibold ${
-                  displayPrice.toLowerCase() === 'gratuit' || displayPrice.toLowerCase() === 'free'
-                    ? 'text-[#00A35F]'
-                    : 'text-gray-700'
-                }`} 
-                style={{ fontFamily: 'var(--font-poppins)' }}
-              >
-                {displayPrice}
-              </span>
-            </div>
-          )}
+          {badge ?? (() => {
+            const priceLC = displayPrice.toLowerCase()
+            const isFree = priceLC === 'gratuit' || priceLC === 'free'
+            const isCagnotte = priceLC === 'cagnotte'
+            return (
+              <div className={`px-3 py-1 rounded-full flex items-center justify-center ${
+                isFree ? 'bg-[#E8F8F0]' : isCagnotte ? 'bg-[#FFF3E8]' : 'bg-gray-100 dark:bg-[#2a2a2a]'
+              }`}>
+                <span
+                  className={`text-[13px] font-semibold ${
+                    isFree ? 'text-[#00A35F]' : isCagnotte ? 'text-[#FF7A00]' : 'text-gray-700'
+                  }`}
+                  style={{ fontFamily: 'var(--font-poppins)' }}
+                >
+                  {displayPrice}
+                </span>
+              </div>
+            )
+          })()}
         </div>
       </div>
 

@@ -550,7 +550,7 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[var(--color-background-primary)]" style={{ paddingBottom: 'calc(140px + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[var(--color-background-primary)]" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
         {isLoading ? (
           <div className="flex flex-col gap-4 py-4">
             {[1, 2, 3, 4, 5].map(i => {
@@ -766,8 +766,8 @@ export function ChatDetails() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area — fixed above bottom navigation */}
-      <div className="fixed left-0 right-0 z-20 bg-[var(--color-background-primary)] border-t border-[#F2F2F2] px-4 py-3 flex items-center gap-3" style={{ bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}>
+      {/* Input Area — fixed at the bottom (nav is hidden for /chat/ routes) */}
+      <div className="fixed left-0 right-0 z-20 bg-[var(--color-background-primary)] border-t border-[#F2F2F2] px-4 py-3 flex items-center gap-3" style={{ bottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
         {isRecording ? (
           <div className="flex-1 flex items-center justify-between h-[48px] bg-[#FCFCFC] border border-[#DFDFDF] rounded-full px-[16px] gap-[12px] overflow-hidden relative">
