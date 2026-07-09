@@ -470,7 +470,10 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       </div>
 
       {/* ── Bottom Button ───────────────────────────── */}
-      <div className="px-5 pb-6 pt-3 shrink-0 bg-[var(--color-background-primary)]">
+      <div 
+        className="px-5 pt-3 shrink-0 bg-[var(--color-background-primary)]"
+        style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}
+      >
         <PrimaryButton
           onClick={handleNext}
           disabled={isNextDisabled()}
