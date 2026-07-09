@@ -183,7 +183,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const me = useAuthStore((state: any) => state.user)
-  const isVerified = me?.isVerified || me?.profile?.isVerified
+  // isVerified on User model = phone/email OTP verified (always true after signup)
+  // For financial features (cagnotte/paid), we need KYC verification: profile.kycStatus === 'verified'
+  const isKycVerified = me?.profile?.kycStatus === 'verified'
 
   // ── Form state ──────────────────────────────────────────────────────────
   const [title, setTitle] = useState(sessionDraft?.title ?? '')
@@ -474,16 +476,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const isPaid = amount && parseFloat(amount) > 0;
   const hasCagnotte = participationMode === 'cagnotte' || (enablePool && poolTarget && parseFloat(poolTarget) > 0);
   const requiresVerification = isPaid || hasCagnotte;
+  // Use KYC status for financial features
+  const isVerified = isKycVerified;
 
   // ── Auto-transition to publish ──────────────────────────────────────────
   useEffect(() => {
-    if (step === 'done' && participationMode !== 'cagnotte') {
+    if (step === 'done' && !requiresVerification) {
       const timer = setTimeout(() => {
         handlePublish()
       }, 2500)
       return () => clearTimeout(timer)
     }
-  }, [step, participationMode])
+  }, [step, requiresVerification])
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER — DONE or PUBLISHED screen

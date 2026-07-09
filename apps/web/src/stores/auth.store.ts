@@ -20,7 +20,7 @@ export interface AuthUser {
     city?: string
     country?: string
     isPublic?: boolean
-    kycStatus?: string
+    kycStatus?: string  // 'pending' | 'verified' | 'rejected'
     interests: string[]
     followersCount?: number
     eventsCount?: number

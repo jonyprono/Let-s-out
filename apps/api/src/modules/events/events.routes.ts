@@ -428,8 +428,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const needsVerification = (event.price && event.price > 0) || (event.poolTarget && event.poolTarget > 0)
     if (needsVerification) {
       const userProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
-      if (!userProfile?.isVerified) {
-        return reply.code(403).send({ error: "Le profil doit être vérifié pour publier cet événement." })
+      if (userProfile?.kycStatus !== 'verified') {
+        return reply.code(403).send({ error: "Le profil doit être vérifié (KYC) pour publier cet événement." })
       }
     }
 
