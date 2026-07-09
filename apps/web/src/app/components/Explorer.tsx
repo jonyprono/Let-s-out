@@ -154,8 +154,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       <div className="fixed inset-0 z-50 bg-[#FAFAFA] dark:bg-[#0a0a0b] flex flex-col pt-safe-6">
         {/* Barre de recherche */}
         <div className="px-[20px] py-[12px] shrink-0 flex items-center self-stretch box-border w-full min-w-0 bg-[#FAFAFA] dark:bg-[#0a0a0b]">
-          <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white dark:bg-[#1A1A1A] box-border shadow-sm min-w-0 ${
-            isSearching ? 'border-2 border-[var(--brand-orange-500)]' : 'border border-[var(--border-default)]'
+          <div className={`flex-1 flex items-center gap-[8px] rounded-[999px] px-[16px] h-[44px] bg-white dark:bg-[#1A1A1A] box-border shadow-sm min-w-0 border transition-colors ${
+            isSearching ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
           }`}>
             <Location01Icon className="w-[20px] h-[20px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
             <input

@@ -14,9 +14,9 @@ import {
 } from '@/lib/auth-ui'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 import { SocialButton } from '@/components/ui/social-button'
 import { Divider } from '@/components/ui/divider'
+import { PrimaryButton } from '@/components/shared/PrimaryButton'
 
 interface LoginProps {
   onSignup: () => void
@@ -170,15 +170,14 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         <div className="mt-4 w-full">
-          {/* Bouton Se connecter - rounded-full capsule déjà dans buttonVariants */}
-          <Button
-            type="button"
+          {/* Bouton Se connecter */}
+          <PrimaryButton
             onClick={handleLogin}
-            disabled={!phone.trim() || !password || logging}
-            className="w-full h-[40px] bg-[#FF991C] hover:bg-[#e68a19] text-white font-poppins text-[14px] font-medium leading-[20px] rounded-full"
+            disabled={!phone.trim() || !password}
+            loading={logging}
           >
             {logging ? 'Connexion...' : 'Se connecter'}
-          </Button>
+          </PrimaryButton>
         </div>
 
         {/* Séparateur Ou */}

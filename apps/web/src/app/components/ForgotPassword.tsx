@@ -9,8 +9,8 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 import { COUNTRIES, Country } from '@/lib/countries'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PrimaryButton } from '@/components/shared/PrimaryButton'
 
 declare global {
   interface Window { recaptchaVerifier: any }
@@ -471,24 +471,13 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
       {/* ── Bottom Button ───────────────────────────── */}
       <div className="px-5 pb-6 pt-3 shrink-0 bg-[var(--color-background-primary)]">
-        <Button
-          type="button"
+        <PrimaryButton
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="w-full"
+          loading={isLoading}
         >
-          {isLoading && (
-            <RefreshIcon
-              width={20}
-              height={20}
-              strokeWidth={1.4}
-              className="animate-spin shrink-0 mr-2"
-            />
-          )}
-          <span className="break-words max-w-full">
-            {step === 3 ? 'Réinitialiser' : 'Suivant'}
-          </span>
-        </Button>
+          {step === 3 ? 'Réinitialiser' : 'Suivant'}
+        </PrimaryButton>
       </div>
     </div>
   )
