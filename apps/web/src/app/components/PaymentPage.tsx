@@ -222,12 +222,20 @@ export function PaymentPage() {
     }
   }
 
-  const onPaymentSuccess = (amount: number, contribution: boolean) => {
+  const onPaymentSuccess = async (amount: number, contribution: boolean) => {
     setStatus('success')
     setResolvedAmount(amount)
     if (contribution && eventId) {
       applyPoolContributionOptimistic(qc, eventId, amount)
     }
+    try {
+      if (eventId) {
+        await apiClient.post('/payments/sync-missed', { eventId })
+      }
+    } catch (e) {
+      console.warn("Sync missed failed", e)
+    }
+
     qc.invalidateQueries({ queryKey: ['chat'] })
     qc.invalidateQueries({ queryKey: ['events', eventId] })
     qc.invalidateQueries({ queryKey: ['events', eventId, 'my-booking'] })

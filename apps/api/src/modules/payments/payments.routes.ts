@@ -68,7 +68,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         description: `Participation : ${event.title}`,
         amount: finalAmount,
         currency: { iso: event.currency || 'XOF' },
-        callback_url: `${process.env.PUBLIC_API_URL || 'https://let-s-out.vercel.app'}/api/v1/payments/fedapay/callback`,
+        callback_url: `${process.env.PUBLIC_API_URL || 'https://let-s-out.onrender.com'}/api/v1/payments/fedapay/callback`,
         customer: {
           firstname: user.profile?.displayName?.split(' ')[0] || 'Utilisateur',
           lastname: user.profile?.displayName?.split(' ').slice(1).join(' ') || 'Anonyme',
@@ -156,7 +156,35 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 
     return reply.send({ received: true })
   })
-
+  // Sync missed FedaPay transactions (if webhook failed)
+  app.post('/sync-missed', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { eventId } = req.body as { eventId: string }
+    
+    try {
+      const txRes = await fetch('https://api.fedapay.com/v1/transactions?limit=50', {
+        headers: { Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}` }
+      })
+      const txData = (await txRes.json()) as any
+      const transactions = txData['v1/transactions'] || txData.data || txData.transactions || []
+      
+      const missedTx = transactions.find((tx: any) => {
+        if (tx.status !== 'approved') return false
+        let meta: any = {}
+        try { meta = typeof tx.custom_metadata === 'string' ? JSON.parse(tx.custom_metadata) : (typeof tx.metadata === 'string' ? JSON.parse(tx.metadata) : (tx.metadata || tx.custom_metadata)) } catch {}
+        return meta?.userId === sub && meta?.eventId === eventId
+      })
+      
+      if (missedTx) {
+        await handleConfirmedBooking(app, { eventId, userId: sub, amount: missedTx.amount })
+        return reply.send({ success: true, message: 'Paiement synchronisé' })
+      }
+      return reply.code(404).send({ error: 'Aucune transaction approuvée trouvée' })
+    } catch (e: any) {
+      app.log.error(e)
+      return reply.code(500).send({ error: 'Erreur de synchronisation' })
+    }
+  })
 
   // DEV uniquement : confirmer manuellement (simule le webhook)
   app.post('/dev/confirm-booking', { preHandler: [app.authenticate] }, async (req, reply) => {

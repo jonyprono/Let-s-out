@@ -579,10 +579,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </div>
 
                   {/* Bouton Gérer la cagnotte pour les organisateurs */}
-                  {isOrganizer && (
+                  {isOrganizer && new Date() > new Date(event?.joinDeadline || event?.startAt || new Date()) && (
                     <button
                       onClick={() => setShowPoolManagementModal(true)}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-[12px] border border-[#E8F5E9] bg-orange-50 text-[13px] font-semibold text-[#FF7A00] active:scale-95 transition-transform"
+                      className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] bg-orange-50 text-[14px] font-medium text-[#FF7A00] active:scale-95 transition-transform"
                     >
                       <Briefcase className="w-4 h-4" />
                       Gérer la cagnotte
@@ -599,9 +599,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           toast.info("Rejoignez l'événement avant de contribuer.")
                         }
                       }}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-[12px] border border-[#E8F5E9] bg-[#F0FBF0] text-[13px] font-semibold text-[#2E7D32] active:scale-95 transition-transform"
+                      className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] bg-white text-[14px] font-medium text-[#1B1818] active:scale-95 transition-transform mt-[16px]"
                     >
-                      <span className="text-base">🎟️</span>
+                      <span className="text-[16px]">💵</span>
                       Contribuer à nouveau
                     </button>
                   )}
@@ -637,29 +637,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 Partager
               </Button>
               {event?.status === 'PUBLISHED' && (
-                hasPool ? (
-                  <Button
-                    onClick={() => {
-                      if (isCreator || participationPaid || hasJoined) {
-                        navigate(`/events/${id}/pay`)
-                      } else {
-                        toast.info("Rejoignez l'événement avant de contribuer.")
-                      }
-                    }}
-                    className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
-                  >
-                    <span className="text-[16px]">🎟️</span>
-                    Contribuer à nouveau
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={goToChat}
-                    className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
-                  >
-                    <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
-                    Accéder au chat
-                  </Button>
-                )
+                <Button
+                  onClick={goToChat}
+                  className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
+                >
+                  <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
+                  Accéder au chat
+                </Button>
               )}
             </>
           ) : (
