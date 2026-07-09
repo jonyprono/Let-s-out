@@ -35,6 +35,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
+import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { SquareUnlock01Icon, SquareLock01Icon, EarthIcon, Coins01Icon } from 'hugeicons-react'
 import { toast } from 'sonner'
 import { searchPlaces, reverseGeocode } from '@/lib/geo'
@@ -1024,24 +1025,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* ── Footer CTA ───────────────────────────────────────────────────── */}
-      <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] border-t border-[var(--border-tertiary)] px-5 py-4">
+    <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] border-t border-[var(--border-tertiary)] px-5 py-4">
         {formStep === 1 ? (
-          <button
-            onClick={() => { if (canGoToStep2) setFormStep(2) }}
+          <PrimaryButton
+            onClick={() => setFormStep(2)}
             disabled={!canGoToStep2}
-            className={`w-full py-[15px] rounded-[100px] font-bold text-[length:var(--font-size-body-medium)] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${!canGoToStep2 ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
           >
             Suivant
-          </button>
+          </PrimaryButton>
         ) : (
-          <button
+          <PrimaryButton
             onClick={handleSubmit}
-            disabled={loading || !canSubmit}
-            className={`w-full py-[15px] rounded-[100px] font-bold text-[length:var(--font-size-body-medium)] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${loading || !canSubmit ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
+            disabled={!canSubmit}
+            loading={loading}
           >
-            {loading ? <div className="w-5 h-5 border-2 border-[var(--brand-orange-400)] border-t-transparent rounded-full animate-spin" /> : null}
-            {loading ? "Création..." : "Créer l'événement"}
-          </button>
+            Créer l'événement
+          </PrimaryButton>
         )}
       </div>
 
