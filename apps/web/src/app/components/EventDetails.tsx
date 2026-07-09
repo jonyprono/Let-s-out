@@ -425,8 +425,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   const orgAvatar = org.profile?.avatarUrl;
                   const orgFollowers = org.profile?.followersCount || 0;
                   const orgEvents = org.detailedStats?.eventsCount || org.profile?.eventsCount || 0;
-                  const rawRating = org.detailedStats?.rating || org.profile?.rating || 0;
-                  const orgRating = rawRating > 0 ? Number(rawRating).toFixed(1) : 0;
+                  const rawRating = Number(org.detailedStats?.rating || org.profile?.rating || 0);
+                  const orgRating = rawRating > 0 ? rawRating.toFixed(1) : null;
                   
                   return (
                     <div key={org.id} className="flex flex-col gap-[12px] bg-[var(--color-background-primary)] rounded-[12px] border border-[var(--border-default)] p-[12px] shadow-sm">
@@ -456,7 +456,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                             <BadgeCheck className="w-[14px] h-[14px] text-[#007AFF]" />
                           </div>
                           <p className="text-[12px] font-normal font-inter text-[var(--color-text-secondary)]">
-                            {orgFollowers} followers • {orgEvents} événements {orgRating > 0 && <span>• {orgRating} <span className="text-[#FF2E93]">★</span></span>}
+                            {orgFollowers} followers • {orgEvents} événements {orgRating && <span>• {orgRating} <span className="text-[#FF2E93]">★</span></span>}
                           </p>
                         </div>
                       </div>
