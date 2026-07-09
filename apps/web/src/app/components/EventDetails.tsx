@@ -579,7 +579,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </div>
 
                   {/* Bouton Gérer la cagnotte pour les organisateurs */}
-                  {isOrganizer && new Date() > new Date(event?.startAt || new Date()) && (
+                  {isOrganizer && new Date() > new Date(event?.registrationDeadline || event?.startAt || new Date()) && (
                     <button
                       onClick={() => setShowPoolManagementModal(true)}
                       className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] bg-orange-50 text-[14px] font-medium text-[#FF7A00] active:scale-95 transition-transform"
@@ -772,10 +772,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         </div>
       )}
 
-      {/* ── Participants Modal ── */}
-      {showParticipantsModal && (
-        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[80%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+      {/* ── Attendees Modal ── */}
+      {showAttendeesModal && (
+        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200" onClick={() => setShowAttendeesModal(false)}>
+          <div className="w-full h-[80%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
@@ -832,8 +832,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
       {/* ── Contributions Modal ── */}
       {showContributionsModal && (
-        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[80%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200" onClick={() => setShowContributionsModal(false)}>
+          <div className="w-full h-[80%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
@@ -895,8 +895,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
       {/* Pending Bookings Modal (Organizer) */}
       {showPendingModal && isOrganizer && (
-        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full h-[70%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300">
+        <div className="absolute inset-0 z-50 bg-black/60 flex items-end justify-center animate-in fade-in duration-200" onClick={() => setShowPendingModal(false)}>
+          <div className="w-full h-[70%] bg-white dark:bg-[#1A1A1A] rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
