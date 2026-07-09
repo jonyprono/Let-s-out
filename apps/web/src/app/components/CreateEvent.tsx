@@ -367,8 +367,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Submit ───────────────────────────────────────────────────────────────  // Enable/disable 'Next' button
-  const canGoToStep2 = isFieldValid(title) && !!startDate && !!startTime
+  // Enable/disable 'Next' button
+  const canGoToStep2 = isFieldValid(title) && !!startDate && !!startTime && !!(address || city) && !!privacy && isFieldValid(description)
   const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
   const canSubmit = canGoToStep2 && !!participationMode && isCagnotteValid
 
