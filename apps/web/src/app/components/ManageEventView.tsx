@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/api-client'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getEventParticipationMode } from '@/lib/utils'
+import { useAuthStore } from '@/features/auth/store'
 import { clearCreateEventDraft } from './CreateEvent'
 
 interface ManageEventViewProps {
@@ -69,6 +70,7 @@ export function ManageEventView({
   event, organizerName, organizerAvatar, formattedDate, formattedStart, formattedEnd, onBack
 }: ManageEventViewProps) {
   const navigate = useNavigate()
+  const { user } = useAuthStore()
   const qc = useQueryClient()
   const [publishing, setPublishing] = useState(false)
 
@@ -77,6 +79,14 @@ export function ManageEventView({
   }
 
   const handlePublish = async () => {
+    // Vérification de profil obligatoire pour les événements payants ou cagnotte
+    const needsVerification = (event.price && event.price > 0) || (event.poolTarget && event.poolTarget > 0)
+    if (needsVerification && !user?.profile?.isVerified) {
+      toast.error("Votre compte doit être vérifié pour publier un événement payant ou avec cagnotte.")
+      navigate('/verify-profile')
+      return
+    }
+
     setPublishing(true)
     try {
       await apiClient.put(`/events/${event.id}/publish`)

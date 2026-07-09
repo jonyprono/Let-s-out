@@ -114,7 +114,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     enabled: !!id && isOrganizer && showPendingModal,
   })
 
-  const hasJoined = !!myBookingData && myBookingData.status !== 'CANCELLED'
+  const hasJoined = (!!myBookingData && myBookingData.status !== 'CANCELLED') || isCreator
 
   const joinMutation = useMutation({
     mutationFn: () => eventsApi.join(id!),
@@ -578,6 +578,17 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     </div>
                   </div>
 
+                  {/* Bouton Gérer la cagnotte pour les organisateurs */}
+                  {isOrganizer && (
+                    <button
+                      onClick={() => setShowPoolManagementModal(true)}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-[12px] border border-[#E8F5E9] bg-orange-50 text-[13px] font-semibold text-[#FF7A00] active:scale-95 transition-transform"
+                    >
+                      <Briefcase className="w-4 h-4" />
+                      Gérer la cagnotte
+                    </button>
+                  )}
+
                   {/* "Contribuer à nouveau" if already joined */}
                   {(hasJoined || participationPaid) && (
                     <button
@@ -615,7 +626,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] px-4 pt-4 pb-safe-4 border-t border-[var(--border-default)] flex items-center gap-3 z-10"
         >
           {hasJoined ? (
-            /* Participant: two buttons */
+            /* Participant or Creator: two buttons */
             <>
               <Button
                 variant="outline"
@@ -626,13 +637,29 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 Partager
               </Button>
               {event?.status === 'PUBLISHED' && (
-                <Button
-                  onClick={goToChat}
-                  className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
-                >
-                  <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
-                  Accéder au chat
-                </Button>
+                hasPool ? (
+                  <Button
+                    onClick={() => {
+                      if (isCreator || participationPaid || hasJoined) {
+                        navigate(`/events/${id}/pay`)
+                      } else {
+                        toast.info("Rejoignez l'événement avant de contribuer.")
+                      }
+                    }}
+                    className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
+                  >
+                    <span className="text-[16px]">🎟️</span>
+                    Contribuer à nouveau
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={goToChat}
+                    className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
+                  >
+                    <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
+                    Accéder au chat
+                  </Button>
+                )
               )}
             </>
           ) : (
