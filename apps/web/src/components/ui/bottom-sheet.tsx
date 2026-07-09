@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export interface BottomSheetProps {
   title?: string;
@@ -10,12 +10,34 @@ export interface BottomSheetProps {
 }
 
 export function BottomSheet({ title, open, onClose, children, noPadding, className }: BottomSheetProps) {
+  useEffect(() => {
+    if (open) {
+      // Push state to history so the hardware back button will consume this state instead of navigating away
+      window.history.pushState({ bottomSheet: true }, '');
+      
+      const handlePopState = () => {
+        // PopState doesn't need preventDefault
+        onClose();
+      };
+      
+      window.addEventListener('popstate', handlePopState);
+      
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        // If closed by other means (like clicking backdrop), remove the state we pushed
+        if (window.history.state?.bottomSheet) {
+          window.history.back();
+        }
+      };
+    }
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+    <div className="fixed inset-0 z-50 flex items-end justify-center pointer-events-auto">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
       <div
-        className={`relative w-full bg-[var(--color-background-primary)] max-h-[95vh] flex flex-col rounded-t-[32px] ${noPadding ? '' : 'px-5 pt-4 pb-10'} ${className || ''}`}
+        className={`relative w-full max-w-[600px] bg-[var(--color-background-primary)] max-h-[95vh] flex flex-col rounded-t-[32px] ${noPadding ? '' : 'px-5 pt-4 pb-10'} ${className || ''} animate-in slide-in-from-bottom-full duration-300`}
         style={{ 
           boxShadow: 'var(--shadow-bottom-sheet)' 
         }}

@@ -10,6 +10,8 @@ import { EventCard } from '@/components/shared/EventCard';
 import ExplorerMap from '@/app/components/ExplorerMap';
 import { eventsApi, type Event } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
+import PullToRefresh from 'react-simple-pull-to-refresh';
+
 interface ExplorerProps {
   onNavigate: (screen: string, id?: string) => void;
 }
@@ -101,17 +103,22 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [eventSearch, setEventSearch] = useState('');
   const [events, setEvents] = useState<Event[]>([]);
 
+  const fetchEvents = async () => {
+    try {
+      const res = await eventsApi.list({ limit: 500 });
+      setEvents(res.data.data || []);
+    } catch (err) {
+      console.error('Failed to fetch events:', err);
+    }
+  };
+
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await eventsApi.list({ limit: 500 });
-        setEvents(res.data.data || []);
-      } catch (err) {
-        console.error('Failed to fetch events:', err);
-      }
-    };
     fetchEvents();
   }, []);
+
+  const handleRefresh = async () => {
+    await fetchEvents();
+  };
 
 
 
@@ -489,31 +496,35 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
         {/* Vue Liste (List View) */}
         {viewMode === 'list' && (
-          <div className="flex-1 overflow-y-auto px-4 pt-4 pb-[80px] flex flex-col relative z-10 bg-background">
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map(ev => {
-                const dateObj = new Date(ev.startAt);
-                const dateStr = dateObj.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                return (
-                  <EventCard
-                    key={ev.id}
-                    event={ev}
-                    onNavigate={onNavigate}
-                    name={ev.title}
-                    datetime={dateStr}
-                    city={ev.city || ''}
-                    place={ev.address || ''}
-                    attendeesCount={`${ev.currentAttendees || 0} Participants`}
-                    price={ev.price === 0 ? "Gratuit" : `${ev.price} ${ev.currency || 'CFA'}`}
-                    cover={true}
-                  />
-                );
-              })
-            ) : (
-              <div className="w-full text-center py-10 mt-10">
-                <p className="text-[#9CA3AF] text-[15px] font-poppins">Aucun résultat</p>
+          <div className="flex-1 overflow-y-auto relative z-10 bg-background h-full w-full">
+            <PullToRefresh onRefresh={handleRefresh} pullingContent="" refreshingContent={<div className="p-4 text-center text-[var(--color-text-secondary)] text-sm">Actualisation...</div>}>
+              <div className="px-4 pt-4 pb-[80px] flex flex-col min-h-[100vh]">
+                {filteredEvents.length > 0 ? (
+                  filteredEvents.map(ev => {
+                    const dateObj = new Date(ev.startAt);
+                    const dateStr = dateObj.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                    return (
+                      <EventCard
+                        key={ev.id}
+                        event={ev}
+                        onNavigate={onNavigate}
+                        name={ev.title}
+                        datetime={dateStr}
+                        city={ev.city || ''}
+                        place={ev.address || ''}
+                        attendeesCount={`${ev.currentAttendees || 0} Participants`}
+                        price={ev.price === 0 ? "Gratuit" : `${ev.price} ${ev.currency || 'CFA'}`}
+                        cover={true}
+                      />
+                    );
+                  })
+                ) : (
+                  <div className="w-full text-center py-10 mt-10">
+                    <p className="text-[#9CA3AF] text-[15px] font-poppins">Aucun résultat</p>
+                  </div>
+                )}
               </div>
-            )}
+            </PullToRefresh>
             
             {/* Bouton pour aller sur la Carte */}
             <div className="fixed bottom-[100px] right-5 z-[1050]">

@@ -284,8 +284,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const organizerName = event.creator?.profile?.displayName || 'Organisateur'
   const organizerAvatar = event.creator?.profile?.avatarUrl
 
-  const coverUrl = event.coverUrl ||
-    'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&h=400&fit=crop'
+  const coverUrl = event.coverUrl || null
 
   const amountToPay = event.price || 0
   const hasPool = hasActivePool(event)
@@ -339,8 +338,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           {/* Cover Image & Title block wrapper to align them properly */}
           <div className="flex flex-col gap-3">
             {/* Cover Image */}
-            <div className="min-h-[200px] w-full bg-slate-100 relative mb-4">
-              <SafeImage src={coverUrl} alt={event.title} className="w-full h-full object-cover" />
+            <div className="min-h-[200px] w-full bg-[var(--color-background-secondary)] relative mb-4 flex items-center justify-center">
+              {coverUrl ? (
+                <SafeImage src={coverUrl} alt={event.title} className="w-full h-full object-cover absolute inset-0" />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-[var(--color-icon-muted)]">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                </div>
+              )}
               {/* Badge superposé en bas à gauche */}
               {event.category && (
                 <div className="absolute -bottom-3 left-4">
@@ -419,8 +424,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   const orgName = org.profile?.displayName || 'Organisateur';
                   const orgAvatar = org.profile?.avatarUrl;
                   const orgFollowers = org.profile?.followersCount || 0;
-                  const orgEvents = org.profile?.eventsCount || 0;
-                  const orgRating = org.profile?.rating || 0;
+                  const orgEvents = org.detailedStats?.eventsCount || org.profile?.eventsCount || 0;
+                  const rawRating = org.detailedStats?.rating || org.profile?.rating || 0;
+                  const orgRating = rawRating > 0 ? Number(rawRating).toFixed(1) : 0;
                   
                   return (
                     <div key={org.id} className="flex flex-col gap-[12px] bg-[var(--color-background-primary)] rounded-[12px] border border-[var(--border-default)] p-[12px] shadow-sm">

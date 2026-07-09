@@ -7,6 +7,7 @@ import { NewConversationModal } from '@/features/chat/components/NewConversation
 import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { useAuthStore } from '@/stores/auth.store';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 
 interface MessagesProps {}
 
@@ -15,7 +16,7 @@ interface MessagesProps {}
 export function Messages(_props: MessagesProps) {
   const navigate = useNavigate();
   useChatSocket();
-  const { data: conversations, isLoading } = useConversations();
+  const { data: conversations, isLoading, refetch } = useConversations();
   const [showNewConv, setShowNewConv] = useState(false);
   const [showAddFriends, setShowAddFriends] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -216,39 +217,41 @@ export function Messages(_props: MessagesProps) {
         </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center py-[16px]" style={{ scrollbarWidth: 'none' }}>
-        {isLoading ? (
-          <div className="w-full flex flex-col gap-[16px] px-[16px]">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="w-full h-[48px] bg-white dark:bg-[#1A1A1A] rounded-2xl flex items-center gap-[8px] animate-pulse">
-                <div className="w-[48px] h-[48px] rounded-[24px] bg-gray-200 dark:bg-[#3A3A3A] flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 dark:bg-[#3A3A3A] rounded-lg w-2/3" />
-                  <div className="h-3 bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] rounded-lg w-full" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <>
-            {visibleConversations.length > 0 ? (
+      <div className="flex-1 overflow-y-auto flex flex-col items-center py-[16px] w-full" style={{ scrollbarWidth: 'none' }}>
+        <PullToRefresh onRefresh={async () => { await refetch(); }} pullingContent="" refreshingContent={<div className="p-4 text-center text-[var(--color-text-secondary)] text-sm">Actualisation...</div>}>
+          <div className="flex flex-col items-center w-full min-h-[100vh]">
+            {isLoading ? (
               <div className="w-full flex flex-col gap-[16px] px-[16px]">
-                {visibleConversations.map(conv => (
-                  <ConvItem 
-                    key={conv.id} 
-                    conv={conv} 
-                    onNavigate={() => {
-                      if (forceUnreadConvs.includes(conv.id)) toggleReadStatus(conv.id, 1);
-                      navigate(`/chat/${conv.id}`)
-                    }} 
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setContextMenu({ x: e.clientX, y: e.clientY, convId: conv.id, unread: conv.unread });
-                    }}
-                  />
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="w-full h-[48px] bg-white dark:bg-[#1A1A1A] rounded-2xl flex items-center gap-[8px] animate-pulse">
+                    <div className="w-[48px] h-[48px] rounded-[24px] bg-gray-200 dark:bg-[#3A3A3A] flex-shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 dark:bg-[#3A3A3A] rounded-lg w-2/3" />
+                      <div className="h-3 bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] rounded-lg w-full" />
+                    </div>
+                  </div>
                 ))}
               </div>
             ) : (
+              <>
+                {visibleConversations.length > 0 ? (
+                  <div className="w-full flex flex-col gap-[16px] px-[16px]">
+                    {visibleConversations.map(conv => (
+                      <ConvItem 
+                        key={conv.id} 
+                        conv={conv} 
+                        onNavigate={() => {
+                          if (forceUnreadConvs.includes(conv.id)) toggleReadStatus(conv.id, 1);
+                          navigate(`/chat/${conv.id}`)
+                        }} 
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          setContextMenu({ x: e.clientX, y: e.clientY, convId: conv.id, unread: conv.unread });
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
               /* Empty state */
               <div className="flex-1 flex flex-col items-center justify-center gap-[20px] px-[16px] w-full max-w-[358px] pb-[100px]">
                 {/* Chat Empty Illustration */}
@@ -310,6 +313,8 @@ export function Messages(_props: MessagesProps) {
             )}
           </>
         )}
+          </div>
+        </PullToRefresh>
       </div>
 
       {/* FAB for filled state */}

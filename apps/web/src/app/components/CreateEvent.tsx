@@ -765,7 +765,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </button>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-[var(--brand-orange-500)] hover:bg-[var(--brand-orange-600)] shadow-md rounded-[6px] active:scale-95 transition-all">
+                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-black/40 hover:bg-black/50 backdrop-blur-md rounded-[6px] active:scale-95 transition-all border border-white/20">
                 <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Importer</span>
                 <Upload04Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
               </button>
