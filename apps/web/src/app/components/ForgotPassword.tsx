@@ -230,7 +230,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const isLoading = sendingOtp || checkingTarget || isFirebaseSending || isFirebaseVerifying || checkingOtp || resetting
 
   return (
-    <div className="w-full min-h-[100dvh] h-[100dvh] flex flex-col bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
+    <div className="w-full h-full flex flex-col flex-1 bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
       <div id="recaptcha-container-fp" />
 
       {/* ── Header ─────────────────────────────────────── */}
@@ -471,7 +471,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
       {/* ── Bottom Button ───────────────────────────── */}
       <div 
-        className="px-5 pt-3 shrink-0 bg-[var(--color-background-primary)]"
+        className="px-5 pt-3 mt-auto shrink-0 bg-[var(--color-background-primary)]"
         style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}
       >
         <PrimaryButton

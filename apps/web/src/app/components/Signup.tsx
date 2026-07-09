@@ -415,7 +415,7 @@ export function Signup({ onBack }: SignupProps) {
   const buttonLabel = step === 7 ? "Rejoindre Let's Out" : 'Suivant'
 
   return (
-    <div className="w-full min-h-[100dvh] h-[100dvh] flex flex-col bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
+    <div className="w-full h-full flex flex-col flex-1 bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
       <div id="recaptcha-container" />
 
       {/* ── Header ─────────────────────────────────────── */}
@@ -843,7 +843,7 @@ export function Signup({ onBack }: SignupProps) {
 
       {/* ── Bottom Area ─────────────────────────────────── */}
       <div 
-        className="px-5 pt-3 shrink-0 bg-[var(--color-background-primary)]"
+        className="px-5 pt-3 mt-auto shrink-0 bg-[var(--color-background-primary)]"
         style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}
       >
         {/* CGU — uniquement à l'étape 7 */}
