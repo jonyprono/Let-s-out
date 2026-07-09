@@ -625,13 +625,15 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 <Share08Icon className="w-4 h-4" strokeWidth={1.8} />
                 Partager
               </Button>
-              <Button
-                onClick={goToChat}
-                className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
-              >
-                <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
-                Accéder au chat
-              </Button>
+              {event?.status === 'PUBLISHED' && (
+                <Button
+                  onClick={goToChat}
+                  className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
+                >
+                  <MessageCircle className="w-4 h-4" strokeWidth={1.8} />
+                  Accéder au chat
+                </Button>
+              )}
             </>
           ) : (
             /* Non-participant: one wide button */

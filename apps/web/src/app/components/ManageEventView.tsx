@@ -79,7 +79,9 @@ export function ManageEventView({
     setPublishing(true)
     try {
       await apiClient.put(`/events/${event.id}/publish`)
+      clearCreateEventDraft()
       toast.success('🎉 Événement publié avec succès !')
+      qc.invalidateQueries({ queryKey: ['events'] })
       qc.invalidateQueries({ queryKey: ['events', event.id] })
     } catch (err: any) {
       toast.error(err?.response?.data?.error || 'Erreur lors de la publication')
