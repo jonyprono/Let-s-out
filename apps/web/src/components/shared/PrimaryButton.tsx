@@ -36,11 +36,11 @@ export function PrimaryButton({
       disabled={disabled || loading}
       className={cn(
         // ── Taille FIXE — ne jamais modifier ces classes ──
-        'w-full h-[40px] rounded-full',
+        'w-full px-[16px] py-[10px] rounded-[1000px]',
         // ── Style par défaut (orange) — surchargeables via className ──
-        'bg-[#FF991C] hover:bg-[#e68a19] text-white',
+        'bg-[#FF991C] hover:bg-[#FF7A00] text-white',
         // ── Typographie ──
-        'font-poppins text-[14px] font-medium leading-[20px]',
+        'font-roboto text-[14px] font-semibold leading-[20px]',
         // ── Comportement ──
         'flex items-center justify-center gap-2 transition-opacity disabled:opacity-50',
         className

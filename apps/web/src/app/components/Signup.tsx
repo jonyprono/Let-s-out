@@ -41,7 +41,7 @@ import { COUNTRIES, Country } from '@/lib/countries'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { CategoryChip } from '@/components/shared/CategoryChip'
-import { Button } from '@/components/ui/button'
+import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { Input } from '@/components/ui/input'
 import { isFieldValid } from '@/lib/validation'
 import { ProgressBar } from '@/components/ui/progress-bar'
@@ -416,7 +416,7 @@ export function Signup({ onBack }: SignupProps) {
   const buttonLabel = step === 7 ? "Rejoindre Let's Out" : 'Suivant'
 
   return (
-    <div className="w-full h-full flex flex-col bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
+    <div className="w-full min-h-[100dvh] h-[100dvh] flex flex-col bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
       <div id="recaptcha-container" />
 
       {/* ── Header ─────────────────────────────────────── */}
@@ -871,21 +871,13 @@ export function Signup({ onBack }: SignupProps) {
           </div>
         )}
 
-        <Button
+        <PrimaryButton
           onClick={handleNext}
           disabled={isNextDisabled()}
-          className="w-full"
+          loading={isLoading}
         >
-          {isLoading && (
-            <RefreshIcon
-              width={20}
-              height={20}
-              strokeWidth={1.4}
-              className="animate-spin shrink-0 mr-2"
-            />
-          )}
-          <span className="break-words max-w-full">{buttonLabel}</span>
-        </Button>
+          {buttonLabel}
+        </PrimaryButton>
       </div>
     </div>
   )

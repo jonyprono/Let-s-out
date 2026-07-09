@@ -230,7 +230,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const isLoading = sendingOtp || checkingTarget || isFirebaseSending || isFirebaseVerifying || checkingOtp || resetting
 
   return (
-    <div className="w-full h-full flex flex-col bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
+    <div className="w-full min-h-[100dvh] h-[100dvh] flex flex-col bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
       <div id="recaptcha-container-fp" />
 
       {/* ── Header ─────────────────────────────────────── */}
