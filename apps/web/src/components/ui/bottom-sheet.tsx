@@ -10,6 +10,12 @@ export interface BottomSheetProps {
 }
 
 export function BottomSheet({ title, open, onClose, children, noPadding, className }: BottomSheetProps) {
+  // Use a ref to always have the latest onClose without triggering effect re-runs
+  const onCloseRef = React.useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (open) {
       // Push state to history so the hardware back button will consume this state instead of navigating away
@@ -17,20 +23,20 @@ export function BottomSheet({ title, open, onClose, children, noPadding, classNa
       
       const handlePopState = () => {
         // PopState doesn't need preventDefault
-        onClose();
+        onCloseRef.current();
       };
       
       window.addEventListener('popstate', handlePopState);
       
       return () => {
         window.removeEventListener('popstate', handlePopState);
-        // If closed by other means (like clicking backdrop), remove the state we pushed
+        // Only pop the state if we are cleaning up while the history state still indicates it's our bottomSheet
         if (window.history.state?.bottomSheet) {
           window.history.back();
         }
       };
     }
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
   return (
