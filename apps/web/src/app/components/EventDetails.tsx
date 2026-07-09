@@ -43,6 +43,18 @@ import { useFavoritesStore } from '@/stores/favorites.store'
 
 import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
 
+const CustomShareIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M10.8333 7.0835H11.25V3.91379C11.25 3.5933 11.5098 3.3335 11.8302 3.3335C11.9917 3.3335 12.1457 3.40068 12.2555 3.51893L17.2165 8.8615C17.3987 9.05775 17.5 9.31566 17.5 9.5835C17.5 9.85133 17.3987 10.1092 17.2165 10.3055L12.2555 15.6481C12.1457 15.7663 11.9917 15.8335 11.8302 15.8335C11.5098 15.8335 11.25 15.5737 11.25 15.2532V12.0835C6.62129 12.0835 4.1224 15.4303 3.49332 16.4041C3.38948 16.5648 3.21428 16.6668 3.02292 16.6668C2.73412 16.6668 2.5 16.4327 2.5 16.1439V15.4168C2.5 10.8145 6.23096 7.0835 10.8333 7.0835Z" stroke="#56514F" strokeWidth="1.25" strokeLinejoin="round"/>
+  </svg>
+)
+
+const CustomChatIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5.20833 5.625H12.7083M5.20833 8.95833H9.79167M0.625 7.29167C0.625 6.64934 0.636217 6.02233 0.657575 5.41692C0.72735 3.43903 0.762242 2.45007 1.56672 1.63954C2.37121 0.829008 3.38808 0.7855 5.42183 0.698492C6.53764 0.65075 7.72575 0.625 8.95833 0.625C10.1909 0.625 11.379 0.65075 12.4948 0.698492C14.5286 0.7855 15.5455 0.829008 16.3499 1.63954C17.1544 2.45007 17.1893 3.43903 17.2591 5.41692C17.2804 6.02233 17.2917 6.64934 17.2917 7.29167C17.2917 7.934 17.2804 8.561 17.2591 9.16642C17.1893 11.1443 17.1544 12.1333 16.3499 12.9438C15.5455 13.7543 14.5286 13.7978 12.4948 13.8848C11.8832 13.911 11.2498 13.9306 10.5994 13.9429C9.98183 13.9546 9.673 13.9605 9.40167 14.0638C9.13033 14.1672 8.90208 14.3629 8.44542 14.7544L6.62919 16.3118C6.51894 16.4063 6.37849 16.4583 6.23326 16.4583C5.89732 16.4583 5.625 16.186 5.625 15.8501V13.8932C5.55702 13.8905 5.48929 13.8878 5.42182 13.8848C3.38807 13.7978 2.37121 13.7543 1.56672 12.9437C0.762242 12.1332 0.72735 11.1443 0.657575 9.16642C0.636217 8.561 0.625 7.934 0.625 7.29167Z" stroke="white" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
 interface EventDetailsProps {
   onBack: () => void
 }
@@ -632,7 +644,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 onClick={handleShare}
                 className="flex-[0.45] flex items-center justify-center gap-2 rounded-full font-semibold border-[var(--border-default)] text-[var(--color-text-primary)]"
               >
-                <Share08Icon className="w-4 h-4" strokeWidth={1.8} />
+                <CustomShareIcon />
                 Partager
               </Button>
               {event?.status === 'PUBLISHED' && (
@@ -640,7 +652,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   onClick={goToChat}
                   className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
                 >
-                  <Comment01Icon className="w-4 h-4" strokeWidth={1.8} />
+                  <CustomChatIcon />
                   Accéder au chat
                 </Button>
               )}
