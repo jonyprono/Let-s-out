@@ -1,5 +1,7 @@
 {
   "installCommand": "corepack enable && corepack prepare pnpm@9.15.4 --activate && pnpm install --no-frozen-lockfile",
+  "buildCommand": "pnpm --filter @letsout/web run build",
+  "outputDirectory": "apps/web/dist",
   "build": {
     "env": {
       "ENABLE_EXPERIMENTAL_COREPACK": "1"
