@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
+import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -20,6 +21,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const user = useAuthStore((s) => s.user);
   const profile = user?.profile;
   const navigate = useNavigate();
+  const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
   const { username } = useParams<{ username?: string }>();
 
@@ -84,7 +86,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       
       {/* Dynamic Cover Header */}
       <div 
-        className="w-full h-[200px] relative flex flex-col justify-between pt-12 pb-3 px-4"
+        onClick={() => { if (isOwnProfile) setShowEditModal(true) }}
+        className="w-full h-[200px] relative flex flex-col justify-between pt-12 pb-3 px-4 cursor-pointer"
         style={{
           background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'url(/Checker.png) center/cover repeat',
           borderBottom: '1px solid #D4D4D4'
@@ -106,15 +109,29 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       {/* Profile Info Section */}
       <div className="flex flex-col items-center -mt-10 mb-4 z-10 px-4">
         {/* Avatar */}
-        <div className="w-[68px] h-[68px] rounded-full ring-4 ring-[#F9F9F9] dark:ring-[#0a0a0b] overflow-hidden bg-gray-200 shadow-sm relative mb-2">
-          <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-500 bg-gray-100">{displayName.charAt(0).toUpperCase()}</div>} />
+        <div 
+          onClick={() => { if (isOwnProfile) setShowEditModal(true) }}
+          className="w-[68px] h-[68px] rounded-full ring-4 ring-[#F9F9F9] dark:ring-[#0a0a0b] overflow-hidden bg-gray-200 shadow-sm relative mb-2 cursor-pointer"
+        >
+          <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+<g clip-path="url(#clip0_1575_8860)">
+<rect width="48" height="48" rx="24" fill="#F5F5F5"/>
+<circle cx="24" cy="16" r="8" fill="#BDBDBD"/>
+<circle cx="24" cy="49" r="22" fill="#BDBDBD"/>
+</g>
+<defs>
+<clipPath id="clip0_1575_8860">
+<rect width="48" height="48" rx="24" fill="white"/>
+</clipPath>
+</defs>
+</svg>} />
         </div>
 
         {/* Name and Location */}
         <div className="flex items-center gap-1">
           <h2 className="text-[16px] font-semibold text-gray-900 dark:text-white leading-tight font-poppins">{displayName}</h2>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-             <path d="M16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM7.04289 11.9571C7.30325 12.2175 7.72535 12.2175 7.9857 11.9571L12.4857 7.45711C12.7461 7.19675 12.7461 6.77465 12.4857 6.51429C12.2254 6.25393 11.8033 6.25393 11.5429 6.51429L7.51429 10.5429L4.45711 7.48571C4.19675 7.22535 3.77465 7.22535 3.51429 7.48571C3.25393 7.74607 3.25393 8.16817 3.51429 8.42853L7.04289 11.9571Z" fill="#2878E8"/>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fillRule="evenodd" clipRule="evenodd" d="M7.66822 1.30874C7.30677 0.921827 6.69331 0.921827 6.33186 1.30874L5.44541 2.25692C5.26468 2.44974 5.0095 2.55601 4.74541 2.54646L3.44913 2.50255C2.91968 2.48474 2.48568 2.91874 2.5035 3.44819L2.54741 4.74574C2.55631 5.00983 2.45068 5.26501 2.25722 5.44574L1.30904 6.33155C0.922133 6.69301 0.922133 7.3071 1.30904 7.66855L2.25722 8.55501C2.45068 8.73574 2.55631 8.99028 2.54741 9.25501L2.50286 10.5519C2.48568 11.0814 2.91968 11.5154 3.44913 11.4976L4.74604 11.4536C5.01013 11.4447 5.26531 11.5504 5.44604 11.7432L6.33186 12.6914C6.69395 13.0789 7.30741 13.0789 7.6695 12.6914L8.55595 11.7432C8.73604 11.5504 8.99122 11.4441 9.25531 11.4536L10.5522 11.4976C11.0817 11.5154 11.5163 11.0814 11.4979 10.5519L11.4546 9.25437C11.445 8.99028 11.5513 8.73574 11.7441 8.55501L12.6923 7.66855C13.0792 7.3071 13.0792 6.69301 12.6923 6.33155L11.7441 5.4451C11.5513 5.26501 11.445 5.00983 11.4546 4.7451L11.4979 3.44819C11.5163 2.91874 11.0817 2.48474 10.5522 2.50255L9.25531 2.5471C8.99122 2.55537 8.73604 2.44974 8.55531 2.25692L7.66822 1.30874ZM3.9665 7.26955L6.14859 9.45101L9.76504 5.50174L8.90786 4.70819L6.10786 7.75955L4.78931 6.44101L3.9665 7.26955Z" fill="#2878E8"/>
           </svg>
         </div>
         <div className="flex items-center gap-1 mt-0.5 mb-2">
@@ -224,11 +241,13 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             <div>
               <h3 className="font-inter text-[14px] font-medium text-gray-500 mb-3">Centres d'intérêt</h3>
               <div className="flex flex-wrap gap-2">
-                {['⚽ Sport', '🎶 Musique', '🍳 Cuisine', '🎭 Arts', '🌍 Culture'].map((i) => (
+                {displayProfile?.interests?.length > 0 ? displayProfile.interests.map((i: string) => (
                   <div key={i} className="px-3 py-1.5 bg-[#FAFAFA] border border-gray-100 rounded-full text-[11px] font-medium text-gray-600">
                     {i}
                   </div>
-                ))}
+                )) : (
+                  <p className="text-[12px] text-gray-400 italic">Aucun centre d'intérêt renseigné.</p>
+                )}
                 {isOwnProfile && (
                   <button className="px-3 py-1.5 bg-[#FAFAFA] border border-dashed border-gray-300 rounded-full text-[11px] font-medium text-gray-600 flex items-center gap-1">
                     + Ajouter
@@ -240,20 +259,20 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             {/* Badges */}
             <div>
               <h3 className="font-inter text-[14px] font-medium text-gray-500 mb-3">Badges</h3>
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
-                {[
-                  { id: '1', title: 'Early\nadopter', icon: '🚀' },
-                  { id: '2', title: 'Social\nStar', icon: '⭐' },
-                  { id: '3', title: 'Party\nMaker', icon: '🎉' },
-                  { id: '4', title: 'Top\nDonateur', icon: '🎁' },
-                  { id: '5', title: 'Top\nOrg.', icon: '🏆' },
-                ].map((b) => (
-                  <div key={b.id} className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0" style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }}>
-                    <span className="text-[20px]">{b.icon}</span>
-                    <span className="text-[9px] font-semibold text-white text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
-                  </div>
-                ))}
-              </div>
+              {(!displayProfile?.user?.badges || displayProfile.user.badges.length === 0) ? (
+                <div className="w-full p-4 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center">
+                   <p className="text-[12px] font-medium text-gray-500">Participez à des événements pour débloquer des badges ! 🏆</p>
+                </div>
+              ) : (
+                <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+                  {displayProfile.user.badges.map((b: any) => (
+                    <div key={b.badge} className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0" style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }}>
+                      <span className="text-[20px]">{b.icon || '⭐'}</span>
+                      <span className="text-[9px] font-semibold text-white text-center leading-[10px] whitespace-pre-wrap">{b.badge}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Prochains Événements */}
@@ -301,6 +320,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         )}
       </div>
 
+      {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
     </div>
   );
 }
