@@ -21,14 +21,9 @@ export function CreatedEventsList() {
   });
 
   const createdEvents = activity?.createdEvents ?? [];
+  const drafts = activity?.draftEvents ?? [];
 
-  const drafts = useMemo(() => {
-    return createdEvents.filter((e: any) => e.status === 'DRAFT');
-  }, [createdEvents]);
-
-  const publishedEvents = useMemo(() => {
-    return createdEvents.filter((e: any) => e.status !== 'DRAFT');
-  }, [createdEvents]);
+  const publishedEvents = createdEvents;
 
   const upcomingEvents = useMemo(() => {
     return publishedEvents.filter((e: any) => new Date(e.startAt) > new Date());
