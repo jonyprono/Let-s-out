@@ -258,7 +258,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     <div ref={scrollRef} className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       
       {/* Dynamic Cover Header */}
-      <div className="w-full h-[200px] relative" style={{ borderBottom: '1px solid #D4D4D4' }}>
+      <div className="w-full h-[200px] relative shrink-0" style={{ borderBottom: '1px solid #D4D4D4' }}>
         <div
           className="absolute inset-0"
           style={{ background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'url(/Checker.png) center/cover repeat' }}
@@ -283,7 +283,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       </div>
 
       {/* Profile Info Section */}
-      <div className="flex flex-col w-full -mt-10 mb-4 z-10 px-4">
+      <div className="flex flex-col w-full -mt-10 mb-4 z-10 px-4 shrink-0">
         <div className="flex items-end gap-3 mb-2">
           {/* Avatar */}
           <div 
@@ -383,7 +383,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       </div>
 
       {/* Main Toggle Profil/Evenements */}
-      <div className="flex justify-center w-full px-4 mb-6">
+      <div className="flex justify-center w-full px-4 mb-6 shrink-0">
         <div className="flex p-1 bg-white border border-gray-100 rounded-full shadow-sm">
           <button 
             onClick={() => setActiveTab('profil')}
@@ -482,23 +482,24 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
 
             {/* Badges */}
-            <div>
+            <div className="shrink-0">
               <h3 className="font-inter text-[14px] font-medium text-gray-500 mb-3">Badges</h3>
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
                 {ALL_BADGES.map((b) => {
                   const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === b.badge);
                   const prog = b.getProgress(activity, friends);
                   const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
+                  const isEarned = hasBadge || pct >= 100;
 
-                  if (hasBadge) {
+                  if (isEarned) {
                     return (
                       <div
                         key={b.badge}
                         onClick={() => setSelectedBadge(b)}
-                        className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
-                        style={{ background: BADGE_GRADIENT }}
+                        className="w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+                        style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%), #FAFAFA' }}
                       >
-                        <span className="text-[20px]">{b.icon}</span>
+                        <div className="w-6 h-6 flex items-center justify-center">{b.icon}</div>
                         <span className="text-[9px] font-semibold text-white text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
                       </div>
                     );
@@ -507,12 +508,12 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                       <div
                         key={b.badge}
                         onClick={() => setSelectedBadge(b)}
-                        className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 cursor-pointer active:scale-95 transition-transform relative overflow-hidden"
+                        className="w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 cursor-pointer active:scale-95 transition-transform relative overflow-hidden"
                       >
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
                           <div className="h-full bg-[#FF7A00]/50 transition-all" style={{ width: `${pct}%` }} />
                         </div>
-                        <span className="text-[20px] grayscale">{b.icon}</span>
+                        <div className="w-6 h-6 flex items-center justify-center grayscale">{b.icon}</div>
                         <span className="text-[9px] font-semibold text-gray-500 text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
                       </div>
                     );
@@ -567,6 +568,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === selectedBadge.badge);
         const prog = selectedBadge.getProgress(activity, friends);
         const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
+        const isEarned = hasBadge || pct >= 100;
         return (
           <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedBadge(null)}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -583,13 +585,13 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 {/* Badge icon */}
                 <div className="flex flex-col items-center mb-4">
                   <div
-                    className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-3 ${!hasBadge ? 'bg-gray-100 grayscale' : ''}`}
-                    style={hasBadge ? { background: BADGE_GRADIENT } : {}}
+                    className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-3 ${!isEarned ? 'bg-gray-100 grayscale' : ''}`}
+                    style={isEarned ? { background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' } : {}}
                   >
-                    <span className="text-[40px]">{selectedBadge.icon}</span>
+                    <div className="scale-[2]">{selectedBadge.icon}</div>
                   </div>
                   <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">{selectedBadge.title.replace('\n', ' ')}</h3>
-                  {hasBadge && <span className="mt-1 px-3 py-1 bg-green-100 text-green-700 text-[11px] font-semibold rounded-full">✓ Obtenu</span>}
+                  {isEarned && <span className="mt-2 px-3 py-1 bg-green-100 text-green-700 text-[11px] font-semibold rounded-full flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Obtenu</span>}
                 </div>
 
                 {/* Description */}
@@ -606,7 +608,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div className="h-full bg-[#FF7A00] rounded-full transition-all" style={{ width: `${pct}%` }} />
                   </div>
-                  <p className="text-right text-[10px] text-gray-400 mt-1">{pct}%{hasBadge ? ' — Félicitations !' : ''}</p>
+                  <p className="text-right text-[10px] text-gray-400 mt-1">{pct}%{isEarned ? ' — Félicitations !' : ''}</p>
                 </div>
               </div>
             </div>
