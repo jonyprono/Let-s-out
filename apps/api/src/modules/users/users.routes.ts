@@ -587,7 +587,7 @@ export default async function usersRoutes(app: FastifyInstance) {
   // ─── FOLLOWERS ─────────────────────────────────────────────────────────────
 
   // Follow a user
-  app.post('/:userId/follow', async (req, reply) => {
+  app.post('/:userId/follow', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
     const { userId } = req.params as { userId: string }
     
@@ -605,11 +605,26 @@ export default async function usersRoutes(app: FastifyInstance) {
       app.prisma.profile.update({ where: { userId: sub }, data: { followingCount: { increment: 1 } } })
     ])
     
+    try {
+      const followerProfile = await app.prisma.profile.findUnique({ where: { userId: sub } });
+      if (followerProfile) {
+        await createAndSendNotification(app, {
+          userId: userId,
+          type: 'NEW_FOLLOWER',
+          title: 'Nouvel abonné',
+          body: `${followerProfile.displayName || followerProfile.username} a commencé à vous suivre.`,
+          data: { followerId: sub }
+        });
+      }
+    } catch (e) {
+      app.log.warn(`Failed to send follow notification: ${e}`);
+    }
+
     return reply.code(201).send({ success: true })
   })
 
   // Unfollow a user
-  app.delete('/:userId/follow', async (req, reply) => {
+  app.delete('/:userId/follow', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
     const { userId } = req.params as { userId: string }
     

@@ -481,9 +481,9 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
 
             {/* Badges */}
-            <div className="shrink-0">
+            <div className="shrink-0 w-full">
               <h3 className="font-inter text-[14px] font-medium text-gray-500 mb-3">Badges</h3>
-              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+              <div className="flex flex-wrap gap-3 pb-2">
                 {ALL_BADGES.map((b) => {
                   const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === b.badge);
                   const prog = b.getProgress(activity, friends);
@@ -495,11 +495,11 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                       <div
                         key={b.badge}
                         onClick={() => setSelectedBadge(b)}
-                        className="w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
-                        style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%), #FAFAFA' }}
+                        className="w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 cursor-pointer active:scale-95 transition-transform shadow-sm"
+                        style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #4CAF50 83.33%)' }}
                       >
-                        <div className="w-6 h-6 flex items-center justify-center">{b.icon}</div>
-                        <span className="text-[9px] font-semibold text-white text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
+                        <div className="w-6 h-6 flex items-center justify-center text-white drop-shadow-md">{b.icon}</div>
+                        <span className="text-[9px] font-bold text-white text-center leading-[10px] whitespace-pre-wrap drop-shadow-sm">{b.title}</span>
                       </div>
                     );
                   } else {
@@ -512,7 +512,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
                           <div className="h-full bg-[#FF7A00]/50 transition-all" style={{ width: `${pct}%` }} />
                         </div>
-                        <div className="w-6 h-6 flex items-center justify-center grayscale">{b.icon}</div>
+                        <div className="w-6 h-6 flex items-center justify-center grayscale opacity-50">{b.icon}</div>
                         <span className="text-[9px] font-semibold text-gray-500 text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
                       </div>
                     );

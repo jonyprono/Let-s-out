@@ -456,6 +456,27 @@ export default async function eventsRoutes(app: FastifyInstance) {
       data: req.body as any,
     })
 
+    const body = req.body as any;
+    // Notify new co-hosts if any
+    if (body.coHostIds && Array.isArray(body.coHostIds)) {
+      const oldCoHosts = event.coHostIds || [];
+      const newCoHosts = body.coHostIds.filter((cid: string) => !oldCoHosts.includes(cid));
+      
+      if (newCoHosts.length > 0) {
+        try {
+          await createAndSendNotificationMany(app, newCoHosts.map((userId: string) => ({
+            userId,
+            type: 'CO_HOST_INVITE',
+            title: 'Co-organisateur',
+            body: `Vous avez été ajouté en tant que co-organisateur pour l'événement "${event.title}".`,
+            data: { eventId: id }
+          })))
+        } catch (e) {
+          app.log.warn(`Failed to send co-host notifications: ${e}`)
+        }
+      }
+    }
+
     // Notify all confirmed participants about the update
     try {
       const bookings = await app.prisma.booking.findMany({
