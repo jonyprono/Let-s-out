@@ -479,15 +479,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // Use KYC status for financial features
   const isVerified = isKycVerified;
 
-  // ── Auto-transition to publish ──────────────────────────────────────────
-  useEffect(() => {
-    if (step === 'done' && !requiresVerification) {
-      const timer = setTimeout(() => {
-        handlePublish()
-      }, 2500)
-      return () => clearTimeout(timer)
-    }
-  }, [step, requiresVerification])
+  // ── No auto-transition, the user must click "Publier l'événement" manually ──────────────────
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER — DONE or PUBLISHED screen

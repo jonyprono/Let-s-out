@@ -22,13 +22,21 @@ export function CreatedEventsList() {
 
   const createdEvents = activity?.createdEvents ?? [];
 
-  const upcomingEvents = useMemo(() => {
-    return createdEvents.filter((e: any) => new Date(e.startAt) > new Date());
+  const drafts = useMemo(() => {
+    return createdEvents.filter((e: any) => e.status === 'DRAFT');
   }, [createdEvents]);
 
-  const pastEvents = useMemo(() => {
-    return createdEvents.filter((e: any) => new Date(e.startAt) <= new Date());
+  const publishedEvents = useMemo(() => {
+    return createdEvents.filter((e: any) => e.status !== 'DRAFT');
   }, [createdEvents]);
+
+  const upcomingEvents = useMemo(() => {
+    return publishedEvents.filter((e: any) => new Date(e.startAt) > new Date());
+  }, [publishedEvents]);
+
+  const pastEvents = useMemo(() => {
+    return publishedEvents.filter((e: any) => new Date(e.startAt) <= new Date());
+  }, [publishedEvents]);
 
   // Aggregate stats
   const totalEvents = createdEvents.length;
@@ -116,7 +124,7 @@ export function CreatedEventsList() {
             )}
           </div>
 
-          <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3">Passés</h2>
+          <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6">Passés</h2>
           <div className="flex flex-col gap-3">
             {pastEvents.length === 0 ? (
               <p className="text-[13px] text-gray-400">Aucun événement passé.</p>
@@ -126,6 +134,17 @@ export function CreatedEventsList() {
               ))
             )}
           </div>
+
+          {drafts.length > 0 && (
+            <>
+              <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6">Non publiés (Brouillons)</h2>
+              <div className="flex flex-col gap-3">
+                {drafts.map((ev: any) => (
+                  <EventRowCard key={ev.id} event={ev} onClick={() => navigate(`/create-event`, { state: { editEventId: ev.id } })} />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       ) : (
         <div className="px-4 flex flex-col items-center justify-center py-20">

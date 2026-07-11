@@ -416,14 +416,15 @@ function TabCagnotte({ event }: { event: any }) {
 function AddPotForm({ event, onSuccess }: { event: any, onSuccess: () => void }) {
   const qc = useQueryClient();
   const [target, setTarget] = useState('');
-  const [mode, setMode] = useState<'libre' | 'minimum' | 'fixe'>('libre');
+  const [poolMinAmount, setPoolMinAmount] = useState('');
   const [desc, setDesc] = useState('');
 
   const updateMut = useMutation({
     mutationFn: async () => {
       await apiClient.patch(`/events/${event.id}`, {
         poolTarget: Number(target),
-        poolMode: mode,
+        poolMode: poolMinAmount ? 'minimum' : 'libre',
+        poolMinAmount: poolMinAmount ? Number(poolMinAmount) : undefined,
         poolDescription: desc
       });
     },
@@ -437,32 +438,46 @@ function AddPotForm({ event, onSuccess }: { event: any, onSuccess: () => void })
 
   return (
     <div className="w-full p-4 flex flex-col pt-2 pb-6">
-       <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4">Créer une cagnotte</h3>
+       <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-6">Ajouter une cagnotte</h3>
        
-       <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Montant cible (XOF)</label>
-       <input 
-         type="number" 
-         value={target} onChange={(e) => setTarget(e.target.value)}
-         className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 focus:outline-none focus:border-[#FF7A00] mb-4"
-         placeholder="Ex: 50000"
-       />
+       <div className="mb-4">
+         <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Montant cible</p>
+         <div className="relative flex items-center">
+           <input
+             type="number" min={1} value={target}
+             onChange={e => setTarget(e.target.value)}
+             placeholder="0"
+             className="w-full pl-4 pr-16 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
+           />
+           <span className="absolute right-4 text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] pointer-events-none">F CFA</span>
+         </div>
+         <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Montant estimé des dépenses</p>
+       </div>
 
-       <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Mode de participation</label>
-       <select
-         value={mode} onChange={(e) => setMode(e.target.value as any)}
-         className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 focus:outline-none focus:border-[#FF7A00] mb-4"
-       >
-         <option value="libre">Montant libre</option>
-         <option value="minimum">Montant minimum requis</option>
-         <option value="fixe">Montant fixe</option>
-       </select>
+       <div className="mb-4">
+         <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Détails</p>
+         <textarea
+           value={desc}
+           onChange={e => setDesc(e.target.value)}
+           placeholder="Quels sont les détails des dépenses prévues ?"
+           rows={4}
+           className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
+         />
+       </div>
 
-       <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-       <textarea 
-         value={desc} onChange={(e) => setDesc(e.target.value)}
-         className="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-gray-800 focus:outline-none focus:border-[#FF7A00] mb-6 h-24"
-         placeholder="A quoi servira cette cagnotte ?"
-       />
+       <div className="mb-6">
+         <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Participation minimale</p>
+         <div className="relative flex items-center">
+           <input
+             type="number" min={1} value={poolMinAmount}
+             onChange={e => setPoolMinAmount(e.target.value)}
+             placeholder="0"
+             className="w-full pl-4 pr-16 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
+           />
+           <span className="absolute right-4 text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] pointer-events-none">F CFA</span>
+         </div>
+         <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
+       </div>
 
        <PrimaryButton onClick={() => updateMut.mutate()} loading={updateMut.isPending} disabled={!target}>
          Valider la cagnotte
