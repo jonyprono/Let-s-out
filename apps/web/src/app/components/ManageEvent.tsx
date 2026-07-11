@@ -237,7 +237,7 @@ function TabParticipants({ bookings }: { event: any, bookings: any[] }) {
       </div>
 
       {/* Simplified Profile Bottom Sheet */}
-      <BottomSheet open={!!selectedUser} onOpenChange={(open: boolean) => !open && setSelectedUser(null)}>
+      <BottomSheet open={!!selectedUser} onClose={() => setSelectedUser(null)}>
         {selectedUser && (
           <div className="w-full flex flex-col items-center pt-2 pb-6 px-4">
             <SafeImage src={selectedUser.profile?.avatarUrl} alt="Selected User" className="w-20 h-20 rounded-full border-4 border-white shadow-sm bg-gray-200 mb-3" />
@@ -403,7 +403,7 @@ function TabCagnotte({ event }: { event: any }) {
       </button>
 
       {/* Simple Pot Creation Form Bottom Sheet */}
-      <BottomSheet open={showAddPot} onOpenChange={(open: boolean) => !open && setShowAddPot(false)}>
+      <BottomSheet open={showAddPot} onClose={() => setShowAddPot(false)}>
          <AddPotForm event={event} onSuccess={() => setShowAddPot(false)} />
       </BottomSheet>
     </div>
