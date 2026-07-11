@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Star, Loader2 } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { eventsApi } from '@/features/events/api'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'

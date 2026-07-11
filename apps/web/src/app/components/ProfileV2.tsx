@@ -74,9 +74,19 @@ const ALL_BADGES: BadgeDef[] = [
         </svg>
       </BadgeIcon>
     ),
-    description: 'Pour ceux qui animent la communauté en créant des événements.',
-    howTo: 'Créez et publiez 3 événements sur la plateforme.',
-    getProgress: (activity, _f) => ({ current: (activity?.createdEvents ?? []).length, target: 3 }),
+    description: 'Pour les organisateurs dont la cagnotte atteint au moins 90% de son objectif.',
+    howTo: 'Organisez un événement avec cagnotte et atteignez 90% de l\'objectif.',
+    getProgress: (activity, _f) => {
+      const events = activity?.createdEvents ?? [];
+      // Find the best pool percentage across all created events
+      const poolEvents = events.filter((e: any) => e.poolTarget > 0);
+      if (poolEvents.length === 0) return { current: 0, target: 90 };
+      const best = Math.max(...poolEvents.map((e: any) => {
+        const pct = e.poolTarget > 0 ? Math.round((e.poolCollected ?? 0) / e.poolTarget * 100) : 0;
+        return pct;
+      }));
+      return { current: Math.min(best, 90), target: 90 };
+    },
   },
   {
     badge: 'Top Donateur',
@@ -93,11 +103,19 @@ const ALL_BADGES: BadgeDef[] = [
       </BadgeIcon>
     ),
     description: 'Récompense la générosité envers la communauté.',
-    howTo: 'Contribuez à la cagnotte de 5 événements différents.',
+    howTo: 'Contribuez au moins 2 fois à la cagnotte de 5 événements différents.',
     getProgress: (activity, _f) => {
-      const contributions = (activity?.bookings ?? []).filter((b: any) => b.event?.poolTarget > 0);
-      const uniqueEvents = new Set(contributions.map((b: any) => b.eventId));
-      return { current: uniqueEvents.size, target: 5 };
+      // Count pool events where totalPaid suggests at least 2 contributions
+      // activity.bookings has the raw booking data including totalPaid and event.poolMinAmount
+      const poolBookings = (activity?.bookings ?? []).filter((b: any) =>
+        b.event?.poolTarget > 0 && b.totalPaid > 0
+      );
+      // Consider "contributed twice" if totalPaid >= 2 * (poolMinAmount || 1)
+      const doubleContributed = poolBookings.filter((b: any) => {
+        const minAmount = b.event?.poolMinAmount || 1;
+        return b.totalPaid >= minAmount * 2;
+      });
+      return { current: doubleContributed.length, target: 5 };
     },
   },
   {
@@ -138,7 +156,6 @@ const ALL_BADGES: BadgeDef[] = [
     getProgress: (_a, _f, profileData) => {
       const stats = profileData?.detailedStats;
       const count = stats?.reviewCount ?? 0;
-      const avg = stats?.punctuality ?? 0;
       // Progress = count of reviews (up to 3), unlocked when avg >= 4.5
       return { current: Math.min(count, 3), target: 3 };
     },

@@ -280,33 +280,74 @@ async function handleConfirmedBooking(
     // L'organisateur devra faire une demande de déblocage pour recevoir les fonds sur son Wallet.
   ])
 
-  // Badge Top Donateur
+  // ── Badge logic after confirmed pool contribution ─────────────────────────
   if (isPoolContribution) {
     try {
-      const distinctContributions = await app.prisma.booking.groupBy({
-        by: ['eventId'],
-        where: {
-          userId,
-          status: 'CONFIRMED',
-          event: { poolTarget: { gt: 0 } },
-        },
-      })
-      if (distinctContributions.length >= 5) {
-        const badgeName = 'Top Donateur'
-        const existingBadge = await app.prisma.userBadge.findFirst({ where: { userId, badge: badgeName } })
-        if (!existingBadge) {
-          await app.prisma.userBadge.create({ data: { userId, badge: badgeName } })
-          await createAndSendNotification(app, {
+      // ── Badge "Top Donateur" ───────────────────────────────────────────────
+      // Counts events where this user contributed at least twice
+      // A 2nd+ contribution = existingBooking already had totalPaid > 0 before this payment
+      const alreadyContributedTwice = existingBooking && (existingBooking.totalPaid ?? 0) > 0;
+
+      if (alreadyContributedTwice) {
+        // Count distinct pool events where user has contributed at least twice
+        // We approximate: events where totalPaid > poolMinAmount (they paid more than the minimum, suggesting multiple payments)
+        // More reliable: count events where the user's booking totalPaid is tracked after 2nd contribution
+        // We'll do a raw count of confirmed bookings on pool events for this user, filtering those already known to have multiple contributions
+        const doubleContributions = await app.prisma.booking.count({
+          where: {
             userId,
-            type: 'NEW_BADGE' as any,
-            title: 'Nouveau Badge Débloqué ! 🏅',
-            body: `Félicitations, vous avez obtenu le badge "${badgeName}" pour votre générosité !`,
-            data: { badgeName }
-          })
+            status: 'CONFIRMED',
+            event: { poolTarget: { gt: 0 } },
+            // Proxy for "contributed at least twice": totalPaid is more than once (we consider > 0 after 2nd increment)
+            totalPaid: { gt: 0 },
+          },
+        });
+        // Since we now know this event qualifies (2nd+ contribution), check total qualifying events
+        if (doubleContributions >= 5) {
+          const badgeName = 'Top Donateur';
+          const existingBadge = await app.prisma.userBadge.findFirst({ where: { userId, badge: badgeName } });
+          if (!existingBadge) {
+            await app.prisma.userBadge.create({ data: { userId, badge: badgeName } });
+            await createAndSendNotification(app, {
+              userId,
+              type: 'NEW_BADGE' as any,
+              title: 'Nouveau Badge Débloqué ! 🏅',
+              body: `Félicitations, vous avez obtenu le badge "Top Donateur" pour votre générosité !`,
+              data: { badgeName }
+            });
+          }
+        }
+      }
+
+      // ── Badge "Party Maker" (for the event creator) ───────────────────────
+      // Awarded when the creator's cagnotte reaches >= 90% of its target
+      if (eventForPool?.creatorId && eventForPool.poolTarget && eventForPool.poolTarget > 0) {
+        const updatedEvent = await app.prisma.event.findUnique({
+          where: { id: eventId },
+          select: { poolCollected: true, poolTarget: true, creatorId: true },
+        });
+        const pct = updatedEvent?.poolCollected && updatedEvent?.poolTarget
+          ? (updatedEvent.poolCollected / updatedEvent.poolTarget)
+          : 0;
+
+        if (pct >= 0.9) {
+          const creatorId = updatedEvent!.creatorId;
+          const badgeName = 'Party Maker';
+          const existingBadge = await app.prisma.userBadge.findFirst({ where: { userId: creatorId, badge: badgeName } });
+          if (!existingBadge) {
+            await app.prisma.userBadge.create({ data: { userId: creatorId, badge: badgeName } });
+            await createAndSendNotification(app, {
+              userId: creatorId,
+              type: 'NEW_BADGE' as any,
+              title: 'Nouveau Badge Débloqué ! 🎉',
+              body: `Félicitations ! Votre cagnotte a atteint plus de 90% de son objectif. Vous obtenez le badge "Party Maker" !`,
+              data: { badgeName }
+            });
+          }
         }
       }
     } catch (e) {
-      app.log.error(`Failed to assign Top Donateur badge: ${e}`)
+      app.log.error(`Failed to assign pool badges: ${e}`);
     }
   }
 

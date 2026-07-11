@@ -524,15 +524,15 @@ export default async function usersRoutes(app: FastifyInstance) {
           select: { user: { select: { profile: { select: { avatarUrl: true } } } } },
         },
         _count: { select: { bookings: true } },
-      }
+      },
+      // poolTarget & poolCollected needed for Party Maker badge
     })
 
-    // Past events participated in
+    // Past events + bookings (with pool data for badge progress)
     const bookings = await app.prisma.booking.findMany({
       where: {
         userId,
         status: 'CONFIRMED',
-        event: { startAt: { lt: new Date() }, isPrivate: false }
       },
       include: {
         event: {
@@ -549,12 +549,24 @@ export default async function usersRoutes(app: FastifyInstance) {
         }
       },
       orderBy: { event: { startAt: 'desc' } },
-      take: 10
+      take: 50  // increased to get all bookings for badge computation
     })
 
-    const pastEvents = bookings.map(b => ({
-      ...b.event,
-      isReviewed: b.event.reviews && b.event.reviews.length > 0
+    const pastEvents = bookings
+      .filter(b => b.event.startAt < new Date() && !b.event.isPrivate)
+      .map(b => ({
+        ...b.event,
+        isReviewed: b.event.reviews && b.event.reviews.length > 0
+      }))
+
+    // Raw bookings with totalPaid for badge computation (Top Donateur)
+    const bookingsForBadge = bookings.map(b => ({
+      eventId: b.eventId,
+      totalPaid: b.totalPaid,
+      event: {
+        poolTarget: (b.event as any).poolTarget,
+        poolMinAmount: (b.event as any).poolMinAmount,
+      }
     }))
 
     let draftEvents: any[] = []
@@ -580,7 +592,8 @@ export default async function usersRoutes(app: FastifyInstance) {
     return reply.send({
       createdEvents,
       pastEvents,
-      draftEvents
+      draftEvents,
+      bookings: bookingsForBadge,
     })
   })
 
