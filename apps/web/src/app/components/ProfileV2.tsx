@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
@@ -14,17 +14,30 @@ import { toast } from 'sonner';
 type BadgeDef = {
   badge: string;
   title: string;
-  icon: string;
+  icon: React.ReactNode;
   description: string;
   howTo: string;
   getProgress: (activity: any, friends: any[]) => { current: number; target: number };
 };
 
+function BadgeIcon({ children }: { children: React.ReactNode }) {
+  return <div className="w-8 h-8 flex items-center justify-center">{children}</div>;
+}
+
 const ALL_BADGES: BadgeDef[] = [
   {
     badge: 'Early adopter',
     title: 'Early\nadopter',
-    icon: '🚀',
+    icon: (
+      <BadgeIcon>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
+          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+        </svg>
+      </BadgeIcon>
+    ),
     description: 'Récompense les pionniers qui ont rejoint Let\'s Out lors du lancement.',
     howTo: 'Créez votre compte pendant la phase de lancement de l\'application.',
     getProgress: (_a, _f) => ({ current: 1, target: 1 }),
@@ -32,7 +45,13 @@ const ALL_BADGES: BadgeDef[] = [
   {
     badge: 'Social Star',
     title: 'Social\nStar',
-    icon: '⭐',
+    icon: (
+      <BadgeIcon>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </BadgeIcon>
+    ),
     description: 'Décerné aux membres avec une grande vie sociale sur la plateforme.',
     howTo: 'Ajoutez 10 amis sur Let\'s Out pour débloquer ce badge.',
     getProgress: (_a, friends) => ({ current: friends.length, target: 10 }),
@@ -40,7 +59,21 @@ const ALL_BADGES: BadgeDef[] = [
   {
     badge: 'Party Maker',
     title: 'Party\nMaker',
-    icon: '🎉',
+    icon: (
+      <BadgeIcon>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5.8 11.3 2 22l10.7-3.79"/>
+          <path d="M4 3h.01"/>
+          <path d="M22 8h.01"/>
+          <path d="M15 2h.01"/>
+          <path d="M22 20h.01"/>
+          <path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12v0c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/>
+          <path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11v0c-.1.5-.55.85-1.06.85H17"/>
+          <path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98v0C9.72 4.9 9.37 5.35 9.37 5.86V6"/>
+          <path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z"/>
+        </svg>
+      </BadgeIcon>
+    ),
     description: 'Pour ceux qui animent la communauté en créant des événements.',
     howTo: 'Créez et publiez 3 événements sur la plateforme.',
     getProgress: (activity, _f) => ({ current: (activity?.createdEvents ?? []).length, target: 3 }),
@@ -48,7 +81,17 @@ const ALL_BADGES: BadgeDef[] = [
   {
     badge: 'Top Donateur',
     title: 'Top\nDonateur',
-    icon: '🎁',
+    icon: (
+      <BadgeIcon>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 12v10H4V12"/>
+          <path d="M22 7H2v5h20V7z"/>
+          <path d="M12 22V7"/>
+          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+        </svg>
+      </BadgeIcon>
+    ),
     description: 'Récompense la générosité envers la communauté.',
     howTo: 'Contribuez à la cagnotte de 5 événements différents.',
     getProgress: (_a, _f) => ({ current: 0, target: 5 }),
@@ -56,7 +99,18 @@ const ALL_BADGES: BadgeDef[] = [
   {
     badge: 'Top Org.',
     title: 'Top\nOrg.',
-    icon: '🏆',
+    icon: (
+      <BadgeIcon>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+          <path d="M4 22h16"/>
+          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
+          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
+          <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
+        </svg>
+      </BadgeIcon>
+    ),
     description: 'Décerné aux organisateurs les mieux notés de la communauté.',
     howTo: 'Maintenez une note moyenne de 4.5/5 après avoir reçu 5 avis.',
     getProgress: (_a, _f) => ({ current: 0, target: 5 }),
@@ -76,10 +130,16 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const profile = user?.profile;
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
   const [selectedBadge, setSelectedBadge] = useState<BadgeDef | null>(null);
   const { username } = useParams<{ username?: string }>();
+
+  // Scroll to top whenever the profile page mounts
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [username]);
 
   const targetUsername = username || profile?.username;
   const isOwnProfile = !username || (!!profile?.username && username === profile?.username);
@@ -116,12 +176,20 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
   // From API: real friendship & follow state
   const friendshipStatus: string = viewedProfile?.friendshipStatus ?? 'none';
-  const isFollowingInitial: boolean = viewedProfile?.isFollowing ?? false;
+  const isFollowingFromAPI: boolean = viewedProfile?.isFollowing ?? false;
   const commonEventsCount: number = viewedProfile?.commonEventsCount ?? 0;
 
-  // Local optimistic states
+  // Local optimistic states — reset when API data arrives
   const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
-  const effectiveIsFollowing = isFollowing !== null ? isFollowing : isFollowingInitial;
+  const prevIsFollowingRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    // When the query refreshes, sync local state
+    if (prevIsFollowingRef.current !== isFollowingFromAPI) {
+      setIsFollowing(null);
+      prevIsFollowingRef.current = isFollowingFromAPI;
+    }
+  }, [isFollowingFromAPI]);
+  const effectiveIsFollowing = isFollowing !== null ? isFollowing : isFollowingFromAPI;
   const [localFriendStatus, setLocalFriendStatus] = useState<string | null>(null);
   const effectiveFriendStatus = localFriendStatus ?? friendshipStatus;
 
@@ -187,7 +255,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const coverUrl = displayProfile?.coverUrl || '';
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+    <div ref={scrollRef} className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       
       {/* Dynamic Cover Header */}
       <div className="w-full h-[200px] relative" style={{ borderBottom: '1px solid #D4D4D4' }}>
