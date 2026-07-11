@@ -117,7 +117,6 @@ const ALL_BADGES: BadgeDef[] = [
   },
 ];
 
-const BADGE_GRADIENT = 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)';
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
