@@ -305,6 +305,16 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           Contribuer à la cagnotte
         </PrimaryButton>
 
+        {(!event.poolReleased && (event.registrationDeadline ? new Date() > new Date(event.registrationDeadline) : new Date() > new Date(event.startAt))) && (
+          <PrimaryButton
+            onClick={() => toast.success("Demande de déblocage envoyée")}
+            className="bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            Débloquer les fonds
+          </PrimaryButton>
+        )}
+
         {!event.poolReleased && (
           <PrimaryButton
             onClick={() => closeMut.mutate()}
@@ -425,6 +435,8 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
   const [target, setTarget] = useState('');
   const [desc, setDesc] = useState('');
   const [poolMinAmount, setPoolMinAmount] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [showDeadlineInput, setShowDeadlineInput] = useState(false);
   const qc = useQueryClient();
 
   const submitMut = useMutation({
@@ -434,6 +446,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
         poolMode: poolMinAmount ? 'minimum' : 'libre',
         poolMinAmount: poolMinAmount ? Number(poolMinAmount) : undefined,
         poolDescription: desc || potName,
+        registrationDeadline: deadline ? new Date(deadline).toISOString() : null,
       });
     },
     onSuccess: () => {
@@ -541,10 +554,22 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
         </div>
 
         {/* Date limite */}
-        <button className="flex items-center gap-2 text-[13px] font-medium text-gray-400 mt-1 self-start">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Ajouter une date limite de contribution
-        </button>
+        {!showDeadlineInput ? (
+          <button onClick={() => setShowDeadlineInput(true)} className="flex items-center gap-2 text-[13px] font-medium text-gray-400 mt-1 self-start">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Ajouter une date limite de contribution
+          </button>
+        ) : (
+          <div className="flex flex-col">
+            <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date limite de contribution</p>
+            <input
+              type="date"
+              value={deadline}
+              onChange={e => setDeadline(e.target.value)}
+              className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
+            />
+          </div>
+        )}
 
         <div className="mt-4 mb-4">
           <PrimaryButton disabled={!isValid} onClick={() => setStep('summary')}>
@@ -580,6 +605,12 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
               <div className="flex flex-col gap-1">
                 <span className="text-[14px] text-gray-500">Participation minimale</span>
                 <span className="font-semibold text-gray-900 dark:text-white">{Number(poolMinAmount).toLocaleString('fr-FR')} F</span>
+              </div>
+            )}
+            {deadline && (
+              <div className="flex flex-col gap-1">
+                <span className="text-[14px] text-gray-500">Date limite</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{fmtDate(deadline)}</span>
               </div>
             )}
             {desc && (

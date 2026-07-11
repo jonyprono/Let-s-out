@@ -94,7 +94,11 @@ const ALL_BADGES: BadgeDef[] = [
     ),
     description: 'Récompense la générosité envers la communauté.',
     howTo: 'Contribuez à la cagnotte de 5 événements différents.',
-    getProgress: (_a, _f) => ({ current: 0, target: 5 }),
+    getProgress: (activity, _f) => {
+      const contributions = (activity?.bookings ?? []).filter((b: any) => b.event?.poolTarget > 0);
+      const uniqueEvents = new Set(contributions.map((b: any) => b.eventId));
+      return { current: uniqueEvents.size, target: 5 };
+    },
   },
   {
     badge: 'Top Org.',

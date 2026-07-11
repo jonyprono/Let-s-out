@@ -275,7 +275,7 @@ export function PaymentPage() {
           <button onClick={() => navigate(`/events/${eventId}`)} className="w-9 h-9 flex items-center justify-center active:scale-95">
             <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
-          <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">Rejoindre l'événement</span>
+          <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">{isContribution ? 'Contribuer à la cagnotte' : 'Rejoindre l\'événement'}</span>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
@@ -373,7 +373,7 @@ export function PaymentPage() {
           <ChevronLeft className="w-[22px] h-[22px] text-gray-900 dark:text-white" strokeWidth={2} />
         </button>
         <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-8">
-          Rejoindre l'événement
+          {isContribution ? 'Contribuer à la cagnotte' : 'Rejoindre l\'événement'}
         </span>
       </div>
 
@@ -486,7 +486,7 @@ export function PaymentPage() {
           onClick={handleOpenSummary}
           className="w-full"
         >
-          Rejoindre
+          {isContribution ? 'Valider' : 'Rejoindre'}
         </Button>
         <div className="flex flex-col items-center justify-center gap-[4px] pt-[0.25rem] w-full text-center">
           <div className="flex items-center justify-center gap-[6px] font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)]">

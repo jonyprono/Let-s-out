@@ -54,7 +54,7 @@ export function PrimaryButton({
           className="animate-spin shrink-0"
         />
       )}
-      <span className="break-words max-w-full">{children}</span>
+      <span className="break-words max-w-full flex items-center justify-center gap-2">{children}</span>
     </Button>
   )
 }

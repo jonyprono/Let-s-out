@@ -280,6 +280,36 @@ async function handleConfirmedBooking(
     // L'organisateur devra faire une demande de déblocage pour recevoir les fonds sur son Wallet.
   ])
 
+  // Badge Top Donateur
+  if (isPoolContribution) {
+    try {
+      const distinctContributions = await app.prisma.booking.groupBy({
+        by: ['eventId'],
+        where: {
+          userId,
+          status: 'CONFIRMED',
+          event: { poolTarget: { gt: 0 } },
+        },
+      })
+      if (distinctContributions.length >= 5) {
+        const badgeName = 'Top Donateur'
+        const existingBadge = await app.prisma.userBadge.findFirst({ where: { userId, badge: badgeName } })
+        if (!existingBadge) {
+          await app.prisma.userBadge.create({ data: { userId, badge: badgeName } })
+          await createAndSendNotification(app, {
+            userId,
+            type: 'NEW_BADGE' as any,
+            title: 'Nouveau Badge Débloqué ! 🏅',
+            body: `Félicitations, vous avez obtenu le badge "${badgeName}" pour votre générosité !`,
+            data: { badgeName }
+          })
+        }
+      }
+    } catch (e) {
+      app.log.error(`Failed to assign Top Donateur badge: ${e}`)
+    }
+  }
+
   // Add to event group chat and send system message
   const conv = await app.prisma.conversation.findUnique({ where: { eventId } })
   if (conv) {
