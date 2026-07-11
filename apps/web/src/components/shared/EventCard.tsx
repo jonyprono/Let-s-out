@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { Share2, Lock, QrCode, X, Loader2 } from 'lucide-react';
+import { Share2, Lock, QrCode, X, Loader2, Calendar, MapPin } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { type Event, eventsApi } from '@/features/events/api';
 import { useQuery } from '@tanstack/react-query';
@@ -193,18 +193,20 @@ export const EventCard = memo(function EventCard({
         {/* Informations */}
         <div>
           <h3 
-            className="font-semibold text-[#1B1818] leading-tight mb-1 truncate" 
+            className="font-semibold text-[#1B1818] leading-tight mb-2 truncate" 
             style={{ fontFamily: 'var(--font-poppins)', fontSize: '17px', fontWeight: 500 }}
           >
             {displayTitle}
           </h3>
-          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-0.5 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
-            {displayDate}
-          </p>
+          <div className="flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 mb-1 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
+            <Calendar className="w-4 h-4 text-gray-400" />
+            <span className="truncate">{displayDate}</span>
+          </div>
           {displayLocation && (
-            <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
-              {displayLocation}
-            </p>
+            <div className="flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400 truncate" style={{ fontFamily: 'var(--font-poppins)' }}>
+              <MapPin className="w-4 h-4 text-gray-400" />
+              <span className="truncate">{displayLocation}</span>
+            </div>
           )}
         </div>
 
