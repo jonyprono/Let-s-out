@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft } from 'lucide-react';
+import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
 
 import { useNavigate, useParams } from 'react-router';
-import { Button } from '@/components/ui/button';
 import { EventCard } from '@/components/shared/EventCard';
+import { toast } from 'sonner';
 
 type BadgeDef = {
   badge: string;
@@ -63,6 +63,8 @@ const ALL_BADGES: BadgeDef[] = [
   },
 ];
 
+const BADGE_GRADIENT = 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)';
+
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
 }
@@ -73,6 +75,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const user = useAuthStore((s) => s.user);
   const profile = user?.profile;
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
   const [selectedBadge, setSelectedBadge] = useState<BadgeDef | null>(null);
@@ -90,7 +93,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     enabled: !!targetUsername,
   });
 
-  const displayProfile = viewedProfile || profile;
+  const displayProfile = isOwnProfile ? (viewedProfile || profile) : viewedProfile;
   const targetUserId = displayProfile?.userId || displayProfile?.user?.id;
 
   const { data: activity } = useQuery({
@@ -99,15 +102,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     enabled: !!targetUserId,
   });
 
-  const displayName = isOwnProfile
-    ? (profile?.displayName || 'Mon Profil')
-    : (displayProfile?.displayName || displayProfile?.username || username || 'Utilisateur');
-  const city = displayProfile?.city || '';
-  const bio = displayProfile?.bio || '';
-
-
-
-  // Followers / Friends queries can be kept if we still need them, but the mockups only show "Amis" count
+  // My own friends list (for stats + badge progress)
   const { data: friendsData } = useQuery({
     queryKey: ['users', 'friends'],
     queryFn: () => usersApi.getFriends(),
@@ -115,16 +110,73 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   });
 
   const createdEvents = activity?.createdEvents ?? [];
-  const pastEvents = activity?.pastEvents ?? []; // Used for "Rejoints" count
-  const upcomingEvents = createdEvents.slice(0, 5); // Example: just to show some next events
+  const pastEvents = activity?.pastEvents ?? [];
+  const upcomingEvents = createdEvents.filter((e: any) => new Date(e.startAt) > new Date()).slice(0, 5);
   const friends = friendsData ?? [];
 
-  const rating = viewedProfile?.detailedStats?.rating?.toFixed(1) || '0.0';
+  // From API: real friendship & follow state
+  const friendshipStatus: string = viewedProfile?.friendshipStatus ?? 'none';
+  const isFollowingInitial: boolean = viewedProfile?.isFollowing ?? false;
+  const commonEventsCount: number = viewedProfile?.commonEventsCount ?? 0;
+
+  // Local optimistic states
+  const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
+  const effectiveIsFollowing = isFollowing !== null ? isFollowing : isFollowingInitial;
+  const [localFriendStatus, setLocalFriendStatus] = useState<string | null>(null);
+  const effectiveFriendStatus = localFriendStatus ?? friendshipStatus;
+
+  const displayName = isOwnProfile
+    ? (profile?.displayName || 'Mon Profil')
+    : (displayProfile?.displayName || displayProfile?.username || username || 'Utilisateur');
+  const city = displayProfile?.city || '';
+  // Real bio only — no fallback placeholder
+  const bio = displayProfile?.bio || '';
+
+  // Interests: profile data directly
+  const interests: string[] = displayProfile?.interests ?? [];
+
+  const rating = viewedProfile?.detailedStats?.rating?.toFixed(1) ?? (isOwnProfile ? '0.0' : null);
+
+  // Follow mutation
+  const followMut = useMutation({
+    mutationFn: async () => {
+      if (effectiveIsFollowing) {
+        await usersApi.unfollowUser(targetUserId!);
+      } else {
+        await usersApi.followUser(targetUserId!);
+      }
+    },
+    onMutate: () => setIsFollowing(!effectiveIsFollowing),
+    onError: () => {
+      setIsFollowing(effectiveIsFollowing);
+      toast.error('Erreur lors de l\'action.');
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] }),
+  });
+
+  // Friend request mutation
+  const friendMut = useMutation({
+    mutationFn: () => usersApi.sendFriendRequest(targetUserId!),
+    onMutate: () => setLocalFriendStatus('pending_sent'),
+    onError: () => {
+      setLocalFriendStatus(null);
+      toast.error('Erreur lors de la demande.');
+    },
+    onSuccess: () => {
+      toast.success('Demande d\'ami envoyée !');
+      qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] });
+    },
+  });
+
+  // Navigate to chat
+  const handleMessage = () => {
+    onNavigate('chat', { userId: targetUserId });
+  };
 
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0b]">
-        <div className="flex flex-col items-center gap-150">
+        <div className="flex flex-col items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-gray-200 animate-pulse" />
           <div className="h-4 w-32 bg-gray-200 rounded-lg animate-pulse" />
         </div>
@@ -132,19 +184,18 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     );
   }
 
-  const coverUrl = displayProfile?.coverUrl || ''; // We assume the user profile might have a coverUrl in the future.
+  const coverUrl = displayProfile?.coverUrl || '';
 
   return (
     <div className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       
       {/* Dynamic Cover Header */}
       <div className="w-full h-[200px] relative" style={{ borderBottom: '1px solid #D4D4D4' }}>
-        {/* Cover image */}
         <div
           className="absolute inset-0"
           style={{ background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'url(/Checker.png) center/cover repeat' }}
         />
-        {/* Top buttons – always above the cover image */}
+        {/* Top buttons — always above the cover image */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-12 z-20">
           <button
             onClick={(e) => { e.stopPropagation(); navigate(-1); }}
@@ -172,7 +223,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             className="w-[72px] h-[72px] rounded-full ring-4 ring-[#F9F9F9] dark:ring-[#0a0a0b] overflow-hidden bg-gray-200 shadow-sm relative cursor-pointer shrink-0"
           >
             <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-<g clip-path="url(#clip0_1575_8860)">
+<g clipPath="url(#clip0_1575_8860)">
 <rect width="48" height="48" rx="24" fill="#F5F5F5"/>
 <circle cx="24" cy="16" r="8" fill="#BDBDBD"/>
 <circle cx="24" cy="49" r="22" fill="#BDBDBD"/>
@@ -195,30 +246,70 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
             <div className="flex items-center gap-1 mt-0.5">
               {city && <span className="text-[12px] text-gray-500 font-medium font-inter">{city} · </span>}
-              <span className="text-[12px] text-gray-500 font-medium font-inter">Membre depuis {new Date(displayProfile?.createdAt || Date.now()).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+              <span className="text-[12px] text-gray-500 font-medium font-inter">
+                Membre depuis {new Date(displayProfile?.createdAt || displayProfile?.user?.createdAt || Date.now()).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Bio */}
+        {/* Bio — real data only */}
         {bio ? (
-           <p className="text-[13px] text-gray-600 dark:text-gray-300 w-full mb-4">{bio}</p>
-        ) : (
-           <p className="text-[13px] text-gray-600 dark:text-gray-300 w-full mb-4">Amatrice de sorties. Fan de musique, food & nouvelles rencontres.</p>
-        )}
+          <p className="text-[13px] text-gray-600 dark:text-gray-300 w-full mb-3">{bio}</p>
+        ) : isOwnProfile ? (
+          <p className="text-[13px] text-gray-400 italic w-full mb-3">Aucune description. Modifiez votre profil pour en ajouter une.</p>
+        ) : null}
 
         {/* Public Profile Actions */}
         {!isOwnProfile && (
-          <div className="flex gap-2 w-full max-w-sm px-4 mb-4">
-            <Button variant="outline" className="flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-2 border-gray-200">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg> Suivre
-            </Button>
-            <Button variant="outline" className="flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-2 border-gray-200">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Écrire
-            </Button>
-            <Button variant="outline" className="flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-2 border-gray-200">
-              <UserPlus className="w-4 h-4" /> Ajouter
-            </Button>
+          <div className="flex gap-2 w-full mb-4">
+            {/* Follow Button */}
+            <button
+              onClick={() => followMut.mutate()}
+              disabled={followMut.isPending}
+              className={`flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-1.5 border transition-all active:scale-95 ${
+                effectiveIsFollowing
+                  ? 'bg-[#FF7A00] text-white border-[#FF7A00]'
+                  : 'bg-white text-gray-700 border-gray-200'
+              }`}
+            >
+              {followMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : effectiveIsFollowing ? <Check className="w-3.5 h-3.5" /> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>}
+              {effectiveIsFollowing ? 'Suivi' : 'Suivre'}
+            </button>
+
+            {/* Message Button */}
+            <button
+              onClick={handleMessage}
+              className="flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-1.5 border border-gray-200 bg-white text-gray-700 active:scale-95 transition-all"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Écrire
+            </button>
+
+            {/* Add Friend Button */}
+            <button
+              onClick={() => {
+                if (effectiveFriendStatus === 'none') friendMut.mutate();
+              }}
+              disabled={friendMut.isPending || effectiveFriendStatus !== 'none'}
+              className={`flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-1.5 border transition-all active:scale-95 ${
+                effectiveFriendStatus === 'friend'
+                  ? 'bg-green-50 text-green-700 border-green-200'
+                  : effectiveFriendStatus === 'pending_sent'
+                  ? 'bg-gray-50 text-gray-400 border-gray-200'
+                  : 'bg-white text-gray-700 border-gray-200'
+              }`}
+            >
+              {friendMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : effectiveFriendStatus === 'friend' ? <UserCheck className="w-3.5 h-3.5" />
+                : effectiveFriendStatus === 'pending_sent' ? <Check className="w-3.5 h-3.5" />
+                : <UserPlus className="w-3.5 h-3.5" />
+              }
+              {effectiveFriendStatus === 'friend' ? 'Amis'
+                : effectiveFriendStatus === 'pending_sent' ? 'Ajouté'
+                : 'Ajouter'
+              }
+            </button>
           </div>
         )}
       </div>
@@ -282,19 +373,21 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   <svg className="w-3.5 h-3.5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 </div>
                 <div className="text-center">
-                  <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{rating}</p>
+                  <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{rating ?? '–'}</p>
                   <p className="font-inter text-[10px] text-gray-500">Note</p>
                 </div>
               </div>
             </div>
 
-            {/* Evénements en commun (Only for public profile) */}
-            {!isOwnProfile && (
+            {/* Evénements en commun — real count from API */}
+            {!isOwnProfile && commonEventsCount > 0 && (
               <div className="w-full bg-[#FFF9EC] border border-[#FFE5B4] rounded-xl p-3 flex items-center gap-3">
                 <div className="bg-[#FF7A00] p-1.5 rounded-lg text-white">
                   <Calendar className="w-4 h-4" />
                 </div>
-                <p className="text-[13px] font-medium text-gray-800">03 Événements en commun</p>
+                <p className="text-[13px] font-medium text-gray-800">
+                  {String(commonEventsCount).padStart(2, '0')} Événement{commonEventsCount > 1 ? 's' : ''} en commun
+                </p>
               </div>
             )}
 
@@ -302,7 +395,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             <div>
               <h3 className="font-inter text-[14px] font-medium text-gray-500 mb-3">Centres d'intérêt</h3>
               <div className="flex flex-wrap gap-2">
-                {displayProfile?.interests?.length > 0 ? displayProfile.interests.map((i: string) => (
+                {interests.length > 0 ? interests.map((i: string) => (
                   <div key={i} className="px-3 py-1.5 bg-[#FAFAFA] border border-gray-100 rounded-full text-[11px] font-medium text-gray-600">
                     {i}
                   </div>
@@ -310,7 +403,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   <p className="text-[12px] text-gray-400 italic">Aucun centre d'intérêt renseigné.</p>
                 )}
                 {isOwnProfile && (
-                  <button className="px-3 py-1.5 bg-[#FAFAFA] border border-dashed border-gray-300 rounded-full text-[11px] font-medium text-gray-600 flex items-center gap-1">
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="px-3 py-1.5 bg-[#FAFAFA] border border-dashed border-gray-300 rounded-full text-[11px] font-medium text-gray-600 flex items-center gap-1 active:scale-95 transition-transform"
+                  >
                     + Ajouter
                   </button>
                 )}
@@ -328,7 +424,12 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
                   if (hasBadge) {
                     return (
-                      <div key={b.badge} className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 cursor-pointer active:scale-95 transition-transform" style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }} onClick={() => setSelectedBadge(b)}>
+                      <div
+                        key={b.badge}
+                        onClick={() => setSelectedBadge(b)}
+                        className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 cursor-pointer active:scale-95 transition-transform"
+                        style={{ background: BADGE_GRADIENT }}
+                      >
                         <span className="text-[20px]">{b.icon}</span>
                         <span className="text-[9px] font-semibold text-white text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
                       </div>
@@ -340,7 +441,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                         onClick={() => setSelectedBadge(b)}
                         className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 cursor-pointer active:scale-95 transition-transform relative overflow-hidden"
                       >
-                        {/* Progress bar at bottom */}
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
                           <div className="h-full bg-[#FF7A00]/50 transition-all" style={{ width: `${pct}%` }} />
                         </div>
@@ -353,55 +453,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               </div>
             </div>
 
-            {/* Badge Detail Modal */}
-            {selectedBadge && (() => {
-              const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === selectedBadge.badge);
-              const prog = selectedBadge.getProgress(activity, friends);
-              const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
-              return (
-                <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedBadge(null)}>
-                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                  <div
-                    className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl p-6 pb-10 shadow-2xl"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {/* Close */}
-                    <button onClick={() => setSelectedBadge(null)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-                    </button>
-
-                    {/* Badge icon */}
-                    <div className="flex flex-col items-center mb-4">
-                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-3 ${hasBadge ? '' : 'bg-gray-100 grayscale'}`} style={hasBadge ? { background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' } : {}}>
-                        <span className="text-[40px]">{selectedBadge.icon}</span>
-                      </div>
-                      <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center whitespace-pre-wrap">{selectedBadge.title.replace('\n', ' ')}</h3>
-                      {hasBadge && <span className="mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[11px] font-semibold rounded-full">✓ Obtenu</span>}
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-4">{selectedBadge.description}</p>
-
-                    {!hasBadge && (
-                      <div className="bg-[#FFF9EC] border border-[#FFE5B4] rounded-2xl p-4">
-                        <p className="text-[12px] font-semibold text-[#FF7A00] mb-2">Comment l'obtenir ?</p>
-                        <p className="text-[13px] text-gray-700 mb-3">{selectedBadge.howTo}</p>
-                        {/* Progress */}
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] text-gray-500">Progression</span>
-                          <span className="text-[11px] font-bold text-[#FF7A00]">{prog.current} / {prog.target}</span>
-                        </div>
-                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-[#FF7A00] rounded-full transition-all" style={{ width: `${pct}%` }} />
-                        </div>
-                        <p className="text-right text-[10px] text-gray-400 mt-1">{pct}%</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-
             {/* Prochains Événements */}
             {upcomingEvents.length > 0 && (
               <div>
@@ -409,7 +460,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   <h3 className="font-inter text-[14px] font-medium text-gray-500">Prochains événements</h3>
                   <button className="text-[13px] text-gray-500 font-medium">Voir tout</button>
                 </div>
-                
                 <div className="flex overflow-x-auto hide-scrollbar pb-4 pl-1">
                   {upcomingEvents.map((event: any) => (
                     <EventCard 
@@ -428,24 +478,73 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
         {activeTab === 'events' && (
           <div className="grid grid-cols-2 gap-4">
-             {/* Evenements créés Card */}
-             <div onClick={() => console.log('Go to created events')} className="w-full bg-[#FAFAFA] border border-[#F5F5F4] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
-               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
-                 <Calendar className="w-5 h-5 text-[#FF7A00]" />
-               </div>
-               <p className="text-[13px] font-medium text-gray-700 text-center">Événements<br/>créés</p>
-             </div>
-
-             {/* Evenements rejoints Card */}
-             <div onClick={() => console.log('Go to joined events')} className="w-full bg-[#FAFAFA] border border-[#F5F5F4] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
-               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
-                 <Activity className="w-5 h-5 text-[#FF7A00]" />
-               </div>
-               <p className="text-[13px] font-medium text-gray-700 text-center">Événements<br/>rejoints</p>
-             </div>
+            <div onClick={() => console.log('Go to created events')} className="w-full bg-[#FAFAFA] border border-[#F5F5F4] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-[#FF7A00]" />
+              </div>
+              <p className="text-[13px] font-medium text-gray-700 text-center">Événements<br/>créés</p>
+            </div>
+            <div onClick={() => console.log('Go to joined events')} className="w-full bg-[#FAFAFA] border border-[#F5F5F4] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+                <Activity className="w-5 h-5 text-[#FF7A00]" />
+              </div>
+              <p className="text-[13px] font-medium text-gray-700 text-center">Événements<br/>rejoints</p>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Badge Detail Bottom Sheet */}
+      {selectedBadge && (() => {
+        const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === selectedBadge.badge);
+        const prog = selectedBadge.getProgress(activity, friends);
+        const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
+        return (
+          <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedBadge(null)}>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <div
+              className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl max-h-[85vh] overflow-y-auto shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 pb-10">
+                {/* Close */}
+                <button onClick={() => setSelectedBadge(null)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                </button>
+
+                {/* Badge icon */}
+                <div className="flex flex-col items-center mb-4">
+                  <div
+                    className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-3 ${!hasBadge ? 'bg-gray-100 grayscale' : ''}`}
+                    style={hasBadge ? { background: BADGE_GRADIENT } : {}}
+                  >
+                    <span className="text-[40px]">{selectedBadge.icon}</span>
+                  </div>
+                  <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">{selectedBadge.title.replace('\n', ' ')}</h3>
+                  {hasBadge && <span className="mt-1 px-3 py-1 bg-green-100 text-green-700 text-[11px] font-semibold rounded-full">✓ Obtenu</span>}
+                </div>
+
+                {/* Description */}
+                <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-4">{selectedBadge.description}</p>
+
+                {/* How to get + progress */}
+                <div className="bg-[#FFF9EC] border border-[#FFE5B4] rounded-2xl p-4">
+                  <p className="text-[12px] font-semibold text-[#FF7A00] mb-2">Comment l'obtenir ?</p>
+                  <p className="text-[13px] text-gray-700 mb-3">{selectedBadge.howTo}</p>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] text-gray-500">Progression</span>
+                    <span className="text-[11px] font-bold text-[#FF7A00]">{prog.current} / {prog.target}</span>
+                  </div>
+                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-[#FF7A00] rounded-full transition-all" style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="text-right text-[10px] text-gray-400 mt-1">{pct}%{hasBadge ? ' — Félicitations !' : ''}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
     </div>

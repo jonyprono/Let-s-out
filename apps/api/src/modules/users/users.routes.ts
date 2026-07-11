@@ -71,9 +71,28 @@ export default async function usersRoutes(app: FastifyInstance) {
       }
     }
 
+    const followRecord = await app.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId: sub, followingId: userId } }
+    })
+    const isFollowing = !!followRecord
+
+    // Common events: events both users have a confirmed booking on
+    const commonEvents = await app.prisma.event.findMany({
+      where: {
+        bookings: {
+          some: { userId: sub, status: 'CONFIRMED' }
+        },
+        AND: [
+          { bookings: { some: { userId: userId, status: 'CONFIRMED' } } }
+        ]
+      },
+      select: { id: true }
+    })
+    const commonEventsCount = commonEvents.length
+
     const detailedStats = await getDetailedStats(app, userId)
 
-    return reply.send({ ...profile, friendshipStatus, detailedStats })
+    return reply.send({ ...profile, friendshipStatus, isFollowing, commonEventsCount, detailedStats })
   })
 
   // Get user profile by username
@@ -115,9 +134,28 @@ export default async function usersRoutes(app: FastifyInstance) {
       }
     }
 
+    const followRecord = await app.prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId: sub, followingId: userId } }
+    })
+    const isFollowing = !!followRecord
+
+    // Common events: events both users have a confirmed booking on
+    const commonEvents = await app.prisma.event.findMany({
+      where: {
+        bookings: {
+          some: { userId: sub, status: 'CONFIRMED' }
+        },
+        AND: [
+          { bookings: { some: { userId: userId, status: 'CONFIRMED' } } }
+        ]
+      },
+      select: { id: true }
+    })
+    const commonEventsCount = commonEvents.length
+
     const detailedStats = await getDetailedStats(app, userId)
 
-    return reply.send({ ...profile, friendshipStatus, detailedStats })
+    return reply.send({ ...profile, friendshipStatus, isFollowing, commonEventsCount, detailedStats })
   })
 
   // Update own profile

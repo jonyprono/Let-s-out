@@ -27,7 +27,9 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const [bio, setBio] = useState(profile?.bio || '')
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests || [])
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || '')
+  const [avatarPreview, setAvatarPreview] = useState(profile?.avatarUrl || '')
   const [coverUrl, setCoverUrl] = useState((profile as any)?.coverUrl || '')
+  const [coverPreview, setCoverPreview] = useState((profile as any)?.coverUrl || '')
   const avatarCacheKey = (profile as { updatedAt?: string })?.updatedAt || avatarUrl
 
   const [isSaving, setIsSaving] = useState(false)
@@ -59,16 +61,21 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
+    // Show preview immediately from local file
+    const localPreview = URL.createObjectURL(file)
+    setAvatarPreview(localPreview)
     setIsUploadingAvatar(true)
     try {
       const compressed = await compressImage(file, 800)
       const url = await chatApi.uploadMedia(compressed)
       setAvatarUrl(url)
+      setAvatarPreview(url)
       await usersApi.updateProfile({ avatarUrl: url })
       await refreshUser()
       invalidateAvatarQueries(qc)
       toast.success('Photo de profil mise à jour !')
     } catch (error) {
+      setAvatarPreview(avatarUrl) // revert on error
       toast.error("Erreur lors de l'envoi de la photo de profil.")
     } finally {
       setIsUploadingAvatar(false)
@@ -78,16 +85,22 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const handleCoverChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
+    // Show preview immediately
+    const localPreview = URL.createObjectURL(file)
+    setCoverPreview(localPreview)
     setIsUploadingCover(true)
     try {
       const compressed = await compressImage(file, 1200)
       const url = await chatApi.uploadMedia(compressed)
       setCoverUrl(url)
+      setCoverPreview(url)
       await usersApi.updateProfile({ coverUrl: url } as any)
       await refreshUser()
       qc.invalidateQueries({ queryKey: ['me'] })
+      qc.invalidateQueries({ queryKey: ['public-profile'] })
       toast.success('Photo de couverture mise à jour !')
     } catch (error) {
+      setCoverPreview(coverUrl) // revert on error
       toast.error("Erreur lors de l'envoi de la couverture.")
     } finally {
       setIsUploadingCover(false)
@@ -147,8 +160,8 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
 
         {/* Cover Photo */}
         <div className="relative w-full h-[140px] bg-gray-100 dark:bg-[#222] overflow-hidden">
-          {coverUrl ? (
-            <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
+          {coverPreview ? (
+            <img src={coverPreview} alt="Cover" className="w-full h-full object-cover" />
           ) : (
             <div
               className="w-full h-full"
@@ -183,7 +196,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
           <div className="relative">
             <div className={`w-20 h-20 rounded-full overflow-hidden shadow-md bg-gray-100 dark:bg-[#333333] ring-4 ring-white dark:ring-[#1A1A1A] ${isUploadingAvatar ? 'opacity-50' : ''}`}>
               <SafeImage
-                src={avatarUrl || null}
+                src={avatarPreview || null}
                 cacheKey={avatarCacheKey}
                 alt="Avatar"
                 className="w-full h-full object-cover"
