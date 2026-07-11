@@ -135,7 +135,7 @@ export function CreatedEventsList() {
               <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6">Non publiés (Brouillons)</h2>
               <div className="flex flex-col gap-3">
                 {drafts.map((ev: any) => (
-                  <EventRowCard key={ev.id} event={ev} onClick={() => navigate(`/create-event`, { state: { editEventId: ev.id } })} />
+                  <EventRowCard key={ev.id} event={ev} onClick={() => navigate(`/events/create`, { state: { editEventId: ev.id, eventData: ev } })} />
                 ))}
               </div>
             </>

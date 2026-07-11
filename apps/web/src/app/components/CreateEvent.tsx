@@ -327,45 +327,57 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
   // ── Pre-fill from editing ─────────────────────────────────────────────
   useEffect(() => {
-    const eventData = location.state?.eventData
     const editEventId = location.state?.editEventId
-    if (eventData && editEventId) {
-      if (eventData.title) setTitle(eventData.title)
-      if (eventData.category) setCategory(eventData.category)
-      if (eventData.startAt) {
-        const d = new Date(eventData.startAt)
-        setStartDate(d.toISOString().split('T')[0])
-        setStartTime(d.toISOString().split('T')[1].slice(0, 5))
+    const eventData = location.state?.eventData
+
+    const applyEventData = (d: any) => {
+      if (d.title) setTitle(d.title)
+      if (d.category) setCategory(d.category)
+      if (d.startAt) {
+        const dt = new Date(d.startAt)
+        setStartDate(dt.toISOString().split('T')[0])
+        setStartTime(dt.toISOString().split('T')[1].slice(0, 5))
       }
-      if (eventData.endAt) {
-        const d = new Date(eventData.endAt)
-        setEndDate(d.toISOString().split('T')[0])
-        setEndTime(d.toISOString().split('T')[1].slice(0, 5))
+      if (d.endAt) {
+        const dt = new Date(d.endAt)
+        setEndDate(dt.toISOString().split('T')[0])
+        setEndTime(dt.toISOString().split('T')[1].slice(0, 5))
         setHasEndDate(true)
       }
-      if (eventData.city) setCity(eventData.city)
-      if (eventData.address) setAddress(eventData.address)
-      if (eventData.latitude) setLat(eventData.latitude)
-      if (eventData.longitude) setLon(eventData.longitude)
-      if (eventData.maxAttendees) setMaxPlaces(String(eventData.maxAttendees))
-      if (eventData.price !== undefined) setAmount(String(eventData.price))
-      if (eventData.isPrivate !== undefined) setPrivacy(eventData.isPrivate ? 'PRIVATE' : 'PUBLIC')
-      if (eventData.description) setDescription(eventData.description)
-      if (eventData.coverUrl) setCoverPreview(eventData.coverUrl)
-      if (eventData.poolTarget !== undefined && eventData.poolTarget !== null) {
+      if (d.city) setCity(d.city)
+      if (d.address) setAddress(d.address)
+      if (d.latitude) setLat(d.latitude)
+      if (d.longitude) setLon(d.longitude)
+      if (d.maxAttendees) setMaxPlaces(String(d.maxAttendees))
+      if (d.price !== undefined) setAmount(String(d.price))
+      if (d.isPrivate !== undefined) setPrivacy(d.isPrivate ? 'PRIVATE' : 'PUBLIC')
+      if (d.description) setDescription(d.description)
+      if (d.coverUrl) setCoverPreview(d.coverUrl)
+      if (d.poolTarget !== undefined && d.poolTarget !== null) {
         setEnablePool(true)
         setParticipationMode('cagnotte')
-        setPoolTarget(String(eventData.poolTarget))
+        setPoolTarget(String(d.poolTarget))
       }
-      if (eventData.poolMinAmount !== undefined && eventData.poolMinAmount !== null) {
-        setPoolMinAmount(String(eventData.poolMinAmount))
+      if (d.poolMinAmount !== undefined && d.poolMinAmount !== null) {
+        setPoolMinAmount(String(d.poolMinAmount))
       }
-      if (eventData.poolDescription) setPoolDescription(eventData.poolDescription)
-      if (eventData.registrationDeadline) {
-        const rd = new Date(eventData.registrationDeadline)
+      if (d.poolDescription) setPoolDescription(d.poolDescription)
+      if (d.registrationDeadline) {
+        const rd = new Date(d.registrationDeadline)
         setRegEndDate(rd.toISOString().split('T')[0])
         setRegEndTime(rd.toISOString().split('T')[1].slice(0, 5))
       }
+    }
+
+    if (eventData && editEventId) {
+      // Data already passed via navigation state
+      applyEventData(eventData)
+    } else if (editEventId) {
+      // Only ID passed — fetch from API
+      apiClient.get(`/events/${editEventId}`).then((res: any) => {
+        const d = res.data
+        if (d) applyEventData(d)
+      }).catch(() => {})
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
