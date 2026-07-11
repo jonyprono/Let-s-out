@@ -37,7 +37,7 @@ const leftTabs: NavTab[] = [
 ]
 const rightTabs: NavTab[] = [
   { path: '/messages',  icon: ChatBubbleIcon,    label: 'Messages' },
-  { path: '/profile',   icon: User,          label: 'Profil' },
+  { path: '/profile',   icon: User,          label: 'Compte' },
 ]
 
 export function BottomNav() {

@@ -10,14 +10,57 @@ import { usersApi } from '@/features/users/api';
 import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { EventCard } from '@/components/shared/EventCard';
-import { toast } from 'sonner';
 
-const ALL_BADGES = [
-  { badge: 'Early adopter', title: 'Early\nadopter', icon: '🚀', instructions: 'Créez votre compte pendant la phase de lancement.' },
-  { badge: 'Social Star', title: 'Social\nStar', icon: '⭐', instructions: 'Obtenez un grand nombre de followers et d\'amis.' },
-  { badge: 'Party Maker', title: 'Party\nMaker', icon: '🎉', instructions: 'Créez et organisez plusieurs événements.' },
-  { badge: 'Top Donateur', title: 'Top\nDonateur', icon: '🎁', instructions: 'Contribuez plusieurs fois aux cagnottes d\'événements.' },
-  { badge: 'Top Org.', title: 'Top\nOrg.', icon: '🏆', instructions: 'Recevez d\'excellentes notes en tant qu\'organisateur.' },
+type BadgeDef = {
+  badge: string;
+  title: string;
+  icon: string;
+  description: string;
+  howTo: string;
+  getProgress: (activity: any, friends: any[]) => { current: number; target: number };
+};
+
+const ALL_BADGES: BadgeDef[] = [
+  {
+    badge: 'Early adopter',
+    title: 'Early\nadopter',
+    icon: '🚀',
+    description: 'Récompense les pionniers qui ont rejoint Let\'s Out lors du lancement.',
+    howTo: 'Créez votre compte pendant la phase de lancement de l\'application.',
+    getProgress: (_a, _f) => ({ current: 1, target: 1 }),
+  },
+  {
+    badge: 'Social Star',
+    title: 'Social\nStar',
+    icon: '⭐',
+    description: 'Décerné aux membres avec une grande vie sociale sur la plateforme.',
+    howTo: 'Ajoutez 10 amis sur Let\'s Out pour débloquer ce badge.',
+    getProgress: (_a, friends) => ({ current: friends.length, target: 10 }),
+  },
+  {
+    badge: 'Party Maker',
+    title: 'Party\nMaker',
+    icon: '🎉',
+    description: 'Pour ceux qui animent la communauté en créant des événements.',
+    howTo: 'Créez et publiez 3 événements sur la plateforme.',
+    getProgress: (activity, _f) => ({ current: (activity?.createdEvents ?? []).length, target: 3 }),
+  },
+  {
+    badge: 'Top Donateur',
+    title: 'Top\nDonateur',
+    icon: '🎁',
+    description: 'Récompense la générosité envers la communauté.',
+    howTo: 'Contribuez à la cagnotte de 5 événements différents.',
+    getProgress: (_a, _f) => ({ current: 0, target: 5 }),
+  },
+  {
+    badge: 'Top Org.',
+    title: 'Top\nOrg.',
+    icon: '🏆',
+    description: 'Décerné aux organisateurs les mieux notés de la communauté.',
+    howTo: 'Maintenez une note moyenne de 4.5/5 après avoir reçu 5 avis.',
+    getProgress: (_a, _f) => ({ current: 0, target: 5 }),
+  },
 ];
 
 interface ProfileProps {
@@ -32,6 +75,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const navigate = useNavigate();
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
+  const [selectedBadge, setSelectedBadge] = useState<BadgeDef | null>(null);
   const { username } = useParams<{ username?: string }>();
 
   const targetUsername = username || profile?.username;
@@ -94,21 +138,25 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     <div className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       
       {/* Dynamic Cover Header */}
-      <div 
-        onClick={() => { if (isOwnProfile) setShowEditModal(true) }}
-        className="w-full h-[200px] relative flex flex-col justify-between pt-12 pb-3 px-4 cursor-pointer"
-        style={{
-          background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'url(/Checker.png) center/cover repeat',
-          borderBottom: '1px solid #D4D4D4'
-        }}
-      >
-        <div className="flex items-center justify-between z-10">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border border-gray-200">
+      <div className="w-full h-[200px] relative" style={{ borderBottom: '1px solid #D4D4D4' }}>
+        {/* Cover image */}
+        <div
+          className="absolute inset-0"
+          style={{ background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'url(/Checker.png) center/cover repeat' }}
+        />
+        {/* Top buttons – always above the cover image */}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-12 z-20">
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+            className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border border-gray-200"
+          >
             <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-white" />
           </button>
-          
           {isOwnProfile && (
-            <button onClick={() => onNavigate('settings')} className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border border-gray-200">
+            <button
+              onClick={(e) => { e.stopPropagation(); onNavigate('settings'); }}
+              className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border border-gray-200"
+            >
               <Settings className="w-5 h-5 text-gray-700 dark:text-white" />
             </button>
           )}
@@ -275,21 +323,27 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
                 {ALL_BADGES.map((b) => {
                   const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === b.badge);
-                  
+                  const prog = b.getProgress(activity, friends);
+                  const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
+
                   if (hasBadge) {
                     return (
-                      <div key={b.badge} className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0" style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }}>
+                      <div key={b.badge} className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 cursor-pointer active:scale-95 transition-transform" style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }} onClick={() => setSelectedBadge(b)}>
                         <span className="text-[20px]">{b.icon}</span>
                         <span className="text-[9px] font-semibold text-white text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
                       </div>
                     );
                   } else {
                     return (
-                      <div 
-                        key={b.badge} 
-                        onClick={() => toast.info(b.instructions)}
-                        className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 cursor-pointer active:scale-95 transition-transform"
+                      <div
+                        key={b.badge}
+                        onClick={() => setSelectedBadge(b)}
+                        className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 cursor-pointer active:scale-95 transition-transform relative overflow-hidden"
                       >
+                        {/* Progress bar at bottom */}
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
+                          <div className="h-full bg-[#FF7A00]/50 transition-all" style={{ width: `${pct}%` }} />
+                        </div>
                         <span className="text-[20px] grayscale">{b.icon}</span>
                         <span className="text-[9px] font-semibold text-gray-500 text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
                       </div>
@@ -298,6 +352,55 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 })}
               </div>
             </div>
+
+            {/* Badge Detail Modal */}
+            {selectedBadge && (() => {
+              const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === selectedBadge.badge);
+              const prog = selectedBadge.getProgress(activity, friends);
+              const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
+              return (
+                <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedBadge(null)}>
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+                  <div
+                    className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl p-6 pb-10 shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Close */}
+                    <button onClick={() => setSelectedBadge(null)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                    </button>
+
+                    {/* Badge icon */}
+                    <div className="flex flex-col items-center mb-4">
+                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-3 ${hasBadge ? '' : 'bg-gray-100 grayscale'}`} style={hasBadge ? { background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' } : {}}>
+                        <span className="text-[40px]">{selectedBadge.icon}</span>
+                      </div>
+                      <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center whitespace-pre-wrap">{selectedBadge.title.replace('\n', ' ')}</h3>
+                      {hasBadge && <span className="mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-[11px] font-semibold rounded-full">✓ Obtenu</span>}
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-4">{selectedBadge.description}</p>
+
+                    {!hasBadge && (
+                      <div className="bg-[#FFF9EC] border border-[#FFE5B4] rounded-2xl p-4">
+                        <p className="text-[12px] font-semibold text-[#FF7A00] mb-2">Comment l'obtenir ?</p>
+                        <p className="text-[13px] text-gray-700 mb-3">{selectedBadge.howTo}</p>
+                        {/* Progress */}
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] text-gray-500">Progression</span>
+                          <span className="text-[11px] font-bold text-[#FF7A00]">{prog.current} / {prog.target}</span>
+                        </div>
+                        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#FF7A00] rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="text-right text-[10px] text-gray-400 mt-1">{pct}%</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Prochains Événements */}
             {upcomingEvents.length > 0 && (

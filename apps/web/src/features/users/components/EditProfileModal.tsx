@@ -8,6 +8,11 @@ import { toast } from 'sonner'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { invalidateAvatarQueries } from '@/lib/avatar-cache'
 
+const AVAILABLE_INTERESTS = [
+  'Sorties', 'Sport', 'Cinéma', 'Voyage', 'Food', 'Business',
+  'Networking', 'Nightlife', 'Musique', 'Culture', 'Art', 'Tech'
+]
+
 interface EditProfileModalProps {
   onClose: () => void
 }
@@ -20,15 +25,18 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const [displayName, setDisplayName] = useState(profile?.displayName || '')
   const [city, setCity] = useState(profile?.city || '')
   const [bio, setBio] = useState(profile?.bio || '')
-  const [interestsText, setInterestsText] = useState(profile?.interests?.join(', ') || '')
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests || [])
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || '')
+  const [coverUrl, setCoverUrl] = useState((profile as any)?.coverUrl || '')
   const avatarCacheKey = (profile as { updatedAt?: string })?.updatedAt || avatarUrl
-  
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const compressImage = (file: File, maxWidth = 800): Promise<File> => {
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [isUploadingCover, setIsUploadingCover] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
+
+  const compressImage = (file: File, maxWidth = 1200): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image()
       const url = URL.createObjectURL(file)
@@ -51,39 +59,63 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
-    
-    setIsUploading(true)
+    setIsUploadingAvatar(true)
     try {
-      const compressed = await compressImage(file)
+      const compressed = await compressImage(file, 800)
       const url = await chatApi.uploadMedia(compressed)
       setAvatarUrl(url)
-      
-      // Auto-save the avatar immediately so it's persisted even if they don't click Save
       await usersApi.updateProfile({ avatarUrl: url })
       await refreshUser()
       invalidateAvatarQueries(qc)
       toast.success('Photo de profil mise à jour !')
     } catch (error) {
-      console.error('Failed to upload avatar', error)
-      toast.error("Erreur lors de l'envoi de l'image.")
+      toast.error("Erreur lors de l'envoi de la photo de profil.")
     } finally {
-      setIsUploading(false)
+      setIsUploadingAvatar(false)
     }
+  }
+
+  const handleCoverChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setIsUploadingCover(true)
+    try {
+      const compressed = await compressImage(file, 1200)
+      const url = await chatApi.uploadMedia(compressed)
+      setCoverUrl(url)
+      await usersApi.updateProfile({ coverUrl: url } as any)
+      await refreshUser()
+      qc.invalidateQueries({ queryKey: ['me'] })
+      toast.success('Photo de couverture mise à jour !')
+    } catch (error) {
+      toast.error("Erreur lors de l'envoi de la couverture.")
+    } finally {
+      setIsUploadingCover(false)
+    }
+  }
+
+  const toggleInterest = (interest: string) => {
+    setSelectedInterests(prev =>
+      prev.includes(interest)
+        ? prev.filter(i => i !== interest)
+        : [...prev, interest]
+    )
   }
 
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      const interests = interestsText.split(',').map(i => i.trim()).filter(i => i.length > 0)
       await usersApi.updateProfile({
         displayName,
         city,
         bio,
-        interests: interests.length > 0 ? interests : undefined,
-        avatarUrl
-      })
+        interests: selectedInterests,
+        avatarUrl,
+        coverUrl,
+      } as any)
       await refreshUser()
       invalidateAvatarQueries(qc)
+      qc.invalidateQueries({ queryKey: ['me'] })
       toast.success('Profil mis à jour avec succès')
       onClose()
     } catch (e) {
@@ -102,7 +134,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
           <X className="w-6 h-6" />
         </button>
         <h2 className="text-[17px] font-bold text-gray-900 dark:text-[#FFFFFF]">Modifier mon profil</h2>
-        <button 
+        <button
           onClick={handleSave}
           disabled={isSaving}
           className="text-[15px] font-bold text-action-primary disabled:opacity-50"
@@ -111,13 +143,45 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-5 pb-32 space-y-6">
-        
-        {/* Avatar */}
-        <div className="flex flex-col items-center justify-center space-y-2 mb-4">
-          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-1">Avatar</span>
+      <div className="flex-1 overflow-y-auto pb-32">
+
+        {/* Cover Photo */}
+        <div className="relative w-full h-[140px] bg-gray-100 dark:bg-[#222] overflow-hidden">
+          {coverUrl ? (
+            <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
+          ) : (
+            <div
+              className="w-full h-full"
+              style={{ background: 'url(/Checker.png) center/cover repeat' }}
+            />
+          )}
+          {/* Cover overlay + button */}
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+            <button
+              onClick={() => coverInputRef.current?.click()}
+              disabled={isUploadingCover}
+              className="flex flex-col items-center gap-1.5 text-white"
+            >
+              {isUploadingCover
+                ? <Loader2 className="w-7 h-7 animate-spin" />
+                : <Camera className="w-7 h-7 drop-shadow" />
+              }
+              <span className="text-[12px] font-semibold drop-shadow">Changer la couverture</span>
+            </button>
+          </div>
+          <input
+            type="file"
+            ref={coverInputRef}
+            accept="image/*"
+            className="hidden"
+            onChange={handleCoverChange}
+          />
+        </div>
+
+        {/* Avatar (overlapping the cover) */}
+        <div className="flex flex-col items-center -mt-10 mb-6 px-5">
           <div className="relative">
-            <div className={`w-24 h-24 rounded-full overflow-hidden shadow-sm bg-gray-100 dark:bg-[#333333] ${isUploading ? 'opacity-50' : ''}`}>
+            <div className={`w-20 h-20 rounded-full overflow-hidden shadow-md bg-gray-100 dark:bg-[#333333] ring-4 ring-white dark:ring-[#1A1A1A] ${isUploadingAvatar ? 'opacity-50' : ''}`}>
               <SafeImage
                 src={avatarUrl || null}
                 cacheKey={avatarCacheKey}
@@ -125,96 +189,105 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                 className="w-full h-full object-cover"
                 fallback={
                   <div className="w-full h-full flex items-center justify-center">
-                    <User className="w-10 h-10 text-gray-400 dark:text-gray-500 dark:text-gray-400" />
+                    <User className="w-10 h-10 text-gray-400" />
                   </div>
                 }
               />
             </div>
-            {isUploading && (
+            {isUploadingAvatar && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <Loader2 className="w-6 h-6 animate-spin text-action-primary" />
               </div>
             )}
             <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="absolute bottom-0 right-0 w-8 h-8 bg-action-primary rounded-full border-2 border-white flex items-center justify-center text-white shadow-md hover:bg-[#8338ec] transition-colors"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute bottom-0 right-0 w-7 h-7 bg-action-primary rounded-full border-2 border-white flex items-center justify-center text-white shadow-md"
             >
-              <Camera className="w-4 h-4" />
+              <Camera className="w-3.5 h-3.5" />
             </button>
             <input
               type="file"
-              ref={fileInputRef}
+              ref={avatarInputRef}
               accept="image/*"
               className="hidden"
               onChange={handleAvatarChange}
             />
           </div>
-          <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">Modifier la photo</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2">Touchez pour modifier la photo de profil</p>
         </div>
 
-        {/* Nom */}
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Nom d'affichage</label>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="John Doe"
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
-          />
+        <div className="px-5 space-y-6">
+          {/* Nom */}
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Nom d'affichage</label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="John Doe"
+              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 transition-colors"
+            />
+          </div>
+
+          {/* Ville */}
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Ville</label>
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Paris"
+              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 transition-colors"
+            />
+          </div>
+
+          {/* Bio */}
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">À propos de moi</label>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={4}
+              placeholder="Passionné(e) de sorties..."
+              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 transition-colors resize-none"
+            />
+          </div>
+
+          {/* Intérêts */}
+          <div className="space-y-2.5">
+            <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Centres d'intérêt</label>
+            <div className="flex flex-wrap gap-2">
+              {AVAILABLE_INTERESTS.map(interest => {
+                const isSelected = selectedInterests.includes(interest)
+                return (
+                  <button
+                    key={interest}
+                    onClick={() => toggleInterest(interest)}
+                    className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all active:scale-95 ${
+                      isSelected
+                        ? 'bg-[#FFF2D3] border-[#FF7A00] text-[#FF7A00]'
+                        : 'bg-gray-50 dark:bg-[#222] border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    {interest}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-[11px] text-gray-400">Sélectionnez vos centres d'intérêt ({selectedInterests.length} choisi{selectedInterests.length > 1 ? 's' : ''})</p>
+          </div>
+
+          {/* Bouton d'enregistrement */}
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="w-full min-h-[52px] h-auto py-3 bg-action-primary text-white rounded-full font-bold text-[16px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md disabled:opacity-60"
+          >
+            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
+          </button>
         </div>
-
-        {/* Ville */}
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Ville</label>
-          <input
-            type="text"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="Paris"
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
-          />
-        </div>
-
-        {/* Bio */}
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">À propos de moi</label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            rows={4}
-            placeholder="Passionné(e) de sorties..."
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors resize-none"
-          />
-        </div>
-
-        {/* Intérêts */}
-        <div className="space-y-1.5 mb-8">
-          <label className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Centres d'intérêt</label>
-          <input
-            type="text"
-            value={interestsText}
-            onChange={(e) => setInterestsText(e.target.value)}
-            placeholder="Sport, Cinéma, Musique..."
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 focus:bg-white dark:bg-[#1A1A1A] transition-colors"
-          />
-          <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-1">Séparez vos intérêts par des virgules.</p>
-        </div>
-
-        {/* Bouton d'enregistrement bas */}
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full min-h-[52px] h-auto py-3 bg-action-primary text-white rounded-full font-bold text-[16px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md disabled:opacity-60"
-        >
-          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
-        </button>
-
       </div>
     </div>
   )
 }
-
-
-
