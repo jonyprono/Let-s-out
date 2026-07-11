@@ -24,7 +24,7 @@ const HomeBase          = lazy(() => import('@/app/components/Home').then(m => (
 const ExplorerBase      = lazy(() => import('@/app/components/Explorer').then(m => ({ default: m.Explorer })))
 const MyEventsBase      = lazy(() => import('@/app/components/MyEvents').then(m => ({ default: m.MyEvents })))
 const MessagesBase      = lazy(() => import('@/app/components/Messages').then(m => ({ default: m.Messages })))
-const ProfileBase       = lazy(() => import('@/app/components/Profile').then(m => ({ default: m.Profile })))
+const ProfileBase       = lazy(() => import('@/app/components/ProfileV2').then(m => ({ default: m.ProfileV2 })))
 const EventDetailsBase  = lazy(() => import('@/app/components/EventDetails').then(m => ({ default: m.EventDetails })))
 const CreateEventBase   = lazy(() => import('@/app/components/CreateEvent').then(m => ({ default: m.CreateEvent })))
 const NotificationsBase = lazy(() => import('@/app/components/Notifications').then(m => ({ default: m.Notifications })))
