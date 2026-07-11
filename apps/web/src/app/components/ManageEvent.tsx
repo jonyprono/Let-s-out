@@ -298,23 +298,22 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           </div>
         </div>
 
-        <button 
+        <PrimaryButton 
           onClick={() => navigate(`/events/${event.id}/pay?type=contribution`)}
-          className="w-full py-4 rounded-xl bg-[#FF7A00] text-white text-[15px] font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
           Contribuer à la cagnotte
-        </button>
+        </PrimaryButton>
 
         {!event.poolReleased && (
-          <button
+          <PrimaryButton
             onClick={() => closeMut.mutate()}
             disabled={closeMut.isPending}
-            className="w-full py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] text-[14px] font-semibold text-gray-700 dark:text-gray-300 flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            className="bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
             Clôturer la cagnotte
-          </button>
+          </PrimaryButton>
         )}
       </div>
     );
@@ -410,13 +409,10 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
       <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2">Aucune cagnotte ajoutée</h3>
       <p className="text-[14px] text-gray-500 text-center mb-6 max-w-[250px]">Ajoutez une cagnotte à l'événement pour mutualiser les frais.</p>
 
-      <button
-        onClick={() => setStep('form')}
-        className="w-full max-w-xs py-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] text-[14px] font-semibold text-gray-900 dark:text-white flex items-center justify-center gap-2 active:scale-95 transition-transform"
-      >
+      <PrimaryButton onClick={() => setStep('form')} className="max-w-xs">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path></svg>
         Ajouter une cagnotte
-      </button>
+      </PrimaryButton>
     </div>
   );
 }
@@ -462,12 +458,11 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             <h2 className="text-[24px] font-bold text-gray-900 dark:text-white mb-2">Votre cagnotte est créée !</h2>
             <p className="text-[15px] text-gray-500 leading-relaxed max-w-[280px]">Les participants ont été notifiés. Vous pouvez maintenant suivre les contributions.</p>
           </div>
-          <button 
-            onClick={() => { setStep('empty'); qc.invalidateQueries({ queryKey: ['events', event.id] }); }} 
-            className="w-full mt-6 py-4 bg-[#FF7A00] text-white rounded-xl font-bold text-[15px] active:scale-95 transition-transform"
-          >
-            Voir la cagnotte
-          </button>
+          <div className="w-full mt-6">
+            <PrimaryButton onClick={() => { setStep('empty'); qc.invalidateQueries({ queryKey: ['events', event.id] }); }}>
+              Voir la cagnotte
+            </PrimaryButton>
+          </div>
         </div>
       </div>
     );
@@ -552,13 +547,9 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
         </button>
 
         <div className="mt-4 mb-4">
-          <button 
-            disabled={!isValid} 
-            onClick={() => setStep('summary')}
-            className="w-full py-4 bg-[#FF7A00] text-white rounded-xl font-bold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
-          >
+          <PrimaryButton disabled={!isValid} onClick={() => setStep('summary')}>
             Valider
-          </button>
+          </PrimaryButton>
         </div>
       </div>
 
@@ -599,13 +590,11 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             )}
           </div>
 
-          <button 
-            onClick={() => submitMut.mutate()} 
-            disabled={submitMut.isPending}
-            className="w-full py-4 mt-6 bg-[#FF7A00] text-white rounded-xl font-bold text-[15px] active:scale-95 transition-transform flex items-center justify-center"
-          >
-            {submitMut.isPending ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirmer'}
-          </button>
+          <div className="mt-6 w-full">
+            <PrimaryButton onClick={() => submitMut.mutate()} loading={submitMut.isPending}>
+              Confirmer
+            </PrimaryButton>
+          </div>
         </div>
       </BottomSheet>
     </div>
