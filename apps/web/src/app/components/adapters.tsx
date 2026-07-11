@@ -39,6 +39,9 @@ const FriendsListBase   = lazy(() => import('@/app/components/FriendsList').then
 const JoinPrivateBase   = lazy(() => import('@/app/components/JoinPrivateEvent').then(m => ({ default: m.JoinPrivateEvent })))
 const EventSuccessBase  = lazy(() => import('@/app/components/EventSuccessScreen').then(m => ({ default: m.EventSuccessScreen })))
 
+const CreatedEventsListBase = lazy(() => import('@/app/components/CreatedEventsList').then(m => ({ default: m.CreatedEventsList })))
+const ManageEventBase = lazy(() => import('@/app/components/ManageEvent').then(m => ({ default: m.ManageEvent })))
+
 // ─── Splashscreen ─────────────────────────────────────────────────────────────
 export function Splashscreen() {
   const nav = useNavigate()
@@ -337,3 +340,20 @@ export function EventSuccessScreen() {
     </Suspense>
   )
 }
+
+export function CreatedEventsList() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <CreatedEventsListBase />
+    </Suspense>
+  )
+}
+
+export function ManageEvent() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <ManageEventBase />
+    </Suspense>
+  )
+}
+

@@ -546,7 +546,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
         {activeTab === 'events' && (
           <div className="grid grid-cols-2 gap-4">
-            <div onClick={() => console.log('Go to created events')} className="w-full bg-[#FAFAFA] border border-[#F5F5F4] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
+            <div onClick={() => navigate('/profile/events-created')} className="w-full bg-[#FAFAFA] dark:bg-[#111] border border-[#F5F5F4] dark:border-[#222] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-[#FF7A00]" />
               </div>

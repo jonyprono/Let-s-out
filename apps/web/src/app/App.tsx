@@ -90,6 +90,8 @@ import {
   MyEvents,
   EventSuccessScreen,
   Wallet,
+  CreatedEventsList,
+  ManageEvent,
 } from '@/app/components/adapters'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
@@ -240,6 +242,7 @@ export default function App() {
             <Route path="/my-events" element={<MyEvents />} />
             <Route path="/events/create" element={<CreateEvent />} />
             <Route path="/events/:id" element={<EventDetails />} />
+            <Route path="/events/:id/manage" element={<ManageEvent />} />
             <Route path="/events/:id/success" element={<EventSuccessScreen />} />
             <Route path="/scan-qr" element={<JoinPrivateEvent />} />
             <Route path="/events/:id/pay" element={<PaymentPage />} />
@@ -252,6 +255,7 @@ export default function App() {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:username" element={<Profile />} />
+            <Route path="/profile/events-created" element={<CreatedEventsList />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/wallet" element={<Wallet />} />
           </Route>
