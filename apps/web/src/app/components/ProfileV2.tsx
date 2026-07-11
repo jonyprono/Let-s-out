@@ -10,6 +10,15 @@ import { usersApi } from '@/features/users/api';
 import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { EventCard } from '@/components/shared/EventCard';
+import { toast } from 'sonner';
+
+const ALL_BADGES = [
+  { badge: 'Early adopter', title: 'Early\nadopter', icon: '🚀', instructions: 'Créez votre compte pendant la phase de lancement.' },
+  { badge: 'Social Star', title: 'Social\nStar', icon: '⭐', instructions: 'Obtenez un grand nombre de followers et d\'amis.' },
+  { badge: 'Party Maker', title: 'Party\nMaker', icon: '🎉', instructions: 'Créez et organisez plusieurs événements.' },
+  { badge: 'Top Donateur', title: 'Top\nDonateur', icon: '🎁', instructions: 'Contribuez plusieurs fois aux cagnottes d\'événements.' },
+  { badge: 'Top Org.', title: 'Top\nOrg.', icon: '🏆', instructions: 'Recevez d\'excellentes notes en tant qu\'organisateur.' },
+];
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
@@ -259,20 +268,31 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             {/* Badges */}
             <div>
               <h3 className="font-inter text-[14px] font-medium text-gray-500 mb-3">Badges</h3>
-              {(!displayProfile?.user?.badges || displayProfile.user.badges.length === 0) ? (
-                <div className="w-full p-4 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center">
-                   <p className="text-[12px] font-medium text-gray-500">Participez à des événements pour débloquer des badges ! 🏆</p>
-                </div>
-              ) : (
-                <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
-                  {displayProfile.user.badges.map((b: any) => (
-                    <div key={b.badge} className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0" style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }}>
-                      <span className="text-[20px]">{b.icon || '⭐'}</span>
-                      <span className="text-[9px] font-semibold text-white text-center leading-[10px] whitespace-pre-wrap">{b.badge}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+                {ALL_BADGES.map((b) => {
+                  const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === b.badge);
+                  
+                  if (hasBadge) {
+                    return (
+                      <div key={b.badge} className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0" style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }}>
+                        <span className="text-[20px]">{b.icon}</span>
+                        <span className="text-[9px] font-semibold text-white text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div 
+                        key={b.badge} 
+                        onClick={() => toast.info(b.instructions)}
+                        className="min-w-[64px] h-[74px] rounded-xl flex flex-col items-center justify-center gap-1 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 cursor-pointer active:scale-95 transition-transform"
+                      >
+                        <span className="text-[20px] grayscale">{b.icon}</span>
+                        <span className="text-[9px] font-semibold text-gray-500 text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
+                      </div>
+                    );
+                  }
+                })}
+              </div>
             </div>
 
             {/* Prochains Événements */}
