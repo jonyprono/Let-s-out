@@ -904,6 +904,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
         if (avgPunctuality >= 4.5) await assignBadge('Ponctuel');
         if (avgAttitude >= 4.5) await assignBadge('Accueillant');
         if (avgReliability >= 4.5) await assignBadge('Fiable');
+        
+        if (allReviewsForCreator.length >= 5) {
+          const avgOverall = allReviewsForCreator.reduce((acc, r) => acc + r.rating, 0) / allReviewsForCreator.length;
+          if (avgOverall >= 4.5) await assignBadge('Top Org.');
+        }
       }
 
       // Notify organizer of a new review

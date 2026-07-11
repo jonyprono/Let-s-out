@@ -17,7 +17,7 @@ type BadgeDef = {
   icon: React.ReactNode;
   description: string;
   howTo: string;
-  getProgress: (activity: any, friends: any[]) => { current: number; target: number };
+  getProgress: (activity: any, friends: any[], profileData?: any) => { current: number; target: number };
 };
 
 function BadgeIcon({ children }: { children: React.ReactNode }) {
@@ -117,9 +117,71 @@ const ALL_BADGES: BadgeDef[] = [
     ),
     description: 'Décerné aux organisateurs les mieux notés de la communauté.',
     howTo: 'Maintenez une note moyenne de 4.5/5 après avoir reçu 5 avis.',
-    getProgress: (_a, _f) => ({ current: 0, target: 5 }),
+    getProgress: (_a, _f, profileData) => ({
+      current: Math.min(profileData?.detailedStats?.reviewCount ?? 0, 5),
+      target: 5,
+    }),
+  },
+  {
+    badge: 'Ponctuel',
+    title: 'Ponctuel',
+    icon: (
+      <BadgeIcon>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </BadgeIcon>
+    ),
+    description: 'Décerné aux organisateurs qui respectent toujours les horaires.',
+    howTo: 'Obtenez une note de ponctualité ≥ 4.5/5 sur au moins 3 évaluations.',
+    getProgress: (_a, _f, profileData) => {
+      const stats = profileData?.detailedStats;
+      const count = stats?.reviewCount ?? 0;
+      const avg = stats?.punctuality ?? 0;
+      // Progress = count of reviews (up to 3), unlocked when avg >= 4.5
+      return { current: Math.min(count, 3), target: 3 };
+    },
+  },
+  {
+    badge: 'Accueillant',
+    title: 'Accueil-\nlant',
+    icon: (
+      <BadgeIcon>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </BadgeIcon>
+    ),
+    description: 'Pour les organisateurs chaleureux et souriants.',
+    howTo: 'Obtenez une note d\'attitude ≥ 4.5/5 sur au moins 3 évaluations.',
+    getProgress: (_a, _f, profileData) => {
+      const count = profileData?.detailedStats?.reviewCount ?? 0;
+      return { current: Math.min(count, 3), target: 3 };
+    },
+  },
+  {
+    badge: 'Fiable',
+    title: 'Fiable',
+    icon: (
+      <BadgeIcon>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </BadgeIcon>
+    ),
+    description: 'Pour ceux dont les événements correspondent toujours aux descriptions.',
+    howTo: 'Obtenez une note de fiabilité ≥ 4.5/5 sur au moins 3 évaluations.',
+    getProgress: (_a, _f, profileData) => {
+      const count = profileData?.detailedStats?.reviewCount ?? 0;
+      return { current: Math.min(count, 3), target: 3 };
+    },
   },
 ];
+
 
 
 interface ProfileProps {
@@ -490,7 +552,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <div className="flex flex-wrap gap-3 pb-2">
                 {ALL_BADGES.map((b) => {
                   const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === b.badge);
-                  const prog = b.getProgress(activity, friends);
+                  const prog = b.getProgress(activity, friends, viewedProfile);
                   const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
                   const isEarned = hasBadge || pct >= 100;
 
@@ -569,7 +631,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       {/* Badge Detail Bottom Sheet */}
       {selectedBadge && (() => {
         const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === selectedBadge.badge);
-        const prog = selectedBadge.getProgress(activity, friends);
+        const prog = selectedBadge.getProgress(activity, friends, viewedProfile);
         const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
         const isEarned = hasBadge || pct >= 100;
         return (
