@@ -41,8 +41,8 @@ export function PaymentPage() {
   const isContribution = isContributionPayment(amountParam, event, typeParam)
   // FedaPay minimum is 100 F — apply for all contributions when no poolMinAmount set
   const minAmount = isContribution
-    ? (event?.poolMinAmount || 100)
-    : (event?.price || 0)
+    ? Math.max(100, event?.poolMinAmount || 100)
+    : Math.max(100, event?.price || 100)
 
   const defaultAmount = isContribution
     ? rawAmount ? String(rawAmount) : (event?.poolMinAmount ? String(event.poolMinAmount) : '')
