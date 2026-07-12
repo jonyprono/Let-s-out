@@ -103,15 +103,15 @@ export class EmailService {
     `
 
     try {
-      await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
         to: data.to,
         subject: `Votre ticket pour ${data.eventName}`,
         html: htmlContent
       })
-      console.log(`Ticket email sent successfully to ${data.to}`)
+      console.log(`[DEBUG EMAIL] Resend API response for ${data.to}:`, JSON.stringify(response))
     } catch (err) {
-      console.error('Failed to send ticket email:', err)
+      console.error('[DEBUG EMAIL] Failed to send ticket email:', err)
     }
   }
 }

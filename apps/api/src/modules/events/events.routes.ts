@@ -617,6 +617,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
         const payer = await app.prisma.profile.findUnique({ where: { userId: sub } })
         
         if (user?.email && event) {
+          app.log.info(`[DEBUG EMAIL] Sending free ticket email to ${user.email} for booking ${booking.id}`);
           const emailService = new EmailService()
           await emailService.sendTicketEmail({
             to: user.email,
@@ -629,6 +630,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
             quantity: 1,
             coverImage: event.coverUrl || undefined,
           })
+          app.log.info(`[DEBUG EMAIL] Successfully triggered emailService.sendTicketEmail for ${user.email}`);
+        } else {
+          app.log.warn(`[DEBUG EMAIL] Did not send free ticket email because user.email is missing or event is null`);
         }
       } catch (err) {
         app.log.error(`Failed to send email ticket for free booking ${booking.id}: ${err}`)
