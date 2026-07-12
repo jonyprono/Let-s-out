@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, ChevronLeft, XCircle, ChevronDown, Check } from 'lucide-react'
+import { Loader2, ChevronLeft } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
 import { toast } from 'sonner'
@@ -11,42 +11,26 @@ import {
   isContributionPayment,
   applyPoolContributionOptimistic,
 } from '@/lib/pool-contribution'
-import { PhoneInputField } from '@/components/shared/PhoneInputField'
-import { COUNTRIES, Country } from '@/lib/countries'
-import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
+import { PaymentFlow } from '@/components/shared/PaymentFlow'
 
-// ── Operators ──────────────────────────────────────────────
-const OPERATORS = [
-  { id: 'mtn', label: 'MTN Momo', logo: '/logos/mtn.png', prefix: '97' },
-  { id: 'moov', label: 'MOOV', logo: '/logos/moov.png', prefix: '96' },
-  { id: 'celtis', label: 'CELTIS', logo: '/logos/celtiis.png', prefix: '95' },
-]
+const parseSafeDate = (dateStr: any): Date => {
+  if (!dateStr) return new Date()
+  const d = new Date(dateStr)
+  if (!isNaN(d.getTime())) return d
+  return new Date()
+}
 
 export function PaymentPage() {
   const { id: eventId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const qc = useQueryClient()
+
   const amountParam = searchParams.get('amount')
   const typeParam = searchParams.get('type')
   const rawAmount = amountParam ? Number(amountParam) : undefined
 
-  // UI state
-  const [status, setStatus] = useState<'form' | 'loading' | 'summary' | 'success' | 'error'>('form')
   const [resolvedAmount, setResolvedAmount] = useState<number | null>(null)
-
-  // Form state
-  const [participationAmount, setParticipationAmount] = useState('')
-  const [country, setCountry] = useState<Country>(COUNTRIES[0])
-  const {
-    displayValue: phoneDisplay,
-    rawValue: phoneNumber,
-    handleChange: handlePhoneChange,
-    reset: resetPhone,
-  } = usePhoneFormatter()
-  const [selectedOperator, setSelectedOperator] = useState(OPERATORS[0])
-  const [showOperatorDropdown, setShowOperatorDropdown] = useState(false)
-  const operatorRef = useRef<HTMLDivElement>(null)
 
   const { data: event, isLoading: eventLoading } = useQuery({
     queryKey: ['events', eventId],
@@ -55,209 +39,54 @@ export function PaymentPage() {
   })
 
   const isContribution = isContributionPayment(amountParam, event, typeParam)
-  const minAmount = event?.poolMinAmount || event?.price || 0
-  const transactionFee = 100
+  const minAmount = isContribution
+    ? event?.poolMinAmount || 0
+    : event?.price || 0
 
-  const finalAmount = (() => {
-    const entered = Number(participationAmount)
-    if (entered > 0) return entered
-    if (isContribution && rawAmount) return rawAmount
-    return event?.price || 0
-  })()
+  const defaultAmount = isContribution
+    ? rawAmount ? String(rawAmount) : (event?.poolMinAmount ? String(event.poolMinAmount) : '')
+    : event?.price ? String(event.price) : ''
 
-  const netToPay = finalAmount + transactionFee
-
-  useEffect(() => {
-    if (event && !participationAmount) {
-      if (event.price > 0) setParticipationAmount(String(event.price))
-    }
-  }, [event])
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (operatorRef.current && !operatorRef.current.contains(e.target as Node)) {
-        setShowOperatorDropdown(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  const handleOpenSummary = () => {
-    if (!participationAmount || Number(participationAmount) < minAmount) {
-      toast.error(`Montant minimum : ${minAmount.toLocaleString()} F`)
-      return
-    }
-    if (!phoneNumber.trim()) {
-      toast.error('Veuillez saisir votre numéro de téléphone')
-      return
-    }
-    setStatus('summary')
-  }
-
-  const handlePay = async () => {
-    if (!eventId) return
-    setStatus('loading')
-
-    const amountToUse = finalAmount
-
-    try {
-      const payload: { eventId: string; amount?: number } = { eventId }
-      if (isContribution || amountParam) payload.amount = amountToUse
-
-      const { data } = await apiClient.post('/payments/fedapay/initiate', payload)
-      setResolvedAmount(amountToUse)
-
-      if (data.devMode) {
-        await handleDevConfirm(amountToUse)
-      } else {
-        const script = document.createElement('script')
-        script.src = 'https://cdn.fedapay.com/checkout.js?v=1.1.7'
-        script.async = true
-        document.head.appendChild(script)
-        script.onload = () => {
-          const FedaPay = (window as any).FedaPay
-          FedaPay.init({
-            public_key: data.publicKey,
-            transaction: { id: data.transactionId, token: data.transactionToken, amount: data.amount, description: data.description },
-            onComplete: (resp: any) => {
-              if (resp.reason === FedaPay.DIALOG_DISMISSED) {
-                setStatus('error')
-                toast.error('Paiement annulé')
-                // Clean up bottom sheet elements
-                document.getElementById('fedapay-backdrop')?.remove()
-              } else {
-                document.getElementById('fedapay-backdrop')?.remove()
-                onPaymentSuccess(amountToUse, isContribution || !!(event?.poolTarget && amountParam))
-              }
-            },
-          }).open()
-
-          // Convert FedaPay overlay to bottom sheet using a robust poller
-          let attempts = 0;
-          const styleInterval = setInterval(() => {
-            attempts++;
-            if (attempts > 20) {
-              clearInterval(styleInterval);
-              return;
-            }
-
-            // Find FedaPay's fixed overlay (direct child of body)
-            const fedaEl = Array.from(document.querySelectorAll('body > div')).find(el => {
-              const s = window.getComputedStyle(el);
-              return s.position === 'fixed' && parseInt(s.zIndex || '0') > 100 && el.id !== 'fedapay-backdrop';
-            }) as HTMLElement | undefined;
-
-            if (fedaEl && !fedaEl.dataset.styledAsSheet) {
-              clearInterval(styleInterval);
-              fedaEl.dataset.styledAsSheet = 'true';
-
-              // Create a dark backdrop above the content but below the sheet
-              if (!document.getElementById('fedapay-backdrop')) {
-                const backdrop = document.createElement('div');
-                backdrop.id = 'fedapay-backdrop';
-                backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9990;transition:opacity 0.3s;';
-                backdrop.onclick = () => {
-                  fedaEl.click?.();
-                };
-                document.body.appendChild(backdrop);
-              }
-
-              // Style the FedaPay container as a bottom sheet
-              fedaEl.style.cssText = [
-                'position: fixed !important',
-                'top: auto !important',
-                'bottom: 0 !important',
-                'left: 0 !important',
-                'right: 0 !important',
-                'width: 100% !important',
-                'height: 85dvh !important',
-                'max-height: 85dvh !important',
-                'border-radius: 20px 20px 0 0 !important',
-                'overflow: hidden !important',
-                'z-index: 9999 !important',
-                'box-shadow: 0 -8px 32px rgba(0,0,0,0.25) !important',
-                'animation: slideUpSheet 0.35s cubic-bezier(0.32,0.72,0,1) !important',
-              ].join(';');
-
-              // Inject keyframes if not already present
-              if (!document.getElementById('fedapay-sheet-style')) {
-                const styleEl = document.createElement('style');
-                styleEl.id = 'fedapay-sheet-style';
-                styleEl.textContent = `
-                  @keyframes slideUpSheet {
-                    from { transform: translateY(100%); }
-                    to   { transform: translateY(0); }
-                  }
-                `;
-                document.head.appendChild(styleEl);
-              }
-
-              // Make iframe fill the container
-              const iframe = fedaEl.querySelector('iframe') as HTMLElement | null;
-              if (iframe) {
-                iframe.style.cssText = 'width:100%!important;height:100%!important;border:none!important;';
-              }
-            }
-          }, 100)
-        }
-      }
-    } catch (err: any) {
-      setStatus('error')
-      toast.error(err.response?.data?.error || 'Erreur lors du paiement')
-    }
+  // ── API handlers ────────────────────────────────────────────
+  const handleInitiate = async (amount: number) => {
+    const payload: { eventId: string; amount?: number } = { eventId: eventId! }
+    if (isContribution || amountParam) payload.amount = amount
+    const { data } = await apiClient.post('/payments/fedapay/initiate', payload)
+    return data
   }
 
   const handleDevConfirm = async (amount: number) => {
-    if (!eventId) return
-    try {
-      const payload: { eventId: string; amount?: number } = { eventId }
-      if (isContribution || amountParam) payload.amount = amount
-      await apiClient.post('/payments/dev/confirm-booking', payload)
-      onPaymentSuccess(amount, isContribution || !!(event?.poolTarget && amountParam))
-    } catch (err: any) {
-      setStatus('error')
-      toast.error(err.response?.data?.error || 'Erreur')
-    }
+    const payload: { eventId: string; amount?: number } = { eventId: eventId! }
+    if (isContribution || amountParam) payload.amount = amount
+    await apiClient.post('/payments/dev/confirm-booking', payload)
   }
 
-  const onPaymentSuccess = async (amount: number, contribution: boolean) => {
-    setStatus('success')
+  const handleSuccess = async (amount: number) => {
     setResolvedAmount(amount)
-    if (contribution && eventId) {
+    if (isContribution && eventId) {
       applyPoolContributionOptimistic(qc, eventId, amount)
     }
     try {
-      if (eventId) {
-        await apiClient.post('/payments/sync-missed', { eventId })
-      }
+      if (eventId) await apiClient.post('/payments/sync-missed', { eventId })
     } catch (e) {
-      console.warn("Sync missed failed", e)
+      console.warn('Sync missed failed', e)
     }
-
     qc.invalidateQueries({ queryKey: ['chat'] })
     qc.invalidateQueries({ queryKey: ['events', eventId] })
     qc.invalidateQueries({ queryKey: ['events', eventId, 'my-booking'] })
     toast.success(
-      contribution
+      isContribution
         ? 'Contribution enregistrée avec succès !'
         : "Paiement réussi ! Vous participez à l'événement",
     )
   }
 
-  const handleOpenChat = async () => {
+  const handleOpenChat = () => {
     if (!eventId) return
     navigate(`/events/${eventId}`)
   }
 
-  const parseSafeDate = (dateStr: any): Date => {
-    if (!dateStr) return new Date()
-    const d = new Date(dateStr)
-    if (!isNaN(d.getTime())) return d
-    return new Date()
-  }
-
+  // ── Loading ──────────────────────────────────────────────────
   if (eventLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#1A1A1A]">
@@ -266,85 +95,121 @@ export function PaymentPage() {
     )
   }
 
-  // ── SUCCESS STATE ──
-  if (status === 'success') {
-    const startDate = parseSafeDate(event?.startAt)
+  // ── Header card (rendered inside PaymentFlow) ────────────────
+  const headerCard = isContribution ? (
+    <div className="w-full bg-[#FAFAFA] dark:bg-[#222] rounded-[12px] p-4 mb-6 mt-2 border border-gray-100 dark:border-gray-800">
+      <h1 className="text-[16px] font-semibold text-gray-900 dark:text-white mb-3">{event?.title}</h1>
+      <div className="border-t border-dashed border-gray-200 dark:border-gray-700 w-full mb-3" />
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] text-gray-600 dark:text-gray-400">Contribution</span>
+        <span className="text-[13px] font-semibold text-[#007AFF]">
+          {event?.poolMode === 'fixe'
+            ? 'Montant fixe'
+            : event?.poolMode === 'minimum'
+            ? 'Montant minimum'
+            : 'Montant libre'}
+        </span>
+      </div>
+    </div>
+  ) : (
+    <>
+      <h1 className="text-[20px] font-bold text-gray-900 dark:text-white mt-2 mb-2">{event?.title}</h1>
+      <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0] mb-5">
+        <span className="text-[13px] text-[#8D8D8D]">Participation</span>
+        <span className="text-[13px] font-semibold text-[#FF7A00]">
+          A partir de {minAmount > 0 ? `${minAmount.toLocaleString()}F` : 'Gratuit'}
+        </span>
+      </div>
+    </>
+  )
 
-    if (isContribution) {
-      const target = event?.poolTarget || 0
-      const previousCollected = event?.poolCollected || 0
-      const totalCollected = previousCollected + (resolvedAmount || 0)
-      const currentProgress = target > 0 ? (totalCollected / target) * 100 : 0
-      const addedProgress = target > 0 ? ((resolvedAmount || 0) / target) * 100 : 0
+  // ── Summary subtitle rendered inside PaymentFlow ─────────────
+  const summarySubtitle = event?.startAt ? (() => {
+    const d = parseSafeDate(event.startAt)
+    const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+    const endD = event.endAt ? parseSafeDate(event.endAt) : null
+    return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}${endD ? ` - ${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}` : ''}`
+  })() : undefined
 
-      return (
-        <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
-          <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-            <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
-              <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
-            </button>
-            <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">Contribuer à la cagnotte</span>
+  // ── Success screens ──────────────────────────────────────────
+  const ContributionSuccessScreen = () => {
+    const target = event?.poolTarget || 0
+    const previousCollected = event?.poolCollected || 0
+    const totalCollected = previousCollected + (resolvedAmount || 0)
+    const currentProgress = target > 0 ? (totalCollected / target) * 100 : 0
+    const addedProgress = target > 0 ? ((resolvedAmount || 0) / target) * 100 : 0
+
+    return (
+      <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
+        <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
+          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
+            <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
+          </button>
+          <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">
+            Contribuer à la cagnotte
+          </span>
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
+          <div className="mt-8 mb-4">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #4CD964, #34C759)' }}>
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <path d="M8 18L15 25L28 11" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
           </div>
-          
-          <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
-            <div className="mt-8 mb-4">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #4CD964, #34C759)' }}>
-                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                  <path d="M8 18L15 25L28 11" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+
+          <h1 className="text-[20px] font-bold text-[#22C55E] mb-2 text-center">Contribution envoyée !</h1>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-8 px-4 leading-relaxed max-w-[300px]">
+            Top! Votre contribution a été bien envoyée. La cagnotte a progressé de {Math.round(addedProgress)}%. 🎉
+          </p>
+
+          <div className="w-full rounded-[16px] border border-gray-100 dark:border-white/5 bg-white dark:bg-[#1A1A1A] p-5 shadow-sm max-w-[358px]">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[16px] font-bold text-[#FF7A00]">Cagnotte</span>
+              <span className="text-[14px] font-bold text-[#22C55E]">
+                {target > 0 ? target.toLocaleString() : totalCollected.toLocaleString()} F CFA
+              </span>
+            </div>
+            <div className="border-t border-dashed border-gray-200 dark:border-gray-700 w-full mb-4" />
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-[6px] mb-6 overflow-hidden">
+              <div className="bg-[#FF7A00] h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(currentProgress, 100)}%` }} />
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400">Votre contribution</span>
+                <span className="text-[13px] font-semibold text-[#FF7A00]">{resolvedAmount?.toLocaleString()} F</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400">Total collecté</span>
+                <span className="text-[13px] font-semibold text-[#22C55E]">{totalCollected.toLocaleString()} F</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400">Progression (+{Math.round(addedProgress)}%)</span>
+                <span className="text-[12px] font-bold text-white bg-[#FF7A00] px-2 py-0.5 rounded-[4px]">{Math.round(currentProgress)}%</span>
               </div>
             </div>
-
-            <h1 className="text-[20px] font-bold text-[#22C55E] mb-2 text-center">Contribution envoyée !</h1>
-            <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-8 px-4 leading-relaxed max-w-[300px]">
-              Top! Votre contribution a été bien envoyée. La cagnotte a progressé de {Math.round(addedProgress)}%. 🎉
-            </p>
-
-            <div className="w-full rounded-[16px] border border-gray-100 dark:border-white/5 bg-white dark:bg-[#1A1A1A] p-5 shadow-sm max-w-[358px]">
-              <div className="flex items-center justify-between mb-4">
-                  <span className="text-[16px] font-bold text-[#FF7A00]">Cagnotte</span>
-                  <span className="text-[14px] font-bold text-[#22C55E]">{target > 0 ? target.toLocaleString() : totalCollected.toLocaleString()} F CFA</span>
-              </div>
-              
-              <div className="border-t border-dashed border-gray-200 dark:border-gray-700 w-full mb-4" />
-
-              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-[6px] mb-6 overflow-hidden">
-                  <div className="bg-[#FF7A00] h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(currentProgress, 100)}%` }} />
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-gray-500 dark:text-gray-400">Votre contribution</span>
-                  <span className="text-[13px] font-semibold text-[#FF7A00]">{resolvedAmount?.toLocaleString()} F</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-gray-500 dark:text-gray-400">Total collecté</span>
-                  <span className="text-[13px] font-semibold text-[#22C55E]">{totalCollected.toLocaleString()} F</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-gray-500 dark:text-gray-400">Progression (+{Math.round(addedProgress)}%)</span>
-                  <span className="text-[12px] font-bold text-white bg-[#FF7A00] px-2 py-0.5 rounded-[4px]">{Math.round(currentProgress)}%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
-              <Button onClick={() => setStatus('form')} className="w-full font-semibold h-[52px]">
-                Contribuer à nouveau
-              </Button>
-              <button onClick={() => navigate(-1)} className="w-full h-[52px] rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform">
-                Retourner au chat
-              </button>
           </div>
         </div>
-      )
-    }
 
+        <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
+          <Button onClick={() => navigate(`/events/${eventId}/pay?type=contribution`)} className="w-full font-semibold h-[52px]">
+            Contribuer à nouveau
+          </Button>
+          <button onClick={() => navigate(-1)} className="w-full h-[52px] rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform">
+            Retourner au chat
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const JoinSuccessScreen = () => {
+    const startDate = parseSafeDate(event?.startAt)
     return (
       <div className="w-full h-full bg-[#FAFAFA] dark:bg-[#1A1A1A] flex flex-col font-poppins relative">
         <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center justify-center" style={{ scrollbarWidth: 'none' }}>
-          
           <div className="mb-4 mt-8">
             <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center relative shadow-sm">
               <div className="absolute inset-0 rounded-full" style={{ background: 'linear-gradient(243.43deg, #4DEF8E 16.67%, #FFEB3A 83.33%)' }} />
@@ -365,7 +230,7 @@ export function PaymentPage() {
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter">Date</span>
                 <span className="text-[13px] font-medium text-gray-900 dark:text-white font-inter text-right">
-                  {event?.startAt ? `${startDate.getDate()} Juin ${startDate.getFullYear()}, ${String(startDate.getHours()).padStart(2, '0')}h` : '--'}
+                  {event?.startAt ? `${startDate.getDate()} ${['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][startDate.getMonth()]} ${startDate.getFullYear()}, ${String(startDate.getHours()).padStart(2,'0')}h` : '--'}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4">
@@ -385,267 +250,36 @@ export function PaymentPage() {
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 bg-[#FAFAFA] dark:bg-[#1A1A1A] px-5 pt-3 pb-8 flex flex-col gap-3">
-            <Button onClick={handleOpenChat} className="w-full font-medium h-[48px] text-[14px]">
-              Rejoindre le groupe
-            </Button>
-            <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[48px] rounded-full font-medium text-[14px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform">
-              Retour à l'événement
-            </button>
-        </div>
-      </div>
-    )
-  }
-
-  // ── ERROR STATE ──
-  if (status === 'error') {
-    return (
-      <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col">
-        <div className="px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-gray-100 dark:bg-[#2a2a2a] rounded-full active:scale-95">
-            <ChevronLeft className="w-5 h-5 text-gray-700" />
-          </button>
-        </div>
-        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
-          <XCircle className="w-20 h-20 text-red-400" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Paiement impossible</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">Vérifiez le montant ou réessayez.</p>
-          <button onClick={() => setStatus('form')} className="w-full bg-gray-900 text-white py-4 rounded-full font-bold">
-            Réessayer
+          <Button onClick={handleOpenChat} className="w-full font-medium h-[48px] text-[14px]">
+            Rejoindre le groupe
+          </Button>
+          <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[48px] rounded-full font-medium text-[14px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform">
+            Retour à l'événement
           </button>
         </div>
       </div>
     )
   }
 
-  // ── LOADING STATE ──
-  if (status === 'loading') {
-    return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-white dark:bg-[#1A1A1A] gap-4">
-        <Loader2 className="w-10 h-10 text-[#FF7A00] animate-spin" />
-        <p className="text-gray-500 dark:text-gray-400 text-[14px]">Traitement en cours...</p>
-      </div>
-    )
-  }
-
-  // ── PAYMENT FORM ──
+  // ── Render PaymentFlow ───────────────────────────────────────
   return (
-    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
-
-      {/* ── Header ── */}
-      <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center gap-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-8 h-8 flex items-center justify-center active:scale-95"
-        >
-          <ChevronLeft className="w-[22px] h-[22px] text-gray-900 dark:text-white" strokeWidth={2} />
-        </button>
-        <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-8">
-          {isContribution ? 'Contribuer à la cagnotte' : 'Rejoindre l\'événement'}
-        </span>
-      </div>
-
-      {/* ── Form content ── */}
-      <div className="flex-1 overflow-y-auto px-5 pb-40" style={{ scrollbarWidth: 'none' }}>
-
-        {isContribution ? (
-          <div className="w-full bg-[#FAFAFA] dark:bg-[#222] rounded-[12px] p-4 mb-6 mt-2 border border-gray-100 dark:border-gray-800">
-            <h1 className="text-[16px] font-semibold text-gray-900 dark:text-white mb-3">{event?.title}</h1>
-            <div className="border-t border-dashed border-gray-200 dark:border-gray-700 w-full mb-3" />
-            <div className="flex items-center justify-between">
-              <span className="text-[13px] text-gray-600 dark:text-gray-400">Contribution</span>
-              <span className="text-[13px] font-semibold text-[#007AFF]">
-                {event?.poolMode === 'fixe' ? 'Montant fixe' : event?.poolMode === 'minimum' ? 'Montant minimum' : 'Montant libre'}
-              </span>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Event name */}
-            <h1 className="text-[20px] font-bold text-gray-900 dark:text-white mt-2 mb-2">{event?.title}</h1>
-
-            {/* Participation row */}
-            <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0] mb-5">
-              <span className="text-[13px] text-[#8D8D8D]">Participation</span>
-              <span className="text-[13px] font-semibold text-[#FF7A00]">
-                A partir de {minAmount > 0 ? `${minAmount.toLocaleString()}F` : 'Gratuit'}
-              </span>
-            </div>
-          </>
-        )}
-
-        {/* ── Amount field ── */}
-        <div className="mb-4">
-          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">
-            Montant de votre participation
-          </label>
-          <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white dark:bg-[#1A1A1A] overflow-hidden h-[52px] focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
-            <input
-              type="number"
-              value={participationAmount}
-              onChange={(e) => setParticipationAmount(e.target.value)}
-              placeholder="0"
-              className="flex-1 px-4 text-[15px] text-gray-900 dark:text-white placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
-            />
-            <span className="pr-4 text-[13px] font-semibold text-[#8D8D8D]">F CFA</span>
-          </div>
-          {minAmount > 0 && (
-            <p className="text-[11px] text-[#8D8D8D] mt-1 ml-0.5">Minimum {minAmount.toLocaleString()}F</p>
-          )}
-        </div>
-
-        {/* ── Payment method ── */}
-        <div className="mb-4">
-          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Méthode de paiement</label>
-          <div className="flex flex-row items-center p-[10px] gap-[4px] w-full h-[44px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] rounded-[6px]">
-            <img src="/logos/mobile-money.png" alt="Mobile money" className="w-6 h-6 object-contain shrink-0" />
-            <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">Mobile money</span>
-            <ChevronDown className="w-4 h-4 text-[#8D8D8D] shrink-0" />
-          </div>
-        </div>
-
-        {/* ── Operator (real dropdown) ── */}
-        <div className="mb-4" ref={operatorRef}>
-          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Opérateur</label>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowOperatorDropdown(!showOperatorDropdown)}
-              className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] rounded-[6px] active:bg-gray-50 dark:bg-[#222222] transition-colors"
-            >
-              <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
-              <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">{selectedOperator.label}</span>
-              <ChevronDown
-                className="w-4 h-4 text-[#8D8D8D] shrink-0 transition-transform duration-200"
-                style={{ transform: showOperatorDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
-              />
-            </button>
-
-            {showOperatorDropdown && (
-              <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-30 bg-white dark:bg-[#1A1A1A] border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-                {OPERATORS.map((op) => (
-                  <button
-                    key={op.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedOperator(op)
-                      setShowOperatorDropdown(false)
-                    }}
-                    className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[44px] hover:bg-[#FFF8F0] transition-colors"
-                  >
-                    <img src={op.logo} alt={op.label} className="w-6 h-6 object-contain shrink-0" />
-                    <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">{op.label}</span>
-                    {selectedOperator.id === op.id && (
-                      <Check className="w-4 h-4 text-[#FF7A00] shrink-0" strokeWidth={2.5} />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Phone number ── */}
-        <div className="mb-8">
-          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Numéro de téléphone</label>
-          <div className="w-full">
-            <PhoneInputField
-              country={country}
-              onCountryChange={(c) => { setCountry(c); resetPhone() }}
-              phoneDisplay={phoneDisplay}
-              onPhoneChange={handlePhoneChange}
-            />
-          </div>
-        </div>
-
-      </div>
-
-      {/* ── Sticky footer ── */}
-      <div
-        className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col items-center gap-2 border-t border-[#F0F0F0]"
-        style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
-      >
-        <Button
-          onClick={handleOpenSummary}
-          className="w-full"
-        >
-          {isContribution ? 'Envoyer' : 'Rejoindre'}
-        </Button>
-        <div className="flex flex-col items-center justify-center gap-[4px] pt-[0.25rem] w-full text-center">
-          <div className="flex items-center justify-center gap-[6px] font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)]">
-            Sécurisé PCI DSS 
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1.34844 0C0.990808 0 0.647828 0.142067 0.394948 0.394948C0.142067 0.647828 0 0.990808 0 1.34844V5.3061C0 11.5255 5.28169 13.5833 6.30877 13.9253C6.58912 14.0249 6.89525 14.0249 7.17559 13.9253C8.20267 13.5833 13.4844 11.5255 13.4844 5.3061V1.34844C13.4844 0.99081 13.3423 0.64783 13.0894 0.394948C12.8365 0.142067 12.4936 0 12.1359 0H1.34844Z" fill="#14CD7F"/>
-              <path d="M9.50648 4.04541L6.04353 7.34908L4.315 5.69724" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span className="text-[#6B7280] text-[clamp(11px,3vw,13px)] font-medium">Fedapay</span>
-        </div>
-      </div>
-
-      {/* ── Transaction Summary Bottom Sheet ── */}
-      {status === 'summary' && (
-        <div className="absolute inset-0 z-50 bg-black/50 flex items-end justify-center animate-in fade-in duration-200">
-          <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[24px] shadow-2xl animate-in slide-in-from-bottom duration-300" style={{ fontFamily: 'Poppins, sans-serif' }}>
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-[#E0E0E0] rounded-full" />
-            </div>
-
-            <div className="px-5 pt-4" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
-
-              <h2 className="text-[17px] font-bold text-gray-900 dark:text-white mb-5 text-center">Résumé de la transaction</h2>
-
-              <div className="mb-5">
-                <h3 className="text-[16px] font-bold text-gray-900 dark:text-white">{event?.title}</h3>
-                {event?.startAt && (
-                  <p className="text-[12px] text-[#8D8D8D] mt-0.5">
-                    {(() => {
-                      const d = parseSafeDate(event.startAt)
-                      const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
-                      const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-                      const endD = event.endAt ? parseSafeDate(event.endAt) : null
-                      return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}${endD ? ` - ${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}` : ''}`
-                    })()}
-                  </p>
-                )}
-                {event?.city && (
-                  <p className="text-[12px] text-[#8D8D8D]">{event.address ? `${event.address}, ` : ''}{event.city}</p>
-                )}
-              </div>
-
-              {/* Phone + operator */}
-              <div className="flex items-center gap-2 bg-[#F8F8F8] rounded-[10px] px-4 py-3 mb-1">
-                <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
-                <span className="text-[14px] font-semibold text-gray-900 dark:text-white flex-1">{selectedOperator.label} • {country.code.replace('+', '')} {phoneDisplay}</span>
-              </div>
-              <p className="text-[11px] text-[#8D8D8D] mb-5 text-center">Moyen sécurisé de paiement</p>
-
-              {/* Breakdown */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#8D8D8D]">Participation</span>
-                  <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{finalAmount.toLocaleString()}F</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#8D8D8D]">Frais de transaction</span>
-                  <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{transactionFee.toLocaleString()} F</span>
-                </div>
-                <div className="border-t border-[#F0F0F0] pt-3 flex items-center justify-between">
-                  <span className="text-[14px] font-bold text-gray-900 dark:text-white">Net à payer</span>
-                  <span className="text-[15px] font-bold text-gray-900 dark:text-white">{netToPay.toLocaleString()} F</span>
-                </div>
-              </div>
-
-              <Button
-                onClick={handlePay}
-                className="w-full mt-2"
-              >
-                {isContribution ? 'Payer la contribution' : 'Payer'}
-              </Button>
-
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <PaymentFlow
+      headerTitle={isContribution ? 'Contribuer à la cagnotte' : "Rejoindre l'événement"}
+      headerCard={headerCard}
+      minAmount={minAmount}
+      defaultAmount={defaultAmount}
+      formSubmitText={isContribution ? 'Envoyer' : 'Rejoindre'}
+      summaryTitle="Résumé de la transaction"
+      summaryItemTitle={event?.title}
+      summaryItemSubtitle={summarySubtitle}
+      summaryItemDetails={event?.city ? `${event.address ? event.address + ', ' : ''}${event.city}` : undefined}
+      summarySubmitText={isContribution ? 'Payer la contribution' : 'Payer'}
+      amountLabel={isContribution ? 'Contribution' : 'Participation'}
+      onInitiate={handleInitiate}
+      onDevConfirm={handleDevConfirm}
+      onSuccess={handleSuccess}
+      successScreen={isContribution ? <ContributionSuccessScreen /> : <JoinSuccessScreen />}
+      onBack={() => navigate(-1)}
+    />
   )
 }
