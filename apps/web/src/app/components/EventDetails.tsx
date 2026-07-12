@@ -431,81 +431,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 {event.coHosts && event.coHosts.length > 0 ? 'Organisateurs' : 'Organisateur'}
               </h2>
               <div className="flex flex-col gap-[16px]">
-                {[event.creator, ...(event.coHosts || [])].filter(Boolean).map((org: any) => {
-                  const orgName = org.profile?.displayName || 'Organisateur';
-                  const orgAvatar = org.profile?.avatarUrl;
-                  const orgFollowers = org.profile?.followersCount || 0;
-                  const orgEvents = org.detailedStats?.eventsCount || org.profile?.eventsCount || 0;
-                  const rawRating = Number(org.detailedStats?.rating || org.profile?.rating || 0);
-                  const orgRating = rawRating > 0 ? rawRating.toFixed(1) : null;
-                  
-                  return (
-                    <div key={org.id} className="flex flex-col gap-[12px] bg-[var(--color-background-primary)] rounded-[12px] border border-[var(--border-default)] p-[12px] shadow-sm">
-                      {/* Row 1: avatar + infos */}
-                      <div className="flex items-center gap-[12px]">
-                        <div
-                          className="cursor-pointer flex-shrink-0"
-                          onClick={() => openUserProfile(org.id, { displayName: orgName, avatarUrl: orgAvatar })}
-                        >
-                          <div className="w-[40px] h-[40px] rounded-full overflow-hidden bg-gray-200">
-                            <SafeImage
-                              src={orgAvatar}
-                              alt={orgName}
-                              className="w-full h-full object-cover"
-                              fallback={
-                                <div className="w-full h-full bg-[var(--color-background-secondary)] flex items-center justify-center text-[15px] font-bold text-[var(--color-text-secondary)]">
-                                  {orgName.charAt(0).toUpperCase()}
-                                </div>
-                              }
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-[4px] mb-[2px]">
-                            <p className="text-[14px] font-semibold font-poppins text-[var(--color-text-primary)]">{orgName}</p>
-                            <BadgeCheck className="w-[14px] h-[14px] text-[#007AFF]" />
-                          </div>
-                          <p className="text-[12px] font-normal font-inter text-[var(--color-text-secondary)]">
-                            {orgFollowers} followers • {orgEvents} événements {orgRating && <span>• {orgRating} <span className="text-[#FF2E93]">★</span></span>}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Row 2: action buttons (only if not the current user) */}
-                      {user?.id !== org.id && (
-                        <div className="flex items-center gap-[8px]">
-                          <button onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              const conv = await chatApi.createDM(org.id);
-                              navigate(`/chat/${conv.id}`);
-                            } catch {
-                              toast.error("Impossible de démarrer la conversation");
-                            }
-                          }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
-                            Message
-                          </button>
-                          <button onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              await usersApi.followUser(org.id);
-                              toast.success("Vous suivez maintenant cet organisateur !");
-                            } catch (err: any) {
-                              if (err?.response?.status === 400) {
-                                toast.error("Vous suivez déjà cet organisateur.");
-                              } else {
-                                toast.error("Erreur lors de l'abonnement");
-                              }
-                            }
-                          }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
-                            Suivre
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {[event.creator, ...(event.coHosts || [])].filter(Boolean).map((org: any) => (
+                  <OrganizerCard key={org.id} org={org} currentUserId={user?.id} onOpenProfile={openUserProfile} />
+                ))}
               </div>
 
             </div>
@@ -983,4 +911,93 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
     </>
   )
+}
+
+function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, currentUserId: string | undefined, onOpenProfile: any }) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+
+  const { data: orgProfile, refetch } = useQuery({
+    queryKey: ['users', org.id],
+    queryFn: () => usersApi.getById(org.id).then(r => r.data),
+    enabled: !!org.id,
+  });
+
+  const orgName = org.profile?.displayName || orgProfile?.displayName || 'Organisateur';
+  const orgAvatar = org.profile?.avatarUrl || orgProfile?.avatarUrl;
+  const orgFollowers = orgProfile?.followersCount || org.profile?.followersCount || 0;
+  const orgEvents = orgProfile?.detailedStats?.eventsCount || orgProfile?.eventsCount || org.detailedStats?.eventsCount || org.profile?.eventsCount || 0;
+  const rawRating = Number(orgProfile?.detailedStats?.rating || orgProfile?.rating || org.detailedStats?.rating || org.profile?.rating || 0);
+  const orgRating = rawRating > 0 ? rawRating.toFixed(1) : null;
+  const isFollowing = orgProfile?.isFollowing || false;
+
+  return (
+    <div className="flex flex-col gap-[12px] bg-[var(--color-background-primary)] rounded-[12px] border border-[var(--border-default)] p-[12px] shadow-sm">
+      {/* Row 1: avatar + infos */}
+      <div 
+        className="flex items-center gap-[12px] cursor-pointer"
+        onClick={() => onOpenProfile(org.id, { displayName: orgName, avatarUrl: orgAvatar })}
+      >
+        <div className="flex-shrink-0">
+          <div className="w-[40px] h-[40px] rounded-full overflow-hidden bg-gray-200">
+            <SafeImage
+              src={orgAvatar}
+              alt={orgName}
+              className="w-full h-full object-cover"
+              fallback={
+                <div className="w-full h-full bg-[var(--color-background-secondary)] flex items-center justify-center text-[15px] font-bold text-[var(--color-text-secondary)]">
+                  {orgName.charAt(0).toUpperCase()}
+                </div>
+              }
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-[4px] mb-[2px]">
+            <p className="text-[14px] font-semibold font-poppins text-[var(--color-text-primary)]">{orgName}</p>
+            <BadgeCheck className="w-[14px] h-[14px] text-[#007AFF]" />
+          </div>
+          <p className="text-[12px] font-normal font-inter text-[var(--color-text-secondary)]">
+            {orgFollowers} followers • {orgEvents} événements {orgRating && <span>• {orgRating} <span className="text-[#FF2E93]">★</span></span>}
+          </p>
+        </div>
+      </div>
+
+      {/* Row 2: action buttons (only if not the current user) */}
+      {currentUserId !== org.id && (
+        <div className="flex items-center gap-[8px]">
+          <button onClick={async (e) => {
+            e.stopPropagation();
+            try {
+              const conv = await chatApi.createDM(org.id);
+              navigate(`/chat/${conv.id}`);
+            } catch {
+              toast.error("Impossible de démarrer la conversation");
+            }
+          }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
+            Message
+          </button>
+          <button onClick={async (e) => {
+            e.stopPropagation();
+            try {
+              if (isFollowing) {
+                await usersApi.unfollowUser(org.id);
+                toast.success("Vous ne suivez plus cet organisateur.");
+              } else {
+                await usersApi.followUser(org.id);
+                toast.success("Vous suivez maintenant cet organisateur !");
+              }
+              refetch();
+              qc.invalidateQueries({ queryKey: ['users', org.id] });
+            } catch (err: any) {
+              toast.error("Erreur lors de l'action");
+            }
+          }} className={`flex-1 py-[6px] rounded-[100px] border text-[13px] font-semibold active:scale-95 transition-transform ${isFollowing ? 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-700 dark:text-gray-300' : 'border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[var(--color-text-primary)]'}`}>
+            {isFollowing ? 'Abonné(e)' : 'Suivre'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }

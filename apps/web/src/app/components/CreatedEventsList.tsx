@@ -20,6 +20,12 @@ export function CreatedEventsList() {
     enabled: !!targetUserId,
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ['users', targetUserId],
+    queryFn: () => usersApi.getById(targetUserId!).then(r => r.data),
+    enabled: !!targetUserId,
+  });
+
   const createdEvents = activity?.createdEvents ?? [];
   const drafts = activity?.draftEvents ?? [];
 
@@ -37,7 +43,7 @@ export function CreatedEventsList() {
   const totalEvents = createdEvents.length;
   // Approximated participants. We would ideally need real booking counts from API.
   const totalParticipants = createdEvents.reduce((acc: number, e: any) => acc + (e._count?.bookings || 0), 0);
-  const globalScore = 4.8; // Placeholder as requested, or compute if rating exists
+  const globalScore = profile?.detailedStats?.rating ? Number(profile.detailedStats.rating).toFixed(1) : 'N/A';
 
   return (
     <div className="w-full min-h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
@@ -82,27 +88,26 @@ export function CreatedEventsList() {
       </div>
 
       {/* Main Tabs */}
-      <div className="flex justify-center w-full px-4 mb-6">
-        <div className="flex p-1 bg-white border border-gray-100 dark:border-gray-800 rounded-full shadow-sm">
-          <button 
-            onClick={() => setActiveTab('events')}
-            className={`px-6 py-2 rounded-full text-[13px] font-semibold transition-colors flex items-center gap-2 ${
-              activeTab === 'events' ? 'bg-[#FFF9EC] text-[#FF7A00]' : 'text-gray-500'
-            }`}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            Evénements
-          </button>
-          <button 
-            onClick={() => setActiveTab('cagnottes')}
-            className={`px-6 py-2 rounded-full text-[13px] font-semibold transition-colors flex items-center gap-2 ${
-              activeTab === 'cagnottes' ? 'bg-[#FFF9EC] text-[#FF7A00]' : 'text-gray-500'
-            }`}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-            Cagnottes
-          </button>
-        </div>
+      <div className="flex flex-row justify-center items-start p-0 gap-2 w-full max-w-[358px] mx-auto mb-6 h-[36px]">
+        <button 
+          onClick={() => setActiveTab('events')}
+          className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
+            activeTab === 'events' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+          }`}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'events' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span className="font-poppins font-medium text-[12px] leading-[16px]">Evénements</span>
+        </button>
+
+        <button 
+          onClick={() => setActiveTab('cagnottes')}
+          className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
+            activeTab === 'cagnottes' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+          }`}
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'cagnottes' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          <span className="font-poppins font-medium text-[12px] leading-[16px]">Cagnottes</span>
+        </button>
       </div>
 
       {/* Content Area */}
