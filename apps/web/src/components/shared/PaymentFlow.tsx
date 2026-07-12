@@ -94,7 +94,11 @@ export function PaymentFlow({
   }, [])
 
   const handleOpenSummary = () => {
-    if (finalAmount < minAmount) {
+    if (!finalAmount || finalAmount <= 0) {
+      toast.error('Veuillez entrer un montant valide')
+      return
+    }
+    if (minAmount > 0 && finalAmount < minAmount) {
       toast.error(`Montant minimum : ${minAmount.toLocaleString()} F`)
       return
     }

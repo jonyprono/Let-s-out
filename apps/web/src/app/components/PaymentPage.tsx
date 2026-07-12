@@ -39,9 +39,10 @@ export function PaymentPage() {
   })
 
   const isContribution = isContributionPayment(amountParam, event, typeParam)
+  // For contributions, always require at least 1 F even if no poolMinAmount set
   const minAmount = isContribution
-    ? event?.poolMinAmount || 0
-    : event?.price || 0
+    ? (event?.poolMinAmount || 1)
+    : (event?.price || 0)
 
   const defaultAmount = isContribution
     ? rawAmount ? String(rawAmount) : (event?.poolMinAmount ? String(event.poolMinAmount) : '')
@@ -50,14 +51,15 @@ export function PaymentPage() {
   // ── API handlers ────────────────────────────────────────────
   const handleInitiate = async (amount: number) => {
     const payload: { eventId: string; amount?: number } = { eventId: eventId! }
-    if (isContribution || amountParam) payload.amount = amount
+    // Always send amount — the backend needs it to know this is a contribution
+    payload.amount = amount
     const { data } = await apiClient.post('/payments/fedapay/initiate', payload)
     return data
   }
 
   const handleDevConfirm = async (amount: number) => {
     const payload: { eventId: string; amount?: number } = { eventId: eventId! }
-    if (isContribution || amountParam) payload.amount = amount
+    payload.amount = amount
     await apiClient.post('/payments/dev/confirm-booking', payload)
   }
 

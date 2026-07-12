@@ -33,7 +33,9 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         return reply.code(400).send({ error: `Le montant minimum est de ${min} F CFA` })
       }
     }
-    if (event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
+    // Only block new joins (not pool contributions) when the event is full
+    const isPoolContributionRequest = customAmount !== undefined && event.poolTarget && event.poolTarget > 0
+    if (!isPoolContributionRequest && event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
       return reply.code(400).send({ error: 'Événement complet' })
     }
 
