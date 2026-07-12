@@ -28,24 +28,24 @@ export function AccountMenu() {
   ];
 
   return (
-    <div className="flex flex-col w-full h-full bg-white dark:bg-black">
+    <div className="flex flex-col w-full h-full bg-white dark:bg-black pt-5 pt-safe-5">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 mt-2">
-        <h1 className="text-[24px] font-bold text-gray-900 dark:text-white">Compte</h1>
+      <div className="flex items-center justify-between px-5 pt-4 pb-2 mt-2">
+        <h1 className="text-[26px] font-bold text-gray-900 dark:text-white">Compte</h1>
       </div>
 
       {/* Menu List */}
-      <div className="flex flex-col px-4 gap-4 mt-4">
+      <div className="flex flex-col px-4 gap-3 mt-4">
         {menuItems.map((item, i) => (
           <button
             key={i}
             onClick={() => navigate(item.path)}
-            className="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform text-left"
+            className="flex items-center gap-4 p-4 rounded-[20px] border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform text-left w-full"
           >
-            <div className="w-10 h-10 rounded-full bg-[#FFF9EC] dark:bg-[#FFF9EC]/10 flex items-center justify-center shrink-0">
-              <item.icon size={20} className="text-[#FF7A00]" />
+            <div className="w-[46px] h-[46px] rounded-full bg-[#FFF9EC] dark:bg-[#FFF9EC]/10 flex items-center justify-center shrink-0">
+              <item.icon size={22} className="text-[#FF7A00]" />
             </div>
-            <span className="text-[16px] font-medium text-gray-900 dark:text-white">
+            <span className="flex-1 text-[16px] font-medium text-gray-900 dark:text-white">
               {item.label}
             </span>
           </button>
