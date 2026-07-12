@@ -447,16 +447,31 @@ export function PaymentPage() {
       {/* ── Form content ── */}
       <div className="flex-1 overflow-y-auto px-5 pb-40" style={{ scrollbarWidth: 'none' }}>
 
-        {/* Event name */}
-        <h1 className="text-[20px] font-bold text-gray-900 dark:text-white mt-2 mb-2">{event?.title}</h1>
+        {isContribution ? (
+          <div className="w-full bg-[#FAFAFA] dark:bg-[#222] rounded-[12px] p-4 mb-6 mt-2 border border-gray-100 dark:border-gray-800">
+            <h1 className="text-[16px] font-semibold text-gray-900 dark:text-white mb-3">{event?.title}</h1>
+            <div className="border-t border-dashed border-gray-200 dark:border-gray-700 w-full mb-3" />
+            <div className="flex items-center justify-between">
+              <span className="text-[13px] text-gray-600 dark:text-gray-400">Contribution</span>
+              <span className="text-[13px] font-semibold text-[#007AFF]">
+                {event?.poolMode === 'fixe' ? 'Montant fixe' : event?.poolMode === 'minimum' ? 'Montant minimum' : 'Montant libre'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Event name */}
+            <h1 className="text-[20px] font-bold text-gray-900 dark:text-white mt-2 mb-2">{event?.title}</h1>
 
-        {/* Participation row */}
-        <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0] mb-5">
-          <span className="text-[13px] text-[#8D8D8D]">Participation</span>
-          <span className="text-[13px] font-semibold text-[#FF7A00]">
-            A partir de {minAmount > 0 ? `${minAmount.toLocaleString()}F` : 'Gratuit'}
-          </span>
-        </div>
+            {/* Participation row */}
+            <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0] mb-5">
+              <span className="text-[13px] text-[#8D8D8D]">Participation</span>
+              <span className="text-[13px] font-semibold text-[#FF7A00]">
+                A partir de {minAmount > 0 ? `${minAmount.toLocaleString()}F` : 'Gratuit'}
+              </span>
+            </div>
+          </>
+        )}
 
         {/* ── Amount field ── */}
         <div className="mb-4">
@@ -553,7 +568,7 @@ export function PaymentPage() {
           onClick={handleOpenSummary}
           className="w-full"
         >
-          {isContribution ? 'Valider' : 'Rejoindre'}
+          {isContribution ? 'Envoyer' : 'Rejoindre'}
         </Button>
         <div className="flex flex-col items-center justify-center gap-[4px] pt-[0.25rem] w-full text-center">
           <div className="flex items-center justify-center gap-[6px] font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)]">

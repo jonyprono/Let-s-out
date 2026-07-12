@@ -605,7 +605,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     <button
                       onClick={() => {
                         if (isCreator || participationPaid) {
-                          navigate(`/events/${id}/pay`)
+                          navigate(`/events/${id}/pay?type=contribution`)
                         } else {
                           toast.info("Rejoignez l'événement avant de contribuer.")
                         }

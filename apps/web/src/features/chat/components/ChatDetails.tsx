@@ -539,7 +539,7 @@ export function ChatDetails() {
             </div>
             <button
               onClick={() => {
-                if (event) navigate(`/events/${event.id}/pay`)
+                if (event) navigate(`/events/${event.id}/pay?type=contribution`)
               }}
               className="rounded-full border-[1.5px] border-action-primary text-action-primary px-4 py-1.5 text-[12px] font-bold active:scale-95 transition-transform touch-sm"
             >
