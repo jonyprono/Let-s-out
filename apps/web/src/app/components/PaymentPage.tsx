@@ -342,46 +342,41 @@ export function PaymentPage() {
     }
 
     return (
-      <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
-        <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-          <button onClick={() => navigate(`/events/${eventId}`)} className="w-9 h-9 flex items-center justify-center active:scale-95">
-            <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
-          </button>
-          <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">Rejoindre l'événement</span>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
-          <div className="mt-12 mb-6">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #4CD964, #34C759)' }}>
-              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                <path d="M8 18L15 25L28 11" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+      <div className="w-full h-full bg-[#FAFAFA] dark:bg-[#1A1A1A] flex flex-col font-poppins relative">
+        <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center justify-center" style={{ scrollbarWidth: 'none' }}>
+          
+          <div className="mb-4 mt-8">
+            <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center relative shadow-sm">
+              <div className="absolute inset-0 rounded-full" style={{ background: 'linear-gradient(243.43deg, #4DEF8E 16.67%, #FFEB3A 83.33%)' }} />
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="relative z-10">
+                <path d="M5 13l4 4L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
           </div>
 
-          <h1 className="text-[22px] font-bold text-[#2E7D32] mb-2 text-center">Participation validée !</h1>
-          <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-8 px-6">
+          <h1 className="text-[20px] font-bold text-[#22C55E] mb-3 text-center">Participation validée !</h1>
+          <p className="text-[13px] text-gray-600 dark:text-gray-400 text-center mb-8 px-2 max-w-[300px] leading-relaxed font-inter">
             Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres participants.
           </p>
 
-          <div className="w-full rounded-2xl border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] shadow-sm p-5 space-y-4">
-            <h2 className="text-[15px] font-bold text-gray-900 dark:text-white">{event?.title}</h2>
+          <div className="w-full rounded-[12px] border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] shadow-sm p-4 space-y-4 max-w-[340px]">
+            <h2 className="text-[15px] font-semibold text-gray-900 dark:text-white">{event?.title}</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400">Date</span>
-                <span className="text-[13px] font-semibold text-gray-900 dark:text-white">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter">Date</span>
+                <span className="text-[13px] font-medium text-gray-900 dark:text-white font-inter text-right">
                   {event?.startAt ? `${startDate.getDate()} Juin ${startDate.getFullYear()}, ${String(startDate.getHours()).padStart(2, '0')}h` : '--'}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400 shrink-0">Lieu</span>
-                <span className="text-[13px] font-semibold text-gray-900 dark:text-white text-right">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter shrink-0">Lieu</span>
+                <span className="text-[13px] font-medium text-gray-900 dark:text-white font-inter text-right">
                   {event?.city ? `${event.address ? event.address + ' ' : ''}(${event.city})` : 'Lieu non précisé'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400">Votre participation</span>
-                <span className="text-[13px] font-semibold text-gray-900 dark:text-white">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter">Votre participation</span>
+                <span className="text-[13px] font-medium text-gray-900 dark:text-white font-inter text-right">
                   {resolvedAmount ? `${resolvedAmount.toLocaleString()} F` : event?.price ? `${event.price.toLocaleString()} F` : 'Gratuit'}
                 </span>
               </div>
@@ -389,11 +384,11 @@ export function PaymentPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
-            <Button onClick={handleOpenChat} className="w-full">
+        <div className="absolute bottom-0 left-0 right-0 bg-[#FAFAFA] dark:bg-[#1A1A1A] px-5 pt-3 pb-8 flex flex-col gap-3">
+            <Button onClick={handleOpenChat} className="w-full font-medium h-[48px] text-[14px]">
               Rejoindre le groupe
             </Button>
-            <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[var(--btn-height)] rounded-full font-bold text-[15px] text-gray-500 dark:text-gray-400 border border-[var(--border-primary)] bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform">
+            <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[48px] rounded-full font-medium text-[14px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform">
               Retour à l'événement
             </button>
         </div>
