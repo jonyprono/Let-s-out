@@ -104,7 +104,7 @@ export class EmailService {
 
     try {
       const response = await this.resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+        from: process.env.RESEND_FROM_EMAIL || 'tickets@letsout.app',
         to: data.to,
         subject: `Votre ticket pour ${data.eventName}`,
         html: htmlContent
