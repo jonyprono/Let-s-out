@@ -655,15 +655,25 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedBadge(null)}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
             <div
-              className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl max-h-[85vh] overflow-y-auto shadow-2xl"
+              className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl shadow-2xl flex flex-col"
+              style={{ maxHeight: '85dvh' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6 pb-10">
-                {/* Close */}
-                <button onClick={() => setSelectedBadge(null)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-                </button>
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                <div className="w-10 h-1 bg-gray-200 dark:bg-gray-700 rounded-full" />
+              </div>
 
+              {/* Close button */}
+              <button
+                onClick={() => setSelectedBadge(null)}
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
+
+              {/* Scrollable content */}
+              <div className="overflow-y-auto flex-1 px-6 pb-8 pt-2" style={{ scrollbarWidth: 'none' }}>
                 {/* Badge icon */}
                 <div className="flex flex-col items-center mb-4">
                   <div
@@ -673,7 +683,11 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                     <div className="scale-[2]">{selectedBadge.icon}</div>
                   </div>
                   <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">{selectedBadge.title.replace('\n', ' ')}</h3>
-                  {isEarned && <span className="mt-2 px-3 py-1 bg-green-100 text-green-700 text-[11px] font-semibold rounded-full flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Obtenu</span>}
+                  {isEarned && (
+                    <span className="mt-2 px-3 py-1 bg-green-100 text-green-700 text-[11px] font-semibold rounded-full flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5" /> Obtenu
+                    </span>
+                  )}
                 </div>
 
                 {/* Description */}
@@ -682,12 +696,12 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 {/* How to get + progress */}
                 <div className="bg-[#FFF9EC] border border-[#FFE5B4] rounded-2xl p-4">
                   <p className="text-[12px] font-semibold text-[#FF7A00] mb-2">Comment l'obtenir ?</p>
-                  <p className="text-[13px] text-gray-700 mb-3">{selectedBadge.howTo}</p>
+                  <p className="text-[13px] text-gray-700 dark:text-gray-300 mb-3">{selectedBadge.howTo}</p>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[11px] text-gray-500">Progression</span>
                     <span className="text-[11px] font-bold text-[#FF7A00]">{prog.current} / {prog.target}</span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div className="h-full bg-[#FF7A00] rounded-full transition-all" style={{ width: `${pct}%` }} />
                   </div>
                   <p className="text-right text-[10px] text-gray-400 mt-1">{pct}%{isEarned ? ' — Félicitations !' : ''}</p>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { ArrowLeft01Icon, UserIcon } from 'hugeicons-react';
+import { ArrowLeft01Icon } from 'hugeicons-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
@@ -8,6 +8,7 @@ import { fr } from 'date-fns/locale';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
+import { UserAvatarIcon } from '@/components/shared/UserAvatarIcon';
 import { toast } from 'sonner';
 
 export function ManageEvent() {
@@ -202,56 +203,88 @@ function TabDetails({ event }: { event: any }) {
 // ----------------------------------------------------------------------
 function TabParticipants({ bookings }: { event: any, bookings: any[] }) {
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  
+  const navigate = useNavigate();
+
   const participants = bookings.filter(b => b.status === 'CONFIRMED').map(b => b.user);
 
   return (
     <div className="flex flex-col h-full relative">
-      <div className="bg-[#FFF9EC] rounded-xl p-3 flex items-center gap-3 mb-4">
-        <UserIcon className="w-5 h-5 text-gray-600" />
+      {/* Count header */}
+      <div className="bg-[#FFF9EC] rounded-xl p-3 flex items-center gap-3 mb-2">
+        <UserAvatarIcon size={22} />
         <span className="text-[14px] font-semibold text-gray-700">{participants.length} Participants</span>
       </div>
 
-      <div className="flex flex-col gap-1 pb-20">
+      {/* List */}
+      <div className="flex flex-col pb-24">
         {participants.length === 0 ? (
           <p className="text-[13px] text-gray-400 text-center py-10">Aucun participant pour le moment.</p>
         ) : (
-          participants.map(user => (
-            <div 
-              key={user.id} 
+          participants.map((user: any) => (
+            <div
+              key={user.id}
               onClick={() => setSelectedUser(user)}
-              className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer active:scale-95 transition-all"
+              className="flex items-center gap-3 px-1 py-3 border-b border-gray-100 dark:border-gray-800 cursor-pointer active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
             >
-              <SafeImage src={user.profile?.avatarUrl} alt="User Avatar" className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
+              {/* Avatar */}
+              {user.profile?.avatarUrl ? (
+                <SafeImage
+                  src={user.profile.avatarUrl}
+                  alt={user.profile?.displayName || ''}
+                  className="w-8 h-8 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <UserAvatarIcon size={32} className="shrink-0" />
+              )}
               <span className="text-[14px] font-medium text-gray-900 dark:text-white">
-                {user.profile?.displayName || user.profile?.username}
+                {user.profile?.displayName || user.profile?.username || 'Utilisateur'}
               </span>
             </div>
           ))
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 w-full p-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800">
+      {/* Bottom invite button */}
+      <div className="fixed bottom-0 left-0 w-full px-4 py-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800">
         <button className="w-full py-3.5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white active:scale-95 transition-transform">
-          <UserIcon className="w-4 h-4" />
+          <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g clipPath="url(#uai-clip-invite)">
+              <rect width="32" height="32" rx="16" fill="none" />
+              <circle cx="13" cy="10.6663" r="5.33333" fill="currentColor" opacity="0.4" />
+              <circle cx="13" cy="32.6667" r="14.6667" fill="currentColor" opacity="0.4" />
+            </g>
+            <line x1="24" y1="10" x2="24" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <line x1="20" y1="14" x2="28" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <defs><clipPath id="uai-clip-invite"><rect width="26" height="32" rx="13" fill="white" /></clipPath></defs>
+          </svg>
           Inviter des participants
         </button>
       </div>
 
+      {/* Bottom sheet: participant detail */}
       <BottomSheet open={!!selectedUser} onClose={() => setSelectedUser(null)}>
         {selectedUser && (
-          <div className="w-full flex flex-col items-center pt-2 pb-6 px-4">
-            <SafeImage src={selectedUser.profile?.avatarUrl} alt="Selected User" className="w-20 h-20 rounded-full border-4 border-white shadow-sm bg-gray-200 mb-3" />
-            <div className="flex items-center gap-2 mb-4">
-              <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">{selectedUser.profile?.displayName || selectedUser.profile?.username}</h3>
-              <UserIcon className="w-5 h-5 text-[#FF7A00]" />
+          <div className="w-full flex flex-col items-center pt-2 pb-8 px-5">
+            <div className="mb-3">
+              {selectedUser.profile?.avatarUrl ? (
+                <SafeImage
+                  src={selectedUser.profile.avatarUrl}
+                  alt={selectedUser.profile?.displayName || ''}
+                  className="w-20 h-20 rounded-full border-4 border-white shadow-sm object-cover"
+                />
+              ) : (
+                <UserAvatarIcon size={80} />
+              )}
             </div>
-            <button 
-              onClick={() => { /* Navigate to full profile */ }}
-              className="w-full max-w-[200px] py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-6"
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4">
+              {selectedUser.profile?.displayName || selectedUser.profile?.username}
+            </h3>
+            <PrimaryButton
+              onClick={() => navigate(`/profile/${selectedUser.profile?.username || selectedUser.id}`)}
+              className="max-w-[200px]"
             >
               Voir le profil
-            </button>
+            </PrimaryButton>
           </div>
         )}
       </BottomSheet>
