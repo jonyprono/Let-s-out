@@ -201,7 +201,7 @@ function TabDetails({ event }: { event: any }) {
 // ----------------------------------------------------------------------
 // TAB: PARTICIPANTS
 // ----------------------------------------------------------------------
-function TabParticipants({ bookings }: { event: any, bookings: any[] }) {
+function TabParticipants({ event, bookings }: { event: any, bookings: any[] }) {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const navigate = useNavigate();
 
