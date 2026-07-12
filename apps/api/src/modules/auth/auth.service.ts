@@ -11,29 +11,10 @@ import * as admin from 'firebase-admin'
 const OTP_SEND_LIMIT = 5
 const OTP_SEND_WINDOW_SECONDS = 10 * 60
 
-// Initialize Firebase Admin only if ALL required credentials are present
-const hasFirebaseCreds = !!(
-  process.env.FIREBASE_PROJECT_ID &&
-  process.env.FIREBASE_CLIENT_EMAIL &&
-  process.env.FIREBASE_PRIVATE_KEY
-)
+import { getFirebaseApp } from '../../services/push.service'
 
-if (!admin.apps.length && hasFirebaseCreds) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      })
-    })
-    console.log('[Firebase Admin] Initialized ✓')
-  } catch (error) {
-    console.error('[Firebase Admin] Initialization error:', error)
-  }
-} else if (!hasFirebaseCreds) {
-  console.warn('[Firebase Admin] Not initialized — FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY manquants (mode dev: idToken non supporté)')
-}
+// Initialize Firebase Admin (handles both SERVICE_ACCOUNT and individual vars)
+getFirebaseApp()
 
 const OTP_TTL_MINUTES = 10
 const OTP_MAX_ATTEMPTS = 5

@@ -9,7 +9,7 @@ import type { PrismaClient } from '@prisma/client'
 
 let firebaseApp: any = null
 
-function getFirebaseApp() {
+export function getFirebaseApp() {
   if (firebaseApp) return firebaseApp
 
   try {
