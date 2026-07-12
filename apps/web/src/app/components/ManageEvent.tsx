@@ -207,6 +207,10 @@ function TabParticipants({ bookings }: { event: any, bookings: any[] }) {
 
   const participants = bookings.filter(b => b.status === 'CONFIRMED').map(b => b.user);
 
+  const isPastDeadline = event.registrationDeadline 
+    ? new Date() > new Date(event.registrationDeadline) 
+    : new Date() > new Date(event.startAt);
+
   return (
     <div className="flex flex-col h-full relative">
       {/* Count header */}
@@ -245,21 +249,34 @@ function TabParticipants({ bookings }: { event: any, bookings: any[] }) {
       </div>
 
       {/* Bottom invite button */}
-      <div className="fixed bottom-0 left-0 w-full px-4 py-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800">
-        <button className="w-full py-3.5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white active:scale-95 transition-transform">
-          <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <g clipPath="url(#uai-clip-invite)">
-              <rect width="32" height="32" rx="16" fill="none" />
-              <circle cx="13" cy="10.6663" r="5.33333" fill="currentColor" opacity="0.4" />
-              <circle cx="13" cy="32.6667" r="14.6667" fill="currentColor" opacity="0.4" />
-            </g>
-            <line x1="24" y1="10" x2="24" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <line x1="20" y1="14" x2="28" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <defs><clipPath id="uai-clip-invite"><rect width="26" height="32" rx="13" fill="white" /></clipPath></defs>
-          </svg>
-          Inviter des participants
-        </button>
-      </div>
+      {!isPastDeadline && (
+        <div className="fixed bottom-0 left-0 w-full px-4 py-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800">
+          <button 
+            onClick={() => {
+              const url = `${window.location.origin}/events/${event.id}`;
+              if (navigator.share) {
+                navigator.share({ title: event.title, url }).catch(console.error);
+              } else {
+                navigator.clipboard.writeText(url);
+                toast.success('Lien copié dans le presse-papier');
+              }
+            }}
+            className="w-full py-3.5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white active:scale-95 transition-transform"
+          >
+            <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g clipPath="url(#uai-clip-invite)">
+                <rect width="32" height="32" rx="16" fill="none" />
+                <circle cx="13" cy="10.6663" r="5.33333" fill="currentColor" opacity="0.4" />
+                <circle cx="13" cy="32.6667" r="14.6667" fill="currentColor" opacity="0.4" />
+              </g>
+              <line x1="24" y1="10" x2="24" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <line x1="20" y1="14" x2="28" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <defs><clipPath id="uai-clip-invite"><rect width="26" height="32" rx="13" fill="white" /></clipPath></defs>
+            </svg>
+            Inviter des participants
+          </button>
+        </div>
+      )}
 
       {/* Bottom sheet: participant detail */}
       <BottomSheet open={!!selectedUser} onClose={() => setSelectedUser(null)}>
@@ -312,6 +329,10 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
   });
 
   if (hasPot) {
+    const isPastDeadline = event.registrationDeadline 
+      ? new Date() > new Date(event.registrationDeadline) 
+      : new Date() > new Date(event.startAt);
+
     const collected = event.poolCollected ?? 0;
     const pct = event.poolTarget ? Math.min(100, Math.round((collected / event.poolTarget) * 100)) : 0;
     return (
@@ -331,16 +352,19 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           </div>
         </div>
 
-        <PrimaryButton 
-          onClick={() => navigate(`/events/${event.id}/pay?type=contribution`)}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-          Contribuer à la cagnotte
-        </PrimaryButton>
+        {!isPastDeadline && (
+          <PrimaryButton 
+            onClick={() => navigate(`/events/${event.id}/pay?type=contribution`)}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            Contribuer à la cagnotte
+          </PrimaryButton>
+        )}
 
-        {(!event.poolReleased && (event.registrationDeadline ? new Date() > new Date(event.registrationDeadline) : new Date() > new Date(event.startAt))) && (
+        {isPastDeadline && (
           <PrimaryButton
             onClick={() => toast.success("Demande de déblocage envoyée")}
+            disabled={event.poolReleased}
             className="bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
@@ -348,7 +372,7 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           </PrimaryButton>
         )}
 
-        {!event.poolReleased && (
+        {(!isPastDeadline && !event.poolReleased) && (
           <PrimaryButton
             onClick={() => closeMut.mutate()}
             disabled={closeMut.isPending}

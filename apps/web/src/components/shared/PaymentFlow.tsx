@@ -77,6 +77,14 @@ export function PaymentFlow({
   const finalAmount = Number(participationAmount) || 0
   const netToPay = finalAmount + transactionFee
 
+  const cleanPhone = phoneNumber.trim().replace(/\s+/g, '')
+  const isBenin = country.code === '+229' || country.cca2 === 'BJ'
+  const isValidPhone = isBenin 
+    ? (cleanPhone.length >= 10 && cleanPhone.startsWith('01')) 
+    : cleanPhone.length > 0
+
+  const isFormValid = finalAmount > 0 && !(minAmount > 0 && finalAmount < minAmount) && isValidPhone;
+
   useEffect(() => {
     if (defaultAmount && !participationAmount) {
       setParticipationAmount(defaultAmount)
@@ -349,12 +357,11 @@ export function PaymentFlow({
         </div>
       </div>
 
-      {/* ── Sticky footer ── */}
       <div
         className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col items-center gap-2 border-t border-[#F0F0F0]"
         style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
       >
-        <Button onClick={handleOpenSummary} className="w-full">
+        <Button onClick={handleOpenSummary} className="w-full" disabled={!isFormValid}>
           {formSubmitText}
         </Button>
         <div className="flex flex-col items-center justify-center gap-[4px] pt-[0.25rem] w-full text-center">
