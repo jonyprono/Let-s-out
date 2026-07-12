@@ -451,12 +451,24 @@ export default async function eventsRoutes(app: FastifyInstance) {
     if (!event) return reply.code(404).send({ error: 'Event not found' })
     if (event.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
 
+    const body = req.body as any;
+
+    const newPrice = body.price !== undefined ? body.price : event.price;
+    const newPoolTarget = body.poolTarget !== undefined ? body.poolTarget : event.poolTarget;
+    const needsVerification = (newPrice && newPrice > 0) || (newPoolTarget && newPoolTarget > 0);
+
+    if (needsVerification) {
+      const userProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
+      if (userProfile?.kycStatus !== 'verified') {
+        return reply.code(403).send({ error: "Le profil doit être vérifié (KYC) pour activer cette option financière." })
+      }
+    }
+
     const updated = await app.prisma.event.update({
       where: { id },
-      data: req.body as any,
+      data: body,
     })
 
-    const body = req.body as any;
     // Notify new co-hosts if any
     if (body.coHostIds && Array.isArray(body.coHostIds)) {
       const oldCoHosts = event.coHostIds || [];
