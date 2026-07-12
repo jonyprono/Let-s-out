@@ -26,10 +26,10 @@ export function ManageEvent() {
     enabled: !!id,
   });
 
-  const { data: bookings } = useQuery({
-    queryKey: ['events', id, 'bookings'],
+  const { data: attendeesData } = useQuery({
+    queryKey: ['events', id, 'attendees'],
     queryFn: async () => {
-      const { data } = await apiClient.get(`/events/${id}/bookings`);
+      const { data } = await apiClient.get(`/events/${id}/attendees`);
       return data;
     },
     enabled: !!id,
@@ -94,7 +94,7 @@ export function ManageEvent() {
       {/* Tab Content */}
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} />}
-        {activeTab === 'participants' && <TabParticipants event={event} bookings={Array.isArray(bookings) ? bookings : (bookings?.data || [])} />}
+        {activeTab === 'participants' && <TabParticipants event={event} attendees={attendeesData?.data || []} />}
         {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} />}
       </div>
     </div>
@@ -201,11 +201,12 @@ function TabDetails({ event }: { event: any }) {
 // ----------------------------------------------------------------------
 // TAB: PARTICIPANTS
 // ----------------------------------------------------------------------
-function TabParticipants({ event, bookings }: { event: any, bookings: any[] }) {
+function TabParticipants({ event, attendees }: { event: any, attendees: any[] }) {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const navigate = useNavigate();
 
-  const participants = bookings.filter(b => b.status === 'CONFIRMED').map(b => b.user);
+  // Attendees endpoint already returns confirmed participants
+  const participants = attendees.map(b => b.user || b);
 
   const isPastDeadline = event.registrationDeadline 
     ? new Date() > new Date(event.registrationDeadline) 
