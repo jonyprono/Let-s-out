@@ -94,7 +94,7 @@ export function ManageEvent() {
       {/* Tab Content */}
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} />}
-        {activeTab === 'participants' && <TabParticipants event={event} bookings={bookings?.data || []} />}
+        {activeTab === 'participants' && <TabParticipants event={event} bookings={Array.isArray(bookings) ? bookings : (bookings?.data || [])} />}
         {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} />}
       </div>
     </div>
@@ -335,52 +335,81 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
 
     const collected = event.poolCollected ?? 0;
     const pct = event.poolTarget ? Math.min(100, Math.round((collected / event.poolTarget) * 100)) : 0;
+    const isFull = pct >= 100;
+    const progressColorClass = isFull ? "bg-[#0CAF60]" : "bg-[#FF7A00]";
+    const bgClass = isFull ? "bg-[#F0FDF4] dark:bg-[#102a1c] border-green-100 dark:border-green-900" : "bg-white dark:bg-[#1A1A1A] border-gray-100 dark:border-gray-800";
+
     return (
-      <div className="flex flex-col gap-4">
-        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-800">
-          <p className="text-[24px] font-extrabold text-gray-900 dark:text-white leading-tight">
-            {collected.toLocaleString('fr-FR')} F
+      <div className="flex flex-col gap-3">
+        <div className={`rounded-[12px] p-4 shadow-sm border ${bgClass}`}>
+          <p className="text-[14px] text-gray-500 mb-1">
+            {isFull ? "Solde disponible" : "Cagnotte"}
           </p>
-          <p className="text-[13px] text-gray-500 mt-0.5">
-            sur {event.poolTarget?.toLocaleString('fr-FR')} F CFA
+          <p className="text-[20px] font-bold text-gray-900 dark:text-white leading-tight">
+            {collected.toLocaleString('fr-FR')} F CFA
           </p>
-          <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full mt-3 overflow-hidden relative">
-            <div className="absolute top-0 left-0 h-full bg-[#FF7A00] rounded-full transition-all" style={{ width: `${pct}%` }} />
-          </div>
-          <div className="flex justify-end mt-1">
-            <span className="text-[10px] font-bold text-white bg-[#FF7A00] rounded px-1.5 py-0.5 leading-none">{pct}%</span>
+          {!isFull && (
+            <p className="text-[13px] text-gray-500 mt-0.5">
+              sur {event.poolTarget?.toLocaleString('fr-FR')} F CFA
+            </p>
+          )}
+          <div className="flex items-center gap-2 mt-3">
+            <div className="flex-1 h-[6px] bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden relative">
+              <div className={`absolute top-0 left-0 h-full rounded-full transition-all ${progressColorClass}`} style={{ width: `${pct}%` }} />
+            </div>
+            <span className={`text-[10px] font-bold text-white rounded px-1.5 py-0.5 leading-none ${progressColorClass}`}>{pct}%</span>
           </div>
         </div>
 
         {!isPastDeadline && (
-          <PrimaryButton 
+          <button 
             onClick={() => navigate(`/events/${event.id}/pay?type=contribution`)}
+            className="flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] active:scale-95 transition-transform text-[14px] font-medium text-gray-900 dark:text-white"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-            Contribuer à la cagnotte
-          </PrimaryButton>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.68091 11.666C3.51388 11.666 4.99981 13.1519 4.99981 14.9849" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4.99981 3.34766C4.99981 5.18063 3.51388 6.66656 1.68091 6.66656" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M15 3.34766C15 5.16459 16.4742 6.64051 18.2853 6.66621" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M18.3333 10.834V8.33398C18.3333 5.97696 18.3333 4.79845 17.6011 4.06622C16.8688 3.33398 15.6903 3.33398 13.3333 3.33398H6.66666C4.30964 3.33398 3.13113 3.33398 2.3989 4.06622C1.66666 4.79845 1.66666 5.97696 1.66666 8.33398V10.0007C1.66666 12.3577 1.66666 13.5362 2.3989 14.2684C3.13113 15.0007 4.30964 15.0007 6.66666 15.0007H10.8333" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12.5 9.16602C12.5 10.5468 11.3807 11.666 10 11.666C8.61925 11.666 7.5 10.5468 7.5 9.16602C7.5 7.78531 8.61925 6.66602 10 6.66602C11.3807 6.66602 12.5 7.78531 12.5 9.16602Z" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M15.8333 11.666V16.666M13.3333 14.166H18.3333" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Déposer une contribution
+          </button>
         )}
 
         {isPastDeadline && (
-          <PrimaryButton
+          <button
             onClick={() => toast.success("Demande de déblocage envoyée")}
             disabled={event.poolReleased}
-            className="bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] active:scale-95 transition-transform text-[14px] font-medium text-gray-900 dark:text-white disabled:opacity-50"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.68091 14.582C3.51388 14.582 4.99981 16.0679 4.99981 17.9009" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M15 17.9009V17.8243C15 16.0336 16.4517 14.582 18.2423 14.582" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M4.99981 6.26367C4.99981 8.09665 3.51388 9.58259 1.68091 9.58259" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M15 6.26367C15 8.08061 16.4742 9.55651 18.2853 9.58226" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14.1667 6.25C15.9792 6.26008 16.9607 6.34046 17.6011 6.98078C18.3333 7.71302 18.3333 8.89152 18.3333 11.2485V12.9152C18.3333 15.2723 18.3333 16.4508 17.6011 17.183C16.8688 17.9152 15.6903 17.9152 13.3333 17.9152H6.66666C4.30964 17.9152 3.13113 17.9152 2.3989 17.183C1.66666 16.4508 1.66666 15.2723 1.66666 12.9152V11.2485C1.66666 8.89152 1.66666 7.71302 2.3989 6.98078C3.03921 6.34046 4.02081 6.26008 5.83333 6.25" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12.5 12.082C12.5 13.4627 11.3807 14.582 10 14.582C8.61925 14.582 7.5 13.4627 7.5 12.082C7.5 10.7013 8.61925 9.58203 10 9.58203C11.3807 9.58203 12.5 10.7013 12.5 12.082Z" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M7.91666 4.16732C7.91666 4.16732 9.4165 2.08398 10 2.08398C10.5835 2.08398 12.0833 4.16732 12.0833 4.16732M10 6.66732V2.50065" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             Débloquer les fonds
-          </PrimaryButton>
+          </button>
         )}
 
         {(!isPastDeadline && !event.poolReleased) && (
-          <PrimaryButton
+          <button
             onClick={() => closeMut.mutate()}
             disabled={closeMut.isPending}
-            className="bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+            className="flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] active:scale-95 transition-transform text-[14px] font-medium text-gray-900 dark:text-white disabled:opacity-50"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.7467 7.49935V5.41602C13.7467 3.34495 12.0678 1.66602 9.99674 1.66602C7.92568 1.66602 6.24674 3.34495 6.24674 5.41602V7.49935" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M11.2462 7.5H8.74674C6.80106 7.5 5.82822 7.5 5.09182 7.89364C4.51037 8.20446 4.03414 8.68075 3.72339 9.26217C3.32981 9.99867 3.3299 10.9715 3.33009 12.9172C3.33026 14.8625 3.33035 15.8352 3.72397 16.5715C4.03477 17.1529 4.51097 17.629 5.09237 17.9398C5.8287 18.3333 6.80139 18.3333 8.74674 18.3333H11.2462C13.1917 18.3333 14.1646 18.3333 14.9009 17.9398C15.4823 17.629 15.9586 17.1527 16.2693 16.5713C16.6629 15.8349 16.6629 14.8622 16.6629 12.9167C16.6629 10.9712 16.6629 9.99842 16.2693 9.262C15.9586 8.68058 15.4823 8.20438 14.9009 7.89359C14.1646 7.5 13.1917 7.5 11.2462 7.5Z" stroke="#737373" strokeWidth="1.25" strokeLinecap="round"/>
+              <path d="M9.99674 14.5833C10.9172 14.5833 11.6634 13.8371 11.6634 12.9167C11.6634 11.9962 10.9172 11.25 9.99674 11.25C9.07627 11.25 8.33008 11.9962 8.33008 12.9167C8.33008 13.8371 9.07627 14.5833 9.99674 14.5833Z" stroke="#737373" strokeWidth="1.25"/>
+            </svg>
             Clôturer la cagnotte
-          </PrimaryButton>
+          </button>
         )}
       </div>
     );
