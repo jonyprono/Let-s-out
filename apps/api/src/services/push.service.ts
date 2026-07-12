@@ -194,10 +194,10 @@ export async function sendPushToUser(
     }),
   )
 
-  if (errors.length > 0) {
-    // Clean up before throwing
+  if (invalidTokens.length > 0) {
+    // Clean up invalid tokens without throwing
     try { await prisma.deviceToken.deleteMany({ where: { token: { in: invalidTokens } } }) } catch {}
-    throw new Error(`FCM rejected token(s): ${errors.join(', ')}`)
+    console.warn(`[FCM] Removed ${invalidTokens.length} invalid token(s) due to errors: ${errors.join(', ')}`)
   }
 
   // Clean up stale tokens

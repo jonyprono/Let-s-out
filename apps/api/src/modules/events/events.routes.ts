@@ -48,12 +48,27 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const interests = userProfile?.interests || []
 
+    const validEnums = ['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM'];
+    const mappedCategories = interests.map((i: string) => {
+      const upper = i.toUpperCase();
+      if (upper === 'MUSIQUE') return 'MUSIC';
+      if (upper === 'GASTRONOMIE') return 'FOOD';
+      if (upper === 'VIE NOCTURNE') return 'NIGHTLIFE';
+      if (upper === 'VOYAGE') return 'TRAVEL';
+      if (upper === 'JEUX') return 'GAMING';
+      if (upper === 'BIEN-ÊTRE' || upper === 'BIEN ETRE') return 'WELLNESS';
+      if (upper === 'NETWORKING') return 'SOCIAL';
+      if (upper === 'TECHNOLOGIE') return 'TECH';
+      if (upper === 'AUTRE') return 'OTHER';
+      return upper;
+    }).filter(c => validEnums.includes(c)) as import('@prisma/client').EventCategory[];
+
     const events = await app.prisma.event.findMany({
       where: {
         status: 'PUBLISHED',
         isPrivate: false,
         startAt: { gte: new Date() }, // Only upcoming events
-        ...(interests.length > 0 && { category: { in: interests as import('@prisma/client').EventCategory[] } }),
+        ...(mappedCategories.length > 0 && { category: { in: mappedCategories } }),
       },
       include: {
         creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
