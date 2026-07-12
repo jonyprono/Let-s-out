@@ -10,6 +10,10 @@ import { SafeImage } from '@/components/shared/SafeImage';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { UserAvatarIcon } from '@/components/shared/UserAvatarIcon';
 import { toast } from 'sonner';
+import { useUserProfile } from '@/features/users/UserProfileContext';
+import { ShareModal } from '@/components/shared/ShareModal';
+import { useFriends } from '@/features/users/api';
+import { eventsApi } from '@/features/events/api';
 
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
@@ -204,6 +208,19 @@ function TabDetails({ event }: { event: any }) {
 function TabParticipants({ event, attendees }: { event: any, attendees: any[] }) {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const navigate = useNavigate();
+  const { openUserProfile } = useUserProfile();
+  const [showInviteOptions, setShowInviteOptions] = useState(false);
+  const [showInviteFriends, setShowInviteFriends] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  const { data: friendsData } = useFriends();
+  const inviteMut = useMutation({
+    mutationFn: async (userId: string) => {
+      await eventsApi.inviteFriends(event.id, [userId]);
+    },
+    onSuccess: () => toast.success('Invitation envoyée !'),
+    onError: () => toast.error('Erreur lors de l\'invitation')
+  });
 
   // Attendees endpoint already returns confirmed participants
   const participants = attendees.map(b => b.user || b);
@@ -228,7 +245,11 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
           participants.map((user: any) => (
             <div
               key={user.id}
-              onClick={() => setSelectedUser(user)}
+              onClick={() => openUserProfile(
+                user.id,
+                { displayName: user.profile?.displayName || user.profile?.username || 'Utilisateur', avatarUrl: user.profile?.avatarUrl },
+                { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+              )}
               className="flex items-center gap-3 px-1 py-3 border-b border-gray-100 dark:border-gray-800 cursor-pointer active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
             >
               {/* Avatar */}
@@ -253,15 +274,7 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
       {!isPastDeadline && (
         <div className="fixed bottom-0 left-0 w-full px-4 py-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800">
           <button 
-            onClick={() => {
-              const url = `${window.location.origin}/events/${event.id}`;
-              if (navigator.share) {
-                navigator.share({ title: event.title, url }).catch(console.error);
-              } else {
-                navigator.clipboard.writeText(url);
-                toast.success('Lien copié dans le presse-papier');
-              }
-            }}
+            onClick={() => setShowInviteOptions(true)}
             className="w-full py-3.5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white active:scale-95 transition-transform"
           >
             <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -279,33 +292,60 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
         </div>
       )}
 
-      {/* Bottom sheet: participant detail */}
-      <BottomSheet open={!!selectedUser} onClose={() => setSelectedUser(null)}>
-        {selectedUser && (
-          <div className="w-full flex flex-col items-center pt-2 pb-8 px-5">
-            <div className="mb-3">
-              {selectedUser.profile?.avatarUrl ? (
-                <SafeImage
-                  src={selectedUser.profile.avatarUrl}
-                  alt={selectedUser.profile?.displayName || ''}
-                  className="w-20 h-20 rounded-full border-4 border-white shadow-sm object-cover"
-                />
-              ) : (
-                <UserAvatarIcon size={80} />
-              )}
-            </div>
-            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4">
-              {selectedUser.profile?.displayName || selectedUser.profile?.username}
-            </h3>
-            <PrimaryButton
-              onClick={() => navigate(`/profile/${selectedUser.profile?.username || selectedUser.id}`)}
-              className="max-w-[200px]"
-            >
-              Voir le profil
-            </PrimaryButton>
-          </div>
-        )}
+      {/* Invite Options BottomSheet */}
+      <BottomSheet open={showInviteOptions} onClose={() => setShowInviteOptions(false)}>
+        <div className="w-full flex flex-col pt-2 pb-8 px-5 gap-3">
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4 text-center">Inviter des participants</h3>
+          <button 
+            onClick={() => { setShowInviteOptions(false); setShowInviteFriends(true); }}
+            className="w-full p-4 flex items-center justify-center gap-3 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-800 rounded-xl text-[15px] font-semibold text-gray-900 dark:text-white"
+          >
+            Inviter des amis Let's Out
+          </button>
+          <button 
+            onClick={() => { setShowInviteOptions(false); setShowShareModal(true); }}
+            className="w-full p-4 flex items-center justify-center gap-3 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-800 rounded-xl text-[15px] font-semibold text-gray-900 dark:text-white"
+          >
+            Partager via lien ou QR
+          </button>
+        </div>
       </BottomSheet>
+
+      {/* Invite Friends BottomSheet */}
+      <BottomSheet open={showInviteFriends} onClose={() => setShowInviteFriends(false)}>
+        <div className="w-full flex flex-col pt-2 pb-8 px-5">
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4 text-center">Vos amis</h3>
+          <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            {!friendsData || friendsData.length === 0 ? (
+              <p className="text-center text-[13px] text-gray-500 py-6">Vous n'avez pas encore d'amis à inviter.</p>
+            ) : (
+              friendsData.map(friend => (
+                <div key={friend.userId} className="flex items-center justify-between p-2 border-b border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center gap-3">
+                    <SafeImage src={friend.avatarUrl} alt={friend.displayName} className="w-10 h-10 rounded-full bg-gray-200" />
+                    <span className="font-semibold text-[14px] text-gray-900 dark:text-white">{friend.displayName}</span>
+                  </div>
+                  <button 
+                    onClick={() => inviteMut.mutate(friend.userId)}
+                    className="px-4 py-1.5 bg-[#FFF9EC] text-[#FF7A00] rounded-full text-[12px] font-semibold active:scale-95"
+                  >
+                    Inviter
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <ShareModal
+          eventId={event.id}
+          eventTitle={event.title}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   );
 }

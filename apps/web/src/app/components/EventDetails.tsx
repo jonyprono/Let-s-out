@@ -601,7 +601,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   )}
 
                   {/* "Contribuer à nouveau" if already joined */}
-                  {(hasJoined || participationPaid) && (
+                  {(hasJoined || participationPaid) && !event.poolReleased && (
                     <button
                       onClick={() => {
                         if (isCreator || participationPaid) {
@@ -615,6 +615,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       <span className="text-[16px]">💵</span>
                       Contribuer à nouveau
                     </button>
+                  )}
+
+                  {event.poolReleased && (
+                    <div className="mt-[16px] p-3 rounded-[8px] bg-red-50 text-red-600 text-[13px] text-center font-medium border border-red-100">
+                      Cette cagnotte est désormais clôturée.
+                    </div>
                   )}
                 </div>
               ) : (
@@ -661,15 +667,21 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             /* Non-participant: one wide button */
             !isPastEvent && (
               <Button
-                onClick={handleJoin}
-                disabled={joinMutation.isPending || isFull}
+                onClick={() => {
+                  if (event.poolReleased) {
+                    toast.info("L'événement et la cagnotte sont clôturés.");
+                    return;
+                  }
+                  handleJoin();
+                }}
+                disabled={joinMutation.isPending || isFull || event.poolReleased}
                 className="flex-1 w-full rounded-full font-medium text-[14px] h-[40px] border-none transition-opacity active:scale-95 font-poppins"
                 style={{
-                  background: (joinMutation.isPending || isFull) ? 'var(--color-background-secondary)' : 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)',
-                  color: (joinMutation.isPending || isFull) ? 'var(--color-text-secondary)' : 'white'
+                  background: (joinMutation.isPending || isFull || event.poolReleased) ? 'var(--color-background-secondary)' : 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)',
+                  color: (joinMutation.isPending || isFull || event.poolReleased) ? 'var(--color-text-secondary)' : 'white'
                 }}
               >
-                {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : "Rejoindre l'événement"}
+                {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : event.poolReleased ? 'Clôturé' : isFull ? 'Complet' : "Rejoindre l'événement"}
               </Button>
             )
           )}
