@@ -919,7 +919,7 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
 
   const { data: orgProfile, refetch } = useQuery({
     queryKey: ['users', org.id],
-    queryFn: () => usersApi.getById(org.id).then(r => r.data),
+    queryFn: () => usersApi.getById(org.id),
     enabled: !!org.id,
   });
 

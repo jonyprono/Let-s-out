@@ -22,7 +22,7 @@ export function CreatedEventsList() {
 
   const { data: profile } = useQuery({
     queryKey: ['users', targetUserId],
-    queryFn: () => usersApi.getById(targetUserId!).then(r => r.data),
+    queryFn: () => usersApi.getById(targetUserId!),
     enabled: !!targetUserId,
   });
 

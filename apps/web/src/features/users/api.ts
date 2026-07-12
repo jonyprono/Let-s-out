@@ -56,6 +56,11 @@ export const usersApi = {
   getActivity: async (userId: string) => {
     const { data } = await apiClient.get(`/users/${userId}/activity`)
     return data
+  },
+
+  getById: async (userId: string) => {
+    const { data } = await apiClient.get(`/users/by-id/${userId}`)
+    return data
   }
 }
 
