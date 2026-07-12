@@ -269,13 +269,85 @@ export function PaymentPage() {
   // ── SUCCESS STATE ──
   if (status === 'success') {
     const startDate = parseSafeDate(event?.startAt)
+
+    if (isContribution) {
+      const target = event?.poolTarget || 0
+      const previousCollected = event?.poolCollected || 0
+      const totalCollected = previousCollected + (resolvedAmount || 0)
+      const currentProgress = target > 0 ? (totalCollected / target) * 100 : 0
+      const addedProgress = target > 0 ? ((resolvedAmount || 0) / target) * 100 : 0
+
+      return (
+        <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
+          <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
+            <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
+              <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
+            </button>
+            <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">Contribuer à la cagnotte</span>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
+            <div className="mt-8 mb-4">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #4CD964, #34C759)' }}>
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <path d="M8 18L15 25L28 11" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+
+            <h1 className="text-[20px] font-bold text-[#22C55E] mb-2 text-center">Contribution envoyée !</h1>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-8 px-4 leading-relaxed max-w-[300px]">
+              Top! Votre contribution a été bien envoyée. La cagnotte a progressé de {Math.round(addedProgress)}%. 🎉
+            </p>
+
+            <div className="w-full rounded-[16px] border border-gray-100 dark:border-white/5 bg-white dark:bg-[#1A1A1A] p-5 shadow-sm max-w-[358px]">
+              <div className="flex items-center justify-between mb-4">
+                  <span className="text-[16px] font-bold text-[#FF7A00]">Cagnotte</span>
+                  <span className="text-[14px] font-bold text-[#22C55E]">{target > 0 ? target.toLocaleString() : totalCollected.toLocaleString()} F CFA</span>
+              </div>
+              
+              <div className="border-t border-dashed border-gray-200 dark:border-gray-700 w-full mb-4" />
+
+              <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-[6px] mb-6 overflow-hidden">
+                  <div className="bg-[#FF7A00] h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(currentProgress, 100)}%` }} />
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-gray-500 dark:text-gray-400">Votre contribution</span>
+                  <span className="text-[13px] font-semibold text-[#FF7A00]">{resolvedAmount?.toLocaleString()} F</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-gray-500 dark:text-gray-400">Total collecté</span>
+                  <span className="text-[13px] font-semibold text-[#22C55E]">{totalCollected.toLocaleString()} F</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-gray-500 dark:text-gray-400">Progression (+{Math.round(addedProgress)}%)</span>
+                  <span className="text-[12px] font-bold text-white bg-[#FF7A00] px-2 py-0.5 rounded-[4px]">{Math.round(currentProgress)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
+              <Button onClick={() => setStatus('form')} className="w-full font-semibold h-[52px]">
+                Contribuer à nouveau
+              </Button>
+              <button onClick={() => navigate(-1)} className="w-full h-[52px] rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform">
+                Retourner au chat
+              </button>
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col" style={{ fontFamily: 'Poppins, sans-serif' }}>
         <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
           <button onClick={() => navigate(`/events/${eventId}`)} className="w-9 h-9 flex items-center justify-center active:scale-95">
             <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
-          <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">{isContribution ? 'Contribuer à la cagnotte' : 'Rejoindre l\'événement'}</span>
+          <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">Rejoindre l'événement</span>
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
@@ -557,7 +629,7 @@ export function PaymentPage() {
                 onClick={handlePay}
                 className="w-full mt-2"
               >
-                Payer
+                {isContribution ? 'Payer la contribution' : 'Payer'}
               </Button>
 
             </div>

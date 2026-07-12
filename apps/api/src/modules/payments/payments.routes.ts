@@ -43,8 +43,8 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     })
     if (!user) return reply.code(404).send({ error: 'Utilisateur introuvable' })
 
-    // MODE DEV : pas de clé configurée → simuler
-    if (!process.env.FEDAPAY_SECRET_KEY) {
+    // MODE DEV : pas de clé configurée ou simulation demandée → simuler
+    if (!process.env.FEDAPAY_SECRET_KEY || process.env.MOCK_PAYMENTS === 'true') {
       app.log.info(`[FedaPay DEV] Événement: ${event.title}, Montant: ${finalAmount}, User: ${sub}`)
       return reply.send({
         devMode: true,
