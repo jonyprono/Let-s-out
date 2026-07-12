@@ -32,6 +32,10 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       if (mode === 'minimum' && min > 0 && finalAmount < min) {
         return reply.code(400).send({ error: `Le montant minimum est de ${min} F CFA` })
       }
+      // FedaPay minimum is 100 F for all transactions
+      if (finalAmount < 100) {
+        return reply.code(400).send({ error: 'Le montant minimum de FedaPay est de 100 F CFA' })
+      }
     }
     // Only block new joins (not pool contributions) when the event is full
     const isPoolContributionRequest = customAmount !== undefined && event.poolTarget && event.poolTarget > 0
@@ -210,6 +214,10 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       }
       if (mode === 'minimum' && min > 0 && finalAmount < min) {
         return reply.code(400).send({ error: `Le montant minimum est de ${min} F CFA` })
+      }
+      // FedaPay minimum is 100 F for all transactions
+      if (finalAmount < 100) {
+        return reply.code(400).send({ error: 'Le montant minimum de FedaPay est de 100 F CFA' })
       }
     }
 
