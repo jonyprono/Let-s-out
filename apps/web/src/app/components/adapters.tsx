@@ -41,6 +41,7 @@ const EventSuccessBase  = lazy(() => import('@/app/components/EventSuccessScreen
 
 const CreatedEventsListBase = lazy(() => import('@/app/components/CreatedEventsList').then(m => ({ default: m.CreatedEventsList })))
 const ManageEventBase = lazy(() => import('@/app/components/ManageEvent').then(m => ({ default: m.ManageEvent })))
+const AccountMenuBase = lazy(() => import('@/app/components/AccountMenu').then(m => ({ default: m.AccountMenu })))
 
 // ─── Splashscreen ─────────────────────────────────────────────────────────────
 export function Splashscreen() {
@@ -353,6 +354,14 @@ export function ManageEvent() {
   return (
     <Suspense fallback={<PageLoader />}>
       <ManageEventBase />
+    </Suspense>
+  )
+}
+
+export function AccountMenu() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <AccountMenuBase />
     </Suspense>
   )
 }

@@ -92,6 +92,7 @@ import {
   Wallet,
   CreatedEventsList,
   ManageEvent,
+  AccountMenu,
 } from '@/app/components/adapters'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
@@ -253,6 +254,7 @@ export default function App() {
             <Route path="/messages" element={<Messages />} />
             <Route path="/chat/:id" element={<ChatDetails />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/account" element={<AccountMenu />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/profile/events-created" element={<CreatedEventsList />} />
