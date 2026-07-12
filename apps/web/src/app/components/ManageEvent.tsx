@@ -14,6 +14,7 @@ import { useUserProfile } from '@/features/users/UserProfileContext';
 import { ShareModal } from '@/components/shared/ShareModal';
 import { useFriends } from '@/features/users/api';
 import { eventsApi } from '@/features/events/api';
+import { useAuthStore } from '@/stores/auth.store';
 
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
@@ -206,8 +207,6 @@ function TabDetails({ event }: { event: any }) {
 // TAB: PARTICIPANTS
 // ----------------------------------------------------------------------
 function TabParticipants({ event, attendees }: { event: any, attendees: any[] }) {
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const navigate = useNavigate();
   const { openUserProfile } = useUserProfile();
   const [showInviteOptions, setShowInviteOptions] = useState(false);
   const [showInviteFriends, setShowInviteFriends] = useState(false);
@@ -354,6 +353,18 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
 // TAB: CAGNOTTE INLINE
 // ----------------------------------------------------------------------
 function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) => void }) {
+  const me = useAuthStore((state: any) => state.user);
+  const isKycVerified = me?.profile?.kycStatus === 'verified';
+
+  const handleAddCagnotte = () => {
+    if (!isKycVerified) {
+      toast.error('Le profil doit être vérifié (KYC) pour ajouter une cagnotte.', {
+        action: { label: 'Vérifier', onClick: () => navigate('/profile/kyc') }
+      });
+      return;
+    }
+    setStep('form');
+  };
   const qc = useQueryClient();
   const navigate = useNavigate();
   const hasPot = event.poolTarget && event.poolTarget > 0;
@@ -494,42 +505,6 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
         </g>
         <path d="M91.9827 31.9553C97.251 27.8747 100.22 22.8863 98.6144 20.8133C97.0088 18.7403 91.4364 20.3678 86.1681 24.4484C80.8999 28.529 77.9308 33.5174 79.5364 35.5904C81.1421 37.6633 86.7145 36.0359 91.9827 31.9553Z" fill="#FF7A00"/>
         <path opacity="0.2" d="M91.3293 30.6985C95.4989 27.4688 97.9589 23.6627 96.8238 22.1972C95.6887 20.7317 91.3883 22.1619 87.2187 25.3915C83.0491 28.6211 80.5891 32.4273 81.7242 33.8927C82.8593 35.3582 87.1597 33.9281 91.3293 30.6985Z" fill="white"/>
-      </svg>
-
-      <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2">Aucune cagnotte ajoutée</h3>
-      <p className="text-[14px] text-gray-500 text-center mb-6 max-w-[250px]">Ajoutez une cagnotte à l'événement pour mutualiser les frais.</p>
-
-      <PrimaryButton onClick={handleAddCagnotte} className="max-w-xs">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"></path><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path></svg>
-        Ajouter une cagnotte
-      </PrimaryButton>
-    </div>
-  );
-}
-
-function TabCagnotteNoData({ setStep }: { setStep: (s: 'form') => void }) {
-  const { userProfile } = useUserProfile();
-  const navigate = useNavigate();
-
-  const handleAddCagnotte = () => {
-    if (userProfile?.kycStatus !== 'verified') {
-      toast.error('Le profil doit être vérifié (KYC) pour ajouter une cagnotte.', {
-        action: { label: 'Vérifier', onClick: () => navigate('/profile/kyc') }
-      });
-      return;
-    }
-    setStep('form');
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-center h-full px-6 pt-12 pb-20">
-      <svg width="129" height="165" viewBox="0 0 129 165" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-6">
-        <path d="M57.653 10.1554L56.9189 12.3925C56.637 13.2514 55.4526 13.3364 55.0506 12.5268L44.5714 8.52985L57.653 10.1554Z" fill="#FAFAFA"/>
-        <path d="M78.2716 12.845C77.7566 15.8174 71.089 17.0732 63.536 15.718C55.9831 14.3628 50.2867 10.8709 50.8152 7.89853C50.9372 7.20738 51.1495 4.69123 51.8587 4.18981C54.2032 2.53647 59.6511 3.91877 65.4514 4.94872C70.8722 5.91091 76.8034 5.9877 78.2716 8.48578C79.1615 10.0217 78.4206 11.9957 78.2716 12.845Z" fill="#FF7A00"/>
-        <path opacity="0.2" d="M78.2716 8.49079C79.1751 10.5417 78.4569 11.7659 78.2716 12.8319C78.0864 13.898 77.052 14.7879 75.4619 15.3752C75.2676 15.452 75.0643 15.5152 74.8565 15.5785C73.6128 15.9281 72.3341 16.1386 71.0439 16.2064C70.8587 16.2064 70.678 16.2064 70.4883 16.238C68.9684 16.2939 67.4465 16.238 65.9348 16.0709L65.4063 16.0031C64.7965 15.9263 64.1685 15.836 63.5406 15.723C62.9127 15.6101 62.3029 15.4836 61.7021 15.3436C61.5304 15.3074 61.3588 15.2623 61.1871 15.2216C59.7679 14.8712 58.3759 14.4182 57.0221 13.8664C56.855 13.8032 56.6969 13.7309 56.5388 13.6677C55.3506 13.1619 54.2232 12.524 53.1779 11.7659C53.0198 11.6529 52.8752 11.54 52.7262 11.4225C51.3258 10.2797 50.6075 9.05094 50.8108 7.90806C50.9463 7.16722 51.0547 4.74593 51.8498 4.19933C52.6448 3.65274 53.7832 3.48108 55.1384 3.47656H55.6805C58.3909 3.56691 61.8828 4.3213 65.447 4.95373C69.6481 5.7036 74.5674 6.35862 77.2146 7.77706C77.3699 7.85935 77.5206 7.94982 77.6663 8.0481C77.8793 8.17967 78.0817 8.32769 78.2716 8.49079Z" fill="black"/>
-        <g opacity="0.2">
-        <path d="M55.8294 3.01528L55.6848 3.4896L53.1732 11.7744C53.0151 11.6614 52.8705 11.5485 52.7214 11.4311L55.1337 3.48508L55.3234 2.86621L55.8294 3.01528Z" fill="black"/>
-        </g>
       </svg>
 
       <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2">Aucune cagnotte ajoutée</h3>
