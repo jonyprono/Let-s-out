@@ -508,7 +508,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     })
 
     // Compute expectedValidatorVotes
-    const bookings = await app.prisma.eventBooking.findMany({
+    const bookings = await app.prisma.booking.findMany({
       where: { eventId: id, status: 'CONFIRMED' },
       select: { userId: true }
     })
