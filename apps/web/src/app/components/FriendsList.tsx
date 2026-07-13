@@ -116,13 +116,13 @@ export function FriendsList() {
               </div>
             ) : (
               globalUsers.map(user => {
-                const displayName = user.profile?.displayName || 'Utilisateur'
-                const avatar = user.profile?.avatarUrl
+                const displayName = user.displayName || 'Utilisateur'
+                const avatar = user.avatarUrl
                 
                 return (
                   <div
-                    key={user.id}
-                    onClick={() => openUserProfile(user.id, { displayName, avatarUrl: avatar })}
+                    key={user.userId}
+                    onClick={() => openUserProfile(user.userId, { displayName, avatarUrl: avatar })}
                     className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
                   >
                     <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#2a2a2a]">
@@ -142,15 +142,15 @@ export function FriendsList() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-[15px] text-gray-900 dark:text-white truncate">{displayName}</p>
-                      {user.profile?.username && (
-                        <p className="text-[13px] text-gray-400 truncate">@{user.profile.username}</p>
+                      {user.username && (
+                        <p className="text-[13px] text-gray-400 truncate">@{user.username}</p>
                       )}
                     </div>
                     
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
-                        friendRequestMut.mutate(user.id)
+                        friendRequestMut.mutate(user.userId)
                       }}
                       disabled={friendRequestMut.isPending}
                       className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-[#FFF9EC] dark:bg-[#FF7A00]/10 text-[#FF7A00] hover:bg-[#FF7A00] hover:text-white"
