@@ -505,10 +505,17 @@ export default async function eventsRoutes(app: FastifyInstance) {
       where: { eventId: id }
     })
 
+    // Compute expectedValidatorVotes
+    const bookings = await app.prisma.eventBooking.findMany({
+      where: { eventId: id, status: 'CONFIRMED' }
+    })
+    const eligibleVotersCount = bookings.filter(b => b.userId !== event.creatorId).length
+    const expectedValidatorVotes = eligibleVotersCount * (event.validatorCandidates?.length || 0)
+
     // Increment view count (fire-and-forget, don't fail if this fails)
     app.prisma.event.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {})
 
-    return reply.send({ ...eventWithCoHosts, validatorVotes })
+    return reply.send({ ...eventWithCoHosts, validatorVotes, expectedValidatorVotes })
   })
 
   // ── Protected routes ─────────────────────────────────────────────────────
