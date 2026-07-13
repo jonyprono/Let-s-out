@@ -13,6 +13,7 @@
 import { useAuthStore } from '@/stores/auth.store'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useCallback } from 'react'
+import { toast } from 'sonner'
 
 // ─── Singleton WebSocket ────────────────────────────────────────────────────
 let globalWs: WebSocket | null = null
@@ -173,6 +174,14 @@ export function useChatSocket() {
       if (data.type === 'notification:new') {
         qc.invalidateQueries({ queryKey: ['notifications'] })
         qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
+        
+        // Show real-time toast
+        if (data.notification?.title && data.notification?.body) {
+          toast.success(data.notification.title, {
+            description: data.notification.body,
+            duration: 5000,
+          })
+        }
       }
       
       // WebRTC and typing signals are now handled directly in ws.onmessage
