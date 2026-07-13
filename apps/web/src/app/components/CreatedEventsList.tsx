@@ -13,6 +13,7 @@ export function CreatedEventsList() {
   const { userId } = useParams<{ userId?: string }>();
   const user = useAuthStore((s) => s.user);
   const targetUserId = userId || user?.id;
+  const isOwnProfile = !userId || userId === user?.id;
 
   const [activeTab, setActiveTab] = useState<'events' | 'cagnottes'>('events');
 
@@ -105,15 +106,17 @@ export function CreatedEventsList() {
           <span className="font-poppins font-medium text-[12px] leading-[16px]">Evénements</span>
         </button>
 
-        <button 
-          onClick={() => setActiveTab('cagnottes')}
-          className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
-            activeTab === 'cagnottes' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
-          }`}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'cagnottes' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-          <span className="font-poppins font-medium text-[12px] leading-[16px]">Cagnottes</span>
-        </button>
+        {isOwnProfile && (
+          <button 
+            onClick={() => setActiveTab('cagnottes')}
+            className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
+              activeTab === 'cagnottes' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'cagnottes' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Cagnottes</span>
+          </button>
+        )}
       </div>
 
       {/* Content Area */}
@@ -125,7 +128,7 @@ export function CreatedEventsList() {
               <p className="text-[13px] text-gray-400">Aucun événement à venir.</p>
             ) : (
               upcomingEvents.map((ev: any) => (
-                <EventRowCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage`)} />
+                <EventRowCard key={ev.id} event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
               ))
             )}
           </div>
@@ -136,12 +139,12 @@ export function CreatedEventsList() {
               <p className="text-[13px] text-gray-400">Aucun événement passé.</p>
             ) : (
               pastEvents.map((ev: any) => (
-                <EventRowCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage`)} />
+                <EventRowCard key={ev.id} event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
               ))
             )}
           </div>
 
-          {drafts.length > 0 && (
+          {isOwnProfile && drafts.length > 0 && (
             <>
               <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6">Non publiés (Brouillons)</h2>
               <div className="flex flex-col gap-3">

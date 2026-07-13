@@ -75,6 +75,9 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         email = result.user.email
       } else {
         const provider = new GoogleAuthProvider()
+        provider.setCustomParameters({
+          prompt: 'select_account consent'
+        })
         const result = await signInWithPopup(auth, provider)
         idToken = await result.user.getIdToken()
         email = result.user.email || ''
