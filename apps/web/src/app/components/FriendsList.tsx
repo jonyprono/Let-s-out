@@ -8,6 +8,7 @@ import { useUserProfile } from '@/features/users/UserProfileContext'
 import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { useAuthStore } from '@/stores/auth.store'
+import { apiClient } from '@/lib/api-client'
 
 type TabType = 'friends' | 'global' | 'followers' | 'following'
 
@@ -42,6 +43,14 @@ export function FriendsList() {
   const { data: globalUsers, isLoading: isSearching } = useSearchUsers(
     activeTab === 'global' ? debouncedQuery : ''
   )
+
+  const createDmMut = useMutation({
+    mutationFn: (targetUserId: string) => apiClient.post('/chat/conversations/dm', { userId: targetUserId }).then(res => res.data),
+    onSuccess: (res) => {
+      navigate(`/messages/${res.data.id}`)
+    },
+    onError: () => toast.error('Impossible de démarrer la conversation')
+  })
 
   const friendRequestMut = useMutation({
     mutationFn: (userId: string) => usersApi.sendFriendRequest(userId),
@@ -271,7 +280,7 @@ export function FriendsList() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          toast.info("Fonctionnalité message à venir")
+                          createDmMut.mutate(user.userId)
                         }}
                         className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-gray-50 dark:bg-[#222222] text-gray-400 hover:text-[#FF7A00]"
                       >

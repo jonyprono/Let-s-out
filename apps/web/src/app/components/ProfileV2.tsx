@@ -206,7 +206,7 @@ interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
 }
 
-type Tab = 'profil' | 'events';
+type Tab = 'profil' | 'events' | 'friends' | 'following';
 
 export function ProfileV2({ onNavigate }: ProfileProps) {
   const user = useAuthStore((s) => s.user);
@@ -471,26 +471,48 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       </div>
 
       {/* Main Toggle Profil/Evenements */}
-      <div className="flex flex-row justify-center items-start p-0 gap-2 w-full max-w-[358px] mx-auto mb-6 shrink-0 h-[36px]">
-        <button 
-          onClick={() => setActiveTab('profil')}
-          className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
-            activeTab === 'profil' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
-          }`}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'profil' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <span className="font-poppins font-medium text-[12px] leading-[16px]">Profil</span>
-        </button>
+      <div className="w-full max-w-full overflow-x-auto hide-scrollbar px-4 mb-6 shrink-0 h-[36px]">
+        <div className="flex flex-row items-center gap-2 min-w-max">
+          <button 
+            onClick={() => setActiveTab('profil')}
+            className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
+              activeTab === 'profil' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'profil' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Profil</span>
+          </button>
 
-        <button 
-          onClick={() => setActiveTab('events')}
-          className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
-            activeTab === 'events' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
-          }`}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'events' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <span className="font-poppins font-medium text-[12px] leading-[16px]">Événements</span>
-        </button>
+          <button 
+            onClick={() => setActiveTab('events')}
+            className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
+              activeTab === 'events' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'events' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Événements</span>
+          </button>
+
+          <button 
+            onClick={() => navigate('/friends')}
+            className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
+              activeTab === 'friends' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <Users className={`w-5 h-5 ${activeTab === 'friends' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}`} />
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Amis</span>
+          </button>
+
+          <button 
+            onClick={() => navigate('/friends?tab=following')}
+            className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
+              activeTab === 'following' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'following' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Abonnements</span>
+          </button>
+        </div>
       </div>
 
       {/* Content Area */}

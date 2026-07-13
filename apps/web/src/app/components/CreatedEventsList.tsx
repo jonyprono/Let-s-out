@@ -45,6 +45,10 @@ export function CreatedEventsList() {
   const totalParticipants = createdEvents.reduce((acc: number, e: any) => acc + (e._count?.bookings || 0), 0);
   const globalScore = profile?.detailedStats?.rating ? Number(profile.detailedStats.rating).toFixed(1) : 'N/A';
 
+  const cagnottes = useMemo(() => {
+    return createdEvents.filter((e: any) => e.poolTarget != null || e.poolMode != null);
+  }, [createdEvents]);
+
   return (
     <div className="w-full min-h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       
@@ -147,12 +151,60 @@ export function CreatedEventsList() {
           )}
         </div>
       ) : (
-        <div className="px-4 flex flex-col items-center justify-center py-20">
-          <p className="text-[13px] text-gray-500">Aucune cagnotte pour le moment.</p>
+        <div className="px-4 pb-20">
+          {cagnottes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <p className="text-[13px] text-gray-500">Aucune cagnotte pour le moment.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {cagnottes.map((ev: any) => (
+                <CagnotteRowCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}?tab=pool`)} />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
+}
+
+function CagnotteRowCard({ event, onClick }: { event: any; onClick: () => void }) {
+  const target = event.poolTarget || 0;
+  const collected = event.poolCollected || 0;
+  const remaining = Math.max(0, target - collected);
+  const progress = target > 0 ? Math.round((collected / target) * 100) : 0;
+
+  return (
+    <div 
+      onClick={onClick}
+      className="w-full bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-3 cursor-pointer active:scale-95 transition-transform shadow-sm"
+    >
+      <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-800 border-dashed">
+        <h3 className="text-[16px] font-bold text-[#FF7A00]">Cagnotte</h3>
+        <span className="text-[12px] text-gray-500 font-medium truncate max-w-[150px]">{event.title}</span>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="text-[13px] text-gray-500 font-medium">Objectif</span>
+          <span className="text-[13px] font-bold text-[#2878E8]">{target.toLocaleString()} F CFA</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[13px] text-gray-500 font-medium">Collecté</span>
+          <span className="text-[13px] font-bold text-[#4CAF50]">{collected.toLocaleString()} F</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[13px] text-gray-500 font-medium">Restant</span>
+          <span className="text-[13px] font-bold text-[#FF7A00]">{remaining.toLocaleString()} F</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-[13px] text-gray-500 font-medium">Progression</span>
+          <span className="text-[12px] font-bold bg-[#FF7A00] text-white px-1.5 py-0.5 rounded">{progress}%</span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function EventRowCard({ event, onClick }: { event: any; onClick: () => void }) {
