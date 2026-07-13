@@ -61,6 +61,15 @@ export const usersApi = {
   getById: async (userId: string) => {
     const { data } = await apiClient.get(`/users/by-id/${userId}`)
     return data
+  },
+  getFollowers: async (userId: string) => {
+    const { data } = await apiClient.get(`/users/${userId}/followers`)
+    return data.data
+  },
+
+  getFollowing: async (userId: string) => {
+    const { data } = await apiClient.get(`/users/${userId}/following`)
+    return data.data
   }
 }
 

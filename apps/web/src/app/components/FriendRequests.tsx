@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft, Check, X, Loader2, Users } from 'lucide-react'
+import { ChevronLeft, Check, X, Loader2, Users, Search } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { Button } from '@/components/ui/button'
+import { SafeImage } from '@/components/shared/SafeImage'
 
 interface FriendRequest {
   id: string
@@ -41,6 +41,7 @@ export function FriendRequests() {
   const qc = useQueryClient()
   const { openUserProfile } = useUserProfile()
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['friend-requests'],
@@ -59,6 +60,7 @@ export function FriendRequests() {
       toast.success('Demande acceptée ! Vous êtes maintenant amis 🎉')
       qc.invalidateQueries({ queryKey: ['friend-requests'] })
       qc.invalidateQueries({ queryKey: ['notifications'] })
+      qc.invalidateQueries({ queryKey: ['users', 'friends'] })
     },
     onError: () => toast.error("Impossible d'accepter la demande."),
     onSettled: () => setProcessingId(null),
@@ -68,6 +70,18 @@ export function FriendRequests() {
     setProcessingId(friendshipId)
     acceptMutation.mutate(friendshipId)
   }
+
+  const filteredRequests = useMemo(() => {
+    if (!searchQuery.trim()) return requests
+    return requests.filter(req => {
+      const p = req.initiator?.profile
+      const searchStr = searchQuery.toLowerCase()
+      return (
+        p?.displayName?.toLowerCase().includes(searchStr) ||
+        p?.username?.toLowerCase().includes(searchStr)
+      )
+    })
+  }, [requests, searchQuery])
 
   return (
     <div className="w-full h-full flex flex-col bg-[#F8F7FF] dark:bg-[#111111]">
@@ -87,6 +101,22 @@ export function FriendRequests() {
           )}
         </div>
       </div>
+
+      {/* Search Bar */}
+      {requests.length > 0 && (
+        <div className="bg-white dark:bg-[#1A1A1A] px-5 pb-3 border-b border-gray-100 dark:border-white/10">
+          <div className="flex bg-gray-100 dark:bg-[#222] rounded-full px-4 py-2.5 items-center gap-2">
+            <Search className="w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher une demande..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-white text-[15px] placeholder-gray-400"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto pb-6">
@@ -119,9 +149,13 @@ export function FriendRequests() {
               Lorsqu'un utilisateur vous envoie une demande d'ami, elle apparaîtra ici.
             </p>
           </div>
+        ) : filteredRequests.length === 0 ? (
+          <div className="text-center py-20 text-gray-400 text-[14px]">
+            Aucune demande trouvée pour "{searchQuery}"
+          </div>
         ) : (
           <div className="p-4 space-y-3">
-            {requests.map(req => {
+            {filteredRequests.map(req => {
               const profile = req.initiator?.profile
               const displayName = profile?.displayName || 'Utilisateur'
               const username = profile?.username
@@ -131,59 +165,26 @@ export function FriendRequests() {
               return (
                 <div
                   key={req.id}
-                  className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+                  onClick={() => openUserProfile(req.initiator.id, { displayName, avatarUrl: avatar })}
+                  className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
                 >
-                  {/* Clickable Area for Profile */}
-                  <div 
-                    className="flex flex-1 items-center gap-3 min-w-0 cursor-pointer active:scale-[0.98] transition-transform"
-                    onClick={() => openUserProfile(req.initiatorId, { displayName, avatarUrl: avatar })}
-                  >
-                    {/* Avatar */}
-                  {avatar ? (
-                    <img
+                  <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#2a2a2a] border border-gray-100 dark:border-white/10 relative">
+                    <SafeImage
                       src={avatar}
                       alt={displayName}
-                      className="w-14 h-14 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div
-                      className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xl"
-                      style={{ background: 'linear-gradient(135deg, #FF7A00, #FF7A00)' }}
-                    >
-                      {displayName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[15px] text-gray-900 dark:text-white truncate">{displayName}</p>
-                    {username && (
-                      <p className="text-[12px] text-gray-400 truncate">@{username}</p>
-                    )}
-                    {profile?.bio && (
-                      <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate mt-0.5">{profile.bio}</p>
-                    )}
-                    <p className="text-[11px] text-gray-300 mt-1">{timeAgo(req.createdAt)}</p>
-                  </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 flex-shrink-0">
-                    {isProcessing ? (
-                      <Loader2 className="w-5 h-5 animate-spin text-action-primary" />
-                    ) : (
-                      <>
-                        <Button
-                          size="sm"
-                          onClick={() => handleAccept(req.id)}
-                          className="w-10 h-10 !p-0 rounded-full flex items-center justify-center"
-                          title="Accepter"
+                      className="w-full h-full object-cover"
+                      fallback={
+                        <div
+                          className="w-full h-full flex items-center justify-center text-white font-bold text-lg"
+                          style={{ background: 'linear-gradient(135deg, #FF7A00, #FF7A00)' }}
                         >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
+                          {displayName.charAt(0).toUpperCase()}
+                        </div>
+                      }
+                    />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
                           onClick={() => {
                             // Simply remove from local view (optimistic)
                             toast.info('Demande ignorée')
