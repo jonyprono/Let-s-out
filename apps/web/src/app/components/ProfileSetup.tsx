@@ -362,7 +362,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       <div className="px-6 pb-6 pt-4 border-t border-gray-100 dark:border-white/10">
         <Button
           onClick={handleNext}
-          disabled={step === 3 && selectedInterests.length < 3}
+          disabled={
+            (step === 1 && (!firstName.trim() || !lastName.trim())) ||
+            (step === 3 && selectedInterests.length < 3)
+          }
           className="w-full"
         >
           {step === 4 ? 'Terminer' : 'Suivant'}

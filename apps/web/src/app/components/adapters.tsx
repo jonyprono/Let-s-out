@@ -112,10 +112,10 @@ export function Onboarding() {
               birthdate: data.birthDate || undefined,
             })
             await refreshUser()
-          } catch (e) {
-            console.error('Failed to update profile during onboarding', e)
-          } finally {
             nav('/home')
+          } catch (e: any) {
+            console.error('Failed to update profile during onboarding', e)
+            import('sonner').then(({ toast }) => toast.error(e.response?.data?.message || 'Erreur lors de la mise à jour du profil. Veuillez réessayer.'))
           }
         }}
       />
