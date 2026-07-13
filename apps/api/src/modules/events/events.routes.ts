@@ -402,14 +402,41 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const { sub: userId } = req.user as { sub: string }
     const { id } = req.params as { id: string }
 
-    const event = await app.prisma.event.findUnique({ where: { id } })
+    const event = await app.prisma.event.findUnique({
+      where: { id },
+      include: { bookings: { where: { status: 'CONFIRMED' }, select: { userId: true } } }
+    })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
     if (event.creatorId !== userId) return reply.code(403).send({ error: 'Forbidden' })
     if (event.validatorVoteStatus !== 'OPEN') return reply.code(400).send({ error: 'Vote is not open' })
 
+    // Recalculer les validateurs retenus avant de clôturer
+    const uniqueVoters = new Set(event.bookings.map(b => b.userId))
+    uniqueVoters.delete(event.creatorId)
+    const eligibleVotersCount = uniqueVoters.size
+    const threshold = event.validatorThreshold || 0.5
+
+    const acceptedValidators: string[] = [...event.validatorIds]
+    if (eligibleVotersCount > 0) {
+      for (const candidateId of event.validatorCandidates) {
+        if (acceptedValidators.includes(candidateId)) continue
+
+        const yesVotes = await app.prisma.validatorVote.count({
+          where: { eventId: id, candidateId, vote: true }
+        })
+
+        if (yesVotes / eligibleVotersCount >= threshold) {
+          acceptedValidators.push(candidateId)
+        }
+      }
+    }
+
     const updatedEvent = await app.prisma.event.update({
       where: { id },
-      data: { validatorVoteStatus: 'CLOSED' }
+      data: { 
+        validatorVoteStatus: 'CLOSED',
+        validatorIds: { set: acceptedValidators }
+      }
     })
 
     // Notifier les validateurs retenus
