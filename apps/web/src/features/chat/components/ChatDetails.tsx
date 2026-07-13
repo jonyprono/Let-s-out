@@ -752,7 +752,7 @@ export function ChatDetails() {
                           className="w-full py-2 rounded-lg font-bold text-sm transition-transform active:scale-95"
                           style={{ backgroundColor: 'color-mix(in srgb, currentColor 10%, transparent)', color: 'currentColor' }}
                         >
-                          Voter
+                          {(event as any)?.validatorVoteStatus === 'CLOSED' ? 'Voir les résultats' : 'Voter'}
                         </button>
                       </div>
                     ) : isVideo && msg.content ? (

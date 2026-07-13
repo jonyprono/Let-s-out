@@ -42,10 +42,10 @@ export function EventValidatorsVote() {
     return <div className="w-full h-full flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]"><div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF7A00] animate-spin" /></div>;
   }
 
-  if (!event || event.validatorVoteStatus !== 'OPEN') {
+  if (!event || !['OPEN', 'CLOSED'].includes(event.validatorVoteStatus)) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b] p-4">
-        <h2 className="text-xl font-bold dark:text-white mb-2">Vote terminé ou inexistant</h2>
+      <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b] p-4 pt-[env(safe-area-inset-top)]">
+        <h2 className="text-xl font-bold dark:text-white mb-2">Vote inexistant</h2>
         <button onClick={() => navigate(-1)} className="px-4 py-2 bg-[#FF7A00] text-white rounded-lg">Retour</button>
       </div>
     );
@@ -53,11 +53,12 @@ export function EventValidatorsVote() {
 
   const attendees = attendeesData?.data || [];
   const candidates = attendees.filter((a: any) => event.validatorCandidates?.includes(a.userId));
+  const isClosed = event.validatorVoteStatus === 'CLOSED';
 
   return (
     <div className="flex flex-col w-full h-full bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex flex-col bg-white/80 dark:bg-[#0a0a0b]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+      <div className="sticky top-0 z-20 flex flex-col bg-white/80 dark:bg-[#0a0a0b]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="flex items-center px-4 py-3">
           <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-white dark:bg-black rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
             <ArrowLeft01Icon className="w-5 h-5 text-gray-700 dark:text-white" />
@@ -67,10 +68,16 @@ export function EventValidatorsVote() {
       </div>
 
       <div className="p-4 flex flex-col gap-4">
-        <div className="bg-[#FFF2D3] dark:bg-[#332200] p-4 rounded-xl text-sm text-[#CC6600] dark:text-[#FFB366]">
-          Approuvez-vous ces participants comme validateurs de la cagnotte ? 
-          Chaque candidat doit obtenir {Math.round((event.validatorThreshold || 0.5) * 100)}% de "Oui" pour être validé.
-        </div>
+        {isClosed ? (
+          <div className="bg-gray-100 dark:bg-[#1A1A1A] p-4 rounded-xl text-sm text-gray-700 dark:text-gray-300 flex items-center justify-center font-medium">
+            Ce vote est clôturé. Voici les résultats finaux.
+          </div>
+        ) : (
+          <div className="bg-[#FFF2D3] dark:bg-[#332200] p-4 rounded-xl text-sm text-[#CC6600] dark:text-[#FFB366]">
+            Approuvez-vous ces participants comme validateurs de la cagnotte ? 
+            Chaque candidat doit obtenir {Math.round((event.validatorThreshold || 0.5) * 100)}% de "Oui" pour être validé.
+          </div>
+        )}
 
         {candidates.map((cand: any) => {
           const isAccepted = event.validatorIds?.includes(cand.userId);
@@ -107,7 +114,7 @@ export function EventValidatorsVote() {
                 </div>
               </div>
 
-              {!isAccepted && (
+              {!isAccepted && !isClosed && (
                 <div className="flex gap-2 mt-2">
                   <button 
                     onClick={() => voteMut.mutate({ candidateId: cand.userId, vote: true })}
