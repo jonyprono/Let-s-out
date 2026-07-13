@@ -153,28 +153,33 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
 // Fonction utilitaire pour transférer l'argent de l'événement vers le Wallet du créateur
 async function releaseFunds(app: FastifyInstance, eventId: string, creatorId: string, amount: number, eventTitle: string) {
+  // Commission par défaut de 10%
+  const commissionPercentage = 0.10;
+  const commissionAmount = Math.round(amount * commissionPercentage);
+  const netAmount = amount - commissionAmount;
+
   await app.prisma.$transaction(async (tx) => {
-    // 1. Marquer l'événement comme released (ou réinitialiser une partie de la cagnotte si besoin, ici on marque just released = true)
+    // 1. Marquer l'événement comme released
     await tx.event.update({
       where: { id: eventId },
       data: { poolReleased: true },
     })
 
-    // 2. Créditer le wallet
+    // 2. Créditer le wallet avec le montant net
     const wallet = await tx.wallet.upsert({
       where: { userId: creatorId },
-      create: { userId: creatorId, balance: amount },
-      update: { balance: { increment: amount } },
+      create: { userId: creatorId, balance: netAmount },
+      update: { balance: { increment: netAmount } },
     })
 
     // 3. Créer la transaction de wallet
     await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,
-        amount,
+        amount: netAmount,
         type: 'DEPOSIT',
-        balanceAfter: wallet.balance + amount, // Add increment to get accurate balanceAfter inside tx 
-        description: `Déblocage des fonds pour "${eventTitle}"`,
+        balanceAfter: wallet.balance + netAmount, // Add increment to get accurate balanceAfter inside tx 
+        description: `Déblocage de "${eventTitle}" (-${commissionAmount}F commission)`,
         refId: eventId,
       },
     })
