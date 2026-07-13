@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth.store'
 export interface ConversationMember {
   userId: string
   isAdmin: boolean
+  mutedUntil?: string | null
   user?: {
     profile?: {
       displayName: string

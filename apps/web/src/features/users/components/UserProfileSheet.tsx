@@ -1,4 +1,4 @@
-import { ChevronLeft, BellOff, Bell, AlertTriangle, Ban, UserPlus, Check, Clock, Loader2 } from 'lucide-react'
+import { ChevronLeft, BellOff, AlertTriangle, Ban, UserPlus, Check, Clock, Loader2 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
