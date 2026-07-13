@@ -118,7 +118,9 @@ export function ManageEvent() {
 // ----------------------------------------------------------------------
 function TabDetails({ event }: { event: any }) {
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const qc = useQueryClient();
+  const { data: friendsData } = useFriends();
 
   const addCoHostMut = useMutation({
     mutationFn: async (userId: string) => {
@@ -129,8 +131,14 @@ function TabDetails({ event }: { event: any }) {
       toast.success('Co-organisateur ajouté');
       qc.invalidateQueries({ queryKey: ['events', event.id] });
       setShowSearchModal(false);
+      setSearchQuery('');
     }
   });
+
+  const filteredFriends = friendsData?.filter(f => 
+    f.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    f.username?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -189,23 +197,45 @@ function TabDetails({ event }: { event: any }) {
           <div className="bg-white dark:bg-[#1A1A1A] w-full max-w-md h-[80vh] rounded-t-3xl flex flex-col relative">
              <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
                <h3 className="font-bold">Ajouter un co-organisateur</h3>
-               <button onClick={() => setShowSearchModal(false)} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full">✕</button>
+               <button onClick={() => { setShowSearchModal(false); setSearchQuery(''); }} className="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-full">✕</button>
              </div>
              <div className="p-4 overflow-y-auto flex-1">
                 <p className="text-[13px] text-gray-500 mb-4">Recherchez un ami pour l'ajouter comme co-organisateur.</p>
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder="Rechercher par nom..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:border-[#FF7A00]"
+                  />
+                </div>
                 <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between p-3 border border-gray-100 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full" />
-                      <span className="font-semibold text-[14px]">Utilisateur Test</span>
-                    </div>
-                    <button onClick={() => addCoHostMut.mutate('test-user-id')} className="px-3 py-1.5 bg-[#FFF9EC] text-[#FF7A00] rounded-lg text-[12px] font-semibold">Ajouter</button>
-                  </div>
+                  {filteredFriends.length > 0 ? (
+                    filteredFriends.map((friend: any) => (
+                      <div key={friend.userId} className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-800 rounded-xl">
+                        <div className="flex items-center gap-3">
+                          <SafeImage src={friend.avatarUrl} alt={friend.displayName} className="w-10 h-10 bg-gray-200 rounded-full" />
+                          <span className="font-semibold text-[14px] dark:text-white">{friend.displayName}</span>
+                        </div>
+                        <button 
+                          onClick={() => addCoHostMut.mutate(friend.userId)}
+                          disabled={event.coHostIds?.includes(friend.userId)}
+                          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold ${event.coHostIds?.includes(friend.userId) ? 'bg-gray-100 text-gray-400' : 'bg-[#FFF9EC] text-[#FF7A00]'}`}
+                        >
+                          {event.coHostIds?.includes(friend.userId) ? 'Ajouté' : 'Ajouter'}
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-[13px] text-center text-gray-500 mt-4">Aucun ami trouvé.</p>
+                  )}
                 </div>
              </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }
@@ -477,12 +507,12 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
       <div className="flex flex-col gap-3">
         <div className={`rounded-[12px] p-4 shadow-sm border ${bgClass}`}>
           <p className="text-[14px] text-gray-500 mb-1">
-            {isFull ? "Solde disponible" : "Cagnotte"}
+            {event.poolReleased ? "Fonds débloqués" : (isFull ? "Solde disponible" : "Cagnotte")}
           </p>
           <p className="text-[20px] font-bold text-gray-900 dark:text-white leading-tight">
             {collected.toLocaleString('fr-FR')} F CFA
           </p>
-          {!isFull && (
+          {!event.poolReleased && !isFull && (
             <p className="text-[13px] text-gray-500 mt-0.5">
               sur {event.poolTarget?.toLocaleString('fr-FR')} F CFA
             </p>
@@ -527,7 +557,7 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
         {/* 3. Débloquer */}
         <button
           onClick={handlePayoutClick}
-          disabled={payoutMut.isPending || isPayoutPending}
+          disabled={payoutMut.isPending || isPayoutPending || event.poolReleased || isPayoutApproved}
           className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${(!isPastDeadline || isVoteOpen || isPayoutPending || event.poolReleased || isPayoutApproved) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -539,7 +569,7 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
             <path d="M12.5 12.082C12.5 13.4627 11.3807 14.582 10 14.582C8.61925 14.582 7.5 13.4627 7.5 12.082C7.5 10.7013 8.61925 9.58203 10 9.58203C11.3807 9.58203 12.5 10.7013 12.5 12.082Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M7.91666 4.16732C7.91666 4.16732 9.4165 2.08398 10 2.08398C10.5835 2.08398 12.0833 4.16732 12.0833 4.16732M10 6.66732V2.50065" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          {payoutMut.isPending ? "Traitement..." : isPayoutPending ? "Déblocage en cours..." : "Débloquer les fonds"}
+          {payoutMut.isPending ? "Traitement..." : isPayoutPending ? "Déblocage en cours..." : (event.poolReleased || isPayoutApproved) ? "Fonds débloqués" : "Débloquer les fonds"}
         </button>
 
         {/* 3.1 Approuver (if organizer is also validator) */}

@@ -570,6 +570,26 @@ export default async function chatRoutes(app: FastifyInstance) {
     return reply.send(conversation)
   })
 
+  // ── Leave group conversation ────────────────────────────────────────────────
+  app.delete('/conversations/:id/leave', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+
+    const member = await app.prisma.conversationMember.findUnique({
+      where: { conversationId_userId: { conversationId: id, userId: sub } },
+      include: { conversation: true },
+    })
+
+    if (!member) return reply.code(403).send({ error: 'Not a member' })
+    if (!member.conversation.isGroup) return reply.code(400).send({ error: 'Cannot leave a direct conversation' })
+
+    await app.prisma.conversationMember.delete({
+      where: { conversationId_userId: { conversationId: id, userId: sub } },
+    })
+
+    return reply.send({ success: true })
+  })
+
   // ── Create group conversation ────────────────────────────────────────────────
   app.post('/conversations/group', async (req, reply) => {
     const { sub } = req.user as { sub: string }
@@ -681,6 +701,25 @@ export default async function chatRoutes(app: FastifyInstance) {
     return reply.send({ onlineCount, isOtherOnline, totalMembers: conversation.members.length })
   })
 
+  // Mute/unmute a conversation
+  app.post('/conversations/:id/mute', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const { mutedUntil } = req.body as { mutedUntil?: string | null } // null to unmute
+
+    const member = await app.prisma.conversationMember.findUnique({
+      where: { conversationId_userId: { conversationId: id, userId: sub } }
+    })
+
+    if (!member) return reply.code(403).send({ error: 'Forbidden' })
+
+    await app.prisma.conversationMember.update({
+      where: { conversationId_userId: { conversationId: id, userId: sub } },
+      data: { mutedUntil: mutedUntil ? new Date(mutedUntil) : null }
+    })
+
+    return reply.send({ success: true })
+  })
+
   }) // End of protected routes
 }
-

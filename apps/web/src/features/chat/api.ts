@@ -101,6 +101,10 @@ export const chatApi = {
     return data
   },
 
+  muteConversation: async (conversationId: string, mutedUntil: string | null): Promise<void> => {
+    await apiClient.post(`/chat/conversations/${conversationId}/mute`, { mutedUntil })
+  },
+
   getEventConversation: async (eventId: string): Promise<Conversation> => {
     const { data } = await apiClient.get(`/chat/conversations/by-event/${eventId}`)
     return data

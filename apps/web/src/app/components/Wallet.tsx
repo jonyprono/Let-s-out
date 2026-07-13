@@ -33,6 +33,7 @@ export function Wallet() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
   const [pinToken, setPinToken] = useState<string | null>(null)
   const [showWalletPinModal, setShowWalletPinModal] = useState(false)
+  const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null)
 
   // Fetch Wallet Balance
   const { data: wallet, isLoading: isLoadingWallet } = useQuery({
@@ -199,7 +200,8 @@ export function Wallet() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   key={tx.id} 
-                  className="w-full bg-white dark:bg-[#18181b] rounded-2xl p-4 flex items-center justify-between border border-gray-100 dark:border-gray-800"
+                  onClick={() => setSelectedTx(tx)}
+                  className="w-full bg-white dark:bg-[#18181b] rounded-2xl p-4 flex items-center justify-between border border-gray-100 dark:border-gray-800 cursor-pointer active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
@@ -210,8 +212,8 @@ export function Wallet() {
                       {tx.type === 'DEPOSIT' ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[15px] text-gray-900 dark:text-white line-clamp-1">{tx.description}</span>
-                      <span className="text-[13px] text-gray-500 flex items-center gap-1">
+                      <span className="font-medium text-[15px] text-gray-900 dark:text-white line-clamp-1 text-left">{tx.description}</span>
+                      <span className="text-[13px] text-gray-500 flex items-center gap-1 text-left">
                         {new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         {tx.status === 'PENDING' && <><AlertCircle size={12} className="text-yellow-500 ml-1"/> En cours</>}
                         {tx.status === 'FAILED' && <><AlertCircle size={12} className="text-red-500 ml-1"/> Échec</>}
@@ -232,6 +234,67 @@ export function Wallet() {
         </div>
 
       </div>
+
+      {/* Transaction Details Modal */}
+      <BottomSheet open={!!selectedTx} onClose={() => setSelectedTx(null)}>
+        {selectedTx && (
+          <div className="p-6 flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-2 mb-2">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                selectedTx.type === 'DEPOSIT' 
+                  ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
+                  : 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
+              }`}>
+                {selectedTx.type === 'DEPOSIT' ? <ArrowDownLeft size={32} /> : <ArrowUpRight size={32} />}
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
+                {selectedTx.type === 'DEPOSIT' ? '+' : '-'}{selectedTx.amount} F CFA
+              </h2>
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                selectedTx.status === 'COMPLETED' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' :
+                selectedTx.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400' :
+                'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+              }`}>
+                {selectedTx.status === 'COMPLETED' ? 'Terminé' : selectedTx.status === 'PENDING' ? 'En cours' : 'Échoué'}
+              </span>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-[#18181b] rounded-2xl p-4 flex flex-col gap-4 border border-gray-100 dark:border-gray-800">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Type</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {selectedTx.type === 'DEPOSIT' ? 'Dépôt' : selectedTx.type === 'REFUND' ? 'Remboursement' : 'Retrait'}
+                </span>
+              </div>
+              <div className="h-[1px] bg-gray-200 dark:bg-gray-800 w-full" />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Date</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  {new Date(selectedTx.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+              <div className="h-[1px] bg-gray-200 dark:bg-gray-800 w-full" />
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-500 dark:text-gray-400">ID Transaction</span>
+                <span className="text-sm font-mono text-gray-900 dark:text-white text-right max-w-[180px] truncate">
+                  {selectedTx.id}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-gray-50 dark:bg-[#18181b] rounded-2xl p-4 border border-gray-100 dark:border-gray-800">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Description</h3>
+              <p className="text-sm text-gray-900 dark:text-white leading-relaxed">
+                {selectedTx.description}
+              </p>
+            </div>
+
+            <Button onClick={() => setSelectedTx(null)} className="w-full mt-4 h-12 rounded-[16px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">
+              Fermer
+            </Button>
+          </div>
+        )}
+      </BottomSheet>
 
       {/* Withdraw Modal */}
       <BottomSheet open={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)}>

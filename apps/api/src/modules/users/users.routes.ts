@@ -748,4 +748,58 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     return reply.send({ success: true, message: 'Account deleted successfully' })
   })
+
+  // Block a user
+  app.post('/:userId/block', async (req, reply) => {
+    const { userId } = req.params as { userId: string }
+    const { sub } = req.user as { sub: string }
+
+    if (userId === sub) return reply.code(400).send({ error: 'Cannot block yourself' })
+
+    const existingFriendship = await app.prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { initiatorId: sub, receiverId: userId },
+          { initiatorId: userId, receiverId: sub }
+        ]
+      }
+    })
+
+    if (existingFriendship) {
+      await app.prisma.friendship.update({
+        where: { id: existingFriendship.id },
+        data: { status: 'BLOCKED', initiatorId: sub, receiverId: userId }
+      })
+    } else {
+      await app.prisma.friendship.create({
+        data: { initiatorId: sub, receiverId: userId, status: 'BLOCKED' }
+      })
+    }
+
+    return reply.send({ success: true })
+  })
+
+  // Report a user
+  app.post('/:userId/report', async (req, reply) => {
+    const { userId } = req.params as { userId: string }
+    const { sub } = req.user as { sub: string }
+    const bodySchema = z.object({
+      reason: z.enum(['SPAM', 'INAPPROPRIATE', 'FAKE', 'HARASSMENT', 'OTHER']),
+      description: z.string().optional()
+    })
+    
+    const parsed = bodySchema.safeParse(req.body)
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.message })
+
+    await app.prisma.report.create({
+      data: {
+        reporterId: sub,
+        reportedId: userId,
+        reason: parsed.data.reason,
+        description: parsed.data.description
+      }
+    })
+
+    return reply.send({ success: true })
+  })
 }

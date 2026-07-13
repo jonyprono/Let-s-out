@@ -127,6 +127,16 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       return reply.send({ data: updatedReq, message: 'Approbation enregistrée. Les fonds ont été débloqués et transférés au créateur.' })
     }
 
+    // Notifier le créateur de cette approbation individuelle
+    const user = await app.prisma.user.findUnique({ where: { id: userId }, include: { profile: true } })
+    await createAndSendNotification(app, {
+      userId: event.creatorId,
+      type: 'SYSTEM',
+      title: '✅ Approbation reçue',
+      body: `${user?.profile?.displayName || 'Un membre'} a approuvé votre demande de déblocage pour "${event.title}".`,
+      data: { eventId },
+    })
+
     return reply.send({ data: updatedReq, message: 'Approbation enregistrée' })
   })
 

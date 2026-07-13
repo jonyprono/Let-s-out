@@ -1,10 +1,14 @@
-import { ChevronLeft, BellOff, AlertTriangle, Ban, UserPlus, Check, Clock } from 'lucide-react'
+import { ChevronLeft, BellOff, Bell, AlertTriangle, Ban, UserPlus, Check, Clock, Loader2 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
 import { useNavigate } from 'react-router'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { toast } from 'sonner'
+import { useState } from 'react'
+import { usersApi } from '../api'
+import { chatApi } from '@/features/chat/api'
+import { ReportModal } from '@/components/shared/ReportModal'
 
 interface PublicProfile {
   id: string
@@ -44,8 +48,46 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
     enabled: !!(userId || username),
   })
 
+  const targetUserId = profile?.userId || userId
+
+  const muteMut = useMutation({
+    mutationFn: async () => {
+      const dm = await chatApi.createDM(targetUserId!)
+      await chatApi.muteConversation(dm.id, new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString())
+    },
+    onSuccess: () => toast.success('Utilisateur mis en sourdine'),
+    onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur')
+  })
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+
+  const reportMut = useMutation({
+    mutationFn: async (reason: string) => {
+      if (!targetUserId) throw new Error('No user id')
+      await usersApi.reportUser(targetUserId, reason)
+    },
+    onSuccess: () => {
+      toast.success('Utilisateur signalé')
+      setIsReportModalOpen(false)
+    },
+    onError: () => toast.error('Erreur lors du signalement')
+  })
+
+  const blockMut = useMutation({
+    mutationFn: async () => {
+      if (!targetUserId) throw new Error('No user id')
+      await usersApi.blockUser(targetUserId)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['user-profile'] })
+      toast.success('Utilisateur bloqué')
+      onClose()
+    },
+    onError: () => toast.error('Erreur lors du blocage')
+  })
+
   const sendFriendMutation = useMutation({
-    mutationFn: () => apiClient.post(`/users/${profile?.userId || userId}/friend-request`, {}),
+    mutationFn: () => apiClient.post(`/users/${targetUserId}/friend-request`, {}),
     onSuccess: () => {
       toast.success('Demande d\'ami envoyée !')
       qc.invalidateQueries({ queryKey: ['user-profile', userId ?? username] })
@@ -184,23 +226,34 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
               Actions
             </h3>
             <div className="flex flex-col items-start gap-1 w-full">
-              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
+              <button 
+                onClick={() => muteMut.mutate()}
+                disabled={muteMut.isPending}
+                className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+              >
                 <div className="flex items-center justify-center">
-                  <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
+                  {muteMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-[#737373]" /> : <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Mettre en sourdine</span>
               </button>
               
-              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
+              <button 
+                onClick={() => setIsReportModalOpen(true)}
+                className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+              >
                 <div className="flex items-center justify-center">
                   <AlertTriangle className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
               </button>
 
-              <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
+              <button 
+                onClick={() => blockMut.mutate()}
+                disabled={blockMut.isPending}
+                className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+              >
                 <div className="flex items-center justify-center">
-                  <Ban className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
+                  {blockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-[#737373]" /> : <Ban className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
                 </div>
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Bloquer</span>
               </button>
@@ -208,6 +261,13 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
           </div>
         )}
       </div>
+
+      <ReportModal
+        open={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onConfirm={(reason) => reportMut.mutate(reason)}
+        isPending={reportMut.isPending}
+      />
     </div>
   )
 }

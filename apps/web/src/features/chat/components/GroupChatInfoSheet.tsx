@@ -1,12 +1,18 @@
-import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, AlertTriangle, LogOut, UserPlus } from 'lucide-react'
+import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, Bell, AlertTriangle, LogOut, UserPlus, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useNavigate } from 'react-router'
-import { Conversation } from '../api'
+import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { Conversation, chatApi } from '../api'
+import { eventsApi } from '@/features/events/api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
+import { usersApi } from '@/features/users/api'
+import { ReportModal } from '@/components/shared/ReportModal'
 
 interface GroupChatInfoSheetProps {
   conversation: Conversation
@@ -18,10 +24,52 @@ interface GroupChatInfoSheetProps {
 
 export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onContribute }: GroupChatInfoSheetProps) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const user = useAuthStore(s => s.user)
   const { openUserProfile } = useUserProfile()
   
   const poolStats = event && hasActivePool(event) ? computePoolStats(event) : null
+  const isMuted = conversation.members.find(m => m.userId === user?.id)?.mutedUntil ? new Date(conversation.members.find(m => m.userId === user?.id)!.mutedUntil!) > new Date() : false
+
+  const muteMut = useMutation({
+    mutationFn: () => chatApi.muteConversation(conversation.id, isMuted ? null : new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] })
+      queryClient.invalidateQueries({ queryKey: ['chat', 'conversations', conversation.id] })
+      toast.success(isMuted ? 'Conversation réactivée' : 'Conversation mise en sourdine')
+    },
+    onError: () => toast.error('Une erreur est survenue')
+  })
+
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+
+  const reportMut = useMutation({
+    mutationFn: async (reason: string) => {
+      if (!event?.creatorId) throw new Error('No creator id')
+      await usersApi.reportUser(event.creatorId, reason)
+    },
+    onSuccess: () => {
+      toast.success('Signalement envoyé')
+      setIsReportModalOpen(false)
+    },
+    onError: () => toast.error('Erreur lors du signalement')
+  })
+
+  const leaveMut = useMutation({
+    mutationFn: async () => {
+      if (event?.id) {
+        await eventsApi.leave(event.id)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['chat'] })
+      toast.success('Vous avez quitté le groupe')
+      navigate('/chat')
+      onClose()
+    },
+    onError: () => toast.error('Erreur lors du départ')
+  })
 
   // SVGs for fallbacks
   const groupSvg = (
@@ -238,29 +286,52 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
             Actions
           </h3>
           <div className="flex flex-col items-start gap-1 w-full">
-            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
+            <button 
+              onClick={() => muteMut.mutate()} 
+              disabled={muteMut.isPending}
+              className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+            >
               <div className="flex items-center justify-center">
-                <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
+                {isMuted ? <Bell className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} /> : <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
               </div>
-              <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Mettre en sourdine</span>
+              <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">
+                {isMuted ? 'Activer le son' : 'Mettre en sourdine'}
+              </span>
+              {muteMut.isPending && <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto" />}
             </button>
             
-            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
+            <button 
+              onClick={() => setIsReportModalOpen(true)}
+              className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+            >
               <div className="flex items-center justify-center">
                 <AlertTriangle className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
             </button>
 
-            <button className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors">
+            <button 
+              onClick={() => leaveMut.mutate()}
+              disabled={leaveMut.isPending}
+              className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+            >
               <div className="flex items-center justify-center">
                 <LogOut className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Quitter le groupe</span>
+              {leaveMut.isPending && <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto" />}
             </button>
+
           </div>
         </div>
       </div>
+
+      <ReportModal
+        open={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        onConfirm={(reason) => reportMut.mutate(reason)}
+        isPending={reportMut.isPending}
+      />
     </div>
   )
 }

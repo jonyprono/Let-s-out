@@ -270,7 +270,7 @@ export default function App() {
         <CallOverlay />
         </UserProfileProvider>
       </BrowserRouter>
-      <Toaster position="top-center" richColors />
+      <Toaster position="top-center" richColors toastOptions={{ style: { marginTop: 'env(safe-area-inset-top, 44px)' } }} />
 
       </ThemeProvider>
     </QueryClientProvider>
