@@ -496,6 +496,48 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         )}
       </div>
 
+      {/* Stats - moved above tabs to match Figma */}
+      <div className="px-4 mb-6 shrink-0">
+        <div className="grid grid-cols-4 gap-2 bg-[#FEFEFA] border border-[#F5F5F4] rounded-2xl py-3 px-2">
+          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]">
+            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+              <Calendar className="w-3.5 h-3.5 text-[#FF7A00]" />
+            </div>
+            <div className="text-center">
+              <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{createdEvents.length}</p>
+              <p className="font-inter text-[10px] text-gray-500">Créés</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]">
+            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+              <Activity className="w-3.5 h-3.5 text-[#FF7A00]" />
+            </div>
+            <div className="text-center">
+              <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{pastEvents.length}</p>
+              <p className="font-inter text-[10px] text-gray-500">Rejoints</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]" onClick={() => navigate(isOwnProfile ? '/friends' : `/friends/${targetUserId}`)}>
+            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+              <Users className="w-3.5 h-3.5 text-[#FF7A00]" />
+            </div>
+            <div className="text-center">
+              <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{friends.length}</p>
+              <p className="font-inter text-[10px] text-gray-500">Amis</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+              <svg className="w-3.5 h-3.5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div className="text-center">
+              <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{rating ?? '–'}</p>
+              <p className="font-inter text-[10px] text-gray-500">Note</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Main Toggle Profil/Evenements */}
       <div className="w-full overflow-x-auto hide-scrollbar px-4 mb-6">
         <div className="flex flex-row items-start p-0 gap-2 w-max">
@@ -545,46 +587,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       <div className="px-4 pb-20 shrink-0">
         {activeTab === 'profil' && (
           <div className="flex flex-col gap-6">
-            
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-2 bg-[#FEFEFA] border border-[#F5F5F4] rounded-2xl py-3 px-2">
-              <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]">
-                <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
-                  <Calendar className="w-3.5 h-3.5 text-[#FF7A00]" />
-                </div>
-                <div className="text-center">
-                  <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{createdEvents.length}</p>
-                  <p className="font-inter text-[10px] text-gray-500">Créés</p>
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]">
-                <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
-                  <Activity className="w-3.5 h-3.5 text-[#FF7A00]" />
-                </div>
-                <div className="text-center">
-                  <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{pastEvents.length}</p>
-                  <p className="font-inter text-[10px] text-gray-500">Rejoints</p>
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]" onClick={() => navigate(isOwnProfile ? '/friends' : `/friends/${targetUserId}`)}>
-                <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
-                  <Users className="w-3.5 h-3.5 text-[#FF7A00]" />
-                </div>
-                <div className="text-center">
-                  <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{friends.length}</p>
-                  <p className="font-inter text-[10px] text-gray-500">Amis</p>
-                </div>
-              </div>
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
-                  <svg className="w-3.5 h-3.5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </div>
-                <div className="text-center">
-                  <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{rating ?? '–'}</p>
-                  <p className="font-inter text-[10px] text-gray-500">Note</p>
-                </div>
-              </div>
-            </div>
 
             {/* Evénements en commun — real count from API */}
             {!isOwnProfile && commonEventsCount > 0 && (
