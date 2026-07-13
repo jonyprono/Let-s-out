@@ -869,7 +869,7 @@ export function ChatDetails() {
             }}
             onContribute={() => {
               setShowEventInfo(false)
-              setShowContributeModal(true)
+              navigate(`/events/${event.id}/pay?type=contribution`)
             }}
           />
         ) : (

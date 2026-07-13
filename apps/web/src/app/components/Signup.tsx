@@ -300,6 +300,7 @@ export function Signup({ onBack }: SignupProps) {
           if (city) profileData.city = city
           await apiClient.patch('/users/me/profile', profileData)
           localStorage.setItem('letsout_onboarding_done', 'true')
+          localStorage.removeItem('pending_google_signup')
           nav('/home')
         } catch (e: any) {
           toast.error(e?.response?.data?.error || "Erreur lors de l'enregistrement")

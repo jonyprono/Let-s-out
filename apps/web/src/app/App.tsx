@@ -110,10 +110,16 @@ import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswor
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
+  const location = useLocation()
   if (!token) return <Navigate to="/login" replace />
 
+  const pendingGoogleSignup = localStorage.getItem('pending_google_signup') === 'true'
+  if (pendingGoogleSignup) {
+    if (location.pathname !== '/signup') return <Navigate to="/signup?mode=google" replace />
+    return <>{children}</>
+  }
+
   const p: any = user?.profile || {}
-  // Only block if profile has literally no name — avoids loops for Google/existing users
   const isProfileIncomplete = !p.displayName
   if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
 
@@ -126,9 +132,12 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   
   if (token) {
-    if (location.pathname === '/signup' && location.search.includes('mode=google')) {
+    const pendingGoogleSignup = localStorage.getItem('pending_google_signup') === 'true'
+    if (pendingGoogleSignup) {
+      if (location.pathname !== '/signup') return <Navigate to="/signup?mode=google" replace />
       return <>{children}</>
     }
+
     const p: any = user?.profile || {}
     const isProfileIncomplete = !p.displayName
     if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
@@ -142,6 +151,9 @@ function RootRoute() {
   const user = useAuthStore((s) => s.user)
 
   if (token) {
+    const pendingGoogleSignup = localStorage.getItem('pending_google_signup') === 'true'
+    if (pendingGoogleSignup) return <Navigate to="/signup?mode=google" replace />
+
     const p: any = user?.profile || {}
     const isProfileIncomplete = !p.displayName
     if (isProfileIncomplete) return <Navigate to="/onboarding" replace />

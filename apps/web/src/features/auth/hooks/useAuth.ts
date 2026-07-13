@@ -88,12 +88,15 @@ export function useGoogleSignIn() {
 
       // Redirect to full signup flow if new account or missing display name
       if (data.isNewUser) {
+        localStorage.setItem('pending_google_signup', 'true')
         nav('/signup?mode=google', { replace: true })
       } else {
         const p: any = data.user.profile || {}
         if (!p.displayName) {
+          localStorage.setItem('pending_google_signup', 'true')
           nav('/signup?mode=google', { replace: true })
         } else {
+          localStorage.removeItem('pending_google_signup')
           nav('/home', { replace: true })
         }
       }
