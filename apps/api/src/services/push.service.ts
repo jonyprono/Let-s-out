@@ -98,11 +98,10 @@ export async function sendToToken(token: string, payload: PushPayload): Promise<
         priority: 'high',
         // TTL : 30s pour les appels (inutile de livrer un appel vieux de 2 min)
         ttl: isCall ? 30_000 : 3_600_000,
-        ...(isCall && {
-          notification: {
-            sound: 'ringtone', // 'ringtone.wav' must exist in res/raw (without extension)
-          },
-        }),
+        notification: {
+          clickAction: isMessage ? 'REPLY_ACTION' : undefined,
+          ...(isCall && { sound: 'ringtone' }),
+        },
       },
       apns: {
         headers: {

@@ -236,7 +236,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   });
 
   const displayProfile = isOwnProfile ? (viewedProfile || profile) : viewedProfile;
-  const targetUserId = displayProfile?.userId || displayProfile?.user?.id;
+  const targetUserId = displayProfile?.id || displayProfile?.userId || displayProfile?.user?.id;
 
   const { data: activity } = useQuery({
     queryKey: ['users', 'activity', targetUserId],

@@ -86,7 +86,7 @@ export function AppBootstrap() {
       })
 
       // Configuration des Actions Locales (Pour la réponse rapide type WhatsApp)
-      LocalNotifications.registerActionTypes({
+      const actionTypes = {
         types: [
           {
             id: 'REPLY_ACTION',
@@ -100,7 +100,10 @@ export function AppBootstrap() {
             ]
           }
         ]
-      })
+      };
+      
+      LocalNotifications.registerActionTypes(actionTypes).catch(() => {});
+      PushNotifications.registerActionTypes(actionTypes).catch(() => {});
 
       // Écoute des actions de notifications locales
       LocalNotifications.addListener('localNotificationActionPerformed', async (notificationAction) => {
@@ -128,8 +131,27 @@ export function AppBootstrap() {
         handleNotificationRouting(data);
       });
 
-      PushNotifications.addListener('pushNotificationActionPerformed', (notification: any) => {
-        const data = notification.notification?.data || notification.data || {}
+      PushNotifications.addListener('pushNotificationActionPerformed', async (notificationAction: any) => {
+        const data = notificationAction.notification?.data || notificationAction.data || {}
+        
+        // Si l'utilisateur a utilisé le bouton "Répondre" depuis le Push en background
+        if (notificationAction.actionId === 'reply' && notificationAction.inputValue) {
+           const conversationId = data.conversationId;
+           if (conversationId) {
+             try {
+               await chatApi.sendMessage(
+                 conversationId, 
+                 notificationAction.inputValue,
+                 'TEXT'
+               );
+               console.log('[PushNotifications] Reply sent seamlessly from background!');
+             } catch (e) {
+               console.error('[PushNotifications] Failed to send reply:', e);
+             }
+           }
+           return;
+        }
+
         handleNotificationRouting(data);
       });
 
