@@ -80,6 +80,7 @@ export function AppBootstrap() {
               body: notification.body || '',
               extra: data,
               smallIcon: 'ic_launcher',
+              actionTypeId: data.type === 'NEW_MESSAGE' ? 'REPLY_ACTION' : undefined,
             },
           ],
         }).catch(() => {})

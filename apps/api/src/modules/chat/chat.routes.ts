@@ -280,18 +280,22 @@ export default async function chatRoutes(app: FastifyInstance) {
 
         // Send FCM push notification for offline members
         const senderName = message.sender.profile?.displayName ?? 'Quelqu\'un'
-        const msgPreview = type === 'TEXT'
+        const msgPreviewRaw = type === 'TEXT'
           ? content.substring(0, 60) + (content.length > 60 ? '...' : '')
           : type === 'IMAGE' ? '📷 Photo'
           : type === 'VIDEO' ? '🎥 Vidéo'
           : type === 'AUDIO' ? '🎵 Message vocal'
           : content.substring(0, 60)
 
+        const isGroup = conversation?.isGroup === true;
+        const pushTitle = isGroup ? (conversation.name || 'Groupe') : senderName;
+        const pushBody = isGroup ? `${senderName}: ${msgPreviewRaw}` : msgPreviewRaw;
+
         await Promise.allSettled(
           offlineMembers.map(({ userId: recipientId }) =>
             sendPushToUser(app.prisma, recipientId, {
-              title: senderName,
-              body: msgPreview,
+              title: pushTitle,
+              body: pushBody,
               data: {
                 type: 'NEW_MESSAGE',
                 conversationId,
