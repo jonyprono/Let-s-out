@@ -539,8 +539,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       </div>
 
       {/* Main Toggle Profil/Evenements */}
-      <div className="w-full overflow-x-auto hide-scrollbar px-4 mb-6">
-        <div className="flex flex-row items-start p-0 gap-2 w-max">
+      <div className="w-full max-w-full overflow-x-auto hide-scrollbar px-4 mb-6 shrink-0 min-h-[40px] flex">
+        <div className="flex flex-row items-start justify-start p-0 gap-2 w-max">
           <button 
             onClick={() => setActiveTab('profil')}
             className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
