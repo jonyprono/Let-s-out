@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { ArrowLeft01Icon } from 'hugeicons-react';
+import { useAuthStore } from '@/stores/auth.store';
 
 export function EventValidatorsVote() {
   const { id } = useParams<{ id: string }>();
@@ -85,6 +86,8 @@ export function EventValidatorsVote() {
           const eligibleVoters = attendees.filter((a: any) => a.userId !== event.creatorId);
           const totalEligible = eligibleVoters.length;
           const pct = totalEligible > 0 ? Math.round((yesVotes / totalEligible) * 100) : 0;
+          const currentUser = useAuthStore.getState().user;
+          const hasVoted = (event.validatorVotes || []).some((v: any) => v.candidateId === cand.userId && v.userId === currentUser?.id);
 
           return (
             <div key={cand.userId} className="bg-white dark:bg-[#1A1A1A] p-4 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col gap-3">
@@ -114,7 +117,7 @@ export function EventValidatorsVote() {
                 </div>
               </div>
 
-              {!isClosed && (
+              {!isClosed && !hasVoted && (
                 <div className="flex gap-2 mt-2">
                   <button 
                     onClick={() => voteMut.mutate({ candidateId: cand.userId, vote: true })}
@@ -130,6 +133,13 @@ export function EventValidatorsVote() {
                   >
                     Non
                   </button>
+                </div>
+              )}
+              {!isClosed && hasVoted && (
+                <div className="flex gap-2 mt-2">
+                  <div className="flex-1 py-2 bg-gray-100 dark:bg-[#2A2A2A]/50 text-gray-500 dark:text-gray-400 font-medium rounded-lg text-center border border-gray-200 dark:border-gray-700/50 cursor-not-allowed">
+                    Déjà voté
+                  </div>
                 </div>
               )}
             </div>
