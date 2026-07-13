@@ -28,7 +28,7 @@ export function FriendsList() {
 
   const friendRequestMut = useMutation({
     mutationFn: (userId: string) => usersApi.sendFriendRequest(userId),
-    onSuccess: (_, userId) => {
+    onSuccess: () => {
       toast.success('Demande d\'ami envoyée !')
       qc.invalidateQueries({ queryKey: ['users', 'search'] })
       qc.invalidateQueries({ queryKey: ['public-profile'] })
