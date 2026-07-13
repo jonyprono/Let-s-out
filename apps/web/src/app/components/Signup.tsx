@@ -25,6 +25,7 @@ import { auth } from '@/lib/firebase'
 import { apiClient } from '@/lib/api-client'
 import { Capacitor } from '@capacitor/core'
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
+import { useAuthStore } from '@/stores/auth.store'
 
 declare global {
   interface Window {
@@ -70,7 +71,6 @@ function validatePhone(code: string, phone: string) {
   return /^\d{8,15}$/.test(cleanPhone)
 }
 
-const TOTAL_STEPS = 7
 
 export function Signup({ onBack }: SignupProps) {
   const nav = useNavigate()
@@ -98,8 +98,13 @@ export function Signup({ onBack }: SignupProps) {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
   // Step 3 – Name
-  const [firstName, setFirstName] = useState('')
-  const [pseudo, setPseudo] = useState('')
+  const currentUser = useAuthStore((s) => s.user)
+  const defaultDisplayName = isGoogleMode && currentUser?.profile?.displayName ? currentUser.profile.displayName : ''
+  const defaultFirstName = defaultDisplayName.split(' ')[0] || ''
+  const defaultPseudo = defaultDisplayName.split(' ').slice(1).join(' ') || ''
+
+  const [firstName, setFirstName] = useState(defaultFirstName)
+  const [pseudo, setPseudo] = useState(defaultPseudo)
 
   // Step 4 – Birthday
   const [birthday, setBirthday] = useState('')
@@ -286,8 +291,7 @@ export function Signup({ onBack }: SignupProps) {
           return
         }
       }
-      setStep((s) => s + 1)
-    } else if (step === 7) {
+    } else if (step === 6) {
       if (isGoogleMode) {
         setIsFirebaseVerifying(true)
         try {
@@ -295,7 +299,6 @@ export function Signup({ onBack }: SignupProps) {
           if (birthday) profileData.birthdate = birthday
           if (city) profileData.city = city
           await apiClient.patch('/users/me/profile', profileData)
-          await apiClient.patch('/users/me/password', { newPassword: password })
           localStorage.setItem('letsout_onboarding_done', 'true')
           nav('/home')
         } catch (e: any) {
@@ -304,6 +307,10 @@ export function Signup({ onBack }: SignupProps) {
           setIsFirebaseVerifying(false)
         }
       } else {
+        setStep((s) => s + 1)
+      }
+    } else if (step === 7) {
+      if (!isGoogleMode) {
         const isFirebaseFlow = currentChannel === 'sms' && (!!idToken || !!nativeVerificationId)
         register({
           target: fullPhone,
@@ -412,7 +419,7 @@ export function Signup({ onBack }: SignupProps) {
 
   const isLoading = sendingOtp || registering || checkingTarget || isFirebaseSending || checkingOtp || isFirebaseVerifying
 
-  const buttonLabel = step === 7 ? "Rejoindre Let's Out" : 'Suivant'
+  const buttonLabel = (isGoogleMode && step === 6) || step === 7 ? "Rejoindre Let's Out" : 'Suivant'
 
   return (
     <div className="w-full h-full flex flex-col flex-1 bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
@@ -435,7 +442,7 @@ export function Signup({ onBack }: SignupProps) {
         </div>
 
         {/* Barre de progression orange fine — sous le header */}
-        <ProgressBar value={step} max={TOTAL_STEPS} className="h-[3px] rounded-none" />
+        <ProgressBar value={step} max={isGoogleMode ? 6 : 7} className="h-[3px] rounded-none" />
       </div>
 
       {/* ── Content ────────────────────────────────────── */}

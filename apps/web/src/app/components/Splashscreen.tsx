@@ -13,10 +13,10 @@ const onboardingScreens = [
   {
     id: 1,
     type: 'slide' as const,
-    title1: 'Découvrez des',
-    title2: 'événements près de vous',
-    description: 'Créez ou rejoignez des événements, sorties, ou activités intéressantes près de vous',
-    image: '/splash1.png',
+    title1: 'Partagez pour mieux',
+    title2: 'profiter',
+    description: 'Financez vos sorties en groupe via des cagnottes partagées et mutualisez les frais pour mieux en profiter ensemble',
+    image: '/splash3.png',
   },
   {
     id: 2,
@@ -29,10 +29,10 @@ const onboardingScreens = [
   {
     id: 3,
     type: 'slide' as const,
-    title1: 'Partagez pour mieux',
-    title2: 'profiter',
-    description: 'Financez vos sorties en groupe via des cagnottes partagées et mutualisez les frais pour mieux en profiter ensemble',
-    image: '/splash3.png',
+    title1: 'Découvrez des',
+    title2: 'événements près de vous',
+    description: 'Créez ou rejoignez des événements, sorties, ou activités intéressantes près de vous',
+    image: '/splash1.png',
   },
 ]
 
@@ -57,6 +57,38 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
     }
   }, [currentIndex, autoPlayDone])
 
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
+
+  // the required distance between touchStart and touchEnd to be detected as a swipe
+  const minSwipeDistance = 50
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null) // otherwise the swipe is fired even with usual touch events
+    setTouchStart(e.targetTouches[0].clientX)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEndHandler = () => {
+    if (!touchStart || !touchEnd) return
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe) {
+      // swipe left => next
+      handleNext()
+    } else if (isRightSwipe) {
+      // swipe right => prev
+      if (currentIndex > 1) {
+        setCurrentIndex(currentIndex - 1)
+      }
+    }
+  }
+
   const handleNext = () => {
     if (currentIndex < onboardingScreens.length - 1) {
       setCurrentIndex(currentIndex + 1)
@@ -64,8 +96,6 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
       onComplete()
     }
   }
-
-
 
   const current = onboardingScreens[currentIndex]
 
@@ -90,8 +120,12 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
         </div>
       )}
 
-      {/* ── Contenu principal ───────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full relative z-10 pb-4">
+      <div 
+        className="flex-1 flex flex-col items-center justify-center w-full relative z-10 pb-4"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEndHandler}
+      >
         <AnimatePresence mode="wait">
 
           {/* ── ÉCRAN 0 : Logo centré sur fond blanc ──────────── */}
