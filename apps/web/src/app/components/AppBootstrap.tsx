@@ -59,6 +59,17 @@ export function AppBootstrap() {
             }
           })
 
+          // Create the default channel on Android 8+ for background pushes
+          if (Capacitor.getPlatform() === 'android') {
+            PushNotifications.createChannel({
+              id: 'default',
+              name: 'Notifications générales',
+              description: "Toutes les notifications importantes de Let's Out",
+              importance: 5,
+              visibility: 1,
+            }).catch(() => {})
+          }
+
           // Trigger registration to get fresh token
           await PushNotifications.register()
         }

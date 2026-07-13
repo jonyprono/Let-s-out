@@ -49,6 +49,17 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
           console.error('[PushNotifications] Registration error:', err.error)
         })
 
+        // Create the default channel on Android 8+
+        if (Capacitor.getPlatform() === 'android') {
+          PushNotifications.createChannel({
+            id: 'default',
+            name: 'Notifications générales',
+            description: "Toutes les notifications importantes de Let's Out",
+            importance: 5,
+            visibility: 1,
+          }).catch(() => {})
+        }
+
         // Always register for push notifications. The capacitor plugin uses google-services.json, not VITE_ variables.
         await PushNotifications.register();
       } else {
