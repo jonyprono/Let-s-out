@@ -214,7 +214,7 @@ export function Profile() {
             'notifications': '/notifications'
           }
           if (screen === 'event-details' && params) nav(`/events/${typeof params === 'string' ? params : params.eventId || params}`)
-          else if (screen === 'chat' && params) nav(`/chat/${params.userId || params}`)
+          else if (screen === 'chat' && params) nav(`/chat/${typeof params === 'string' ? params : params.id || params.userId || params}`)
           else if (map[screen]) nav(map[screen])
         }}
       />

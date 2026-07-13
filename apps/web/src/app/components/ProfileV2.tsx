@@ -6,6 +6,7 @@ import { SafeImage } from '@/components/shared/SafeImage';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
+import { chatApi } from '@/features/chat/api';
 
 import { useNavigate, useParams } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
@@ -319,8 +320,13 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   });
 
   // Navigate to chat
-  const handleMessage = () => {
-    onNavigate('chat', { userId: targetUserId });
+  const handleMessage = async () => {
+    try {
+      const conv = await chatApi.createDM(targetUserId!);
+      onNavigate('chat', conv.id);
+    } catch (e) {
+      toast.error('Impossible d\'ouvrir la discussion');
+    }
   };
 
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
