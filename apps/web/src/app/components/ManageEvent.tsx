@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -19,7 +19,9 @@ import { useAuthStore } from '@/stores/auth.store';
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'cagnotte'>('details');
+  const [searchParams] = useSearchParams();
+  const initialTab = (searchParams.get('tab') as 'details' | 'participants' | 'cagnotte') || 'details';
+  const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'cagnotte'>(initialTab);
   const [cagnotteStep, setCagnotteStep] = useState<'empty' | 'form' | 'summary' | 'success'>('empty');
 
   const { data: event, isLoading } = useQuery({

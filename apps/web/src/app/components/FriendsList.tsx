@@ -47,7 +47,7 @@ export function FriendsList() {
   const createDmMut = useMutation({
     mutationFn: (targetUserId: string) => apiClient.post('/chat/conversations/dm', { userId: targetUserId }).then(res => res.data),
     onSuccess: (res) => {
-      navigate(`/messages/${res.data.id}`)
+      navigate(`/messages/${res.id}`)
     },
     onError: () => toast.error('Impossible de démarrer la conversation')
   })

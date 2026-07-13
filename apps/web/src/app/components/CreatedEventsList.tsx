@@ -159,7 +159,7 @@ export function CreatedEventsList() {
           ) : (
             <div className="flex flex-col gap-3">
               {cagnottes.map((ev: any) => (
-                <CagnotteRowCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}?tab=pool`)} />
+                <CagnotteRowCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage?tab=cagnotte`)} />
               ))}
             </div>
           )}
