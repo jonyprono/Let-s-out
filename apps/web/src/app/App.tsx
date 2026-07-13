@@ -94,6 +94,7 @@ import {
   ManageEvent,
   AccountMenu,
 } from '@/app/components/adapters'
+import { EventValidatorsVote } from '@/app/pages/EventValidatorsVote'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
 import { CallOverlay } from '@/features/chat/components/CallOverlay'
@@ -244,6 +245,7 @@ export default function App() {
             <Route path="/events/create" element={<CreateEvent />} />
             <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/events/:id/manage" element={<ManageEvent />} />
+            <Route path="/events/:id/validators-vote" element={<EventValidatorsVote />} />
             <Route path="/events/:id/success" element={<EventSuccessScreen />} />
             <Route path="/scan-qr" element={<JoinPrivateEvent />} />
             <Route path="/events/:id/pay" element={<PaymentPage />} />

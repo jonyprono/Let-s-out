@@ -15,6 +15,7 @@ import { ShareModal } from '@/components/shared/ShareModal';
 import { useFriends } from '@/features/users/api';
 import { eventsApi } from '@/features/events/api';
 import { useAuthStore } from '@/stores/auth.store';
+import { ValidatorVoteForm } from './ValidatorVoteForm';
 
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
@@ -22,7 +23,7 @@ export function ManageEvent() {
   const [searchParams] = useSearchParams();
   const initialTab = (searchParams.get('tab') as 'details' | 'participants' | 'cagnotte') || 'details';
   const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'cagnotte'>(initialTab);
-  const [cagnotteStep, setCagnotteStep] = useState<'empty' | 'form' | 'summary' | 'success'>('empty');
+  const [cagnotteStep, setCagnotteStep] = useState<'empty' | 'form' | 'summary' | 'success' | 'validator-vote'>('empty');
 
   const { data: event, isLoading } = useQuery({
     queryKey: ['events', id],
@@ -53,6 +54,10 @@ export function ManageEvent() {
   const hasPot = event.poolTarget && event.poolTarget > 0;
   
   // If we are in the cagnotte flow (form, summary, success) and it's not the active display, render fullscreen
+  if (activeTab === 'cagnotte' && cagnotteStep === 'validator-vote') {
+    return <ValidatorVoteForm event={event} attendees={attendeesData?.data || []} onBack={() => setCagnotteStep('empty')} />;
+  }
+
   if (activeTab === 'cagnotte' && cagnotteStep !== 'empty' && (!hasPot || cagnotteStep === 'success')) {
     return <TabCagnotteFullscreen event={event} step={cagnotteStep} setStep={setCagnotteStep} onBack={() => setCagnotteStep('empty')} />;
   }
@@ -382,6 +387,15 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
     onError: () => toast.error('Erreur'),
   });
 
+  const payoutMut = useMutation({
+    mutationFn: async () => apiClient.post(`/events/${event.id}/payout/request`),
+    onSuccess: () => {
+      toast.success("Demande de déblocage envoyée");
+      qc.invalidateQueries({ queryKey: ['events', event.id] });
+    },
+    onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du déblocage')
+  });
+
   if (hasPot) {
     const isPastDeadline = event.registrationDeadline 
       ? new Date() > new Date(event.registrationDeadline) 
@@ -392,6 +406,47 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
     const isFull = pct >= 100;
     const progressColorClass = isFull ? "bg-[#0CAF60]" : "bg-[#FF7A00]";
     const bgClass = isFull ? "bg-[#F0FDF4] dark:bg-[#102a1c] border-green-100 dark:border-green-900" : "bg-white dark:bg-[#1A1A1A] border-gray-100 dark:border-gray-800";
+
+    const isVoteOpen = event.validatorVoteStatus === 'OPEN';
+    const isVoteClosed = event.validatorVoteStatus === 'CLOSED';
+    const hasPayoutRequest = !!event.payoutRequest;
+    const isPayoutPending = event.payoutRequest?.status === 'PENDING';
+    const isPayoutApproved = event.payoutRequest?.status === 'APPROVED';
+
+    const handlePayoutClick = () => {
+      if (!isPastDeadline) return toast.error("La date limite n'est pas encore atteinte");
+      if (isVoteOpen) return toast.error("Vous devez clôturer le vote d'abord");
+      if (isPayoutPending) return toast.error("Le déblocage est déjà en cours d'approbation");
+      if (event.poolReleased || isPayoutApproved) return toast.error("Les fonds ont déjà été débloqués");
+      payoutMut.mutate();
+    };
+
+    const handleStartVoteClick = () => {
+      if (isVoteOpen) return toast.error("Le vote est déjà en cours");
+      if (isVoteClosed) return toast.error("Le vote est terminé");
+      if (hasPayoutRequest) return toast.error("Le déblocage a déjà été demandé");
+      setStep('validator-vote');
+    };
+
+    const handleContributeClick = () => {
+      if (isPastDeadline || isFull || event.poolReleased) {
+        return toast.error("Les contributions sont fermées.");
+      }
+      navigate(`/events/${event.id}/pay?type=contribution`);
+    };
+
+    const handleCloseClick = () => {
+      if (!event.poolReleased) return toast.error("Les fonds doivent d'abord être débloqués");
+      closeMut.mutate();
+    };
+
+    let payoutText = "Débloquer les fonds";
+    if (isPayoutPending) payoutText = "Déblocage en cours...";
+    else if (event.poolReleased || isPayoutApproved) payoutText = "Fonds débloqués";
+
+    let voteText = "Lancer le vote des validateurs";
+    if (isVoteOpen) voteText = "Vote en cours...";
+    else if (isVoteClosed) voteText = "Vote clôturé";
 
     return (
       <div className="flex flex-col gap-3">
@@ -415,56 +470,39 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           </div>
         </div>
 
-        {!isPastDeadline && (
-          <button 
-            onClick={() => navigate(`/events/${event.id}/pay?type=contribution`)}
-            className="flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] active:scale-95 transition-transform text-[14px] font-medium text-gray-900 dark:text-white"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1.68091 11.666C3.51388 11.666 4.99981 13.1519 4.99981 14.9849" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M4.99981 3.34766C4.99981 5.18063 3.51388 6.66656 1.68091 6.66656" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M15 3.34766C15 5.16459 16.4742 6.64051 18.2853 6.66621" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M18.3333 10.834V8.33398C18.3333 5.97696 18.3333 4.79845 17.6011 4.06622C16.8688 3.33398 15.6903 3.33398 13.3333 3.33398H6.66666C4.30964 3.33398 3.13113 3.33398 2.3989 4.06622C1.66666 4.79845 1.66666 5.97696 1.66666 8.33398V10.0007C1.66666 12.3577 1.66666 13.5362 2.3989 14.2684C3.13113 15.0007 4.30964 15.0007 6.66666 15.0007H10.8333" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12.5 9.16602C12.5 10.5468 11.3807 11.666 10 11.666C8.61925 11.666 7.5 10.5468 7.5 9.16602C7.5 7.78531 8.61925 6.66602 10 6.66602C11.3807 6.66602 12.5 7.78531 12.5 9.16602Z" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M15.8333 11.666V16.666M13.3333 14.166H18.3333" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Déposer une contribution
-          </button>
-        )}
+        {/* 1. Contribuer */}
+        <button 
+          onClick={handleContributeClick}
+          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isPastDeadline || isFull || event.poolReleased ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+        >
+          Déposer une contribution
+        </button>
 
-        {isPastDeadline && (
-          <button
-            onClick={() => toast.success("Demande de déblocage envoyée")}
-            disabled={event.poolReleased}
-            className="flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] active:scale-95 transition-transform text-[14px] font-medium text-gray-900 dark:text-white disabled:opacity-50"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1.68091 14.582C3.51388 14.582 4.99981 16.0679 4.99981 17.9009" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M15 17.9009V17.8243C15 16.0336 16.4517 14.582 18.2423 14.582" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M4.99981 6.26367C4.99981 8.09665 3.51388 9.58259 1.68091 9.58259" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M15 6.26367C15 8.08061 16.4742 9.55651 18.2853 9.58226" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M14.1667 6.25C15.9792 6.26008 16.9607 6.34046 17.6011 6.98078C18.3333 7.71302 18.3333 8.89152 18.3333 11.2485V12.9152C18.3333 15.2723 18.3333 16.4508 17.6011 17.183C16.8688 17.9152 15.6903 17.9152 13.3333 17.9152H6.66666C4.30964 17.9152 3.13113 17.9152 2.3989 17.183C1.66666 16.4508 1.66666 15.2723 1.66666 12.9152V11.2485C1.66666 8.89152 1.66666 7.71302 2.3989 6.98078C3.03921 6.34046 4.02081 6.26008 5.83333 6.25" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12.5 12.082C12.5 13.4627 11.3807 14.582 10 14.582C8.61925 14.582 7.5 13.4627 7.5 12.082C7.5 10.7013 8.61925 9.58203 10 9.58203C11.3807 9.58203 12.5 10.7013 12.5 12.082Z" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M7.91666 4.16732C7.91666 4.16732 9.4165 2.08398 10 2.08398C10.5835 2.08398 12.0833 4.16732 12.0833 4.16732M10 6.66732V2.50065" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Débloquer les fonds
-          </button>
-        )}
+        {/* 2. Voter */}
+        <button
+          onClick={handleStartVoteClick}
+          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isVoteOpen || isVoteClosed || hasPayoutRequest ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+        >
+          {voteText}
+        </button>
 
-        {(!isPastDeadline && !event.poolReleased) && (
-          <button
-            onClick={() => closeMut.mutate()}
-            disabled={closeMut.isPending}
-            className="flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] active:scale-95 transition-transform text-[14px] font-medium text-gray-900 dark:text-white disabled:opacity-50"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M13.7467 7.49935V5.41602C13.7467 3.34495 12.0678 1.66602 9.99674 1.66602C7.92568 1.66602 6.24674 3.34495 6.24674 5.41602V7.49935" stroke="#737373" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M11.2462 7.5H8.74674C6.80106 7.5 5.82822 7.5 5.09182 7.89364C4.51037 8.20446 4.03414 8.68075 3.72339 9.26217C3.32981 9.99867 3.3299 10.9715 3.33009 12.9172C3.33026 14.8625 3.33035 15.8352 3.72397 16.5715C4.03477 17.1529 4.51097 17.629 5.09237 17.9398C5.8287 18.3333 6.80139 18.3333 8.74674 18.3333H11.2462C13.1917 18.3333 14.1646 18.3333 14.9009 17.9398C15.4823 17.629 15.9586 17.1527 16.2693 16.5713C16.6629 15.8349 16.6629 14.8622 16.6629 12.9167C16.6629 10.9712 16.6629 9.99842 16.2693 9.262C15.9586 8.68058 15.4823 8.20438 14.9009 7.89359C14.1646 7.5 13.1917 7.5 11.2462 7.5Z" stroke="#737373" strokeWidth="1.25" strokeLinecap="round"/>
-              <path d="M9.99674 14.5833C10.9172 14.5833 11.6634 13.8371 11.6634 12.9167C11.6634 11.9962 10.9172 11.25 9.99674 11.25C9.07627 11.25 8.33008 11.9962 8.33008 12.9167C8.33008 13.8371 9.07627 14.5833 9.99674 14.5833Z" stroke="#737373" strokeWidth="1.25"/>
-            </svg>
-            Clôturer la cagnotte
-          </button>
-        )}
+        {/* 3. Débloquer */}
+        <button
+          onClick={handlePayoutClick}
+          disabled={payoutMut.isPending}
+          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${!isPastDeadline || isVoteOpen || isPayoutPending || event.poolReleased || isPayoutApproved ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+        >
+          {payoutMut.isPending ? "Traitement..." : payoutText}
+        </button>
+
+        {/* 4. Clôturer */}
+        <button
+          onClick={handleCloseClick}
+          disabled={closeMut.isPending}
+          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${!event.poolReleased ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+        >
+          Clôturer la cagnotte
+        </button>
       </div>
     );
   }

@@ -45,6 +45,7 @@ model User {
   reports          Report[]             @relation("Reporter")
   reviews          Review[]
   wallet           Wallet?
+  validatorVotes   ValidatorVote[]      @relation("UserValidatorVotes")
 
   @@map("users")
 }
@@ -174,11 +175,16 @@ model Event {
   poolCollected    Float         @default(0)
   poolReleased     Boolean       @default(false)
   coHostIds        String[]      @default([])
+  validatorVoteStatus String?    // null | 'OPEN' | 'CLOSED'
+  validatorCandidates String[]   @default([])
+  validatorIds     String[]      @default([])
+  validatorThreshold Float?      @default(0.5)
   bookings         Booking[]
   conversation     Conversation? @relation("EventConversation")
   creator          User          @relation("EventCreator", fields: [creatorId], references: [id])
   reviews          Review[]
   payoutRequest    EventPayoutRequest?
+  validatorVotes   ValidatorVote[]
 
   @@index([creatorId])
   @@index([status])
@@ -209,12 +215,31 @@ model Booking {
   @@map("bookings")
 }
 
+model ValidatorVote {
+  id          String   @id @default(cuid())
+  eventId     String
+  userId      String
+  candidateId String
+  vote        Boolean  // true for Yes, false for No
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user        User     @relation("UserValidatorVotes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId, candidateId])
+  @@index([eventId])
+  @@index([userId])
+  @@map("validator_votes")
+}
+
 model Conversation {
   id            String               @id @default(cuid())
   name          String?
   isGroup       Boolean              @default(false)
   avatarUrl     String?
   eventId       String?              @unique
+  pinnedMessageId String?
   lastMessageAt DateTime?
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
@@ -473,6 +498,7 @@ enum MessageType {
   AUDIO
   FILE
   SYSTEM
+  POLL
 }
 
 enum NotifType {

@@ -26,8 +26,13 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     if (event.payoutRequest && event.payoutRequest.status !== 'REJECTED') {
       return reply.code(400).send({ error: 'Une demande de déblocage est déjà en cours ou a été approuvée.' })
     }
+    if (event.validatorVoteStatus === 'OPEN') {
+      return reply.code(400).send({ error: 'Le vote des validateurs est toujours en cours. Veuillez le clôturer d\'abord.' })
+    }
 
     const hasCoHosts = event.coHostIds && event.coHostIds.length > 0
+    const hasValidators = event.validatorIds && event.validatorIds.length > 0
+    const needsApproval = hasCoHosts || hasValidators
 
     const newRequest = await app.prisma.eventPayoutRequest.upsert({
       where: { eventId },
@@ -35,36 +40,39 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         eventId,
         requestedBy: userId,
         amount: event.poolCollected,
-        status: hasCoHosts ? 'PENDING' : 'APPROVED',
+        status: needsApproval ? 'PENDING' : 'APPROVED',
         approvals: [],
       },
       update: {
         requestedBy: userId,
         amount: event.poolCollected,
-        status: hasCoHosts ? 'PENDING' : 'APPROVED',
+        status: needsApproval ? 'PENDING' : 'APPROVED',
         approvals: [],
       },
     })
 
-    // S'il n'y a pas de co-hôte, on approuve directement et on transfère les fonds
-    if (!hasCoHosts) {
+    // S'il n'y a pas d'approbations requises, on approuve directement et on transfère les fonds
+    if (!needsApproval) {
       await releaseFunds(app, eventId, userId, event.poolCollected, event.title)
       return reply.send({ data: { ...newRequest, status: 'APPROVED' }, message: 'Fonds débloqués avec succès' })
     }
 
-    if (event.coHostIds && event.coHostIds.length > 0) {
-      const coHostsToNotify = event.coHostIds.filter(id => id !== event.creatorId)
-      if (coHostsToNotify.length > 0) {
-        await createAndSendNotificationMany(app, coHostsToNotify.map(hostId => ({
-          userId: hostId,
-          type: 'SYSTEM',
-          title: 'Veuillez approuver le déblocage',
-          body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
-          data: { eventId },
-        })))
-      }
+    // Notifier co-hôtes et validateurs
+    const usersToNotify = new Set<string>()
+    if (hasCoHosts) event.coHostIds.forEach(id => id !== event.creatorId && usersToNotify.add(id))
+    if (hasValidators) event.validatorIds.forEach(id => id !== event.creatorId && usersToNotify.add(id))
+
+    if (usersToNotify.size > 0) {
+      await createAndSendNotificationMany(app, Array.from(usersToNotify).map(hostId => ({
+        userId: hostId,
+        type: 'SYSTEM',
+        title: 'Veuillez approuver le déblocage',
+        body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
+        data: { eventId },
+      })))
     }
-    return reply.send({ data: newRequest, message: 'Demande envoyée aux co-organisateurs' })
+
+    return reply.send({ data: newRequest, message: 'Demande envoyée aux co-organisateurs et validateurs' })
   })
 
   // Approuver le déblocage
@@ -78,7 +86,9 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     })
 
     if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
-    if (!event.coHostIds.includes(userId)) return reply.code(403).send({ error: 'Seul un co-organisateur peut approuver' })
+    const isCoHost = event.coHostIds.includes(userId)
+    const isValidator = event.validatorIds && event.validatorIds.includes(userId)
+    if (!isCoHost && !isValidator) return reply.code(403).send({ error: 'Vous n\'êtes pas autorisé à approuver ce déblocage' })
     
     const payoutReq = event.payoutRequest
     if (!payoutReq) return reply.code(404).send({ error: 'Aucune demande de déblocage trouvée' })
@@ -87,10 +97,13 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
     const updatedApprovals = [...payoutReq.approvals, userId]
     
-    // Vérifier si tous les co-hôtes ont approuvé
-    // On enlève le creator s'il est par erreur dans coHostIds
-    const requiredCoHosts = event.coHostIds.filter(id => id !== event.creatorId)
-    const allApproved = requiredCoHosts.every(id => updatedApprovals.includes(id))
+    // Vérifier si tous les co-hôtes et validateurs ont approuvé
+    // On enlève le creator s'il est par erreur dans les listes
+    const requiredApprovers = new Set<string>()
+    if (event.coHostIds) event.coHostIds.forEach(id => id !== event.creatorId && requiredApprovers.add(id))
+    if (event.validatorIds) event.validatorIds.forEach(id => id !== event.creatorId && requiredApprovers.add(id))
+
+    const allApproved = Array.from(requiredApprovers).every(id => updatedApprovals.includes(id))
 
     const newStatus = allApproved ? 'APPROVED' : 'PENDING'
 
@@ -108,7 +121,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         userId: event.creatorId,
         type: 'SYSTEM',
         title: '💸 Fonds débloqués',
-        body: `La cagnotte de "${event.title}" a été débloquée avec succès par vos co-organisateurs.`,
+        body: `La cagnotte de "${event.title}" a été débloquée avec succès.`,
         data: { eventId },
       })
       return reply.send({ data: updatedReq, message: 'Approbation enregistrée. Les fonds ont été débloqués et transférés au créateur.' })

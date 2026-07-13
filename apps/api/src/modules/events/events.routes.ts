@@ -242,6 +242,132 @@ export default async function eventsRoutes(app: FastifyInstance) {
     return reply.send({ data: events, total })
   })
 
+  // ─── VALIDATEURS (Cagnotte) ───────────────────────────────────────────────
+
+  // Lancer le vote des validateurs
+  app.post('/:id/validators/start', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const { candidates, threshold } = req.body as { candidates: string[], threshold?: number }
+
+    const event = await app.prisma.event.findUnique({ where: { id }, include: { conversation: true } })
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+    if (event.creatorId !== userId) return reply.code(403).send({ error: 'Forbidden' })
+    if (event.validatorVoteStatus === 'OPEN') return reply.code(400).send({ error: 'Vote is already open' })
+
+    const updatedEvent = await app.prisma.event.update({
+      where: { id },
+      data: {
+        validatorVoteStatus: 'OPEN',
+        validatorCandidates: candidates,
+        validatorThreshold: threshold || 0.5,
+      }
+    })
+
+    // Create poll message in conversation
+    if (event.conversation) {
+      const pollMsg = await app.prisma.message.create({
+        data: {
+          conversationId: event.conversation.id,
+          senderId: userId,
+          type: 'POLL',
+          content: 'Vote des validateurs en cours',
+        }
+      })
+      await app.prisma.conversation.update({
+        where: { id: event.conversation.id },
+        data: { pinnedMessageId: pollMsg.id }
+      })
+    }
+
+    // Notify all participants
+    const bookings = await app.prisma.booking.findMany({ where: { eventId: id, status: 'CONFIRMED' } })
+    if (bookings.length > 0) {
+      await createAndSendNotificationMany(app, bookings.map(b => ({
+        userId: b.userId,
+        type: 'SYSTEM',
+        title: 'Vote pour les validateurs',
+        body: `L'organisateur de "${event.title}" a lancé le vote pour désigner les validateurs de la cagnotte.`,
+        data: { eventId: id }
+      })))
+    }
+
+    return reply.send({ success: true, event: updatedEvent })
+  })
+
+  // Voter pour un candidat
+  app.post('/:id/validators/vote', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const { candidateId, vote } = req.body as { candidateId: string, vote: boolean }
+
+    const event = await app.prisma.event.findUnique({
+      where: { id },
+      include: { bookings: { where: { status: 'CONFIRMED' } } }
+    })
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+    if (event.validatorVoteStatus !== 'OPEN') return reply.code(400).send({ error: 'Vote is not open' })
+
+    const booking = event.bookings.find(b => b.userId === userId)
+    if (!booking && event.creatorId !== userId) return reply.code(403).send({ error: 'You are not a participant' })
+
+    // Enregistrer le vote
+    await app.prisma.validatorVote.upsert({
+      where: { eventId_userId_candidateId: { eventId: id, userId, candidateId } },
+      create: { eventId: id, userId, candidateId, vote },
+      update: { vote }
+    })
+
+    // Vérifier si le candidat atteint le seuil (seulement si le vote est "Oui")
+    if (vote) {
+      const allVotes = await app.prisma.validatorVote.findMany({
+        where: { eventId: id, candidateId, vote: true }
+      })
+      
+      const totalEligibleVoters = event.bookings.length
+      // On évite la division par zéro
+      if (totalEligibleVoters > 0) {
+        const threshold = event.validatorThreshold || 0.5
+        if (allVotes.length / totalEligibleVoters >= threshold) {
+          if (!event.validatorIds.includes(candidateId)) {
+            await app.prisma.event.update({
+              where: { id },
+              data: { validatorIds: { push: candidateId } }
+            })
+            // Notifier favorablement
+            await createAndSendNotification(app, {
+              userId: candidateId,
+              type: 'SYSTEM',
+              title: 'Validation acceptée !',
+              body: `Vous avez été choisi comme validateur pour la cagnotte de "${event.title}".`,
+              data: { eventId: id }
+            })
+          }
+        }
+      }
+    }
+
+    return reply.send({ success: true })
+  })
+
+  // Clôturer le vote des validateurs
+  app.post('/:id/validators/close', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+
+    const event = await app.prisma.event.findUnique({ where: { id } })
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+    if (event.creatorId !== userId) return reply.code(403).send({ error: 'Forbidden' })
+    if (event.validatorVoteStatus !== 'OPEN') return reply.code(400).send({ error: 'Vote is not open' })
+
+    const updatedEvent = await app.prisma.event.update({
+      where: { id },
+      data: { validatorVoteStatus: 'CLOSED' }
+    })
+
+    return reply.send({ success: true, event: updatedEvent })
+  })
+
   // Helper to get rating
   const getUserRating = async (userId: string) => {
     const events = await app.prisma.event.findMany({

@@ -547,6 +547,26 @@ export function ChatDetails() {
             </button>
           </div>
         )}
+
+        {(event as any)?.validatorVoteStatus === 'OPEN' && (
+          <div className="px-4 pb-2 relative z-20">
+            <div className="bg-[#FFF2D3] dark:bg-[#332200] border border-[#FFD073] dark:border-[#CC6600] rounded-lg p-3 flex items-center justify-between shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                 onClick={() => event && navigate(`/events/${event.id}/validators-vote`)}>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#FF7A00]/20 flex items-center justify-center shrink-0">
+                  <span className="text-lg">📊</span>
+                </div>
+                <div>
+                  <p className="text-[13px] font-bold text-[#CC6600] dark:text-[#FFB366]">Vote des validateurs en cours</p>
+                  <p className="text-[11px] text-[#CC6600]/80 dark:text-[#FFB366]/80">Votre avis est requis pour débloquer les fonds</p>
+                </div>
+              </div>
+              <button className="text-[12px] font-bold text-white bg-[#FF7A00] hover:bg-[#E66E00] px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-transform">
+                Voter
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Messages Area */}
@@ -706,7 +726,7 @@ export function ChatDetails() {
                     showSpacer={showSenderInfo && !isFirstInGroup}
                     onAvatarClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
                     imageUrl={isImage && msg.content ? msg.content : undefined}
-                    content={!isMedia && !msg.isDeleted ? (msg.content ?? undefined) : undefined}
+                    content={!isMedia && !msg.isDeleted && msg.type !== 'POLL' ? (msg.content ?? undefined) : undefined}
                   >
                     {msg.isDeleted ? (
                       <div className="flex items-center gap-2 italic text-[#FF7A00]">
@@ -715,6 +735,26 @@ export function ChatDetails() {
                         <span className="text-[10px] text-[var(--color-text-secondary)] opacity-70 align-bottom leading-none ml-2">
                           {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                         </span>
+                      </div>
+                    ) : msg.type === 'POLL' ? (
+                      <div className="w-[240px] flex flex-col gap-3 p-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-[#FF7A00]/10 flex items-center justify-center shrink-0">
+                            <span className="text-lg">📊</span>
+                          </div>
+                          <div>
+                            <p className={`text-[13px] font-bold ${isMe ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Vote des validateurs</p>
+                            <p className={`text-[11px] ${isMe ? 'text-white/80' : 'text-gray-500'}`}>La cagnotte nécessite des validateurs</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => navigate(`/events/${conversation?.eventId}/validators-vote`)}
+                          className={`w-full py-2 rounded-lg font-medium text-sm transition-colors ${
+                            isMe ? 'bg-white text-[#FF7A00] hover:bg-gray-50' : 'bg-[#FF7A00] text-white hover:bg-[#E66E00]'
+                          }`}
+                        >
+                          Voter
+                        </button>
                       </div>
                     ) : isVideo && msg.content ? (
                       <div className="relative">
