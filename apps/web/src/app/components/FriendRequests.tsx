@@ -185,20 +185,47 @@ export function FriendRequests() {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                          onClick={() => {
-                            // Simply remove from local view (optimistic)
-                            toast.info('Demande ignorée')
-                            qc.setQueryData<FriendRequest[]>(['friend-requests'], old =>
-                              old ? old.filter(r => r.id !== req.id) : []
-                            )
-                          }}
-                          className="w-10 h-10 !p-0 rounded-full flex items-center justify-center"
-                          title="Ignorer"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </>
-                    )}
+                    <p className="font-bold text-[15px] text-gray-900 dark:text-white truncate">
+                      {displayName}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      {username && (
+                        <p className="text-[13px] text-gray-500 dark:text-gray-400 truncate">
+                          @{username}
+                        </p>
+                      )}
+                      {username && <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0" />}
+                      <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 flex-shrink-0">
+                        {timeAgo(req.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleAccept(req.id)
+                      }}
+                      disabled={isProcessing}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-[#FF7A00] text-white hover:bg-[#E66E00] active:scale-95 transition-all disabled:opacity-50"
+                    >
+                      {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // Refuse logic
+                        toast.info("Demande ignorée")
+                        qc.setQueryData<FriendRequest[]>(['friend-requests'], old =>
+                          old ? old.filter(r => r.id !== req.id) : []
+                        )
+                      }}
+                      disabled={isProcessing}
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#333] active:scale-95 transition-all disabled:opacity-50"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               )
