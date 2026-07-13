@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
-import { ChevronLeft, Users, MessageCircle, Search, UserPlus, UserMinus, UserCheck } from 'lucide-react'
+import { ChevronLeft, Users, MessageCircle, Search, UserPlus, UserMinus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersApi, useSearchUsers } from '@/features/users/api'
 import { SafeImage } from '@/components/shared/SafeImage'
