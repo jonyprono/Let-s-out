@@ -103,7 +103,6 @@ export function AppBootstrap() {
       };
       
       LocalNotifications.registerActionTypes(actionTypes).catch(() => {});
-      PushNotifications.registerActionTypes(actionTypes).catch(() => {});
 
       // Écoute des actions de notifications locales
       LocalNotifications.addListener('localNotificationActionPerformed', async (notificationAction) => {
