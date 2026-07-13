@@ -436,7 +436,10 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
 
     const handleStartVoteClick = () => {
       if (isVoteOpen) {
-        if (!isAllVoted) return toast.error("Vous ne pouvez clôturer le vote que lorsque tous les participants ont voté.");
+        if (!isAllVoted) {
+          const remaining = expectedVotes - allVotesCount;
+          return toast.error(`Vous ne pouvez clôturer le vote que lorsque tous les participants ont voté. Il reste ${remaining} vote(s) en attente.`);
+        }
         closeVoteMut.mutate();
         return;
       }

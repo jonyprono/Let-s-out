@@ -344,7 +344,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
       where: { eventId: id }
     })
     
-    const eligibleVotersCount = event.bookings.filter(b => b.userId !== event.creatorId).length
+    const uniqueVoters = new Set(event.bookings.map(b => b.userId))
+    uniqueVoters.delete(event.creatorId)
+    const eligibleVotersCount = uniqueVoters.size
     const candidatesCount = event.validatorCandidates.length
     const expectedVotes = eligibleVotersCount * candidatesCount
     
@@ -507,9 +509,12 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     // Compute expectedValidatorVotes
     const bookings = await app.prisma.eventBooking.findMany({
-      where: { eventId: id, status: 'CONFIRMED' }
+      where: { eventId: id, status: 'CONFIRMED' },
+      select: { userId: true }
     })
-    const eligibleVotersCount = bookings.filter(b => b.userId !== event.creatorId).length
+    const uniqueVoters = new Set(bookings.map(b => b.userId))
+    uniqueVoters.delete(event.creatorId)
+    const eligibleVotersCount = uniqueVoters.size
     const expectedValidatorVotes = eligibleVotersCount * (event.validatorCandidates?.length || 0)
 
     // Increment view count (fire-and-forget, don't fail if this fails)
