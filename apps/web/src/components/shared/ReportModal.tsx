@@ -8,18 +8,23 @@ interface ReportModalProps {
   onClose: () => void
   onConfirm: (reason: string) => void
   isPending?: boolean
+  type?: 'USER' | 'GROUP_OR_CHAT'
 }
 
-export function ReportModal({ open, onClose, onConfirm, isPending }: ReportModalProps) {
+export function ReportModal({ open, onClose, onConfirm, isPending, type = 'USER' }: ReportModalProps) {
   const [selectedReason, setSelectedReason] = useState<string>('')
 
-  const reasons = [
-    { value: 'SPAM', label: 'Spam ou publicité non sollicitée' },
-    { value: 'INAPPROPRIATE', label: 'Contenu inapproprié ou offensant' },
-    { value: 'FAKE', label: 'Faux profil ou usurpation d\'identité' },
-    { value: 'HARASSMENT', label: 'Harcèlement ou intimidation' },
-    { value: 'OTHER', label: 'Autre raison' }
+  const allReasons = [
+    { value: 'SPAM', label: 'Spam ou publicité non sollicitée', types: ['USER', 'GROUP_OR_CHAT'] },
+    { value: 'INAPPROPRIATE', label: 'Contenu inapproprié ou offensant', types: ['USER', 'GROUP_OR_CHAT'] },
+    { value: 'FAKE', label: 'Faux profil ou usurpation d\'identité', types: ['USER'] },
+    { value: 'HARASSMENT', label: 'Harcèlement ou intimidation', types: ['USER', 'GROUP_OR_CHAT'] },
+    { value: 'SCAM', label: 'Arnaque ou escroquerie', types: ['USER', 'GROUP_OR_CHAT'] },
+    { value: 'HATE_SPEECH', label: 'Discours de haine', types: ['USER', 'GROUP_OR_CHAT'] },
+    { value: 'OTHER', label: 'Autre raison', types: ['USER', 'GROUP_OR_CHAT'] }
   ]
+
+  const reasons = allReasons.filter(r => r.types.includes(type))
 
   const handleConfirm = () => {
     if (selectedReason) {

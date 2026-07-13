@@ -414,7 +414,15 @@ export function Signup({ onBack }: SignupProps) {
     if (!isGoogleMode && step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
     if (!isGoogleMode && step === 2) return otp.join('').length < OTP_LENGTH || isFirebaseVerifying || checkingOtp
     if (step === 3) return !isFieldValid(firstName)
-    if (step === 4) return !birthday
+    if (step === 4) {
+      if (!birthday) return true
+      const birthDate = new Date(birthday)
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
+      return age < 18
+    }
     if (step === 5) return false
     if (step === 6) return interests.length === 0
     if (step === 7) return !isPwdValid || !acceptedTerms || registering
@@ -624,8 +632,9 @@ export function Signup({ onBack }: SignupProps) {
                 type="text"
                 value={birthdayText}
                 onChange={(e) => {
-                  setBirthdayText(e.target.value)
-                  const match = e.target.value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+                  let val = e.target.value
+                  setBirthdayText(val)
+                  const match = val.match(/^(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})$/)
                   if (match) {
                     setBirthday(`${match[3]}-${match[2]}-${match[1]}`)
                   } else {

@@ -227,13 +227,14 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const targetUsername = username || profile?.username;
   const isOwnProfile = !username || (!!profile?.username && username === profile?.username);
 
-  const { data: viewedProfile, isLoading: isLoadingProfile } = useQuery({
+  const { data: viewedProfile, isLoading: isLoadingProfile, error: profileError } = useQuery({
     queryKey: ['public-profile', targetUsername],
     queryFn: async () => {
       const { data } = await apiClient.get(`/users/${targetUsername}`);
       return data;
     },
     enabled: !!targetUsername,
+    retry: false,
   });
 
   const displayProfile = isOwnProfile ? (viewedProfile || profile) : viewedProfile;
@@ -328,6 +329,31 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       toast.error('Impossible d\'ouvrir la discussion');
     }
   };
+
+  if (username && !isOwnProfile && profileError) {
+    return (
+      <div className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b]">
+        {/* Header simple pour revenir en arrière */}
+        <div className="absolute top-0 left-0 w-full p-4 pt-12 z-10 flex items-center">
+          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-full shadow-sm">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-900 dark:text-white">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+          </div>
+          <h2 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">Profil indisponible</h2>
+          <p className="text-[14px] text-gray-500">{(profileError as any)?.response?.data?.error || "Vous ne pouvez pas voir ce profil ou il n'existe pas."}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
     return (
@@ -660,7 +686,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
         {activeTab === 'events' && (
           <div className="grid grid-cols-2 gap-4">
-            <div onClick={() => navigate('/profile/events-created')} className="w-full bg-[#FAFAFA] dark:bg-[#111] border border-[#F5F5F4] dark:border-[#222] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
+            <div onClick={() => navigate(isOwnProfile ? '/profile/events-created' : `/profile/${targetUserId}/events-created`)} className="w-full bg-[#FAFAFA] dark:bg-[#111] border border-[#F5F5F4] dark:border-[#222] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-[#FF7A00]" />
               </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { ArrowLeft01Icon } from 'hugeicons-react';
+import { Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
@@ -120,7 +121,7 @@ function TabDetails({ event }: { event: any }) {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const qc = useQueryClient();
-  const { data: friendsData } = useFriends();
+  const { data: friendsData, isLoading: isLoadingFriends } = useFriends();
 
   const addCoHostMut = useMutation({
     mutationFn: async (userId: string) => {
@@ -211,7 +212,9 @@ function TabDetails({ event }: { event: any }) {
                   />
                 </div>
                 <div className="flex flex-col gap-3">
-                  {filteredFriends.length > 0 ? (
+                  {isLoadingFriends ? (
+                    <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
+                  ) : filteredFriends.length > 0 ? (
                     filteredFriends.map((friend: any) => (
                       <div key={friend.userId} className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-800 rounded-xl">
                         <div className="flex items-center gap-3">
@@ -220,7 +223,7 @@ function TabDetails({ event }: { event: any }) {
                         </div>
                         <button 
                           onClick={() => addCoHostMut.mutate(friend.userId)}
-                          disabled={event.coHostIds?.includes(friend.userId)}
+                          disabled={event.coHostIds?.includes(friend.userId) || addCoHostMut.isPending}
                           className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold ${event.coHostIds?.includes(friend.userId) ? 'bg-gray-100 text-gray-400' : 'bg-[#FFF9EC] text-[#FF7A00]'}`}
                         >
                           {event.coHostIds?.includes(friend.userId) ? 'Ajouté' : 'Ajouter'}
@@ -228,7 +231,7 @@ function TabDetails({ event }: { event: any }) {
                       </div>
                     ))
                   ) : (
-                    <p className="text-[13px] text-center text-gray-500 mt-4">Aucun ami trouvé.</p>
+                    <p className="text-[13px] text-center text-gray-500 mt-4">Aucun ami trouvé avec ce nom.</p>
                   )}
                 </div>
              </div>

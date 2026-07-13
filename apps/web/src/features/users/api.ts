@@ -58,6 +58,11 @@ export const usersApi = {
     return data
   },
 
+  unblockUser: async (userId: string) => {
+    const { data } = await apiClient.post(`/users/${userId}/unblock`)
+    return data
+  },
+
   reportUser: async (userId: string, reason: string) => {
     const { data } = await apiClient.post(`/users/${userId}/report`, { reason })
     return data

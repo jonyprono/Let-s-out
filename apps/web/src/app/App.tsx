@@ -272,6 +272,7 @@ export default function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/profile/events-created" element={<CreatedEventsList />} />
+            <Route path="/profile/:userId/events-created" element={<CreatedEventsList />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/wallet" element={<Wallet />} />
           </Route>

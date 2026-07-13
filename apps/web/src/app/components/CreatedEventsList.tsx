@@ -6,11 +6,13 @@ import { usersApi } from '@/features/users/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useParams } from 'react-router';
 
 export function CreatedEventsList() {
   const navigate = useNavigate();
+  const { userId } = useParams<{ userId?: string }>();
   const user = useAuthStore((s) => s.user);
-  const targetUserId = user?.id;
+  const targetUserId = userId || user?.id;
 
   const [activeTab, setActiveTab] = useState<'events' | 'cagnottes'>('events');
 

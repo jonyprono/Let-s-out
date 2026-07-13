@@ -16,7 +16,7 @@ interface PublicProfile {
   username: string
   displayName: string
   avatarUrl?: string | null
-  friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'friend'
+  friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'friend' | 'blocked'
   user?: { id: string }
 }
 
@@ -84,6 +84,18 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
       onClose()
     },
     onError: () => toast.error('Erreur lors du blocage')
+  })
+
+  const unblockMut = useMutation({
+    mutationFn: async () => {
+      if (!targetUserId) throw new Error('No user id')
+      await usersApi.unblockUser(targetUserId)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['user-profile'] })
+      toast.success('Utilisateur débloqué')
+    },
+    onError: () => toast.error('Erreur lors du déblocage')
   })
 
   const sendFriendMutation = useMutation({
@@ -247,16 +259,29 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
                 <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
               </button>
 
-              <button 
-                onClick={() => blockMut.mutate()}
-                disabled={blockMut.isPending}
-                className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
-              >
-                <div className="flex items-center justify-center">
-                  {blockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-[#737373]" /> : <Ban className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
-                </div>
-                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Bloquer</span>
-              </button>
+              {friendStatus === 'blocked' ? (
+                <button 
+                  onClick={() => unblockMut.mutate()}
+                  disabled={unblockMut.isPending}
+                  className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+                >
+                  <div className="flex items-center justify-center">
+                    {unblockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-[#737373]" /> : <Check className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
+                  </div>
+                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Débloquer</span>
+                </button>
+              ) : (
+                <button 
+                  onClick={() => blockMut.mutate()}
+                  disabled={blockMut.isPending}
+                  className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+                >
+                  <div className="flex items-center justify-center">
+                    {blockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-[#737373]" /> : <Ban className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
+                  </div>
+                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Bloquer</span>
+                </button>
+              )}
             </div>
           </div>
         )}

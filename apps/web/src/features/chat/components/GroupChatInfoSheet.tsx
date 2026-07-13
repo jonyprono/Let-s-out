@@ -331,6 +331,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
         onClose={() => setIsReportModalOpen(false)}
         onConfirm={(reason) => reportMut.mutate(reason)}
         isPending={reportMut.isPending}
+        type="GROUP_OR_CHAT"
       />
     </div>
   )

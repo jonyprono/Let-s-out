@@ -92,7 +92,8 @@ export function useGoogleSignIn() {
         nav('/signup?mode=google', { replace: true })
       } else {
         const p: any = data.user.profile || {}
-        if (!p.displayName) {
+        // If they haven't completed onboarding (missing birthdate or interests)
+        if (!p.displayName || !p.birthdate || !p.interests || p.interests.length === 0) {
           localStorage.setItem('pending_google_signup', 'true')
           nav('/signup?mode=google', { replace: true })
         } else {

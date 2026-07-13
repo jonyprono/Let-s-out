@@ -216,7 +216,7 @@ export function Wallet() {
                       <span className="text-[13px] text-gray-500 flex items-center gap-1 text-left">
                         {new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                         {tx.status === 'PENDING' && <><AlertCircle size={12} className="text-yellow-500 ml-1"/> En cours</>}
-                        {tx.status === 'FAILED' && <><AlertCircle size={12} className="text-red-500 ml-1"/> Échec</>}
+                        {(tx.status || 'COMPLETED') === 'FAILED' && <><AlertCircle size={12} className="text-red-500 ml-1"/> Échec</>}
                       </span>
                     </div>
                   </div>
@@ -251,11 +251,11 @@ export function Wallet() {
                 {selectedTx.type === 'DEPOSIT' ? '+' : '-'}{selectedTx.amount} F CFA
               </h2>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                selectedTx.status === 'COMPLETED' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' :
+                (selectedTx.status || 'COMPLETED') === 'COMPLETED' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' :
                 selectedTx.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400' :
                 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
               }`}>
-                {selectedTx.status === 'COMPLETED' ? 'Terminé' : selectedTx.status === 'PENDING' ? 'En cours' : 'Échoué'}
+                {(selectedTx.status || 'COMPLETED') === 'COMPLETED' ? 'Terminé' : selectedTx.status === 'PENDING' ? 'En cours' : 'Échoué'}
               </span>
             </div>
 

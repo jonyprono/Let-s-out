@@ -64,7 +64,15 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     let friendshipStatus = 'none'
     if (friendship) {
-      if (friendship.status === 'ACCEPTED') {
+      if (friendship.status === 'BLOCKED') {
+        if (friendship.receiverId === sub) {
+          // The current user has been blocked by the target user
+          return reply.code(403).send({ error: 'Vous ne pouvez pas voir ce profil.' })
+        } else {
+          // The current user blocked the target user
+          friendshipStatus = 'blocked'
+        }
+      } else if (friendship.status === 'ACCEPTED') {
         friendshipStatus = 'friend'
       } else {
         friendshipStatus = friendship.initiatorId === sub ? 'pending_sent' : 'pending_received'
@@ -127,7 +135,15 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     let friendshipStatus = 'none'
     if (friendship) {
-      if (friendship.status === 'ACCEPTED') {
+      if (friendship.status === 'BLOCKED') {
+        if (friendship.receiverId === sub) {
+          // The current user has been blocked by the target user
+          return reply.code(403).send({ error: 'Vous ne pouvez pas voir ce profil.' })
+        } else {
+          // The current user blocked the target user
+          friendshipStatus = 'blocked'
+        }
+      } else if (friendship.status === 'ACCEPTED') {
         friendshipStatus = 'friend'
       } else {
         friendshipStatus = friendship.initiatorId === sub ? 'pending_sent' : 'pending_received'
@@ -419,6 +435,7 @@ export default async function usersRoutes(app: FastifyInstance) {
 
   // Search users
   app.get('/search', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
     const { q, limit = '20', offset = '0' } = req.query as any
     const users = await app.prisma.profile.findMany({
       where: {
@@ -428,10 +445,26 @@ export default async function usersRoutes(app: FastifyInstance) {
         ],
         isPublic: true,
       },
-      take: Number(limit),
+      take: Number(limit) * 2, // Take more to account for filtered out users
       skip: Number(offset),
     })
-    return reply.send({ data: users, total: users.length })
+
+    // Filter out users who have blocked the current user or whom the current user has blocked
+    const userIds = users.map(u => u.userId)
+    const blocks = await app.prisma.friendship.findMany({
+      where: {
+        status: 'BLOCKED',
+        OR: [
+          { initiatorId: sub, receiverId: { in: userIds } },
+          { initiatorId: { in: userIds }, receiverId: sub }
+        ]
+      }
+    })
+
+    const blockedIds = new Set(blocks.flatMap(b => [b.initiatorId, b.receiverId]))
+    const filteredUsers = users.filter(u => !blockedIds.has(u.userId)).slice(0, Number(limit))
+
+    return reply.send({ data: filteredUsers, total: filteredUsers.length })
   })
 
   // Send friend request
@@ -779,12 +812,34 @@ export default async function usersRoutes(app: FastifyInstance) {
     return reply.send({ success: true })
   })
 
+  // Unblock a user
+  app.post('/:userId/unblock', async (req, reply) => {
+    const { userId } = req.params as { userId: string }
+    const { sub } = req.user as { sub: string }
+
+    const existingFriendship = await app.prisma.friendship.findFirst({
+      where: {
+        initiatorId: sub,
+        receiverId: userId,
+        status: 'BLOCKED'
+      }
+    })
+
+    if (existingFriendship) {
+      await app.prisma.friendship.delete({
+        where: { id: existingFriendship.id }
+      })
+    }
+
+    return reply.send({ success: true })
+  })
+
   // Report a user
   app.post('/:userId/report', async (req, reply) => {
     const { userId } = req.params as { userId: string }
     const { sub } = req.user as { sub: string }
     const bodySchema = z.object({
-      reason: z.enum(['SPAM', 'INAPPROPRIATE', 'FAKE', 'HARASSMENT', 'OTHER']),
+      reason: z.enum(['SPAM', 'INAPPROPRIATE', 'FAKE', 'HARASSMENT', 'SCAM', 'HATE_SPEECH', 'OTHER']),
       description: z.string().optional()
     })
     

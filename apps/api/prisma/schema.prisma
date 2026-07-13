@@ -537,6 +537,8 @@ enum ReportReason {
   INAPPROPRIATE
   FAKE
   HARASSMENT
+  SCAM
+  HATE_SPEECH
   OTHER
 }
 

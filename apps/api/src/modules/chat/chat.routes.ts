@@ -234,8 +234,30 @@ export default async function chatRoutes(app: FastifyInstance) {
 
       const member = await app.prisma.conversationMember.findUnique({
         where: { conversationId_userId: { conversationId, userId: sub } },
+        include: { conversation: true }
       })
       if (!member) return reply.code(403).send({ error: 'Not a member' })
+
+      if (!member.conversation.isGroup) {
+        // It's a DM, check if the other member has blocked this user or if this user has blocked the other
+        const otherMember = await app.prisma.conversationMember.findFirst({
+          where: { conversationId, userId: { not: sub } }
+        })
+        if (otherMember) {
+          const block = await app.prisma.friendship.findFirst({
+            where: {
+              status: 'BLOCKED',
+              OR: [
+                { initiatorId: sub, receiverId: otherMember.userId },
+                { initiatorId: otherMember.userId, receiverId: sub }
+              ]
+            }
+          })
+          if (block) {
+            return reply.code(403).send({ error: 'Impossible d\'envoyer un message.' })
+          }
+        }
+      }
 
       const message = await app.prisma.message.create({
         data: { conversationId, senderId: sub, content, type: type as any },
@@ -387,6 +409,21 @@ export default async function chatRoutes(app: FastifyInstance) {
     const { userId } = req.body as { userId: string }
 
     if (sub === userId) return reply.code(400).send({ error: 'Cannot DM yourself' })
+
+    // Check if there is a block
+    const block = await app.prisma.friendship.findFirst({
+      where: {
+        status: 'BLOCKED',
+        OR: [
+          { initiatorId: sub, receiverId: userId },
+          { initiatorId: userId, receiverId: sub }
+        ]
+      }
+    })
+
+    if (block) {
+      return reply.code(403).send({ error: 'Impossible de contacter cet utilisateur.' })
+    }
 
     // Check if DM already exists
     const existing = await app.prisma.conversation.findFirst({
