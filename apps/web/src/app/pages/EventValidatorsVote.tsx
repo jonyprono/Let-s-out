@@ -88,6 +88,7 @@ export function EventValidatorsVote() {
           const pct = totalEligible > 0 ? Math.round((yesVotes / totalEligible) * 100) : 0;
           const currentUser = useAuthStore.getState().user;
           const hasVoted = (event.validatorVotes || []).some((v: any) => v.candidateId === cand.userId && v.userId === currentUser?.id);
+          const totalVotesCast = (event.validatorVotes || []).filter((v: any) => v.candidateId === cand.userId).length;
 
           return (
             <div key={cand.userId} className="bg-white dark:bg-[#1A1A1A] p-4 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col gap-3">
@@ -106,7 +107,7 @@ export function EventValidatorsVote() {
               
               <div className="flex flex-col gap-1 mt-1">
                 <div className="flex justify-between text-[11px] text-gray-500 font-medium">
-                  <span>Progression ({yesVotes} votes)</span>
+                  <span>Progression ({yesVotes} Oui / {totalVotesCast} votes)</span>
                   <span className={pct >= (event.validatorThreshold || 0.5) * 100 ? 'text-green-600 dark:text-green-400 font-bold' : ''}>{pct}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-gray-100 dark:bg-[#333333] rounded-full overflow-hidden">
