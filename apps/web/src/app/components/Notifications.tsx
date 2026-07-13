@@ -133,6 +133,7 @@ export function Notifications({ onBack }: NotificationsProps) {
       case 'EVENT_CANCELLED':
       case 'JOIN_REQUEST':
       case 'JOIN_ACCEPTED':
+      case 'SYSTEM':
         if (d?.eventId) navigate(`/events/${d.eventId}`);
         break;
       case 'PAYMENT_SUCCESS':

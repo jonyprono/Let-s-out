@@ -6,6 +6,7 @@ import { ArrowLeft01Icon } from 'hugeicons-react';
 import { Search } from 'lucide-react';
 
 export function ValidatorVoteForm({ event, attendees, onBack }: any) {
+  const [step, setStep] = useState<'select' | 'confirm' | 'success'>('select');
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [threshold, setThreshold] = useState(50);
   const [search, setSearch] = useState('');
@@ -19,9 +20,8 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
       });
     },
     onSuccess: () => {
-      toast.success('Le vote a été lancé avec succès !');
       qc.invalidateQueries({ queryKey: ['events', event.id] });
-      onBack();
+      setStep('success');
     },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du lancement du vote'),
   });
@@ -38,10 +38,81 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
     a.user?.username?.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (step === 'success') {
+    return (
+      <div className="flex flex-col w-full h-full bg-[#F9F9F9] dark:bg-[#0a0a0b] absolute inset-0 z-50 overflow-hidden items-center justify-center p-6">
+        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-sm">
+          <div className="w-16 h-16 bg-gradient-to-tr from-[#9EE83C] to-[#E3F962] rounded-full flex items-center justify-center">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+        <h2 className="text-[24px] font-bold text-[#14C93F] mb-4">Vote lancé !</h2>
+        <p className="text-center text-gray-500 text-[14px] leading-relaxed mb-8 max-w-[280px]">
+          Les participants ont été notifiés. Les validateurs seront retenus dès la fin ou la cloture du vote.
+        </p>
+        <button
+          onClick={onBack}
+          className="w-full max-w-[320px] h-[48px] bg-[#FF7A00] text-white font-bold rounded-full transition-transform active:scale-95 shadow-sm"
+        >
+          Retour à la cagnotte
+        </button>
+      </div>
+    );
+  }
+
+  if (step === 'confirm') {
+    return (
+      <div className="flex flex-col w-full h-full bg-black/40 absolute inset-0 z-50 justify-end">
+        <div className="bg-white dark:bg-[#1C1C1E] w-full rounded-t-3xl pt-2 pb-8 px-6 animate-in slide-in-from-bottom-full duration-300">
+          <div className="w-10 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6"></div>
+          
+          <div className="flex items-center justify-between mb-8">
+            <button onClick={() => setStep('select')} className="text-gray-400">
+              <ArrowLeft01Icon className="w-6 h-6" />
+            </button>
+            <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Lancer le vote des validateurs</h3>
+            <div className="w-6"></div>
+          </div>
+
+          <div className="mb-6">
+            <h4 className="text-[18px] font-bold text-gray-900 dark:text-white">{event.title}</h4>
+            <p className="text-[14px] text-gray-500 mt-1">Cagnotte Frais généraux</p>
+          </div>
+
+          <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-6"></div>
+
+          <p className="text-[14px] text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">
+            Lancer le vote de sélection des validateurs de confiance par les membres participants. Un sondage sera envoyé dans le groupe de discussion de l'événement.
+          </p>
+
+          <button className="flex items-center gap-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[#2A2A2A] px-4 py-2.5 rounded-full mb-8 hover:opacity-80">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            Ajouter une date limite de vote
+          </button>
+
+          <button
+            onClick={() => startVoteMut.mutate()}
+            disabled={startVoteMut.isPending}
+            className="w-full h-[52px] bg-[#FF7A00] text-white font-bold rounded-full transition-transform active:scale-95 text-[15px] shadow-sm flex items-center justify-center"
+          >
+            {startVoteMut.isPending ? "Lancement..." : "Lancer le vote"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col w-full h-full bg-[#F9F9F9] dark:bg-[#0a0a0b] absolute inset-0 z-10 overflow-y-auto">
+    <div className="flex flex-col w-full h-full bg-[#F9F9F9] dark:bg-[#0a0a0b] absolute inset-0 z-40 overflow-hidden">
       {/* Header */}
-      <div className="sticky top-0 z-20 flex flex-col bg-white/80 dark:bg-[#0a0a0b]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
+      <div className="flex flex-col bg-white dark:bg-[#0a0a0b] border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center px-4 py-3">
           <button onClick={onBack} className="w-9 h-9 flex items-center justify-center bg-white dark:bg-black rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
             <ArrowLeft01Icon className="w-5 h-5 text-gray-700 dark:text-white" />
@@ -50,7 +121,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
         </div>
       </div>
 
-      <div className="p-4 flex flex-col gap-6">
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6 pb-24">
         <div className="bg-white dark:bg-[#1A1A1A] p-4 rounded-xl border border-gray-100 dark:border-gray-800">
           <h3 className="font-semibold text-[15px] mb-2 dark:text-white">Sélection des candidats</h3>
           <p className="text-gray-500 text-[13px] mb-4">Choisissez les participants qui pourraient valider le déblocage des fonds. Un vote sera soumis à tous les participants.</p>
@@ -99,16 +170,20 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
               onChange={e => setThreshold(Number(e.target.value))}
               className="flex-1 accent-[#FF7A00]"
             />
-            <span className="font-bold text-lg dark:text-white w-12 text-right">{threshold}%</span>
+            <span className="font-bold text-gray-900 dark:text-white min-w-[3ch]">{threshold}%</span>
           </div>
         </div>
+      </div>
 
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#0a0a0b] border-t border-gray-100 dark:border-gray-800">
         <button
-          onClick={() => startVoteMut.mutate()}
-          disabled={selectedCandidates.length === 0 || startVoteMut.isPending}
-          className="w-full h-[48px] bg-[#FF7A00] hover:bg-[#E66E00] text-white rounded-xl font-semibold transition-colors disabled:opacity-50 mt-4 mb-8"
+          onClick={() => {
+            if (selectedCandidates.length === 0) return toast.error("Sélectionnez au moins un candidat");
+            setStep('confirm');
+          }}
+          className="w-full h-12 bg-[#FF7A00] text-white font-semibold rounded-lg hover:bg-[#E66E00] transition-colors active:scale-95 disabled:opacity-50 disabled:active:scale-100"
         >
-          {startVoteMut.isPending ? 'Lancement...' : `Lancer le vote (${selectedCandidates.length} candidat${selectedCandidates.length > 1 ? 's' : ''})`}
+          Continuer
         </button>
       </div>
     </div>

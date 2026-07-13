@@ -74,6 +74,9 @@ export function EventValidatorsVote() {
 
         {candidates.map((cand: any) => {
           const isAccepted = event.validatorIds?.includes(cand.userId);
+          const yesVotes = (event.validatorVotes || []).filter((v: any) => v.candidateId === cand.userId && v.vote).length;
+          const totalEligible = attendees.length;
+          const pct = totalEligible > 0 ? Math.round((yesVotes / totalEligible) * 100) : 0;
 
           return (
             <div key={cand.userId} className="bg-white dark:bg-[#1A1A1A] p-4 rounded-xl border border-gray-100 dark:border-gray-800 flex flex-col gap-3">
@@ -88,6 +91,19 @@ export function EventValidatorsVote() {
                     Validé
                   </span>
                 )}
+              </div>
+              
+              <div className="flex flex-col gap-1 mt-1">
+                <div className="flex justify-between text-[11px] text-gray-500 font-medium">
+                  <span>Progression ({yesVotes} votes)</span>
+                  <span className={pct >= (event.validatorThreshold || 0.5) * 100 ? 'text-green-600 dark:text-green-400 font-bold' : ''}>{pct}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-100 dark:bg-[#333333] rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full transition-all ${pct >= (event.validatorThreshold || 0.5) * 100 ? 'bg-[#14C93F]' : 'bg-[#FF7A00]'}`}
+                    style={{ width: `${Math.min(pct, 100)}%` }}
+                  />
+                </div>
               </div>
 
               {!isAccepted && (

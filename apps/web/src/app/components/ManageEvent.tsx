@@ -475,6 +475,14 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           onClick={handleContributeClick}
           className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isPastDeadline || isFull || event.poolReleased ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.68091 11.666C3.51388 11.666 4.99981 13.1519 4.99981 14.9849" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M4.99981 3.34766C4.99981 5.18063 3.51388 6.66656 1.68091 6.66656" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 3.34766C15 5.16459 16.4742 6.64051 18.2853 6.66621" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M18.3333 10.834V8.33398C18.3333 5.97696 18.3333 4.79845 17.6011 4.06622C16.8688 3.33398 15.6903 3.33398 13.3333 3.33398H6.66666C4.30964 3.33398 3.13113 3.33398 2.3989 4.06622C1.66666 4.79845 1.66666 5.97696 1.66666 8.33398V10.0007C1.66666 12.3577 1.66666 13.5362 2.3989 14.2684C3.13113 15.0007 4.30964 15.0007 6.66666 15.0007H10.8333" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12.5 9.16602C12.5 10.5468 11.3807 11.666 10 11.666C8.61925 11.666 7.5 10.5468 7.5 9.16602C7.5 7.78531 8.61925 6.66602 10 6.66602C11.3807 6.66602 12.5 7.78531 12.5 9.16602Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15.8333 11.666V16.666M13.3333 14.166H18.3333" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
           Déposer une contribution
         </button>
 
@@ -483,6 +491,10 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           onClick={handleStartVoteClick}
           className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isVoteOpen || isVoteClosed || hasPayoutRequest ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.5902 3.65263C13.0977 3.65263 12.8514 3.65263 12.6271 3.56939C12.5959 3.55782 12.5652 3.54511 12.535 3.53125C12.3175 3.43147 12.1434 3.25734 11.7951 2.90907C10.9935 2.10749 10.5927 1.7067 10.0996 1.66974C10.0333 1.66477 9.96666 1.66477 9.90041 1.66974C9.40725 1.7067 9.00641 2.10749 8.20487 2.90907C7.85661 3.25734 7.68247 3.43147 7.46497 3.53125C7.43476 3.54511 7.40405 3.55782 7.37289 3.56939C7.14854 3.65263 6.90227 3.65263 6.40976 3.65263H6.31891C5.06231 3.65263 4.43402 3.65263 4.04366 4.04301C3.65328 4.43337 3.65328 5.06167 3.65328 6.31826V6.40911C3.65328 6.90162 3.65328 7.14789 3.57004 7.37224C3.55847 7.4034 3.54576 7.43412 3.5319 7.46432C3.43212 7.68182 3.25799 7.85596 2.90971 8.20422C2.10814 9.00577 1.70735 9.4066 1.67039 9.89977C1.66542 9.96602 1.66542 10.0327 1.67039 10.0989C1.70735 10.5921 2.10814 10.9928 2.90971 11.7944C3.25799 12.1428 3.43212 12.3168 3.5319 12.5343C3.54576 12.5646 3.55847 12.5953 3.57004 12.6264C3.65328 12.8508 3.65328 13.0971 3.65328 13.5896V13.6804C3.65328 14.937 3.65328 15.5653 4.04366 15.9557C4.43402 16.3461 5.06231 16.3461 6.31891 16.3461H6.40976C6.90227 16.3461 7.14854 16.3461 7.37289 16.4293C7.40405 16.4408 7.43476 16.4536 7.46497 16.4674C7.68247 16.5673 7.85661 16.7413 8.20487 17.0896C9.00641 17.8912 9.40725 18.292 9.90041 18.3289C9.96666 18.3339 10.0333 18.3339 10.0996 18.3289C10.5927 18.292 10.9935 17.8912 11.7951 17.0896C12.1434 16.7413 12.3175 16.5673 12.535 16.4674C12.5652 16.4536 12.5959 16.4408 12.6271 16.4293C12.8514 16.3461 13.0977 16.3461 13.5902 16.3461H13.6811C14.9377 16.3461 15.566 16.3461 15.9563 15.9557C16.3467 15.5653 16.3467 14.937 16.3467 13.6804V13.5896C16.3467 13.0971 16.3467 12.8508 16.4299 12.6264C16.4415 12.5953 16.4542 12.5646 16.4681 12.5343C16.5679 12.3168 16.742 12.1428 17.0902 11.7944C17.8918 10.9928 18.2927 10.5921 18.3296 10.0989C18.3346 10.0327 18.3346 9.96602 18.3296 9.89977C18.2927 9.4066 17.8918 9.00577 17.0902 8.20422C16.742 7.85596 16.5679 7.68182 16.4681 7.46432C16.4542 7.43412 16.4415 7.4034 16.4299 7.37224C16.3467 7.14789 16.3467 6.90162 16.3467 6.40911V6.31826C16.3467 5.06167 16.3467 4.43337 15.9563 4.04301C15.566 3.65263 14.9377 3.65263 13.6811 3.65263H13.5902Z" stroke="currentColor" strokeWidth="1.25"/>
+            <path d="M7.08334 13.7493C7.66553 12.7429 8.75367 12.0658 10 12.0658C11.2463 12.0658 12.3345 12.7429 12.9167 13.7493M11.6667 8.33267C11.6667 9.25317 10.9205 9.99934 10 9.99934C9.07959 9.99934 8.33334 9.25317 8.33334 8.33267C8.33334 7.41221 9.07959 6.66602 10 6.66602C10.9205 6.66602 11.6667 7.41221 11.6667 8.33267Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/>
+          </svg>
           {voteText}
         </button>
 
@@ -492,6 +504,15 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           disabled={payoutMut.isPending}
           className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${!isPastDeadline || isVoteOpen || isPayoutPending || event.poolReleased || isPayoutApproved ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.68091 14.582C3.51388 14.582 4.99981 16.0679 4.99981 17.9009" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 17.9009V17.8243C15 16.0336 16.4517 14.582 18.2423 14.582" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M4.99981 6.26367C4.99981 8.09665 3.51388 9.58259 1.68091 9.58259" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 6.26367C15 8.08061 16.4742 9.55651 18.2853 9.58226" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14.1667 6.25C15.9792 6.26008 16.9607 6.34046 17.6011 6.98078C18.3333 7.71302 18.3333 8.89152 18.3333 11.2485V12.9152C18.3333 15.2723 18.3333 16.4508 17.6011 17.183C16.8688 17.9152 15.6903 17.9152 13.3333 17.9152H6.66666C4.30964 17.9152 3.13113 17.9152 2.3989 17.183C1.66666 16.4508 1.66666 15.2723 1.66666 12.9152V11.2485C1.66666 8.89152 1.66666 7.71302 2.3989 6.98078C3.03921 6.34046 4.02081 6.26008 5.83333 6.25" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12.5 12.082C12.5 13.4627 11.3807 14.582 10 14.582C8.61925 14.582 7.5 13.4627 7.5 12.082C7.5 10.7013 8.61925 9.58203 10 9.58203C11.3807 9.58203 12.5 10.7013 12.5 12.082Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M7.91666 4.16732C7.91666 4.16732 9.4165 2.08398 10 2.08398C10.5835 2.08398 12.0833 4.16732 12.0833 4.16732M10 6.66732V2.50065" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
           {payoutMut.isPending ? "Traitement..." : payoutText}
         </button>
 
@@ -501,6 +522,11 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           disabled={closeMut.isPending}
           className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${!event.poolReleased ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.7467 7.49935V5.41602C13.7467 3.34495 12.0678 1.66602 9.99674 1.66602C7.92568 1.66602 6.24674 3.34495 6.24674 5.41602V7.49935" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M11.2462 7.5H8.74674C6.80106 7.5 5.82822 7.5 5.09182 7.89364C4.51037 8.20446 4.03414 8.68075 3.72339 9.26217C3.32981 9.99867 3.3299 10.9715 3.33009 12.9172C3.33026 14.8625 3.33035 15.8352 3.72397 16.5715C4.03477 17.1529 4.51097 17.629 5.09237 17.9398C5.8287 18.3333 6.80139 18.3333 8.74674 18.3333H11.2462C13.1917 18.3333 14.1646 18.3333 14.9009 17.9398C15.4823 17.629 15.9586 17.1527 16.2693 16.5713C16.6629 15.8349 16.6629 14.8622 16.6629 12.9167C16.6629 10.9712 16.6629 9.99842 16.2693 9.262C15.9586 8.68058 15.4823 8.20438 14.9009 7.89359C14.1646 7.5 13.1917 7.5 11.2462 7.5Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/>
+            <path d="M9.99674 14.5833C10.9172 14.5833 11.6634 13.8371 11.6634 12.9167C11.6634 11.9962 10.9172 11.25 9.99674 11.25C9.07627 11.25 8.33008 11.9962 8.33008 12.9167C8.33008 13.8371 9.07627 14.5833 9.99674 14.5833Z" stroke="currentColor" strokeWidth="1.25"/>
+          </svg>
           Clôturer la cagnotte
         </button>
       </div>
