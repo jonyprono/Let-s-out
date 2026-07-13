@@ -86,20 +86,13 @@ export function useGoogleSignIn() {
       if (data.refreshToken) setRefreshToken(data.refreshToken)
       setUser(data.user as any)
 
-      // Redirect to full signup flow if new account or missing display name
+      // Redirect to full signup flow if new account
       if (data.isNewUser) {
         localStorage.setItem('pending_google_signup', 'true')
         nav('/signup?mode=google', { replace: true })
       } else {
-        const p: any = data.user.profile || {}
-        // If they haven't completed onboarding (missing birthdate or interests)
-        if (!p.displayName || !p.birthdate || !p.interests || p.interests.length === 0) {
-          localStorage.setItem('pending_google_signup', 'true')
-          nav('/signup?mode=google', { replace: true })
-        } else {
-          localStorage.removeItem('pending_google_signup')
-          nav('/home', { replace: true })
-        }
+        localStorage.removeItem('pending_google_signup')
+        nav('/home', { replace: true })
       }
     },
     onError: (err: any) => {
