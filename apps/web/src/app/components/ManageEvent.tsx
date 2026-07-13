@@ -405,6 +405,9 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
     }
     setStep('form');
   };
+  const [showPayoutConfirm, setShowPayoutConfirm] = useState(false);
+  const [showPayoutSuccess, setShowPayoutSuccess] = useState(false);
+
   const qc = useQueryClient();
   const navigate = useNavigate();
   const hasPot = event.poolTarget && event.poolTarget > 0;
@@ -423,7 +426,8 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
   const payoutMut = useMutation({
     mutationFn: async () => apiClient.post(`/events/${event.id}/payout/request`),
     onSuccess: () => {
-      toast.success("Demande de déblocage envoyée");
+      setShowPayoutConfirm(false);
+      setShowPayoutSuccess(true);
       qc.invalidateQueries({ queryKey: ['events', event.id] });
     },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du déblocage')
@@ -465,6 +469,9 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
     const hasValidators = event.validatorCandidates?.length > 0;
     const canPayout = isVoteClosed || (!hasValidators && isPastDeadline);
 
+    const commission = Math.round(collected * 0.10);
+    const totalToReceive = collected - commission;
+
     const handlePayoutClick = () => {
       if (!canPayout) {
         if (isVoteOpen) return toast.error("Vous devez clôturer le vote d'abord");
@@ -472,7 +479,7 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
       }
       if (isPayoutPending) return toast.error("Le déblocage est déjà en cours d'approbation");
       if (event.poolReleased || isPayoutApproved) return toast.error("Les fonds ont déjà été débloqués");
-      payoutMut.mutate();
+      setShowPayoutConfirm(true);
     };
 
     const closeVoteMut = useMutation({
@@ -606,6 +613,85 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           </svg>
           Clôturer la cagnotte
         </button>
+
+        {/* Payout Confirm Bottom Sheet */}
+        <BottomSheet open={showPayoutConfirm} onClose={() => setShowPayoutConfirm(false)}>
+          <div className="flex flex-col w-full bg-white dark:bg-[#1A1A1A]">
+            <div className="flex justify-center w-full mb-4">
+              <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+            </div>
+            <h2 className="text-center text-[17px] font-bold text-gray-900 dark:text-white mb-6">Détails du retrait</h2>
+            
+            <h3 className="text-[15px] font-bold text-gray-900 dark:text-white mb-4">{event.title}</h3>
+            
+            <div className="flex flex-col gap-3 border-t border-b border-gray-100 dark:border-gray-800 border-dashed py-4 mb-4">
+              <div className="flex justify-between">
+                <span className="text-[14px] text-gray-500">Cagnotte</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">Frais généraux</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[14px] text-gray-500">Montant</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{collected.toLocaleString('fr-FR')} F</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[14px] text-gray-500">Commission</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{commission.toLocaleString('fr-FR')} F</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[14px] text-gray-500">Méthode</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">Mobile Money</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[14px] text-gray-500">Numéro</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{me?.profile?.phone || "Non défini"}</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 mb-6">
+              <div className="flex justify-between">
+                <span className="text-[14px] text-gray-500">Total à payer</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{collected.toLocaleString('fr-FR')} F</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[14px] text-gray-500">Total à recevoir</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{totalToReceive.toLocaleString('fr-FR')} F</span>
+              </div>
+            </div>
+
+            <PrimaryButton 
+              onClick={() => payoutMut.mutate()} 
+              loading={payoutMut.isPending}
+              className="w-full"
+            >
+              Confirmer
+            </PrimaryButton>
+          </div>
+        </BottomSheet>
+
+        {/* Payout Success Bottom Sheet */}
+        <BottomSheet open={showPayoutSuccess} onClose={() => setShowPayoutSuccess(false)}>
+          <div className="flex flex-col items-center justify-center py-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#4DEF8E] to-[#FFEB3A] flex items-center justify-center mb-6">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 13L9 17L19 7" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h2 className="text-[20px] font-bold text-center text-gray-900 dark:text-white mb-2 leading-tight">
+              Demande de retrait<br/>envoyée !
+            </h2>
+            <p className="text-[14px] text-gray-500 text-center mb-8 px-4">
+              Votre demande de retrait a été bien envoyée.<br/>
+              Vous recevrez les sous dès l'approbation des validateurs.
+            </p>
+            <PrimaryButton 
+              onClick={() => setShowPayoutSuccess(false)} 
+              className="w-full"
+            >
+              Retour à la cagnotte
+            </PrimaryButton>
+          </div>
+        </BottomSheet>
+
       </div>
     );
   }
