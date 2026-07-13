@@ -75,7 +75,8 @@ export function EventValidatorsVote() {
         {candidates.map((cand: any) => {
           const isAccepted = event.validatorIds?.includes(cand.userId);
           const yesVotes = (event.validatorVotes || []).filter((v: any) => v.candidateId === cand.userId && v.vote).length;
-          const totalEligible = attendees.length;
+          const eligibleVoters = attendees.filter((a: any) => a.userId !== event.creatorId);
+          const totalEligible = eligibleVoters.length;
           const pct = totalEligible > 0 ? Math.round((yesVotes / totalEligible) * 100) : 0;
 
           return (

@@ -739,19 +739,18 @@ export function ChatDetails() {
                     ) : msg.type === 'POLL' ? (
                       <div className="w-[240px] flex flex-col gap-3 p-1">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-[#FF7A00]/10 flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'color-mix(in srgb, currentColor 15%, transparent)' }}>
                             <span className="text-lg">📊</span>
                           </div>
                           <div>
-                            <p className={`text-[13px] font-bold ${isMe ? 'text-white' : 'text-gray-900 dark:text-white'}`}>Vote des validateurs</p>
-                            <p className={`text-[11px] ${isMe ? 'text-white/80' : 'text-gray-500'}`}>La cagnotte nécessite des validateurs</p>
+                            <p className="text-[13px] font-bold" style={{ color: 'currentColor' }}>Vote des validateurs</p>
+                            <p className="text-[11px]" style={{ color: 'color-mix(in srgb, currentColor 80%, transparent)' }}>Votre avis est requis pour débloquer les fonds</p>
                           </div>
                         </div>
                         <button 
                           onClick={() => navigate(`/events/${conversation?.eventId}/validators-vote`)}
-                          className={`w-full py-2 rounded-lg font-medium text-sm transition-colors ${
-                            isMe ? 'bg-white text-[#FF7A00] hover:bg-gray-50' : 'bg-[#FF7A00] text-white hover:bg-[#E66E00]'
-                          }`}
+                          className="w-full py-2 rounded-lg font-bold text-sm transition-transform active:scale-95"
+                          style={{ backgroundColor: 'color-mix(in srgb, currentColor 10%, transparent)', color: 'currentColor' }}
                         >
                           Voter
                         </button>

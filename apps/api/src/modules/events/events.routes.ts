@@ -342,6 +342,20 @@ export default async function eventsRoutes(app: FastifyInstance) {
               body: `Vous avez été choisi comme validateur pour la cagnotte de "${event.title}".`,
               data: { eventId: id }
             })
+
+            // Vérifier si une demande de déblocage est déjà en cours
+            const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
+              where: { eventId: id }
+            })
+            if (payoutReq && payoutReq.status === 'PENDING') {
+              await createAndSendNotification(app, {
+                userId: candidateId,
+                type: 'SYSTEM',
+                title: 'Veuillez approuver le déblocage',
+                body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
+                data: { eventId: id }
+              })
+            }
           }
         }
       }
@@ -429,10 +443,15 @@ export default async function eventsRoutes(app: FastifyInstance) {
       eventWithCoHosts.coHosts = coHostsWithRating
     }
 
+    // Fetch validatorVotes if any
+    const validatorVotes = await app.prisma.validatorVote.findMany({
+      where: { eventId: id }
+    })
+
     // Increment view count (fire-and-forget, don't fail if this fails)
     app.prisma.event.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {})
 
-    return reply.send(eventWithCoHosts)
+    return reply.send({ ...eventWithCoHosts, validatorVotes })
   })
 
   // ── Protected routes ─────────────────────────────────────────────────────
