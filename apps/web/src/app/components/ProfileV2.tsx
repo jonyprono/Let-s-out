@@ -497,35 +497,56 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       </div>
 
       {/* Main Toggle Profil/Evenements */}
-      <div className="w-full max-w-full overflow-x-auto hide-scrollbar px-4 mb-6 shrink-0 h-[36px]">
-        <div className="flex flex-row justify-center items-start p-0 gap-2 w-max mx-auto">
-          {['profil', 'events'].map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`flex flex-row items-center px-3 py-2 gap-1 h-[36px] rounded-full transition-colors ${
-                activeTab === tab ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
-              }`}
-            >
-              {tab === 'profil' ? (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === tab ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === tab ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-              )}
-              <span className="font-poppins font-medium text-[12px] leading-[16px]">
-                {tab === 'profil' ? 'Mon profil' : 'Événements'}
-              </span>
-            </button>
-          ))}
+      <div className="w-full overflow-x-auto hide-scrollbar px-4 mb-6">
+        <div className="flex flex-row items-start p-0 gap-2 w-max">
+          <button 
+            onClick={() => setActiveTab('profil')}
+            className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
+              activeTab === 'profil' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'profil' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Profil</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('events')}
+            className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
+              activeTab === 'events' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'events' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Evénements</span>
+          </button>
+
+          <button 
+            onClick={() => navigate(isOwnProfile ? '/friends' : `/friends/${targetUserId}`)}
+            className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
+              activeTab === 'friends' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <Users className={`w-[18px] h-[18px] ${activeTab === 'friends' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}`} />
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Amis</span>
+          </button>
+
+          <button 
+            onClick={() => navigate(isOwnProfile ? '/friends?tab=following' : `/friends/${targetUserId}?tab=following`)}
+            className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
+              activeTab === 'following' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+            }`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'following' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Abonnements</span>
+          </button>
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="w-full flex-1 pb-10 bg-white rounded-t-3xl border-t border-gray-100 pt-6 px-4">
+      {/* TABS CONTENT */}
+      <div className="px-4 pb-20 shrink-0">
         {activeTab === 'profil' && (
-          <div className="space-y-8">
+          <div className="flex flex-col gap-6">
             
-            {/* Stats Row */}
+            {/* Stats */}
             <div className="grid grid-cols-4 gap-2 bg-[#FEFEFA] border border-[#F5F5F4] rounded-2xl py-3 px-2">
               <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]">
                 <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
@@ -579,21 +600,43 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
             {/* Interests */}
             <div>
-              <h3 className="font-inter text-[14px] font-medium text-gray-500 mb-3">Centres d'intérêt</h3>
+              <h3 className="font-inter text-[15px] font-medium text-gray-600 mb-3">Mes intérêts</h3>
               <div className="flex flex-wrap gap-2">
-                {interests.length > 0 ? interests.map((i: string) => (
-                  <div key={i} className="px-3 py-1.5 bg-[#FAFAFA] border border-gray-100 rounded-full text-[11px] font-medium text-gray-600">
-                    {i}
-                  </div>
-                )) : (
+                {interests.length > 0 ? interests.map((i: string) => {
+                  let icon = '📌';
+                  if (i.toLowerCase().includes('sport')) icon = '⚽';
+                  else if (i.toLowerCase().includes('musique')) icon = '🎶';
+                  else if (i.toLowerCase().includes('cuisine')) icon = '🍳';
+                  else if (i.toLowerCase().includes('art')) icon = '🎨';
+                  else if (i.toLowerCase().includes('culture')) icon = '🌍';
+                  else if (i.toLowerCase().includes('voyage')) icon = '✈️';
+                  else if (i.toLowerCase().includes('jeux')) icon = '🎮';
+                  else if (i.toLowerCase().includes('tech')) icon = '💻';
+                  else if (i.toLowerCase().includes('lecture') || i.toLowerCase().includes('livre')) icon = '📚';
+                  else if (i.toLowerCase().includes('ciné') || i.toLowerCase().includes('film')) icon = '🎬';
+                  else if (i.toLowerCase().includes('photo')) icon = '📷';
+                  else if (i.toLowerCase().includes('danse')) icon = '💃';
+                  else if (i.toLowerCase().includes('mode')) icon = '👗';
+                  else if (i.toLowerCase().includes('anim')) icon = '🐾';
+                  else if (i.toLowerCase().includes('brico')) icon = '🛠️';
+                  else if (i.toLowerCase().includes('natur')) icon = '🌿';
+                  else if (i.toLowerCase().includes('bien-être')) icon = '🧘‍♀️';
+
+                  return (
+                    <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FAFAFA] border border-[#F5F5F4] rounded-full text-[13px] font-medium text-gray-700">
+                      <span>{icon}</span>
+                      <span>{i}</span>
+                    </div>
+                  );
+                }) : (
                   <p className="text-[12px] text-gray-400 italic">Aucun centre d'intérêt renseigné.</p>
                 )}
                 {isOwnProfile && (
                   <button
                     onClick={() => setShowEditModal(true)}
-                    className="px-3 py-1.5 bg-[#FAFAFA] border border-dashed border-gray-300 rounded-full text-[11px] font-medium text-gray-600 flex items-center gap-1 active:scale-95 transition-transform"
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-white border border-dashed border-[#D4D4D4] rounded-full text-[13px] font-medium text-gray-700 active:scale-95 transition-transform"
                   >
-                    + Ajouter
+                    <span className="text-gray-400 text-[16px] leading-[0]">+</span> Ajouter
                   </button>
                 )}
               </div>
