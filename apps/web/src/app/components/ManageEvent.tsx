@@ -396,6 +396,15 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du déblocage')
   });
 
+  const approvePayoutMut = useMutation({
+    mutationFn: async () => apiClient.post(`/events/${event.id}/payout/approve`),
+    onSuccess: () => {
+      toast.success("Déblocage approuvé");
+      qc.invalidateQueries({ queryKey: ['events', event.id] });
+    },
+    onError: (err: any) => toast.error(err.response?.data?.error || "Erreur lors de l'approbation")
+  });
+
   if (hasPot) {
     const isPastDeadline = event.registrationDeadline 
       ? new Date() > new Date(event.registrationDeadline) 
@@ -522,8 +531,8 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
         {/* 3. Débloquer */}
         <button
           onClick={handlePayoutClick}
-          disabled={payoutMut.isPending}
-          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${!isPastDeadline || isVoteOpen || isPayoutPending || event.poolReleased || isPayoutApproved ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+          disabled={payoutMut.isPending || isPayoutPending}
+          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${(!isPastDeadline || isVoteOpen || isPayoutPending || event.poolReleased || isPayoutApproved) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M1.68091 14.582C3.51388 14.582 4.99981 16.0679 4.99981 17.9009" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
@@ -534,8 +543,19 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
             <path d="M12.5 12.082C12.5 13.4627 11.3807 14.582 10 14.582C8.61925 14.582 7.5 13.4627 7.5 12.082C7.5 10.7013 8.61925 9.58203 10 9.58203C11.3807 9.58203 12.5 10.7013 12.5 12.082Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M7.91666 4.16732C7.91666 4.16732 9.4165 2.08398 10 2.08398C10.5835 2.08398 12.0833 4.16732 12.0833 4.16732M10 6.66732V2.50065" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          {payoutMut.isPending ? "Traitement..." : payoutText}
+          {payoutMut.isPending ? "Traitement..." : isPayoutPending ? "Déblocage en cours..." : "Débloquer les fonds"}
         </button>
+
+        {/* 3.1 Approuver (if organizer is also validator) */}
+        {!!me?.id && event.validatorIds?.includes(me.id) && isPayoutPending && !event.payoutRequest?.approvals?.includes(me.id) && (
+          <button
+            onClick={() => approvePayoutMut.mutate()}
+            disabled={approvePayoutMut.isPending}
+            className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-[#10B981] text-white rounded-[8px] transition-transform text-[14px] font-bold active:scale-95`}
+          >
+            {approvePayoutMut.isPending ? "Approbation..." : "Approuver le déblocage"}
+          </button>
+        )}
 
         {/* 4. Clôturer */}
         <button

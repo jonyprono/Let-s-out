@@ -493,6 +493,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       include: {
         creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true, followersCount: true, eventsCount: true } } } },
         _count: { select: { bookings: true } },
+        payoutRequest: true
       },
     })
     if (!event) return reply.code(404).send({ error: 'Event not found' })

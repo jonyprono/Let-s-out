@@ -562,6 +562,23 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               )}
             </div>
 
+            {/* Payout Approval Banner for Validators */}
+            {event && !!user && event.validatorIds?.includes(user.id) && event.payoutRequest?.status === 'PENDING' && !event.payoutRequest.approvals.includes(user.id) && (
+              <div className="mt-4 p-4 rounded-xl border border-[#10B981] bg-[#F0FDF4] dark:bg-[#10B981]/10 dark:border-[#10B981]/30">
+                <h3 className="text-[15px] font-bold text-[#047857] dark:text-[#34D399] mb-1">Approbation requise</h3>
+                <p className="text-[13px] text-[#065F46] dark:text-[#A7F3D0] mb-3 leading-tight">
+                  L'organisateur a demandé le déblocage des fonds. En tant que validateur, veuillez l'approuver.
+                </p>
+                <button
+                  onClick={() => approvePayoutMutation.mutate()}
+                  disabled={approvePayoutMutation.isPending}
+                  className="w-full flex items-center justify-center py-[10px] bg-[#10B981] text-white text-[14px] font-bold rounded-[8px] active:scale-95 transition-transform"
+                >
+                  {approvePayoutMutation.isPending ? "Traitement..." : "Approuver le déblocage"}
+                </button>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
