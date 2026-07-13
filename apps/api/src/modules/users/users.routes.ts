@@ -415,6 +415,45 @@ export default async function usersRoutes(app: FastifyInstance) {
     return reply.send({ data: friends })
   })
 
+  // Get friends list for a specific user
+  app.get('/:userId/friends', async (req, reply) => {
+    const { userId } = req.params as { userId: string }
+    const { search } = req.query as { search?: string }
+    const friendships = await app.prisma.friendship.findMany({
+      where: {
+        status: 'ACCEPTED',
+        OR: [
+          { initiatorId: userId },
+          { receiverId: userId },
+        ]
+      },
+      include: {
+        initiator: { select: { profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
+        receiver: { select: { profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
+      }
+    })
+
+    let friends = friendships.map(f => {
+      const isInitiator = f.initiatorId === userId
+      const friendId = isInitiator ? f.receiverId : f.initiatorId
+      const profile = isInitiator ? f.receiver.profile : f.initiator.profile
+      return {
+        userId: friendId,
+        friendshipId: f.id,
+        username: profile?.username,
+        displayName: profile?.displayName,
+        avatarUrl: profile?.avatarUrl,
+      }
+    })
+
+    if (search) {
+      const s = search.toLowerCase()
+      friends = friends.filter(f => f.displayName?.toLowerCase().includes(s) || f.username?.toLowerCase().includes(s))
+    }
+
+    return reply.send({ data: friends })
+  })
+
   // Get pending friend requests received by current user
   app.get('/me/friend-requests', async (req, reply) => {
     const { sub } = req.user as { sub: string }

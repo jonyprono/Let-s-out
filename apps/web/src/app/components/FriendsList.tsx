@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { ChevronLeft, Users, MessageCircle, Search, UserPlus, UserMinus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersApi, useSearchUsers } from '@/features/users/api'
@@ -18,26 +18,30 @@ export function FriendsList() {
   const qc = useQueryClient()
   const currentUser = useAuthStore(s => s.user)
   const myUserId = currentUser?.id || ''
+  
+  const { userId } = useParams<{ userId?: string }>()
+  const isPublicMode = !!userId && userId !== myUserId
+  const targetUserId = userId || myUserId
 
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedQuery] = useDebounce(searchQuery, 300)
   const [activeTab, setActiveTab] = useState<TabType>('friends')
 
   const { data: friends, isLoading: isLoadingFriends } = useQuery({
-    queryKey: ['users', 'friends'],
-    queryFn: usersApi.getFriends,
+    queryKey: ['users', 'friends', targetUserId],
+    queryFn: () => usersApi.getFriends(isPublicMode ? targetUserId : undefined),
   })
 
   const { data: followers, isLoading: isLoadingFollowers } = useQuery({
-    queryKey: ['users', 'followers', myUserId],
-    queryFn: () => usersApi.getFollowers(myUserId),
-    enabled: activeTab === 'followers' && !!myUserId
+    queryKey: ['users', 'followers', targetUserId],
+    queryFn: () => usersApi.getFollowers(targetUserId),
+    enabled: activeTab === 'followers' && !!targetUserId
   })
 
   const { data: following, isLoading: isLoadingFollowing } = useQuery({
-    queryKey: ['users', 'following', myUserId],
-    queryFn: () => usersApi.getFollowing(myUserId),
-    enabled: activeTab === 'following' && !!myUserId
+    queryKey: ['users', 'following', targetUserId],
+    queryFn: () => usersApi.getFollowing(targetUserId),
+    enabled: activeTab === 'following' && !!targetUserId
   })
 
   const { data: globalUsers, isLoading: isSearching } = useSearchUsers(
@@ -133,10 +137,10 @@ export function FriendsList() {
         {/* Toggle Tabs */}
         <div className="flex gap-2 mt-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {[
-            { id: 'friends', label: 'Mes amis' },
+            { id: 'friends', label: isPublicMode ? 'Amis' : 'Mes amis' },
             { id: 'followers', label: 'Abonnés' },
             { id: 'following', label: 'Abonnements' },
-            { id: 'global', label: 'Découvrir' },
+            ...(isPublicMode ? [] : [{ id: 'global', label: 'Découvrir' }])
           ].map(tab => (
             <button 
               key={tab.id}

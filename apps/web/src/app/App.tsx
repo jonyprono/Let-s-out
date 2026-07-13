@@ -265,6 +265,7 @@ export default function App() {
             <Route path="/verify-profile" element={<VerifyProfile />} />
             <Route path="/friend-requests" element={<FriendRequests />} />
             <Route path="/friends" element={<FriendsList />} />
+            <Route path="/friends/:userId" element={<FriendsList />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/chat/:id" element={<ChatDetails />} />
             <Route path="/notifications" element={<Notifications />} />

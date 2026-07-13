@@ -23,8 +23,9 @@ export const usersApi = {
     return data.data
   },
 
-  getFriends: async (): Promise<Friend[]> => {
-    const { data } = await apiClient.get('/users/me/friends')
+  getFriends: async (userId?: string): Promise<Friend[]> => {
+    const url = userId ? `/users/${userId}/friends` : '/users/me/friends'
+    const { data } = await apiClient.get(url)
     return data.data
   },
 
@@ -91,7 +92,7 @@ export const usersApi = {
 export function useFriends() {
   return useQuery({
     queryKey: ['users', 'friends'],
-    queryFn: usersApi.getFriends,
+    queryFn: () => usersApi.getFriends(),
   })
 }
 
