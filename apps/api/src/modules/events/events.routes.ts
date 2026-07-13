@@ -334,34 +334,65 @@ export default async function eventsRoutes(app: FastifyInstance) {
               where: { id },
               data: { validatorIds: { push: candidateId } }
             })
-            // Notifier favorablement
-            await createAndSendNotification(app, {
-              userId: candidateId,
-              type: 'SYSTEM',
-              title: 'Validation acceptée !',
-              body: `Vous avez été choisi comme validateur pour la cagnotte de "${event.title}".`,
-              data: { eventId: id }
-            })
-
-            // Vérifier si une demande de déblocage est déjà en cours
-            const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
-              where: { eventId: id }
-            })
-            if (payoutReq && payoutReq.status === 'PENDING') {
-              await createAndSendNotification(app, {
-                userId: candidateId,
-                type: 'SYSTEM',
-                title: 'Veuillez approuver le déblocage',
-                body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
-                data: { eventId: id }
-              })
-            }
           }
         }
       }
     }
 
-    return reply.send({ success: true })
+    // Vérifier si tous les participants ont voté pour tous les candidats
+    const allEventVotesCount = await app.prisma.validatorVote.count({
+      where: { eventId: id }
+    })
+    
+    const eligibleVotersCount = event.bookings.filter(b => b.userId !== event.creatorId).length
+    const candidatesCount = event.validatorCandidates.length
+    const expectedVotes = eligibleVotersCount * candidatesCount
+    
+    let autoClosed = false
+    if (expectedVotes > 0 && allEventVotesCount >= expectedVotes) {
+      const finalEvent = await app.prisma.event.update({
+        where: { id },
+        data: { validatorVoteStatus: 'CLOSED' }
+      })
+      autoClosed = true
+      
+      // Notifier l'organisateur
+      await createAndSendNotification(app, {
+        userId: event.creatorId,
+        type: 'SYSTEM',
+        title: 'Vote terminé',
+        body: `Tous les participants ont voté. Le vote pour "${event.title}" est automatiquement clôturé.`,
+        data: { eventId: id }
+      })
+
+      // Notifier les validateurs retenus
+      if (finalEvent.validatorIds.length > 0) {
+        const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
+          where: { eventId: id }
+        })
+
+        await createAndSendNotificationMany(app, finalEvent.validatorIds.map(valId => ({
+          userId: valId,
+          type: 'SYSTEM',
+          title: 'Validation acceptée !',
+          body: `Vous avez été choisi comme validateur pour la cagnotte de "${event.title}".`,
+          data: { eventId: id }
+        })))
+
+        // Si un déblocage était déjà demandé, notifier qu'ils doivent approuver
+        if (payoutReq && payoutReq.status === 'PENDING') {
+          await createAndSendNotificationMany(app, finalEvent.validatorIds.map(valId => ({
+            userId: valId,
+            type: 'SYSTEM',
+            title: 'Veuillez approuver le déblocage',
+            body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
+            data: { eventId: id }
+          })))
+        }
+      }
+    }
+
+    return reply.send({ success: true, autoClosed })
   })
 
   // Clôturer le vote des validateurs
@@ -378,6 +409,32 @@ export default async function eventsRoutes(app: FastifyInstance) {
       where: { id },
       data: { validatorVoteStatus: 'CLOSED' }
     })
+
+    // Notifier les validateurs retenus
+    if (updatedEvent.validatorIds.length > 0) {
+      const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
+        where: { eventId: id }
+      })
+
+      await createAndSendNotificationMany(app, updatedEvent.validatorIds.map(valId => ({
+        userId: valId,
+        type: 'SYSTEM',
+        title: 'Validation acceptée !',
+        body: `Vous avez été choisi comme validateur pour la cagnotte de "${event.title}".`,
+        data: { eventId: id }
+      })))
+
+      // Si un déblocage était déjà demandé, notifier qu'ils doivent approuver
+      if (payoutReq && payoutReq.status === 'PENDING') {
+        await createAndSendNotificationMany(app, updatedEvent.validatorIds.map(valId => ({
+          userId: valId,
+          type: 'SYSTEM',
+          title: 'Veuillez approuver le déblocage',
+          body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
+          data: { eventId: id }
+        })))
+      }
+    }
 
     return reply.send({ success: true, event: updatedEvent })
   })
