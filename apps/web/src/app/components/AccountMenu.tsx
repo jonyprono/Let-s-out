@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { UserCircle02Icon, Calendar01Icon, Wallet01Icon, Settings02Icon } from 'hugeicons-react';
+import { UserCircle02Icon, Calendar01Icon, Wallet01Icon, Settings02Icon, UserMultiple02Icon } from 'hugeicons-react';
 
 export function AccountMenu() {
   const navigate = useNavigate();
@@ -14,6 +14,16 @@ export function AccountMenu() {
       label: 'Evénements',
       icon: Calendar01Icon,
       path: '/my-events',
+    },
+    {
+      label: 'Mes Amis',
+      icon: UserMultiple02Icon,
+      path: '/friends',
+    },
+    {
+      label: 'Demandes d\'amis',
+      icon: UserMultiple02Icon,
+      path: '/friend-requests',
     },
     {
       label: 'Portefeuille',

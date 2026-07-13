@@ -803,7 +803,15 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     const isVerified = booking?.user?.profile?.isVerified
                     const amount = booking?.amount || booking?.paidAmount
                     return (
-                      <div key={booking.id} className="w-full flex items-center gap-3 px-5 py-3">
+                      <button
+                        key={booking.id}
+                        className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 dark:bg-[#222222] transition-colors text-left"
+                        onClick={() => openUserProfile(
+                          booking.user.id, 
+                          { displayName: name, avatarUrl: avatar },
+                          { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                        )}
+                      >
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
                           <SafeImage
                             src={avatar}
@@ -823,7 +831,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         {amount && (
                           <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{Number(amount).toLocaleString()} F</span>
                         )}
-                      </div>
+                      </button>
                     )
                   })}
                 </div>
