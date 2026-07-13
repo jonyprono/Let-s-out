@@ -280,17 +280,20 @@ export function Signup({ onBack }: SignupProps) {
         })
       }
     } else if (step === 4) {
-      if (birthday) {
-        const birthDate = new Date(birthday)
-        const today = new Date()
-        let age = today.getFullYear() - birthDate.getFullYear()
-        const m = today.getMonth() - birthDate.getMonth()
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
-        if (age < 18) {
-          toast.error("Vous devez avoir au moins 18 ans pour vous inscrire.")
-          return
-        }
+      if (!birthday) {
+        toast.error("Veuillez renseigner votre date de naissance.")
+        return
       }
+      const birthDate = new Date(birthday)
+      const today = new Date()
+      let age = today.getFullYear() - birthDate.getFullYear()
+      const m = today.getMonth() - birthDate.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
+      if (age < 18) {
+        toast.error("Vous devez avoir au moins 18 ans pour vous inscrire.")
+        return
+      }
+      setStep((s) => s + 1)
     } else if (step === 6) {
       if (isGoogleMode) {
         setIsFirebaseVerifying(true)
@@ -411,7 +414,7 @@ export function Signup({ onBack }: SignupProps) {
     if (!isGoogleMode && step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
     if (!isGoogleMode && step === 2) return otp.join('').length < OTP_LENGTH || isFirebaseVerifying || checkingOtp
     if (step === 3) return !isFieldValid(firstName)
-    if (step === 4) return false
+    if (step === 4) return !birthday
     if (step === 5) return false
     if (step === 6) return interests.length === 0
     if (step === 7) return !isPwdValid || !acceptedTerms || registering
