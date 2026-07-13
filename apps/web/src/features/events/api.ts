@@ -59,6 +59,12 @@ export interface Event {
   poolCollected?: number
   poolReleased?: boolean
   _count?: { bookings: number }
+  validatorIds?: string[]
+  validatorCandidates?: string[]
+  validatorVoteStatus?: 'OPEN' | 'CLOSED' | 'NONE'
+  validatorThreshold?: number
+  expectedValidatorVotes?: number
+  validatorVotes?: any[]
 }
 
 export interface EventsQuery {

@@ -469,10 +469,6 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
       closeMut.mutate();
     };
 
-    let payoutText = "Débloquer les fonds";
-    if (isPayoutPending) payoutText = "Déblocage en cours...";
-    else if (event.poolReleased || isPayoutApproved) payoutText = "Fonds débloqués";
-
     let voteText = "Lancer le vote des validateurs";
     if (isVoteOpen) voteText = closeVoteMut.isPending ? "Clôture en cours..." : "Clôturer le vote";
     else if (isVoteClosed) voteText = "Vote clôturé";
