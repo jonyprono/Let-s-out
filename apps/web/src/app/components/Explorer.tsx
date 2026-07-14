@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { Loader2, ChevronLeft, Lock } from 'lucide-react';
 import { toast } from 'sonner';
-import { Search01Icon, Location01Icon, ArrowDown01Icon, SlidersHorizontalIcon, MapsIcon, ListViewIcon, QrCode01Icon, Cancel01Icon, Tick01Icon } from 'hugeicons-react';
+import { Search01Icon, Location01Icon, ArrowDown01Icon, MapsIcon, ListViewIcon, Cancel01Icon, Tick01Icon } from 'hugeicons-react';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
