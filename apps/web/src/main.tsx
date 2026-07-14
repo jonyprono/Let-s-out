@@ -15,12 +15,16 @@ if (typeof window !== 'undefined' && window.crypto && !window.crypto.randomUUID)
   };
 }
 
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
+
 // Restore cached query data from localStorage before first render
 // This ensures offline users see their last-known data immediately
 restoreQueryCache()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>,
 )

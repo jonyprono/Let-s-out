@@ -40,6 +40,7 @@ const config: CapacitorConfig = {
         url: 'https://letsout.app/app',
         cleartext: false,
         allowNavigation: ['letsout.app', 'let-s-out.onrender.com', 'let-s-out-web.vercel.app'],
+        errorPath: 'error.html',
       }
     : {
         // Development: point to local Vite dev server for live-reload
