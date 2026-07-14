@@ -661,9 +661,17 @@ export default async function usersRoutes(app: FastifyInstance) {
       })
     }
 
+    const joinedEvents = bookings
+      .filter(b => isOwner || !b.event.isPrivate)
+      .map(b => ({
+        ...b.event,
+        isReviewed: b.event.reviews && b.event.reviews.length > 0
+      }))
+
     return reply.send({
       createdEvents,
       pastEvents,
+      joinedEvents,
       draftEvents,
       bookings: bookingsForBadge,
     })

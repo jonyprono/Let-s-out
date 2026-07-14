@@ -467,15 +467,15 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const canCloseVote = isVoteOpen && (isAllVoted || isPastDeadline || allCandidatesValidated);
     
     const hasValidators = event.validatorCandidates?.length > 0;
-    const canPayout = isVoteClosed || (!hasValidators && isPastDeadline);
+    const canPayout = isVoteClosed || !hasValidators;
 
-    const commission = Math.round(collected * 0.10);
+    const commission = Math.round(collected * 0.03);
     const totalToReceive = collected - commission;
 
     const handlePayoutClick = () => {
       if (!canPayout) {
         if (isVoteOpen) return toast.error("Vous devez clôturer le vote d'abord");
-        return toast.error("La date limite n'est pas encore atteinte");
+        return toast.error("Action non autorisée");
       }
       if (isPayoutPending) return toast.error("Le déblocage est déjà en cours d'approbation");
       if (event.poolReleased || isPayoutApproved) return toast.error("Les fonds ont déjà été débloqués");
@@ -524,7 +524,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const groupedContributions = attendees.reduce((acc: any, booking: any) => {
       const userId = booking?.user?.id;
       if (!userId) return acc;
-      const amt = Number(booking?.totalPaid || booking?.amount || booking?.paidAmount || 0);
+      const amt = Number(booking?.amount || booking?.paidAmount || 0);
       if (amt <= 0) return acc;
       if (!acc[userId]) {
         acc[userId] = { ...booking, totalAmount: 0 };
@@ -717,7 +717,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
                 <span className="text-[14px] font-semibold text-gray-900 dark:text-white">Frais généraux</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[14px] text-gray-500">Montant</span>
+                <span className="text-[14px] text-gray-500">Montant brut</span>
                 <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{collected.toLocaleString('fr-FR')} F</span>
               </div>
               <div className="flex justify-between">
@@ -735,10 +735,6 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
             </div>
 
             <div className="flex flex-col gap-3 mb-6">
-              <div className="flex justify-between">
-                <span className="text-[14px] text-gray-500">Total à payer</span>
-                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{collected.toLocaleString('fr-FR')} F</span>
-              </div>
               <div className="flex justify-between">
                 <span className="text-[14px] text-gray-500">Total à recevoir</span>
                 <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{totalToReceive.toLocaleString('fr-FR')} F</span>

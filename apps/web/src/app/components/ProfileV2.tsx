@@ -718,7 +718,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               </div>
               <p className="text-[13px] font-medium text-gray-700 text-center">Événements<br/>créés</p>
             </div>
-            <div onClick={() => console.log('Go to joined events')} className="w-full bg-[#FAFAFA] border border-[#F5F5F4] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
+            <div onClick={() => navigate(isOwnProfile ? '/profile/events-joined' : `/profile/${targetUserId}/events-joined`)} className="w-full bg-[#FAFAFA] border border-[#F5F5F4] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
                 <Activity className="w-5 h-5 text-[#FF7A00]" />
               </div>
