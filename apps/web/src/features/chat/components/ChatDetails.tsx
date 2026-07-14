@@ -205,6 +205,10 @@ export function ChatDetails() {
   const memberCount = conversation?.members?.length ?? 0
 
   const otherMembers = conversation?.members?.filter(m => m.userId !== user?.id) || []
+
+  // Block status: 'i_blocked' = I blocked them, 'they_blocked' = they blocked me, 'none' = no block
+  const blockStatus = conversation?.blockStatus ?? 'none'
+  const isBlocked = blockStatus !== 'none'
   
   const getMessageStatus = (msg: any) => {
     if (msg._optimistic) return 'sending'
@@ -813,7 +817,17 @@ export function ChatDetails() {
       {/* Input Area — fixed at the bottom (nav is hidden for /chat/ routes) */}
       <div className="fixed left-0 right-0 z-20 bg-[var(--color-background-primary)] border-t border-[#F2F2F2] px-4 py-3 flex items-center gap-3" style={{ bottom: 'env(safe-area-inset-bottom, 0px)' }}>
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
-        {isRecording ? (
+        {isBlocked ? (
+          <div className="flex-1 flex items-center justify-center h-[48px] bg-[#F9F9F9] dark:bg-[#2A2A2A] border border-[#DFDFDF] dark:border-[#333] rounded-full px-[16px] gap-[8px]">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+            <span className="text-[13px] text-gray-400 dark:text-gray-500">
+              {blockStatus === 'i_blocked' ? 'Vous avez bloqué cet utilisateur' : 'Vous ne pouvez pas répondre à cette conversation'}
+            </span>
+          </div>
+        ) : isRecording ? (
           <div className="flex-1 flex items-center justify-between h-[48px] bg-[#FCFCFC] border border-[#DFDFDF] rounded-full px-[16px] gap-[12px] overflow-hidden relative">
             <div className="flex items-center gap-2">
               <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
@@ -835,7 +849,7 @@ export function ChatDetails() {
           />
         )}
 
-        {isRecording && (
+        {!isBlocked && isRecording && (
           <button
             onClick={stopRecording}
             className="w-[48px] h-[48px] rounded-full flex items-center justify-center bg-[#FF7A00] text-white shadow-sm flex-shrink-0 animate-in zoom-in duration-200"

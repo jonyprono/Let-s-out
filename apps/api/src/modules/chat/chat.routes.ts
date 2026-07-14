@@ -617,7 +617,29 @@ export default async function chatRoutes(app: FastifyInstance) {
     })
 
     if (!conversation) return reply.code(404).send({ error: 'Conversation not found' })
-    return reply.send(conversation)
+
+    // For DM conversations, check if there's a block between the two users
+    let blockStatus: 'none' | 'i_blocked' | 'they_blocked' = 'none'
+    if (!conversation.isGroup) {
+      const otherMemberId = conversation.members.find(m => m.userId !== sub)?.userId
+      if (otherMemberId) {
+        const block = await app.prisma.friendship.findFirst({
+          where: {
+            status: 'BLOCKED',
+            OR: [
+              { initiatorId: sub, receiverId: otherMemberId },
+              { initiatorId: otherMemberId, receiverId: sub },
+            ]
+          }
+        })
+        if (block) {
+          blockStatus = block.initiatorId === sub ? 'i_blocked' : 'they_blocked'
+        }
+      }
+    }
+
+    return reply.send({ ...conversation, blockStatus })
+
   })
 
   // ── Leave group conversation ────────────────────────────────────────────────

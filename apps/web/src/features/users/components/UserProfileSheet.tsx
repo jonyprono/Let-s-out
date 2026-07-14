@@ -80,6 +80,8 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['user-profile'] })
+      qc.invalidateQueries({ queryKey: ['chat', 'conversation'] })
+      qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
       toast.success('Utilisateur bloqué')
       onClose()
     },
@@ -93,6 +95,8 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['user-profile'] })
+      qc.invalidateQueries({ queryKey: ['chat', 'conversation'] })
+      qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
       toast.success('Utilisateur débloqué')
     },
     onError: () => toast.error('Erreur lors du déblocage')
@@ -266,9 +270,9 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
                   className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
                 >
                   <div className="flex items-center justify-center">
-                    {unblockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-[#737373]" /> : <Check className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
+                    {unblockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-green-500" /> : <Ban className="w-[18px] h-[18px] text-green-500" strokeWidth={1.5} />}
                   </div>
-                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Débloquer</span>
+                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-green-600 text-left">Débloquer</span>
                 </button>
               ) : (
                 <button 
@@ -277,9 +281,9 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
                   className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
                 >
                   <div className="flex items-center justify-center">
-                    {blockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-[#737373]" /> : <Ban className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
+                    {blockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-red-500" /> : <Ban className="w-[18px] h-[18px] text-red-500" strokeWidth={1.5} />}
                   </div>
-                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Bloquer</span>
+                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-red-500 text-left">Bloquer</span>
                 </button>
               )}
             </div>

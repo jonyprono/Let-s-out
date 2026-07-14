@@ -24,6 +24,7 @@ export interface Conversation {
   avatarUrl: string | null
   lastMessageAt: string | null
   eventId: string | null
+  blockStatus?: 'none' | 'i_blocked' | 'they_blocked'
   members: ConversationMember[]
   messages: Message[]
 }
