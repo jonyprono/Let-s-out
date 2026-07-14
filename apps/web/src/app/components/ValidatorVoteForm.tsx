@@ -10,6 +10,8 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [threshold, setThreshold] = useState(50);
   const [search, setSearch] = useState('');
+  const [voteDeadline, setVoteDeadline] = useState('');
+  const [showDeadlineInput, setShowDeadlineInput] = useState(false);
   const qc = useQueryClient();
 
   const startVoteMut = useMutation({
@@ -17,6 +19,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
       await apiClient.post(`/events/${event.id}/validators/start`, {
         candidates: selectedCandidates,
         threshold: threshold / 100, // API expects e.g., 0.5
+        voteDeadline: voteDeadline ? new Date(voteDeadline).toISOString() : undefined,
       });
     },
     onSuccess: () => {
@@ -64,8 +67,14 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
 
   if (step === 'confirm') {
     return (
-      <div className="flex flex-col w-full h-full bg-black/40 absolute inset-0 z-50 justify-end">
-        <div className="bg-white dark:bg-[#1C1C1E] w-full rounded-t-3xl pt-2 pb-8 px-6 animate-in slide-in-from-bottom-full duration-300">
+      <div 
+        className="flex flex-col w-full h-full bg-black/40 absolute inset-0 z-50 justify-end"
+        onClick={() => setStep('select')}
+      >
+        <div 
+          className="bg-white dark:bg-[#1C1C1E] w-full rounded-t-3xl pt-2 pb-8 px-6 animate-in slide-in-from-bottom-full duration-300"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="w-10 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6"></div>
           
           <div className="flex items-center justify-between mb-8">
@@ -87,15 +96,30 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
             Lancer le vote de sélection des validateurs de confiance par les membres participants. Un sondage sera envoyé dans le groupe de discussion de l'événement.
           </p>
 
-          <button className="flex items-center gap-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[#2A2A2A] px-4 py-2.5 rounded-full mb-8 hover:opacity-80">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-            Ajouter une date limite de vote
-          </button>
+          {!showDeadlineInput ? (
+            <button 
+              onClick={() => setShowDeadlineInput(true)}
+              className="flex items-center gap-2 text-[14px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[#2A2A2A] px-4 py-2.5 rounded-full mb-8 hover:opacity-80 transition-opacity"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-400">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Ajouter une date limite de vote
+            </button>
+          ) : (
+            <div className="flex flex-col mb-8">
+              <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date et heure limite de vote</p>
+              <input
+                type="datetime-local"
+                value={voteDeadline}
+                onChange={e => setVoteDeadline(e.target.value)}
+                className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
+              />
+            </div>
+          )}
 
           <button
             onClick={() => startVoteMut.mutate()}

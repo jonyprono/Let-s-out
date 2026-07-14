@@ -1018,9 +1018,9 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
           </button>
         ) : (
           <div className="flex flex-col">
-            <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date limite de contribution</p>
+            <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date et heure limite de contribution</p>
             <input
-              type="date"
+              type="datetime-local"
               value={deadline}
               onChange={e => setDeadline(e.target.value)}
               className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
