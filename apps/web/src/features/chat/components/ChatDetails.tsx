@@ -609,11 +609,11 @@ export function ChatDetails() {
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-2.5 bg-gray-200 dark:bg-[#444] rounded-full overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-action-primary"
+                    className="h-full rounded-full bg-[#FF9500]"
                     style={{ width: `${computePoolStats(event).progress}%` }}
                   />
                 </div>
-                <span className="text-[12px] font-bold text-action-primary">{computePoolStats(event).progress}%</span>
+                <span className="text-[12px] font-bold text-[#FF9500]">{computePoolStats(event).progress}%</span>
               </div>
             </div>
             {event.startAt && new Date(event.startAt).getTime() > Date.now() && (
@@ -670,19 +670,21 @@ export function ChatDetails() {
             <p className="text-xs text-gray-300 dark:text-gray-400">Soyez le premier à écrire !</p>
           </div>
         ) : (
-          messages.filter(msg => !localDeletedMessages.includes(msg.id)).map((msg, index) => {
-            const isSystem = msg.type === 'SYSTEM'
-            const isMe = !isSystem && msg.senderId === user?.id
-            const senderName = msg.sender?.profile?.displayName ?? 'Inconnu'
-            const senderAvatar = msg.sender?.profile?.avatarUrl ?? null
-            const showSenderInfo = isGroup && !isMe
+          (() => {
+            const filteredMessages = messages.filter(msg => !localDeletedMessages.includes(msg.id));
+            return filteredMessages.map((msg, index) => {
+              const isSystem = msg.type === 'SYSTEM'
+              const isMe = !isSystem && msg.senderId === user?.id
+              const senderName = msg.sender?.profile?.displayName ?? 'Inconnu'
+              const senderAvatar = msg.sender?.profile?.avatarUrl ?? null
+              const showSenderInfo = isGroup && !isMe
 
-            const prevMsg = index > 0 ? messages[index - 1] : null
-            const showDateSep = !prevMsg ||
-              new Date(msg.createdAt).toDateString() !== new Date(prevMsg.createdAt).toDateString()
+              const prevMsg = index > 0 ? filteredMessages[index - 1] : null
+              const showDateSep = !prevMsg ||
+                new Date(msg.createdAt).toDateString() !== new Date(prevMsg.createdAt).toDateString()
 
-            // Group consecutive messages from same sender
-            const isFirstInGroup = !prevMsg || prevMsg.senderId !== msg.senderId || showDateSep
+              // Group consecutive messages from same sender, breaking on system messages or date boundaries
+              const isFirstInGroup = !prevMsg || prevMsg.type === 'SYSTEM' || prevMsg.senderId !== msg.senderId || showDateSep
 
             const isImage = msg.type === 'IMAGE'
             const isVideo = msg.type === 'VIDEO'
@@ -826,6 +828,7 @@ export function ChatDetails() {
                 </div>
             )
           })
+          })()
         )}
 
         <div ref={messagesEndRef} />
