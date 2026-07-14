@@ -501,7 +501,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
       if (isVoteClosed) return toast.error("Le vote est terminé");
       if (hasPayoutRequest) return toast.error("Le déblocage a déjà été demandé");
       if (collected <= 0) return toast.error("La cagnotte est vide.");
-      setCagnotteStep('validator-vote');
+      setStep('validator-vote');
     };
 
     const isContributionFrozen = isVoteOpen || isVoteClosed || hasPayoutRequest || event.poolReleased;
