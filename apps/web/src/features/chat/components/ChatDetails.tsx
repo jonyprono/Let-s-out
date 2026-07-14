@@ -205,7 +205,6 @@ export function ChatDetails() {
 
   // UI state
   const [inputText, setInputText] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
   const [showEventInfo, setShowEventInfo] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showContributeModal, setShowContributeModal] = useState(false)
@@ -836,13 +835,6 @@ export function ChatDetails() {
           })
         )}
 
-        {isUploading && (
-          <div className="flex justify-end">
-            <div className="bg-gray-200 text-gray-500 dark:text-gray-400 rounded-2xl px-4 py-2 text-sm italic animate-pulse">
-              Envoi en cours...
-            </div>
-          </div>
-        )}
         <div ref={messagesEndRef} />
       </div>
 
