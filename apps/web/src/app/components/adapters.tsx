@@ -28,7 +28,7 @@ const ProfileBase       = lazy(() => import('@/app/components/ProfileV2').then(m
 const EventDetailsBase  = lazy(() => import('@/app/components/EventDetails').then(m => ({ default: (m as any)?.EventDetails as React.ComponentType<any> })))
 const CreateEventBase   = lazy(() => import('@/app/components/CreateEvent').then(m => ({ default: m.CreateEvent })))
 const NotificationsBase = lazy(() => import('@/app/components/Notifications').then(m => ({ default: m.Notifications })))
-const SettingsBase      = lazy(() => import('@/app/components/Settings').then(m => ({ default: m.Settings })))
+const SettingsBase      = lazy(() => import('@/app/components/Settings').then(m => ({ default: m?.Settings || (m as any)?.default?.Settings || (m as any)?.default })))
 const ChatDetailsBase   = lazy(() => import('@/features/chat/components/ChatDetails').then(m => ({ default: m.ChatDetails })))
 const PaymentPageBase   = lazy(() => import('@/app/components/PaymentPage').then(m => ({ default: m.PaymentPage })))
 const FriendRequestsBase= lazy(() => import('@/app/components/FriendRequests').then(m => ({ default: m.FriendRequests })))
