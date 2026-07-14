@@ -31,7 +31,7 @@ import { SettingsToggle } from '@/components/shared/SettingsToggle'
 
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
@@ -245,6 +245,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [publishing, setPublishing] = useState(false)
   const [createdEventId, setCreatedEventId] = useState<string | null>(null)
   const [step, setStep] = useState<'form' | 'preview' | 'done' | 'published'>('form')
+  const qc = useQueryClient()
   const [formStep, setFormStep] = useState<1 | 2>(1)
 
   const [enablePool, setEnablePool] = useState(sessionDraft?.enablePool ?? false)
@@ -474,6 +475,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       await apiClient.put(`/events/${eventId}/publish`)
       clearCreateEventDraft()
       toast.success('🎉 Événement publié avec succès !')
+      qc.invalidateQueries({ queryKey: ['users', 'activity'] })
+      qc.invalidateQueries({ queryKey: ['events'] })
       setStep('published')
     } catch (err: any) {
       console.error('Publish Error:', err)

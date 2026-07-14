@@ -95,6 +95,7 @@ export function ManageEventView({
       toast.success('🎉 Événement publié avec succès !')
       qc.invalidateQueries({ queryKey: ['events'] })
       qc.invalidateQueries({ queryKey: ['events', event.id] })
+      qc.invalidateQueries({ queryKey: ['users', 'activity'] })
     } catch (err: any) {
       toast.error(err?.response?.data?.error || 'Erreur lors de la publication')
     } finally {
