@@ -56,7 +56,7 @@ export function ManageEvent() {
   
   // If we are in the cagnotte flow (form, summary, success) and it's not the active display, render fullscreen
   if (activeTab === 'cagnotte' && cagnotteStep === 'validator-vote') {
-    return <ValidatorVoteForm event={event} attendees={attendeesData?.data || []} onBack={() => setCagnotteStep('empty')} />;
+    return <ValidatorVoteForm event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} onBack={() => setCagnotteStep('empty')} />;
   }
 
   if (activeTab === 'cagnotte' && cagnotteStep !== 'empty' && (!hasPot || cagnotteStep === 'success')) {
@@ -107,8 +107,8 @@ export function ManageEvent() {
       {/* Tab Content */}
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} />}
-        {activeTab === 'participants' && <TabParticipants event={event} attendees={attendeesData?.data || []} />}
-        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} attendees={attendeesData?.data || []} />}
+        {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
+        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
       </div>
     </div>
   );
