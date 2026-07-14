@@ -272,9 +272,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
   // ── Friends for organizer search ────────────────────────────────────────
   const { data: friendsData } = useQuery({
-    queryKey: ['friends-search', coOrgSearch],
+    queryKey: ['users-search', coOrgSearch],
     queryFn: async () => {
-      const res = await apiClient.get('/users/me/friends', { params: { search: coOrgSearch || undefined, limit: 20 } })
+      const res = await apiClient.get('/users/search', { params: { q: coOrgSearch || undefined, limit: 20 } })
       return res.data
     },
     enabled: showOrganizerSearch,
@@ -447,9 +447,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
       setStep('done')
     } catch (err: any) {
-      const apiMsg = err?.response?.data?.message;
-      const msg = Array.isArray(apiMsg) ? apiMsg[0] : apiMsg;
-      toast.error(msg || 'Erreur lors de la création');
+      console.error('CreateEvent Error:', err)
+      const apiMsg = err?.response?.data?.message || err?.response?.data?.error
+      const msg = Array.isArray(apiMsg) ? apiMsg[0] : apiMsg
+      const errorStr = typeof msg === 'string' ? msg : (err.message || 'Erreur lors de la création')
+      toast.error(errorStr === '[object ProgressEvent]' ? 'Erreur de connexion au serveur' : errorStr)
     } finally { setLoading(false) }
   }
 
@@ -474,7 +476,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       toast.success('🎉 Événement publié avec succès !')
       setStep('published')
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || 'Erreur lors de la publication')
+      console.error('Publish Error:', err)
+      const apiMsg = err?.response?.data?.error || err?.response?.data?.message
+      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err.message || 'Erreur lors de la publication')
+      toast.error(errorStr === '[object ProgressEvent]' ? 'Erreur de connexion au serveur' : errorStr)
     } finally { setPublishing(false) }
   }
 
@@ -716,7 +721,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {friends.length === 0 && (
             <div className="flex flex-col items-center justify-center pt-16 text-center">
               <UserIcon className="w-12 h-12 text-[var(--color-icon-muted)] mb-3" strokeWidth={1.5} />
-              <p className="text-[14px] text-[var(--color-text-secondary)]">Aucun ami trouvé</p>
+              <p className="text-[14px] text-[var(--color-text-secondary)]">Aucun utilisateur trouvé</p>
               <p className="text-[12px] text-[var(--color-text-muted)] mt-1">Essayez un autre nom</p>
             </div>
           )}

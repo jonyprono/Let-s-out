@@ -121,7 +121,16 @@ function TabDetails({ event }: { event: any }) {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const qc = useQueryClient();
-  const { data: friendsData, isLoading: isLoadingFriends } = useFriends();
+  const { data: usersData, isLoading: isLoadingFriends } = useQuery({
+    queryKey: ['users-search', searchQuery],
+    queryFn: async () => {
+      const res = await apiClient.get('/users/search', { params: { q: searchQuery || undefined, limit: 20 } })
+      return res.data
+    },
+    enabled: showSearchModal
+  });
+
+  const filteredFriends = Array.isArray(usersData) ? usersData : (usersData?.data ?? []);
 
   const addCoHostMut = useMutation({
     mutationFn: async (userId: string) => {
@@ -135,11 +144,6 @@ function TabDetails({ event }: { event: any }) {
       setSearchQuery('');
     }
   });
-
-  const filteredFriends = friendsData?.filter(f => 
-    f.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    f.username?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -201,7 +205,7 @@ function TabDetails({ event }: { event: any }) {
                <button onClick={() => { setShowSearchModal(false); setSearchQuery(''); }} className="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-full">✕</button>
              </div>
              <div className="p-4 overflow-y-auto flex-1">
-                <p className="text-[13px] text-gray-500 mb-4">Recherchez un ami pour l'ajouter comme co-organisateur.</p>
+                <p className="text-[13px] text-gray-500 mb-4">Recherchez un utilisateur pour l'ajouter comme co-organisateur.</p>
                 <div className="mb-4">
                   <input
                     type="text"
@@ -231,7 +235,7 @@ function TabDetails({ event }: { event: any }) {
                       </div>
                     ))
                   ) : (
-                    <p className="text-[13px] text-center text-gray-500 mt-4">Aucun ami trouvé avec ce nom.</p>
+                    <p className="text-[13px] text-center text-gray-500 mt-4">Aucun utilisateur trouvé avec ce nom.</p>
                   )}
                 </div>
              </div>
