@@ -104,8 +104,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
     queryFn: ({ pageParam = 0 }) =>
       eventsApi.list({ limit: 20, offset: pageParam, ...queryParams }).then(r => r.data),
     getNextPageParam: (lastPage, allPages) => {
-      const loaded = allPages.reduce((acc, page) => acc + page.data.length, 0);
-      return loaded < lastPage.total ? loaded : undefined;
+      const loaded = allPages.reduce((acc, page) => acc + (page?.data?.length || 0), 0);
+      return loaded < (lastPage?.total || 0) ? loaded : undefined;
     },
     initialPageParam: 0,
   });
