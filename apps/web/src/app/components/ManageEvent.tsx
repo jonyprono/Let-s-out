@@ -474,15 +474,16 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const canCloseVote = isVoteOpen && (isAllVoted || isPastDeadline || allCandidatesValidated);
     
     const hasValidators = event.validatorCandidates?.length > 0;
-    const canPayout = isVoteClosed || !hasValidators;
+    const canPayout = collected > 0 && (hasValidators ? isVoteClosed : true);
+    const canClosePool = collected === 0 || event.poolReleased;
 
     const commission = Math.round(collected * 0.10);
     const totalToReceive = collected - commission;
 
     const handlePayoutClick = () => {
-      if (!canPayout) {
-        if (isVoteOpen) return toast.error("Vous devez clôturer le vote d'abord");
-        return toast.error("Action non autorisée");
+      if (collected <= 0) return toast.error("La cagnotte est vide.");
+      if (hasValidators && !isVoteClosed) {
+        return toast.error(isVoteOpen ? "Vous devez clôturer le vote d'abord" : "Vous devez d'abord lancer le vote des validateurs");
       }
       if (isPayoutPending) return toast.error("Le déblocage est déjà en cours d'approbation");
       if (event.poolReleased || isPayoutApproved) return toast.error("Les fonds ont déjà été débloqués");
@@ -501,25 +502,27 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const handleStartVoteClick = () => {
       if (isVoteOpen) {
         if (!canCloseVote) {
-          return toast.error("Vous devez attendre que tous les participants aient voté, que la date limite soit passée, ou que tous les candidats soient validés.");
+          return toast.error("Vous devez attendre que tous les participants aient voté ou que la date limite soit passée.");
         }
         closeVoteMut.mutate();
         return;
       }
       if (isVoteClosed) return toast.error("Le vote est terminé");
       if (hasPayoutRequest) return toast.error("Le déblocage a déjà été demandé");
+      if (collected <= 0) return toast.error("La cagnotte est vide.");
       setStep('validator-vote');
     };
 
+    const isContributionFrozen = isVoteOpen || isVoteClosed || hasPayoutRequest || event.poolReleased;
     const handleContributeClick = () => {
-      if (isPastDeadline || isFull || event.poolReleased) {
+      if (isPastDeadline || isFull || isContributionFrozen) {
         return toast.error("Les contributions sont fermées.");
       }
       navigate(`/events/${event.id}/pay?type=contribution`);
     };
 
     const handleCloseClick = () => {
-      if (!event.poolReleased) return toast.error("Les fonds doivent d'abord être débloqués");
+      if (!canClosePool) return toast.error("Les fonds doivent d'abord être débloqués");
       closeMut.mutate();
     };
 
@@ -559,14 +562,10 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
             <div className="flex-1 h-[6px] bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden relative">
               <div className={`absolute top-0 left-0 h-full rounded-full transition-all ${progressColorClass}`} style={{ width: `${pct}%` }} />
             </div>
-            <span className={`text-[10px] font-bold text-white rounded px-1.5 py-0.5 leading-none ${progressColorClass}`}>{pct}%</span>
-          </div>
-        </div>
-
-        {/* 1. Contribuer */}
+            <span className={`text-[10px] font-bold text-white rounded px-1.5 py-0.5 leading-none ${progressCo        {/* 1. Contribuer */}
         <button 
           onClick={handleContributeClick}
-          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isPastDeadline || isFull || event.poolReleased ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isPastDeadline || isFull || isContributionFrozen ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M1.68091 11.666C3.51388 11.666 4.99981 13.1519 4.99981 14.9849" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
@@ -580,17 +579,19 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
         </button>
 
         {/* 2. Voter */}
-        <button
-          onClick={handleStartVoteClick}
-          disabled={closeVoteMut.isPending || isVoteClosed || hasPayoutRequest || (isVoteOpen && !canCloseVote)}
-          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isVoteClosed || hasPayoutRequest || (isVoteOpen && !canCloseVote) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M13.5902 3.65263C13.0977 3.65263 12.8514 3.65263 12.6271 3.56939C12.5959 3.55782 12.5652 3.54511 12.535 3.53125C12.3175 3.43147 12.1434 3.25734 11.7951 2.90907C10.9935 2.10749 10.5927 1.7067 10.0996 1.66974C10.0333 1.66477 9.96666 1.66477 9.90041 1.66974C9.40725 1.7067 9.00641 2.10749 8.20487 2.90907C7.85661 3.25734 7.68247 3.43147 7.46497 3.53125C7.43476 3.54511 7.40405 3.55782 7.37289 3.56939C7.14854 3.65263 6.90227 3.65263 6.40976 3.65263H6.31891C5.06231 3.65263 4.43402 3.65263 4.04366 4.04301C3.65328 4.43337 3.65328 5.06167 3.65328 6.31826V6.40911C3.65328 6.90162 3.65328 7.14789 3.57004 7.37224C3.55847 7.4034 3.54576 7.43412 3.5319 7.46432C3.43212 7.68182 3.25799 7.85596 2.90971 8.20422C2.10814 9.00577 1.70735 9.4066 1.67039 9.89977C1.66542 9.96602 1.66542 10.0327 1.67039 10.0989C1.70735 10.5921 2.10814 10.9928 2.90971 11.7944C3.25799 12.1428 3.43212 12.3168 3.5319 12.5343C3.54576 12.5646 3.55847 12.5953 3.57004 12.6264C3.65328 12.8508 3.65328 13.0971 3.65328 13.5896V13.6804C3.65328 14.937 3.65328 15.5653 4.04366 15.9557C4.43402 16.3461 5.06231 16.3461 6.31891 16.3461H6.40976C6.90227 16.3461 7.14854 16.3461 7.37289 16.4293C7.40405 16.4408 7.43476 16.4536 7.46497 16.4674C7.68247 16.5673 7.85661 16.7413 8.20487 17.0896C9.00641 17.8912 9.40725 18.292 9.90041 18.3289C9.96666 18.3339 10.0333 18.3339 10.0996 18.3289C10.5927 18.292 10.9935 17.8912 11.7951 17.0896C12.1434 16.7413 12.3175 16.5673 12.535 16.4674C12.5652 16.4536 12.5959 16.4408 12.6271 16.4293C12.8514 16.3461 13.0977 16.3461 13.5902 16.3461H13.6811C14.9377 16.3461 15.566 16.3461 15.9563 15.9557C16.3467 15.5653 16.3467 14.937 16.3467 13.6804V13.5896C16.3467 13.0971 16.3467 12.8508 16.4299 12.6264C16.4415 12.5953 16.4542 12.5646 16.4681 12.5343C16.5679 12.3168 16.742 12.1428 17.0902 11.7944C17.8918 10.9928 18.2927 10.5921 18.3296 10.0989C18.3346 10.0327 18.3346 9.96602 18.3296 9.89977C18.2927 9.4066 17.8918 9.00577 17.0902 8.20422C16.742 7.85596 16.5679 7.68182 16.4681 7.46432C16.4542 7.43412 16.4415 7.4034 16.4299 7.37224C16.3467 7.14789 16.3467 6.90162 16.3467 6.40911V6.31826C16.3467 5.06167 16.3467 4.43337 15.9563 4.04301C15.566 3.65263 14.9377 3.65263 13.6811 3.65263H13.5902Z" stroke="currentColor" strokeWidth="1.25"/>
-            <path d="M7.08334 13.7493C7.66553 12.7429 8.75367 12.0658 10 12.0658C11.2463 12.0658 12.3345 12.7429 12.9167 13.7493M11.6667 8.33267C11.6667 9.25317 10.9205 9.99934 10 9.99934C9.07959 9.99934 8.33334 9.25317 8.33334 8.33267C8.33334 7.41221 9.07959 6.66602 10 6.66602C10.9205 6.66602 11.6667 7.41221 11.6667 8.33267Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/>
-          </svg>
-          {voteText}
-        </button>
+        {hasValidators && (
+          <button
+            onClick={handleStartVoteClick}
+            disabled={closeVoteMut.isPending || isVoteClosed || hasPayoutRequest || (isVoteOpen && !canCloseVote) || collected <= 0}
+            className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isVoteClosed || hasPayoutRequest || (isVoteOpen && !canCloseVote) || collected <= 0 ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.5902 3.65263C13.0977 3.65263 12.8514 3.65263 12.6271 3.56939C12.5959 3.55782 12.5652 3.54511 12.535 3.53125C12.3175 3.43147 12.1434 3.25734 11.7951 2.90907C10.9935 2.10749 10.5927 1.7067 10.0996 1.66974C10.0333 1.66477 9.96666 1.66477 9.90041 1.66974C9.40725 1.7067 9.00641 2.10749 8.20487 2.90907C7.85661 3.25734 7.68247 3.43147 7.46497 3.53125C7.43476 3.54511 7.40405 3.55782 7.37289 3.56939C7.14854 3.65263 6.90227 3.65263 6.40976 3.65263H6.31891C5.06231 3.65263 4.43402 3.65263 4.04366 4.04301C3.65328 4.43337 3.65328 5.06167 3.65328 6.31826V6.40911C3.65328 6.90162 3.65328 7.14789 3.57004 7.37224C3.55847 7.4034 3.54576 7.43412 3.5319 7.46432C3.43212 7.68182 3.25799 7.85596 2.90971 8.20422C2.10814 9.00577 1.70735 9.4066 1.67039 9.89977C1.66542 9.96602 1.66542 10.0327 1.67039 10.0989C1.70735 10.5921 2.10814 10.9928 2.90971 11.7944C3.25799 12.1428 3.43212 12.3168 3.5319 12.5343C3.54576 12.5646 3.55847 12.5953 3.57004 12.6264C3.65328 12.8508 3.65328 13.0971 3.65328 13.5896V13.6804C3.65328 14.937 3.65328 15.5653 4.04366 15.9557C4.43402 16.3461 5.06231 16.3461 6.31891 16.3461H6.40976C6.90227 16.3461 7.14854 16.3461 7.37289 16.4293C7.40405 16.4408 7.43476 16.4536 7.46497 16.4674C7.68247 16.5673 7.85661 16.7413 8.20487 17.0896C9.00641 17.8912 9.40725 18.292 9.90041 18.3289C9.96666 18.3339 10.0333 18.3339 10.0996 18.3289C10.5927 18.292 10.9935 17.8912 11.7951 17.0896C12.1434 16.7413 12.3175 16.5673 12.535 16.4674C12.5652 16.4536 12.5959 16.4408 12.6271 16.4293C12.8514 16.3461 13.0977 16.3461 13.5902 16.3461H13.6811C14.9377 16.3461 15.566 16.3461 15.9563 15.9557C16.3467 15.5653 16.3467 14.937 16.3467 13.6804V13.5896C16.3467 13.0971 16.3467 12.8508 16.4299 12.6264C16.4415 12.5953 16.4542 12.5646 16.4681 12.5343C16.5679 12.3168 16.742 12.1428 17.0902 11.7944C17.8918 10.9928 18.2927 10.5921 18.3296 10.0989C18.3346 10.0327 18.3346 9.96602 18.3296 9.89977C18.2927 9.4066 17.8918 9.00577 17.0902 8.20422C16.742 7.85596 16.5679 7.68182 16.4681 7.46432C16.4542 7.43412 16.4415 7.4034 16.4299 7.37224C16.3467 7.14789 16.3467 6.90162 16.3467 6.40911V6.31826C16.3467 5.06167 16.3467 4.43337 15.9563 4.04301C15.566 3.65263 14.9377 3.65263 13.6811 3.65263H13.5902Z" stroke="currentColor" strokeWidth="1.25"/>
+              <path d="M7.08334 13.7493C7.66553 12.7429 8.75367 12.0658 10 12.0658C11.2463 12.0658 12.3345 12.7429 12.9167 13.7493M11.6667 8.33267C11.6667 9.25317 10.9205 9.99934 10 9.99934C9.07959 9.99934 8.33334 9.25317 8.33334 8.33267C8.33334 7.41221 9.07959 6.66602 10 6.66602C10.9205 6.66602 11.6667 7.41221 11.6667 8.33267Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round"/>
+            </svg>
+            {voteText}
+          </button>
+        )}
 
         {/* 3. Débloquer */}
         <button
@@ -610,22 +611,22 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
           {payoutMut.isPending ? "Traitement..." : isPayoutPending ? "Déblocage en cours..." : (event.poolReleased || isPayoutApproved) ? "Fonds débloqués" : "Débloquer les fonds"}
         </button>
 
-        {/* 3.1 Approuver (if organizer is also validator) */}
-        {!!me?.id && event.validatorIds?.includes(me.id) && isPayoutPending && !event.payoutRequest?.approvals?.includes(me.id) && (
+        {/* 3.1 Approuver (if co-host or validator) */}
+        {!!me?.id && me.id !== event.creatorId && (event.validatorIds?.includes(me.id) || event.coHostIds?.includes(me.id)) && isPayoutPending && !event.payoutRequest?.approvals?.includes(me.id) && (
           <button
-            onClick={() => approvePayoutMut.mutate()}
-            disabled={approvePayoutMut.isPending}
+            onClick={() => navigate(`/events/${event.id}/approve-payout`)}
             className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-[#10B981] text-white rounded-[8px] transition-transform text-[14px] font-bold active:scale-95`}
           >
-            {approvePayoutMut.isPending ? "Approbation..." : "Approuver le déblocage"}
+            Examiner la demande de déblocage
           </button>
         )}
 
         {/* 4. Clôturer */}
         <button
           onClick={handleCloseClick}
-          disabled={closeMut.isPending}
-          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${!event.poolReleased ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+          disabled={closeMut.isPending || !canClosePool}
+          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${!canClosePool ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+        > ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M13.7467 7.49935V5.41602C13.7467 3.34495 12.0678 1.66602 9.99674 1.66602C7.92568 1.66602 6.24674 3.34495 6.24674 5.41602V7.49935" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>

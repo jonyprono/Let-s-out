@@ -106,6 +106,8 @@ import { AdminDashboardPage } from '@/app/components/admin/AdminDashboardPage'
 import { AdminKycListPage } from '@/app/components/admin/AdminKycListPage'
 import { AdminKycDetailPage } from '@/app/components/admin/AdminKycDetailPage'
 import { AdminAdminsPage } from '@/app/components/admin/AdminAdminsPage'
+import { AdminSettingsPage } from './pages/admin/AdminSettingsPage';
+import { EventPayoutApproval } from './components/EventPayoutApproval';
 import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -259,6 +261,7 @@ export default function App() {
             <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/events/:id/manage" element={<ManageEvent />} />
             <Route path="/events/:id/validators-vote" element={<EventValidatorsVote />} />
+            <Route path="/events/:id/approve-payout" element={<EventPayoutApproval />} />
             <Route path="/events/:id/success" element={<EventSuccessScreen />} />
             <Route path="/scan-qr" element={<JoinPrivateEvent />} />
             <Route path="/events/:id/pay" element={<PaymentPage />} />
