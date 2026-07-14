@@ -13,6 +13,28 @@ export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement>
   children?: React.ReactNode;
 }
 
+function renderContent(text: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      return (
+        <a 
+          key={i} 
+          href={part} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-blue-500 dark:text-blue-400 hover:underline break-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 export function MessageBubble({
   content,
   time,
@@ -41,7 +63,7 @@ export function MessageBubble({
         </div>
       )}
       
-      <div className={cn("flex max-w-[75%] flex-col gap-[var(--spacing-050)]", isSender ? "items-end" : "items-start")}>
+      <div className={cn("flex max-w-[85%] sm:max-w-[75%] flex-col gap-[var(--spacing-050)]", isSender ? "items-end" : "items-start")}>
         {imageUrl ? (
           <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--border-secondary)] relative group">
             <img 
@@ -71,12 +93,14 @@ export function MessageBubble({
             {children ? (
               children
             ) : (
-              <>
-                <span className="selectable-text mr-2">{content}</span>
-                <span className="inline-block text-[10px] text-[var(--color-text-secondary)] opacity-70 align-bottom leading-none">
+              <div className="flex flex-wrap items-end gap-2">
+                <span className="selectable-text whitespace-pre-wrap break-words w-full" style={{ wordBreak: 'break-word' }}>
+                  {content ? renderContent(content) : null}
+                </span>
+                <span className="inline-block text-[10px] text-[var(--color-text-secondary)] opacity-70 leading-none ml-auto shrink-0 mt-1">
                   {time}
                 </span>
-              </>
+              </div>
             )}
           </div>
         )}
