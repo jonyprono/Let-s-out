@@ -754,9 +754,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
               {attendeesLoading ? (
                 <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-action-primary" /></div>
-              ) : attendeesData?.data?.length > 0 ? (
+              ) : (Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || [])?.length > 0 ? (
                 <div>
-                  {attendeesData.data.map((booking: any) => {
+                  {(Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []).map((booking: any) => {
                     const avatar = booking?.user?.profile?.avatarUrl
                     const name = booking?.user?.profile?.displayName || '?'
                     const isVerified = booking?.user?.profile?.isVerified
@@ -812,10 +812,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
               {attendeesLoading ? (
                 <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-action-primary" /></div>
-              ) : attendeesData?.data?.length > 0 ? (
+              ) : (Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || [])?.length > 0 ? (
                 <div>
                   {(() => {
-                    const groupedContributions = attendeesData.data.reduce((acc: any, booking: any) => {
+                    const groupedContributions = (Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []).reduce((acc: any, booking: any) => {
                       const userId = booking?.user?.id;
                       if (!userId) return acc;
                       const amt = Number(booking?.amount || booking?.paidAmount || 0);
