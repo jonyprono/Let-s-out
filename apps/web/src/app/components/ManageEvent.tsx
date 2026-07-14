@@ -434,7 +434,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     mutationFn: async () => apiClient.post(`/events/${event.id}/payout/request`),
     onSuccess: () => {
       setShowPayoutConfirm(false);
-      setShowPayoutSuccess(true);
+      setTimeout(() => setShowPayoutSuccess(true), 350);
       qc.invalidateQueries({ queryKey: ['events', event.id] });
     },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du déblocage')
@@ -531,7 +531,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const groupedContributions = attendees.reduce((acc: any, booking: any) => {
       const userId = booking?.user?.id;
       if (!userId) return acc;
-      const amt = Number(booking?.amount || booking?.paidAmount || 0);
+      const amt = Number(booking?.totalPaid || booking?.amount || booking?.paidAmount || 0);
       if (amt <= 0) return acc;
       if (!acc[userId]) {
         acc[userId] = { ...booking, totalAmount: 0 };
