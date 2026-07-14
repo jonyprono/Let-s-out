@@ -928,7 +928,7 @@ export function ChatDetails() {
           <div className="flex-1 flex items-center justify-center pt-safe-top pb-safe-bottom">
             <img src={fullscreenImage} alt="Fullscreen content" className="w-full h-full object-contain max-h-[100dvh]" />
           </div>
-        </BottomSheet>
+        </div>
       )}
 
       {/* Message Context Menu Bottom Sheet */}
