@@ -289,7 +289,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const attendeeCount = event._count?.bookings ?? event.currentAttendees ?? 0
   const maxAttendees = event.maxAttendees
-  const isFull = maxAttendees != null && attendeeCount >= maxAttendees
+  const isFull = maxAttendees != null && maxAttendees > 0 && attendeeCount >= maxAttendees
   const isPastEvent = event?.startAt ? new Date(event.startAt) < new Date() : false
 
   const organizerName = event.creator?.profile?.displayName || 'Organisateur'
@@ -635,11 +635,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   handleJoin();
                 }}
                 disabled={joinMutation.isPending || isFull || event.poolReleased}
-                className="flex-1 w-full rounded-full font-medium text-[14px] h-[40px] border-none transition-opacity active:scale-95 font-poppins"
-                style={{
-                  background: (joinMutation.isPending || isFull || event.poolReleased) ? 'var(--color-background-secondary)' : 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)',
-                  color: (joinMutation.isPending || isFull || event.poolReleased) ? 'var(--color-text-secondary)' : 'white'
-                }}
+                className="flex-1 rounded-full font-medium text-[14px] font-poppins"
               >
                 {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : event.poolReleased ? 'Clôturé' : isFull ? 'Complet' : "Rejoindre l'événement"}
               </Button>
