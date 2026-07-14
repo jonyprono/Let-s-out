@@ -21,6 +21,17 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 // This ensures offline users see their last-known data immediately
 restoreQueryCache()
 
+// Automatically reload the page when Vite fails to fetch a dynamic chunk
+// (e.g. after a Vercel deployment where old chunks are deleted)
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault()
+  const reloaded = sessionStorage.getItem('vite-chunk-reload')
+  if (!reloaded) {
+    sessionStorage.setItem('vite-chunk-reload', 'true')
+    window.location.reload()
+  }
+})
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>

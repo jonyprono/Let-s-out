@@ -17,7 +17,6 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public static getDerivedStateFromError(error: Error): State {
-    // Check if it's a dynamic import failure (network error)
     const isNetwork = 
       error.message.includes('Failed to fetch dynamically imported module') ||
       error.message.includes('Importing a module script failed') ||
@@ -28,6 +27,19 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo)
+    
+    // Auto-reload for Vercel deployment chunk errors
+    if (
+      error.message.includes('Failed to fetch dynamically imported module') ||
+      error.message.includes('Importing a module script failed')
+    ) {
+      // Prevent infinite reload loops by checking sessionStorage
+      const reloaded = sessionStorage.getItem('vite-chunk-reload')
+      if (!reloaded) {
+        sessionStorage.setItem('vite-chunk-reload', 'true')
+        window.location.reload()
+      }
+    }
   }
 
   private handleRetry = () => {
