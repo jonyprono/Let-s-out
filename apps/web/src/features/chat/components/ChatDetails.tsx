@@ -209,6 +209,7 @@ export function ChatDetails() {
   const [showEventInfo, setShowEventInfo] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showContributeModal, setShowContributeModal] = useState(false)
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null)
   const [pickerMsgId, setPickerMsgId] = useState<string | null>(null)
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null)
   const [localDeletedMessages, setLocalDeletedMessagesState] = useState<string[]>(() => {
@@ -643,7 +644,7 @@ export function ChatDetails() {
                 )}
 
                 <div
-                  className="relative"
+                  className={`relative ${pickerMsgId === msg.id ? 'z-50' : ''}`}
                   onMouseDown={() => handlePressStart(msg.id)}
                   onMouseUp={handlePressEnd}
                   onTouchStart={() => handlePressStart(msg.id)}
@@ -726,6 +727,7 @@ export function ChatDetails() {
                     showSpacer={showSenderInfo && !isFirstInGroup}
                     onAvatarClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
                     imageUrl={isImage && msg.content ? msg.content : undefined}
+                    onImageClick={() => setFullscreenImage(msg.content ?? null)}
                     content={!isMedia && !msg.isDeleted && msg.type !== 'POLL' ? (msg.content ?? undefined) : undefined}
                   >
                     {msg.isDeleted ? (
@@ -935,6 +937,24 @@ export function ChatDetails() {
           eventTitle={event.title}
           onClose={() => setShowShareModal(false)}
         />
+      )}
+
+      {/* Fullscreen Image Viewer */}
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 z-[300] bg-black/95 backdrop-blur-xl flex flex-col animate-in fade-in duration-200"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <div className="flex justify-between items-center p-4 pt-safe-4 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent">
+            <span className="text-white/80 text-sm font-medium">Image</span>
+            <button onClick={() => setFullscreenImage(null)} className="w-10 h-10 rounded-full bg-white dark:bg-[#1A1A1A]/20 flex items-center justify-center text-white backdrop-blur-md active:scale-95 transition-transform">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          <div className="flex-1 flex items-center justify-center pt-safe-top pb-safe-bottom">
+            <img src={fullscreenImage} alt="Fullscreen content" className="w-full h-full object-contain max-h-[100dvh]" />
+          </div>
+        </div>
       )}
     </div>
   )

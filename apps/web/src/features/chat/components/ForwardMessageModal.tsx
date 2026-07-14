@@ -100,15 +100,10 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
               <button
                 key={conv.id}
                 onClick={() => toggleSelect(conv.id)}
-                className="w-full flex items-center justify-start gap-4 p-3 rounded-2xl hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+                className="w-full flex items-center justify-between gap-4 p-3 rounded-2xl hover:bg-gray-50 dark:bg-[#222222] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
               >
-                {/* Radio button on the left */}
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${selectedConvs.includes(conv.id) ? 'border-[#FF7A00] bg-[#FF7A00]' : 'border-gray-300'}`}>
-                  {selectedConvs.includes(conv.id) && <div className="w-2.5 h-2.5 rounded-full bg-white dark:bg-[#1A1A1A]" />}
-                </div>
-
                 {/* Avatar and name */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 overflow-hidden">
                   <div className="w-[44px] h-[44px] rounded-full overflow-hidden bg-gray-100 dark:bg-[#2a2a2a] flex-shrink-0">
                     <SafeImage 
                       src={conv.avatarUrl} 
@@ -143,9 +138,14 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
                       }
                     />
                   </div>
-                  <span className="font-poppins font-medium text-[15px] text-gray-900 dark:text-white truncate max-w-[200px] text-left">
+                  <span className="font-poppins font-medium text-[15px] text-gray-900 dark:text-white truncate text-left">
                     {conv.name}
                   </span>
+                </div>
+
+                {/* Radio button on the right */}
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${selectedConvs.includes(conv.id) ? 'border-[#FF7A00] bg-[#FF7A00]' : 'border-gray-300'}`}>
+                  {selectedConvs.includes(conv.id) && <div className="w-2.5 h-2.5 rounded-full bg-white dark:bg-[#1A1A1A]" />}
                 </div>
               </button>
             ))

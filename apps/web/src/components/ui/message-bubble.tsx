@@ -9,6 +9,7 @@ export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement>
   avatarUrl?: string;
   showSpacer?: boolean;
   onAvatarClick?: () => void;
+  onImageClick?: () => void;
   children?: React.ReactNode;
 }
 
@@ -20,6 +21,7 @@ export function MessageBubble({
   avatarUrl,
   showSpacer = false,
   onAvatarClick,
+  onImageClick,
   className,
   children,
   ...props
@@ -41,8 +43,18 @@ export function MessageBubble({
       
       <div className={cn("flex max-w-[75%] flex-col gap-[var(--spacing-050)]", isSender ? "items-end" : "items-start")}>
         {imageUrl ? (
-          <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--border-secondary)] relative">
-            <img src={imageUrl} alt="attachment" className="max-h-[200px] w-auto object-cover" />
+          <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--border-secondary)] relative group">
+            <img 
+              src={imageUrl} 
+              alt="attachment" 
+              className={cn("max-h-[200px] w-auto object-cover transition-opacity", onImageClick && "cursor-pointer hover:opacity-90 active:opacity-75")} 
+              onClick={(e) => {
+                if (onImageClick) {
+                  e.stopPropagation();
+                  onImageClick();
+                }
+              }}
+            />
             <div className={cn("absolute bottom-2 right-2 px-2 py-0.5 rounded-full text-[10px] text-white bg-black/50")}>
               {time}
             </div>
