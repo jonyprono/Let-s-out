@@ -239,6 +239,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
   const displayProfile = isOwnProfile ? (viewedProfile || profile) : viewedProfile;
   const targetUserId = displayProfile?.userId || displayProfile?.id || displayProfile?.user?.id;
+  const isProfileVerified = displayProfile?.kycStatus === 'verified';
 
   const { data: activity } = useQuery({
     queryKey: ['users', 'activity', targetUserId],
@@ -398,7 +399,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
       {/* Profile Info Section */}
       <div className="flex flex-col w-full -mt-10 mb-4 z-10 px-4 shrink-0">
-        <div className="flex items-end gap-3 mb-2">
+        <div className="flex flex-col gap-3 mb-2">
           {/* Avatar */}
           <div 
             onClick={() => { if (isOwnProfile) setShowEditModal(true) }}
@@ -422,9 +423,11 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           <div className="flex flex-col pb-1">
             <div className="flex items-center gap-1">
               <h2 className="text-[17px] font-semibold text-gray-900 dark:text-white leading-tight font-poppins">{displayName}</h2>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" clipRule="evenodd" d="M7.66822 1.30874C7.30677 0.921827 6.69331 0.921827 6.33186 1.30874L5.44541 2.25692C5.26468 2.44974 5.0095 2.55601 4.74541 2.54646L3.44913 2.50255C2.91968 2.48474 2.48568 2.91874 2.5035 3.44819L2.54741 4.74574C2.55631 5.00983 2.45068 5.26501 2.25722 5.44574L1.30904 6.33155C0.922133 6.69301 0.922133 7.3071 1.30904 7.66855L2.25722 8.55501C2.45068 8.73574 2.55631 8.99028 2.54741 9.25501L2.50286 10.5519C2.48568 11.0814 2.91968 11.5154 3.44913 11.4976L4.74604 11.4536C5.01013 11.4447 5.26531 11.5504 5.44604 11.7432L6.33186 12.6914C6.69395 13.0789 7.30741 13.0789 7.6695 12.6914L8.55595 11.7432C8.73604 11.5504 8.99122 11.4441 9.25531 11.4536L10.5522 11.4976C11.0817 11.5154 11.5163 11.0814 11.4979 10.5519L11.4546 9.25437C11.445 8.99028 11.5513 8.73574 11.7441 8.55501L12.6923 7.66855C13.0792 7.3071 13.0792 6.69301 12.6923 6.33155L11.7441 5.4451C11.5513 5.26501 11.445 5.00983 11.4546 4.7451L11.4979 3.44819C11.5163 2.91874 11.0817 2.48474 10.5522 2.50255L9.25531 2.5471C8.99122 2.55537 8.73604 2.44974 8.55531 2.25692L7.66822 1.30874ZM3.9665 7.26955L6.14859 9.45101L9.76504 5.50174L8.90786 4.70819L6.10786 7.75955L4.78931 6.44101L3.9665 7.26955Z" fill="#2878E8"/>
-              </svg>
+              {isProfileVerified && (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M7.66822 1.30874C7.30677 0.921827 6.69331 0.921827 6.33186 1.30874L5.44541 2.25692C5.26468 2.44974 5.0095 2.55601 4.74541 2.54646L3.44913 2.50255C2.91968 2.48474 2.48568 2.91874 2.5035 3.44819L2.54741 4.74574C2.55631 5.00983 2.45068 5.26501 2.25722 5.44574L1.30904 6.33155C0.922133 6.69301 0.922133 7.3071 1.30904 7.66855L2.25722 8.55501C2.45068 8.73574 2.55631 8.99028 2.54741 9.25501L2.50286 10.5519C2.48568 11.0814 2.91968 11.5154 3.44913 11.4976L4.74604 11.4536C5.01013 11.4447 5.26531 11.5504 5.44604 11.7432L6.33186 12.6914C6.69395 13.0789 7.30741 13.0789 7.6695 12.6914L8.55595 11.7432C8.73604 11.5504 8.99122 11.4441 9.25531 11.4536L10.5522 11.4976C11.0817 11.5154 11.5163 11.0814 11.4979 10.5519L11.4546 9.25437C11.445 8.99028 11.5513 8.73574 11.7441 8.55501L12.6923 7.66855C13.0792 7.3071 13.0792 6.69301 12.6923 6.33155L11.7441 5.4451C11.5513 5.26501 11.445 5.00983 11.4546 4.7451L11.4979 3.44819C11.5163 2.91874 11.0817 2.48474 10.5522 2.50255L9.25531 2.5471C8.99122 2.55537 8.73604 2.44974 8.55531 2.25692L7.66822 1.30874ZM3.9665 7.26955L6.14859 9.45101L9.76504 5.50174L8.90786 4.70819L6.10786 7.75955L4.78931 6.44101L3.9665 7.26955Z" fill="#2878E8"/>
+                </svg>
+              )}
             </div>
             <div className="flex items-center gap-1 mt-0.5">
               {city && <span className="text-[12px] text-gray-500 font-medium font-inter">{city} · </span>}
@@ -602,7 +605,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
             {/* Interests */}
             <div>
-              <h3 className="font-inter text-[15px] font-medium text-gray-600 mb-3">Mes intérêts</h3>
+              <h3 className="font-inter text-[15px] font-medium text-gray-600 mb-3">{isOwnProfile ? 'Mes intérêts' : "Centres d'intérêt"}</h3>
               <div className="flex flex-wrap gap-2">
                 {interests.length > 0 ? interests.map((i: string) => {
                   let icon = '📌';
@@ -660,8 +663,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                     return (
                       <div
                         key={b.badge}
-                        onClick={() => setSelectedBadge(b)}
-                        className="w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 cursor-pointer active:scale-95 transition-transform shadow-sm"
+                        onClick={() => { if (isOwnProfile) setSelectedBadge(b) }}
+                        className={`w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 transition-transform shadow-sm ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
                         style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #4CAF50 83.33%)' }}
                       >
                         <div className="w-6 h-6 flex items-center justify-center text-white drop-shadow-md">{b.icon}</div>
@@ -672,14 +675,14 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                     return (
                       <div
                         key={b.badge}
-                        onClick={() => setSelectedBadge(b)}
-                        className="w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 cursor-pointer active:scale-95 transition-transform relative overflow-hidden"
+                        onClick={() => { if (isOwnProfile) setSelectedBadge(b) }}
+                        className={`w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 transition-transform relative overflow-hidden ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
                       >
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
                           <div className="h-full bg-[#FF7A00]/50 transition-all" style={{ width: `${pct}%` }} />
                         </div>
-                        <div className="w-6 h-6 flex items-center justify-center grayscale opacity-50">{b.icon}</div>
-                        <span className="text-[9px] font-semibold text-gray-500 text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
+                        <div className="w-6 h-6 flex items-center justify-center text-gray-400">{b.icon}</div>
+                        <span className="text-[9px] font-bold text-gray-400 text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
                       </div>
                     );
                   }
