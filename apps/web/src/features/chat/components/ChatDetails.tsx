@@ -19,6 +19,7 @@ import { Capacitor } from '@capacitor/core'
 import { resolveContributionAmount, computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 import { MessageBubble } from '@/components/ui/message-bubble'
 import { ChatInput } from '@/components/ui/chat-input'
+import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { GroupChatInfoSheet } from './GroupChatInfoSheet'
 import { ForwardMessageModal } from './ForwardMessageModal'
 
