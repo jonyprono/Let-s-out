@@ -1,8 +1,11 @@
 import { useNavigate, useParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
+import { chatApi } from '@/features/chat/api'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import toast from 'react-hot-toast'
+import { useState } from 'react'
 
 export function EventSuccessScreen() {
   const { id } = useParams()
@@ -13,6 +16,28 @@ export function EventSuccessScreen() {
     queryFn: () => eventsApi.getById(id!).then(r => r.data),
     enabled: !!id,
   })
+
+  const [isJoiningChat, setIsJoiningChat] = useState(false)
+
+  const goToChat = async () => {
+    if (!id) return
+    setIsJoiningChat(true)
+    try {
+      const conv = await chatApi.getEventConversation(id)
+      navigate(`/chat/${conv.id}`)
+    } catch (err: any) {
+      const status = err?.response?.status
+      if (status === 403) {
+        toast.info("Rejoignez l'événement pour accéder à la discussion.")
+      } else if (status === 404) {
+        toast.info("Aucune discussion trouvée pour cet événement.")
+      } else {
+        toast.error("Impossible de démarrer la conversation")
+      }
+    } finally {
+      setIsJoiningChat(false)
+    }
+  }
 
   const event = eventData
 
@@ -76,11 +101,18 @@ export function EventSuccessScreen() {
       </div>
 
       {/* Sticky footer */}
-      <div className="fixed bottom-0 left-0 right-0 px-[16px] py-[12px] bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-white/10 max-w-[390px] mx-auto w-full z-40 pb-safe-4">
+      <div className="fixed bottom-0 left-0 right-0 px-[16px] py-[12px] bg-white dark:bg-[#1A1A1A] max-w-[390px] mx-auto w-full z-40 pb-safe-4 flex flex-col gap-[12px]">
+        <button
+          onClick={goToChat}
+          disabled={isJoiningChat}
+          className="w-full h-[40px] rounded-[1000px] text-white font-medium text-[14px] active:scale-95 transition-transform flex items-center justify-center disabled:opacity-70"
+          style={{ background: '#FF9500' }}
+        >
+          {isJoiningChat ? 'Chargement...' : 'Rejoindre le groupe'}
+        </button>
         <button
           onClick={() => navigate(`/events/${id}`)}
-          className="w-full h-[40px] rounded-[1000px] text-white font-medium text-[14px] active:scale-95 transition-transform"
-          style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' }}
+          className="w-full h-[40px] rounded-[1000px] text-[var(--color-text-primary)] font-medium text-[14px] active:scale-95 transition-transform bg-white dark:bg-[#1A1A1A] border border-[var(--border-default)]"
         >
           Retour à l'événement
         </button>

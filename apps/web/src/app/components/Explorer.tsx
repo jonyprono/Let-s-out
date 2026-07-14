@@ -425,7 +425,14 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   }}
                   className="shrink-0 flex items-center justify-center p-1"
                 >
-                  <SlidersHorizontalIcon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.5 5.83325H5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2.5 14.1667H7.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M15 14.1667H17.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12.5 5.83325H17.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M5 5.83325C5 5.05669 5 4.6684 5.12687 4.36211C5.29602 3.95374 5.62048 3.62928 6.02886 3.46012C6.33515 3.33325 6.72343 3.33325 7.5 3.33325C8.27657 3.33325 8.66483 3.33325 8.97117 3.46012C9.3795 3.62928 9.704 3.95374 9.87317 4.36211C10 4.6684 10 5.05669 10 5.83325C10 6.60982 10 6.9981 9.87317 7.30439C9.704 7.71277 9.3795 8.03723 8.97117 8.20639C8.66483 8.33325 8.27657 8.33325 7.5 8.33325C6.72343 8.33325 6.33515 8.33325 6.02886 8.20639C5.62048 8.03723 5.29602 7.71277 5.12687 7.30439C5 6.9981 5 6.60982 5 5.83325Z" stroke="#737373" strokeWidth="1.5"/>
+                    <path d="M10 14.1667C10 13.3902 10 13.0019 10.1268 12.6956C10.296 12.2872 10.6205 11.9627 11.0288 11.7936C11.3352 11.6667 11.7234 11.6667 12.5 11.6667C13.2766 11.6667 13.6648 11.6667 13.9712 11.7936C14.3795 11.9627 14.704 12.2872 14.8732 12.6956C15 13.0019 15 13.3902 15 14.1667C15 14.9433 15 15.3316 14.8732 15.6379C14.704 16.0462 14.3795 16.3707 13.9712 16.5399C13.6648 16.6667 13.2766 16.6667 12.5 16.6667C11.7234 16.6667 11.3352 16.6667 11.0288 16.5399C10.6205 16.3707 10.296 16.0462 10.1268 15.6379C10 15.3316 10 14.9433 10 14.1667Z" stroke="#737373" strokeWidth="1.5"/>
+                  </svg>
                 </button>
               )}
             </div>
@@ -435,9 +442,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 e.stopPropagation();
                 onNavigate('scan-qr');
               }}
-              className="w-[44px] h-[44px] shrink-0 rounded-full border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] flex items-center justify-center shadow-sm active:bg-gray-50 dark:bg-[#222222] transition-colors"
+              className="shrink-0 flex items-center justify-center active:scale-95 transition-transform"
             >
-              <QrCode01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={1.5} />
+              <svg width="44" height="44" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0.5" y="0.5" width="35" height="35" rx="17.5" fill="white" className="dark:fill-[#1A1A1A]"/>
+                <rect x="0.5" y="0.5" width="35" height="35" rx="17.5" stroke="#D4D4D4" className="dark:stroke-[#333]"/>
+                <path d="M10.5 13C10.5 11.8215 10.5 11.2322 10.8661 10.8661C11.2322 10.5 11.8215 10.5 13 10.5C14.1785 10.5 14.7678 10.5 15.1339 10.8661C15.5 11.2322 15.5 11.8215 15.5 13C15.5 14.1785 15.5 14.7678 15.1339 15.1339C14.7678 15.5 14.1785 15.5 13 15.5C11.8215 15.5 11.2322 15.5 10.8661 15.1339C10.5 14.7678 10.5 14.1785 10.5 13Z" stroke="#737373" strokeWidth="1.5"/>
+                <path d="M10.5 23C10.5 21.8215 10.5 21.2322 10.8661 20.8661C11.2322 20.5 11.8215 20.5 13 20.5C14.1785 20.5 14.7678 20.5 15.1339 20.8661C15.5 21.2322 15.5 21.8215 15.5 23C15.5 24.1785 15.5 24.7677 15.1339 25.1339C14.7678 25.5 14.1785 25.5 13 25.5C11.8215 25.5 11.2322 25.5 10.8661 25.1339C10.5 24.7677 10.5 24.1785 10.5 23Z" stroke="#737373" strokeWidth="1.5"/>
+                <path d="M10.5 18H15.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M18 10.5V14.6667" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M20.5 13C20.5 11.8215 20.5 11.2322 20.8661 10.8661C21.2322 10.5 21.8215 10.5 23 10.5C24.1785 10.5 24.7677 10.5 25.1339 10.8661C25.5 11.2322 25.5 11.8215 25.5 13C25.5 14.1785 25.5 14.7678 25.1339 15.1339C24.7677 15.5 24.1785 15.5 23 15.5C21.8215 15.5 21.2322 15.5 20.8661 15.1339C20.5 14.7678 20.5 14.1785 20.5 13Z" stroke="#737373" strokeWidth="1.5"/>
+                <path d="M25.5 18H20.5C19.3215 18 18.7322 18 18.3661 18.3661C18 18.7322 18 19.3215 18 20.5M18 22.8077V25.1154M20.5 20.5V21.75C20.5 22.9553 21.1531 23 22.1667 23C22.6269 23 23 23.3731 23 23.8333M21.3333 25.5H20.5M23 20.5C24.1785 20.5 24.7677 20.5 25.1339 20.8667C25.5 21.2332 25.5 21.8234 25.5 23.0036C25.5 24.1838 25.5 24.7739 25.1339 25.1406C24.8667 25.4082 24.4806 25.4805 23.8333 25.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
             </button>
           </div>
 
@@ -452,10 +468,10 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     hapticFeedback.impact();
                     setSelectedCategory(tab.id);
                   }}
-                  className={`shrink-0 active:scale-95 transition-all px-4 py-1.5 rounded-[1000px] text-center ${
+                  className={`shrink-0 active:scale-95 transition-all px-[16px] py-[8px] rounded-[1000px] text-center ${
                     isActive
-                      ? 'bg-[#FFF2D3] text-[#FF7A00]'
-                      : 'bg-[#F2F2F2] text-[var(--color-text-secondary)]'
+                      ? 'bg-[#FFF9EC] text-[#FF7A00]'
+                      : 'bg-[#F9FAFB] dark:bg-[#2A2A2A] text-[#737373] dark:text-[#A3A3A3]'
                   }`}
                 >
                   <span className={`text-[12px] font-poppins whitespace-nowrap ${
