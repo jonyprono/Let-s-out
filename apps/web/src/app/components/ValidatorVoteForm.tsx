@@ -112,7 +112,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
   return (
     <div className="flex flex-col w-full h-full bg-[#F9F9F9] dark:bg-[#0a0a0b] absolute inset-0 z-40 overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col bg-white dark:bg-[#0a0a0b] border-b border-gray-200 dark:border-gray-800">
+      <div className="flex flex-col bg-white dark:bg-[#0a0a0b] border-b border-gray-200 dark:border-gray-800 pt-12">
         <div className="flex items-center px-4 py-3">
           <button onClick={onBack} className="w-9 h-9 flex items-center justify-center bg-white dark:bg-black rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
             <ArrowLeft01Icon className="w-5 h-5 text-gray-700 dark:text-white" />

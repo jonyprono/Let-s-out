@@ -51,7 +51,7 @@ export function PaymentFlow({
   summaryItemSubtitle,
   summaryItemDetails,
   summarySubmitText,
-  transactionFee = 100,
+  transactionFee,
   amountLabel = 'Participation',
   onInitiate,
   onDevConfirm,
@@ -75,7 +75,8 @@ export function PaymentFlow({
   const operatorRef = useRef<HTMLDivElement>(null)
 
   const finalAmount = Number(participationAmount) || 0
-  const netToPay = finalAmount + transactionFee
+  const computedFee = transactionFee ?? Math.ceil(finalAmount * 0.02)
+  const netToPay = finalAmount + computedFee
 
   const cleanPhone = phoneNumber.trim().replace(/\s+/g, '')
   const isBenin = country.code === '+229' || country.cca2 === 'BJ'
@@ -406,9 +407,9 @@ export function PaymentFlow({
                   <span className="text-[13px] text-[#8D8D8D]">{amountLabel}</span>
                   <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{finalAmount.toLocaleString()}F</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[#8D8D8D]">Frais de transaction</span>
-                  <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{transactionFee.toLocaleString()} F</span>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-[13px] text-gray-500">Frais de transaction</span>
+                  <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{computedFee.toLocaleString()} F</span>
                 </div>
                 <div className="border-t border-[#F0F0F0] pt-3 flex items-center justify-between">
                   <span className="text-[14px] font-bold text-gray-900 dark:text-white">Net à payer</span>
