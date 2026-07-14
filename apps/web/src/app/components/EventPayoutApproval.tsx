@@ -70,7 +70,7 @@ export function EventPayoutApproval() {
   return (
     <div className="w-full min-h-screen flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b]">
       {/* Header */}
-      <div className="flex items-center px-4 py-4 bg-white dark:bg-[#1A1A1A] border-b border-gray-100 dark:border-gray-800 shrink-0 sticky top-0 z-10">
+      <div className="flex items-center px-4 pt-12 pb-4 bg-white dark:bg-[#1A1A1A] border-b border-gray-100 dark:border-gray-800 shrink-0 sticky top-0 z-10">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-900 dark:text-white active:scale-95 transition-transform">
           <ArrowLeft01Icon size={24} />
         </button>
