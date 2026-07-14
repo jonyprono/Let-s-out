@@ -562,8 +562,14 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
             <div className="flex-1 h-[6px] bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden relative">
               <div className={`absolute top-0 left-0 h-full rounded-full transition-all ${progressColorClass}`} style={{ width: `${pct}%` }} />
             </div>
-            <span className={`text-[10px] font-bold text-white rounded px-1.5 py-0.5 leading-none ${progressCo        {/* 1. Contribuer */}
-        <button 
+            <span className={`text-[10px] font-bold text-white rounded px-1.5 py-0.5 leading-none ${progressColorClass}`}>
+              {Math.round(pct)}%
+            </span>
+          </div>
+        </div>
+
+        {/* 1. Contribuer */}
+        <button
           onClick={handleContributeClick}
           className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${isPastDeadline || isFull || isContributionFrozen ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
