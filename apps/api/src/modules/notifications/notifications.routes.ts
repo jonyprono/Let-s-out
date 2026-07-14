@@ -148,16 +148,19 @@ export async function createAndSendNotification(
     broadcastToUser(data.userId, { type: 'notification:new', notification: notif })
 
     // 2. FCM Push — for background/offline devices
-    const { sendPushToUser } = await import('../../services/push.service')
-    await sendPushToUser(app.prisma as any, data.userId, {
-      title: data.title,
-      body: data.body,
-      data: {
-        notifId: notif.id,
-        type: data.type,
-        ...(data.data ? Object.fromEntries(Object.entries(data.data).map(([k, v]) => [k, String(v)])) : {}),
-      },
-    })
+    import('../../services/push.service')
+      .then(({ sendPushToUser }) => {
+        sendPushToUser(app.prisma as any, data.userId, {
+          title: data.title,
+          body: data.body,
+          data: {
+            notifId: notif.id,
+            type: data.type,
+            ...(data.data ? Object.fromEntries(Object.entries(data.data).map(([k, v]) => [k, String(v)])) : {}),
+          },
+        }).catch(err => app.log.error(`[FCM] Background push failed: ${err}`))
+      })
+      .catch(err => app.log.error(`[FCM] Failed to load push service: ${err}`))
 
     return notif
   } catch (e) {
