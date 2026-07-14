@@ -472,13 +472,23 @@ export function ChatDetails() {
   }
 
   const handleDeleteGlobal = async (msgId: string) => {
-    try {
-      await chatApi.deleteMessage(msgId)
-      toast.success('Message supprimé pour tout le monde')
-    } catch (e) {
-      toast.error('Erreur lors de la suppression')
-    }
+    // Hide the context menu immediately
     setPickerMsgId(null)
+    
+    // Optimistic UI update: mark message as deleted instantly
+    qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => 
+      old.map(m => m.id === msgId ? { ...m, isDeleted: true } : m)
+    )
+    
+    try {
+      chatApi.deleteMessage(msgId).catch(() => {
+        // Revert on failure
+        qc.invalidateQueries({ queryKey: ['chat', 'messages', id] })
+        toast.error('Erreur lors de la suppression')
+      })
+    } catch (e) {
+      // Ignored
+    }
   }
 
   const openForwardModal = (msg: any) => {
@@ -955,7 +965,7 @@ export function ChatDetails() {
               
               {/* Actions */}
               <div className="flex flex-col py-2 px-2">
-                {!msg.isDeleted && msg.content && (
+                {!msg.isDeleted && msg.content && msg.type !== 'POLL' && (
                   <button
                     onClick={() => handleCopy(msg.content!)}
                     className="flex items-center gap-4 px-4 py-4 text-[16px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 rounded-2xl transition-colors text-left"
@@ -964,7 +974,7 @@ export function ChatDetails() {
                     Copier
                   </button>
                 )}
-                {!msg.isDeleted && (
+                {!msg.isDeleted && msg.type !== 'POLL' && (
                   <button
                     onClick={() => openForwardModal(msg)}
                     className="flex items-center gap-4 px-4 py-4 text-[16px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 rounded-2xl transition-colors text-left"
