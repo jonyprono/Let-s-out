@@ -933,7 +933,7 @@ export function ChatDetails() {
       )}
 
       {/* Message Context Menu Bottom Sheet */}
-      <BottomSheet isOpen={!!pickerMsgId} onClose={() => setPickerMsgId(null)}>
+      <BottomSheet open={!!pickerMsgId} onClose={() => setPickerMsgId(null)}>
         {pickerMsgId && (() => {
           const msg = messages?.find(m => m.id === pickerMsgId)
           if (!msg) return null
