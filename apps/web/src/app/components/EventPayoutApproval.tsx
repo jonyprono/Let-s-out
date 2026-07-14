@@ -1,10 +1,10 @@
-import { useState } from 'react';
+
 import { useNavigate, useParams } from 'react-router';
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
-import { SafeImage } from '@/components/shared/SafeImage';
+
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth.store';
 

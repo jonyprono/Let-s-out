@@ -1,5 +1,5 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircleIcon, RefreshCcw01Icon, Home01Icon } from 'hugeicons-react';
+import { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertCircleIcon, Refresh01Icon, Home01Icon } from 'hugeicons-react';
 
 interface Props {
   children?: ReactNode;
@@ -55,7 +55,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               onClick={this.handleReset}
               className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-900 dark:bg-white text-white dark:text-black font-bold rounded-xl active:scale-95 transition-transform"
             >
-              <RefreshCcw01Icon size={18} />
+              <Refresh01Icon size={18} />
               Recharger la page
             </button>
             

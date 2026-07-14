@@ -440,15 +440,6 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du déblocage')
   });
 
-  const approvePayoutMut = useMutation({
-    mutationFn: async () => apiClient.post(`/events/${event.id}/payout/approve`),
-    onSuccess: () => {
-      toast.success("Déblocage approuvé");
-      qc.invalidateQueries({ queryKey: ['events', event.id] });
-    },
-    onError: (err: any) => toast.error(err.response?.data?.error || "Erreur lors de l'approbation")
-  });
-
   if (hasPot) {
     const isPastDeadline = event.registrationDeadline 
       ? new Date() > new Date(event.registrationDeadline) 
