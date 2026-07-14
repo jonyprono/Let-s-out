@@ -36,6 +36,26 @@ const CreateEventSchema = z.object({
 
 export default async function eventsRoutes(app: FastifyInstance) {
 
+  // Helper: get all user IDs that are blocked (in either direction) for a given user
+  async function getBlockedIds(userId: string): Promise<string[]> {
+    const blocks = await app.prisma.friendship.findMany({
+      where: {
+        status: 'BLOCKED',
+        OR: [
+          { initiatorId: userId },
+          { receiverId: userId },
+        ],
+      },
+      select: { initiatorId: true, receiverId: true },
+    })
+    const ids = new Set<string>()
+    for (const b of blocks) {
+      if (b.initiatorId !== userId) ids.add(b.initiatorId)
+      if (b.receiverId !== userId) ids.add(b.receiverId)
+    }
+    return Array.from(ids)
+  }
+
   // ── Public routes ────────────────────────────────────────────────────────
   // Get recommended events based on user interests
   app.get('/recommended', { preHandler: [app.authenticate] }, async (req, reply) => {
@@ -63,12 +83,15 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return upper;
     }).filter(c => validEnums.includes(c)) as import('@prisma/client').EventCategory[];
 
+    const blockedIds = await getBlockedIds(sub)
+
     const events = await app.prisma.event.findMany({
       where: {
         status: 'PUBLISHED',
         isPrivate: false,
         startAt: { gte: new Date() }, // Only upcoming events
         ...(mappedCategories.length > 0 && { category: { in: mappedCategories } }),
+        ...(blockedIds.length > 0 && { creatorId: { notIn: blockedIds } }),
       },
       include: {
         creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
@@ -134,9 +157,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
     return reply.send({ data: pendingEvents, total: pendingEvents.length })
   })
 
-  // List events (with filters)
-  app.get('/', async (req, reply) => {
+  // List events (with filters) — optionally authenticated to filter blocked creators
+  app.get('/', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
     const { category, city, status = 'PUBLISHED', limit = '20', offset = '0', search, upcoming, maxPrice, date, time, ongoing } = req.query as any
+    const currentUser = (req.user as any)?.sub as string | undefined
 
     let startDateBoundary: Date | undefined;
     let endDateBoundary: Date | undefined;
@@ -196,6 +220,12 @@ export default async function eventsRoutes(app: FastifyInstance) {
       startDateBoundary = new Date();
     }
 
+    // Filter out events from blocked users (if authenticated)
+    let blockedCreatorIds: string[] = []
+    if (currentUser) {
+      blockedCreatorIds = await getBlockedIds(currentUser)
+    }
+
     const whereClause: any = {
       status,
       isPrivate: false,
@@ -208,6 +238,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
           { description: { contains: search, mode: 'insensitive' } },
         ],
       }),
+      ...(blockedCreatorIds.length > 0 && { creatorId: { notIn: blockedCreatorIds } }),
     };
 
     if (ongoing === 'true') {

@@ -23,6 +23,15 @@ export default fp(async (app) => {
       return reply.code(403).send({ statusCode: 403, error: 'Forbidden', message: 'Admin access required' })
     }
   })
+
+  // Decorator for routes that work with or without auth (user info available if token provided)
+  app.decorate('optionalAuthenticate', async (request: FastifyRequest, _reply: FastifyReply) => {
+    try {
+      await request.jwtVerify()
+    } catch {
+      // No valid token — that's OK for optional auth routes
+    }
+  })
 })
 
 // Augment FastifyInstance type
@@ -30,5 +39,6 @@ declare module 'fastify' {
   interface FastifyInstance {
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
     requireAdmin: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
+    optionalAuthenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
   }
 }
