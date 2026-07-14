@@ -6,6 +6,8 @@ export interface ConversationMember {
   userId: string
   isAdmin: boolean
   mutedUntil?: string | null
+  lastReadAt?: string | null
+  lastDeliveredAt?: string | null
   user?: {
     profile?: {
       displayName: string
