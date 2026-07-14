@@ -204,6 +204,23 @@ export function ChatDetails() {
 
   const memberCount = conversation?.members?.length ?? 0
 
+  const otherMembers = conversation?.members?.filter(m => m.userId !== user?.id) || []
+  
+  const getMessageStatus = (msg: any) => {
+    if (msg._optimistic) return 'sending'
+    const msgDate = new Date(msg.createdAt).getTime()
+    
+    // Check if anyone read it
+    const isRead = otherMembers.some(m => m.lastReadAt && new Date(m.lastReadAt).getTime() >= msgDate)
+    if (isRead) return 'read'
+    
+    // Check if anyone received it
+    const isDelivered = otherMembers.some(m => m.lastDeliveredAt && new Date(m.lastDeliveredAt).getTime() >= msgDate)
+    if (isDelivered) return 'delivered'
+    
+    return 'sent'
+  }
+
   // UI state
   const [inputText, setInputText] = useState('')
   const [showEventInfo, setShowEventInfo] = useState(false)
@@ -714,7 +731,8 @@ export function ChatDetails() {
 
                   <MessageBubble
                     isSender={isMe}
-                    time={`${format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}${isMe && isLastMsg ? ' ✓' : ''}`}
+                    time={format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                    status={getMessageStatus(msg)}
                     avatarUrl={showSenderInfo && isFirstInGroup ? senderAvatar || undefined : undefined}
                     showSpacer={showSenderInfo && !isFirstInGroup}
                     onAvatarClick={() => openProfile(msg.senderId, senderName, senderAvatar)}

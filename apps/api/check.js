@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.event.findUnique({ where: { id: 'cmrjr3ksl000ra1v1ezs3q4ux' } }).then(e => { console.log('Creator:', e.creatorId); process.exit(0); });

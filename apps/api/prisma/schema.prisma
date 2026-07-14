@@ -257,6 +257,7 @@ model ConversationMember {
   isAdmin        Boolean      @default(false)
   joinedAt       DateTime     @default(now())
   lastReadAt     DateTime?
+  lastDeliveredAt DateTime?
   mutedUntil     DateTime?
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)

@@ -10,6 +10,7 @@ export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement>
   showSpacer?: boolean;
   onAvatarClick?: () => void;
   onImageClick?: () => void;
+  status?: 'sending' | 'sent' | 'delivered' | 'read';
   children?: React.ReactNode;
 }
 
@@ -44,10 +45,48 @@ export function MessageBubble({
   showSpacer = false,
   onAvatarClick,
   onImageClick,
+  status,
   className,
   children,
   ...props
 }: MessageBubbleProps) {
+
+  const renderStatusIcon = () => {
+    if (!isSender || !status) return null;
+    
+    if (status === 'sending') {
+      return (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 opacity-70">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      );
+    }
+    if (status === 'sent') {
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 opacity-70">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      );
+    }
+    if (status === 'delivered') {
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1 opacity-70">
+          <polyline points="18 6 7 17 2 12"></polyline>
+          <polyline points="22 10 16 16 14 14"></polyline>
+        </svg>
+      );
+    }
+    if (status === 'read') {
+      return (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+          <polyline points="18 6 7 17 2 12"></polyline>
+          <polyline points="22 10 16 16 14 14"></polyline>
+        </svg>
+      );
+    }
+    return null;
+  };
   return (
     <div className={cn("flex w-full gap-[var(--spacing-100)]", isSender ? "flex-row-reverse" : "flex-row", className)} {...props}>
       {!isSender && (avatarUrl || showSpacer) && (
@@ -97,8 +136,9 @@ export function MessageBubble({
                 <span className="selectable-text whitespace-pre-wrap break-words w-full" style={{ wordBreak: 'break-word' }}>
                   {content ? renderContent(content) : null}
                 </span>
-                <span className="inline-block text-[10px] text-[var(--color-text-secondary)] opacity-70 leading-none ml-auto shrink-0 mt-1">
+                <span className="inline-flex items-center text-[10px] text-[var(--color-text-secondary)] opacity-70 leading-none ml-auto shrink-0 mt-1">
                   {time}
+                  {renderStatusIcon()}
                 </span>
               </div>
             )}

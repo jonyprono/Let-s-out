@@ -157,10 +157,20 @@ export function useChatSocket() {
   useEffect(() => {
     const handler: MessageHandler = (data) => {
       if (data.type === 'new_message') {
+        const userId = useAuthStore.getState().user?.id
+        if (data.message && data.message.senderId !== userId) {
+          sendGlobal({ type: 'delivered', conversationId: data.message.conversationId, messageId: data.message.id })
+        }
         qc.invalidateQueries({ queryKey: ['chat', 'messages', data.message.conversationId] })
         qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
       }
       
+      if (data.type === 'delivered' || data.type === 'read') {
+        qc.invalidateQueries({ queryKey: ['chat', 'messages', data.conversationId] })
+        qc.invalidateQueries({ queryKey: ['chat', 'conversation', data.conversationId] })
+        qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
+      }
+
       if (data.type === 'message_deleted') {
         qc.invalidateQueries({ queryKey: ['chat', 'messages', data.messageId] }) // wait, the backend sends conversationId implicitly? Actually we don't have conversationId in the event unless we add it, wait the backend broadcasted to the conversation.
         qc.invalidateQueries({ queryKey: ['chat', 'messages'] }) // Invalidate all messages to be safe

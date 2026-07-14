@@ -148,19 +148,21 @@ export async function createAndSendNotification(
     broadcastToUser(data.userId, { type: 'notification:new', notification: notif })
 
     // 2. FCM Push — for background/offline devices
-    import('../../services/push.service')
-      .then(({ sendPushToUser }) => {
-        sendPushToUser(app.prisma as any, data.userId, {
-          title: data.title,
-          body: data.body,
-          data: {
-            notifId: notif.id,
-            type: data.type,
-            ...(data.data ? Object.fromEntries(Object.entries(data.data).map(([k, v]) => [k, String(v)])) : {}),
-          },
-        }).catch(err => app.log.error(`[FCM] Background push failed: ${err}`))
+    try {
+      const { sendPushToUser } = await import('../../services/push.service')
+      // Wait for it so Vercel doesn't kill the function, but catch errors
+      await sendPushToUser(app.prisma as any, data.userId, {
+        title: data.title,
+        body: data.body,
+        data: {
+          notifId: notif.id,
+          type: data.type,
+          ...(data.data ? Object.fromEntries(Object.entries(data.data).map(([k, v]) => [k, String(v)])) : {}),
+        },
       })
-      .catch(err => app.log.error(`[FCM] Failed to load push service: ${err}`))
+    } catch (pushErr) {
+      app.log.warn(`[FCM] Push failed for ${data.userId}: ${pushErr}`)
+    }
 
     return notif
   } catch (e) {

@@ -115,10 +115,23 @@ export default async function chatRoutes(app: FastifyInstance) {
         if (msg.type === 'read' && msg.messageId) {
           await app.prisma.conversationMember.update({
             where: { conversationId_userId: { conversationId: msg.conversationId, userId } },
-            data: { lastReadAt: new Date() },
+            data: { lastReadAt: new Date(), lastDeliveredAt: new Date() }, // Si lu, c'est aussi distribué
           })
           broadcastToConversation(app, msg.conversationId, {
             type: 'read',
+            userId,
+            conversationId: msg.conversationId,
+            messageId: msg.messageId,
+          }, userId)
+        }
+
+        if (msg.type === 'delivered' && msg.messageId) {
+          await app.prisma.conversationMember.update({
+            where: { conversationId_userId: { conversationId: msg.conversationId, userId } },
+            data: { lastDeliveredAt: new Date() },
+          })
+          broadcastToConversation(app, msg.conversationId, {
+            type: 'delivered',
             userId,
             conversationId: msg.conversationId,
             messageId: msg.messageId,
@@ -156,7 +169,7 @@ export default async function chatRoutes(app: FastifyInstance) {
               // If they are online via WS, the call_offer was already relayed above.
               // Sending FCM to an online user would cause a DUPLICATE call_offer on the client
               // which triggers an auto-reject (callStatus !== 'IDLE') and silently kills the call.
-              Promise.allSettled(
+              await Promise.allSettled(
                 members.map(async ({ userId: recipientId }) => {
                   const isOnline = connections.has(recipientId) && connections.get(recipientId)!.size > 0
                   if (isOnline) {
@@ -179,7 +192,7 @@ export default async function chatRoutes(app: FastifyInstance) {
                     },
                   })
                 })
-              ).catch(callPushErr => app.log.warn(`[FCM] Failed to send call push: ${String(callPushErr)}`))
+              )
             } catch (callPushErr) {
               app.log.warn(`[FCM] Failed to send call push: ${String(callPushErr)}`)
             }
@@ -313,7 +326,7 @@ export default async function chatRoutes(app: FastifyInstance) {
         const pushTitle = isGroup ? (conversation.name || 'Groupe') : senderName;
         const pushBody = isGroup ? `${senderName}: ${msgPreviewRaw}` : msgPreviewRaw;
 
-        Promise.allSettled(
+        await Promise.allSettled(
           offlineMembers.map(({ userId: recipientId }) =>
             sendPushToUser(app.prisma, recipientId, {
               title: pushTitle,
@@ -325,7 +338,7 @@ export default async function chatRoutes(app: FastifyInstance) {
               },
             })
           )
-        ).catch(e => app.log.warn(`[FCM Background] Error: ${e}`))
+        )
       }
 
       return reply.code(201).send(message)
