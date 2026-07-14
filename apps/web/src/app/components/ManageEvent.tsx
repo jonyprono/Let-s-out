@@ -108,7 +108,7 @@ export function ManageEvent() {
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} />}
         {activeTab === 'participants' && <TabParticipants event={event} attendees={attendeesData?.data || []} />}
-        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} />}
+        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} attendees={attendeesData?.data || []} />}
       </div>
     </div>
   );
@@ -392,7 +392,7 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
 // ----------------------------------------------------------------------
 // TAB: CAGNOTTE INLINE
 // ----------------------------------------------------------------------
-function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) => void }) {
+function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep: (s: any) => void, attendees: any[] }) {
   const me = useAuthStore((state: any) => state.user);
   const isKycVerified = me?.profile?.kycStatus === 'verified';
 
@@ -520,6 +520,20 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
     if (isVoteOpen) voteText = closeVoteMut.isPending ? "Clôture en cours..." : "Clôturer le vote";
     else if (isVoteClosed) voteText = "Vote clôturé";
 
+    // Group attendees by user ID to sum their paidAmount
+    const groupedContributions = attendees.reduce((acc: any, booking: any) => {
+      const userId = booking?.user?.id;
+      if (!userId) return acc;
+      const amt = Number(booking?.amount || booking?.paidAmount || 0);
+      if (amt <= 0) return acc;
+      if (!acc[userId]) {
+        acc[userId] = { ...booking, totalAmount: 0 };
+      }
+      acc[userId].totalAmount += amt;
+      return acc;
+    }, {});
+    const contributionsList = Object.values(groupedContributions).sort((a: any, b: any) => b.totalAmount - a.totalAmount);
+
     return (
       <div className="flex flex-col gap-3">
         <div className={`rounded-[12px] p-4 shadow-sm border ${bgClass}`}>
@@ -613,6 +627,79 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
           </svg>
           Clôturer la cagnotte
         </button>
+
+        {/* Participations List */}
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-[14px] font-semibold text-gray-900 dark:text-white">Participations ({contributionsList.length})</h3>
+            <button className="text-[13px] font-medium text-gray-500 active:opacity-70 transition-opacity">Voir tout</button>
+          </div>
+          <div className="flex flex-col gap-0 bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+            {contributionsList.slice(0, 10).map((booking: any) => {
+              const avatar = booking?.user?.profile?.avatarUrl;
+              const name = booking?.user?.profile?.displayName || '?';
+              const amount = booking?.totalAmount;
+              const date = booking?.createdAt ? format(new Date(booking.createdAt), "dd/MM/yyyy") : "";
+              return (
+                <div key={booking.user.id} className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                      <SafeImage src={avatar} alt={name} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="text-[13px] font-medium text-gray-900 dark:text-white">{name}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[13px] font-bold text-gray-900 dark:text-white">{amount.toLocaleString('fr-FR')} F</span>
+                    {date && <span className="text-[10px] text-gray-400 mt-0.5">{date}</span>}
+                  </div>
+                </div>
+              );
+            })}
+            {contributionsList.length === 0 && (
+              <div className="p-4 text-center text-[13px] text-gray-500">Aucune participation.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Validateurs Section */}
+        {event.validatorCandidates?.length > 0 && (
+          <div className="mt-4 mb-8">
+            <h3 className="text-[14px] font-semibold text-gray-900 dark:text-white mb-3">Validateurs</h3>
+            {isVoteOpen ? (
+              <div className="flex items-center justify-center gap-2 bg-white dark:bg-[#1A1A1A] rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 text-gray-500">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin-slow">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.92-10.26l5.57 5.57"/>
+                </svg>
+                <span className="text-[14px] font-medium">Vote en cours</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-0 bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+                {event.validatorIds?.map((vid: string) => {
+                  const attendee = attendees?.find((a: any) => a.user.id === vid);
+                  if (!attendee) return null;
+                  const name = attendee.user.profile?.displayName || 'Validateur';
+                  const avatar = attendee.user.profile?.avatarUrl;
+                  const hasApproved = event.payoutRequest?.approvals?.includes(vid);
+                  return (
+                    <div key={vid} className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                          <SafeImage src={avatar} alt={name} className="w-full h-full object-cover" />
+                        </div>
+                        <span className="text-[13px] font-medium text-gray-900 dark:text-white">{name}</span>
+                      </div>
+                      {hasApproved && (
+                        <div className="w-5 h-5 rounded-full bg-[#10B981] flex items-center justify-center">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Payout Confirm Bottom Sheet */}
         <BottomSheet open={showPayoutConfirm} onClose={() => setShowPayoutConfirm(false)}>

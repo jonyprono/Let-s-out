@@ -814,43 +814,58 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-action-primary" /></div>
               ) : attendeesData?.data?.length > 0 ? (
                 <div>
-                  {attendeesData.data.map((booking: any) => {
-                    const avatar = booking?.user?.profile?.avatarUrl
-                    const name = booking?.user?.profile?.displayName || '?'
-                    const isVerified = booking?.user?.profile?.isVerified
-                    const amount = booking?.amount || booking?.paidAmount
-                    return (
-                      <button
-                        key={booking.id}
-                        className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 dark:bg-[#222222] transition-colors text-left"
-                        onClick={() => openUserProfile(
-                          booking.user.id, 
-                          { displayName: name, avatarUrl: avatar },
-                          { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
-                        )}
-                      >
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
-                          <SafeImage
-                            src={avatar}
-                            alt={name}
-                            className="w-full h-full object-cover"
-                            fallback={
-                              <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white font-bold text-[14px]">
-                                {name.charAt(0).toUpperCase()}
-                              </div>
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center gap-1 flex-1">
-                          <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
-                          {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
-                        </div>
-                        {amount && (
-                          <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{Number(amount).toLocaleString()} F</span>
-                        )}
-                      </button>
-                    )
-                  })}
+                  {(() => {
+                    const groupedContributions = attendeesData.data.reduce((acc: any, booking: any) => {
+                      const userId = booking?.user?.id;
+                      if (!userId) return acc;
+                      const amt = Number(booking?.amount || booking?.paidAmount || 0);
+                      if (amt <= 0) return acc;
+                      if (!acc[userId]) {
+                        acc[userId] = { ...booking, totalAmount: 0 };
+                      }
+                      acc[userId].totalAmount += amt;
+                      return acc;
+                    }, {});
+                    const contributionsList = Object.values(groupedContributions).sort((a: any, b: any) => b.totalAmount - a.totalAmount);
+
+                    return contributionsList.map((booking: any) => {
+                      const avatar = booking?.user?.profile?.avatarUrl
+                      const name = booking?.user?.profile?.displayName || '?'
+                      const isVerified = booking?.user?.profile?.isVerified
+                      const amount = booking?.totalAmount
+                      return (
+                        <button
+                          key={booking.id}
+                          className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 dark:bg-[#222222] transition-colors text-left"
+                          onClick={() => openUserProfile(
+                            booking.user.id, 
+                            { displayName: name, avatarUrl: avatar },
+                            { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                          )}
+                        >
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                            <SafeImage
+                              src={avatar}
+                              alt={name}
+                              className="w-full h-full object-cover"
+                              fallback={
+                                <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white font-bold text-[14px]">
+                                  {name.charAt(0).toUpperCase()}
+                                </div>
+                              }
+                            />
+                          </div>
+                          <div className="flex items-center gap-1 flex-1">
+                            <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
+                            {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
+                          </div>
+                          {amount > 0 && (
+                            <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{Number(amount).toLocaleString()} F</span>
+                          )}
+                        </button>
+                      )
+                    });
+                  })()}
                 </div>
               ) : (
                 <div className="text-center py-10 text-gray-400 text-[14px]">Aucune contribution pour le moment.</div>
