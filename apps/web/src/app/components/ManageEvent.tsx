@@ -173,7 +173,7 @@ function TabDetails({ event }: { event: any }) {
       {/* A propos */}
       <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
         <h3 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-2">À propos</h3>
-        <p className="text-[13px] text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{event.description}</p>
+        <p className="text-[13px] text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words break-all">{event.description}</p>
       </div>
 
       {/* Organisateurs */}
@@ -185,9 +185,12 @@ function TabDetails({ event }: { event: any }) {
           <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{event.creator?.profile?.displayName || event.creator?.profile?.username}</span>
         </div>
 
-        {event.coHostIds?.length > 0 && (
-           <p className="text-[12px] text-gray-500 mb-3">{event.coHostIds.length} co-organisateur(s) ajouté(s)</p>
-        )}
+        {event.coHosts?.map((coHost: any) => (
+          <div key={coHost.id} className="flex items-center gap-3 mb-3">
+            <SafeImage src={coHost.profile?.avatarUrl} alt="Co-organisateur" className="w-10 h-10 rounded-full bg-gray-200" />
+            <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{coHost.profile?.displayName || coHost.profile?.username || coHost.username || 'Co-organisateur'}</span>
+          </div>
+        ))}
 
         <button 
           onClick={() => setShowSearchModal(true)}

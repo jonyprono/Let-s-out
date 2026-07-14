@@ -813,12 +813,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {/* Co-organizers */}
           {selectedCoOrgs.map((org, i) => (
             <div key={i} className="flex items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
-              <div className="w-10 h-10 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center font-bold text-[length:var(--font-size-title-small)] shrink-0">
-                {org.firstName?.[0]?.toUpperCase() || org.username?.[0]?.toUpperCase()}
-              </div>
+              {org.avatarUrl ? (
+                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                  <SafeImage src={org.avatarUrl} alt={org.name} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center font-bold text-[length:var(--font-size-title-small)] shrink-0">
+                  {org.name?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] truncate">
-                  {org.firstName} {org.lastName}
+                  {org.name}
                 </p>
                 <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate">Co-organisateur</p>
               </div>
