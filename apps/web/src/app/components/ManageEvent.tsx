@@ -632,7 +632,6 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
           onClick={handleCloseClick}
           disabled={closeMut.isPending || !canClosePool}
           className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${!canClosePool ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
-        > ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M13.7467 7.49935V5.41602C13.7467 3.34495 12.0678 1.66602 9.99674 1.66602C7.92568 1.66602 6.24674 3.34495 6.24674 5.41602V7.49935" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
