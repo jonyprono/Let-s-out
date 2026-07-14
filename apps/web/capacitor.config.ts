@@ -39,7 +39,7 @@ const config: CapacitorConfig = {
         // Production: load /app directly — bypasses LandingPage entirely for native apps
         url: 'https://letsout.app/app',
         cleartext: false,
-        allowNavigation: ['letsout.app', 'let-s-out.onrender.com', 'let-s-out-web.vercel.app'],
+        allowNavigation: ['letsout.app', 'let-s-out.onrender.com', 'let-s-out-web.vercel.app', 'localhost'],
         errorPath: 'error.html',
       }
     : {
@@ -51,7 +51,9 @@ const config: CapacitorConfig = {
       },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0,
+      launchShowDuration: 3000,
+      launchAutoHide: true,
+      backgroundColor: "#ffffff",
     },
     StatusBar: {
       overlaysWebView: false,
