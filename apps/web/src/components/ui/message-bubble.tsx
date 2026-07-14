@@ -7,6 +7,8 @@ export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement>
   isSender?: boolean;
   imageUrl?: string;
   avatarUrl?: string;
+  showAvatar?: boolean;
+  senderName?: string;
   showSpacer?: boolean;
   onAvatarClick?: () => void;
   onImageClick?: () => void;
@@ -42,6 +44,8 @@ export function MessageBubble({
   isSender = false,
   imageUrl,
   avatarUrl,
+  showAvatar,
+  senderName,
   showSpacer = false,
   onAvatarClick,
   onImageClick,
@@ -89,15 +93,24 @@ export function MessageBubble({
   };
   return (
     <div className={cn("flex w-full gap-[var(--spacing-100)]", isSender ? "flex-row-reverse" : "flex-row", className)} {...props}>
-      {!isSender && (avatarUrl || showSpacer) && (
-        <div className="flex w-8 flex-col justify-end flex-shrink-0">
-          {avatarUrl && (
-            <img
-              src={avatarUrl}
-              alt="avatar"
-              className={cn("h-8 w-8 rounded-full object-cover", onAvatarClick && "cursor-pointer active:opacity-75")}
-              onClick={onAvatarClick}
-            />
+      {!isSender && (showAvatar || showSpacer) && (
+        <div className="flex w-8 flex-col justify-end flex-shrink-0 pb-[18px]">
+          {showAvatar && (
+            avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="avatar"
+                className={cn("h-8 w-8 rounded-full object-cover", onAvatarClick && "cursor-pointer active:opacity-75")}
+                onClick={onAvatarClick}
+              />
+            ) : (
+              <div 
+                className={cn("h-8 w-8 rounded-full bg-gray-200 dark:bg-[#333] flex items-center justify-center text-[12px] font-bold text-gray-500 dark:text-gray-400", onAvatarClick && "cursor-pointer active:opacity-75")}
+                onClick={onAvatarClick}
+              >
+                {senderName ? senderName.charAt(0).toUpperCase() : '?'}
+              </div>
+            )
           )}
         </div>
       )}
@@ -146,15 +159,24 @@ export function MessageBubble({
         )}
       </div>
 
-      {isSender && (avatarUrl || showSpacer) && (
-        <div className="flex w-8 flex-col justify-end flex-shrink-0">
-          {avatarUrl && (
-            <img
-              src={avatarUrl}
-              alt="avatar"
-              className={cn("h-8 w-8 rounded-full object-cover", onAvatarClick && "cursor-pointer active:opacity-75")}
-              onClick={onAvatarClick}
-            />
+      {isSender && (showAvatar || showSpacer) && (
+        <div className="flex w-8 flex-col justify-end flex-shrink-0 pb-[18px]">
+          {showAvatar && (
+            avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="avatar"
+                className={cn("h-8 w-8 rounded-full object-cover", onAvatarClick && "cursor-pointer active:opacity-75")}
+                onClick={onAvatarClick}
+              />
+            ) : (
+              <div 
+                className={cn("h-8 w-8 rounded-full bg-gray-200 dark:bg-[#333] flex items-center justify-center text-[12px] font-bold text-gray-500 dark:text-gray-400", onAvatarClick && "cursor-pointer active:opacity-75")}
+                onClick={onAvatarClick}
+              >
+                {senderName ? senderName.charAt(0).toUpperCase() : '?'}
+              </div>
+            )
           )}
         </div>
       )}

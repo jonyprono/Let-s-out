@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Send, Play, MapPin, Calendar, Users, Share2, X, Check, MoreVertical, Trash2 } from 'lucide-react'
+import { ChevronLeft, Send, Play, MapPin, Calendar, Users, Share2, X, MoreVertical, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
@@ -165,6 +165,14 @@ function VideoMessage({ src }: { src: string, isMe: boolean }) {
       )}
     </>
   )
+}
+
+const MessageStatusIcon = ({ status, color = "currentColor" }: { status: string, color?: string }) => {
+  if (status === 'sending') return <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+  if (status === 'sent') return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  if (status === 'delivered') return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70"><polyline points="18 6 7 17 2 12"></polyline><polyline points="22 10 16 16 14 14"></polyline></svg>
+  if (status === 'read') return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 6 7 17 2 12"></polyline><polyline points="22 10 16 16 14 14"></polyline></svg>
+  return null;
 }
 
 export function ChatDetails() {
@@ -599,7 +607,7 @@ export function ChatDetails() {
             <div className="flex-1 mr-4">
               <p className="text-[13px] font-bold text-gray-900 dark:text-[#FFFFFF] mb-1.5">Cagnotte en cours</p>
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-1.5 bg-gray-100 dark:bg-[#333333] rounded-full overflow-hidden">
+                <div className="flex-1 h-2.5 bg-gray-200 dark:bg-[#444] rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full bg-action-primary"
                     style={{ width: `${computePoolStats(event).progress}%` }}
@@ -608,14 +616,16 @@ export function ChatDetails() {
                 <span className="text-[12px] font-bold text-action-primary">{computePoolStats(event).progress}%</span>
               </div>
             </div>
-            <button
-              onClick={() => {
-                if (event) navigate(`/events/${event.id}/pay?type=contribution`)
-              }}
-              className="rounded-full border-[1.5px] border-action-primary text-action-primary px-4 py-1.5 text-[12px] font-bold active:scale-95 transition-transform touch-sm"
-            >
-              Contribuer
-            </button>
+            {event.startAt && new Date(event.startAt).getTime() > Date.now() && (
+              <button
+                onClick={() => {
+                  if (event) navigate(`/events/${event.id}/pay?type=contribution`)
+                }}
+                className="rounded-full border-[1.5px] border-action-primary text-action-primary px-4 py-1.5 text-[12px] font-bold active:scale-95 transition-transform touch-sm"
+              >
+                Contribuer
+              </button>
+            )}
           </div>
         )}
 
@@ -672,13 +682,12 @@ export function ChatDetails() {
               new Date(msg.createdAt).toDateString() !== new Date(prevMsg.createdAt).toDateString()
 
             // Group consecutive messages from same sender
-            const isFirstInGroup = !prevMsg || prevMsg.senderId !== msg.senderId
+            const isFirstInGroup = !prevMsg || prevMsg.senderId !== msg.senderId || showDateSep
 
             const isImage = msg.type === 'IMAGE'
             const isVideo = msg.type === 'VIDEO'
             const isAudio = msg.type === 'AUDIO'
             const isMedia = isImage || isVideo || isAudio
-            const isLastMsg = index === (messages?.length || 0) - 1
 
             const grouped = groupReactions(msg.reactions ?? [])
 
@@ -737,7 +746,9 @@ export function ChatDetails() {
                     isSender={isMe}
                     time={format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                     status={getMessageStatus(msg)}
-                    avatarUrl={showSenderInfo && isFirstInGroup ? senderAvatar || undefined : undefined}
+                    showAvatar={showSenderInfo && isFirstInGroup}
+                    senderName={senderName}
+                    avatarUrl={senderAvatar || undefined}
                     showSpacer={showSenderInfo && !isFirstInGroup}
                     onAvatarClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
                     imageUrl={isImage && msg.content ? msg.content : undefined}
@@ -779,13 +790,19 @@ export function ChatDetails() {
                             <span className="text-[9px] font-medium text-white">
                               {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                             </span>
-                            {isMe && isLastMsg && <Check className="w-[12px] h-[12px] text-white" strokeWidth={2.5} />}
+                            {isMe && <MessageStatusIcon status={getMessageStatus(msg)} color="white" />}
                           </div>
                         </div>
                       </div>
                     ) : isAudio && msg.content ? (
-                      <div className="w-[200px] flex items-center gap-2 py-1">
+                      <div className="w-[200px] flex flex-col py-1">
                         <AudioMessage src={msg.content} />
+                        <div className="flex items-center justify-end gap-1 mt-1 -mb-1 pr-2">
+                          <span className="text-[10px] font-medium opacity-70" style={{ color: isMe ? '#1B1818' : 'var(--color-text-secondary)' }}>
+                            {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                          </span>
+                          {isMe && <MessageStatusIcon status={getMessageStatus(msg)} color={isMe ? '#1B1818' : 'var(--color-text-secondary)'} />}
+                        </div>
                       </div>
                     ) : null}
                   </MessageBubble>
