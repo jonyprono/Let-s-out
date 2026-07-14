@@ -59,7 +59,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
       qc.invalidateQueries({ queryKey: ['events', event.id] })
       qc.invalidateQueries({ queryKey: ['events', event.id, 'my-booking'] })
       onClose()
-      navigate(`/events/${event.id}/success`)
+      navigate(`/events/${event.id}/success`, { state: { amountPaid: finalAmount } })
     },
     onError: (err: any) => {
       const errCode = err?.response?.data?.error
@@ -184,7 +184,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
     qc.invalidateQueries({ queryKey: ['events', event.id, 'my-booking'] })
     setIsProcessing(false)
     onClose()
-    navigate(`/events/${event.id}/success`)
+    navigate(`/events/${event.id}/success`, { state: { amountPaid: finalAmount } })
   }
 
   return (

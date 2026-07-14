@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams, useLocation } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
 import { chatApi } from '@/features/chat/api'
@@ -10,6 +10,8 @@ import { useState } from 'react'
 export function EventSuccessScreen() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const amountPaid = location.state?.amountPaid || 0
 
   const { data: eventData } = useQuery({
     queryKey: ['events', id],
@@ -95,6 +97,14 @@ export function EventSuccessScreen() {
                 {event.address ? `${event.address}` : ''}{event.city ? ` (${event.city})` : event.address ? '' : 'Lieu non précisé'}
               </span>
             </div>
+            {amountPaid > 0 && (
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-[14px] font-inter text-[var(--color-text-secondary)]">Votre participation</span>
+                <span className="text-[14px] font-inter text-[#1B1818] text-right">
+                  {amountPaid.toLocaleString('fr-FR')} F
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
