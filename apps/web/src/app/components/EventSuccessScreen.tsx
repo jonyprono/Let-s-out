@@ -11,13 +11,22 @@ export function EventSuccessScreen() {
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const amountPaid = location.state?.amountPaid || 0
+  const stateAmountPaid = location.state?.amountPaid
 
   const { data: eventData } = useQuery({
     queryKey: ['events', id],
     queryFn: () => eventsApi.getById(id!).then(r => r.data),
     enabled: !!id,
   })
+
+  const { data: myBookingData } = useQuery({
+    queryKey: ['events', id, 'my-booking'],
+    queryFn: () => eventsApi.getMyBooking(id!).then(r => r.data),
+    enabled: !!id,
+    retry: false
+  })
+
+  const amountPaid = stateAmountPaid !== undefined ? stateAmountPaid : (myBookingData?.totalPaid || 0)
 
   const [isJoiningChat, setIsJoiningChat] = useState(false)
 
