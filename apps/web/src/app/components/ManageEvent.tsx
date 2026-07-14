@@ -524,7 +524,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const groupedContributions = attendees.reduce((acc: any, booking: any) => {
       const userId = booking?.user?.id;
       if (!userId) return acc;
-      const amt = Number(booking?.amount || booking?.paidAmount || 0);
+      const amt = Number(booking?.totalPaid || booking?.amount || booking?.paidAmount || 0);
       if (amt <= 0) return acc;
       if (!acc[userId]) {
         acc[userId] = { ...booking, totalAmount: 0 };
