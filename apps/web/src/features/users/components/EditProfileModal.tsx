@@ -150,13 +150,13 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="text-[15px] font-bold text-action-primary disabled:opacity-50"
+          className="text-[15px] font-bold text-[#FF7A00] disabled:opacity-50"
         >
           {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer'}
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-32">
+      <div className="flex-1 overflow-y-auto pb-24">
 
         {/* Cover Photo */}
         <div className="relative w-full h-[140px] bg-gray-100 dark:bg-[#222] overflow-hidden">
@@ -209,13 +209,13 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             </div>
             {isUploadingAvatar && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-action-primary" />
+                <Loader2 className="w-6 h-6 animate-spin text-[#FF7A00]" />
               </div>
             )}
             <button
               onClick={() => avatarInputRef.current?.click()}
               disabled={isUploadingAvatar}
-              className="absolute bottom-0 right-0 w-7 h-7 bg-action-primary rounded-full border-2 border-white flex items-center justify-center text-white shadow-md"
+              className="absolute bottom-0 right-0 w-7 h-7 bg-[#FF7A00] rounded-full border-2 border-white flex items-center justify-center text-white shadow-md"
             >
               <Camera className="w-3.5 h-3.5" />
             </button>
@@ -239,7 +239,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="John Doe"
-              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 transition-colors"
+              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-[#FF7A00]/30 transition-colors"
             />
           </div>
 
@@ -251,7 +251,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
               value={city}
               onChange={(e) => setCity(e.target.value)}
               placeholder="Paris"
-              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 transition-colors"
+              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-[#FF7A00]/30 transition-colors"
             />
           </div>
 
@@ -263,7 +263,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
               onChange={(e) => setBio(e.target.value)}
               rows={4}
               placeholder="Passionné(e) de sorties..."
-              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-action-primary/30 transition-colors resize-none"
+              className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-[#FFFFFF] outline-none focus:border-[#FF7A00]/30 transition-colors resize-none"
             />
           </div>
 
@@ -273,17 +273,41 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             <div className="flex flex-wrap gap-2">
               {AVAILABLE_INTERESTS.map(interest => {
                 const isSelected = selectedInterests.includes(interest)
+                let icon = '📌';
+                if (interest.toLowerCase().includes('sport')) icon = '⚽';
+                else if (interest.toLowerCase().includes('musique')) icon = '🎶';
+                else if (interest.toLowerCase().includes('cuisine') || interest.toLowerCase().includes('food')) icon = '🍳';
+                else if (interest.toLowerCase().includes('art')) icon = '🎨';
+                else if (interest.toLowerCase().includes('culture')) icon = '🌍';
+                else if (interest.toLowerCase().includes('voyage')) icon = '✈️';
+                else if (interest.toLowerCase().includes('jeux')) icon = '🎮';
+                else if (interest.toLowerCase().includes('tech')) icon = '💻';
+                else if (interest.toLowerCase().includes('lecture') || interest.toLowerCase().includes('livre')) icon = '📚';
+                else if (interest.toLowerCase().includes('ciné') || interest.toLowerCase().includes('film')) icon = '🎬';
+                else if (interest.toLowerCase().includes('photo')) icon = '📷';
+                else if (interest.toLowerCase().includes('danse')) icon = '💃';
+                else if (interest.toLowerCase().includes('mode')) icon = '👗';
+                else if (interest.toLowerCase().includes('anim')) icon = '🐾';
+                else if (interest.toLowerCase().includes('brico')) icon = '🛠️';
+                else if (interest.toLowerCase().includes('natur')) icon = '🌿';
+                else if (interest.toLowerCase().includes('bien-être')) icon = '🧘‍♀️';
+                else if (interest.toLowerCase().includes('business')) icon = '💼';
+                else if (interest.toLowerCase().includes('networking')) icon = '🤝';
+                else if (interest.toLowerCase().includes('nightlife')) icon = '🍸';
+                else if (interest.toLowerCase().includes('sorties')) icon = '🎟️';
+
                 return (
                   <button
                     key={interest}
                     onClick={() => toggleInterest(interest)}
-                    className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all active:scale-95 ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium border transition-all active:scale-95 ${
                       isSelected
                         ? 'bg-[#FFF2D3] border-[#FF7A00] text-[#FF7A00]'
                         : 'bg-gray-50 dark:bg-[#222] border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-400'
                     }`}
                   >
-                    {interest}
+                    <span>{icon}</span>
+                    <span>{interest}</span>
                   </button>
                 )
               })}
@@ -295,7 +319,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="w-full min-h-[52px] h-auto py-3 bg-action-primary text-white rounded-full font-bold text-[16px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md disabled:opacity-60"
+            className="w-full h-[52px] bg-[#FF7A00] text-white rounded-full font-bold text-[16px] flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md disabled:opacity-60"
           >
             {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
           </button>
