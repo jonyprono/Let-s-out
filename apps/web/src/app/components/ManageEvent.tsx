@@ -711,9 +711,6 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
         {/* Payout Confirm Bottom Sheet */}
         <BottomSheet open={showPayoutConfirm} onClose={() => setShowPayoutConfirm(false)}>
           <div className="flex flex-col w-full bg-white dark:bg-[#1A1A1A]">
-            <div className="flex justify-center w-full mb-4">
-              <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-            </div>
             <h2 className="text-center text-[17px] font-bold text-gray-900 dark:text-white mb-6">Détails du retrait</h2>
             
             <h3 className="text-[15px] font-bold text-gray-900 dark:text-white mb-4">{event.title}</h3>
@@ -1045,7 +1042,6 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
 
       <BottomSheet open={step === 'summary'} onClose={() => setStep('form')}>
         <div className="px-5 pt-2 pb-8 flex flex-col gap-4">
-          <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2" />
           <h3 className="text-center text-[16px] font-bold text-gray-900 dark:text-white mb-2">Résumé de la cagnotte</h3>
           
           <div>
@@ -1081,7 +1077,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             {desc && (
               <div className="flex flex-col gap-1">
                 <span className="text-[14px] text-gray-500">Détails</span>
-                <span className="font-semibold text-gray-900 dark:text-white leading-relaxed">{desc}</span>
+                <span className="font-semibold text-gray-900 dark:text-white leading-relaxed break-words break-all">{desc}</span>
               </div>
             )}
           </div>
