@@ -46,20 +46,19 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
     )
   }
 
-  const handleForward = async () => {
+  const handleForward = () => {
     if (!messageContent || selectedConvs.length === 0) return
     setIsSending(true)
-    try {
-      await Promise.all(selectedConvs.map(convId => 
-        chatApi.sendMessage(convId, messageContent, messageType)
-      ))
-      toast.success('Message transféré')
-      onClose()
-    } catch (e) {
-      toast.error('Erreur lors du transfert')
-    } finally {
-      setIsSending(false)
-    }
+    
+    // Execute in background
+    Promise.all(selectedConvs.map(convId => 
+      chatApi.sendMessage(convId, messageContent, messageType)
+    )).catch(() => {
+      toast.error('Erreur lors d\'un des transferts')
+    })
+    
+    toast.success('Message transféré')
+    onClose()
   }
 
   return (

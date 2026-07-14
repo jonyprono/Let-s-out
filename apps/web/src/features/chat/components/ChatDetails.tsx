@@ -290,17 +290,38 @@ export function ChatDetails() {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file || !id) return
-    setIsUploading(true)
+    
+    const isVideo = file.type.startsWith('video/')
+    const msgType = isVideo ? 'VIDEO' : 'IMAGE'
+    const tempId = `optimistic-${Date.now()}`
+    const localUrl = URL.createObjectURL(file)
+
+    qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
+      ...old,
+      {
+        id: tempId,
+        content: localUrl,
+        type: msgType,
+        senderId: user?.id || '',
+        conversationId: id,
+        createdAt: new Date().toISOString(),
+        isDeleted: false,
+        reactions: [],
+        sender: { id: user?.id, profile: user?.profile },
+        _optimistic: true,
+      }
+    ])
+
     try {
       if (Capacitor.isNativePlatform()) {
         await saveFileLocally(file, file.name)
       }
       const url = await chatApi.uploadMedia(file)
-      sendMsg({ content: url, type: file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE' })
+      sendMsg({ content: url, type: msgType })
     } catch {
-      alert("Erreur lors de l'envoi du fichier.")
+      toast.error("Erreur lors de l'envoi du fichier.")
     } finally {
-      setIsUploading(false)
+      qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => old.filter(m => m.id !== tempId))
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
@@ -328,7 +349,25 @@ export function ChatDetails() {
           const ext = mimeType.includes('mp4') ? 'mp4' : 'webm'
           const file = new File([audioBlob], `voice-note-${Date.now()}.${ext}`, { type: mimeType })
           
-          setIsUploading(true)
+          const tempId = `optimistic-${Date.now()}`
+          const localUrl = URL.createObjectURL(audioBlob)
+
+          qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
+            ...old,
+            {
+              id: tempId,
+              content: localUrl,
+              type: 'AUDIO',
+              senderId: user?.id || '',
+              conversationId: id,
+              createdAt: new Date().toISOString(),
+              isDeleted: false,
+              reactions: [],
+              sender: { id: user?.id, profile: user?.profile },
+              _optimistic: true,
+            }
+          ])
+
           try {
             if (Capacitor.isNativePlatform()) {
               await saveFileLocally(audioBlob, file.name)
@@ -338,7 +377,7 @@ export function ChatDetails() {
           } catch (e) {
             toast.error("Erreur d'envoi de la note vocale")
           } finally {
-            setIsUploading(false)
+            qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => old.filter(m => m.id !== tempId))
           }
         }
       }
