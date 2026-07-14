@@ -469,7 +469,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const hasValidators = event.validatorCandidates?.length > 0;
     const canPayout = isVoteClosed || !hasValidators;
 
-    const commission = Math.round(collected * 0.03);
+    const commission = Math.round(collected * 0.10);
     const totalToReceive = collected - commission;
 
     const handlePayoutClick = () => {

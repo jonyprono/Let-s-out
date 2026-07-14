@@ -5,7 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { useParams } from 'react-router';
-import { EventRowCard } from '@/app/components/EventRowCard';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export function JoinedEventsList() {
   const navigate = useNavigate();
@@ -148,43 +149,6 @@ export function JoinedEventsList() {
   );
 }
 
-function CagnotteRowCard({ event, onClick }: { event: any; onClick: () => void }) {
-  const target = event.poolTarget || 0;
-  const collected = event.poolCollected || 0;
-  const remaining = Math.max(0, target - collected);
-  const progress = target > 0 ? Math.round((collected / target) * 100) : 0;
-
-  return (
-    <div 
-      onClick={onClick}
-      className="w-full bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-3 cursor-pointer active:scale-95 transition-transform shadow-sm"
-    >
-      <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-800 border-dashed">
-        <h3 className="text-[16px] font-bold text-[#FF7A00]">Cagnotte</h3>
-        <span className="text-[12px] text-gray-500 font-medium truncate max-w-[150px]">{event.title}</span>
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-[13px] text-gray-500 font-medium">Objectif</span>
-          <span className="text-[13px] font-bold text-[#2878E8]">{target.toLocaleString()} F CFA</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[13px] text-gray-500 font-medium">Collecté</span>
-          <span className="text-[13px] font-bold text-[#4CAF50]">{collected.toLocaleString()} F</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[13px] text-gray-500 font-medium">Restant</span>
-          <span className="text-[13px] font-bold text-[#FF7A00]">{remaining.toLocaleString()} F</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[13px] text-gray-500 font-medium">Progression</span>
-          <span className="text-[12px] font-bold bg-[#FF7A00] text-white px-1.5 py-0.5 rounded">{progress}%</span>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function EventRowCard({ event, onClick }: { event: any; onClick: () => void }) {
   return (

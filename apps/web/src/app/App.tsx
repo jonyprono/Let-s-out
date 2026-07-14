@@ -91,6 +91,7 @@ import {
   EventSuccessScreen,
   Wallet,
   CreatedEventsList,
+  JoinedEventsList,
   ManageEvent,
   AccountMenu,
 } from '@/app/components/adapters'
@@ -276,7 +277,6 @@ export default function App() {
             <Route path="/profile/:userId/events-created" element={<CreatedEventsList />} />
             <Route path="/profile/events-joined" element={<JoinedEventsList />} />
             <Route path="/profile/:userId/events-joined" element={<JoinedEventsList />} />
-            <Route path="/profile/badges" element={<BadgesView />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/wallet" element={<Wallet />} />
           </Route>
