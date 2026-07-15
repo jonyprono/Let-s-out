@@ -81,7 +81,7 @@ export function PaymentFlow({
   const cleanPhone = phoneNumber.trim().replace(/\s+/g, '')
   const isBenin = country.code === '+229' || country.cca2 === 'BJ'
   const isValidPhone = isBenin 
-    ? (cleanPhone.length >= 10 && cleanPhone.startsWith('01')) 
+    ? ((cleanPhone.length >= 10 && cleanPhone.startsWith('01')) || cleanPhone.length === 8) 
     : cleanPhone.length > 0
 
   const isFormValid = finalAmount > 0 && !(minAmount > 0 && finalAmount < minAmount) && isValidPhone;
