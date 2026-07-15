@@ -250,12 +250,13 @@ export default async function walletRoutes(app: FastifyInstance) {
       const payoutData = (await payoutRes.json()) as any
 
       if (!payoutRes.ok || payoutData.error) {
-        app.log.error('[FedaPay Payout Error]', JSON.stringify(payoutData))
+        // Pino logger expects the object as the first argument
+        app.log.error({ payoutData }, '[FedaPay Payout Error]')
         const errMsg = payoutData?.message 
           || payoutData?.error?.message 
           || (payoutData?.errors ? Object.values(payoutData.errors).flat().join(', ') : null)
           || 'Erreur lors du transfert FedaPay'
-        return reply.code(500).send({ error: errMsg })
+        return reply.code(500).send({ error: errMsg, details: payoutData })
       }
 
       // Étape 2 : Mettre à jour la base de données
