@@ -192,10 +192,22 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       const txData = (await txRes.json()) as any
       const transactions = txData['v1/transactions'] || txData.data || txData.transactions || []
       
+      // Log for debugging
+      app.log.info(`[sync-missed] Found ${transactions.length} transactions. Looking for userId=${sub} eventId=${eventId}`)
+      transactions.slice(0, 5).forEach((tx: any) => {
+        app.log.info(`[sync-missed] tx id=${tx.id} status=${tx.status} metadata=${JSON.stringify(tx.metadata)} custom_metadata=${JSON.stringify(tx.custom_metadata)}`)
+      })
+
+      // FedaPay uses various statuses: approved, captured, transferred
+      const APPROVED_STATUSES = ['approved', 'captured', 'transferred']
+      
       const missedTx = transactions.find((tx: any) => {
-        if (tx.status !== 'approved') return false
+        if (!APPROVED_STATUSES.includes(tx.status)) return false
         let meta: any = {}
-        try { meta = typeof tx.custom_metadata === 'string' ? JSON.parse(tx.custom_metadata) : (typeof tx.metadata === 'string' ? JSON.parse(tx.metadata) : (tx.metadata || tx.custom_metadata)) } catch {}
+        try {
+          const rawMeta = tx.metadata || tx.custom_metadata || {}
+          meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
+        } catch {}
         return meta?.userId === sub && meta?.eventId === eventId
       })
       
@@ -210,9 +222,11 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     }
   })
 
-  // DEV uniquement : confirmer manuellement (simule le webhook)
+  // DEV / SANDBOX : confirmer manuellement (simule le webhook)
   app.post('/dev/confirm-booking', { preHandler: [app.authenticate] }, async (req, reply) => {
-    if (process.env.NODE_ENV === 'production' && process.env.FEDAPAY_SECRET_KEY && process.env.MOCK_PAYMENTS !== 'true') return reply.code(404).send()
+    const isSandboxKey = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_')
+    // Block in production UNLESS using sandbox keys (testing mode)
+    if (process.env.NODE_ENV === 'production' && !isSandboxKey && process.env.MOCK_PAYMENTS !== 'true') return reply.code(404).send()
     const { sub } = req.user as { sub: string }
     const { eventId, amount: customAmount } = req.body as { eventId: string; amount?: number }
 
