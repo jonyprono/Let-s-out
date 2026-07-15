@@ -253,9 +253,14 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       }
     }
 
-    await handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount })
-    const booking = await app.prisma.booking.findUnique({ where: { userId_eventId: { userId: sub, eventId } } })
-    return reply.send({ message: 'Booking confirmed (dev)', bookingId: booking?.id })
+    // Reply immediately so client doesn't time out while we process
+    // handleConfirmedBooking can take 10-20s (DB + notifications + email)
+    reply.send({ message: 'Booking confirmed (sandbox/dev)', eventId })
+
+    // Process booking asynchronously — fire and forget
+    handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount }).catch((e) =>
+      app.log.error('[dev/confirm-booking] Error in handleConfirmedBooking', e)
+    )
   })
 
   // Get booking details (for receipt page)

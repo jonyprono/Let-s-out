@@ -78,7 +78,14 @@ export function PaymentPage() {
         if (isSandbox) {
           console.warn('Sandbox: sync-missed failed, using dev/confirm as fallback')
           try {
-            await apiClient.post('/payments/dev/confirm-booking', { eventId, amount })
+            // Use 30s timeout: Render cold start + heavy DB ops can take up to 20s
+            await apiClient.post(
+              '/payments/dev/confirm-booking',
+              { eventId, amount },
+              { timeout: 30000 },
+            )
+            // Backend processes async — wait 3s before re-fetching so DB is updated
+            await new Promise((r) => setTimeout(r, 3000))
           } catch (confirmErr) {
             console.warn('Dev confirm also failed', confirmErr)
           }
