@@ -63,8 +63,12 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       })
     }
 
-    // MODE PROD : appel API FedaPay
-    const txRes = await fetch('https://api.fedapay.com/v1/transactions', {
+    // MODE PROD / SANDBOX : appel API FedaPay
+    const baseUrl = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') 
+      ? 'https://sandbox-api.fedapay.com/v1' 
+      : 'https://api.fedapay.com/v1';
+
+    const txRes = await fetch(`${baseUrl}/transactions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,7 +97,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     }
 
     const tokenRes = await fetch(
-      `https://api.fedapay.com/v1/transactions/${transactionId}/token`,
+      `${baseUrl}/transactions/${transactionId}/token`,
       { method: 'POST', headers: { Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}` } },
     )
     const tokenData = (await tokenRes.json()) as any
@@ -168,7 +172,11 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     const { eventId } = req.body as { eventId: string }
     
     try {
-      const txRes = await fetch('https://api.fedapay.com/v1/transactions?limit=50', {
+      const baseUrl = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') 
+        ? 'https://sandbox-api.fedapay.com/v1' 
+        : 'https://api.fedapay.com/v1';
+
+      const txRes = await fetch(`${baseUrl}/transactions?limit=50`, {
         headers: { Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}` }
       })
       const txData = (await txRes.json()) as any

@@ -226,9 +226,12 @@ export default async function walletRoutes(app: FastifyInstance) {
         return reply.send({ success: true, message: 'Retrait simulé avec succès' })
       }
 
-      // MODE PROD: Appeler l'API FedaPay Payouts
-      // Étape 1 : Créer le Payout
-      const payoutRes = await fetch('https://api.fedapay.com/v1/payouts', {
+      // MODE PROD / SANDBOX: Appeler l'API FedaPay Payouts
+      const baseUrl = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') 
+        ? 'https://sandbox-api.fedapay.com/v1' 
+        : 'https://api.fedapay.com/v1';
+
+      const payoutRes = await fetch(`${baseUrl}/payouts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
