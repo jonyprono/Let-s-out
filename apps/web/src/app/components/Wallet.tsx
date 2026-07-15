@@ -170,6 +170,14 @@ export function Wallet() {
             const amount = Number(withdrawData.amount)
             if (!amount || amount < 500) return toast.error('Le montant minimum est de 500 F CFA')
             if (!phoneNumber.trim()) return toast.error('Numéro de téléphone invalide')
+            
+            const cleanPhone = phoneNumber.replace(/\s+/g, '')
+            if (country.code === '+229') {
+              if (cleanPhone.length !== 10 || !cleanPhone.startsWith('01')) {
+                return toast.error('Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.')
+              }
+            }
+
             if (wallet && amount > wallet.balance) return toast.error('Solde insuffisant')
             setWithdrawStep('summary')
           }} className="flex flex-col gap-5">

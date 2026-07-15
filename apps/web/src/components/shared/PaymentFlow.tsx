@@ -80,10 +80,9 @@ export function PaymentFlow({
   const netToPay = finalAmount + computedFee
 
   const cleanPhone = phoneNumber.trim().replace(/\s+/g, '')
-  const isBenin = country.code === '+229' || country.cca2 === 'BJ'
-  // Accept 10-digit numbers starting with 01 (new Benin format) OR 8-digit legacy format for sandbox tests (64000001, 66000001)
-  const isValidPhone = isBenin 
-    ? ((cleanPhone.length === 10 && cleanPhone.startsWith('01')) || cleanPhone.length === 8) 
+  // Accept 10-digit numbers starting with 01 (new Benin format)
+  const isValidPhone = country.code === '+229'
+    ? (cleanPhone.length === 10 && cleanPhone.startsWith('01'))
     : cleanPhone.length > 0
 
   const isFormValid = finalAmount > 0 && !(minAmount > 0 && finalAmount < minAmount) && isValidPhone;
