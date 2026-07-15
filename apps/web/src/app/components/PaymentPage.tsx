@@ -31,6 +31,12 @@ export function PaymentPage() {
   const rawAmount = amountParam ? Number(amountParam) : undefined
 
   const [resolvedAmount, setResolvedAmount] = useState<number | null>(null)
+  const [paymentKey, setPaymentKey] = useState(0)
+
+  const handleReset = () => {
+    setResolvedAmount(null)
+    setPaymentKey(prev => prev + 1)
+  }
 
   const { data: event, isLoading: eventLoading } = useQuery({
     queryKey: ['events', eventId],
@@ -167,7 +173,7 @@ export function PaymentPage() {
     return (
       <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
         <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-          <button onClick={() => navigate(`/events/${eventId}`)} className="w-9 h-9 flex items-center justify-center active:scale-95">
+          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
             <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
           <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">
@@ -219,16 +225,17 @@ export function PaymentPage() {
 
         <div className="flex-shrink-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 border-t border-gray-100 dark:border-white/10 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
           <Button
-            onClick={() => navigate(`/events/${eventId}/pay?type=contribution`)}
+            onClick={handleReset}
             className="w-full font-semibold h-[52px]"
           >
             Contribuer à nouveau
           </Button>
           <button
-            onClick={() => navigate(`/events/${eventId}`)}
-            className="w-full h-[52px] rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
+            onClick={() => navigate(-1)}
+            className="w-full h-[52px] flex items-center justify-center gap-2 rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
           >
-            Retourner au chat
+            <ChevronLeft className="w-5 h-5" />
+            
           </button>
         </div>
       </div>
@@ -294,6 +301,7 @@ export function PaymentPage() {
   // ── Render PaymentFlow ───────────────────────────────────────
   return (
     <PaymentFlow
+      key={paymentKey}
       headerTitle={isContribution ? 'Contribuer à la cagnotte' : "Rejoindre l'événement"}
       headerCard={headerCard}
       minAmount={minAmount}
