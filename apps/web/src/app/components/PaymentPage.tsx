@@ -95,10 +95,12 @@ export function PaymentPage() {
             await new Promise((r) => setTimeout(r, 3000))
           } catch (confirmErr) {
             console.warn('Dev confirm also failed', confirmErr)
+            throw new Error("Impossible de valider le paiement. Assurez-vous d'avoir déployé le backend avec les correctifs Sandbox.")
           }
-        }
-        // In live mode: webhook will handle it asynchronously — no fallback needed
-      }
+        } else {
+          // In live mode: webhook will handle it asynchronously — no fallback needed, but sync-missed failed
+          throw new Error('La synchronisation du paiement a échoué. Le webhook prendra le relais.')
+        }      }
     }
     // Force re-fetch all relevant data
     await qc.invalidateQueries({ queryKey: ['chat'] })
