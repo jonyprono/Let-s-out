@@ -63,18 +63,28 @@ export function PaymentPage() {
     await apiClient.post('/payments/dev/confirm-booking', payload)
   }
 
-  const handleSuccess = async (amount: number) => {
+  const handleSuccess = async (amount: number, isSandbox?: boolean) => {
     setResolvedAmount(amount)
+    // Apply optimistic update immediately so UI reflects change
     if (isContribution && eventId) {
       applyPoolContributionOptimistic(qc, eventId, amount)
     }
-    // Try to sync missed webhook (FedaPay sandbox may not send webhook)
-    try {
-      if (eventId) {
+    // Sync the transaction with our backend
+    if (eventId) {
+      try {
         await apiClient.post('/payments/sync-missed', { eventId })
+      } catch (syncErr: any) {
+        // In sandbox mode, FedaPay may not send webhooks — use dev/confirm as fallback
+        if (isSandbox) {
+          console.warn('Sandbox: sync-missed failed, using dev/confirm as fallback')
+          try {
+            await apiClient.post('/payments/dev/confirm-booking', { eventId, amount })
+          } catch (confirmErr) {
+            console.warn('Dev confirm also failed', confirmErr)
+          }
+        }
+        // In live mode: webhook will handle it asynchronously — no fallback needed
       }
-    } catch (e) {
-      console.warn('Sync missed failed', e)
     }
     // Force re-fetch all relevant data
     await qc.invalidateQueries({ queryKey: ['chat'] })
@@ -150,7 +160,7 @@ export function PaymentPage() {
     return (
       <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
         <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
+          <button onClick={() => navigate(`/events/${eventId}`)} className="w-9 h-9 flex items-center justify-center active:scale-95">
             <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
           <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">
@@ -158,7 +168,7 @@ export function PaymentPage() {
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
+        <div className="flex-1 overflow-y-auto px-5 pb-6 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
           <div className="mt-8 mb-4">
             <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #4CD964, #34C759)' }}>
               <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
@@ -200,11 +210,17 @@ export function PaymentPage() {
           </div>
         </div>
 
-        <div className="flex-shrink-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
-          <Button onClick={() => navigate(`/events/${eventId}/pay?type=contribution`)} className="w-full font-semibold h-[52px]">
+        <div className="flex-shrink-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 border-t border-gray-100 dark:border-white/10 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
+          <Button
+            onClick={() => navigate(`/events/${eventId}/pay?type=contribution`)}
+            className="w-full font-semibold h-[52px]"
+          >
             Contribuer à nouveau
           </Button>
-          <button onClick={() => navigate(-1)} className="w-full h-[52px] rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform">
+          <button
+            onClick={() => navigate(`/events/${eventId}`)}
+            className="w-full h-[52px] rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
+          >
             Retourner au chat
           </button>
         </div>

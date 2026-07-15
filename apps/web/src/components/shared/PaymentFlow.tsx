@@ -28,6 +28,7 @@ export interface PaymentFlowProps {
   amountLabel?: string;
   onInitiate: (amount: number) => Promise<{
     devMode?: boolean;
+    isSandbox?: boolean;
     transactionId?: string;
     transactionToken?: string;
     publicKey?: string;
@@ -35,7 +36,7 @@ export interface PaymentFlowProps {
     description?: string;
   }>;
   onDevConfirm: (amount: number) => Promise<void>;
-  onSuccess: (amount: number) => void;
+  onSuccess: (amount: number, isSandbox?: boolean) => void;
   successScreen?: React.ReactNode;
   onBack?: () => void;
 }
@@ -119,6 +120,25 @@ export function PaymentFlow({
     setStatus('summary')
   }
 
+  const cleanFedaPayDOM = () => {
+    // Remove our backdrop
+    document.getElementById('fedapay-backdrop')?.remove()
+    document.getElementById('fedapay-sheet-style')?.remove()
+    // Remove ALL fixed divs injected by FedaPay SDK (they block pointer events after close)
+    Array.from(document.querySelectorAll('body > div')).forEach((el) => {
+      const s = window.getComputedStyle(el as HTMLElement)
+      if (
+        (el.id !== 'root' && el.id !== 'fedapay-backdrop') &&
+        (s.position === 'fixed' || (el as HTMLElement).dataset.styledAsSheet === 'true')
+      ) {
+        el.remove()
+      }
+    })
+    // Also remove any FedaPay script to allow re-init on next payment
+    document.querySelectorAll('script[src*="fedapay"]').forEach((s) => s.remove())
+    delete (window as any).FedaPay
+  }
+
   const handlePay = async () => {
     setStatus('loading')
 
@@ -143,14 +163,14 @@ export function PaymentFlow({
               description: data.description 
             },
             onComplete: (resp: any) => {
+              cleanFedaPayDOM()
               if (resp.reason === FedaPay.DIALOG_DISMISSED) {
                 setStatus('error')
                 toast.error('Paiement annulé')
-                document.getElementById('fedapay-backdrop')?.remove()
               } else {
-                document.getElementById('fedapay-backdrop')?.remove()
+                // First update status, then call onSuccess async
                 setStatus('success')
-                onSuccess(finalAmount)
+                onSuccess(finalAmount, data.isSandbox)
               }
             },
           }).open()
@@ -163,7 +183,7 @@ export function PaymentFlow({
               return;
             }
             const fedaEl = Array.from(document.querySelectorAll('body > div')).find(el => {
-              const s = window.getComputedStyle(el);
+              const s = window.getComputedStyle(el as HTMLElement);
               return s.position === 'fixed' && parseInt(s.zIndex || '0') > 100 && el.id !== 'fedapay-backdrop';
             }) as HTMLElement | undefined;
 
@@ -218,7 +238,7 @@ export function PaymentFlow({
     try {
       await onDevConfirm(amount)
       setStatus('success')
-      onSuccess(amount)
+      onSuccess(amount, true) // devMode is always sandbox-like
     } catch (err: any) {
       setStatus('error')
       toast.error(err.response?.data?.error || 'Erreur')

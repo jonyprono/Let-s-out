@@ -107,8 +107,11 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       return reply.code(500).send({ error: `FedaPay token extraction failed. Response: ${JSON.stringify(tokenData)}` })
     }
 
+    const isSandbox = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') ?? false
+
     return reply.send({
       devMode: false,
+      isSandbox,
       transactionToken: finalToken,
       transactionId: transactionId,
       publicKey: process.env.FEDAPAY_PUBLIC_KEY,

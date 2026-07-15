@@ -240,17 +240,22 @@ export default async function walletRoutes(app: FastifyInstance) {
         body: JSON.stringify({
           amount: amount,
           currency: { iso: 'XOF' },
-          mode: network, // par exemple 'mtn', 'moov'
-          customer: { phone_number: { number: phone, country: 'BJ' } },
-          send_now: true, // Envoyer immédiatement
+          mode: network, // e.g. 'mtn', 'moov'
+          // FedaPay expects the local number without country code
+          customer: { phone_number: { number: phone.replace(/^\+229/, '').replace(/^229/, ''), country: 'BJ' } },
+          send_now: true,
         }),
       })
 
       const payoutData = (await payoutRes.json()) as any
 
       if (!payoutRes.ok || payoutData.error) {
-        app.log.error('[FedaPay Payout Error]', payoutData)
-        return reply.code(500).send({ error: payoutData.message || payoutData.error?.message || 'Erreur lors du transfert FedaPay' })
+        app.log.error('[FedaPay Payout Error]', JSON.stringify(payoutData))
+        const errMsg = payoutData?.message 
+          || payoutData?.error?.message 
+          || (payoutData?.errors ? Object.values(payoutData.errors).flat().join(', ') : null)
+          || 'Erreur lors du transfert FedaPay'
+        return reply.code(500).send({ error: errMsg })
       }
 
       // Étape 2 : Mettre à jour la base de données
