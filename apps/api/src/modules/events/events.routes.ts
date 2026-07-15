@@ -1246,7 +1246,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       // Notify organizer of a new review
       await createAndSendNotification(app, {
         userId: creatorId,
-        type: 'NEW_REVIEW',
+        type: 'SYSTEM',
         title: 'Nouvel avis reçu 📝',
         body: `Un participant a évalué votre événement "${event.title}".`,
         data: { eventId: id }

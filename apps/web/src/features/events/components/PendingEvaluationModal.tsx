@@ -122,10 +122,12 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
             onChange={(e) => setComment(e.target.value)}
             placeholder="Un petit mot ? (optionnel)..."
             rows={3}
-            className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:border-[#FF7A00] resize-none"
+            className="w-full min-h-[80px] flex-shrink-0 bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:border-[#FF7A00] resize-none"
           />
+        </div>
 
-          {/* Actions */}
+        {/* Actions (Pinned at bottom) */}
+        <div className="px-5 pt-3 pb-safe-6 border-t border-gray-100 dark:border-white/10 flex-shrink-0 bg-white dark:bg-[#1A1A1A]">
           <PrimaryButton
             onClick={handleSubmit}
             disabled={rating === 0 || isSubmitting}
@@ -135,7 +137,7 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
           </PrimaryButton>
           <button
             onClick={onClose}
-            className="text-gray-400 font-semibold text-sm hover:text-gray-600 dark:text-gray-300 transition-colors text-center pb-2"
+            className="w-full mt-3 text-gray-400 font-semibold text-sm hover:text-gray-600 dark:text-gray-300 transition-colors text-center pb-2"
           >
             Évaluer plus tard
           </button>
