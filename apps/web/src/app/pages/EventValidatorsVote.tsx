@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router';
 import { apiClient } from '@/lib/api-client';
@@ -28,6 +29,8 @@ export function EventValidatorsVote() {
     enabled: !!id,
   });
 
+  const [pendingVote, setPendingVote] = useState<{ candidateId: string, vote: boolean } | null>(null);
+
   const voteMut = useMutation({
     mutationFn: async ({ candidateId, vote }: { candidateId: string, vote: boolean }) => {
       await apiClient.post(`/events/${id}/validators/vote`, { candidateId, vote });
@@ -37,6 +40,7 @@ export function EventValidatorsVote() {
       qc.invalidateQueries({ queryKey: ['events', id] });
     },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du vote'),
+    onSettled: () => setPendingVote(null),
   });
 
   if (isLoading) {
@@ -121,17 +125,29 @@ export function EventValidatorsVote() {
               {!isClosed && !hasVoted && (
                 <div className="flex gap-2 mt-2">
                   <button 
-                    onClick={() => voteMut.mutate({ candidateId: cand.userId, vote: true })}
+                    onClick={() => {
+                      setPendingVote({ candidateId: cand.userId, vote: true });
+                      voteMut.mutate({ candidateId: cand.userId, vote: true });
+                    }}
                     disabled={voteMut.isPending}
-                    className="flex-1 py-2 bg-gray-50 dark:bg-[#2A2A2A] hover:bg-green-50 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
+                    className="flex-1 py-2 bg-gray-50 dark:bg-[#2A2A2A] hover:bg-green-50 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 font-medium rounded-lg transition-colors border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2"
                   >
+                    {voteMut.isPending && pendingVote?.candidateId === cand.userId && pendingVote?.vote === true ? (
+                      <div className="w-4 h-4 rounded-full border-2 border-green-600/30 border-t-green-600 animate-spin" />
+                    ) : null}
                     Oui
                   </button>
                   <button 
-                    onClick={() => voteMut.mutate({ candidateId: cand.userId, vote: false })}
+                    onClick={() => {
+                      setPendingVote({ candidateId: cand.userId, vote: false });
+                      voteMut.mutate({ candidateId: cand.userId, vote: false });
+                    }}
                     disabled={voteMut.isPending}
-                    className="flex-1 py-2 bg-gray-50 dark:bg-[#2A2A2A] hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 font-medium rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
+                    className="flex-1 py-2 bg-gray-50 dark:bg-[#2A2A2A] hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 font-medium rounded-lg transition-colors border border-gray-200 dark:border-gray-700 flex items-center justify-center gap-2"
                   >
+                    {voteMut.isPending && pendingVote?.candidateId === cand.userId && pendingVote?.vote === false ? (
+                      <div className="w-4 h-4 rounded-full border-2 border-red-600/30 border-t-red-600 animate-spin" />
+                    ) : null}
                     Non
                   </button>
                 </div>
