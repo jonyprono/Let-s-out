@@ -935,21 +935,49 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const { sub } = req.user as { sub: string }
     const { id } = req.params as { id: string }
 
+    const event = await app.prisma.event.findUnique({
+      where: { id },
+      select: { conversationId: true, userId: true }
+    })
+
+    if (event?.userId === sub) {
+      return reply.code(400).send({ error: 'Organizer cannot leave' })
+    }
+
     const booking = await app.prisma.booking.findUnique({
       where: { userId_eventId: { userId: sub, eventId: id } },
     })
-    if (!booking) return reply.code(404).send({ error: 'Not joined' })
 
-    await app.prisma.$transaction([
-      app.prisma.booking.update({
-        where: { id: booking.id },
-        data: { status: 'CANCELLED' },
-      }),
-      app.prisma.event.update({
-        where: { id },
-        data: { currentAttendees: { decrement: 1 } },
-      }),
-    ])
+    const operations: any[] = []
+
+    if (booking && booking.status !== 'CANCELLED') {
+      operations.push(
+        app.prisma.booking.update({
+          where: { id: booking.id },
+          data: { status: 'CANCELLED' },
+        })
+      )
+      operations.push(
+        app.prisma.event.update({
+          where: { id },
+          data: { currentAttendees: { decrement: 1 } },
+        })
+      )
+    }
+
+    if (event?.conversationId) {
+      operations.push(
+        app.prisma.conversationMember.deleteMany({
+          where: { conversationId: event.conversationId, userId: sub }
+        })
+      )
+    }
+
+    if (operations.length > 0) {
+      await app.prisma.$transaction(operations)
+    } else if (!booking) {
+      return reply.code(404).send({ error: 'Not joined' })
+    }
 
     return reply.send({ message: 'Left event' })
   })

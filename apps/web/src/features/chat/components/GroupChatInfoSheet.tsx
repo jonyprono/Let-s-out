@@ -59,6 +59,8 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
     mutationFn: async () => {
       if (event?.id) {
         await eventsApi.leave(event.id)
+      } else if (conversation?.id) {
+        await chatApi.leaveGroup(conversation.id)
       }
     },
     onSuccess: () => {
@@ -101,7 +103,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
   )
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-[#FAFAFA] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center px-4 py-2 pt-safe-6 sticky top-0 bg-[#FAFAFA] z-10">
         <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
@@ -310,17 +312,19 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
             </button>
 
-            <button 
-              onClick={() => leaveMut.mutate()}
-              disabled={leaveMut.isPending}
-              className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
-            >
-              <div className="flex items-center justify-center">
-                <LogOut className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
-              </div>
-              <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Quitter le groupe</span>
-              {leaveMut.isPending && <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto" />}
-            </button>
+            {(!event || event.userId !== user?.id) && (
+              <button 
+                onClick={() => leaveMut.mutate()}
+                disabled={leaveMut.isPending}
+                className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
+              >
+                <div className="flex items-center justify-center">
+                  <LogOut className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
+                </div>
+                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Quitter le groupe</span>
+                {leaveMut.isPending && <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto" />}
+              </button>
+            )}
 
           </div>
         </div>

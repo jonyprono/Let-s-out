@@ -123,6 +123,10 @@ export const chatApi = {
     await apiClient.post(`/chat/conversations/${groupId}/join`)
   },
 
+  leaveGroup: async (groupId: string): Promise<void> => {
+    await apiClient.delete(`/chat/conversations/${groupId}/leave`)
+  },
+
   markAsRead: async (conversationId: string): Promise<void> => {
     await apiClient.post(`/chat/conversations/${conversationId}/read`)
   },
