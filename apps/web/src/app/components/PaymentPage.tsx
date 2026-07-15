@@ -68,14 +68,19 @@ export function PaymentPage() {
     if (isContribution && eventId) {
       applyPoolContributionOptimistic(qc, eventId, amount)
     }
+    // Try to sync missed webhook (FedaPay sandbox may not send webhook)
     try {
-      if (eventId) await apiClient.post('/payments/sync-missed', { eventId })
+      if (eventId) {
+        await apiClient.post('/payments/sync-missed', { eventId })
+      }
     } catch (e) {
       console.warn('Sync missed failed', e)
     }
-    qc.invalidateQueries({ queryKey: ['chat'] })
-    qc.invalidateQueries({ queryKey: ['events', eventId] })
-    qc.invalidateQueries({ queryKey: ['events', eventId, 'my-booking'] })
+    // Force re-fetch all relevant data
+    await qc.invalidateQueries({ queryKey: ['chat'] })
+    await qc.invalidateQueries({ queryKey: ['events', eventId] })
+    await qc.invalidateQueries({ queryKey: ['events', eventId, 'my-booking'] })
+    qc.invalidateQueries({ queryKey: ['events'] })
     toast.success(
       isContribution
         ? 'Contribution enregistrée avec succès !'
@@ -195,7 +200,7 @@ export function PaymentPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
+        <div className="flex-shrink-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 flex flex-col gap-3" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}>
           <Button onClick={() => navigate(`/events/${eventId}/pay?type=contribution`)} className="w-full font-semibold h-[52px]">
             Contribuer à nouveau
           </Button>

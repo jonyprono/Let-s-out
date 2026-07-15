@@ -155,10 +155,17 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     if (transaction?.status !== 'approved') return reply.send({ received: true })
 
     let meta: { eventId?: string; userId?: string } = {}
-    try { meta = typeof transaction.metadata === 'string' ? JSON.parse(transaction.metadata) : transaction.metadata } catch {}
+    try {
+      // FedaPay sandbox may nest metadata differently
+      const rawMeta = transaction.metadata || transaction.custom_metadata || {}
+      meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
+    } catch {}
 
     const { eventId, userId } = meta
-    if (!eventId || !userId) return reply.send({ received: true })
+    if (!eventId || !userId) {
+      app.log.warn('[FedaPay webhook] Missing eventId or userId in metadata', { meta })
+      return reply.send({ received: true })
+    }
 
     try {
       await handleConfirmedBooking(app, { eventId, userId, amount: transaction.amount })

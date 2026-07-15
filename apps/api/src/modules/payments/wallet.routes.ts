@@ -42,7 +42,7 @@ export default async function walletRoutes(app: FastifyInstance) {
       data: { walletPinHash: hash, walletPinSalt: salt }
     })
 
-    const token = app.jwt.sign({ sub, purpose: 'wallet_access' }, { expiresIn: '15m' })
+    const token = app.jwt.sign({ sub, purpose: 'wallet_access' }, { expiresIn: '1h' })
     return reply.send({ success: true, token })
   })
 
@@ -132,7 +132,7 @@ export default async function walletRoutes(app: FastifyInstance) {
     // Réinitialiser les tentatives
     await app.prisma.user.update({ where: { id: sub }, data: { walletPinAttempts: 0, walletPinLockedUntil: null } })
 
-    const token = app.jwt.sign({ sub, purpose: 'wallet_access' }, { expiresIn: '15m' })
+    const token = app.jwt.sign({ sub, purpose: 'wallet_access' }, { expiresIn: '1h' })
     return reply.send({ success: true, token })
   })
 

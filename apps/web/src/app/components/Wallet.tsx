@@ -99,7 +99,16 @@ export function Wallet() {
       queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.error || 'Erreur lors du retrait')
+      const status = err.response?.status
+      if (status === 403) {
+        // PIN token expired - reset and ask user to re-enter
+        setPinToken(null)
+        setWithdrawMode(false)
+        setWithdrawStep('form')
+        toast.error('Session expirée. Veuillez ressaisir votre code PIN.')
+      } else {
+        toast.error(err.response?.data?.error || 'Erreur lors du retrait')
+      }
     },
   })
 
