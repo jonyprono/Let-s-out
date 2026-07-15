@@ -98,13 +98,30 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
           FedaPay.init({
             public_key: data.publicKey,
             transaction: { id: data.transactionId, token: data.transactionToken, amount: data.amount, description: data.description },
-            onComplete: (resp: any) => {
+            onComplete: async (resp: any) => {
               if (resp.reason === FedaPay.DIALOG_DISMISSED) {
                 toast.error('Paiement annulé')
                 setIsProcessing(false)
                 document.getElementById('fedapay-backdrop')?.remove()
               } else {
                 document.getElementById('fedapay-backdrop')?.remove()
+                try {
+                  await apiClient.post('/payments/sync-missed', { eventId: event.id })
+                } catch (syncErr) {
+                  if (data.isSandbox) {
+                    console.warn('Sandbox: sync-missed failed, using dev/confirm as fallback')
+                    try {
+                      await apiClient.post('/payments/dev/confirm-booking', payload, { timeout: 30000 })
+                      await new Promise((r) => setTimeout(r, 3000))
+                    } catch (confirmErr) {
+                      setIsProcessing(false)
+                      toast.error("Erreur de synchronisation du paiement")
+                      return
+                    }
+                  } else {
+                    toast.error('La synchronisation du paiement a échoué. Le webhook prendra le relais.')
+                  }
+                }
                 onPaymentSuccess()
               }
             },
