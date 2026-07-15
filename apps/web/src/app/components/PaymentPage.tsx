@@ -235,7 +235,7 @@ export function PaymentPage() {
             className="w-full h-[52px] flex items-center justify-center gap-2 rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
           >
             <ChevronLeft className="w-5 h-5" />
-            
+            Retourner au chat
           </button>
         </div>
       </div>
