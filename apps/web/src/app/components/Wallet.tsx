@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'motion/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { WalletIcon, ArrowUpRight, ArrowDownLeft, Clock, AlertCircle } from 'lucide-react'
+import { WalletIcon, ArrowUpRight, ArrowDownLeft, Clock, AlertCircle, ChevronDown, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
 
@@ -10,6 +10,15 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { useNavigate } from 'react-router'
 import { ChevronLeft, Lock } from 'lucide-react'
 import { WalletPinManager } from './WalletPinManager'
+import { PhoneInputField } from '@/components/shared/PhoneInputField'
+import { COUNTRIES, Country } from '@/lib/countries'
+import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
+
+const OPERATORS = [
+  { id: 'mtn', label: 'MTN Momo', logo: '/logos/mtn.png', prefix: '97' },
+  { id: 'moov', label: 'MOOV', logo: '/logos/moov.png', prefix: '96' },
+  { id: 'celtis', label: 'CELTIS', logo: '/logos/celtiis.png', prefix: '95' },
+]
 import { useAuthStore } from '@/stores/auth.store'
 
 interface WalletData {
@@ -31,7 +40,23 @@ export function Wallet() {
   const user = useAuthStore((s) => s.user)
   const [withdrawMode, setWithdrawMode] = useState(false)
   const [withdrawStep, setWithdrawStep] = useState<'form' | 'summary'>('form')
-  const [withdrawData, setWithdrawData] = useState({ network: 'mtn', phone: '', amount: '' })
+  const [withdrawData, setWithdrawData] = useState({ amount: '' })
+  const [country, setCountry] = useState<Country>(COUNTRIES[0])
+  const { displayValue: phoneDisplay, rawValue: phoneNumber, handleChange: handlePhoneChange, reset: resetPhone } = usePhoneFormatter()
+  const [selectedOperator, setSelectedOperator] = useState(OPERATORS[0])
+  const [showOperatorDropdown, setShowOperatorDropdown] = useState(false)
+  const operatorRef = useRef<HTMLDivElement>(null)
+  
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (operatorRef.current && !operatorRef.current.contains(e.target as Node)) {
+        setShowOperatorDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
   const [pinToken, setPinToken] = useState<string | null>(null)
   const [showWalletPinModal, setShowWalletPinModal] = useState(false)
   const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null)
@@ -68,7 +93,8 @@ export function Wallet() {
       toast.success('Demande de retrait initiée avec succès')
       setWithdrawMode(false)
       setWithdrawStep('form')
-      setWithdrawData({ network: 'mtn', phone: '', amount: '' })
+      setWithdrawData({ amount: '' })
+      resetPhone()
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
       queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
     },
@@ -134,49 +160,76 @@ export function Wallet() {
             e.preventDefault()
             const amount = Number(withdrawData.amount)
             if (!amount || amount < 500) return toast.error('Le montant minimum est de 500 F CFA')
-            if (!withdrawData.phone) return toast.error('Numéro de téléphone invalide')
+            if (!phoneNumber.trim()) return toast.error('Numéro de téléphone invalide')
             if (wallet && amount > wallet.balance) return toast.error('Solde insuffisant')
             setWithdrawStep('summary')
           }} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-500">Montant du retrait</label>
-              <div className="relative flex items-center">
+              <label className="text-[13px] font-medium text-gray-900 dark:text-white">Montant du retrait</label>
+              <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white dark:bg-[#1A1A1A] overflow-hidden h-[52px] focus-within:border-2 focus-within:border-[#FF7A00] transition-all duration-150">
                 <input 
                   type="number"
                   min="500"
                   max={wallet?.balance || 0}
                   value={withdrawData.amount}
                   onChange={e => setWithdrawData(prev => ({ ...prev, amount: e.target.value }))}
-                  className="w-full pl-4 pr-16 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[15px] bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
+                  placeholder="0"
+                  className="flex-1 px-4 text-[15px] text-gray-900 dark:text-white placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
                   required
                 />
-                <span className="absolute right-4 text-[15px] font-medium text-gray-500 pointer-events-none">F CFA</span>
+                <span className="pr-4 text-[13px] font-semibold text-[#8D8D8D]">F CFA</span>
               </div>
               <span className="text-[12px] text-gray-400 mt-1">Minimum 500F</span>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-500">Réseau Mobile</label>
-              <select 
-                value={withdrawData.network}
-                onChange={e => setWithdrawData(prev => ({ ...prev, network: e.target.value }))}
-                className="h-[52px] w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent px-4 text-[15px] dark:text-white focus:outline-none focus:border-[#FF991C]"
-              >
-                <option value="mtn">MTN Mobile Money</option>
-                <option value="moov">Moov Money</option>
-              </select>
+            <div className="flex flex-col gap-2" ref={operatorRef}>
+              <label className="text-[13px] font-medium text-gray-900 dark:text-white">Opérateur</label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowOperatorDropdown(!showOperatorDropdown)}
+                  className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[52px] bg-white dark:bg-[#1A1A1A] border border-[#DFDFDF] rounded-[10px] active:bg-gray-50 dark:bg-[#222222] transition-colors"
+                >
+                  <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
+                  <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">{selectedOperator.label}</span>
+                  <ChevronDown
+                    className="w-4 h-4 text-[#8D8D8D] shrink-0 transition-transform duration-200"
+                    style={{ transform: showOperatorDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                  />
+                </button>
+
+                {showOperatorDropdown && (
+                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-30 bg-white dark:bg-[#1A1A1A] border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                    {OPERATORS.map((op) => (
+                      <button
+                        key={op.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedOperator(op)
+                          setShowOperatorDropdown(false)
+                        }}
+                        className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[52px] hover:bg-[#FFF8F0] transition-colors"
+                      >
+                        <img src={op.logo} alt={op.label} className="w-6 h-6 object-contain shrink-0" />
+                        <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">{op.label}</span>
+                        {selectedOperator.id === op.id && (
+                          <Check className="w-4 h-4 text-[#FF7A00] shrink-0" strokeWidth={2.5} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-500">Numéro de téléphone</label>
-              <div className="relative flex items-center">
-                <input 
-                  type="tel"
-                  placeholder="Ex: 97000000"
-                  value={withdrawData.phone}
-                  onChange={e => setWithdrawData(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full pl-4 pr-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[15px] bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
-                  required
+              <label className="text-[13px] font-medium text-gray-900 dark:text-white">Numéro de téléphone</label>
+              <div className="w-full">
+                <PhoneInputField
+                  country={country}
+                  onCountryChange={(c) => { setCountry(c); resetPhone() }}
+                  phoneDisplay={phoneDisplay}
+                  onPhoneChange={handlePhoneChange}
                 />
               </div>
             </div>
@@ -216,11 +269,11 @@ export function Wallet() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Méthode</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{withdrawData.network === 'mtn' ? 'MTN Mobile Money' : 'Moov Money'}</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{selectedOperator.label}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Numéro</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{withdrawData.phone}</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{phoneNumber}</span>
               </div>
 
               <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-2" />
@@ -236,7 +289,7 @@ export function Wallet() {
             </div>
 
             <Button 
-              onClick={() => withdrawMutation.mutate({ amount: Number(withdrawData.amount), phone: withdrawData.phone, network: withdrawData.network })}
+              onClick={() => withdrawMutation.mutate({ amount: Number(withdrawData.amount), phone: phoneNumber, network: selectedOperator.id })}
               disabled={withdrawMutation.isPending}
               className="w-full h-[52px] rounded-full bg-[#FF7A00] hover:bg-[#e66a00] text-white font-bold text-[15px] mt-6"
             >
