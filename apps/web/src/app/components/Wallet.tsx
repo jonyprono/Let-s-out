@@ -273,7 +273,7 @@ export function Wallet() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-500">Numéro</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{phoneNumber}</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{country.code} {phoneNumber}</span>
               </div>
 
               <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-2" />
@@ -289,7 +289,7 @@ export function Wallet() {
             </div>
 
             <Button 
-              onClick={() => withdrawMutation.mutate({ amount: Number(withdrawData.amount), phone: phoneNumber, network: selectedOperator.id })}
+              onClick={() => withdrawMutation.mutate({ amount: Number(withdrawData.amount), phone: `${country.code}${phoneNumber.replace(/\\s+/g, '')}`, network: selectedOperator.id })}
               disabled={withdrawMutation.isPending}
               className="w-full h-[52px] rounded-full bg-[#FF7A00] hover:bg-[#e66a00] text-white font-bold text-[15px] mt-6"
             >
