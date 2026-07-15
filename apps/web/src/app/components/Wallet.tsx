@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { motion } from 'motion/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { WalletIcon, ArrowUpRight, ArrowDownLeft, Clock, AlertCircle, Phone, Landmark } from 'lucide-react'
+import { WalletIcon, ArrowUpRight, ArrowDownLeft, Clock, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
 
 import { Button } from '@/components/ui/button'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
-import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router'
 import { ChevronLeft, Lock } from 'lucide-react'
 import { WalletPinManager } from './WalletPinManager'
@@ -30,7 +29,9 @@ interface WalletTransaction {
 export function Wallet() {
   const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
-  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false)
+  const [withdrawMode, setWithdrawMode] = useState(false)
+  const [withdrawStep, setWithdrawStep] = useState<'form' | 'summary'>('form')
+  const [withdrawData, setWithdrawData] = useState({ network: 'mtn', phone: '', amount: '' })
   const [pinToken, setPinToken] = useState<string | null>(null)
   const [showWalletPinModal, setShowWalletPinModal] = useState(false)
   const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null)
@@ -65,7 +66,9 @@ export function Wallet() {
     },
     onSuccess: () => {
       toast.success('Demande de retrait initiée avec succès')
-      setIsWithdrawModalOpen(false)
+      setWithdrawMode(false)
+      setWithdrawStep('form')
+      setWithdrawData({ network: 'mtn', phone: '', amount: '' })
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
       queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
     },
@@ -74,25 +77,6 @@ export function Wallet() {
     },
   })
 
-  const handleWithdraw = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    const amount = Number(formData.get('amount'))
-    const phone = formData.get('phone') as string
-    const network = formData.get('network') as string
-
-    if (!amount || amount < 500) {
-      return toast.error('Le montant minimum est de 500 F CFA')
-    }
-    if (!phone) {
-      return toast.error('Numéro de téléphone invalide')
-    }
-    if (wallet && amount > wallet.balance) {
-      return toast.error('Solde insuffisant')
-    }
-
-    withdrawMutation.mutate({ amount, phone, network })
-  }
 
   const navigate = useNavigate()
 
@@ -123,6 +107,145 @@ export function Wallet() {
 
   if (!pinToken) {
     return <WalletPinManager onVerified={setPinToken} />
+  }
+
+  if (withdrawMode) {
+    return (
+      <div className="bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full">
+        <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
+          <button onClick={() => setWithdrawMode(false)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
+          </button>
+          <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Initier un retrait</h1>
+        </div>
+        
+        <div className="flex-1 flex flex-col p-4 sm:p-6 gap-6">
+          {/* Header Card */}
+          <div className="bg-gray-100 dark:bg-[#18181b] rounded-2xl p-4 flex flex-col gap-2">
+            <h2 className="text-[16px] font-bold text-gray-900 dark:text-white">Mon Portefeuille</h2>
+            <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-1" />
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-500">Solde disponible</span>
+              <span className="text-[15px] font-bold text-blue-500">{wallet?.balance?.toLocaleString('fr-FR')} F</span>
+            </div>
+          </div>
+
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            const amount = Number(withdrawData.amount)
+            if (!amount || amount < 500) return toast.error('Le montant minimum est de 500 F CFA')
+            if (!withdrawData.phone) return toast.error('Numéro de téléphone invalide')
+            if (wallet && amount > wallet.balance) return toast.error('Solde insuffisant')
+            setWithdrawStep('summary')
+          }} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-500">Montant du retrait</label>
+              <div className="relative flex items-center">
+                <input 
+                  type="number"
+                  min="500"
+                  max={wallet?.balance || 0}
+                  value={withdrawData.amount}
+                  onChange={e => setWithdrawData(prev => ({ ...prev, amount: e.target.value }))}
+                  className="w-full pl-4 pr-16 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[15px] bg-transparent text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
+                  required
+                />
+                <span className="absolute right-4 text-[15px] font-medium text-gray-500 pointer-events-none">F CFA</span>
+              </div>
+              <span className="text-[12px] text-gray-400 mt-1">Minimum 500F</span>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-500">Réseau Mobile</label>
+              <select 
+                value={withdrawData.network}
+                onChange={e => setWithdrawData(prev => ({ ...prev, network: e.target.value }))}
+                className="h-[52px] w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent px-4 text-[15px] dark:text-white focus:outline-none focus:border-[#FF991C]"
+              >
+                <option value="mtn">MTN Mobile Money</option>
+                <option value="moov">Moov Money</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-500">Numéro de téléphone</label>
+              <div className="relative flex items-center">
+                <input 
+                  type="tel"
+                  placeholder="Ex: 97000000"
+                  value={withdrawData.phone}
+                  onChange={e => setWithdrawData(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full pl-4 pr-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[15px] bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
+                  required
+                />
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full h-[52px] rounded-full bg-[#FF7A00] hover:bg-[#e66a00] text-white font-bold text-[15px] mt-4"
+            >
+              Continuer
+            </Button>
+          </form>
+        </div>
+
+        {/* Summary BottomSheet */}
+        <BottomSheet open={withdrawStep === 'summary'} onClose={() => setWithdrawStep('form')}>
+          <div className="px-5 pt-2 pb-8 flex flex-col gap-4">
+            <h3 className="text-center text-[16px] font-bold text-gray-900 dark:text-white mb-2">Détails du retrait</h3>
+            
+            <div>
+              <p className="text-[17px] font-bold text-gray-900 dark:text-white">Mon Portefeuille</p>
+            </div>
+
+            <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-2" />
+
+            <div className="flex flex-col gap-4 text-[14px]">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Cagnotte</span>
+                <span className="font-semibold text-gray-900 dark:text-white">Portefeuille principal</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Montant</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Commission</span>
+                <span className="font-semibold text-gray-900 dark:text-white">0 F</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Méthode</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{withdrawData.network === 'mtn' ? 'MTN Mobile Money' : 'Moov Money'}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Numéro</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{withdrawData.phone}</span>
+              </div>
+
+              <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-2" />
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Total à débiter</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500">Total à recevoir</span>
+                <span className="font-semibold text-[#FF7A00] dark:text-[#FF7A00]">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
+              </div>
+            </div>
+
+            <Button 
+              onClick={() => withdrawMutation.mutate({ amount: Number(withdrawData.amount), phone: withdrawData.phone, network: withdrawData.network })}
+              disabled={withdrawMutation.isPending}
+              className="w-full h-[52px] rounded-full bg-[#FF7A00] hover:bg-[#e66a00] text-white font-bold text-[15px] mt-6"
+            >
+              {withdrawMutation.isPending ? 'Traitement...' : 'Confirmer'}
+            </Button>
+          </div>
+        </BottomSheet>
+      </div>
+    )
   }
 
   return (
@@ -168,7 +291,7 @@ export function Wallet() {
 
           <Button 
             className="w-full mt-2 h-12 rounded-[16px] bg-[#FF991C] hover:bg-[#e68a19] text-white font-semibold flex items-center justify-center gap-2 z-10"
-            onClick={() => setIsWithdrawModalOpen(true)}
+            onClick={() => setWithdrawMode(true)}
             disabled={!wallet || wallet.balance <= 0 || isLoadingWallet}
           >
             <ArrowUpRight size={20} />
@@ -296,68 +419,7 @@ export function Wallet() {
         )}
       </BottomSheet>
 
-      {/* Withdraw Modal */}
-      <BottomSheet open={isWithdrawModalOpen} onClose={() => setIsWithdrawModalOpen(false)}>
-        <div className="p-4 sm:p-6 flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Retirer vers Mobile Money</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">L'argent sera transféré instantanément sur votre compte.</p>
-          </div>
-          
-          <form onSubmit={handleWithdraw} className="flex flex-col gap-4 mt-2">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Réseau Mobile</label>
-              <select name="network" defaultValue="mtn" className="h-12 w-full rounded-[14px] border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#18181b] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF991C]">
-                <option value="mtn">MTN Mobile Money</option>
-                <option value="moov">Moov Money</option>
-              </select>
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Numéro de téléphone</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-3 text-gray-400" size={20} />
-                <Input 
-                  name="phone"
-                  type="tel"
-                  placeholder="Ex: 97000000"
-                  className="pl-10 h-12 rounded-[14px]"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium">Montant à retirer (F CFA)</label>
-              <div className="relative">
-                <Landmark className="absolute left-3 top-3 text-gray-400" size={20} />
-                <Input 
-                  name="amount"
-                  type="number"
-                  min="500"
-                  max={wallet?.balance || 0}
-                  defaultValue={wallet?.balance || 0}
-                  className="pl-10 h-12 rounded-[14px]"
-                  required
-                />
-              </div>
-              <span className="text-[12px] text-gray-500">
-                Solde max: {wallet?.balance?.toLocaleString('fr-FR')} F CFA
-              </span>
-            </div>
-
-            <div className="mt-4 pb-8">
-              <Button 
-                type="submit" 
-                className="w-full h-12 rounded-[16px] bg-[#FF991C] hover:bg-[#e68a19] text-white font-semibold"
-                disabled={withdrawMutation.isPending}
-              >
-                {withdrawMutation.isPending ? 'Traitement...' : 'Confirmer le retrait'}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </BottomSheet>
 
       {/* Modals */}
       {showWalletPinModal && (
