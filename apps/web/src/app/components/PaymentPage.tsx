@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2, ChevronLeft } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
+import { chatApi } from '@/features/chat/api'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -111,9 +112,15 @@ export function PaymentPage() {
     )
   }
 
-  const handleOpenChat = () => {
+  const handleOpenChat = async () => {
     if (!eventId) return
-    navigate(`/events/${eventId}`)
+    try {
+      const conv = await chatApi.getEventConversation(eventId)
+      navigate(`/chat/${conv.id}`)
+    } catch (err) {
+      toast.error('Impossible de charger le chat. Réessayez.')
+      navigate(`/events/${eventId}`)
+    }
   }
 
   // ── Loading ──────────────────────────────────────────────────

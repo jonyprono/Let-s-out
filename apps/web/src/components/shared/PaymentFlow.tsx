@@ -168,9 +168,14 @@ export function PaymentFlow({
                 setStatus('error')
                 toast.error('Paiement annulé')
               } else {
-                // First update status, then call onSuccess async
-                setStatus('success')
-                onSuccess(finalAmount, data.isSandbox)
+                // Wait for onSuccess to complete (which includes DB sync delays) before showing success screen
+                setStatus('loading')
+                Promise.resolve(onSuccess(finalAmount, data.isSandbox))
+                  .then(() => setStatus('success'))
+                  .catch(() => {
+                    toast.error('Erreur de synchronisation, veuillez rafraîchir')
+                    setStatus('error')
+                  })
               }
             },
           }).open()
