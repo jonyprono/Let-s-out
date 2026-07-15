@@ -253,14 +253,15 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       }
     }
 
-    // Reply immediately so client doesn't time out while we process
-    // handleConfirmedBooking can take 10-20s (DB + notifications + email)
-    reply.send({ message: 'Booking confirmed (sandbox/dev)', eventId })
-
-    // Process booking asynchronously — fire and forget
-    handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount }).catch((e) =>
+    // We now await this since the frontend has a 30s timeout for this fallback route.
+    // This ensures DB is fully updated before replying 200, so subsequent queries (my-booking, chat) succeed.
+    try {
+      await handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount })
+      reply.send({ message: 'Booking confirmed (sandbox/dev)', eventId })
+    } catch (e) {
       app.log.error('[dev/confirm-booking] Error in handleConfirmedBooking', e)
-    )
+      reply.code(500).send({ error: 'Internal Server Error during booking confirmation' })
+    }
   })
 
   // Get booking details (for receipt page)
