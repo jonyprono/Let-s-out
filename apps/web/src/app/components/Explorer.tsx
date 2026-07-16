@@ -461,115 +461,100 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
       {/* List View */}
       {viewMode === 'list' && (
-        <div className="flex-1 overflow-y-auto bg-white dark:bg-black" style={{ scrollbarWidth: 'none' }}>
-          <PullToRefresh onRefresh={handleRefresh} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">Actualisation...</div>}>
-            <div>
-            
-            {/* Title row (Scrolls away) */}
-            <div className="px-4 pt-safe-5 pt-5 pb-0 bg-white dark:bg-black">
-              <div className="flex items-start justify-between mb-1">
-                <div>
-                  <h1 className="text-[22px] font-bold text-gray-900 dark:text-white leading-tight">
-                    Explorer <span className="text-[#FF7A00]">✦</span>
-                  </h1>
-                  <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">
-                    Découvrez des expériences uniques autour de vous
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <button onClick={() => onNavigate('notifications')} className="w-10 h-10 flex items-center justify-center">
-                    <NotificationIconWithBadge unreadCount={unreadNotifCount} className="w-7 h-7 text-gray-900 dark:text-white" />
-                  </button>
-                  <button
-                    onClick={() => toast('Filtres avancés bientôt disponibles', { icon: '🚧' })}
-                    className="w-10 h-10 bg-[#FF7A00] rounded-[14px] flex items-center justify-center shadow-md active:scale-95 transition-transform"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                      <path d="M4 6h16M7 12h10M10 18h4" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                </div>
+        <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-black">
+          {/* Fixed Header */}
+          <div className="px-4 pt-safe-5 pt-5 pb-3 bg-white dark:bg-black z-20 flex-shrink-0">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h1 className="text-[22px] font-bold text-gray-900 dark:text-white leading-tight">
+                  Explorer <span className="text-[#FF7A00]">✦</span>
+                </h1>
+                <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                  Découvrez des expériences uniques autour de vous
+                </p>
               </div>
-            </div>
-
-            {/* Sticky Search bar + Filters */}
-            <div className="sticky top-0 z-20 bg-white/95 dark:bg-black/95 backdrop-blur-sm px-4 pt-3 pb-3">
-              {/* Search bar + Carte button */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`flex-1 flex items-center gap-2 px-4 h-11 rounded-full bg-gray-100 dark:bg-[#1A1A1A] border transition-colors ${
-                  eventSearchFocused || eventSearch
-                    ? 'border-[#FF7A00]'
-                    : 'border-transparent'
-                }`}>
-                  <Search01Icon className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.5} />
-                  <input
-                    type="text"
-                    placeholder="Rechercher des événements, artistes, lieux..."
-                    value={eventSearch}
-                    onChange={e => setEventSearch(e.target.value)}
-                    onFocus={() => setEventSearchFocused(true)}
-                    onBlur={() => setEventSearchFocused(false)}
-                    className="flex-1 text-[13px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0"
-                  />
-                  {eventSearch && (
-                    <button onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}>
-                      <Cancel01Icon className="w-4 h-4 text-gray-400" strokeWidth={2} />
-                    </button>
-                  )}
-                </div>
-                {/* Carte button */}
+              <div className="flex items-center gap-2 mt-1">
+                <button onClick={() => onNavigate('notifications')} className="w-10 h-10 flex items-center justify-center">
+                  <NotificationIconWithBadge unreadCount={unreadNotifCount} className="w-7 h-7 text-gray-900 dark:text-white" />
+                </button>
                 <button
-                  onClick={() => { hapticFeedback.impact(); setViewMode('map'); }}
-                  className="shrink-0 flex items-center gap-1.5 h-11 px-4 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+                  onClick={() => toast('Filtres avancés bientôt disponibles', { icon: '🚧' })}
+                  className="w-10 h-10 bg-[#FF7A00] rounded-[14px] flex items-center justify-center shadow-md active:scale-95 transition-transform"
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 3L4 5.5v15L9 18l6 3 5-2.5V3.5L15 6 9 3z" stroke="#6B7280" strokeWidth="1.8" strokeLinejoin="round"/>
-                    <path d="M9 3v15M15 6v15" stroke="#6B7280" strokeWidth="1.8" strokeLinecap="round"/>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 6h16M7 12h10M10 18h4" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
                   </svg>
-                  <span className="text-[13px] font-semibold text-gray-600 dark:text-gray-300">Carte</span>
                 </button>
               </div>
-
-              {/* Location row */}
-              <button onClick={openSearch} className="flex items-center gap-1 mb-3 active:opacity-70 transition-opacity">
-                <Location01Icon className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
-                <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
-                  {currentLocation || 'Où allez-vous ?'}
-                </span>
-                <ArrowDown01Icon className="w-4 h-4 text-gray-500" strokeWidth={2} />
-              </button>
-
-              {/* Filter tabs */}
-              <div className="flex gap-2 pb-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                {filterTabs.map((tab) => {
-                  const isActive = selectedCategory === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => { hapticFeedback.impact(); setSelectedCategory(tab.id); }}
-                      className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95 whitespace-nowrap border ${
-                        isActive
-                          ? 'bg-[#FF7A00] text-white border-[#FF7A00] shadow-sm'
-                          : 'bg-white dark:bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
-                      }`}
-                    >
-                      {tab.id === 'tout' && isActive && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                          <rect x="3" y="3" width="8" height="8" rx="1.5" fill="white"/>
-                          <rect x="13" y="3" width="8" height="8" rx="1.5" fill="white"/>
-                          <rect x="3" y="13" width="8" height="8" rx="1.5" fill="white"/>
-                          <rect x="13" y="13" width="8" height="8" rx="1.5" fill="white"/>
-                        </svg>
-                      )}
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
-            {/* Category Icons Row (Scrolls away) */}
-            <div className="flex gap-5 px-4 pt-3 pb-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`flex-1 flex items-center gap-2 px-4 h-11 rounded-full bg-gray-100 dark:bg-[#1A1A1A] border transition-colors ${
+                eventSearchFocused || eventSearch ? 'border-[#FF7A00]' : 'border-transparent'
+              }`}>
+                <Search01Icon className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.5} />
+                <input
+                  type="text"
+                  placeholder="Rechercher des événements, artistes, lieux..."
+                  value={eventSearch}
+                  onChange={e => setEventSearch(e.target.value)}
+                  onFocus={() => setEventSearchFocused(true)}
+                  onBlur={() => setEventSearchFocused(false)}
+                  className="flex-1 text-[13px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0"
+                />
+                {eventSearch && (
+                  <button onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}>
+                    <Cancel01Icon className="w-4 h-4 text-gray-400" strokeWidth={2} />
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => { hapticFeedback.impact(); setViewMode('map'); }}
+                className="shrink-0 flex items-center gap-1.5 h-11 px-4 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 3L4 5.5v15L9 18l6 3 5-2.5V3.5L15 6 9 3z" stroke="#6B7280" strokeWidth="1.8" strokeLinejoin="round"/>
+                  <path d="M9 3v15M15 6v15" stroke="#6B7280" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+                <span className="text-[13px] font-semibold text-gray-600 dark:text-gray-300">Carte</span>
+              </button>
+            </div>
+
+            <button onClick={openSearch} className="flex items-center gap-1 mb-3 active:opacity-70 transition-opacity">
+              <Location01Icon className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
+              <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
+                {currentLocation || 'Où allez-vous ?'}
+              </span>
+              <ArrowDown01Icon className="w-4 h-4 text-gray-500" strokeWidth={2} />
+            </button>
+
+            <div className="flex gap-2 pb-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              {filterTabs.map((tab) => {
+                const isActive = selectedCategory === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => { hapticFeedback.impact(); setSelectedCategory(tab.id); }}
+                    className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95 whitespace-nowrap border ${
+                      isActive
+                        ? 'bg-[#FF7A00] text-white border-[#FF7A00] shadow-sm'
+                        : 'bg-white dark:bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Scrollable List */}
+          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            <PullToRefresh onRefresh={handleRefresh} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">Actualisation...</div>}>
+              <div>
+              
+              {/* Category Icons Row (Scrolls away) */}
+              <div className="flex gap-5 px-4 pt-3 pb-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               {CATEGORY_LABELS.map((cat) => {
                 const isActive = selectedIconCategory === cat.id;
                 return (
@@ -645,6 +630,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </div>
             </div>
           </PullToRefresh>
+        </div>
 
           {/* Map FAB */}
           <div className="fixed bottom-[100px] right-5 z-[1050]">
