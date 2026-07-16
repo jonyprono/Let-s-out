@@ -91,22 +91,47 @@ export function Notifications({ onBack }: NotificationsProps) {
         navigate('/friend-requests');
         break;
       case 'FRIEND_ACCEPTED':
-        navigate('/profile');
+        if (d?.userId) navigate(`/profile/${d.userId}`);
+        else navigate('/friends');
         break;
       case 'EVENT_INVITE':
       case 'EVENT_UPDATE':
       case 'EVENT_CANCELLED':
+        if (d?.eventId) navigate(`/events/${d.eventId}`);
+        break;
       case 'JOIN_REQUEST':
+        if (d?.eventId) navigate(`/events/${d.eventId}/manage`);
+        break;
       case 'JOIN_ACCEPTED':
-      case 'SYSTEM':
+      case 'JOIN_CONFIRMED':
         if (d?.eventId) navigate(`/events/${d.eventId}`);
         break;
       case 'PAYMENT_SUCCESS':
         if (d?.bookingId) navigate(`/payments/${d.bookingId}`);
         else if (d?.eventId) navigate(`/events/${d.eventId}`);
         break;
+      case 'PAYMENT_FAILED':
+        if (d?.eventId) navigate(`/events/${d.eventId}`);
+        break;
+      case 'POOL_NEW':
+      case 'POOL_UNLOCK_REQUEST':
+        if (d?.eventId) navigate(`/events/${d.eventId}`);
+        break;
+      case 'POOL_UNLOCK_APPROVED':
+        navigate('/wallet');
+        break;
+      case 'POOL_VOTE_STARTED':
+        if (d?.eventId) navigate(`/events/${d.eventId}/validators-vote`);
+        break;
+      case 'EVENT_REVIEW_REQUEST':
+        if (d?.eventId) navigate(`/events/${d.eventId}`);
+        break;
       case 'NEW_MESSAGE':
-        navigate('/messages');
+        if (d?.conversationId) navigate(`/chat/${d.conversationId}`);
+        else navigate('/messages');
+        break;
+      case 'SYSTEM':
+        if (d?.eventId) navigate(`/events/${d.eventId}`);
         break;
       default:
         break;

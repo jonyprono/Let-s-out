@@ -186,20 +186,38 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
 
 
+  // Pre-fetch event conversation to make "Accéder au chat" instant
+  const { data: eventConvData } = useQuery({
+    queryKey: ['event-conv', id],
+    queryFn: () => chatApi.getEventConversation(id!),
+    enabled: !!id && !!user && hasJoined,
+    staleTime: 5 * 60 * 1000, // 5 min cache
+    retry: false,
+  });
+
+  const [goingToChat, setGoingToChat] = useState(false);
   const goToChat = async () => {
-    if (!event) return
+    if (!event) return;
+    // Use cached conversation id if available → instant navigation
+    if (eventConvData?.id) {
+      navigate(`/chat/${eventConvData.id}`);
+      return;
+    }
+    setGoingToChat(true);
     try {
-      const conv = await chatApi.getEventConversation(id!)
-      navigate(`/chat/${conv.id}`)
+      const conv = await chatApi.getEventConversation(id!);
+      navigate(`/chat/${conv.id}`);
     } catch (err: any) {
-      const status = err?.response?.status
+      const status = err?.response?.status;
       if (status === 403) {
-        toast.info("Rejoignez l'événement pour accéder à la discussion.")
+        toast.info("Rejoignez l'événement pour accéder à la discussion.");
       } else if (status === 404) {
-        toast.info("Aucune discussion trouvée pour cet événement.")
+        toast.info("Aucune discussion trouvée pour cet événement.");
       } else {
-        navigate('/messages')
+        navigate('/messages');
       }
+    } finally {
+      setGoingToChat(false);
     }
   }
   const handleConfirmContribute = (amount: number) => {
@@ -615,9 +633,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               {event?.status === 'PUBLISHED' && (
                 <Button
                   onClick={goToChat}
-                  className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90"
+                  disabled={goingToChat}
+                  className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90 disabled:opacity-70"
                 >
-                  <CustomChatIcon />
+                  {goingToChat ? <Loader2 className="w-4 h-4 animate-spin" /> : <CustomChatIcon />}
                   Accéder au chat
                 </Button>
               )}
@@ -966,8 +985,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, currentUserId: string | undefined, onOpenProfile: any }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
+  const [dmPending, setDmPending] = useState(false);
 
-  const { data: orgProfile, refetch } = useQuery({
+  const { data: orgProfile } = useQuery({
     queryKey: ['users', org.id],
     queryFn: () => usersApi.getById(org.id),
     enabled: !!org.id,
@@ -979,7 +1000,38 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
   const orgEvents = orgProfile?.detailedStats?.eventsCount || orgProfile?.eventsCount || org.detailedStats?.eventsCount || org.profile?.eventsCount || 0;
   const rawRating = Number(orgProfile?.detailedStats?.rating || orgProfile?.rating || org.detailedStats?.rating || org.profile?.rating || 0);
   const orgRating = rawRating > 0 ? rawRating.toFixed(1) : null;
-  const isFollowing = orgProfile?.isFollowing || false;
+  const serverFollowing = orgProfile?.isFollowing || false;
+  const isFollowing = optimisticFollowing !== null ? optimisticFollowing : serverFollowing;
+
+  const handleMessage = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (dmPending) return;
+    setDmPending(true);
+    try {
+      const conv = await chatApi.createDM(org.id);
+      navigate(`/chat/${conv.id}`);
+    } catch {
+      toast.error("Impossible de démarrer la conversation");
+      setDmPending(false);
+    }
+  };
+
+  const handleFollow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Optimistic: toggle immediately
+    const next = !isFollowing;
+    setOptimisticFollowing(next);
+    const action = next ? usersApi.followUser(org.id) : usersApi.unfollowUser(org.id);
+    action
+      .then(() => {
+        qc.invalidateQueries({ queryKey: ['users', org.id] });
+      })
+      .catch(() => {
+        // Revert on error
+        setOptimisticFollowing(!next);
+        toast.error("Erreur lors de l'action");
+      });
+  };
 
   return (
     <div className="flex flex-col gap-[12px] bg-[var(--color-background-primary)] rounded-[12px] border border-[var(--border-default)] p-[12px] shadow-sm">
@@ -1017,34 +1069,22 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
       {/* Row 2: action buttons (only if not the current user) */}
       {currentUserId !== org.id && (
         <div className="flex items-center gap-[8px]">
-          <button onClick={async (e) => {
-            e.stopPropagation();
-            try {
-              const conv = await chatApi.createDM(org.id);
-              navigate(`/chat/${conv.id}`);
-            } catch {
-              toast.error("Impossible de démarrer la conversation");
-            }
-          }} className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform">
-            Message
+          <button
+            onClick={handleMessage}
+            disabled={dmPending}
+            className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform disabled:opacity-60"
+          >
+            {dmPending ? '...' : 'Message'}
           </button>
-          <button onClick={async (e) => {
-            e.stopPropagation();
-            try {
-              if (isFollowing) {
-                await usersApi.unfollowUser(org.id);
-                toast.success("Vous ne suivez plus cet organisateur.");
-              } else {
-                await usersApi.followUser(org.id);
-                toast.success("Vous suivez maintenant cet organisateur !");
-              }
-              refetch();
-              qc.invalidateQueries({ queryKey: ['users', org.id] });
-            } catch (err: any) {
-              toast.error("Erreur lors de l'action");
-            }
-          }} className={`flex-1 py-[6px] rounded-[100px] border text-[13px] font-semibold active:scale-95 transition-transform ${isFollowing ? 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-700 dark:text-gray-300' : 'border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[var(--color-text-primary)]'}`}>
-            {isFollowing ? 'Abonné(e)' : 'Suivre'}
+          <button
+            onClick={handleFollow}
+            className={`flex-1 py-[6px] rounded-[100px] border text-[13px] font-semibold active:scale-95 transition-all ${
+              isFollowing
+                ? 'bg-[#FFF2E5] border-[#FF7A00] text-[#FF7A00]'
+                : 'border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[var(--color-text-primary)]'
+            }`}
+          >
+            {isFollowing ? '✓ Abonné(e)' : 'Suivre'}
           </button>
         </div>
       )}

@@ -100,7 +100,11 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     const detailedStats = await getDetailedStats(app, userId)
 
-    return reply.send({ ...profile, friendshipStatus, isFollowing, commonEventsCount, detailedStats })
+    const friendsCount = await app.prisma.friendship.count({
+      where: { OR: [{ initiatorId: userId }, { receiverId: userId }], status: 'ACCEPTED' }
+    })
+
+    return reply.send({ ...profile, friendshipStatus, isFollowing, commonEventsCount, detailedStats, friendsCount })
   })
 
   // Get user profile by username
@@ -171,7 +175,11 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     const detailedStats = await getDetailedStats(app, userId)
 
-    return reply.send({ ...profile, friendshipStatus, isFollowing, commonEventsCount, detailedStats })
+    const friendsCount = await app.prisma.friendship.count({
+      where: { OR: [{ initiatorId: userId }, { receiverId: userId }], status: 'ACCEPTED' }
+    })
+
+    return reply.send({ ...profile, friendshipStatus, isFollowing, commonEventsCount, detailedStats, friendsCount })
   })
 
   // Update own profile

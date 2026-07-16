@@ -51,7 +51,7 @@ export function FriendsList() {
   const createDmMut = useMutation({
     mutationFn: (targetUserId: string) => apiClient.post('/chat/conversations/dm', { userId: targetUserId }).then(res => res.data),
     onSuccess: (res) => {
-      navigate(`/messages/${res.id}`)
+      navigate(`/chat/${res.id}`)
     },
     onError: () => toast.error('Impossible de démarrer la conversation')
   })
@@ -67,25 +67,45 @@ export function FriendsList() {
   })
 
   const followMut = useMutation({
-    mutationFn: (userId: string) => usersApi.followUser(userId),
-    onSuccess: () => {
-      toast.success('Abonnement réussi !')
-      qc.invalidateQueries({ queryKey: ['users', 'followers'] })
-      qc.invalidateQueries({ queryKey: ['users', 'following'] })
-      qc.invalidateQueries({ queryKey: ['users', 'search'] })
+    mutationFn: (uid: string) => usersApi.followUser(uid),
+    onMutate: async (uid) => {
+      await qc.cancelQueries({ queryKey: ['users', 'followers', targetUserId] })
+      const prev = qc.getQueryData(['users', 'followers', targetUserId])
+      // Optimistically mark as following in cache (add to following list)
+      qc.setQueryData(['users', 'following', targetUserId], (old: any[]) =>
+        old ? [...old, { userId: uid }] : old
+      )
+      return { prev }
     },
-    onError: () => toast.error('Erreur lors de l\'abonnement')
+    onError: (_err, _uid, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['users', 'followers', targetUserId], ctx.prev)
+      toast.error('Erreur lors de l\'abonnement')
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['users', 'followers', targetUserId] })
+      qc.invalidateQueries({ queryKey: ['users', 'following', targetUserId] })
+    },
   })
 
   const unfollowMut = useMutation({
-    mutationFn: (userId: string) => usersApi.unfollowUser(userId),
-    onSuccess: () => {
-      toast.success('Désabonnement réussi !')
-      qc.invalidateQueries({ queryKey: ['users', 'followers'] })
-      qc.invalidateQueries({ queryKey: ['users', 'following'] })
-      qc.invalidateQueries({ queryKey: ['users', 'search'] })
+    mutationFn: (uid: string) => usersApi.unfollowUser(uid),
+    onMutate: async (uid) => {
+      await qc.cancelQueries({ queryKey: ['users', 'following', targetUserId] })
+      const prev = qc.getQueryData(['users', 'following', targetUserId])
+      // Optimistically remove from following list
+      qc.setQueryData(['users', 'following', targetUserId], (old: any[]) =>
+        old ? old.filter((u: any) => u.userId !== uid) : old
+      )
+      return { prev }
     },
-    onError: () => toast.error('Erreur lors du désabonnement')
+    onError: (_err, _uid, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['users', 'following', targetUserId], ctx.prev)
+      toast.error('Erreur lors du désabonnement')
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['users', 'followers', targetUserId] })
+      qc.invalidateQueries({ queryKey: ['users', 'following', targetUserId] })
+    },
   })
 
   const filterList = (list: any[]) => {

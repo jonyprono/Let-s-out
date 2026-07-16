@@ -5,10 +5,11 @@ import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { useUserProfile } from '@/features/users/UserProfileContext';
 import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
 import { useLogout } from '@/features/auth/hooks/useAuth';
+import { chatApi } from '@/features/chat/api';
 
 import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -26,10 +27,13 @@ export function Profile({ onNavigate }: ProfileProps) {
   const user = useAuthStore((s) => s.user);
   const profile = user?.profile;
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddFriendsModal, setShowAddFriendsModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('events');
   const { username } = useParams<{ username?: string }>()
+  // Optimistic follow state: null = use server value, true/false = override
+  const [optimisticIsFollowing, setOptimisticIsFollowing] = useState<boolean | null>(null);
 
   const targetUsername = username || profile?.username;
   const isOwnProfile = !username || (!!profile?.username && username === profile?.username);
@@ -98,6 +102,42 @@ export function Profile({ onNavigate }: ProfileProps) {
   const followers = followersData ?? [];
   const following = followingData ?? [];
   const friends = friendsData ?? [];
+
+  // Follow state: derive from followers list or viewedProfile
+  const serverIsFollowing = viewedProfile?.isFollowing ?? false;
+  const isFollowing = optimisticIsFollowing !== null ? optimisticIsFollowing : serverIsFollowing;
+
+  // Friends count for other profile: use viewedProfile.friendsCount if available
+  const viewedFriendsCount = isOwnProfile
+    ? friends.length
+    : (viewedProfile?.friendsCount ?? viewedProfile?.friendsCount ?? 0);
+
+  // Follow mutation with optimistic update
+  const followMutation = useMutation({
+    mutationFn: () => isFollowing
+      ? usersApi.unfollowUser(targetUserId!)
+      : usersApi.followUser(targetUserId!),
+    onMutate: () => {
+      // Optimistic: immediately toggle the state
+      setOptimisticIsFollowing(!isFollowing);
+    },
+    onError: () => {
+      // Revert on error
+      setOptimisticIsFollowing(isFollowing);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] });
+      qc.invalidateQueries({ queryKey: ['users', targetUserId, 'followers'] });
+    },
+  });
+
+  // DM mutation
+  const dmMutation = useMutation({
+    mutationFn: () => chatApi.createDM(targetUserId!),
+    onSuccess: (conv) => {
+      navigate(`/chat/${conv.id}`);
+    },
+  });
 
   // Show loading state while determining own vs other profile
   if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
@@ -195,8 +235,26 @@ export function Profile({ onNavigate }: ProfileProps) {
           {/* Actions */}
           {!isOwnProfile && (
             <div className="flex gap-2 w-full mb-4 max-w-sm">
-              <Button className="flex-1 rounded-full h-10 text-[13px] font-bold shadow-sm" style={{ backgroundColor: 'var(--color-action-primary, #FF7A00)' }}>+ Suivre</Button>
-              <Button variant="outline" className="flex-1 rounded-full h-10 text-[13px] font-bold shadow-sm">Message</Button>
+              <Button
+                className="flex-1 rounded-full h-10 text-[13px] font-bold shadow-sm transition-all"
+                style={{
+                  backgroundColor: isFollowing ? 'transparent' : 'var(--color-action-primary, #FF7A00)',
+                  color: isFollowing ? 'var(--color-action-primary, #FF7A00)' : 'white',
+                  border: isFollowing ? '1.5px solid var(--color-action-primary, #FF7A00)' : 'none',
+                }}
+                disabled={followMutation.isPending}
+                onClick={() => followMutation.mutate()}
+              >
+                {isFollowing ? '✓ Abonné(e)' : '+ Suivre'}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 rounded-full h-10 text-[13px] font-bold shadow-sm"
+                disabled={dmMutation.isPending}
+                onClick={() => dmMutation.mutate()}
+              >
+                {dmMutation.isPending ? '...' : 'Écrire'}
+              </Button>
             </div>
           )}
 
@@ -205,7 +263,7 @@ export function Profile({ onNavigate }: ProfileProps) {
             {[
               { value: createdEvents.length, label: 'Créés' },
               { value: pastEvents.length, label: 'Rejoints' },
-              { value: friends.length, label: 'Amis' },
+              { value: isOwnProfile ? friends.length : viewedFriendsCount, label: 'Amis' },
               { value: rating, label: 'Note' },
             ].map((stat, i) => (
               <div key={i} className="bg-white dark:bg-[#1A1A1A] px-3 py-2 rounded-[14px] shadow-sm border border-gray-100 dark:border-white/10 flex flex-col items-start min-w-[70px]">
