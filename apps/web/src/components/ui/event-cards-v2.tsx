@@ -224,7 +224,7 @@ export function SquareEventCard({
           {isPast && (
             <div className="flex items-center gap-1 text-[10px] font-semibold text-[#FFB340]">
               <span>⭐</span>
-              <span>4.8</span>
+              <span>{(event as any).averageRating ?? 4.8}</span>
             </div>
           )}
         </div>
