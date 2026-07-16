@@ -82,6 +82,11 @@ export function FeaturedEventCard({
   const dateStr = format(startDate, "EEE. d MMM yyyy • HH:mm 'GMT'", { locale: fr })
   const location = [event.city, event.country].filter(Boolean).join(', ') || 'Lieu à définir'
 
+  const attendeesList = attendees || ((event as any).bookings || []).map((b: any) => ({
+    avatarUrl: b.user?.profile?.avatarUrl,
+    displayName: b.user?.profile?.displayName || b.user?.firstName || b.user?.email || '?'
+  }))
+
   return (
     <div
       onClick={onClick}
@@ -135,7 +140,7 @@ export function FeaturedEventCard({
 
         {/* Attendees row */}
         <AttendeesRow
-          attendees={attendees}
+          attendees={attendeesList}
           count={event.currentAttendees}
           size={24}
         />
@@ -163,6 +168,12 @@ export function SquareEventCard({
   const startDate = new Date(event.startAt)
   const dateStr = format(startDate, 'd MMM yyyy • HH:mm', { locale: fr })
   const location = [event.city, event.country].filter(Boolean).join(', ') || 'Lieu à définir'
+  const isPast = startDate < new Date()
+
+  const attendeesList = attendees || ((event as any).bookings || []).map((b: any) => ({
+    avatarUrl: b.user?.profile?.avatarUrl,
+    displayName: b.user?.profile?.displayName || b.user?.firstName || b.user?.email || '?'
+  }))
 
   return (
     <div
@@ -209,11 +220,13 @@ export function SquareEventCard({
 
         {/* Attendees + Rating */}
         <div className="flex items-center justify-between">
-          <AttendeesRow attendees={attendees} count={event.currentAttendees} size={20} />
-          <div className="flex items-center gap-1 text-[10px] font-semibold text-[#FFB340]">
-            <span>⭐</span>
-            <span>4.8</span>
-          </div>
+          <AttendeesRow attendees={attendeesList} count={event.currentAttendees} size={20} />
+          {isPast && (
+            <div className="flex items-center gap-1 text-[10px] font-semibold text-[#FFB340]">
+              <span>⭐</span>
+              <span>4.8</span>
+            </div>
+          )}
         </div>
       </div>
     </div>
