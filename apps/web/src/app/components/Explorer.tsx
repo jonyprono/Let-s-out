@@ -554,23 +554,23 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               <div>
               
               {/* Category Icons Row (Scrolls away) */}
-              <div className="flex gap-5 px-4 pt-3 pb-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex gap-3 px-4 pt-1 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               {CATEGORY_LABELS.map((cat) => {
                 const isActive = selectedIconCategory === cat.id;
                 return (
                   <button
                     key={cat.id}
                     onClick={() => { hapticFeedback.impact(); setSelectedIconCategory(isActive ? null : cat.id); }}
-                    className="flex flex-col items-center gap-1.5 shrink-0 active:scale-95 transition-transform w-[58px]"
+                    className="flex flex-col items-center gap-1 shrink-0 active:scale-95 transition-transform w-[50px]"
                   >
-                    <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center border transition-colors ${
+                    <div className={`w-[42px] h-[42px] rounded-full flex items-center justify-center border transition-colors ${
                       isActive
                         ? 'bg-orange-50 dark:bg-[#FF7A00]/10 border-orange-200 dark:border-[#FF7A00]/30'
                         : 'bg-orange-50/60 dark:bg-[#FF7A00]/5 border-orange-100 dark:border-[#FF7A00]/10'
                     }`}>
-                      <cat.icon size={24} className="text-[#FF7A00]" strokeWidth={1.8} />
+                      <cat.icon size={20} className="text-[#FF7A00]" strokeWidth={1.8} />
                     </div>
-                    <span className={`text-[11px] text-center font-medium leading-tight ${
+                    <span className={`text-[10px] text-center font-medium leading-tight ${
                       isActive ? 'text-[#FF7A00] font-semibold' : 'text-gray-600 dark:text-gray-400'
                     }`}>{cat.label}</span>
                   </button>
@@ -578,12 +578,12 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               })}
             </div>
 
-            <div className="px-4 pt-3 pb-[100px]">
+            <div className="px-4 pt-1 pb-[100px]">
               {filteredEvents.length > 0 ? (
                 <>
                   {/* ── En vedette (Horizontal scroll — 3 cards visible) ── */}
                   {sortFeaturedEvents(filteredEvents).length > 0 && (
-                    <div className="mb-5 -mx-4">
+                    <div className="mb-3 -mx-4">
                       <div className="flex items-center justify-between px-4 mb-3">
                         <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">
                           En vedette <span>🔥</span>

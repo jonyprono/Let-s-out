@@ -55,7 +55,7 @@ function EventCardSkeleton() {
 
 function FeaturedSkeleton() {
   return (
-    <div className="flex-shrink-0 w-[300px] h-[200px] bg-gray-200 dark:bg-gray-700 rounded-3xl overflow-hidden animate-pulse" />
+    <div className="flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded-3xl overflow-hidden animate-pulse" style={{ width: 'min(82vw, 290px)', height: 'clamp(140px, 20vh, 180px)' }} />
   );
 }
 
@@ -67,58 +67,58 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
   rating: number;
 }) {
   return (
-    <div className="mx-4 mb-5 bg-[#FF7A00] rounded-[20px] px-5 py-4 flex items-center justify-between shadow-md">
+    <div className="mx-4 mb-3 bg-[#FF7A00] rounded-[18px] px-4 py-2.5 flex items-center justify-between shadow-md">
       {/* Events this week */}
-      <div className="flex flex-col items-center gap-1 flex-1">
-        <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-0.5">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <div className="flex flex-col items-center gap-0.5 flex-1">
+        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center mb-0.5">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
             <rect x="3" y="4" width="18" height="18" rx="3" stroke="white" strokeWidth="1.8"/>
             <path d="M16 2v4M8 2v4M3 10h18" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
         </div>
-        <span className="text-white font-bold text-[20px] leading-none">{eventsThisWeek}</span>
-        <span className="text-white/90 text-[9px] text-center font-medium leading-tight">Événements<br/>cette semaine</span>
+        <span className="text-white font-bold text-[16px] leading-none">{eventsThisWeek}</span>
+        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Événements<br/>cette semaine</span>
       </div>
 
-      <div className="w-px h-10 bg-white/25" />
+      <div className="w-px h-8 bg-white/25" />
 
       {/* Friends/Participants */}
-      <div className="flex flex-col items-center gap-1 flex-1">
-        <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-0.5">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <div className="flex flex-col items-center gap-0.5 flex-1">
+        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center mb-0.5">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
             <circle cx="9" cy="7" r="4" stroke="white" strokeWidth="1.8"/>
             <path d="M3 20c0-3.866 2.686-7 6-7s6 3.134 6 7" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
             <path d="M16 3.5a4 4 0 0 1 0 7M21 20c0-3.866-2.686-7-6-7" stroke="white" strokeWidth="1.8" strokeLinecap="round"/>
           </svg>
         </div>
-        <span className="text-white font-bold text-[20px] leading-none">{friendsCount}</span>
-        <span className="text-white/90 text-[9px] text-center font-medium leading-tight">Participants<br/>avec vous</span>
+        <span className="text-white font-bold text-[16px] leading-none">{friendsCount}</span>
+        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Participants<br/>avec vous</span>
       </div>
 
-      <div className="w-px h-10 bg-white/25" />
+      <div className="w-px h-8 bg-white/25" />
 
       {/* Joined events */}
-      <div className="flex flex-col items-center gap-1 flex-1">
-        <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-0.5">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <div className="flex flex-col items-center gap-0.5 flex-1">
+        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center mb-0.5">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <span className="text-white font-bold text-[20px] leading-none">{joinedCount}</span>
-        <span className="text-white/90 text-[9px] text-center font-medium leading-tight">Événements<br/>rejoints</span>
+        <span className="text-white font-bold text-[16px] leading-none">{joinedCount}</span>
+        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Événements<br/>rejoints</span>
       </div>
 
-      <div className="w-px h-10 bg-white/25" />
+      <div className="w-px h-8 bg-white/25" />
 
       {/* Rating */}
-      <div className="flex flex-col items-center gap-1 flex-1">
-        <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-0.5">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <div className="flex flex-col items-center gap-0.5 flex-1">
+        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center mb-0.5">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
           </svg>
         </div>
-        <span className="text-white font-bold text-[20px] leading-none">{rating > 0 ? rating.toFixed(1) : '—'}</span>
-        <span className="text-white/90 text-[9px] text-center font-medium leading-tight">Note moyenne<br/>reçue</span>
+        <span className="text-white font-bold text-[16px] leading-none">{rating > 0 ? rating.toFixed(1) : '—'}</span>
+        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Note moyenne<br/>reçue</span>
       </div>
     </div>
   );
@@ -417,7 +417,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
             {!showSpinner && !isOffline && (
               <>
                 {/* ── Orange Stats Banner ── */}
-                <div className="pt-2">
+                <div className="pt-1">
                   <StatsBanner
                     eventsThisWeek={eventsThisWeek}
                     friendsCount={friendsCount}
@@ -427,7 +427,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                 </div>
 
                 {/* ── À ne pas manquer ── */}
-                <div className="mb-5">
+                <div className="mb-3">
                   <div className="flex items-center justify-between px-4 mb-3">
                     <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">À ne pas manquer</h2>
                     <button onClick={() => setViewAll('featured')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
@@ -474,7 +474,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                 </div>
 
                 {/* ── Événements populaires ── */}
-                <div className="pt-2 pb-2">
+                <div className="pt-1 pb-1">
                   <div className="flex items-center justify-between px-4 mb-3">
                     <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Événements populaires</h2>
                     <button onClick={() => setViewAll('popular')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>

@@ -95,7 +95,7 @@ export function FeaturedEventCard({
     <div
       onClick={onClick}
       className="relative shrink-0 snap-start rounded-3xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-      style={{ width: 300, height: 200 }}
+      style={{ width: 'min(82vw, 290px)', height: 'clamp(140px, 20vh, 180px)' }}
     >
       {/* Cover image */}
       <SafeImage
@@ -187,7 +187,7 @@ export function SquareEventCard({
     <div
       onClick={onClick}
       className="relative shrink-0 snap-start rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-      style={{ width: 180, height: 240 }}
+      style={{ width: 'clamp(145px, 40vw, 175px)', height: 'clamp(155px, 21vh, 190px)' }}
     >
       <SafeImage
         src={event.coverUrl ?? undefined}
