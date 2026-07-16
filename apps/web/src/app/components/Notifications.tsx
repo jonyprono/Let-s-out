@@ -52,15 +52,20 @@ export function Notifications({ onBack }: NotificationsProps) {
   const { data, isLoading } = useNotifications(100, false);
   const allNotifications = data?.data ?? [];
   const unarchivedNotifications = useMemo(() => filterActiveNotifications(allNotifications), [allNotifications]);
-  
+  // On exclut NEW_MESSAGE de l'affichage in-app (les push notifs backend ne sont pas affectées)
+  const visibleNotifications = useMemo(
+    () => unarchivedNotifications.filter(n => n.type !== 'NEW_MESSAGE'),
+    [unarchivedNotifications],
+  );
+
   const displayedNotifications = useMemo(() => {
     if (activeTab === 'unread') {
-      return unarchivedNotifications.filter(n => !n.isRead);
+      return visibleNotifications.filter(n => !n.isRead);
     }
-    return unarchivedNotifications;
-  }, [unarchivedNotifications, activeTab]);
+    return visibleNotifications;
+  }, [visibleNotifications, activeTab]);
 
-  const activeUnreadCount = unarchivedNotifications.filter((n) => !n.isRead).length;
+  const activeUnreadCount = visibleNotifications.filter((n) => !n.isRead).length;
 
   const markReadMutation = useMarkNotificationAsRead();
   const markAllReadMutation = useMarkAllNotificationsAsRead();
