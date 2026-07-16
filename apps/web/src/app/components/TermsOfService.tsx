@@ -7,7 +7,7 @@ export function TermsOfService() {
   return (
     <div className="h-[100dvh] overflow-y-auto bg-background-white p-5 pb-10">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
+        <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/settings')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
           <ArrowLeft className="w-6 h-6" />
         </button>
         <h1 className="text-xl font-bold">Conditions d'utilisation</h1>

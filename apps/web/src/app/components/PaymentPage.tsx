@@ -182,7 +182,7 @@ export function PaymentPage() {
     return (
       <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
         <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
+          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')} className="w-9 h-9 flex items-center justify-center active:scale-95">
             <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
           <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">
@@ -240,7 +240,7 @@ export function PaymentPage() {
             Contribuer à nouveau
           </Button>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')}
             className="w-full h-[52px] flex items-center justify-center gap-2 rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -326,7 +326,7 @@ export function PaymentPage() {
       onDevConfirm={handleDevConfirm}
       onSuccess={handleSuccess}
       successScreen={isContribution ? <ContributionSuccessScreen /> : <JoinSuccessScreen />}
-      onBack={() => navigate(-1)}
+      onBack={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')}
     />
   )
 }

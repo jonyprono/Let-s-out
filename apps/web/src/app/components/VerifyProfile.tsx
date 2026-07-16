@@ -351,12 +351,12 @@ export function VerifyProfile() {
 
   // ── KYC déjà en attente ──────────────────────────────────────────────────
   if (kycStatus === 'pending' && !isComplete) {
-    return <KycPendingScreen onBack={() => navigate(-1)} />
+    return <KycPendingScreen onBack={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')} />
   }
 
   // ── KYC déjà vérifié ────────────────────────────────────────────────────
   if (kycStatus === 'verified') {
-    return <KycVerifiedScreen onBack={() => navigate(-1)} />
+    return <KycVerifiedScreen onBack={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')} />
   }
 
   // ── Success screen ───────────────────────────────────────────────────────
@@ -373,7 +373,7 @@ export function VerifyProfile() {
 
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-[#333333] flex gap-3">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')}
             className="flex-[0.8] py-4 rounded-full border border-gray-200 dark:border-[#333333] font-bold text-[15px] text-gray-700 dark:text-gray-300 bg-white dark:bg-[#1A1A1A]"
           >
             Retour
@@ -407,7 +407,7 @@ export function VerifyProfile() {
       <div className="px-5 pt-safe-4 pb-3 flex-shrink-0">
         <div className="flex items-center justify-center relative mb-4">
           <button
-            onClick={() => step === 0 ? navigate(-1) : setStep(s => (s - 1) as KycStep)}
+            onClick={() => step === 0 ? (window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')) : setStep(s => (s - 1) as KycStep)}
             className="absolute left-0 w-8 h-8 flex items-center justify-center"
           >
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-white" />

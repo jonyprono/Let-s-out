@@ -60,7 +60,7 @@ export function PaymentReceipt() {
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Reçu introuvable</h2>
         <p className="text-sm text-gray-400 mb-6">Ce reçu n'existe pas ou vous n'y avez pas accès.</p>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')}
           className="px-6 py-3 bg-action-primary text-white rounded-full font-semibold"
         >
           Retour

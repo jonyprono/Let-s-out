@@ -73,7 +73,7 @@ export function ManageEvent() {
           style={{ backgroundImage: `url(${event.coverUrl || '/Checker.png'})` }} 
         />
         <div className="absolute top-0 left-0 w-full p-4 pt-12 z-10 flex items-center">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm">
+          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm">
             <ArrowLeft01Icon className="w-5 h-5 text-gray-700 dark:text-white" />
           </button>
           <span className="ml-3 font-semibold text-gray-900 dark:text-white drop-shadow-md">Gestion événement</span>

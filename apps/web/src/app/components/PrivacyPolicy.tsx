@@ -14,7 +14,7 @@ export function PrivacyPolicy() {
         boxSizing: 'border-box', width: '100%'
       }}>
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/settings')}
           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem', borderRadius: '50%', display: 'flex', alignItems: 'center' }}
         >
           <ArrowLeft style={{ width: 22, height: 22, color: '#1a1a1a' }} />
