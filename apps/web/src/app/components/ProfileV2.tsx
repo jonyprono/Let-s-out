@@ -336,10 +336,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       <div className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {/* Header simple pour revenir en arrière */}
         <div className="absolute top-0 left-0 w-full p-4 pt-12 z-10 flex items-center">
-          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-full shadow-sm">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-900 dark:text-white">
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
+          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-full shadow-sm">
+            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
         </div>
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
@@ -381,7 +379,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         {/* Top buttons — always above the cover image */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-12 z-20">
           <button
-            onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+            onClick={(e) => { e.stopPropagation(); window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account'); }}
             className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border border-gray-200"
           >
             <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-white" />

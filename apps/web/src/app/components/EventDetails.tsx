@@ -56,12 +56,20 @@ const CustomChatIcon = () => (
 )
 
 interface EventDetailsProps {
-  onBack: () => void
+  onBack?: () => void
 }
 
 export function EventDetails({ onBack }: EventDetailsProps) {
+  const navigate = useNavigate();
+  const handleBack = () => {
+    if (onBack) return onBack();
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const qc = useQueryClient()
   const user = useAuthStore((s) => s.user)
   const { openUserProfile } = useUserProfile()
@@ -345,8 +353,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         {/* Header */}
         <div className="flex-shrink-0 bg-[var(--color-background-primary)] z-10 px-4 pt-safe-4 pt-4 pb-3 flex items-center justify-between min-h-[56px] h-[60px] shadow-sm">
           <button
-            onClick={onBack}
-            className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform -ml-2"
+            onClick={handleBack}
+            className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0"
           >
             <ChevronLeft className="w-6 h-6 text-[var(--color-text-primary)]" strokeWidth={2.5} />
           </button>

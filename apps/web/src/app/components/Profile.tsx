@@ -170,7 +170,7 @@ export function Profile({ onNavigate }: ProfileProps) {
       <div className="px-4 pt-12 pb-2 sticky top-0 z-20 flex items-center justify-between bg-gray-50 dark:bg-[#1A1A1A] dark:bg-[#222222]/90 backdrop-blur-md">
         <div className="flex items-center gap-2">
           {!isOwnProfile && (
-            <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A] flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm hover:bg-gray-50 dark:bg-[#0a0a0b] transition-colors">
+            <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A] flex items-center justify-center border border-gray-200 dark:border-white/10 shadow-sm hover:bg-gray-50 dark:bg-[#0a0a0b] transition-colors">
               <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
           )}

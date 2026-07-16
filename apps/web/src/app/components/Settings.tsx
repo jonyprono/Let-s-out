@@ -24,7 +24,7 @@ import { PreferenceSegment } from '@/components/shared/SettingsToggle';
 import { Button } from '@/components/ui/button';
 
 interface SettingsProps {
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 const colorClasses: Record<string, string> = {
@@ -83,7 +83,7 @@ export function Settings({ onBack }: SettingsProps) {
       <div className="bg-background-white dark:bg-[#1A1A1A] px-5 pt-4 pt-safe-4 pb-4 border-b border-gray-100 dark:border-[#2A2A2A]">
         <div className="flex items-center gap-3">
           <button
-            onClick={onBack}
+            onClick={() => onBack ? onBack() : (window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account'))}
             className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0"
           >
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />

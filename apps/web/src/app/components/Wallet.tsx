@@ -119,7 +119,7 @@ export function Wallet() {
     return (
       <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full`}>
         <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
           <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Mon Portefeuille</h1>
@@ -322,7 +322,7 @@ export function Wallet() {
     <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full overflow-y-auto`}>
       {/* Header */}
       <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+        <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
           <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
         </button>
         <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white">Mon Portefeuille</h1>

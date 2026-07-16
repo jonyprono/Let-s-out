@@ -538,7 +538,7 @@ export function ChatDetails() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--color-background-primary)] border-b border-gray-100 dark:border-white/10 pt-safe-6 pb-2">
         <div className="flex items-center px-4">
-          <button onClick={() => navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 dark:bg-[#222222] rounded-full transition-colors active:scale-95">
+          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 dark:bg-[#222222] rounded-full transition-colors active:scale-95">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
 
