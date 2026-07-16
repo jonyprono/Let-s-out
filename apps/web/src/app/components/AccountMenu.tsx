@@ -49,10 +49,20 @@ export function AccountMenu() {
     },
   });
 
+  const { data: myProfile } = useQuery({
+    queryKey: ['public-profile', user?.profile?.username],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/users/${user?.profile?.username}`);
+      return data;
+    },
+    enabled: !!user?.profile?.username,
+  });
+
   const eventsCount = user?.profile?.eventsCount ?? (activity?.createdEvents?.length ?? 0);
   const friendsCount = friends?.length ?? (user?.profile?.followersCount ?? 0);
   const joinedCount = activity?.joinedEvents?.length ?? 0;
   const pendingRequests = (friendRequests?.data?.length ?? 0) + (friendRequests?.received?.length ?? 0);
+  const rating = myProfile?.detailedStats?.rating?.toFixed(1) ?? '0.0';
 
   const menuItems = [
     {
@@ -187,7 +197,7 @@ export function AccountMenu() {
           <div className="flex flex-col items-center flex-1">
             <div className="flex items-center gap-0.5">
               <span className="text-[14px]">⭐</span>
-              <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">4.8</span>
+              <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">{rating}</span>
             </div>
             <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">Note</span>
           </div>

@@ -251,103 +251,133 @@ export function Home({ userData, onNavigate }: HomeProps) {
     || userData?.firstName?.split(' ')[0]
     || 'vous';
   const avatarUrl = user?.profile?.avatarUrl;
+  const [viewAll, setViewAll] = useState<'featured' | 'popular' | null>(null);
 
   const handleRefresh = async () => {
     if (!isOffline) await qc.invalidateQueries({ queryKey: ['events'] });
   };
 
-  return (
-    <div className="w-full h-full flex flex-col bg-white dark:bg-black">
-
-      {/* ── Header ── */}
-      <div className="px-4 pt-safe-4 pt-4 pb-3 flex-shrink-0 bg-white dark:bg-black">
-
-        {/* Row 1: Avatar + greeting + notif + scan */}
-        <div className="flex items-center gap-3 mb-4">
-          {/* Avatar */}
-          <button onClick={() => onNavigate('profile')} className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#FF7A00] shrink-0 active:opacity-70 transition-opacity">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#FF7A00] to-[#E56A00] flex items-center justify-center text-white text-lg font-bold">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-            )}
+  if (viewAll) {
+    const listEvents = viewAll === 'featured' ? featuredEvents : popularEvents;
+    const title = viewAll === 'featured' ? 'À ne pas manquer' : 'Événements populaires';
+    
+    return (
+      <div className="w-full h-full flex flex-col bg-white dark:bg-black">
+        {/* Header */}
+        <div className="px-4 pt-safe-4 pt-4 pb-3 flex items-center gap-3 bg-white dark:bg-black z-10 sticky top-0 border-b border-gray-100 dark:border-gray-800">
+          <button onClick={() => setViewAll(null)} className="w-10 h-10 bg-gray-100 dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
-
-          {/* Greeting */}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">
-              Bienvenue, {displayName} 👋
-            </h1>
-            <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">
-              Prêt pour de <span className="text-[#FF7A00] font-semibold">nouvelles expériences</span> ?
-            </p>
-          </div>
-
-          {/* Notification */}
-          <button
-            onClick={() => onNavigate('notifications')}
-            className="w-10 h-10 flex items-center justify-center active:opacity-70 transition-opacity"
-          >
-            <NotificationIconWithBadge unreadCount={unreadCount} className="w-7 h-7 text-gray-900 dark:text-white" />
-          </button>
-
-          {/* QR Scan button - orange rounded square */}
-          <button
-            onClick={() => onNavigate('scan-qr')}
-            className="w-10 h-10 bg-[#FF7A00] rounded-[12px] flex items-center justify-center active:scale-95 transition-transform shadow-md"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <rect x="7" y="7" width="4" height="4" rx="0.5" stroke="white" strokeWidth="2"/>
-              <rect x="13" y="7" width="4" height="4" rx="0.5" stroke="white" strokeWidth="2"/>
-              <rect x="7" y="13" width="4" height="4" rx="0.5" stroke="white" strokeWidth="2"/>
-              <path d="M13 13h1M17 13v1M13 17h4v-2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h1>
         </div>
-
-        {/* Search bar */}
-        <button
-          onClick={() => onNavigate('explorer')}
-          className="w-full flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-[#1A1A1A] rounded-full text-left active:opacity-70 transition-opacity mb-4"
-        >
-          <Search01Icon className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
-          <span className="flex-1 text-sm text-gray-400">Concerts, artistes, lieux, événements...</span>
-          <div className="w-7 h-7 flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M4 6h16M7 12h10M10 18h4" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </div>
-        </button>
-
-        {/* Filter chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {TIME_FILTERS.map((f) => {
-            const isActive = activeFilter === f.key;
-            return (
-              <button
-                key={f.key}
-                onClick={() => { hapticFeedback.impact(); setActiveFilter(f.key); }}
-                className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95 whitespace-nowrap ${
-                  isActive
-                    ? 'bg-[#FF7A00] text-white shadow-sm'
-                    : 'bg-gray-100 dark:bg-[#1A1A1A] text-gray-600 dark:text-gray-400'
-                }`}
-              >
-                <span className="text-[12px]">{f.icon}</span>
-                {f.label}
-              </button>
-            );
-          })}
+        
+        {/* List */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4" style={{ scrollbarWidth: 'none' }}>
+          {listEvents.map(event => (
+            <RowEventCard
+              key={event.id}
+              event={event}
+              onClick={() => onNavigate('event-details', event.id)}
+            />
+          ))}
+          {listEvents.length === 0 && (
+            <p className="text-center text-gray-500 py-10">Aucun événement disponible.</p>
+          )}
         </div>
       </div>
+    );
+  }
 
+  return (
+    <div className="w-full h-full flex flex-col bg-white dark:bg-black">
       {/* ── Scrollable content ── */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         <PullToRefresh onRefresh={handleRefresh} isPullable={!isOffline}>
-          <div className="pb-28">
+          <div className="pb-28 pt-safe-4">
+
+            {/* Row 1: Avatar + greeting + notif + scan (Scrolls away) */}
+            <div className="flex items-center gap-3 mb-4 px-4 pt-4">
+              {/* Avatar */}
+              <button onClick={() => onNavigate('profile')} className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#FF7A00] shrink-0 active:opacity-70 transition-opacity">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#FF7A00] to-[#E56A00] flex items-center justify-center text-white text-lg font-bold">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </button>
+
+              {/* Greeting */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">
+                  Bienvenue, {displayName} 👋
+                </h1>
+                <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">
+                  Prêt pour de <span className="text-[#FF7A00] font-semibold">nouvelles expériences</span> ?
+                </p>
+              </div>
+
+              {/* Notification */}
+              <button
+                onClick={() => onNavigate('notifications')}
+                className="w-10 h-10 flex items-center justify-center active:opacity-70 transition-opacity"
+              >
+                <NotificationIconWithBadge unreadCount={unreadCount} className="w-7 h-7 text-gray-900 dark:text-white" />
+              </button>
+
+              {/* QR Scan button - orange rounded square */}
+              <button
+                onClick={() => onNavigate('scan-qr')}
+                className="w-10 h-10 bg-[#FF7A00] rounded-[12px] flex items-center justify-center active:scale-95 transition-transform shadow-md"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="7" y="7" width="4" height="4" rx="0.5" stroke="white" strokeWidth="2"/>
+                  <rect x="13" y="7" width="4" height="4" rx="0.5" stroke="white" strokeWidth="2"/>
+                  <rect x="7" y="13" width="4" height="4" rx="0.5" stroke="white" strokeWidth="2"/>
+                  <path d="M13 13h1M17 13v1M13 17h4v-2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Sticky Section: Search bar + Filter chips */}
+            <div className="sticky top-0 z-20 bg-white/95 dark:bg-black/95 backdrop-blur-sm px-4 pt-1 pb-3">
+              {/* Search bar */}
+              <button
+                onClick={() => onNavigate('explorer')}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-gray-100 dark:bg-[#1A1A1A] rounded-full text-left active:opacity-70 transition-opacity mb-4"
+              >
+                <Search01Icon className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
+                <span className="flex-1 text-sm text-gray-400">Concerts, artistes, lieux, événements...</span>
+                <div className="w-7 h-7 flex items-center justify-center">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 6h16M7 12h10M10 18h4" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+              </button>
+
+              {/* Filter chips */}
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {TIME_FILTERS.map((f) => {
+                  const isActive = activeFilter === f.key;
+                  return (
+                    <button
+                      key={f.key}
+                      onClick={() => { hapticFeedback.impact(); setActiveFilter(f.key); }}
+                      className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95 whitespace-nowrap ${
+                        isActive
+                          ? 'bg-[#FF7A00] text-white shadow-sm'
+                          : 'bg-gray-100 dark:bg-[#1A1A1A] text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      <span className="text-[12px]">{f.icon}</span>
+                      {f.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             {showSpinner && (
               <div className="flex justify-center py-16">
@@ -391,7 +421,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                 <div className="mb-5">
                   <div className="flex items-center justify-between px-4 mb-3">
                     <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">À ne pas manquer</h2>
-                    <button className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
+                    <button onClick={() => setViewAll('featured')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
                   </div>
 
                   {isLoading ? (
@@ -438,7 +468,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                 <div className="pt-2 pb-2">
                   <div className="flex items-center justify-between px-4 mb-3">
                     <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Événements populaires</h2>
-                    <button className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
+                    <button onClick={() => setViewAll('popular')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
                   </div>
 
                   {isLoading && popularEvents.length === 0 ? (

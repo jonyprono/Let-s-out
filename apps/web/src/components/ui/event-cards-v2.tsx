@@ -2,6 +2,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { Event } from '@/features/events/api'
+import { useFavoritesStore } from '@/stores/favorites.store'
 
 // ─── Shared: Attendee Avatars Row ────────────────────────────────────────────
 function AttendeesRow({ attendees, count, size = 24 }: {
@@ -62,22 +63,25 @@ function AttendeesRow({ attendees, count, size = 24 }: {
   )
 }
 
-// ─── 1. FeaturedEventCard ─ "À ne pas manquer" (Home) ────────────────────────
 export function FeaturedEventCard({
   event,
   onClick,
-  isSaved = false,
-  onSaveToggle,
   attendees,
   badge = 'À LA UNE'
 }: {
   event: Event
   onClick?: () => void
-  isSaved?: boolean
-  onSaveToggle?: () => void
   attendees?: { avatarUrl?: string | null; displayName?: string }[]
   badge?: string
 }) {
+  const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
+  const isSaved = isFavorite(event.id)
+  
+  const onSaveToggle = () => {
+    if (isSaved) removeFavorite(event.id)
+    else addFavorite(event)
+  }
+
   const startDate = new Date(event.startAt)
   const dateStr = format(startDate, "EEE. d MMM yyyy • HH:mm 'GMT'", { locale: fr })
   const location = [event.city, event.country].filter(Boolean).join(', ') || 'Lieu à définir'
@@ -153,18 +157,22 @@ export function FeaturedEventCard({
 export function SquareEventCard({
   event,
   onClick,
-  isSaved = false,
-  onSaveToggle,
   attendees,
   badge = 'POPULAIRE'
 }: {
   event: Event
   onClick?: () => void
-  isSaved?: boolean
-  onSaveToggle?: () => void
   attendees?: { avatarUrl?: string | null; displayName?: string }[]
   badge?: string
 }) {
+  const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
+  const isSaved = isFavorite(event.id)
+  
+  const onSaveToggle = () => {
+    if (isSaved) removeFavorite(event.id)
+    else addFavorite(event)
+  }
+
   const startDate = new Date(event.startAt)
   const dateStr = format(startDate, 'd MMM yyyy • HH:mm', { locale: fr })
   const location = [event.city, event.country].filter(Boolean).join(', ') || 'Lieu à définir'
@@ -237,14 +245,18 @@ export function SquareEventCard({
 export function RowEventCard({
   event,
   onClick,
-  isSaved = false,
-  onSaveToggle
 }: {
   event: Event
   onClick?: () => void
-  isSaved?: boolean
-  onSaveToggle?: () => void
 }) {
+  const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
+  const isSaved = isFavorite(event.id)
+  
+  const onSaveToggle = () => {
+    if (isSaved) removeFavorite(event.id)
+    else addFavorite(event)
+  }
+
   const startDate = new Date(event.startAt)
   const day = format(startDate, 'dd')
   const month = format(startDate, 'MMM', { locale: fr }).toUpperCase().replace('.', '')
