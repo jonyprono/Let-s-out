@@ -25,6 +25,8 @@ const TYPE_CONFIG: Record<string, { icon: any; label: string }> = {
   POOL_UNLOCK_APPROVED: { icon: TickDouble01Icon, label: 'Déblocage de fonds approuvé' },
   POOL_VOTE_STARTED: { icon: Settings03Icon, label: 'Vote des validateurs' },
   SYSTEM:          { icon: Notification01Icon, label: 'Système' },
+  JOIN_CONFIRMED:  { icon: TickDouble01Icon, label: 'Participation confirmée' },
+  EVENT_REVIEW_REQUEST: { icon: Notification01Icon, label: 'Avis demandé' },
   default:         { icon: Notification01Icon, label: 'Notification' },
 };
 
@@ -36,6 +38,7 @@ function getActionLabel(type: string) {
     case 'NEW_MESSAGE': return "Ouvrir le chat";
     case 'FRIEND_REQUEST': return "Voir la demande";
     case 'POOL_NEW': return "Consulter la cagnotte";
+    case 'EVENT_REVIEW_REQUEST': return "Laisser un avis";
     default: return "Voir les détails";
   }
 }
