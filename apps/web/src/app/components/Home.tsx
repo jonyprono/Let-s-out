@@ -2,15 +2,16 @@ import { useState, useEffect, useRef } from 'react';
 import { Loader2, WifiOff, RefreshCw } from 'lucide-react';
 import { Search01Icon } from 'hugeicons-react';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { eventsApi, type Event } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
-import { usersApi } from '@/features/users/api';
 import { hapticFeedback } from '@/lib/haptics';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { PermissionsRequest } from './PermissionsRequest';
-import { EventCard } from '@/components/shared/EventCard';
+import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
+import { sortFeaturedEvents, sortPopularEvents } from '@/utils/event-ranking';
+import { Calendar01Icon, UserMultiple02Icon, FavouriteIcon, StarIcon } from 'hugeicons-react';
 
 interface HomeProps {
   userData: any;
@@ -39,38 +40,30 @@ function getTimeFilter(key: string): { upcoming?: boolean; status?: string; date
 // ── Skeleton loaders ───────────────────────────────────────────────────────────
 function EventCardSkeleton() {
   return (
-    <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 animate-pulse mb-4">
-      <div className="h-44 bg-gray-200" />
-      <div className="p-3 space-y-2">
+    <div className="flex w-full h-[110px] bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 animate-pulse mb-4">
+      <div className="w-[110px] h-full bg-gray-200" />
+      <div className="flex-1 p-3 space-y-2">
         <div className="h-4 bg-gray-200 rounded-full w-3/4" />
         <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-1/2" />
-        <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-2/3" />
-        <div className="h-6 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-full mt-2" />
+        <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-1/3" />
       </div>
     </div>
   );
 }
 
-function EventCardSkeletonHorizontal() {
+function FeaturedEventCardSkeleton() {
   return (
-    <div className="flex-shrink-0 w-[280px] bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 animate-pulse">
-      <div className="h-44 bg-gray-200" />
-      <div className="p-3 space-y-2">
-        <div className="h-4 bg-gray-200 rounded-full w-3/4" />
-        <div className="h-3 bg-gray-100 dark:bg-[#2a2a2a] rounded-full w-1/2" />
-      </div>
+    <div className="flex-shrink-0 w-[320px] sm:w-[350px] h-[200px] bg-white dark:bg-[#1A1A1A] rounded-3xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 animate-pulse">
+      <div className="h-full bg-gray-200" />
     </div>
   );
 }
 
 
 
-// ── Section title ──────────────────────────────────────────────────────────────
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-[17px] font-bold text-gray-900 dark:text-white px-5 mb-3">{children}</h2>
-  );
-}
+
+
+
 
 // ── Main Home component ────────────────────────────────────────────────────────
 export function Home({ userData, onNavigate }: HomeProps) {
@@ -110,27 +103,44 @@ export function Home({ userData, onNavigate }: HomeProps) {
     initialPageParam: 0,
   });
 
-  const { data: recommendedData, isLoading: isRecommendedLoading } = useQuery({
-    queryKey: ['events', 'recommended'],
-    queryFn: () => eventsApi.getRecommended().then(r => r.data),
-  });
 
-  // My upcoming events
-  const { data: activity } = useQuery({
-    queryKey: ['users', 'activity', userData?.id],
-    queryFn: () => usersApi.getActivity(userData!.id),
-    enabled: !!userData?.id,
-  });
-  const now = new Date();
-  const myOngoingEvents: any[] = (activity?.createdEvents || []).filter((e: any) => new Date(e.startAt) >= now);
 
-  const rawEvents: Event[] = eventsData?.pages.flatMap(page => page.data) || [];
+  let rawEvents: Event[] = eventsData?.pages.flatMap(page => page.data) || [];
+  
+  // Appliquer le filtrage local pour garantir le bon fonctionnement
+  if (activeFilter) {
+    const now = new Date();
+    rawEvents = rawEvents.filter(ev => {
+      const start = ev.startAt ? new Date(ev.startAt) : null;
+      const end = (ev as any).endAt ? new Date((ev as any).endAt) : null;
+      if (!start) return false;
+      
+      if (activeFilter === 'ongoing') {
+        return start <= now && (!end || end >= now);
+      } else if (activeFilter === 'tonight') {
+        const today = new Date(now); today.setHours(18,0,0,0);
+        const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(6,0,0,0);
+        return start >= today && start <= tomorrow;
+      } else if (activeFilter === 'tomorrow') {
+        const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(0,0,0,0);
+        const dayAfter = new Date(tomorrow); dayAfter.setDate(dayAfter.getDate() + 1);
+        return start >= tomorrow && start <= dayAfter;
+      } else if (activeFilter === 'weekend') {
+        const dayOfWeek = now.getDay();
+        const daysToSat = (6 - dayOfWeek + 7) % 7 || 7;
+        const sat = new Date(now); sat.setDate(now.getDate() + daysToSat); sat.setHours(0,0,0,0);
+        const sun = new Date(sat); sun.setDate(sat.getDate() + 1); sun.setHours(23,59,59,999);
+        return start >= sat && start <= sun;
+      }
+      return true;
+    });
+  }
+
   const events: Event[] = rawEvents;
-  const recommendedEvents: Event[] = recommendedData?.data || events.slice(0, 5);
-
-  // Split feed: first 3 as vertical, rest as "Les plus populaires" horizontal
-  const feedEvents = events.slice(0, 3);
-  const popularEvents = events.slice(3);
+  
+  // Sort events based on the new ranking utility
+  const featuredEvents = sortFeaturedEvents(events).slice(0, 5); // À ne pas manquer
+  const popularEvents = sortPopularEvents(events).filter(e => !featuredEvents.find(f => f.id === e.id)); // Événements populaires (excluding featured)
 
   const showSpinner = isLoading && rawEvents.length === 0 && !isOffline;
 
@@ -243,75 +253,106 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
             {!showSpinner && !isOffline && (
               <>
-                {/* ── 1. Vos événements en cours ── */}
-                {myOngoingEvents.length > 0 && (
-                  <div className="pt-5 pb-2">
-                    <SectionTitle>Vos événements en cours</SectionTitle>
-                    <div className="px-4 space-y-4">
-                      {myOngoingEvents.slice(0, 1).map((event: any) => (
-                        <EventCard key={event.id} event={event} onNavigate={onNavigate} />
+                {/* ── Orange Stats Banner ── */}
+                <div className="px-4 mt-2 mb-6">
+                  <div className="w-full bg-gradient-to-br from-[#FF7A00] to-[#E56A00] rounded-[24px] p-5 shadow-lg flex justify-between items-start text-white">
+                    <div className="flex flex-col items-center gap-1 flex-1">
+                      <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-1">
+                        <Calendar01Icon size={18} strokeWidth={2} />
+                      </div>
+                      <span className="text-[20px] font-bold leading-none">12</span>
+                      <span className="text-[9px] text-center font-medium opacity-90 leading-tight">Événements<br/>cette semaine</span>
+                    </div>
+                    
+                    <div className="w-[1px] h-12 bg-white/20 my-auto mx-1" />
+                    
+                    <div className="flex flex-col items-center gap-1 flex-1">
+                      <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-1">
+                        <UserMultiple02Icon size={18} strokeWidth={2} />
+                      </div>
+                      <span className="text-[20px] font-bold leading-none">345</span>
+                      <span className="text-[9px] text-center font-medium opacity-90 leading-tight">Participants<br/>avec vous</span>
+                    </div>
+                    
+                    <div className="w-[1px] h-12 bg-white/20 my-auto mx-1" />
+                    
+                    <div className="flex flex-col items-center gap-1 flex-1">
+                      <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-1">
+                        <FavouriteIcon size={18} strokeWidth={2} />
+                      </div>
+                      <span className="text-[20px] font-bold leading-none">8</span>
+                      <span className="text-[9px] text-center font-medium opacity-90 leading-tight">Événements<br/>rejoints</span>
+                    </div>
+
+                    <div className="w-[1px] h-12 bg-white/20 my-auto mx-1" />
+                    
+                    <div className="flex flex-col items-center gap-1 flex-1">
+                      <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center mb-1">
+                        <StarIcon size={18} strokeWidth={2} />
+                      </div>
+                      <span className="text-[20px] font-bold leading-none">4.8</span>
+                      <span className="text-[9px] text-center font-medium opacity-90 leading-tight">Note moyenne<br/>reçue</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── 1. À ne pas manquer (Featured - horizontal scroll) ── */}
+                <div className="pt-2 pb-2">
+                  <div className="flex items-center justify-between px-5 mb-3">
+                    <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">À ne pas manquer</h2>
+                    <span className="text-[12px] font-semibold text-[#FF7A00]">Voir tout &gt;</span>
+                  </div>
+                  {isLoading ? (
+                    <div className="flex gap-4 overflow-x-auto px-4 pb-3 snap-x" style={{ scrollbarWidth: 'none' }}>
+                      {Array.from({ length: 3 }).map((_, i) => <FeaturedEventCardSkeleton key={i} />)}
+                    </div>
+                  ) : featuredEvents.length > 0 && (
+                    <div className="flex gap-4 overflow-x-auto px-4 pb-3 snap-x" style={{ scrollbarWidth: 'none' }}>
+                      {featuredEvents.map(event => (
+                        <FeaturedEventCard 
+                          key={event.id} 
+                          event={event} 
+                          onClick={() => onNavigate('event-details', event.id)} 
+                        />
                       ))}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
 
-                {/* ── 2. Recommandé pour vous (horizontal scroll) ── */}
-                {(recommendedEvents.length > 0 || isRecommendedLoading) && (
-                  <div className="pt-5 pb-2">
-                    <SectionTitle>Recommandé pour vous</SectionTitle>
-                    {isRecommendedLoading ? (
-                      <div className="flex gap-4 overflow-x-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
-                        {Array.from({ length: 3 }).map((_, i) => <EventCardSkeletonHorizontal key={i} />)}
-                      </div>
-                    ) : (
-                      <div className="flex gap-4 overflow-x-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
-                        {recommendedEvents.map(event => (
-                          <EventCard key={event.id} event={event} horizontal onNavigate={onNavigate} />
-                        ))}
-                      </div>
-                    )}
+                {/* ── 2. Événements populaires (Vertical feed) ── */}
+                <div className="pt-6 pb-2">
+                  <div className="flex items-center justify-between px-5 mb-3">
+                    <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Événements populaires</h2>
+                    <span className="text-[12px] font-semibold text-[#FF7A00]">Voir tout &gt;</span>
                   </div>
-                )}
-
-                {/* ── 3. Vertical event feed ── */}
-                {isLoading && events.length === 0 ? (
-                  <div className="px-4 pt-5 space-y-4">
-                    {Array.from({ length: 3 }).map((_, i) => <EventCardSkeleton key={i} />)}
-                  </div>
-                ) : events.length === 0 ? (
-                  <div className="flex flex-col items-center py-14 gap-3 text-center px-8">
-                    <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-2xl">📭</div>
-                    <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{emptyStateLabel}</p>
-                    <p className="text-xs text-gray-400">Essayez un autre créneau ou revenez plus tard.</p>
-                  </div>
-                ) : (
-                  <>
-                    {feedEvents.length > 0 && (
-                      <div className="px-4 pt-2 space-y-4">
-                        {feedEvents.map(event => (
-                          <EventCard key={event.id} event={event} onNavigate={onNavigate} />
-                        ))}
-                      </div>
-                    )}
-
-                    {/* ── 4. Les plus populaires (horizontal scroll) ── */}
-                    {popularEvents.length > 0 && (
-                      <div className="pt-6 pb-2">
-                        <SectionTitle>Les plus populaires</SectionTitle>
-                        <div className="flex gap-4 overflow-x-auto px-4 pb-3" style={{ scrollbarWidth: 'none' }}>
-                          {popularEvents.map(event => (
-                            <EventCard key={event.id} event={event} horizontal onNavigate={onNavigate} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Infinite scroll trigger */}
-                    <div ref={bottomRef} className="h-10 mt-4 flex items-center justify-center">
-                      {isFetchingNextPage && <Loader2 className="w-6 h-6 animate-spin text-gray-400" />}
+                  
+                  {isLoading && popularEvents.length === 0 ? (
+                    <div className="px-4 space-y-4">
+                      {Array.from({ length: 3 }).map((_, i) => <EventCardSkeleton key={i} />)}
                     </div>
-                  </>
-                )}
+                  ) : popularEvents.length === 0 && featuredEvents.length === 0 ? (
+                    <div className="flex flex-col items-center py-14 gap-3 text-center px-8">
+                      <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-2xl">📭</div>
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{emptyStateLabel}</p>
+                      <p className="text-xs text-gray-400">Essayez un autre créneau ou revenez plus tard.</p>
+                    </div>
+                  ) : (
+                    <div className="px-4 space-y-3">
+                      {popularEvents.map(event => (
+                        <RowEventCard 
+                          key={event.id} 
+                          event={event} 
+                          onClick={() => onNavigate('event-details', event.id)} 
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Infinite scroll trigger */}
+                  <div ref={bottomRef} className="h-10 mt-4 flex items-center justify-center">
+                    {isFetchingNextPage && <Loader2 className="w-6 h-6 animate-spin text-gray-400" />}
+                  </div>
+                </div>
               </>
             )}
           </div>

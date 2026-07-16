@@ -6,9 +6,10 @@ import { Search01Icon, Location01Icon, ArrowDown01Icon, MapsIcon, ListViewIcon, 
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
-import { EventCard } from '@/components/shared/EventCard';
-import ExplorerMap from '@/app/components/ExplorerMap';
 import { eventsApi, type Event } from '@/features/events/api';
+import { SquareEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
+import { sortFeaturedEvents, sortNearbyEvents } from '@/utils/event-ranking';
+import ExplorerMap from '@/app/components/ExplorerMap';
 import { useNotifications } from '@/features/notifications/api';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 
@@ -18,31 +19,17 @@ interface ExplorerProps {
 
 // Filtres supprimés
 
-/*
-const CATEGORY_LABELS: Record<string, string> = {
-  SPORT: 'Sport',
-  CULTURE: 'Culture & Art',
-  FOOD: 'Gastronomie',
-  NIGHTLIFE: 'Soirées',
-  TRAVEL: 'Voyages',
-  GAMING: 'Gaming',
-  WELLNESS: 'Bien-être',
-  MUSIC: 'Musique',
-  OTHER: 'Autre',
-};
+import { Basketball01Icon, PaintBoardIcon, Moon01Icon, MusicNote01Icon, StarIcon, Settings01Icon, Mic01Icon } from 'hugeicons-react';
 
-const CATEGORY_ICONS: Record<string, React.FC<any>> = {
-  SPORT: Basketball01Icon,
-  CULTURE: PaintBoardIcon,
-  FOOD: Pizza01Icon,
-  NIGHTLIFE: Moon01Icon,
-  TRAVEL: Airplane01Icon,
-  GAMING: GameIcon,
-  WELLNESS: FavouriteIcon,
-  MUSIC: MusicNote01Icon,
-  OTHER: StarIcon,
-};
-*/
+const CATEGORY_LABELS = [
+  { id: 'MUSIC', label: 'Concerts', icon: MusicNote01Icon },
+  { id: 'NIGHTLIFE', label: 'Fêtes', icon: Moon01Icon },
+  { id: 'CONFERENCE', label: 'Conférences', icon: Mic01Icon },
+  { id: 'WORKSHOP', label: 'Ateliers', icon: Settings01Icon },
+  { id: 'SPORT', label: 'Sports', icon: Basketball01Icon },
+  { id: 'CULTURE', label: 'Arts', icon: PaintBoardIcon },
+  { id: 'OTHER', label: 'Autres', icon: StarIcon },
+];
 
 // Filter tabs matching Figma — fonctionnels
 const filterTabs = [
@@ -76,6 +63,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('tout');
+  const [selectedIconCategory, setSelectedIconCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [eventSearchFocused, setEventSearchFocused] = useState(false);
 
@@ -350,8 +338,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     }
     // tabFilter === null = 'Tout' : pas de filtre supplémentaire
 
-    if (searchActive) return textMatch && tabMatch;
-    return textMatch && cityMatch && tabMatch;
+    if (searchActive) return textMatch && tabMatch && (!selectedIconCategory || ev.category === selectedIconCategory);
+    return textMatch && cityMatch && tabMatch && (!selectedIconCategory || ev.category === selectedIconCategory);
   });
 
   // Nombre de notifications non lues (directement depuis unreadCount renvoyé par l'API)
@@ -458,7 +446,12 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           </div>
 
           {/* Filter chips — scrollable if they don't fit */}
-          <div className="flex gap-[8px] pb-3 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex gap-[8px] pb-5 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <button className="shrink-0 active:scale-95 transition-all w-9 h-9 flex items-center justify-center bg-[#FF7A00] rounded-[10px] text-white">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
             {filterTabs.map((tab) => {
               const isActive = selectedCategory === tab.id;
               return (
@@ -468,13 +461,13 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     hapticFeedback.impact();
                     setSelectedCategory(tab.id);
                   }}
-                  className={`shrink-0 active:scale-95 transition-all px-[16px] py-[8px] rounded-[1000px] text-center ${
+                  className={`shrink-0 active:scale-95 transition-all px-[16px] py-[8px] rounded-[1000px] text-center border ${
                     isActive
-                      ? 'bg-[#FFF9EC] text-[#FF7A00]'
-                      : 'bg-[#F9FAFB] dark:bg-[#2A2A2A] text-[#737373] dark:text-[#A3A3A3]'
+                      ? 'bg-transparent text-gray-900 dark:text-white border-gray-900 dark:border-white'
+                      : 'bg-transparent text-[#737373] dark:text-[#A3A3A3] border-gray-200 dark:border-gray-800'
                   }`}
                 >
-                  <span className={`text-[12px] font-poppins whitespace-nowrap ${
+                  <span className={`text-[13px] font-poppins whitespace-nowrap ${
                     isActive ? 'font-semibold' : 'font-medium'
                   }`}>
                     {tab.label}
@@ -482,6 +475,43 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 </button>
               );
             })}
+          </div>
+
+          {/* Category Icons Row */}
+          <div className="flex gap-4 pb-4 overflow-x-auto items-start snap-x" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <button
+              onClick={() => { hapticFeedback.impact(); setSelectedIconCategory(null); }}
+              className={`flex flex-col items-center gap-2 shrink-0 snap-center w-[70px] active:scale-95 transition-transform ${
+                selectedIconCategory === null ? 'opacity-100' : 'opacity-50'
+              }`}
+            >
+              <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center border ${
+                selectedIconCategory === null 
+                  ? 'bg-orange-50 dark:bg-[#FF7A00]/10 border-orange-100 dark:border-[#FF7A00]/20'
+                  : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800'
+              }`}>
+                <StarIcon size={24} className={selectedIconCategory === null ? 'text-[#FF7A00]' : 'text-gray-400'} />
+              </div>
+              <span className={`text-[11px] font-poppins ${selectedIconCategory === null ? 'font-bold text-[#FF7A00]' : 'font-medium text-gray-500'}`}>Tous</span>
+            </button>
+            {CATEGORY_LABELS.map((cat) => (
+              <button 
+                key={cat.id} 
+                onClick={() => { hapticFeedback.impact(); setSelectedIconCategory(cat.id); }}
+                className={`flex flex-col items-center gap-2 shrink-0 snap-center w-[70px] active:scale-95 transition-transform ${
+                  selectedIconCategory === cat.id ? 'opacity-100' : 'opacity-50'
+                }`}
+              >
+                <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center border ${
+                  selectedIconCategory === cat.id 
+                    ? 'bg-orange-50 dark:bg-[#FF7A00]/10 border-orange-100 dark:border-[#FF7A00]/20'
+                    : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800'
+                }`}>
+                  <cat.icon size={24} className={selectedIconCategory === cat.id ? 'text-[#FF7A00]' : 'text-gray-400'} />
+                </div>
+                <span className={`text-[11px] font-poppins ${selectedIconCategory === cat.id ? 'font-bold text-[#FF7A00]' : 'font-medium text-gray-500'}`}>{cat.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -516,23 +546,45 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             <PullToRefresh onRefresh={handleRefresh} pullingContent="" refreshingContent={<div className="p-4 text-center text-[var(--color-text-secondary)] text-sm">Actualisation...</div>}>
               <div className="px-4 pt-4 pb-[80px] flex flex-col min-h-[100vh]">
                 {filteredEvents.length > 0 ? (
-                  filteredEvents.map(ev => {
-                    const dateObj = new Date(ev.startAt);
-                    const dateStr = dateObj.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                    return (
-                      <EventCard
-                        key={ev.id}
-                        event={ev}
-                        onNavigate={onNavigate}
-                        name={ev.title}
-                        datetime={dateStr}
-                        city={ev.city || ''}
-                        place={ev.address || ''}
-                        attendeesCount={`${ev.currentAttendees || 0} Participants`}
-                        cover={true}
-                      />
-                    );
-                  })
+                  <>
+                    {/* ── 1. En vedette (Horizontal Scroll) ── */}
+                    {sortFeaturedEvents(filteredEvents).length > 0 && (
+                      <div className="mb-6 -mx-4">
+                        <div className="flex items-center justify-between px-4 mb-3">
+                          <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">En vedette <span className="text-xl">🔥</span></h2>
+                          <span className="text-[12px] font-semibold text-[#FF7A00]">Voir tout &gt;</span>
+                        </div>
+                        <div className="flex gap-4 overflow-x-auto px-4 pb-3 snap-x" style={{ scrollbarWidth: 'none' }}>
+                          {sortFeaturedEvents(filteredEvents).slice(0, 5).map(ev => (
+                            <SquareEventCard 
+                              key={ev.id} 
+                              event={ev} 
+                              onClick={() => onNavigate('event-details', ev.id)} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── 2. Événements près de vous (Vertical List) ── */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                          Événements près de vous
+                        </h2>
+                        <span className="text-[12px] font-semibold text-[#FF7A00]">Voir tout &gt;</span>
+                      </div>
+                      <div className="space-y-3">
+                        {sortNearbyEvents(filteredEvents).map(ev => (
+                          <RowEventCard 
+                            key={ev.id} 
+                            event={ev} 
+                            onClick={() => onNavigate('event-details', ev.id)} 
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <div className="w-full text-center py-10 mt-10">
                     <p className="text-[#9CA3AF] text-[15px] font-poppins">Aucun résultat</p>
