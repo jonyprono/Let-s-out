@@ -338,7 +338,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         formattedDate={formattedDate}
         formattedStart={formattedStart}
         formattedEnd={formattedEnd}
-        onBack={onBack}
+        onBack={handleBack}
       />
     )
   }
