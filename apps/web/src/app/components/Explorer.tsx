@@ -22,21 +22,22 @@ interface ExplorerProps {
 import { Basketball01Icon, PaintBoardIcon, Moon01Icon, MusicNote01Icon, StarIcon, Settings01Icon, Mic01Icon } from 'hugeicons-react';
 
 const CATEGORY_LABELS = [
-  { id: 'MUSIC', label: 'Concerts', icon: MusicNote01Icon },
-  { id: 'NIGHTLIFE', label: 'Fêtes', icon: Moon01Icon },
+  { id: 'MUSIC',      label: 'Concerts',    icon: MusicNote01Icon },
+  { id: 'NIGHTLIFE',  label: 'Fêtes',       icon: Moon01Icon },
   { id: 'CONFERENCE', label: 'Conférences', icon: Mic01Icon },
-  { id: 'WORKSHOP', label: 'Ateliers', icon: Settings01Icon },
-  { id: 'SPORT', label: 'Sports', icon: Basketball01Icon },
-  { id: 'CULTURE', label: 'Arts', icon: PaintBoardIcon },
-  { id: 'OTHER', label: 'Autres', icon: StarIcon },
+  { id: 'WORKSHOP',   label: 'Ateliers',    icon: Settings01Icon },
+  { id: 'SPORT',      label: 'Sports',      icon: Basketball01Icon },
+  { id: 'CULTURE',    label: 'Arts',        icon: PaintBoardIcon },
+  { id: 'OTHER',      label: 'Autres',      icon: StarIcon },
 ];
 
-// Filter tabs matching Figma — fonctionnels
+// Filter tabs — pill style with border
 const filterTabs = [
-  { id: 'tout',         label: 'Tout',         filter: null },
-  { id: 'pour-vous',   label: 'Pour vous',    filter: 'recommended' },
-  { id: 'en-ce-moment',label: 'En ce moment', filter: 'ongoing' },
-  { id: 'ce-week-end', label: 'Ce week-end',  filter: 'weekend' },
+  { id: 'tout',          label: 'Tout',         filter: null },
+  { id: 'pour-vous',     label: 'Pour vous',    filter: 'recommended' },
+  { id: 'en-ce-moment',  label: 'En ce moment', filter: 'ongoing' },
+  { id: 'ce-soir',       label: 'Ce soir',      filter: 'tonight' },
+  { id: 'ce-week-end',   label: 'Week-end',     filter: 'weekend' },
 ];
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
@@ -359,254 +360,223 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   })) as any[];
 
   return (
-    <div className={`w-full h-full flex flex-col relative bg-background`}>
+    <div className="w-full h-full flex flex-col relative bg-white dark:bg-black">
 
-        {/* Header & Search Bar */}
-        <div className={`px-4 pt-safe-6 pb-0 shrink-0 w-full min-w-0 box-border relative z-20 bg-[var(--color-background-primary)]`}>
-          {/* Title + Notification */}
-          <div className="flex items-center justify-between mb-2 mt-2 w-full min-w-0">
-            <h1 className="text-[20px] font-bold font-poppins text-[var(--color-text-primary)] leading-tight">Explorez et découvrez</h1>
-            <button onClick={() => onNavigate('notifications')} className="w-10 h-10 flex items-center justify-center -mr-2">
-              <NotificationIconWithBadge unreadCount={unreadNotifCount} className="w-8 h-8 text-[var(--color-text-primary)]" />
-            </button>
+      {/* Header */}
+      <div className="px-4 pt-safe-5 pt-5 pb-0 shrink-0 bg-white dark:bg-black">
+        {/* Title row */}
+        <div className="flex items-start justify-between mb-1">
+          <div>
+            <h1 className="text-[22px] font-bold text-gray-900 dark:text-white leading-tight">
+              Explorer <span className="text-[#FF7A00]">✦</span>
+            </h1>
+            <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+              Découvrez des expériences uniques autour de vous
+            </p>
           </div>
-
-          {/* Location */}
-          <button onClick={openSearch} className="flex items-center gap-1 mb-3 active:opacity-70 transition-opacity max-w-full min-w-0">
-            <Location01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.8} />
-            <span className="text-[14px] font-poppins font-medium text-[var(--color-text-primary)] truncate flex-1 text-left min-w-0">{currentLocation || 'Où allez-vous ?'}</span>
-            <ArrowDown01Icon className="w-[16px] h-[16px] text-[var(--color-icon-secondary)]" strokeWidth={2} />
-          </button>
-
-          {/* Search bar */}
-          <div className="flex items-center gap-[10px] mb-3 w-full min-w-0 box-border">
-            <div
-              className={`flex-1 border rounded-[999px] flex items-center px-[14px] h-[44px] gap-[8px] bg-white dark:bg-[#1A1A1A] box-border min-w-0 shadow-sm transition-colors ${
-                eventSearchFocused || eventSearch
-                  ? 'border-[var(--brand-orange-500)]'
-                  : 'border-[var(--border-default)]'
-              }`}
-            >
-              <Search01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)] shrink-0" strokeWidth={1.5} />
-              <input
-                type="text"
-                placeholder="Rechercher des événements"
-                value={eventSearch}
-                onChange={(e) => setEventSearch(e.target.value)}
-                onFocus={() => setEventSearchFocused(true)}
-                onBlur={() => setEventSearchFocused(false)}
-                className="text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] font-poppins flex-1 bg-transparent outline-none border-none min-w-0"
-              />
-              {/* X pour effacer quand du texte est saisi */}
-              {eventSearch ? (
-                <button
-                  onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}
-                  className="shrink-0 flex items-center justify-center p-1"
-                >
-                  <Cancel01Icon className="w-[18px] h-[18px] text-[var(--color-icon-secondary)]" strokeWidth={2} />
-                </button>
-              ) : (
-                <button
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
-                    toast('Filtres avancés bientôt disponibles', { icon: '🚧' });
-                  }}
-                  className="shrink-0 flex items-center justify-center p-1"
-                >
-                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M2.5 5.83325H5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M2.5 14.1667H7.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M15 14.1667H17.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M12.5 5.83325H17.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M5 5.83325C5 5.05669 5 4.6684 5.12687 4.36211C5.29602 3.95374 5.62048 3.62928 6.02886 3.46012C6.33515 3.33325 6.72343 3.33325 7.5 3.33325C8.27657 3.33325 8.66483 3.33325 8.97117 3.46012C9.3795 3.62928 9.704 3.95374 9.87317 4.36211C10 4.6684 10 5.05669 10 5.83325C10 6.60982 10 6.9981 9.87317 7.30439C9.704 7.71277 9.3795 8.03723 8.97117 8.20639C8.66483 8.33325 8.27657 8.33325 7.5 8.33325C6.72343 8.33325 6.33515 8.33325 6.02886 8.20639C5.62048 8.03723 5.29602 7.71277 5.12687 7.30439C5 6.9981 5 6.60982 5 5.83325Z" stroke="#737373" strokeWidth="1.5"/>
-                    <path d="M10 14.1667C10 13.3902 10 13.0019 10.1268 12.6956C10.296 12.2872 10.6205 11.9627 11.0288 11.7936C11.3352 11.6667 11.7234 11.6667 12.5 11.6667C13.2766 11.6667 13.6648 11.6667 13.9712 11.7936C14.3795 11.9627 14.704 12.2872 14.8732 12.6956C15 13.0019 15 13.3902 15 14.1667C15 14.9433 15 15.3316 14.8732 15.6379C14.704 16.0462 14.3795 16.3707 13.9712 16.5399C13.6648 16.6667 13.2766 16.6667 12.5 16.6667C11.7234 16.6667 11.3352 16.6667 11.0288 16.5399C10.6205 16.3707 10.296 16.0462 10.1268 15.6379C10 15.3316 10 14.9433 10 14.1667Z" stroke="#737373" strokeWidth="1.5"/>
-                  </svg>
-                </button>
-              )}
-            </div>
-
+          <div className="flex items-center gap-2 mt-1">
+            <button onClick={() => onNavigate('notifications')} className="w-10 h-10 flex items-center justify-center">
+              <NotificationIconWithBadge unreadCount={unreadNotifCount} className="w-7 h-7 text-gray-900 dark:text-white" />
+            </button>
+            {/* Orange filter button */}
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onNavigate('scan-qr');
-              }}
-              className="shrink-0 flex items-center justify-center active:scale-95 transition-transform"
+              onClick={() => toast('Filtres avancés bientôt disponibles', { icon: '🚧' })}
+              className="w-10 h-10 bg-[#FF7A00] rounded-[14px] flex items-center justify-center shadow-md active:scale-95 transition-transform"
             >
-              <svg width="44" height="44" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0.5" y="0.5" width="35" height="35" rx="17.5" fill="white" className="dark:fill-[#1A1A1A]"/>
-                <rect x="0.5" y="0.5" width="35" height="35" rx="17.5" stroke="#D4D4D4" className="dark:stroke-[#333]"/>
-                <path d="M10.5 13C10.5 11.8215 10.5 11.2322 10.8661 10.8661C11.2322 10.5 11.8215 10.5 13 10.5C14.1785 10.5 14.7678 10.5 15.1339 10.8661C15.5 11.2322 15.5 11.8215 15.5 13C15.5 14.1785 15.5 14.7678 15.1339 15.1339C14.7678 15.5 14.1785 15.5 13 15.5C11.8215 15.5 11.2322 15.5 10.8661 15.1339C10.5 14.7678 10.5 14.1785 10.5 13Z" stroke="#737373" strokeWidth="1.5"/>
-                <path d="M10.5 23C10.5 21.8215 10.5 21.2322 10.8661 20.8661C11.2322 20.5 11.8215 20.5 13 20.5C14.1785 20.5 14.7678 20.5 15.1339 20.8661C15.5 21.2322 15.5 21.8215 15.5 23C15.5 24.1785 15.5 24.7677 15.1339 25.1339C14.7678 25.5 14.1785 25.5 13 25.5C11.8215 25.5 11.2322 25.5 10.8661 25.1339C10.5 24.7677 10.5 24.1785 10.5 23Z" stroke="#737373" strokeWidth="1.5"/>
-                <path d="M10.5 18H15.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M18 10.5V14.6667" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M20.5 13C20.5 11.8215 20.5 11.2322 20.8661 10.8661C21.2322 10.5 21.8215 10.5 23 10.5C24.1785 10.5 24.7677 10.5 25.1339 10.8661C25.5 11.2322 25.5 11.8215 25.5 13C25.5 14.1785 25.5 14.7678 25.1339 15.1339C24.7677 15.5 24.1785 15.5 23 15.5C21.8215 15.5 21.2322 15.5 20.8661 15.1339C20.5 14.7678 20.5 14.1785 20.5 13Z" stroke="#737373" strokeWidth="1.5"/>
-                <path d="M25.5 18H20.5C19.3215 18 18.7322 18 18.3661 18.3661C18 18.7322 18 19.3215 18 20.5M18 22.8077V25.1154M20.5 20.5V21.75C20.5 22.9553 21.1531 23 22.1667 23C22.6269 23 23 23.3731 23 23.8333M21.3333 25.5H20.5M23 20.5C24.1785 20.5 24.7677 20.5 25.1339 20.8667C25.5 21.2332 25.5 21.8234 25.5 23.0036C25.5 24.1838 25.5 24.7739 25.1339 25.1406C24.8667 25.4082 24.4806 25.4805 23.8333 25.5" stroke="#737373" strokeWidth="1.5" strokeLinecap="round"/>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M4 6h16M7 12h10M10 18h4" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
               </svg>
             </button>
-          </div>
-
-          {/* Filter chips — scrollable if they don't fit */}
-          <div className="flex gap-[8px] pb-5 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <button className="shrink-0 active:scale-95 transition-all w-9 h-9 flex items-center justify-center bg-[#FF7A00] rounded-[10px] text-white">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            {filterTabs.map((tab) => {
-              const isActive = selectedCategory === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    hapticFeedback.impact();
-                    setSelectedCategory(tab.id);
-                  }}
-                  className={`shrink-0 active:scale-95 transition-all px-[16px] py-[8px] rounded-[1000px] text-center border ${
-                    isActive
-                      ? 'bg-transparent text-gray-900 dark:text-white border-gray-900 dark:border-white'
-                      : 'bg-transparent text-[#737373] dark:text-[#A3A3A3] border-gray-200 dark:border-gray-800'
-                  }`}
-                >
-                  <span className={`text-[13px] font-poppins whitespace-nowrap ${
-                    isActive ? 'font-semibold' : 'font-medium'
-                  }`}>
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Category Icons Row */}
-          <div className="flex gap-4 pb-4 overflow-x-auto items-start snap-x" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <button
-              onClick={() => { hapticFeedback.impact(); setSelectedIconCategory(null); }}
-              className={`flex flex-col items-center gap-2 shrink-0 snap-center w-[70px] active:scale-95 transition-transform ${
-                selectedIconCategory === null ? 'opacity-100' : 'opacity-50'
-              }`}
-            >
-              <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center border ${
-                selectedIconCategory === null 
-                  ? 'bg-orange-50 dark:bg-[#FF7A00]/10 border-orange-100 dark:border-[#FF7A00]/20'
-                  : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800'
-              }`}>
-                <StarIcon size={24} className={selectedIconCategory === null ? 'text-[#FF7A00]' : 'text-gray-400'} />
-              </div>
-              <span className={`text-[11px] font-poppins ${selectedIconCategory === null ? 'font-bold text-[#FF7A00]' : 'font-medium text-gray-500'}`}>Tous</span>
-            </button>
-            {CATEGORY_LABELS.map((cat) => (
-              <button 
-                key={cat.id} 
-                onClick={() => { hapticFeedback.impact(); setSelectedIconCategory(cat.id); }}
-                className={`flex flex-col items-center gap-2 shrink-0 snap-center w-[70px] active:scale-95 transition-transform ${
-                  selectedIconCategory === cat.id ? 'opacity-100' : 'opacity-50'
-                }`}
-              >
-                <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center border ${
-                  selectedIconCategory === cat.id 
-                    ? 'bg-orange-50 dark:bg-[#FF7A00]/10 border-orange-100 dark:border-[#FF7A00]/20'
-                    : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800'
-                }`}>
-                  <cat.icon size={24} className={selectedIconCategory === cat.id ? 'text-[#FF7A00]' : 'text-gray-400'} />
-                </div>
-                <span className={`text-[11px] font-poppins ${selectedIconCategory === cat.id ? 'font-bold text-[#FF7A00]' : 'font-medium text-gray-500'}`}>{cat.label}</span>
-              </button>
-            ))}
           </div>
         </div>
 
-        {/* Vue Carte (Map View) */}
-        {viewMode === 'map' && (
-          <div className="flex-1 relative z-0 w-full h-full">
-            {/* Bouton pour revenir à la Liste */}
-            <div className="absolute top-4 right-4 z-[1050]">
-              <button
-                onClick={() => {
-                  hapticFeedback.impact();
-                  setViewMode('list');
-                }}
-                className="w-[44px] h-[44px] rounded-[12px] bg-[var(--brand-orange-500)] shadow-md flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <ListViewIcon className="w-[22px] h-[22px] text-white" strokeWidth={2} />
-              </button>
-            </div>
-            <ExplorerMap
-              events={mapEvents}
-              mapCenter={currentLocation === 'Abomey-Calavi' ? [6.4485, 2.3556] : [6.36536, 2.41833]}
-              mapGeoLoading={false}
-              onGeolocate={() => {}}
-              onNavigate={onNavigate}
+        {/* Search bar + Carte button */}
+        <div className="flex items-center gap-2 mt-3 mb-3">
+          <div className={`flex-1 flex items-center gap-2 px-4 h-11 rounded-full bg-gray-100 dark:bg-[#1A1A1A] border transition-colors ${
+            eventSearchFocused || eventSearch
+              ? 'border-[#FF7A00]'
+              : 'border-transparent'
+          }`}>
+            <Search01Icon className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.5} />
+            <input
+              type="text"
+              placeholder="Rechercher des événements, artistes, lieux..."
+              value={eventSearch}
+              onChange={e => setEventSearch(e.target.value)}
+              onFocus={() => setEventSearchFocused(true)}
+              onBlur={() => setEventSearchFocused(false)}
+              className="flex-1 text-[13px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0"
             />
+            {eventSearch && (
+              <button onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}>
+                <Cancel01Icon className="w-4 h-4 text-gray-400" strokeWidth={2} />
+              </button>
+            )}
           </div>
-        )}
+          {/* Carte button */}
+          <button
+            onClick={() => { hapticFeedback.impact(); setViewMode(viewMode === 'map' ? 'list' : 'map'); }}
+            className="shrink-0 flex items-center gap-1.5 h-11 px-4 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 3L4 5.5v15L9 18l6 3 5-2.5V3.5L15 6 9 3z" stroke="#6B7280" strokeWidth="1.8" strokeLinejoin="round"/>
+              <path d="M9 3v15M15 6v15" stroke="#6B7280" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            <span className="text-[13px] font-semibold text-gray-600 dark:text-gray-300">Carte</span>
+          </button>
+        </div>
 
-        {/* Vue Liste (List View) */}
-        {viewMode === 'list' && (
-          <div className="flex-1 overflow-y-auto relative z-10 bg-background h-full w-full">
-            <PullToRefresh onRefresh={handleRefresh} pullingContent="" refreshingContent={<div className="p-4 text-center text-[var(--color-text-secondary)] text-sm">Actualisation...</div>}>
-              <div className="px-4 pt-4 pb-[80px] flex flex-col min-h-[100vh]">
-                {filteredEvents.length > 0 ? (
-                  <>
-                    {/* ── 1. En vedette (Horizontal Scroll) ── */}
-                    {sortFeaturedEvents(filteredEvents).length > 0 && (
-                      <div className="mb-6 -mx-4">
-                        <div className="flex items-center justify-between px-4 mb-3">
-                          <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">En vedette <span className="text-xl">🔥</span></h2>
-                          <span className="text-[12px] font-semibold text-[#FF7A00]">Voir tout &gt;</span>
-                        </div>
-                        <div className="flex gap-4 overflow-x-auto px-4 pb-3 snap-x" style={{ scrollbarWidth: 'none' }}>
-                          {sortFeaturedEvents(filteredEvents).slice(0, 5).map(ev => (
-                            <SquareEventCard 
-                              key={ev.id} 
-                              event={ev} 
-                              onClick={() => onNavigate('event-details', ev.id)} 
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
+        {/* Location row */}
+        <button onClick={openSearch} className="flex items-center gap-1 mb-3 active:opacity-70 transition-opacity">
+          <Location01Icon className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
+          <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
+            {currentLocation || 'Où allez-vous ?'}
+          </span>
+          <ArrowDown01Icon className="w-4 h-4 text-gray-500" strokeWidth={2} />
+        </button>
 
-                    {/* ── 2. Événements près de vous (Vertical List) ── */}
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white flex items-center gap-1">
-                          Événements près de vous
+        {/* Filter tabs — pill style with border */}
+        <div className="flex gap-2 pb-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {filterTabs.map((tab) => {
+            const isActive = selectedCategory === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => { hapticFeedback.impact(); setSelectedCategory(tab.id); }}
+                className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95 whitespace-nowrap border ${
+                  isActive
+                    ? 'bg-[#FF7A00] text-white border-[#FF7A00] shadow-sm'
+                    : 'bg-white dark:bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
+                }`}
+              >
+                {tab.id === 'tout' && isActive && (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="3" width="8" height="8" rx="1.5" fill="white"/>
+                    <rect x="13" y="3" width="8" height="8" rx="1.5" fill="white"/>
+                    <rect x="3" y="13" width="8" height="8" rx="1.5" fill="white"/>
+                    <rect x="13" y="13" width="8" height="8" rx="1.5" fill="white"/>
+                  </svg>
+                )}
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Category Icons Row */}
+        <div className="flex gap-5 pb-4 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          {CATEGORY_LABELS.map((cat) => {
+            const isActive = selectedIconCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => { hapticFeedback.impact(); setSelectedIconCategory(isActive ? null : cat.id); }}
+                className="flex flex-col items-center gap-1.5 shrink-0 active:scale-95 transition-transform w-[58px]"
+              >
+                <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center border transition-colors ${
+                  isActive
+                    ? 'bg-orange-50 dark:bg-[#FF7A00]/10 border-orange-200 dark:border-[#FF7A00]/30'
+                    : 'bg-orange-50/60 dark:bg-[#FF7A00]/5 border-orange-100 dark:border-[#FF7A00]/10'
+                }`}>
+                  <cat.icon size={24} className="text-[#FF7A00]" strokeWidth={1.8} />
+                </div>
+                <span className={`text-[11px] text-center font-medium leading-tight ${
+                  isActive ? 'text-[#FF7A00] font-semibold' : 'text-gray-600 dark:text-gray-400'
+                }`}>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Map View */}
+      {viewMode === 'map' && (
+        <div className="flex-1 relative z-0 w-full h-full">
+          <div className="absolute top-4 right-4 z-[1050]">
+            <button
+              onClick={() => { hapticFeedback.impact(); setViewMode('list'); }}
+              className="w-11 h-11 rounded-[14px] bg-[#FF7A00] shadow-md flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <ListViewIcon className="w-5 h-5 text-white" strokeWidth={2} />
+            </button>
+          </div>
+          <ExplorerMap
+            events={mapEvents}
+            mapCenter={currentLocation === 'Abomey-Calavi' ? [6.4485, 2.3556] : [6.36536, 2.41833]}
+            mapGeoLoading={false}
+            onGeolocate={() => {}}
+            onNavigate={onNavigate}
+          />
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="flex-1 overflow-y-auto bg-white dark:bg-black" style={{ scrollbarWidth: 'none' }}>
+          <PullToRefresh onRefresh={handleRefresh} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">Actualisation...</div>}>
+            <div className="px-4 pt-3 pb-[100px]">
+              {filteredEvents.length > 0 ? (
+                <>
+                  {/* ── En vedette (Horizontal scroll — 3 cards visible) ── */}
+                  {sortFeaturedEvents(filteredEvents).length > 0 && (
+                    <div className="mb-5 -mx-4">
+                      <div className="flex items-center justify-between px-4 mb-3">
+                        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">
+                          En vedette <span>🔥</span>
                         </h2>
-                        <span className="text-[12px] font-semibold text-[#FF7A00]">Voir tout &gt;</span>
+                        <button className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
                       </div>
-                      <div className="space-y-3">
-                        {sortNearbyEvents(filteredEvents).map(ev => (
-                          <RowEventCard 
-                            key={ev.id} 
-                            event={ev} 
-                            onClick={() => onNavigate('event-details', ev.id)} 
+                      <div className="flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+                        {sortFeaturedEvents(filteredEvents).slice(0, 6).map((ev, idx) => (
+                          <SquareEventCard
+                            key={ev.id}
+                            event={ev}
+                            onClick={() => onNavigate('event-details', ev.id)}
+                            badge={idx === 0 ? 'À LA UNE' : idx === 1 ? 'POPULAIRE' : 'NOUVEAU'}
                           />
                         ))}
                       </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="w-full text-center py-10 mt-10">
-                    <p className="text-[#9CA3AF] text-[15px] font-poppins">Aucun résultat</p>
+                  )}
+
+                  {/* ── Événements près de vous (Vertical) ── */}
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Événements près de vous</h2>
+                      <button className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
+                    </div>
+                    <div className="space-y-3">
+                      {sortNearbyEvents(filteredEvents).map(ev => (
+                        <RowEventCard
+                          key={ev.id}
+                          event={ev}
+                          onClick={() => onNavigate('event-details', ev.id)}
+                        />
+                      ))}
+                    </div>
                   </div>
-                )}
-              </div>
-            </PullToRefresh>
-            
-            {/* Bouton pour aller sur la Carte */}
-            <div className="fixed bottom-[100px] right-5 z-[1050]">
-              <button
-                onClick={() => {
-                  hapticFeedback.impact();
-                  setViewMode('map');
-                }}
-                className="w-[44px] h-[44px] rounded-[12px] bg-[var(--brand-orange-500)] shadow-md flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <MapsIcon className="w-[22px] h-[22px] text-white" strokeWidth={2} />
-              </button>
+                </>
+              ) : (
+                <div className="flex flex-col items-center py-20 gap-3 text-center">
+                  <div className="text-4xl">🔍</div>
+                  <p className="text-[15px] font-semibold text-gray-700 dark:text-gray-300">Aucun résultat</p>
+                  <p className="text-[13px] text-gray-400">Essayez un autre mot-clé ou une autre ville.</p>
+                </div>
+              )}
             </div>
+          </PullToRefresh>
+
+          {/* Map FAB */}
+          <div className="fixed bottom-[100px] right-5 z-[1050]">
+            <button
+              onClick={() => { hapticFeedback.impact(); setViewMode('map'); }}
+              className="w-11 h-11 rounded-[14px] bg-[#FF7A00] shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <MapsIcon className="w-5 h-5 text-white" strokeWidth={2} />
+            </button>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 }

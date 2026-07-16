@@ -1,17 +1,21 @@
 import { useNavigate } from 'react-router';
-import { 
-  Calendar01Icon, 
-  Wallet01Icon, 
-  Settings02Icon, 
+import {
+  UserCircle02Icon,
+  Calendar01Icon,
+  Wallet01Icon,
+  Settings02Icon,
   UserMultiple02Icon,
-  Logout03Icon,
   ArrowRight01Icon,
-  Tick02Icon,
-  Ticket01Icon
+  UserAdd01Icon,
+  Medal01Icon,
+  HeadphonesIcon,
 } from 'hugeicons-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { useNotifications } from '@/features/notifications/api';
+import { useQuery } from '@tanstack/react-query';
+import { usersApi } from '@/features/users/api';
+import { apiClient } from '@/lib/api-client';
 
 export function AccountMenu() {
   const navigate = useNavigate();
@@ -23,136 +27,239 @@ export function AccountMenu() {
   const username = user?.profile?.username ? `@${user.profile.username}` : '';
   const avatarUrl = user?.profile?.avatarUrl;
   const isVerified = user?.isVerified || false;
-  const isCreator = true; // Hardcoded to match design, or use user.role if available
+
+  // Real stats
+  const { data: activity } = useQuery({
+    queryKey: ['users', 'activity', user?.id],
+    queryFn: () => usersApi.getActivity(user!.id),
+    enabled: !!user?.id,
+  });
+
+  const { data: friends } = useQuery({
+    queryKey: ['users', 'friends'],
+    queryFn: () => usersApi.getFriends(),
+  });
+
+  // Friend requests count
+  const { data: friendRequests } = useQuery({
+    queryKey: ['users', 'friend-requests'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/users/me/friend-requests');
+      return data;
+    },
+  });
+
+  const eventsCount = user?.profile?.eventsCount ?? (activity?.createdEvents?.length ?? 0);
+  const friendsCount = friends?.length ?? (user?.profile?.followersCount ?? 0);
+  const joinedCount = activity?.joinedEvents?.length ?? 0;
+  const pendingRequests = (friendRequests?.data?.length ?? 0) + (friendRequests?.received?.length ?? 0);
 
   const menuItems = [
     {
+      label: 'Profil',
+      subtitle: 'Gérez vos informations personnelles',
+      icon: UserCircle02Icon,
+      path: '/profile',
+      badge: null,
+    },
+    {
       label: 'Mes événements',
-      subtitle: 'Billets et inscriptions',
-      icon: Ticket01Icon,
-      path: '/my-events',
-      badge: null
-    },
-    {
-      label: 'Gérer mes événements',
-      subtitle: 'Création et suivi',
+      subtitle: 'Événements créés et rejoints',
       icon: Calendar01Icon,
-      path: '/manage-events',
-      badge: 'Nouveau'
+      path: '/my-events',
+      badge: null,
     },
     {
-      label: 'Amis & Réseau',
-      subtitle: 'Retrouvez vos connaissances',
+      label: 'Mes amis',
+      subtitle: 'Voir et gérer vos amis',
       icon: UserMultiple02Icon,
       path: '/friends',
-      badge: null
+      badge: friendsCount > 0 ? String(friendsCount) : null,
+    },
+    {
+      label: "Demandes d'amis",
+      subtitle: 'Voir vos demandes reçues et envoyées',
+      icon: UserAdd01Icon,
+      path: '/friend-requests',
+      badge: pendingRequests > 0 ? String(pendingRequests) : null,
     },
     {
       label: 'Portefeuille',
-      subtitle: 'Solde et cagnottes',
+      subtitle: 'Gérez vos paiements et transactions',
       icon: Wallet01Icon,
       path: '/wallet',
-      badge: null
-    }
+      badge: null,
+    },
+    {
+      label: 'Badges & Récompenses',
+      subtitle: 'Découvrez vos badges et niveaux',
+      icon: Medal01Icon,
+      path: '/badges',
+      badge: null,
+    },
+    {
+      label: 'Aide & Support',
+      subtitle: 'FAQ, centre d\'aide et contact',
+      icon: HeadphonesIcon,
+      path: '/support',
+      badge: null,
+    },
   ];
 
   return (
-    <div className="flex flex-col w-full h-full bg-[#F9FAFB] dark:bg-black pt-5 pt-safe-5">
-      {/* Header Profile Section */}
-      <div className="px-5 pt-4 pb-6 flex items-start justify-between">
-        <div className="flex items-center gap-3" onClick={() => navigate('/profile')}>
-          <div className="w-[52px] h-[52px] rounded-full overflow-hidden bg-gray-200 border border-gray-300 dark:border-gray-800 shrink-0">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white text-xl font-bold">
-                {displayName.charAt(0).toUpperCase()}
+    <div className="flex flex-col w-full h-full bg-white dark:bg-black overflow-hidden">
+      {/* ── Header ── */}
+      <div className="px-4 pt-safe-5 pt-5 pb-4 bg-white dark:bg-black flex-shrink-0">
+        {/* Avatar + name + notif + settings */}
+        <div className="flex items-start justify-between mb-4">
+          {/* Left: avatar + name */}
+          <div
+            className="flex items-center gap-3 active:opacity-70 transition-opacity cursor-pointer"
+            onClick={() => navigate('/profile')}
+          >
+            {/* Avatar */}
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-gray-100 dark:border-gray-800">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white text-2xl font-bold">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <h1 className="text-[18px] font-bold text-gray-900 dark:text-white leading-tight">{displayName}</h1>
-              {isVerified && <Tick02Icon className="w-4 h-4 text-blue-500 bg-white rounded-full" />}
             </div>
-            <span className="text-[14px] text-gray-500 dark:text-gray-400 font-medium">{username}</span>
-            <div className="flex gap-2 mt-1">
-              <span className="text-[10px] bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded font-semibold uppercase">Utilisateur</span>
-              {isCreator && <span className="text-[10px] bg-orange-100 dark:bg-[#FF7A00]/20 text-[#FF7A00] px-2 py-0.5 rounded font-semibold uppercase">Créateur</span>}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate('/notifications')} className="w-10 h-10 bg-white dark:bg-[#1A1A1A] rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform border border-gray-100 dark:border-gray-800">
-            <NotificationIconWithBadge unreadCount={unreadCount} className="w-6 h-6 text-gray-900 dark:text-white" />
-          </button>
-          <button onClick={() => navigate('/settings')} className="w-10 h-10 bg-white dark:bg-[#1A1A1A] rounded-full flex items-center justify-center shadow-sm active:scale-95 transition-transform border border-gray-100 dark:border-gray-800">
-            <Settings02Icon className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={1.5} />
-          </button>
-        </div>
-      </div>
 
-      {/* PRO Banner */}
-      <div className="px-5 mb-6">
-        <div className="w-full bg-gradient-to-r from-[#FF7A00] to-[#FFA733] rounded-2xl p-4 flex items-center justify-between shadow-md active:scale-[0.98] transition-transform cursor-pointer">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 text-white mb-1">
-              <span className="text-lg">⭐</span>
-              <span className="font-bold text-[16px]">Pass Let's Out PRO</span>
-            </div>
-            <span className="text-white/90 text-[12px] font-medium">Boostez vos événements et créez des cagnottes</span>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-            <ArrowRight01Icon className="w-5 h-5 text-white" strokeWidth={2} />
-          </div>
-        </div>
-      </div>
-
-      {/* Menu List */}
-      <div className="flex-1 px-4 space-y-3 overflow-y-auto pb-[100px]" style={{ scrollbarWidth: 'none' }}>
-        {menuItems.map((item, i) => (
-          <button
-            key={i}
-            onClick={() => navigate(item.path)}
-            className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#1A1A1A] shadow-sm border border-gray-100 dark:border-gray-800/50 active:scale-[0.98] transition-transform text-left w-full"
-          >
-            <div className="w-11 h-11 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center shrink-0">
-              <item.icon size={22} className="text-gray-700 dark:text-gray-300" strokeWidth={1.5} />
-            </div>
-            <div className="flex-1 flex flex-col justify-center">
-              <span className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight mb-0.5">
-                {item.label}
-              </span>
-              <span className="text-[12px] text-gray-500 dark:text-gray-400 font-medium">
-                {item.subtitle}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {item.badge && (
-                <span className="text-[10px] bg-[#FF7A00] text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
-                  {item.badge}
+            {/* Name + badge */}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[19px] font-bold text-gray-900 dark:text-white leading-tight">
+                  {displayName}
                 </span>
-              )}
-              <ArrowRight01Icon size={18} className="text-gray-400" strokeWidth={2} />
+                {isVerified && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#3B82F6">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+              <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">{username}</span>
+              <span className="mt-1 inline-block bg-[#FF7A00] text-white text-[10px] font-bold px-2 py-0.5 rounded-md self-start">
+                Membre actif
+              </span>
             </div>
-          </button>
-        ))}
+          </div>
 
-        <div className="pt-4">
-          <button
-            onClick={() => {
-              logout();
-              navigate('/login');
-            }}
-            className="flex items-center gap-3 p-4 rounded-2xl w-full text-left active:scale-[0.98] transition-transform"
-          >
-            <div className="w-11 h-11 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center shrink-0">
-              <Logout03Icon size={22} className="text-red-500" strokeWidth={1.5} />
+          {/* Right: notif + settings */}
+          <div className="flex items-center gap-2 mt-1">
+            <button
+              onClick={() => navigate('/notifications')}
+              className="w-10 h-10 flex items-center justify-center active:opacity-70 transition-opacity"
+            >
+              <NotificationIconWithBadge unreadCount={unreadCount} className="w-7 h-7 text-gray-800 dark:text-white" />
+            </button>
+            <button
+              onClick={() => navigate('/settings')}
+              className="w-10 h-10 flex items-center justify-center active:opacity-70 transition-opacity"
+            >
+              <Settings02Icon className="w-7 h-7 text-gray-800 dark:text-white" strokeWidth={1.6} />
+            </button>
+          </div>
+        </div>
+
+        {/* ── Stats Row ── */}
+        <div className="flex items-center justify-between py-3 border-t border-b border-gray-100 dark:border-gray-800 mb-4">
+          <div className="flex flex-col items-center flex-1">
+            <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">{eventsCount}</span>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">Événements</span>
+          </div>
+          <div className="w-px h-8 bg-gray-100 dark:bg-gray-800" />
+          <div className="flex flex-col items-center flex-1">
+            <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">{friendsCount}</span>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">Amis</span>
+          </div>
+          <div className="w-px h-8 bg-gray-100 dark:bg-gray-800" />
+          <div className="flex flex-col items-center flex-1">
+            <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">{joinedCount}</span>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">Rejoints</span>
+          </div>
+          <div className="w-px h-8 bg-gray-100 dark:bg-gray-800" />
+          <div className="flex flex-col items-center flex-1">
+            <div className="flex items-center gap-0.5">
+              <span className="text-[14px]">⭐</span>
+              <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">4.8</span>
             </div>
-            <span className="flex-1 text-[15px] font-bold text-red-500">
-              Se déconnecter
-            </span>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">Note</span>
+          </div>
+        </div>
+
+        {/* ── PRO Banner ── */}
+        <div className="bg-[#FF7A00] rounded-2xl px-4 py-3 flex items-center justify-between active:scale-[0.98] transition-transform cursor-pointer">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-white font-bold text-[15px]">Pass Let's Out</span>
+              <span className="bg-white text-[#FF7A00] text-[10px] font-bold px-1.5 py-0.5 rounded-md">PRO</span>
+            </div>
+            <span className="text-white/85 text-[12px] font-medium">Plus d'avantages exclusifs</span>
+          </div>
+          <button className="flex items-center gap-1 bg-white/20 rounded-full px-3 py-1.5 active:scale-95 transition-transform">
+            <span className="text-white text-[11px] font-semibold whitespace-nowrap">Voir mes avantages</span>
+            <ArrowRight01Icon size={14} className="text-white" strokeWidth={2.5} />
           </button>
+        </div>
+      </div>
+
+      {/* ── Menu List ── */}
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+        <div className="px-4 pb-28">
+          {menuItems.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => navigate(item.path)}
+              className="flex items-center gap-4 py-4 w-full text-left active:bg-gray-50 dark:active:bg-[#111] transition-colors border-b border-gray-100 dark:border-gray-800/60 last:border-b-0"
+            >
+              {/* Icon circle */}
+              <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center shrink-0">
+                <item.icon size={20} className="text-[#FF7A00]" strokeWidth={1.6} />
+              </div>
+
+              {/* Label + subtitle */}
+              <div className="flex-1 flex flex-col min-w-0">
+                <span className="text-[15px] font-semibold text-gray-900 dark:text-white leading-tight">
+                  {item.label}
+                </span>
+                <span className="text-[12px] text-gray-400 dark:text-gray-500 font-medium mt-0.5">
+                  {item.subtitle}
+                </span>
+              </div>
+
+              {/* Badge or arrow */}
+              <div className="flex items-center gap-2 shrink-0">
+                {item.badge && (
+                  <span className="bg-[#FF7A00] text-white text-[11px] font-bold px-2 py-0.5 rounded-full min-w-[24px] text-center">
+                    {item.badge}
+                  </span>
+                )}
+                <ArrowRight01Icon size={18} className="text-gray-300 dark:text-gray-600" strokeWidth={2} />
+              </div>
+            </button>
+          ))}
+
+          {/* Logout */}
+          <div className="pt-6 pb-4">
+            <button
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+              className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl active:opacity-70 transition-opacity"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+              </svg>
+              <span className="text-[15px] font-semibold text-red-500">Se déconnecter</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
