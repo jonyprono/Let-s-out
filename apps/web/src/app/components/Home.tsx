@@ -208,8 +208,10 @@ export function Home({ userData, onNavigate }: HomeProps) {
   }
 
   const events: Event[] = rawEvents;
+  // "À ne pas manquer" = top 6 by featured score
   const featuredEvents = sortFeaturedEvents(events).slice(0, 6);
-  const popularEvents = sortPopularEvents(events).filter(e => !featuredEvents.find(f => f.id === e.id));
+  // "Populaires" = sorted by attendee count (independent list, no deduplication)
+  const popularEvents = sortPopularEvents(events);
 
   // Real stats
   const now = new Date();
@@ -482,7 +484,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     <div className="px-4 space-y-3">
                       {[1, 2, 3].map(i => <EventCardSkeleton key={i} />)}
                     </div>
-                  ) : popularEvents.length === 0 && featuredEvents.length === 0 ? (
+                  ) : popularEvents.length === 0 ? (
                     <div className="flex flex-col items-center py-14 gap-3 text-center px-8">
                       <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-2xl">📭</div>
                       <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{emptyStateLabel}</p>
