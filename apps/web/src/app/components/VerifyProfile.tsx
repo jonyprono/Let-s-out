@@ -331,12 +331,19 @@ export function VerifyProfile() {
       await apiClient.post('/users/me/kyc', fd)
       await refreshUser().catch(() => {})
       setIsComplete(true)
-    } catch {
-      toast.error('Erreur lors de l\'envoi des documents. Réessayez.')
+    } catch (err: any) {
+      const msg = err?.response?.data?.error
+        || err?.message
+        || 'Erreur lors de l\'envoi des documents. Réessayez.'
+      toast.error(
+        msg === '[object ProgressEvent]' || err?.code === 'ECONNABORTED'
+          ? 'Connexion trop lente ou perdue. Réessayez en Wi-Fi.'
+          : msg
+      )
       setSubmitStatus('error')
       return
     } finally {
-      setSubmitStatus('done')
+      setSubmitStatus(s => s === 'uploading' ? 'done' : s)
     }
   }
 

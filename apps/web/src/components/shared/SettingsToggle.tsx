@@ -52,7 +52,7 @@ export function SettingsToggle({ checked, onChange }: SettingsToggleProps) {
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onChange(!checked); }}
-      className={`w-[44px] h-[24px] min-h-[24px] min-w-[44px] rounded-[12px] flex items-center px-[2px] transition-colors shrink-0 box-border border-[0.5px] ${
+      className={`!w-[44px] !h-[24px] !min-h-[24px] !min-w-[44px] rounded-[12px] flex items-center px-[2px] p-0 transition-colors shrink-0 box-border border-[0.5px] ${
         checked ? 'bg-[var(--brand-orange-500)] border-[var(--brand-orange-500)]' : 'bg-[#E5E7EB] border-[#E5E7EB]'
       }`}
     >

@@ -46,8 +46,8 @@ export const apiClient = axios.create({
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
   // On mobile (Capacitor), allow more time for Render free-tier cold starts (~50s)
-  // On web browser, keep a snappy 10s timeout
-  timeout: isCapacitor() ? 60000 : 10000,
+  // On web browser, keep a snappy 15s timeout (uploads have their own extended timeout)
+  timeout: isCapacitor() ? 90000 : 15000,
 })
 
 // ── Request interceptor ───────────────────────────────────────────────────────
@@ -56,6 +56,8 @@ apiClient.interceptors.request.use((config) => {
   // Let the browser handle FormData boundary automatically
   if (config.data instanceof FormData) {
     delete config.headers['Content-Type']
+    // File uploads can be slow on Render — give them 3 minutes
+    config.timeout = 180000
   } else if (['post', 'put', 'patch'].includes(config.method?.toLowerCase() || '')) {
     // Force an empty object for POST/PUT/PATCH so Axios and CapacitorHttp don't drop Content-Type
     config.data = config.data || {}

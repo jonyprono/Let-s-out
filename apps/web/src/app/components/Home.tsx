@@ -381,7 +381,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
       {/* ── Scrollable content ── */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        <PullToRefresh onRefresh={handleRefresh} isPullable={!isOffline}>
+        <PullToRefresh onRefresh={handleRefresh} isPullable={!isOffline} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">Actualisation...</div>}>
           <div className="pb-28">
 
             {showSpinner && (

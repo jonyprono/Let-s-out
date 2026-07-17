@@ -13,10 +13,10 @@ const onboardingScreens = [
   {
     id: 1,
     type: 'slide' as const,
-    title1: 'Découvrez des',
-    title2: 'événements près de vous',
-    description: 'Créez ou rejoignez des événements, sorties, ou activités intéressantes près de vous',
-    image: '/splash1.png',
+    title1: 'Partagez pour mieux',
+    title2: 'profiter',
+    description: 'Financez vos sorties en groupe via des cagnottes partagées et mutualisez les frais pour mieux en profiter ensemble',
+    image: '/splash3.png',
   },
   {
     id: 2,
@@ -29,10 +29,10 @@ const onboardingScreens = [
   {
     id: 3,
     type: 'slide' as const,
-    title1: 'Partagez pour mieux',
-    title2: 'profiter',
-    description: 'Financez vos sorties en groupe via des cagnottes partagées et mutualisez les frais pour mieux en profiter ensemble',
-    image: '/splash3.png',
+    title1: 'Découvrez des',
+    title2: 'événements près de vous',
+    description: 'Créez ou rejoignez des événements, sorties, ou activités intéressantes près de vous',
+    image: '/splash1.png',
   },
 ]
 

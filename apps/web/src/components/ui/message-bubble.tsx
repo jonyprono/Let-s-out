@@ -92,7 +92,7 @@ export function MessageBubble({
     return null;
   };
   return (
-    <div className={cn("flex w-full gap-[var(--spacing-100)]", isSender ? "flex-row-reverse" : "flex-row", className)} {...props}>
+    <div className={cn("flex w-full gap-2", isSender ? "flex-row-reverse" : "flex-row", className)} {...props}>
       {!isSender && (showAvatar || showSpacer) && (
         <div className="flex w-8 flex-col justify-end flex-shrink-0 pb-[18px]">
           {showAvatar && (
@@ -115,7 +115,7 @@ export function MessageBubble({
         </div>
       )}
       
-      <div className={cn("flex max-w-[85%] sm:max-w-[75%] flex-col gap-[var(--spacing-050)]", isSender ? "items-end" : "items-start")}>
+      <div className={cn("flex max-w-[85%] sm:max-w-[75%] flex-col gap-1", isSender ? "items-end" : "items-start")}>
         {imageUrl ? (
           <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--border-secondary)] relative group">
             <img 
@@ -136,7 +136,7 @@ export function MessageBubble({
         ) : (
           <div
             className={cn(
-              "relative px-[var(--spacing-200)] py-[var(--spacing-150)] font-poppins text-[var(--font-size-body-medium)] rounded-[var(--radius-large)]",
+              "relative px-3.5 py-2 font-poppins text-[var(--font-size-body-medium)] rounded-[var(--radius-large)]",
               isSender
                 ? "bg-[var(--brand-orange-100)] text-[#1B1818] dark:bg-[var(--brand-orange-500)] dark:text-white rounded-tr-sm"
                 : "bg-[var(--color-background-secondary)] text-[#1B1818] dark:text-white rounded-tl-sm"

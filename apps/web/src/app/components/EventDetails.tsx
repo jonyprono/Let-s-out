@@ -351,7 +351,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
 
         {/* Header */}
-        <div className="flex-shrink-0 bg-[var(--color-background-primary)] z-10 px-4 pt-safe-4 pt-4 pb-3 flex items-center justify-between min-h-[56px] h-[60px] shadow-sm">
+        <div className="flex-shrink-0 bg-[var(--color-background-primary)] z-10 px-4 pt-safe-4 pt-4 pb-4 flex items-center justify-between min-h-[64px] shadow-sm">
           <button
             onClick={handleBack}
             className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0"
