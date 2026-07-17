@@ -38,7 +38,7 @@ interface WalletStats {
     title: string
     startAt: string
     city: string
-    coverImage: string | null
+    coverUrl: string | null
     poolCollected: number
     status: string
   }[]
@@ -572,7 +572,7 @@ export function Wallet() {
               stats.poolEvents.map((evt) => (
                 <div key={evt.id} className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
                   <div className="w-[100px] h-[80px] rounded-[14px] bg-gray-200 dark:bg-gray-800 overflow-hidden relative shrink-0">
-                    <SafeImage src={evt.coverImage || undefined} alt={evt.title} className="w-full h-full object-cover" />
+                    <SafeImage src={evt.coverUrl || undefined} alt={evt.title} className="w-full h-full object-cover" />
                     <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1.5">
                       <div className={`w-1.5 h-1.5 rounded-full ${new Date(evt.startAt) > new Date() ? 'bg-[#4CAF50]' : 'bg-gray-400'}`} />
                       <span className="text-[10px] font-bold text-white leading-none">

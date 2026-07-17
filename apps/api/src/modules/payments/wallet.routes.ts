@@ -215,7 +215,7 @@ export default async function walletRoutes(app: FastifyInstance) {
         title: true,
         startAt: true,
         city: true,
-        coverImage: true,
+        coverUrl: true,
         poolCollected: true,
         status: true,
       },
