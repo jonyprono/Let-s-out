@@ -484,11 +484,12 @@ export default async function chatRoutes(app: FastifyInstance) {
     }
   )
 
-  // Mark conversation as read
   app.post('/conversations/:id/read', async (req, reply) => {
-    const { sub } = req.user as { sub: string }
+    const { sub, role } = req.user as { sub: string; role?: string }
     const { id } = req.params as { id: string }
     
+    if (role === 'ADMIN') return reply.send({ success: true }) // Admins don't trigger read receipts
+
     await app.prisma.conversationMember.updateMany({
       where: {
         conversationId: id,
@@ -696,14 +697,14 @@ export default async function chatRoutes(app: FastifyInstance) {
 
   // Get messages in a conversation
   app.get('/conversations/:id/messages', async (req, reply) => {
-    const { sub } = req.user as { sub: string }
+    const { sub, role } = req.user as { sub: string; role?: string }
     const { id } = req.params as { id: string }
     const { limit = '50', before } = req.query as any
 
     const member = await app.prisma.conversationMember.findUnique({
       where: { conversationId_userId: { conversationId: id, userId: sub } },
     })
-    if (!member) return reply.code(403).send({ error: 'Not a member' })
+    if (!member && role !== 'ADMIN') return reply.code(403).send({ error: 'Not a member' })
 
     const messages = await app.prisma.message.findMany({
       where: {
@@ -788,13 +789,13 @@ export default async function chatRoutes(app: FastifyInstance) {
 
   // ── Get single conversation details ─────────────────────────────────────────
   app.get('/conversations/:id', async (req, reply) => {
-    const { sub } = req.user as { sub: string }
+    const { sub, role } = req.user as { sub: string; role?: string }
     const { id } = req.params as { id: string }
 
     const member = await app.prisma.conversationMember.findUnique({
       where: { conversationId_userId: { conversationId: id, userId: sub } },
     })
-    if (!member) return reply.code(403).send({ error: 'Not a member' })
+    if (!member && role !== 'ADMIN') return reply.code(403).send({ error: 'Not a member' })
 
     const conversation = await app.prisma.conversation.findUnique({
       where: { id },
@@ -941,7 +942,7 @@ export default async function chatRoutes(app: FastifyInstance) {
 
   // Get real-time presence for a conversation
   app.get('/conversations/:id/presence', async (req, reply) => {
-    const { sub } = req.user as { sub: string }
+    const { sub, role } = req.user as { sub: string; role?: string }
     const { id } = req.params as { id: string }
 
     const conversation = await app.prisma.conversation.findUnique({
@@ -950,7 +951,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     })
 
     if (!conversation) return reply.code(404).send({ error: 'Not found' })
-    if (!conversation.members.some((m: any) => m.userId === sub)) return reply.code(403).send({ error: 'Forbidden' })
+    if (role !== 'ADMIN' && !conversation.members.some((m: any) => m.userId === sub)) return reply.code(403).send({ error: 'Forbidden' })
 
     // Count how many members (excluding the current user) are online
     let onlineCount = 0
