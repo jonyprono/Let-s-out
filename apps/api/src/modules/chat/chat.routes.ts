@@ -24,10 +24,128 @@ export function broadcastToConversation(
   app.prisma.conversationMember
     .findMany({ where: { conversationId }, select: { userId: true } })
     .then((members) => {
-      members
-        .filter((m) => m.userId !== excludeUserId)
-        .forEach((m) => broadcastToUser(m.userId, data))
+      members.forEach(({ userId }) => {
+        if (userId !== excludeUserId) broadcastToUser(userId, data)
+      })
     })
+}
+
+function triggerAiBotLogic(
+  app: FastifyInstance,
+  conversation: any,
+  message: any,
+  senderIsAdmin: boolean,
+  senderIsBot: boolean
+) {
+  const botMembers = conversation.members.filter((m: any) => m.user?.isBot || m.userId.startsWith('bot_'))
+
+  app.log.info(`[BOT] Message in conv ${conversation.id}: senderIsBot=${senderIsBot}, senderIsAdmin=${senderIsAdmin}, bots=${botMembers.length}, paused=${conversation.isBotPaused}`)
+
+  if (botMembers.length > 0 && !senderIsBot) {
+    let shouldReply = false
+    let currentPaused = conversation.isBotPaused
+
+    if (senderIsAdmin) {
+      app.log.info(`[BOT] Admin message detected, pausing bot in conv ${conversation.id}`)
+      app.prisma.conversation.update({
+        where: { id: conversation.id },
+        data: { isBotPaused: true, adminLastMessageAt: new Date() }
+      }).catch(console.error)
+    } else {
+      if (currentPaused) {
+        if (!conversation.adminLastMessageAt) {
+          app.prisma.conversation.update({
+            where: { id: conversation.id },
+            data: { isBotPaused: false }
+          }).catch(console.error)
+          currentPaused = false
+          app.log.info(`[BOT] Bot auto-reactivated (no admin timestamp) in conv ${conversation.id}`)
+        } else {
+          const minutesSinceAdmin = (Date.now() - new Date(conversation.adminLastMessageAt).getTime()) / 60000
+          app.log.info(`[BOT] Bot was paused, ${minutesSinceAdmin.toFixed(1)} min since admin message`)
+          if (minutesSinceAdmin > 5) {
+            app.prisma.conversation.update({
+              where: { id: conversation.id },
+              data: { isBotPaused: false }
+            }).catch(console.error)
+            currentPaused = false
+            app.log.info(`[BOT] Bot auto-reactivated after 5 min in conv ${conversation.id}`)
+          }
+        }
+      }
+
+      if (!currentPaused) {
+        shouldReply = true
+      } else {
+        app.log.info(`[BOT] Bot still paused in conv ${conversation.id}, not replying`)
+      }
+    }
+
+    if (shouldReply) {
+      const bot = botMembers[0]
+      app.log.info(`[BOT] Triggering reply from ${bot.userId} in conv ${conversation.id}`)
+
+      app.prisma.profile.findUnique({
+        where: { userId: bot.userId },
+        select: { displayName: true }
+      }).then(botProfile => {
+        const sendTyping = () => broadcastToConversation(app, conversation.id, {
+          type: 'typing',
+          userId: bot.userId,
+          conversationId: conversation.id,
+          displayName: botProfile?.displayName ?? 'Agent',
+        }, bot.userId)
+
+        sendTyping()
+        const typingInterval = setInterval(sendTyping, 2000)
+
+        app.prisma.message.findMany({
+          where: { conversationId: conversation.id },
+          orderBy: { createdAt: 'desc' },
+          take: 12
+        })
+          .then(history => {
+            const reversed = history.reverse()
+            const formattedHistory = reversed
+              .slice(0, reversed.length - 1)
+              .map(m => ({ role: m.senderId === bot.userId ? 'bot' : 'user', content: m.content || '...' }))
+            app.log.info(`[BOT] History length: ${formattedHistory.length}`)
+            return aiService.generateSupportResponse(bot.userId, conversation.id, formattedHistory, message.content || '[Fichier/Image joint]')
+          })
+          .then(replyContent => {
+            app.log.info(`[BOT] Got reply: "${replyContent?.substring(0, 80)}..."`)
+            if (replyContent) {
+              return app.prisma.message.create({
+                data: {
+                  conversationId: conversation.id,
+                  senderId: bot.userId,
+                  type: 'TEXT',
+                  content: replyContent
+                },
+                include: {
+                  sender: { select: { profile: { select: { username: true, displayName: true, avatarUrl: true } } } }
+                }
+              })
+            }
+            return null
+          })
+          .then(replyMsg => {
+            clearInterval(typingInterval)
+            if (replyMsg) {
+              broadcastToConversation(app, conversation.id, { type: 'new_message', message: replyMsg }, undefined)
+              return app.prisma.conversation.update({
+                where: { id: conversation.id },
+                data: { lastMessageAt: new Date() }
+              })
+            }
+          })
+          .catch(err => {
+            clearInterval(typingInterval)
+            app.log.error(`[BOT] Error in bot response chain: ${String(err)}`)
+          })
+      })
+    }
+  }
 }
 
 export default async function chatRoutes(app: FastifyInstance) {
@@ -103,127 +221,7 @@ export default async function chatRoutes(app: FastifyInstance) {
             message,
           }, undefined)
 
-          // ── AI Bot Logic ──────────────────────────────────────────────────
-          const botMembers = conversation.members.filter(m => m.user.isBot)
-          const senderIsBot = sender.user.isBot
-          const senderIsAdmin = (sender.user as any).role === 'ADMIN'
-
-          app.log.info(`[BOT] Message in conv ${conversation.id}: senderIsBot=${senderIsBot}, senderIsAdmin=${senderIsAdmin}, bots=${botMembers.length}, paused=${conversation.isBotPaused}`)
-
-          // Only trigger bot if there are bot members AND sender is not a bot
-          if (botMembers.length > 0 && !senderIsBot) {
-            let shouldReply = false
-            let currentPaused = conversation.isBotPaused
-
-            if (senderIsAdmin) {
-              // Admin took over — pause bot
-              app.log.info(`[BOT] Admin message detected, pausing bot in conv ${conversation.id}`)
-              await app.prisma.conversation.update({
-                where: { id: conversation.id },
-                data: { isBotPaused: true, adminLastMessageAt: new Date() }
-              })
-            } else {
-              // Normal user — check if bot was paused by admin
-              if (currentPaused) {
-                if (!conversation.adminLastMessageAt) {
-                  // Paused but no admin timestamp? Unpause immediately
-                  await app.prisma.conversation.update({
-                    where: { id: conversation.id },
-                    data: { isBotPaused: false }
-                  })
-                  currentPaused = false
-                  app.log.info(`[BOT] Bot auto-reactivated (no admin timestamp) in conv ${conversation.id}`)
-                } else {
-                  const minutesSinceAdmin = (Date.now() - conversation.adminLastMessageAt.getTime()) / 60000
-                  app.log.info(`[BOT] Bot was paused, ${minutesSinceAdmin.toFixed(1)} min since admin message`)
-                  if (minutesSinceAdmin > 5) {
-                    await app.prisma.conversation.update({
-                      where: { id: conversation.id },
-                      data: { isBotPaused: false }
-                    })
-                    currentPaused = false
-                    app.log.info(`[BOT] Bot auto-reactivated after 5 min in conv ${conversation.id}`)
-                  }
-                }
-              }
-
-              if (!currentPaused) {
-                shouldReply = true
-              } else {
-                app.log.info(`[BOT] Bot still paused in conv ${conversation.id}, not replying`)
-              }
-            }
-
-            if (shouldReply) {
-              const bot = botMembers[0]
-              app.log.info(`[BOT] Triggering reply from ${bot.userId} in conv ${conversation.id}`)
-
-              // Send typing indicator
-              const botProfile = await app.prisma.profile.findUnique({
-                where: { userId: bot.userId },
-                select: { displayName: true }
-              })
-              // Send typing indicator repeatedly every 2s while the AI is thinking
-              // (frontend typing timeout is 3s — so we refresh it to keep it alive)
-              const sendTyping = () => broadcastToConversation(app, conversation.id, {
-                type: 'typing',
-                userId: bot.userId,
-                conversationId: conversation.id,
-                displayName: botProfile?.displayName ?? 'Agent',
-              }, bot.userId)
-
-              sendTyping()
-              const typingInterval = setInterval(sendTyping, 2000)
-
-              // Fetch history, generate AI response, broadcast — all async to not block
-              app.prisma.message.findMany({
-                where: { conversationId: conversation.id },
-                orderBy: { createdAt: 'desc' },
-                take: 12
-              })
-                .then(history => {
-                  // Reverse to chronological order
-                  const reversed = history.reverse()
-                  // Map to AI format, skip the last message (we pass it separately)
-                  const formattedHistory = reversed
-                    .slice(0, reversed.length - 1)
-                    .map(m => ({ role: m.senderId === bot.userId ? 'bot' : 'user', content: m.content || '...' }))
-                  app.log.info(`[BOT] History length: ${formattedHistory.length}`)
-                  return aiService.generateSupportResponse(bot.userId, conversation.id, formattedHistory, msg.content || '[Fichier/Image joint]')
-                })
-                .then(replyContent => {
-                  app.log.info(`[BOT] Got reply: "${replyContent?.substring(0, 80)}..."`)
-                  if (replyContent) {
-                    return app.prisma.message.create({
-                      data: {
-                        conversationId: conversation.id,
-                        senderId: bot.userId,
-                        type: 'TEXT',
-                        content: replyContent
-                      },
-                      include: {
-                        sender: { select: { profile: { select: { username: true, displayName: true, avatarUrl: true } } } }
-                      }
-                    })
-                  }
-                  return null
-                })
-                .then(replyMsg => {
-                  clearInterval(typingInterval)
-                  if (replyMsg) {
-                    broadcastToConversation(app, conversation.id, { type: 'new_message', message: replyMsg }, undefined)
-                    return app.prisma.conversation.update({
-                      where: { id: conversation.id },
-                      data: { lastMessageAt: new Date() }
-                    })
-                  }
-                })
-                .catch(err => {
-                  clearInterval(typingInterval)
-                  app.log.error(`[BOT] Error in bot response chain: ${String(err)}`)
-                })
-            }
-          }
+          // AI Bot Logic has been moved out
         }
 
         if (msg.type === 'typing') {
@@ -479,6 +477,15 @@ export default async function chatRoutes(app: FastifyInstance) {
           )
         )
       }
+
+      // Trigger AI bot logic if applicable
+      triggerAiBotLogic(
+        app,
+        conversation,
+        message,
+        role === 'ADMIN',
+        role !== 'ADMIN' && effectiveSenderId.startsWith('bot_')
+      )
 
       return reply.code(201).send(message)
     }
