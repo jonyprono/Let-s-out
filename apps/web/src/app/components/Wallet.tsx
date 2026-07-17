@@ -70,6 +70,7 @@ export function Wallet() {
   const [pinToken, setPinToken] = useState<string | null>(null)
   const [showWalletPinModal, setShowWalletPinModal] = useState(false)
   const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
 
   const [activeTab, setActiveTab] = useState<'overview' | 'events'>('overview')
 
@@ -146,14 +147,14 @@ export function Wallet() {
 
   if (user?.profile?.kycStatus !== 'verified') {
     return (
-      <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full">
-        <div className="sticky top-0 z-40 bg-[#F8F9FA]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-safe-top pt-6 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
+      <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col h-[100dvh] w-full overflow-hidden">
+        <div className="flex-none bg-[#F8F9FA]/90 dark:bg-[#09090b]/90 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800 z-40">
           <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
           <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Mon Portefeuille</h1>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-4">
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-6 text-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <Lock className="w-8 h-8 text-gray-400" />
           </div>
@@ -175,15 +176,15 @@ export function Wallet() {
 
   if (withdrawMode) {
     return (
-      <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full">
-        <div className="sticky top-0 z-40 bg-[#F8F9FA]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-safe-top pt-6 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
+      <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col h-[100dvh] w-full overflow-hidden">
+        <div className="flex-none bg-[#F8F9FA]/90 dark:bg-[#09090b]/90 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800 z-40">
           <button onClick={() => setWithdrawMode(false)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
           <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Initier un retrait</h1>
         </div>
         
-        <div className="flex-1 flex flex-col p-4 sm:p-6 gap-6 font-poppins">
+        <div className="flex-1 overflow-y-auto flex flex-col p-4 sm:p-6 gap-6 font-poppins pb-24">
           <div className="bg-white dark:bg-[#1A1A1A] rounded-[20px] p-4 flex flex-col gap-2 shadow-sm border border-gray-100 dark:border-gray-800">
             <h2 className="text-[16px] font-bold text-gray-900 dark:text-white">Mon Portefeuille</h2>
             <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-1" />
@@ -333,8 +334,8 @@ export function Wallet() {
   }
 
   return (
-    <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full font-poppins">
-      <div className="sticky top-0 z-40 bg-[#F8F9FA]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-safe-top pt-4 pb-2 flex flex-col border-b border-transparent">
+    <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col h-[100dvh] w-full font-poppins overflow-hidden">
+      <div className="flex-none bg-[#F8F9FA]/90 dark:bg-[#09090b]/90 backdrop-blur-md px-4 pt-12 pb-2 flex flex-col border-b border-transparent z-40">
         <div className="flex items-center justify-between mb-1">
           <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
@@ -343,13 +344,11 @@ export function Wallet() {
             <h1 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">Mon Portefeuille</h1>
             <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Gérez vos fonds en toute simplicité</span>
           </div>
-          <button onClick={() => setShowWalletPinModal(true)} className="p-2 -mr-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
-            <Lock className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
-          </button>
+          <div className="w-10" /> {/* Spacer for centering */}
         </div>
       </div>
       
-      <div className="flex flex-col px-5 py-4 w-full max-w-[480px] mx-auto gap-6 pb-24">
+      <div className="flex-1 overflow-y-auto flex flex-col px-5 py-4 w-full max-w-[480px] mx-auto gap-6 pb-24">
         
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
@@ -414,7 +413,7 @@ export function Wallet() {
             <span className="text-[12px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Historique</span>
           </button>
 
-          <button onClick={() => navigate('/settings')} className="flex-1 flex flex-col items-center gap-2 p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
+          <button onClick={() => setShowSettingsModal(true)} className="flex-1 flex flex-col items-center gap-2 p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center border border-gray-200 dark:border-gray-700">
               <Settings className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2} />
             </div>
@@ -679,6 +678,44 @@ export function Wallet() {
           />
         </div>
       )}
+
+      <BottomSheet open={showSettingsModal} onClose={() => setShowSettingsModal(false)}>
+        <div className="p-6 flex flex-col gap-6 font-poppins pb-8">
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">Paramètres du portefeuille</h3>
+          
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => { setShowSettingsModal(false); setShowWalletPinModal(true) }}
+              className="flex items-center gap-4 p-4 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 active:scale-[0.98] transition-transform text-left"
+            >
+              <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center text-[#FF7A00] shrink-0">
+                <Lock size={20} />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="font-bold text-[15px] text-gray-900 dark:text-white">Gérer mon code PIN</span>
+                <span className="text-[12px] text-gray-500">Modifier votre code de sécurité</span>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => { setShowSettingsModal(false); toast.info('Bientôt disponible') }}
+              className="flex items-center gap-4 p-4 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 active:scale-[0.98] transition-transform text-left"
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="font-bold text-[15px] text-gray-900 dark:text-white">Mes comptes bancaires</span>
+                <span className="text-[12px] text-gray-500">Gérer vos moyens de retrait</span>
+              </div>
+            </button>
+          </div>
+          
+          <Button onClick={() => setShowSettingsModal(false)} className="w-full h-[56px] rounded-[16px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 font-bold text-[16px]">
+            Fermer
+          </Button>
+        </div>
+      </BottomSheet>
     </div>
   )
 }
