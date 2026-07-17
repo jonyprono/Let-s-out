@@ -67,7 +67,7 @@ export function AdminAdminsPage() {
       </div>
 
       {showAdd && (
-        <div className="p-6 rounded-3xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.02] backdrop-blur-xl shadow-2xl animate-in slide-in-from-top-4 space-y-4">
+        <div className="p-6 rounded-3xl border border-white/10 bg-[#1A1A1A]/[0.02] backdrop-blur-xl shadow-2xl animate-in slide-in-from-top-4 space-y-4">
           <h2 className="text-lg font-bold text-white mb-2">Nouvel Administrateur</h2>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
@@ -94,7 +94,7 @@ export function AdminAdminsPage() {
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button onClick={() => setShowAdd(false)} className="px-6 py-3 rounded-xl font-bold text-white/50 hover:bg-white dark:bg-[#1A1A1A]/5 transition-colors">Annuler</button>
+            <button onClick={() => setShowAdd(false)} className="px-6 py-3 rounded-xl font-bold text-white/50 hover:bg-[#1A1A1A]/5 transition-colors">Annuler</button>
             <button
               onClick={() => addMut.mutate()}
               disabled={phone.length < 6 || addMut.isPending}
@@ -115,7 +115,7 @@ export function AdminAdminsPage() {
         )}
         
         {admins?.map((admin: AdminUser) => (
-          <div key={admin.id} className="p-5 rounded-3xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.02] backdrop-blur-md shadow-lg group hover:bg-white dark:bg-[#1A1A1A]/[0.04] transition-colors flex items-center justify-between gap-4">
+          <div key={admin.id} className="p-5 rounded-3xl border border-white/10 bg-[#1A1A1A]/[0.02] backdrop-blur-md shadow-lg group hover:bg-[#1A1A1A]/[0.04] transition-colors flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 border border-white/10 flex items-center justify-center text-white font-bold shrink-0 shadow-inner">
                 {admin.name ? admin.name.charAt(0).toUpperCase() : <Shield className="w-5 h-5 text-red-400" />}
