@@ -783,20 +783,13 @@ export function Wallet() {
           
           <div className="flex flex-col gap-3 overflow-y-auto pb-4 flex-1">
             {stats?.poolEvents?.map(evt => (
-              <button 
+              <div 
                 key={evt.id}
-                onClick={() => { 
-                  setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.available });
-                  setShowEventSelector(false);
-                  setWithdrawMode(true);
-                  setWithdrawData({ amount: evt.available.toString() });
-                }}
-                className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-transform text-left"
+                className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)]"
               >
-                {/* Thumbnail */}
-                <div className="w-[96px] h-[84px] rounded-[16px] bg-gray-200 dark:bg-gray-800 overflow-hidden relative shrink-0">
+                <div className="w-[100px] h-[80px] rounded-[14px] bg-gray-200 dark:bg-gray-800 overflow-hidden relative shrink-0">
                   <SafeImage src={evt.coverUrl || undefined} alt={evt.title} className="w-full h-full object-cover" />
-                  <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${new Date(evt.startAt) > new Date() ? 'bg-[#4CAF50]' : 'bg-gray-400'}`} />
                     <span className="text-[10px] font-bold text-white leading-none">
                       {new Date(evt.startAt) > new Date() ? 'En cours' : 'Terminé'}
@@ -804,30 +797,41 @@ export function Wallet() {
                   </div>
                 </div>
 
-                {/* Info */}
-                <div className="flex flex-col flex-1 min-w-0 py-1">
-                  <h4 className="font-bold text-[15px] text-gray-900 dark:text-white line-clamp-1 leading-tight">{evt.title}</h4>
-                  <div className="flex items-center gap-1.5 mt-1.5 text-gray-400">
-                    <Calendar className="w-3.5 h-3.5 shrink-0" />
+                <div className="flex flex-col flex-1 py-1">
+                  <h4 className="font-bold text-[14px] text-gray-900 dark:text-white line-clamp-1">{evt.title}</h4>
+                  <div className="flex items-center gap-1.5 mt-1 text-gray-500">
+                    <Calendar className="w-3.5 h-3.5" />
                     <span className="text-[11px] font-medium">
-                      {new Date(evt.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date(evt.startAt).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1 text-gray-400">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                     <span className="text-[11px] font-medium line-clamp-1">{evt.city}</span>
                   </div>
                 </div>
 
-                {/* Amount + arrow */}
-                <div className="flex flex-col items-end gap-1.5 shrink-0 border-l border-gray-100 dark:border-gray-800 pl-4">
-                  <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Solde dispo.</span>
-                  <span className="text-[14px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">{evt.available.toLocaleString('fr-FR')} F</span>
-                  <div className="w-8 h-8 rounded-full bg-[#FFF3E6] dark:bg-[#FF7A00]/20 flex items-center justify-center text-[#FF7A00]">
-                    <ArrowUpRight size={16} strokeWidth={2.5} />
+                <div className="flex flex-col items-end gap-2 shrink-0 h-full justify-between py-1 border-l border-gray-100 dark:border-gray-800 pl-2">
+                  <div className="flex items-start justify-between w-full">
+                    <div className="flex flex-col items-end w-full">
+                      <span className="text-[10px] font-semibold text-gray-500">Solde disponible</span>
+                      <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
+                    </div>
                   </div>
+                  <button 
+                    onClick={() => {
+                      setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.available });
+                      setShowEventSelector(false);
+                      setWithdrawMode(true);
+                      setWithdrawData({ amount: evt.available.toString() });
+                    }}
+                    className="bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition-transform"
+                  >
+                    <ArrowUpRight size={14} strokeWidth={3} />
+                    Retirer
+                  </button>
                 </div>
-              </button>
+              </div>
             ))}
             
             {stats?.poolEvents?.length === 0 && (
