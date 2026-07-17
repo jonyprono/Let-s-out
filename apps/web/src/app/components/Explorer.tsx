@@ -463,33 +463,33 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       {viewMode === 'list' && (
         <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-black">
           {/* Fixed Header */}
-          <div className="px-4 pt-safe-5 pt-5 pb-3 bg-white dark:bg-black z-20 flex-shrink-0">
-            <div className="flex items-start justify-between mb-4">
+          <div className="px-4 pt-safe-3 pt-3 pb-2 bg-white dark:bg-black z-20 flex-shrink-0">
+            <div className="flex items-center justify-between mb-2">
               <div>
-                <h1 className="text-[22px] font-bold text-gray-900 dark:text-white leading-tight">
+                <h1 className="text-[19px] font-bold text-gray-900 dark:text-white leading-tight">
                   Explorer <span className="text-[#FF7A00]">✦</span>
                 </h1>
-                <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
                   Découvrez des expériences uniques autour de vous
                 </p>
               </div>
-              <div className="flex items-center gap-2 mt-1">
-                <button onClick={() => onNavigate('notifications')} className="w-10 h-10 flex items-center justify-center">
-                  <NotificationIconWithBadge unreadCount={unreadNotifCount} className="w-7 h-7 text-gray-900 dark:text-white" />
+              <div className="flex items-center gap-2">
+                <button onClick={() => onNavigate('notifications')} className="w-9 h-9 flex items-center justify-center">
+                  <NotificationIconWithBadge unreadCount={unreadNotifCount} className="w-6 h-6 text-gray-900 dark:text-white" />
                 </button>
                 <button
                   onClick={() => toast('Filtres avancés bientôt disponibles', { icon: '🚧' })}
-                  className="w-10 h-10 bg-[#FF7A00] rounded-[14px] flex items-center justify-center shadow-md active:scale-95 transition-transform"
+                  className="w-9 h-9 bg-[#FF7A00] rounded-[12px] flex items-center justify-center shadow-md active:scale-95 transition-transform"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                     <path d="M4 6h16M7 12h10M10 18h4" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
                   </svg>
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 mb-3">
-              <div className={`flex-1 flex items-center gap-2 px-4 h-11 rounded-full bg-gray-100 dark:bg-[#1A1A1A] border transition-colors ${
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`flex-1 flex items-center gap-2 px-3 h-9 rounded-full bg-gray-100 dark:bg-[#1A1A1A] border transition-colors ${
                 eventSearchFocused || eventSearch ? 'border-[#FF7A00]' : 'border-transparent'
               }`}>
                 <Search01Icon className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.5} />
@@ -500,7 +500,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onChange={e => setEventSearch(e.target.value)}
                   onFocus={() => setEventSearchFocused(true)}
                   onBlur={() => setEventSearchFocused(false)}
-                  className="flex-1 text-[13px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0"
+                  className="flex-1 text-[12px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0"
                 />
                 {eventSearch && (
                   <button onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}>
@@ -510,17 +510,17 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               </div>
               <button
                 onClick={() => { hapticFeedback.impact(); setViewMode('map'); }}
-                className="shrink-0 flex items-center gap-1.5 h-11 px-4 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+                className="shrink-0 flex items-center gap-1.5 h-9 px-3 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path d="M9 3L4 5.5v15L9 18l6 3 5-2.5V3.5L15 6 9 3z" stroke="#6B7280" strokeWidth="1.8" strokeLinejoin="round"/>
                   <path d="M9 3v15M15 6v15" stroke="#6B7280" strokeWidth="1.8" strokeLinecap="round"/>
                 </svg>
-                <span className="text-[13px] font-semibold text-gray-600 dark:text-gray-300">Carte</span>
+                <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-300">Carte</span>
               </button>
             </div>
 
-            <button onClick={openSearch} className="flex items-center gap-1 mb-3 active:opacity-70 transition-opacity">
+            <button onClick={openSearch} className="flex items-center gap-1 mb-1.5 active:opacity-70 transition-opacity">
               <Location01Icon className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
               <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
                 {currentLocation || 'Où allez-vous ?'}
@@ -535,7 +535,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   <button
                     key={tab.id}
                     onClick={() => { hapticFeedback.impact(); setSelectedCategory(tab.id); }}
-                    className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold transition-all active:scale-95 whitespace-nowrap border ${
+                    className={`shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all active:scale-95 whitespace-nowrap border ${
                       isActive
                         ? 'bg-[#FF7A00] text-white border-[#FF7A00] shadow-sm'
                         : 'bg-white dark:bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
