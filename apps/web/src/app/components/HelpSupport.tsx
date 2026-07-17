@@ -59,7 +59,7 @@ export default function HelpSupport() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate(-1)}
-            className="w-10 h-10 border border-gray-200 dark:border-gray-800 rounded-xl flex items-center justify-center bg-white dark:bg-black active:scale-95 transition-transform shadow-sm"
+            className="w-10 h-10 border border-gray-100 dark:border-gray-800 rounded-2xl flex items-center justify-center bg-white dark:bg-black active:scale-95 transition-transform shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
           >
             <ArrowLeft01Icon size={20} className="text-gray-900 dark:text-white" />
           </button>
@@ -103,45 +103,45 @@ export default function HelpSupport() {
           <h3 className="text-[16px] font-bold text-gray-900 dark:text-white mb-4">
             Besoin d'aide rapidement ?
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="flex justify-between gap-2">
             {/* Card 1 */}
-            <button className="flex flex-col items-center p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-[#111] shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-[0.98] transition-transform">
-              <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
-                <HelpCircleIcon size={20} className="text-[#FF7A00]" strokeWidth={1.8} />
+            <button className="flex-1 flex flex-col items-center p-2.5 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-[#111] shadow-sm active:scale-[0.98] transition-transform">
+              <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
+                <HelpCircleIcon size={18} className="text-[#FF7A00]" strokeWidth={2} />
               </div>
-              <span className="text-[13px] font-bold text-gray-900 dark:text-white mb-1">Centre d'aide</span>
-              <span className="text-[10px] text-center text-gray-500 dark:text-gray-400 font-medium leading-tight">
-                Trouvez des réponses à vos questions
+              <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap">Centre d'aide</span>
+              <span className="text-[8px] text-center text-gray-500 dark:text-gray-400 font-medium leading-[1.1]">
+                Trouvez des<br/>réponses
               </span>
             </button>
             {/* Card 2 */}
-            <button className="flex flex-col items-center p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-[#111] shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-[0.98] transition-transform">
-              <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
-                <Message01Icon size={20} className="text-[#FF7A00]" strokeWidth={1.8} />
+            <button className="flex-1 flex flex-col items-center p-2.5 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-[#111] shadow-sm active:scale-[0.98] transition-transform">
+              <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
+                <Message01Icon size={18} className="text-[#FF7A00]" strokeWidth={2} />
               </div>
-              <span className="text-[13px] font-bold text-gray-900 dark:text-white mb-1">Nous écrire</span>
-              <span className="text-[10px] text-center text-gray-500 dark:text-gray-400 font-medium leading-tight">
-                Démarrez une conversation avec l'équipe
+              <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap">Nous écrire</span>
+              <span className="text-[8px] text-center text-gray-500 dark:text-gray-400 font-medium leading-[1.1]">
+                Démarrez une<br/>conversation
               </span>
             </button>
             {/* Card 3 */}
-            <button className="flex flex-col items-center p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-[#111] shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-[0.98] transition-transform">
-              <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
-                <Call02Icon size={20} className="text-[#FF7A00]" strokeWidth={1.8} />
+            <button className="flex-1 flex flex-col items-center p-2.5 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-[#111] shadow-sm active:scale-[0.98] transition-transform">
+              <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
+                <Call02Icon size={18} className="text-[#FF7A00]" strokeWidth={2} />
               </div>
-              <span className="text-[13px] font-bold text-gray-900 dark:text-white mb-1">Nous appeler</span>
-              <span className="text-[10px] text-center text-gray-500 dark:text-gray-400 font-medium leading-tight">
+              <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap">Nous appeler</span>
+              <span className="text-[8px] text-center text-gray-500 dark:text-gray-400 font-medium leading-[1.1]">
                 Lun - Ven<br/>8h00 - 18h00
               </span>
             </button>
             {/* Card 4 */}
-            <button className="flex flex-col items-center p-4 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-[#111] shadow-[0_2px_10px_rgba(0,0,0,0.02)] active:scale-[0.98] transition-transform">
-              <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
-                <Alert01Icon size={20} className="text-[#FF7A00]" strokeWidth={1.8} />
+            <button className="flex-1 flex flex-col items-center p-2.5 border border-gray-100 dark:border-gray-800 rounded-2xl bg-white dark:bg-[#111] shadow-sm active:scale-[0.98] transition-transform">
+              <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
+                <Alert01Icon size={18} className="text-[#FF7A00]" strokeWidth={2} />
               </div>
-              <span className="text-[13px] font-bold text-gray-900 dark:text-white mb-1 text-center leading-tight">Signaler un problème</span>
-              <span className="text-[10px] text-center text-gray-500 dark:text-gray-400 font-medium leading-tight">
-                Signalez un bug ou un comportement inapproprié
+              <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap">Signaler bug</span>
+              <span className="text-[8px] text-center text-gray-500 dark:text-gray-400 font-medium leading-[1.1]">
+                Signalez un bug<br/>ou problème
               </span>
             </button>
           </div>
@@ -179,7 +179,7 @@ export default function HelpSupport() {
                   <span className="text-[#FF7A00]">⭐</span>
                   <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{agent.rating}</span>
                 </div>
-                <button className="w-full h-8 flex items-center justify-center gap-1.5 bg-orange-50 dark:bg-[#FF7A00]/10 text-[#FF7A00] rounded-full active:scale-95 transition-transform">
+                <button className="w-full h-8 flex items-center justify-center gap-1.5 bg-transparent border border-orange-200 dark:border-[#FF7A00]/30 text-[#FF7A00] rounded-full active:scale-95 transition-transform">
                   <Message01Icon size={14} strokeWidth={2} />
                   <span className="text-[11px] font-bold">Discuter</span>
                 </button>
