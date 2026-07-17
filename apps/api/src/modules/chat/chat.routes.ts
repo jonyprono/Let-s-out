@@ -56,7 +56,8 @@ export default async function chatRoutes(app: FastifyInstance) {
     app.log.info(`WS connected: ${userId} (${connections.get(userId)!.size} sockets)`)
 
     // Update last seen
-    await app.prisma.user.update({ where: { id: userId }, data: { lastSeenAt: new Date() } })
+    // Use updateMany so it silently skips if user not found (avoids P2025 crash)
+    await app.prisma.user.updateMany({ where: { id: userId }, data: { lastSeenAt: new Date() } })
 
     socket.on('message', async (raw: Buffer | string) => {
       try {
@@ -152,12 +153,17 @@ export default async function chatRoutes(app: FastifyInstance) {
                 where: { userId: bot.userId },
                 select: { displayName: true }
               })
-              broadcastToConversation(app, conversation.id, {
+              // Send typing indicator repeatedly every 2s while the AI is thinking
+              // (frontend typing timeout is 3s — so we refresh it to keep it alive)
+              const sendTyping = () => broadcastToConversation(app, conversation.id, {
                 type: 'typing',
                 userId: bot.userId,
                 conversationId: conversation.id,
                 displayName: botProfile?.displayName ?? 'Agent',
               }, bot.userId)
+
+              sendTyping()
+              const typingInterval = setInterval(sendTyping, 2000)
 
               // Fetch history, generate AI response, broadcast — all async to not block
               app.prisma.message.findMany({
@@ -193,6 +199,7 @@ export default async function chatRoutes(app: FastifyInstance) {
                   return null
                 })
                 .then(replyMsg => {
+                  clearInterval(typingInterval)
                   if (replyMsg) {
                     broadcastToConversation(app, conversation.id, { type: 'new_message', message: replyMsg }, undefined)
                     return app.prisma.conversation.update({
@@ -201,7 +208,10 @@ export default async function chatRoutes(app: FastifyInstance) {
                     })
                   }
                 })
-                .catch(err => app.log.error(`[BOT] Error in bot response chain: ${String(err)}`))
+                .catch(err => {
+                  clearInterval(typingInterval)
+                  app.log.error(`[BOT] Error in bot response chain: ${String(err)}`)
+                })
             }
           }
         }
