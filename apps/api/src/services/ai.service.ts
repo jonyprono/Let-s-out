@@ -1,13 +1,14 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export class AiService {
-  private genAI: GoogleGenerativeAI;
+  private groq: Groq;
 
   constructor() {
-    const apiKey = process.env.GEMINI_API_KEY || '';
-    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY || '',
+    });
   }
 
   async generateSupportResponse(
@@ -17,8 +18,8 @@ export class AiService {
     newMessage: string
   ): Promise<string> {
     try {
-      if (!process.env.GEMINI_API_KEY) {
-        console.warn('[AI] GEMINI_API_KEY is not set.');
+      if (!process.env.GROQ_API_KEY) {
+        console.warn('[AI] GROQ_API_KEY is not set.');
         return 'Désolé, je ne peux pas vous répondre pour le moment (Clé API manquante).';
       }
 
@@ -29,59 +30,39 @@ export class AiService {
       });
 
       const systemPrompt = bot?.botPrompt ||
-        `Vous êtes ${bot?.profile?.displayName || 'un agent'}, un assistant du support client pour l'application Let's Out. Soyez bref, concis et très utile. Vous parlez en français.`;
+        `Tu es ${bot?.profile?.displayName || 'un agent'}, un assistant du support client pour l'application Let's Out. Sois bref, concis et très utile. Tu parles en français. Ne dis jamais que tu es une IA ou un robot. Réponds directement aux questions de l'utilisateur.`;
 
-      // ── Sanitize history for Gemini ──────────────────────────────────────────
-      // Gemini requires:
-      //   1. Roles must be 'user' or 'model' only
-      //   2. History must alternate strictly user/model
-      //   3. History must NOT start with 'model'
-      //   4. History must NOT end with 'user' (the current message is the last user turn)
-      const rawHistory = history.map(msg => ({
-        role: msg.role === 'bot' ? 'model' : 'user',
-        parts: [{ text: msg.content || '...' }]
-      }));
+      // Build messages array for Groq (OpenAI-compatible format)
+      const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
+        { role: 'system', content: systemPrompt }
+      ];
 
-      // Filter out empty content and enforce alternation
-      const sanitizedHistory: { role: string; parts: { text: string }[] }[] = [];
-      for (const turn of rawHistory) {
-        const last = sanitizedHistory[sanitizedHistory.length - 1];
-        if (last && last.role === turn.role) {
-          // Merge consecutive same-role turns into one
-          last.parts[0].text += '\n' + turn.parts[0].text;
+      // Add history
+      for (const msg of history) {
+        if (msg.role === 'bot' || msg.role === 'assistant') {
+          messages.push({ role: 'assistant', content: msg.content || '...' });
         } else {
-          sanitizedHistory.push({ ...turn, parts: [{ text: turn.parts[0].text }] });
+          messages.push({ role: 'user', content: msg.content || '...' });
         }
       }
 
-      // History must not start with 'model'
-      if (sanitizedHistory.length > 0 && sanitizedHistory[0].role === 'model') {
-        sanitizedHistory.shift();
-      }
+      // Add the new user message
+      messages.push({ role: 'user', content: newMessage });
 
-      // History must not end with 'user' (the new message IS the last user turn)
-      if (sanitizedHistory.length > 0 && sanitizedHistory[sanitizedHistory.length - 1].role === 'user') {
-        sanitizedHistory.pop();
-      }
+      console.log(`[AI] Calling Groq for bot ${botId}, messages: ${messages.length}`);
 
-      console.log(`[AI] Calling Gemini for bot ${botId}, history length: ${sanitizedHistory.length}`);
-
-      const chatModel = this.genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        systemInstruction: systemPrompt
+      const completion = await this.groq.chat.completions.create({
+        model: 'llama-3.1-8b-instant',
+        messages,
+        max_tokens: 512,
+        temperature: 0.7,
       });
 
-      const chat = chatModel.startChat({
-        history: sanitizedHistory,
-      });
-
-      const result = await chat.sendMessage(newMessage);
-      const text = result.response.text();
+      const text = completion.choices[0]?.message?.content || '';
       console.log(`[AI] Got response (${text.length} chars)`);
       return text;
     } catch (error: any) {
       console.error('[AI] Error generating AI response:', error?.message || error);
-      // Return a graceful fallback so the user still gets a message
       return "Je suis désolé, je rencontre des difficultés techniques. Un agent humain vous contactera bientôt.";
     }
   }
