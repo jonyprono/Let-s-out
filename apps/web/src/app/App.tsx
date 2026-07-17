@@ -64,6 +64,7 @@ import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { PrivacyPolicy } from '@/app/components/PrivacyPolicy'
 import { TermsOfService } from '@/app/components/TermsOfService'
 import { LandingPage } from '@/app/components/LandingPage'
+import HelpSupport from './components/HelpSupport'
 
 // All screens via adapter bridge (prop-based → React Router)
 import {
@@ -281,6 +282,7 @@ export default function App() {
             <Route path="/profile/:userId/events-joined" element={<JoinedEventsList />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/wallet" element={<Wallet />} />
+            <Route path="/support" element={<HelpSupport />} />
           </Route>
 
           {/* Fallback */}
