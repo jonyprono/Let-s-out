@@ -362,41 +362,66 @@ export function Wallet() {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full rounded-[20px] bg-gradient-to-r from-[#FF6B00] to-[#FFA726] shadow-[0_8px_20px_rgba(255,122,0,0.25)] p-5 relative overflow-hidden flex flex-row items-center justify-between"
+          className="w-full rounded-[24px] bg-gradient-to-r from-[#FF7A00] via-[#FF9500] to-[#FFB340] shadow-[0_8px_24px_rgba(255,122,0,0.35)] p-5 relative overflow-hidden flex flex-row items-center justify-between min-h-[130px]"
         >
-          <div className="relative z-10 flex flex-col gap-1">
-            <div className="flex items-center gap-1.5 opacity-90 text-white">
-              <span className="text-[13px] font-medium">Solde disponible</span>
-              <AlertCircle size={14} className="opacity-80" />
+          {/* Decorative background circles */}
+          <div className="absolute right-[60px] top-[-30px] w-[120px] h-[120px] rounded-full bg-white/10" />
+          <div className="absolute right-[20px] top-[-50px] w-[160px] h-[160px] rounded-full bg-white/10" />
+          <div className="absolute right-[-10px] bottom-[-60px] w-[130px] h-[130px] rounded-full bg-white/10" />
+
+          {/* Left: text content */}
+          <div className="relative z-10 flex flex-col gap-0.5 flex-1 pr-4">
+            <div className="flex items-center gap-1.5 text-white/90">
+              <span className="text-[13px] font-semibold">Solde disponible</span>
+              <AlertCircle size={13} className="opacity-80" />
             </div>
-            
-            <div className="flex items-baseline gap-1 mt-1 mb-2">
+
+            <div className="flex items-baseline gap-1 mt-1.5">
               {isLoadingWallet ? (
-                <div className="h-10 w-32 bg-white/20 animate-pulse rounded-lg mt-1" />
+                <div className="h-[42px] w-36 bg-white/20 animate-pulse rounded-lg" />
               ) : (
                 <>
-                  <span className="text-[32px] font-extrabold text-white tracking-tight leading-none">
+                  <span className="text-[38px] font-extrabold text-white tracking-tight leading-none">
                     {wallet?.balance?.toLocaleString('fr-FR') || 0}
                   </span>
-                  <span className="text-[16px] font-bold text-white/90 ml-1">F CFA</span>
+                  <span className="text-[17px] font-bold text-white/90 ml-1 mb-0.5">F CFA</span>
                 </>
               )}
             </div>
 
-            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full w-max mt-1">
-              <Check className="w-3 h-3 text-[#4CAF50]" strokeWidth={4} />
+            <div className="inline-flex items-center gap-1.5 bg-[#2E7D32]/80 px-3 py-1 rounded-full w-max mt-2.5">
+              <Check className="w-3 h-3 text-white" strokeWidth={3} />
               <span className="text-[11px] font-bold text-white">Disponible pour retrait</span>
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-col items-center justify-center opacity-80 h-[80px] w-[80px]">
-             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-lg">
-                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-             </svg>
+          {/* Right: 3D wallet icon */}
+          <div className="relative z-10 shrink-0 w-[90px] h-[90px] flex items-center justify-center">
+            {/* Main wallet body */}
+            <svg width="80" height="72" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Wallet body */}
+              <rect x="4" y="20" width="72" height="48" rx="10" fill="white" fillOpacity="0.35"/>
+              <rect x="4" y="20" width="72" height="48" rx="10" stroke="white" strokeOpacity="0.5" strokeWidth="1"/>
+              {/* Wallet flap */}
+              <path d="M4 30 Q4 20 14 20 H66 Q76 20 76 30" fill="white" fillOpacity="0.5"/>
+              {/* Card slot / pocket */}
+              <rect x="48" y="36" width="24" height="16" rx="5" fill="white" fillOpacity="0.5" stroke="white" strokeOpacity="0.6" strokeWidth="0.8"/>
+              {/* Coin circle */}
+              <circle cx="60" cy="44" r="5" fill="white" fillOpacity="0.8"/>
+              {/* Strap lines */}
+              <line x1="4" y1="30" x2="76" y2="30" stroke="white" strokeOpacity="0.4" strokeWidth="1"/>
+            </svg>
+            {/* Coins below */}
+            <div className="absolute bottom-[-4px] right-[-4px] flex gap-0.5">
+              <div className="w-6 h-6 rounded-full bg-yellow-300 shadow-[0_2px_6px_rgba(0,0,0,0.2)] border-2 border-yellow-100/50 flex items-center justify-center">
+                <span className="text-[8px] font-black text-yellow-700">$</span>
+              </div>
+              <div className="w-5 h-5 rounded-full bg-yellow-400 shadow-[0_2px_4px_rgba(0,0,0,0.15)] border-2 border-yellow-200/50 mt-1">
+              </div>
+            </div>
           </div>
         </motion.div>
+
 
         <div className="flex items-start justify-between gap-3">
           <button onClick={() => setShowEventSelector(true)} className="flex-1 flex flex-col items-center gap-2 px-1 py-3 bg-[#FFF3E6] dark:bg-[#FF7A00]/10 rounded-[16px] border border-[#FFE4C4] dark:border-[#FF7A00]/20 active:scale-95 transition-transform shadow-sm">
@@ -758,14 +783,41 @@ export function Wallet() {
                   setWithdrawMode(true);
                   setWithdrawData({ amount: evt.poolCollected.toString() });
                 }}
-                className="flex flex-row items-center justify-between p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 active:scale-[0.98] transition-transform text-left shadow-sm"
+                className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)] active:scale-[0.98] transition-transform text-left"
               >
-                <div className="flex flex-col items-start flex-1 overflow-hidden pr-3">
-                  <span className="font-bold text-[14px] text-gray-900 dark:text-white line-clamp-1">{evt.title}</span>
-                  <span className="text-[12px] text-[#FF7A00] font-bold mt-0.5">{evt.poolCollected.toLocaleString('fr-FR')} F CFA</span>
+                {/* Thumbnail */}
+                <div className="w-[80px] h-[70px] rounded-[14px] bg-gray-200 dark:bg-gray-800 overflow-hidden relative shrink-0">
+                  <SafeImage src={evt.coverUrl || undefined} alt={evt.title} className="w-full h-full object-cover" />
+                  <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                    <div className={`w-1.5 h-1.5 rounded-full ${new Date(evt.startAt) > new Date() ? 'bg-[#4CAF50]' : 'bg-gray-400'}`} />
+                    <span className="text-[9px] font-bold text-white leading-none">
+                      {new Date(evt.startAt) > new Date() ? 'En cours' : 'Terminé'}
+                    </span>
+                  </div>
                 </div>
-                <div className="w-8 h-8 rounded-full bg-[#FFF3E6] dark:bg-[#FF7A00]/20 flex items-center justify-center text-[#FF7A00] shrink-0">
-                  <ArrowUpRight size={16} strokeWidth={2.5} />
+
+                {/* Info */}
+                <div className="flex flex-col flex-1 py-0.5 overflow-hidden">
+                  <h4 className="font-bold text-[14px] text-gray-900 dark:text-white line-clamp-1">{evt.title}</h4>
+                  <div className="flex items-center gap-1.5 mt-1 text-gray-500">
+                    <Calendar className="w-3 h-3 shrink-0" />
+                    <span className="text-[10px] font-medium">
+                      {new Date(evt.startAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span className="text-[10px] font-medium line-clamp-1">{evt.city}</span>
+                  </div>
+                </div>
+
+                {/* Amount + arrow */}
+                <div className="flex flex-col items-end gap-1 shrink-0 border-l border-gray-100 dark:border-gray-800 pl-3">
+                  <span className="text-[10px] font-semibold text-gray-500 whitespace-nowrap">Solde dispo.</span>
+                  <span className="text-[12px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">{evt.poolCollected.toLocaleString('fr-FR')} F</span>
+                  <div className="w-7 h-7 rounded-full bg-[#FFF3E6] dark:bg-[#FF7A00]/20 flex items-center justify-center text-[#FF7A00] mt-0.5">
+                    <ArrowUpRight size={14} strokeWidth={2.5} />
+                  </div>
                 </div>
               </button>
             ))}
