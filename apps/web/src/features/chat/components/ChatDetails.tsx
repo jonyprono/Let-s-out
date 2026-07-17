@@ -194,21 +194,30 @@ export function ChatDetails() {
   const { data: presence } = useConversationPresence(id!)
 
   const isGroup = conversation?.isGroup ?? false
+  
+  const getTargetMember = () => {
+    if (!conversation) return null
+    if (user?.role === 'ADMIN') {
+      return conversation.members.find((m) => !m.userId.startsWith('bot_')) ?? conversation.members[0]
+    }
+    return conversation.members.find((m) => m.userId !== user?.id)
+  }
+  
+  const targetMember = getTargetMember()
+
   const conversationTitle = event?.title ?? (conversation
     ? conversation.isGroup
       ? (conversation.name ?? 'Groupe')
-      : (conversation.members.find((m) => m.userId !== user?.id)?.user?.profile?.displayName ?? 'Conversation')
+      : (targetMember?.user?.profile?.displayName ?? 'Conversation')
     : 'Conversation')
 
   const conversationAvatar = event?.coverUrl ?? (conversation
     ? conversation.isGroup
       ? conversation.avatarUrl
-      : (conversation.members.find((m) => m.userId !== user?.id)?.user?.profile?.avatarUrl ?? null)
+      : (targetMember?.user?.profile?.avatarUrl ?? null)
     : null)
 
-  const otherMember = conversation?.isGroup
-    ? null
-    : conversation?.members.find((m) => m.userId !== user?.id) ?? null
+  const otherMember = conversation?.isGroup ? null : targetMember
 
   const memberCount = conversation?.members?.length ?? 0
 

@@ -241,8 +241,8 @@ export default async function chatRoutes(app: FastifyInstance) {
         }
 
         if (msg.type === 'read' && msg.messageId) {
-          await app.prisma.conversationMember.update({
-            where: { conversationId_userId: { conversationId: msg.conversationId, userId } },
+          await app.prisma.conversationMember.updateMany({
+            where: { conversationId: msg.conversationId, userId },
             data: { lastReadAt: new Date(), lastDeliveredAt: new Date() }, // Si lu, c'est aussi distribué
           })
           broadcastToConversation(app, msg.conversationId, {
@@ -254,8 +254,8 @@ export default async function chatRoutes(app: FastifyInstance) {
         }
 
         if (msg.type === 'delivered' && msg.messageId) {
-          await app.prisma.conversationMember.update({
-            where: { conversationId_userId: { conversationId: msg.conversationId, userId } },
+          await app.prisma.conversationMember.updateMany({
+            where: { conversationId: msg.conversationId, userId },
             data: { lastDeliveredAt: new Date() },
           })
           broadcastToConversation(app, msg.conversationId, {
@@ -478,12 +478,10 @@ export default async function chatRoutes(app: FastifyInstance) {
     const { sub } = req.user as { sub: string }
     const { id } = req.params as { id: string }
     
-    await app.prisma.conversationMember.update({
+    await app.prisma.conversationMember.updateMany({
       where: {
-        conversationId_userId: {
-          conversationId: id,
-          userId: sub,
-        }
+        conversationId: id,
+        userId: sub,
       },
       data: { lastReadAt: new Date() }
     })
