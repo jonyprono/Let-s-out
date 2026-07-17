@@ -61,7 +61,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     socket.on('message', async (raw: Buffer | string) => {
       try {
         const msg = JSON.parse(raw.toString()) as {
-          type: 'message' | 'typing' | 'read' | 'call_start' | 'call_offer' | 'call_answer' | 'ice_candidate' | 'call_reject' | 'call_end'
+          type: 'message' | 'typing' | 'read' | 'delivered' | 'call_start' | 'call_offer' | 'call_answer' | 'ice_candidate' | 'call_reject' | 'call_end'
           conversationId: string
           content?: string
           messageType?: string
@@ -550,6 +550,29 @@ export default async function chatRoutes(app: FastifyInstance) {
       },
     })
 
+    // If chatting with a bot, send a welcome message automatically
+    const targetUser = await app.prisma.user.findUnique({
+      where: { id: userId },
+      select: { isBot: true, botPrompt: true, profile: true }
+    })
+
+    if (targetUser?.isBot) {
+      const botName = targetUser.profile?.displayName || 'votre agent'
+      const welcomePrompt = `Bonjour ! Je suis ${botName}, votre agent de support Let's Out. Comment puis-je vous aider aujourd'hui ?`
+      app.prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          senderId: userId,
+          type: 'TEXT',
+          content: welcomePrompt
+        },
+        include: { sender: { select: { profile: { select: { username: true, displayName: true, avatarUrl: true } } } } }
+      }).then(welcomeMsg => {
+        broadcastToConversation(app, conversation.id, { type: 'new_message', message: welcomeMsg }, undefined)
+        return app.prisma.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: new Date() } })
+      }).catch(console.error)
+    }
+
     return reply.code(201).send(conversation)
   })
 
@@ -576,6 +599,41 @@ export default async function chatRoutes(app: FastifyInstance) {
     if (!isMember) return reply.code(403).send({ error: 'Not a member. Join the event first.' })
 
     return reply.send(conversation)
+  })
+
+  // ── Admin Bot Management ──────────────────────────────────────────────────
+  app.get('/admin/bots', async (_req, reply) => {
+    // Ideally verify admin role here
+    const bots = await app.prisma.user.findMany({
+      where: { isBot: true },
+      include: { profile: true }
+    })
+    reply.send(bots)
+  })
+
+  app.put('/admin/bots/:id', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const { botPrompt } = req.body as { botPrompt: string }
+    const updated = await app.prisma.user.update({
+      where: { id },
+      data: { botPrompt }
+    })
+    reply.send(updated)
+  })
+
+  app.get('/admin/bot-conversations', async (_req, reply) => {
+    // Fetch conversations where a bot is a member
+    const conversations = await app.prisma.conversation.findMany({
+      where: {
+        members: { some: { user: { isBot: true } } }
+      },
+      include: {
+        members: { include: { user: { include: { profile: true } } } },
+        messages: { orderBy: { createdAt: 'desc' }, take: 1 }
+      },
+      orderBy: { lastMessageAt: 'desc' }
+    })
+    reply.send(conversations)
   })
 
   // Get messages in a conversation

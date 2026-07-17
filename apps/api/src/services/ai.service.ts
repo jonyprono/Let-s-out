@@ -12,7 +12,7 @@ export class AiService {
 
   async generateSupportResponse(
     botId: string,
-    conversationId: string,
+    _conversationId: string,
     history: { role: string; content: string }[],
     newMessage: string
   ): Promise<string> {

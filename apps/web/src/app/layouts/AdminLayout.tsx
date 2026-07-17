@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router'
-import { LayoutDashboard, ShieldCheck, ArrowLeft, Moon, Sun, LogOut, Shield } from 'lucide-react'
+import { LayoutDashboard, ShieldCheck, Moon, Sun, LogOut, Shield, MessageSquare, Bot, ArrowLeft } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useAuthStore } from '@/stores/auth.store'
 
@@ -7,6 +7,8 @@ const navItems = [
   { to: '/admin', end: true, label: 'Dashboard', icon: LayoutDashboard },
   { to: '/admin/kyc', end: false, label: 'Vérifications KYC', icon: ShieldCheck },
   { to: '/admin/admins', end: false, label: 'Administrateurs', icon: Shield },
+  { to: '/admin/support', end: false, label: 'Chats Support', icon: MessageSquare },
+  { to: '/admin/bots', end: false, label: 'Agents IA', icon: Bot },
 ]
 
 export function AdminLayout() {
