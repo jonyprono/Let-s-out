@@ -20,7 +20,6 @@ export function AdminLoginPage() {
   const user = useAuthStore(s => s.user)
   const token = useAuthStore(s => s.accessToken)
 
-  // Redirect if already admin
   useEffect(() => {
     if (token && user?.role === 'ADMIN') {
       navigate('/admin', { replace: true })
@@ -34,12 +33,9 @@ export function AdminLoginPage() {
     setError('')
     setLoading(true)
 
-    // Si c'est un numéro sans le +, on peut ajouter un warning ou le laisser tel quel
-    const finalTarget = target.trim()
-
     try {
       const res = await apiClient.post('/auth/admin-login', { 
-        target: finalTarget,
+        target: target.trim(),
         password
       })
 
@@ -58,17 +54,17 @@ export function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0b] flex items-center justify-center p-4 relative overflow-hidden transition-colors">
       {/* Background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/20 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-500/10 dark:bg-red-500/20 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-8 relative z-10 p-8 rounded-3xl border border-white/10 bg-white dark:bg-[#1A1A1A]/[0.02] backdrop-blur-xl">
+      <div className="w-full max-w-md space-y-8 relative z-10 p-8 rounded-3xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#111115] shadow-xl dark:shadow-none">
         <div className="text-center space-y-3">
           <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-red-500/20">
             <Shield className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Accès Administrateur</h1>
-          <p className="text-white/50 text-sm">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Accès Administrateur</h1>
+          <p className="text-gray-500 dark:text-white/50 text-sm">
             Entrez vos identifiants pour accéder au dashboard.
           </p>
         </div>
@@ -80,7 +76,7 @@ export function AdminLoginPage() {
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               placeholder="Email ou Numéro (ex: +229...)"
-              className="w-full bg-white dark:bg-[#1A1A1A]/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
+              className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:border-red-500/60 transition-colors"
               autoFocus
               required
             />
@@ -92,13 +88,13 @@ export function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mot de passe"
-              className="w-full bg-white dark:bg-[#1A1A1A]/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/30 focus:outline-none focus:border-red-500/50 transition-colors"
+              className="w-full bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl px-5 py-4 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:border-red-500/60 transition-colors"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/40 hover:text-gray-700 dark:hover:text-white/80 transition-colors"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -108,13 +104,13 @@ export function AdminLoginPage() {
             <button
               type="button"
               onClick={() => navigate('/admin/reset-password')}
-              className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors"
+              className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium transition-colors"
             >
               Mot de passe oublié ?
             </button>
           </div>
 
-          {error && <p className="text-red-400 text-sm text-center font-medium bg-red-500/10 py-2 rounded-xl border border-red-500/20">{error}</p>}
+          {error && <p className="text-red-500 dark:text-red-400 text-sm text-center font-medium bg-red-50 dark:bg-red-500/10 py-2 rounded-xl border border-red-200 dark:border-red-500/20">{error}</p>}
 
           <button
             type="submit"
@@ -127,7 +123,7 @@ export function AdminLoginPage() {
           <button
             type="button"
             onClick={() => navigate(token ? '/home' : '/login')}
-            className="w-full text-white/40 text-sm font-medium py-3 hover:text-white/80 transition-colors"
+            className="w-full text-gray-400 dark:text-white/40 text-sm font-medium py-3 hover:text-gray-700 dark:hover:text-white/80 transition-colors"
           >
             Retour à l'application
           </button>

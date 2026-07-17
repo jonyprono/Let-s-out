@@ -102,58 +102,81 @@ export default async function chatRoutes(app: FastifyInstance) {
             message,
           }, undefined)
 
-          // ── AI Bot Logic ──
-          const isSenderAdmin = sender.user.role === 'ADMIN'
+          // ── AI Bot Logic ──────────────────────────────────────────────────
           const botMembers = conversation.members.filter(m => m.user.isBot)
+          const senderIsBot = sender.user.isBot
+          const senderIsAdmin = (sender.user as any).role === 'ADMIN'
 
-          if (botMembers.length > 0) {
+          app.log.info(`[BOT] Message in conv ${conversation.id}: senderIsBot=${senderIsBot}, senderIsAdmin=${senderIsAdmin}, bots=${botMembers.length}, paused=${conversation.isBotPaused}`)
+
+          // Only trigger bot if there are bot members AND sender is not a bot
+          if (botMembers.length > 0 && !senderIsBot) {
             let shouldReply = false
             let currentPaused = conversation.isBotPaused
 
-            if (isSenderAdmin) {
-              // Admin took over, pause bot
+            if (senderIsAdmin) {
+              // Admin took over — pause bot
+              app.log.info(`[BOT] Admin message detected, pausing bot in conv ${conversation.id}`)
               await app.prisma.conversation.update({
                 where: { id: conversation.id },
                 data: { isBotPaused: true, adminLastMessageAt: new Date() }
               })
             } else {
-              // Normal user
+              // Normal user — check if bot was paused by admin
               if (currentPaused && conversation.adminLastMessageAt) {
-                const minutesSinceAdmin = (new Date().getTime() - conversation.adminLastMessageAt.getTime()) / 60000
+                const minutesSinceAdmin = (Date.now() - conversation.adminLastMessageAt.getTime()) / 60000
+                app.log.info(`[BOT] Bot was paused, ${minutesSinceAdmin.toFixed(1)} min since admin message`)
                 if (minutesSinceAdmin > 5) {
                   await app.prisma.conversation.update({
                     where: { id: conversation.id },
                     data: { isBotPaused: false }
                   })
                   currentPaused = false
+                  app.log.info(`[BOT] Bot auto-reactivated after 5 min in conv ${conversation.id}`)
                 }
               }
 
               if (!currentPaused) {
                 shouldReply = true
+              } else {
+                app.log.info(`[BOT] Bot still paused in conv ${conversation.id}, not replying`)
               }
             }
 
             if (shouldReply) {
               const bot = botMembers[0]
-              
-              // Send typing indicator for bot
-              const botProfile = await app.prisma.profile.findUnique({ where: { userId: bot.userId }, select: { displayName: true }})
+              app.log.info(`[BOT] Triggering reply from ${bot.userId} in conv ${conversation.id}`)
+
+              // Send typing indicator
+              const botProfile = await app.prisma.profile.findUnique({
+                where: { userId: bot.userId },
+                select: { displayName: true }
+              })
               broadcastToConversation(app, conversation.id, {
                 type: 'typing',
                 userId: bot.userId,
                 conversationId: conversation.id,
-                displayName: botProfile?.displayName ?? 'Bot',
+                displayName: botProfile?.displayName ?? 'Agent',
               }, bot.userId)
 
-              app.prisma.message.findMany({ where: { conversationId: conversation.id }, orderBy: { createdAt: 'desc' }, take: 10 })
+              // Fetch history, generate AI response, broadcast — all async to not block
+              app.prisma.message.findMany({
+                where: { conversationId: conversation.id },
+                orderBy: { createdAt: 'desc' },
+                take: 12
+              })
                 .then(history => {
-                  const formattedHistory = history.reverse().map(m => ({ role: m.senderId === bot.userId ? 'bot' : 'user', content: m.content || '' }))
-                  // Pop the current message since we pass it separately
-                  formattedHistory.pop()
+                  // Reverse to chronological order
+                  const reversed = history.reverse()
+                  // Map to AI format, skip the last message (we pass it separately)
+                  const formattedHistory = reversed
+                    .slice(0, reversed.length - 1)
+                    .map(m => ({ role: m.senderId === bot.userId ? 'bot' : 'user', content: m.content || '...' }))
+                  app.log.info(`[BOT] History length: ${formattedHistory.length}`)
                   return aiService.generateSupportResponse(bot.userId, conversation.id, formattedHistory, msg.content!)
                 })
                 .then(replyContent => {
+                  app.log.info(`[BOT] Got reply: "${replyContent?.substring(0, 80)}..."`)
                   if (replyContent) {
                     return app.prisma.message.create({
                       data: {
@@ -162,17 +185,23 @@ export default async function chatRoutes(app: FastifyInstance) {
                         type: 'TEXT',
                         content: replyContent
                       },
-                      include: { sender: { select: { profile: { select: { username: true, displayName: true, avatarUrl: true } } } } }
+                      include: {
+                        sender: { select: { profile: { select: { username: true, displayName: true, avatarUrl: true } } } }
+                      }
                     })
                   }
+                  return null
                 })
                 .then(replyMsg => {
                   if (replyMsg) {
                     broadcastToConversation(app, conversation.id, { type: 'new_message', message: replyMsg }, undefined)
-                    return app.prisma.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: new Date() } })
+                    return app.prisma.conversation.update({
+                      where: { id: conversation.id },
+                      data: { lastMessageAt: new Date() }
+                    })
                   }
                 })
-                .catch(console.error)
+                .catch(err => app.log.error(`[BOT] Error in bot response chain: ${String(err)}`))
             }
           }
         }
