@@ -477,14 +477,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 <button onClick={() => onNavigate('notifications')} className="w-9 h-9 flex items-center justify-center">
                   <NotificationIconWithBadge unreadCount={unreadNotifCount} className="w-6 h-6 text-gray-900 dark:text-white" />
                 </button>
-                <button
-                  onClick={() => toast('Filtres avancés bientôt disponibles', { icon: '🚧' })}
-                  className="w-9 h-9 bg-[#FF7A00] rounded-[12px] flex items-center justify-center shadow-md active:scale-95 transition-transform"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M4 6h16M7 12h10M10 18h4" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
-                </button>
               </div>
             </div>
 
@@ -507,6 +499,15 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                     <Cancel01Icon className="w-4 h-4 text-gray-400" strokeWidth={2} />
                   </button>
                 )}
+                <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-0.5" />
+                <button
+                  onClick={() => toast('Filtres avancés bientôt disponibles', { icon: '🚧' })}
+                  className="w-6 h-6 flex items-center justify-center active:scale-95 transition-transform"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 6h16M7 12h10M10 18h4" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </button>
               </div>
               <button
                 onClick={() => { hapticFeedback.impact(); setViewMode('map'); }}

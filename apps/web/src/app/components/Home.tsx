@@ -350,15 +350,11 @@ export function Home({ userData, onNavigate }: HomeProps) {
         <div className="px-4 pb-2">
           <button
             onClick={() => onNavigate('explorer')}
-            className="w-full flex items-center gap-3 px-4 py-2 bg-gray-100 dark:bg-[#1A1A1A] rounded-full text-left active:opacity-70 transition-opacity mb-2"
+            className="w-full flex items-center gap-3 px-4 bg-gray-100 dark:bg-[#1A1A1A] rounded-full text-left active:opacity-70 transition-opacity mb-2"
+            style={{ height: 'clamp(36px, 5vh, 44px)' }}
           >
             <Search01Icon className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
-            <span className="flex-1 text-sm text-gray-400">Concerts, artistes, lieux, événements...</span>
-            <div className="w-7 h-7 flex items-center justify-center">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M4 6h16M7 12h10M10 18h4" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
+            <span className="flex-1 text-[13px] text-gray-400 truncate">Concerts, artistes, lieux, événements...</span>
           </button>
 
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
