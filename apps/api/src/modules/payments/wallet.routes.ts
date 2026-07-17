@@ -254,7 +254,7 @@ export default async function walletRoutes(app: FastifyInstance) {
   // Retrait (Payout) vers Mobile Money
   app.post('/payout', { preHandler: [app.authenticate, verifyWalletPin] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { amount, phone, network } = req.body as { amount: number; phone: string; network: string }
+    const { amount, phone, network, eventTitle } = req.body as { amount: number; phone: string; network: string; eventTitle?: string }
 
     if (!amount || amount <= 0) return reply.code(400).send({ error: 'Montant invalide' })
     if (!phone) return reply.code(400).send({ error: 'Numéro de téléphone requis' })
@@ -278,7 +278,7 @@ export default async function walletRoutes(app: FastifyInstance) {
               amount,
               type: 'WITHDRAWAL',
               balanceAfter: wallet.balance - amount,
-              description: `Retrait Mobile Money (${phone})`,
+              description: eventTitle ? `Retrait (${eventTitle})` : `Retrait Mobile Money`,
               refId: phone,
             },
           }),
@@ -331,7 +331,7 @@ export default async function walletRoutes(app: FastifyInstance) {
             amount,
             type: 'WITHDRAWAL',
             balanceAfter: wallet.balance - amount,
-            description: `Retrait Mobile Money (${phone})`,
+            description: eventTitle ? `Retrait (${eventTitle})` : `Retrait Mobile Money`,
             refId: payoutData.v1?.payout?.id?.toString() || phone,
           },
         }),

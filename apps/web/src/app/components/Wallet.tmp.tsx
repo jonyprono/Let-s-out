@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
   ArrowUpRight, ArrowDownLeft, Clock, AlertCircle, ChevronDown, Check,
   Settings, Lock, ChevronLeft, Calendar,
-  History, Landmark
+  History
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
@@ -71,8 +71,6 @@ export function Wallet() {
   const [showWalletPinModal, setShowWalletPinModal] = useState(false)
   const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
-  const [showEventSelector, setShowEventSelector] = useState(false)
-  const [selectedWithdrawEvent, setSelectedWithdrawEvent] = useState<{ id: string, title: string, amount: number } | null>(null)
 
   const [activeTab, setActiveTab] = useState<'overview' | 'events'>('overview')
 
@@ -120,7 +118,7 @@ export function Wallet() {
   })
 
   const withdrawMutation = useMutation({
-    mutationFn: async (payload: { amount: number; phone: string; network: string; eventTitle?: string }) => {
+    mutationFn: async (payload: { amount: number; phone: string; network: string }) => {
       const res = await apiClient.post('/wallet/payout', payload, { headers: { 'x-wallet-pin-token': pinToken } })
       return res.data
     },
@@ -188,15 +186,11 @@ export function Wallet() {
         
         <div className="flex-1 overflow-y-auto flex flex-col p-4 sm:p-6 gap-6 font-poppins pb-24">
           <div className="bg-white dark:bg-[#1A1A1A] rounded-[20px] p-4 flex flex-col gap-2 shadow-sm border border-gray-100 dark:border-gray-800">
-            <h2 className="text-[16px] font-bold text-gray-900 dark:text-white">
-              {selectedWithdrawEvent ? `Retrait - ${selectedWithdrawEvent.title}` : 'Mon Portefeuille'}
-            </h2>
+            <h2 className="text-[16px] font-bold text-gray-900 dark:text-white">Mon Portefeuille</h2>
             <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-1" />
             <div className="flex justify-between items-center">
               <span className="text-[14px] text-gray-500">Solde disponible</span>
-              <span className="text-[16px] font-bold text-[#FF7A00]">
-                {selectedWithdrawEvent ? selectedWithdrawEvent.amount.toLocaleString('fr-FR') : (wallet?.balance?.toLocaleString('fr-FR') || 0)} F CFA
-              </span>
+              <span className="text-[16px] font-bold text-[#FF7A00]">{wallet?.balance?.toLocaleString('fr-FR')} F CFA</span>
             </div>
           </div>
 
@@ -213,8 +207,7 @@ export function Wallet() {
               }
             }
 
-            const maxAmount = selectedWithdrawEvent ? selectedWithdrawEvent.amount : (wallet?.balance || 0)
-            if (amount > maxAmount) return toast.error('Solde insuffisant')
+            if (wallet && amount > wallet.balance) return toast.error('Solde insuffisant')
             setWithdrawStep('summary')
           }} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
@@ -223,7 +216,7 @@ export function Wallet() {
                 <input 
                   type="number"
                   min="500"
-                  max={selectedWithdrawEvent ? selectedWithdrawEvent.amount : (wallet?.balance || 0)}
+                  max={wallet?.balance || 0}
                   value={withdrawData.amount}
                   onChange={e => setWithdrawData(prev => ({ ...prev, amount: e.target.value }))}
                   placeholder="0"
@@ -351,9 +344,7 @@ export function Wallet() {
             <h1 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">Mon Portefeuille</h1>
             <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Gérez vos fonds en toute simplicité</span>
           </div>
-          <button onClick={() => setShowWalletPinModal(true)} className="p-2 -mr-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
-            <Lock className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
-          </button>
+          <div className="w-10" /> {/* Spacer for centering */}
         </div>
       </div>
       
@@ -362,82 +353,91 @@ export function Wallet() {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full rounded-[20px] bg-gradient-to-r from-[#FF6B00] to-[#FFA726] shadow-[0_8px_20px_rgba(255,122,0,0.25)] p-5 relative overflow-hidden flex flex-row items-center justify-between"
+          className="w-full rounded-[20px] bg-gradient-to-br from-[#FF6B00] to-[#FF9900] shadow-[0_8px_20px_rgba(255,122,0,0.25)] p-5 relative overflow-hidden"
         >
+          <div className="absolute -right-4 -top-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-xl" />
+          
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-90 drop-shadow-md">
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
+              <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+              <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+              <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+            </svg>
+          </div>
+
           <div className="relative z-10 flex flex-col gap-1">
             <div className="flex items-center gap-1.5 opacity-90 text-white">
               <span className="text-[13px] font-medium">Solde disponible</span>
               <AlertCircle size={14} className="opacity-80" />
             </div>
             
-            <div className="flex items-baseline gap-1 mt-1 mb-2">
+            <div className="flex items-baseline gap-1 mt-1 mb-3">
               {isLoadingWallet ? (
                 <div className="h-10 w-32 bg-white/20 animate-pulse rounded-lg mt-1" />
               ) : (
                 <>
-                  <span className="text-[32px] font-extrabold text-white tracking-tight leading-none">
+                  <span className="text-[34px] font-extrabold text-white tracking-tight leading-none">
                     {wallet?.balance?.toLocaleString('fr-FR') || 0}
                   </span>
-                  <span className="text-[16px] font-bold text-white/90 ml-1">F CFA</span>
+                  <span className="text-[16px] font-bold text-white/90">F CFA</span>
                 </>
               )}
             </div>
 
-            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full w-max mt-1">
-              <Check className="w-3 h-3 text-[#4CAF50]" strokeWidth={4} />
+            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full w-max mt-1 border border-white/20 shadow-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] shadow-[0_0_4px_#4CAF50]" />
               <span className="text-[11px] font-bold text-white">Disponible pour retrait</span>
             </div>
           </div>
-
-          <div className="relative z-10 flex flex-col items-center justify-center opacity-80 h-[80px] w-[80px]">
-             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="drop-shadow-lg">
-                <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-                <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-                <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
-             </svg>
-          </div>
         </motion.div>
 
-        <div className="flex items-start justify-between gap-3">
-          <button onClick={() => setShowEventSelector(true)} className="flex-1 flex flex-col items-center gap-2 px-1 py-3 bg-[#FFF3E6] dark:bg-[#FF7A00]/10 rounded-[16px] border border-[#FFE4C4] dark:border-[#FF7A00]/20 active:scale-95 transition-transform shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <button onClick={() => setWithdrawMode(true)} className="flex-1 flex flex-col items-center gap-2 p-3 bg-[#FFF3E6] dark:bg-[#FF7A00]/10 rounded-[16px] border border-[#FFE4C4] dark:border-[#FF7A00]/20 active:scale-95 transition-transform shadow-sm">
             <div className="w-10 h-10 rounded-full bg-[#FF7A00] flex items-center justify-center shadow-md shadow-orange-500/20">
               <ArrowUpRight className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-[11px] font-bold text-gray-900 dark:text-white text-center leading-tight">Retirer des<br/>fonds</span>
+            <span className="text-[12px] font-bold text-gray-900 dark:text-white text-center leading-tight">Retirer des fonds</span>
           </button>
 
-          <button onClick={() => { setActiveTab('overview'); setTimeout(() => document.getElementById('tx-list')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="flex-1 flex flex-col items-center gap-2 px-1 py-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
+          <button onClick={() => {
+            const tabsContainer = document.getElementById('wallet-tabs-content');
+            if (tabsContainer) {
+              tabsContainer.scrollIntoView({ behavior: 'smooth' });
+              setActiveTab('overview');
+            }
+          }} className="flex-1 flex flex-col items-center gap-2 p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center border border-gray-200 dark:border-gray-700">
               <History className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2} />
             </div>
-            <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Historique</span>
+            <span className="text-[12px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Historique</span>
           </button>
 
-          <button onClick={() => setShowSettingsModal(true)} className="flex-1 flex flex-col items-center gap-2 px-1 py-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
+          <button onClick={() => setShowSettingsModal(true)} className="flex-1 flex flex-col items-center gap-2 p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center border border-gray-200 dark:border-gray-700">
               <Settings className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2} />
             </div>
-            <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Paramètres</span>
+            <span className="text-[12px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Paramètres</span>
           </button>
         </div>
 
-        <div id="wallet-tabs-content" className="flex border-b border-gray-200 dark:border-gray-800 mt-2">
+        <div id="wallet-tabs-content" className="flex bg-[#F2F2F2] dark:bg-[#18181b] rounded-full p-1 mt-2 shadow-inner border border-gray-100/50 dark:border-gray-800">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`flex-1 py-3 text-[14px] font-bold transition-all duration-200 border-b-2 ${
+            className={`flex-1 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
               activeTab === 'overview' 
-                ? 'border-[#FF7A00] text-[#FF7A00]' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                ? 'bg-white dark:bg-[#2A2A2A] text-[#FF7A00] shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Vue d'ensemble
           </button>
           <button
             onClick={() => setActiveTab('events')}
-            className={`flex-1 py-3 text-[14px] font-bold transition-all duration-200 border-b-2 ${
+            className={`flex-1 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
               activeTab === 'events' 
-                ? 'border-[#FF7A00] text-[#FF7A00]' 
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                ? 'bg-white dark:bg-[#2A2A2A] text-[#FF7A00] shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             Par événement
@@ -450,10 +450,10 @@ export function Wallet() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col gap-6"
           >
-            <div className="flex justify-between bg-white dark:bg-[#1A1A1A] rounded-[16px] p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800">
+            <div className="flex justify-between bg-white dark:bg-[#1A1A1A] rounded-[16px] p-4 shadow-sm border border-gray-100 dark:border-gray-800">
               <div className="flex flex-col items-center gap-1.5 flex-1 relative">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <div className="w-8 h-8 rounded-full bg-[#FFF3E6] dark:bg-[#FF7A00]/20 flex items-center justify-center">
+                  <ArrowDownLeft className="w-4 h-4 text-[#FF7A00]" strokeWidth={2.5} />
                 </div>
                 <span className="text-[11px] font-semibold text-gray-500">Total gagné</span>
                 <span className="text-[13px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">
@@ -463,8 +463,8 @@ export function Wallet() {
               </div>
 
               <div className="flex flex-col items-center gap-1.5 flex-1 relative">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center">
-                  <ArrowUpRight className="w-6 h-6 text-[#4CAF50]" strokeWidth={2.5} />
+                <div className="w-8 h-8 rounded-full bg-[#E8F5E9] dark:bg-green-900/30 flex items-center justify-center">
+                  <ArrowUpRight className="w-4 h-4 text-[#4CAF50]" strokeWidth={2.5} />
                 </div>
                 <span className="text-[11px] font-semibold text-gray-500">Total retiré</span>
                 <span className="text-[13px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">
@@ -474,8 +474,8 @@ export function Wallet() {
               </div>
 
               <div className="flex flex-col items-center gap-1.5 flex-1">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-[#9C27B0]" strokeWidth={2} />
+                <div className="w-8 h-8 rounded-full bg-[#F3E5F5] dark:bg-purple-900/30 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-[#9C27B0]" strokeWidth={2} />
                 </div>
                 <span className="text-[11px] font-semibold text-gray-500 text-center leading-tight px-1">Événements actifs</span>
                 <span className="text-[14px] font-extrabold text-gray-900 dark:text-white">
@@ -486,71 +486,8 @@ export function Wallet() {
 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Fonds par événement</h3>
-                <button onClick={() => setActiveTab('events')} className="text-[13px] font-bold text-[#FF7A00]">Voir tout &gt;</button>
-              </div>
-
-              {isLoadingStats ? (
-                Array(2).fill(0).map((_, i) => <div key={i} className="w-full h-[110px] bg-white dark:bg-[#1A1A1A] rounded-[20px] animate-pulse border border-gray-100 dark:border-gray-800" />)
-              ) : !stats?.poolEvents || stats.poolEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
-                  <p className="text-gray-500 text-[13px] font-medium">Aucun événement avec cagnotte débloquée.</p>
-                </div>
-              ) : (
-                stats.poolEvents.slice(0, 3).map((evt) => (
-                  <div key={evt.id} className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-                    <div className="w-[100px] h-[80px] rounded-[14px] bg-gray-200 dark:bg-gray-800 overflow-hidden relative shrink-0">
-                      <SafeImage src={evt.coverUrl || undefined} alt={evt.title} className="w-full h-full object-cover" />
-                      <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${new Date(evt.startAt) > new Date() ? 'bg-[#4CAF50]' : 'bg-gray-400'}`} />
-                        <span className="text-[10px] font-bold text-white leading-none">
-                          {new Date(evt.startAt) > new Date() ? 'En cours' : 'Terminé'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col flex-1 py-1">
-                      <h4 className="font-bold text-[14px] text-gray-900 dark:text-white line-clamp-1">{evt.title}</h4>
-                      <div className="flex items-center gap-1.5 mt-1 text-gray-500">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span className="text-[11px] font-medium">
-                          {new Date(evt.startAt).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                        <span className="text-[11px] font-medium line-clamp-1">{evt.city}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-2 shrink-0 h-full justify-between py-1 border-l border-gray-100 dark:border-gray-800 pl-2">
-                      <div className="flex items-start justify-between w-full">
-                        <div className="flex flex-col items-end w-full">
-                          <span className="text-[10px] font-semibold text-gray-500">Solde disponible</span>
-                          <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.poolCollected.toLocaleString('fr-FR')} F</span>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.poolCollected });
-                          setWithdrawMode(true);
-                          setWithdrawData({ amount: evt.poolCollected.toString() });
-                        }}
-                        className="bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition-transform"
-                      >
-                        <ArrowUpRight size={14} strokeWidth={3} />
-                        Retirer
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex flex-col gap-3" id="tx-list">
-              <div className="flex items-center justify-between mb-1">
                 <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Transactions récentes</h3>
-                <button onClick={() => { setActiveTab('events'); setTimeout(() => document.getElementById('tx-list')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="text-[13px] font-bold text-[#FF7A00]">Voir tout &gt;</button>
+                <button onClick={() => setActiveTab('events')} className="text-[13px] font-bold text-[#FF7A00]">Voir tout &gt;</button>
               </div>
 
               {isLoadingTx ? (
@@ -616,7 +553,7 @@ export function Wallet() {
             className="flex flex-col gap-4"
           >
             <div className="flex items-center justify-between mb-1">
-              <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Tous les événements débloqués</h3>
+              <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Fonds par événement</h3>
             </div>
 
             {isLoadingStats ? (
@@ -632,7 +569,7 @@ export function Wallet() {
               </div>
             ) : (
               stats.poolEvents.map((evt) => (
-                <div key={evt.id} className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                <div key={evt.id} className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
                   <div className="w-[100px] h-[80px] rounded-[14px] bg-gray-200 dark:bg-gray-800 overflow-hidden relative shrink-0">
                     <SafeImage src={evt.coverUrl || undefined} alt={evt.title} className="w-full h-full object-cover" />
                     <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1.5">
@@ -644,7 +581,7 @@ export function Wallet() {
                   </div>
 
                   <div className="flex flex-col flex-1 py-1">
-                    <h4 className="font-bold text-[14px] text-gray-900 dark:text-white line-clamp-1">{evt.title}</h4>
+                    <h4 className="font-bold text-[15px] text-gray-900 dark:text-white line-clamp-1">{evt.title}</h4>
                     <div className="flex items-center gap-1.5 mt-1 text-gray-500">
                       <Calendar className="w-3.5 h-3.5" />
                       <span className="text-[11px] font-medium">
@@ -657,24 +594,13 @@ export function Wallet() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2 shrink-0 h-full justify-between py-1 border-l border-gray-100 dark:border-gray-800 pl-2">
+                  <div className="flex flex-col items-end gap-2 pr-1 shrink-0 h-full justify-between py-1">
                     <div className="flex items-start justify-between w-full">
-                      <div className="flex flex-col items-end w-full">
-                        <span className="text-[10px] font-semibold text-gray-500">Solde disponible</span>
-                        <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.poolCollected.toLocaleString('fr-FR')} F</span>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[11px] font-semibold text-gray-500">Débloqué</span>
+                        <span className="text-[14px] font-extrabold text-gray-900 dark:text-white">{evt.poolCollected.toLocaleString('fr-FR')} F</span>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => {
-                        setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.poolCollected });
-                        setWithdrawMode(true);
-                        setWithdrawData({ amount: evt.poolCollected.toString() });
-                      }}
-                      className="bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition-transform"
-                    >
-                      <ArrowUpRight size={14} strokeWidth={3} />
-                      Retirer
-                    </button>
                   </div>
                 </div>
               ))
@@ -741,58 +667,6 @@ export function Wallet() {
             </Button>
           </div>
         )}
-      </BottomSheet>
-
-      <BottomSheet open={showEventSelector} onClose={() => setShowEventSelector(false)}>
-        <div className="p-6 flex flex-col gap-4 font-poppins pb-8 max-h-[80vh]">
-          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">Choisir l'origine des fonds</h3>
-          <p className="text-[13px] text-gray-500 text-center">Sélectionnez la cagnotte depuis laquelle vous souhaitez retirer de l'argent.</p>
-          
-          <div className="flex flex-col gap-3 overflow-y-auto pr-2 pb-4 flex-1">
-            {stats?.poolEvents?.map(evt => (
-              <button 
-                key={evt.id}
-                onClick={() => { 
-                  setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.poolCollected });
-                  setShowEventSelector(false);
-                  setWithdrawMode(true);
-                  setWithdrawData({ amount: evt.poolCollected.toString() });
-                }}
-                className="flex flex-row items-center justify-between p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 active:scale-[0.98] transition-transform text-left shadow-sm"
-              >
-                <div className="flex flex-col items-start flex-1 overflow-hidden pr-3">
-                  <span className="font-bold text-[14px] text-gray-900 dark:text-white line-clamp-1">{evt.title}</span>
-                  <span className="text-[12px] text-[#FF7A00] font-bold mt-0.5">{evt.poolCollected.toLocaleString('fr-FR')} F CFA</span>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-[#FFF3E6] dark:bg-[#FF7A00]/20 flex items-center justify-center text-[#FF7A00] shrink-0">
-                  <ArrowUpRight size={16} strokeWidth={2.5} />
-                </div>
-              </button>
-            ))}
-            
-            {stats?.poolEvents?.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">Aucune cagnotte débloquée disponible.</p>
-            )}
-            
-            <button 
-              onClick={() => { 
-                setSelectedWithdrawEvent(null);
-                setShowEventSelector(false);
-                setWithdrawMode(true);
-                setWithdrawData({ amount: wallet?.balance?.toString() || '' });
-              }}
-              className="flex flex-row items-center justify-between p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 active:scale-[0.98] transition-transform text-left shadow-sm mt-2"
-            >
-              <div className="flex flex-col items-start flex-1 pr-3">
-                <span className="font-bold text-[14px] text-gray-900 dark:text-white">Portefeuille global</span>
-                <span className="text-[12px] text-gray-500 font-medium mt-0.5">Solde total: {wallet?.balance?.toLocaleString('fr-FR') || 0} F CFA</span>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 shrink-0">
-                <Landmark size={16} strokeWidth={2.5} />
-              </div>
-            </button>
-          </div>
-        </div>
       </BottomSheet>
 
       {showWalletPinModal && (
