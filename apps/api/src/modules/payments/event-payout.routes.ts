@@ -140,6 +140,46 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     return reply.send({ data: updatedReq, message: 'Approbation enregistrée' })
   })
 
+  // Refuser le déblocage
+  app.post<{ Params: { id: string }, Body: { reason?: string } }>('/:id/payout/reject', async (request, reply) => {
+    const { sub: userId } = request.user as { sub: string }
+    const eventId = request.params.id
+    const { reason } = request.body || {}
+
+    const event = await app.prisma.event.findUnique({
+      where: { id: eventId },
+      include: { payoutRequest: true },
+    })
+
+    if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
+    const isCoHost = event.coHostIds.includes(userId)
+    const isValidator = event.validatorIds && event.validatorIds.includes(userId)
+    if (!isCoHost && !isValidator) return reply.code(403).send({ error: 'Vous n\'êtes pas autorisé à refuser ce déblocage' })
+    
+    const payoutReq = event.payoutRequest
+    if (!payoutReq) return reply.code(404).send({ error: 'Aucune demande de déblocage trouvée' })
+    if (payoutReq.status !== 'PENDING') return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
+    
+    // On met à jour le statut à REJECTED directement
+    const updatedReq = await app.prisma.eventPayoutRequest.update({
+      where: { eventId },
+      data: {
+        status: 'REJECTED',
+      },
+    })
+
+    const user = await app.prisma.user.findUnique({ where: { id: userId }, include: { profile: true } })
+    await createAndSendNotification(app, {
+      userId: event.creatorId,
+      type: 'SYSTEM',
+      title: '❌ Déblocage refusé',
+      body: `${user?.profile?.displayName || 'Un membre'} a refusé votre demande de déblocage pour "${event.title}".${reason ? ` Motif : ${reason}` : ''}`,
+      data: { eventId },
+    })
+
+    return reply.send({ data: updatedReq, message: 'Refus enregistré. Le créateur a été notifié.' })
+  })
+
   // Récupérer le statut
   app.get<{ Params: { id: string } }>('/:id/payout/status', async (request, reply) => {
     const eventId = request.params.id
