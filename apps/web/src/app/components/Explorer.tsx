@@ -502,22 +502,27 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-0.5" />
                 <button
                   onClick={() => toast('Filtres avancés bientôt disponibles', { icon: '🚧' })}
-                  className="w-6 h-6 flex items-center justify-center active:scale-95 transition-transform"
+                  className="w-7 h-7 flex items-center justify-center active:scale-95 transition-transform"
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                    <path d="M4 6h16M7 12h10M10 18h4" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round"/>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.5 5.83325H5" stroke="#FF7A00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M2.5 14.1667H7.5" stroke="#FF7A00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M15 14.1667H17.5" stroke="#FF7A00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12.5 5.83325H17.5" stroke="#FF7A00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M5 5.83325C5 5.05669 5 4.6684 5.12687 4.36211C5.29602 3.95374 5.62048 3.62928 6.02886 3.46012C6.33515 3.33325 6.72343 3.33325 7.5 3.33325C8.27657 3.33325 8.66483 3.33325 8.97117 3.46012C9.3795 3.62928 9.704 3.95374 9.87317 4.36211C10 4.6684 10 5.05669 10 5.83325C10 6.60982 10 6.9981 9.87317 7.30439C9.704 7.71277 9.3795 8.03723 8.97117 8.20639C8.66483 8.33325 8.27657 8.33325 7.5 8.33325C6.72343 8.33325 6.33515 8.33325 6.02886 8.20639C5.62048 8.03723 5.29602 7.71277 5.12687 7.30439C5 6.9981 5 6.60982 5 5.83325Z" stroke="#FF7A00" strokeWidth="1.5"/>
+                    <path d="M10 14.1667C10 13.3902 10 13.0019 10.1268 12.6956C10.296 12.2872 10.6205 11.9627 11.0288 11.7936C11.3352 11.6667 11.7234 11.6667 12.5 11.6667C13.2766 11.6667 13.6648 11.6667 13.9712 11.7936C14.3795 11.9627 14.704 12.2872 14.8732 12.6956C15 13.0019 15 13.3902 15 14.1667C15 14.9433 15 15.3316 14.8732 15.6379C14.704 16.0462 14.3795 16.3707 13.9712 16.5399C13.6648 16.6667 13.2766 16.6667 12.5 16.6667C11.7234 16.6667 11.3352 16.6667 11.0288 16.5399C10.6205 16.3707 10.296 16.0462 10.1268 15.6379C10 15.3316 10 14.9433 10 14.1667Z" stroke="#FF7A00" strokeWidth="1.5"/>
                   </svg>
                 </button>
               </div>
               <button
                 onClick={() => { hapticFeedback.impact(); setViewMode('map'); }}
-                className="shrink-0 flex items-center gap-1.5 h-9 px-3 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+                className="shrink-0 flex items-center gap-1.5 h-9 px-4 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1A1A1A] shadow-sm active:scale-95 transition-transform"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path d="M9 3L4 5.5v15L9 18l6 3 5-2.5V3.5L15 6 9 3z" stroke="#6B7280" strokeWidth="1.8" strokeLinejoin="round"/>
                   <path d="M9 3v15M15 6v15" stroke="#6B7280" strokeWidth="1.8" strokeLinecap="round"/>
                 </svg>
-                <span className="text-[12px] font-semibold text-gray-600 dark:text-gray-300">Carte</span>
+                <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">Carte</span>
               </button>
             </div>
 
