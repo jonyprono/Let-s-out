@@ -367,23 +367,36 @@ export default async function chatRoutes(app: FastifyInstance) {
   app.post(
     '/conversations/:conversationId/messages',
     async (req, reply) => {
-      const { sub } = req.user as { sub: string }
+      const { sub, role } = req.user as { sub: string; role?: string }
       const { conversationId } = req.params as { conversationId: string }
       const { content, type = 'TEXT' } = req.body as { content: string; type?: string }
 
       if (!content?.trim()) return reply.code(400).send({ error: 'Content required' })
 
-      const member = await app.prisma.conversationMember.findUnique({
-        where: { conversationId_userId: { conversationId, userId: sub } },
-        include: { conversation: true }
+      const conversation = await app.prisma.conversation.findUnique({
+        where: { id: conversationId },
+        include: { members: { include: { user: true } } }
       })
-      if (!member) return reply.code(403).send({ error: 'Not a member' })
 
-      if (!member.conversation.isGroup) {
+      if (!conversation) return reply.code(404).send({ error: 'Conversation not found' })
+
+      let member = conversation.members.find(m => m.userId === sub)
+      let effectiveSenderId = sub
+
+      if (role === 'ADMIN') {
+        const botMember = conversation.members.find(m => m.user.isBot || m.userId.startsWith('bot_'))
+        if (!botMember) {
+          return reply.code(403).send({ error: 'Impossible de répondre (aucun bot dans cette conversation)' })
+        }
+        effectiveSenderId = botMember.userId
+        // Admin overrides member check
+      } else {
+        if (!member) return reply.code(403).send({ error: 'Not a member' })
+      }
+
+      if (role !== 'ADMIN' && !conversation.isGroup) {
         // It's a DM, check if the other member has blocked this user or if this user has blocked the other
-        const otherMember = await app.prisma.conversationMember.findFirst({
-          where: { conversationId, userId: { not: sub } }
-        })
+        const otherMember = conversation.members.find(m => m.userId !== sub)
         if (otherMember) {
           const block = await app.prisma.friendship.findFirst({
             where: {
@@ -401,7 +414,7 @@ export default async function chatRoutes(app: FastifyInstance) {
       }
 
       const message = await app.prisma.message.create({
-        data: { conversationId, senderId: sub, content, type: type as any },
+        data: { conversationId, senderId: effectiveSenderId, content, type: type as any },
         include: {
           sender: {
             select: {
@@ -414,18 +427,16 @@ export default async function chatRoutes(app: FastifyInstance) {
 
       await app.prisma.conversation.update({
         where: { id: conversationId },
-        data: { lastMessageAt: new Date() },
+        data: { 
+          lastMessageAt: new Date(),
+          ...(role === 'ADMIN' ? { isBotPaused: true, adminLastMessageAt: new Date() } : {})
+        },
       })
 
       // Notifier les autres membres en temps réel
       broadcastToConversation(app, conversationId, { type: 'new_message', message }, sub)
 
-      // Get conversation and members for DB notification
-      const conversation = await app.prisma.conversation.findUnique({
-        where: { id: conversationId },
-        include: { members: true }
-      })
-      const groupName = conversation?.name || (conversation?.isGroup ? 'Groupe' : message.sender.profile?.displayName)
+      const groupName = conversation.name || (conversation.isGroup ? 'Groupe' : message.sender.profile?.displayName)
 
       // Notify other members who are offline/not the sender
       const offlineMembers = conversation?.members.filter(m => m.userId !== sub) || []
