@@ -172,6 +172,66 @@ export default async function walletRoutes(app: FastifyInstance) {
     return reply.send({ data: wallet })
   })
 
+  // Statistiques du portefeuille
+  app.get('/stats', { preHandler: [app.authenticate, verifyWalletPin] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+
+    const wallet = await app.prisma.wallet.findUnique({ where: { userId: sub } })
+
+    let totalEarned = 0;
+    let totalWithdrawn = 0;
+
+    if (wallet) {
+      const agg = await app.prisma.walletTransaction.groupBy({
+        by: ['type'],
+        where: { walletId: wallet.id },
+        _sum: { amount: true },
+      })
+      
+      const depositAgg = agg.find(a => a.type === 'DEPOSIT')
+      if (depositAgg?._sum?.amount) totalEarned = depositAgg._sum.amount
+      
+      const withdrawAgg = agg.find(a => a.type === 'WITHDRAWAL')
+      if (withdrawAgg?._sum?.amount) totalWithdrawn = withdrawAgg._sum.amount
+    }
+
+    const now = new Date()
+    const activeEventsCount = await app.prisma.event.count({
+      where: {
+        creatorId: sub,
+        status: 'PUBLISHED',
+        endAt: { gte: now }
+      }
+    })
+
+    const poolEvents = await app.prisma.event.findMany({
+      where: {
+        creatorId: sub,
+        poolCollected: { gt: 0 },
+        poolReleased: true,
+      },
+      select: {
+        id: true,
+        title: true,
+        startAt: true,
+        city: true,
+        coverImage: true,
+        poolCollected: true,
+        status: true,
+      },
+      orderBy: { startAt: 'desc' }
+    })
+
+    return reply.send({ 
+      data: {
+        totalEarned,
+        totalWithdrawn,
+        activeEventsCount,
+        poolEvents
+      }
+    })
+  })
+
   // Historique des transactions
   app.get('/transactions', { preHandler: [app.authenticate, verifyWalletPin] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }

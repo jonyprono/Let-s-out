@@ -1,29 +1,47 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'motion/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { WalletIcon, ArrowUpRight, ArrowDownLeft, Clock, AlertCircle, ChevronDown, Check } from 'lucide-react'
+import { 
+  ArrowUpRight, ArrowDownLeft, Clock, AlertCircle, ChevronDown, Check,
+  Settings, Lock, ChevronLeft, Calendar,
+  History
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
-
 import { Button } from '@/components/ui/button'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { useNavigate } from 'react-router'
-import { ChevronLeft, Lock } from 'lucide-react'
 import { WalletPinManager } from './WalletPinManager'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { COUNTRIES, Country } from '@/lib/countries'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
+import { useAuthStore } from '@/stores/auth.store'
+import { SafeImage } from '@/components/shared/SafeImage'
 
 const OPERATORS = [
   { id: 'mtn', label: 'MTN Momo', logo: '/logos/mtn.png', prefix: '97' },
   { id: 'moov', label: 'MOOV', logo: '/logos/moov.png', prefix: '96' },
   { id: 'celtis', label: 'CELTIS', logo: '/logos/celtiis.png', prefix: '95' },
 ]
-import { useAuthStore } from '@/stores/auth.store'
 
 interface WalletData {
   id: string
   balance: number
+}
+
+interface WalletStats {
+  totalEarned: number
+  totalWithdrawn: number
+  activeEventsCount: number
+  poolEvents: {
+    id: string
+    title: string
+    startAt: string
+    city: string
+    coverImage: string | null
+    poolCollected: number
+    status: string
+  }[]
 }
 
 interface WalletTransaction {
@@ -38,6 +56,8 @@ interface WalletTransaction {
 export function Wallet() {
   const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
+  const navigate = useNavigate()
+  
   const [withdrawMode, setWithdrawMode] = useState(false)
   const [withdrawStep, setWithdrawStep] = useState<'form' | 'summary'>('form')
   const [withdrawData, setWithdrawData] = useState({ amount: '' })
@@ -47,6 +67,12 @@ export function Wallet() {
   const [showOperatorDropdown, setShowOperatorDropdown] = useState(false)
   const operatorRef = useRef<HTMLDivElement>(null)
   
+  const [pinToken, setPinToken] = useState<string | null>(null)
+  const [showWalletPinModal, setShowWalletPinModal] = useState(false)
+  const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null)
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'events'>('overview')
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (operatorRef.current && !operatorRef.current.contains(e.target as Node)) {
@@ -57,16 +83,23 @@ export function Wallet() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const [pinToken, setPinToken] = useState<string | null>(null)
-  const [showWalletPinModal, setShowWalletPinModal] = useState(false)
-  const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null)
-
   // Fetch Wallet Balance
   const { data: wallet, isLoading: isLoadingWallet } = useQuery({
     queryKey: ['wallet', pinToken],
     queryFn: async () => {
       if (!pinToken) return null
       const res = await apiClient.get<{ data: WalletData }>('/wallet', { headers: { 'x-wallet-pin-token': pinToken } })
+      return res.data.data
+    },
+    enabled: !!pinToken,
+  })
+
+  // Fetch Wallet Stats
+  const { data: stats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['wallet-stats', pinToken],
+    queryFn: async () => {
+      if (!pinToken) return null
+      const res = await apiClient.get<{ data: WalletStats }>('/wallet/stats', { headers: { 'x-wallet-pin-token': pinToken } })
       return res.data.data
     },
     enabled: !!pinToken,
@@ -83,7 +116,6 @@ export function Wallet() {
     enabled: !!pinToken,
   })
 
-  // Payout Mutation
   const withdrawMutation = useMutation({
     mutationFn: async (payload: { amount: number; phone: string; network: string }) => {
       const res = await apiClient.post('/wallet/payout', payload, { headers: { 'x-wallet-pin-token': pinToken } })
@@ -96,12 +128,12 @@ export function Wallet() {
       setWithdrawData({ amount: '' })
       resetPhone()
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
+      queryClient.invalidateQueries({ queryKey: ['wallet-stats'] })
       queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
     },
     onError: (err: any) => {
       const status = err.response?.status
       if (status === 403) {
-        // PIN token expired - reset and ask user to re-enter
         setPinToken(null)
         setWithdrawMode(false)
         setWithdrawStep('form')
@@ -112,13 +144,10 @@ export function Wallet() {
     },
   })
 
-
-  const navigate = useNavigate()
-
   if (user?.profile?.kycStatus !== 'verified') {
     return (
-      <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full`}>
-        <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
+      <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full">
+        <div className="sticky top-0 z-40 bg-[#F8F9FA]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-safe-top pt-6 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
           <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
@@ -129,10 +158,10 @@ export function Wallet() {
             <Lock className="w-8 h-8 text-gray-400" />
           </div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Accès restreint</h2>
-          <p className="text-gray-500 dark:text-gray-400">
+          <p className="text-gray-500">
             Votre profil n'est pas encore vérifié. Vous devez vérifier votre identité pour accéder au portefeuille.
           </p>
-          <Button onClick={() => navigate('/settings')} className="mt-4 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] h-12 px-6">
+          <Button onClick={() => navigate('/settings')} className="mt-4 bg-[#FF7A00] hover:bg-[#e66a00] text-white rounded-[16px] h-12 px-6 font-bold">
             Vérifier mon profil
           </Button>
         </div>
@@ -146,22 +175,21 @@ export function Wallet() {
 
   if (withdrawMode) {
     return (
-      <div className="bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full">
-        <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
+      <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full">
+        <div className="sticky top-0 z-40 bg-[#F8F9FA]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-safe-top pt-6 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800">
           <button onClick={() => setWithdrawMode(false)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
           <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Initier un retrait</h1>
         </div>
         
-        <div className="flex-1 flex flex-col p-4 sm:p-6 gap-6">
-          {/* Header Card */}
-          <div className="bg-gray-100 dark:bg-[#18181b] rounded-2xl p-4 flex flex-col gap-2">
+        <div className="flex-1 flex flex-col p-4 sm:p-6 gap-6 font-poppins">
+          <div className="bg-white dark:bg-[#1A1A1A] rounded-[20px] p-4 flex flex-col gap-2 shadow-sm border border-gray-100 dark:border-gray-800">
             <h2 className="text-[16px] font-bold text-gray-900 dark:text-white">Mon Portefeuille</h2>
             <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-1" />
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-500">Solde disponible</span>
-              <span className="text-[15px] font-bold text-blue-500">{wallet?.balance?.toLocaleString('fr-FR')} F</span>
+              <span className="text-[14px] text-gray-500">Solde disponible</span>
+              <span className="text-[16px] font-bold text-[#FF7A00]">{wallet?.balance?.toLocaleString('fr-FR')} F CFA</span>
             </div>
           </div>
 
@@ -182,8 +210,8 @@ export function Wallet() {
             setWithdrawStep('summary')
           }} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-medium text-gray-900 dark:text-white">Montant du retrait</label>
-              <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white dark:bg-[#1A1A1A] overflow-hidden h-[52px] focus-within:border-2 focus-within:border-[#FF7A00] transition-all duration-150">
+              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">Montant du retrait</label>
+              <div className="flex items-center border border-[#E5E7EB] dark:border-gray-800 rounded-[14px] bg-white dark:bg-[#1A1A1A] overflow-hidden h-[56px] focus-within:border-2 focus-within:border-[#FF7A00] transition-all duration-150 shadow-sm">
                 <input 
                   type="number"
                   min="500"
@@ -191,32 +219,32 @@ export function Wallet() {
                   value={withdrawData.amount}
                   onChange={e => setWithdrawData(prev => ({ ...prev, amount: e.target.value }))}
                   placeholder="0"
-                  className="flex-1 px-4 text-[15px] text-gray-900 dark:text-white placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
+                  className="flex-1 px-4 text-[16px] font-semibold text-gray-900 dark:text-white placeholder:text-[#C0C0C0] dark:placeholder:text-[#666] outline-none bg-transparent h-full"
                   required
                 />
-                <span className="pr-4 text-[13px] font-semibold text-[#8D8D8D]">F CFA</span>
+                <span className="pr-4 text-[14px] font-bold text-[#8D8D8D]">F CFA</span>
               </div>
-              <span className="text-[12px] text-gray-400 mt-1">Minimum 500F</span>
+              <span className="text-[12px] text-gray-400 mt-1 font-medium">Minimum 500 F</span>
             </div>
 
             <div className="flex flex-col gap-2" ref={operatorRef}>
-              <label className="text-[13px] font-medium text-gray-900 dark:text-white">Opérateur</label>
+              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">Opérateur</label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setShowOperatorDropdown(!showOperatorDropdown)}
-                  className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[52px] bg-white dark:bg-[#1A1A1A] border border-[#DFDFDF] rounded-[10px] active:bg-gray-50 dark:bg-[#222222] transition-colors"
+                  className="w-full flex flex-row items-center p-[12px] gap-[10px] h-[56px] bg-white dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-gray-800 rounded-[14px] active:bg-gray-50 dark:active:bg-[#222] transition-colors shadow-sm"
                 >
-                  <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
-                  <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">{selectedOperator.label}</span>
+                  <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-8 h-8 object-contain shrink-0 rounded-md" />
+                  <span className="flex-1 text-[15px] font-medium text-gray-900 dark:text-white text-left">{selectedOperator.label}</span>
                   <ChevronDown
-                    className="w-4 h-4 text-[#8D8D8D] shrink-0 transition-transform duration-200"
+                    className="w-5 h-5 text-[#8D8D8D] shrink-0 transition-transform duration-200"
                     style={{ transform: showOperatorDropdown ? 'rotate(180deg)' : 'rotate(0deg)' }}
                   />
                 </button>
 
                 {showOperatorDropdown && (
-                  <div className="absolute top-[calc(100%+6px)] left-0 right-0 z-30 bg-white dark:bg-[#1A1A1A] border border-[#DFDFDF] rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="absolute top-[calc(100%+8px)] left-0 right-0 z-30 bg-white dark:bg-[#1A1A1A] border border-[#E5E7EB] dark:border-gray-800 rounded-[16px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
                     {OPERATORS.map((op) => (
                       <button
                         key={op.id}
@@ -225,12 +253,12 @@ export function Wallet() {
                           setSelectedOperator(op)
                           setShowOperatorDropdown(false)
                         }}
-                        className="w-full flex flex-row items-center p-[10px] gap-[4px] h-[52px] hover:bg-[#FFF8F0] transition-colors"
+                        className="w-full flex flex-row items-center p-[12px] gap-[10px] h-[56px] hover:bg-[#FFF8F0] dark:hover:bg-[#222] transition-colors border-b border-[#E5E7EB] dark:border-gray-800 last:border-0"
                       >
-                        <img src={op.logo} alt={op.label} className="w-6 h-6 object-contain shrink-0" />
-                        <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">{op.label}</span>
+                        <img src={op.logo} alt={op.label} className="w-8 h-8 object-contain shrink-0 rounded-md" />
+                        <span className="flex-1 text-[15px] font-medium text-gray-900 dark:text-white text-left">{op.label}</span>
                         {selectedOperator.id === op.id && (
-                          <Check className="w-4 h-4 text-[#FF7A00] shrink-0" strokeWidth={2.5} />
+                          <Check className="w-5 h-5 text-[#FF7A00] shrink-0" strokeWidth={3} />
                         )}
                       </button>
                     ))}
@@ -240,7 +268,7 @@ export function Wallet() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[13px] font-medium text-gray-900 dark:text-white">Numéro de téléphone</label>
+              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">Numéro de téléphone</label>
               <div className="w-full">
                 <PhoneInputField
                   country={country}
@@ -253,64 +281,50 @@ export function Wallet() {
 
             <Button 
               type="submit" 
-              className="w-full h-[52px] rounded-full bg-[#FF7A00] hover:bg-[#e66a00] text-white font-bold text-[15px] mt-4"
+              className="w-full h-[56px] rounded-[16px] bg-gradient-to-r from-[#FF7A00] to-[#FF991C] hover:opacity-90 text-white font-bold text-[16px] mt-4 shadow-[0_4px_14px_rgba(255,122,0,0.3)] transition-transform active:scale-[0.98]"
             >
               Continuer
             </Button>
           </form>
         </div>
 
-        {/* Summary BottomSheet */}
         <BottomSheet open={withdrawStep === 'summary'} onClose={() => setWithdrawStep('form')}>
-          <div className="px-5 pt-2 pb-8 flex flex-col gap-4">
-            <h3 className="text-center text-[16px] font-bold text-gray-900 dark:text-white mb-2">Détails du retrait</h3>
+          <div className="px-6 pt-2 pb-8 flex flex-col gap-5 font-poppins">
+            <h3 className="text-center text-[18px] font-bold text-gray-900 dark:text-white mb-2">Détails du retrait</h3>
             
-            <div>
-              <p className="text-[17px] font-bold text-gray-900 dark:text-white">Mon Portefeuille</p>
+            <div className="flex flex-col gap-1 items-center mb-2">
+              <span className="text-[14px] text-gray-500 font-medium">Montant</span>
+              <span className="text-[32px] font-bold text-gray-900 dark:text-white leading-none">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
             </div>
 
-            <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-2" />
-
-            <div className="flex flex-col gap-4 text-[14px]">
+            <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-col gap-3">
               <div className="flex justify-between items-center">
-                <span className="text-gray-500">Cagnotte</span>
-                <span className="font-semibold text-gray-900 dark:text-white">Portefeuille principal</span>
+                <span className="text-[14px] text-gray-500">Depuis</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">Portefeuille principal</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-500">Montant</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
+                <span className="text-[14px] text-gray-500">Vers</span>
+                <div className="flex items-center gap-2">
+                  <img src={selectedOperator.logo} className="w-4 h-4" alt="" />
+                  <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{selectedOperator.label}</span>
+                </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-500">Commission</span>
-                <span className="font-semibold text-gray-900 dark:text-white">0 F</span>
+                <span className="text-[14px] text-gray-500">Numéro</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{country.code} {phoneNumber}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-500">Méthode</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{selectedOperator.label}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Numéro</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{country.code} {phoneNumber}</span>
-              </div>
-
-              <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-2" />
-
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Total à débiter</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-500">Total à recevoir</span>
-                <span className="font-semibold text-[#FF7A00] dark:text-[#FF7A00]">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
+                <span className="text-[14px] text-gray-500">Frais</span>
+                <span className="text-[14px] font-semibold text-green-600 dark:text-green-400">0 F (Gratuit)</span>
               </div>
             </div>
 
             <Button 
               onClick={() => withdrawMutation.mutate({ amount: Number(withdrawData.amount), phone: `${country.code}${phoneNumber.replace(/\\s+/g, '')}`, network: selectedOperator.id })}
               disabled={withdrawMutation.isPending}
-              className="w-full h-[52px] rounded-full bg-[#FF7A00] hover:bg-[#e66a00] text-white font-bold text-[15px] mt-6"
+              className="w-full h-[56px] rounded-[16px] bg-gradient-to-r from-[#FF7A00] to-[#FF991C] hover:opacity-90 text-white font-bold text-[16px] mt-2 shadow-[0_4px_14px_rgba(255,122,0,0.3)] transition-transform active:scale-[0.98]"
             >
-              {withdrawMutation.isPending ? 'Traitement...' : 'Confirmer'}
+              {withdrawMutation.isPending ? 'Traitement en cours...' : 'Confirmer le retrait'}
             </Button>
           </div>
         </BottomSheet>
@@ -319,181 +333,345 @@ export function Wallet() {
   }
 
   return (
-    <div className={`bg-[#F9FAFB] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full overflow-y-auto`}>
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-[#F9FAFB]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-12 pb-2 flex items-center justify-between border-b border-gray-100 dark:border-gray-800">
-        <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-          <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
-        </button>
-        <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white">Mon Portefeuille</h1>
-        <button onClick={() => setShowWalletPinModal(true)} className="p-2 -mr-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-          <Lock className="w-5 h-5 text-gray-900 dark:text-white" />
-        </button>
+    <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col min-h-[100dvh] w-full font-poppins">
+      <div className="sticky top-0 z-40 bg-[#F8F9FA]/80 dark:bg-[#09090b]/80 backdrop-blur-md px-4 pt-safe-top pt-4 pb-2 flex flex-col border-b border-transparent">
+        <div className="flex items-center justify-between mb-1">
+          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+            <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
+          </button>
+          <div className="flex flex-col items-center">
+            <h1 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">Mon Portefeuille</h1>
+            <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Gérez vos fonds en toute simplicité</span>
+          </div>
+          <button onClick={() => setShowWalletPinModal(true)} className="p-2 -mr-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+            <Lock className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
+          </button>
+        </div>
       </div>
       
-      <div className="flex flex-col flex-1 px-4 sm:px-6 py-6 w-full max-w-[430px] mx-auto gap-6">
+      <div className="flex flex-col px-5 py-4 w-full max-w-[480px] mx-auto gap-6 pb-24">
         
-        {/* Balance Card */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full bg-white dark:bg-[#18181b] rounded-[24px] shadow-sm border border-gray-100 dark:border-gray-800 p-6 flex flex-col gap-4 relative overflow-hidden"
+          className="w-full rounded-[20px] bg-gradient-to-br from-[#FF6B00] to-[#FF9900] shadow-[0_8px_20px_rgba(255,122,0,0.25)] p-5 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <WalletIcon size={80} />
-          </div>
+          <div className="absolute -right-4 -top-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full blur-xl" />
           
-          <div className="flex flex-col gap-1 z-10">
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Solde Disponible</span>
-            <div className="flex items-baseline gap-2">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-90 drop-shadow-md">
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
+              <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+              <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+              <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+            </svg>
+          </div>
+
+          <div className="relative z-10 flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 opacity-90 text-white">
+              <span className="text-[13px] font-medium">Solde disponible</span>
+              <AlertCircle size={14} className="opacity-80" />
+            </div>
+            
+            <div className="flex items-baseline gap-1 mt-1 mb-3">
               {isLoadingWallet ? (
-                <div className="h-10 w-32 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg" />
+                <div className="h-10 w-32 bg-white/20 animate-pulse rounded-lg mt-1" />
               ) : (
                 <>
-                  <span className="text-[36px] font-bold text-gray-900 dark:text-white tracking-tight">
+                  <span className="text-[34px] font-extrabold text-white tracking-tight leading-none">
                     {wallet?.balance?.toLocaleString('fr-FR') || 0}
                   </span>
-                  <span className="text-[18px] font-semibold text-gray-500 dark:text-gray-400">F CFA</span>
+                  <span className="text-[16px] font-bold text-white/90">F CFA</span>
                 </>
               )}
             </div>
-          </div>
 
-          <Button 
-            className="w-full mt-2 h-12 rounded-[16px] bg-[#FF991C] hover:bg-[#e68a19] text-white font-semibold flex items-center justify-center gap-2 z-10"
-            onClick={() => setWithdrawMode(true)}
-            disabled={!wallet || wallet.balance <= 0 || isLoadingWallet}
-          >
-            <ArrowUpRight size={20} />
-            Retirer mes fonds
-          </Button>
+            <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full w-max mt-1 border border-white/20 shadow-sm">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#4CAF50] shadow-[0_0_4px_#4CAF50]" />
+              <span className="text-[11px] font-bold text-white">Disponible pour retrait</span>
+            </div>
+          </div>
         </motion.div>
 
-        {/* Transactions List */}
-        <div className="flex flex-col gap-4 flex-1">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-[18px] text-gray-900 dark:text-white">Historique</h3>
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <button onClick={() => setWithdrawMode(true)} className="flex-1 flex flex-col items-center gap-2 p-3 bg-[#FFF3E6] dark:bg-[#FF7A00]/10 rounded-[16px] border border-[#FFE4C4] dark:border-[#FF7A00]/20 active:scale-95 transition-transform shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-[#FF7A00] flex items-center justify-center shadow-md shadow-orange-500/20">
+              <ArrowUpRight className="w-5 h-5 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-[12px] font-bold text-gray-900 dark:text-white text-center leading-tight">Retirer des fonds</span>
+          </button>
 
-          <div className="flex flex-col gap-3 pb-8">
-            {isLoadingTx ? (
-              Array(4).fill(0).map((_, i) => (
-                <div key={i} className="w-full h-[72px] bg-white dark:bg-[#18181b] rounded-2xl animate-pulse" />
-              ))
-            ) : !transactions || transactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
-                <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                  <Clock className="w-8 h-8 text-gray-400" />
+          <button onClick={() => {
+            const tabsContainer = document.getElementById('wallet-tabs-content');
+            if (tabsContainer) {
+              tabsContainer.scrollIntoView({ behavior: 'smooth' });
+              setActiveTab('overview');
+            }
+          }} className="flex-1 flex flex-col items-center gap-2 p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center border border-gray-200 dark:border-gray-700">
+              <History className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2} />
+            </div>
+            <span className="text-[12px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Historique</span>
+          </button>
+
+          <button onClick={() => navigate('/settings')} className="flex-1 flex flex-col items-center gap-2 p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center border border-gray-200 dark:border-gray-700">
+              <Settings className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2} />
+            </div>
+            <span className="text-[12px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Paramètres</span>
+          </button>
+        </div>
+
+        <div id="wallet-tabs-content" className="flex bg-[#F2F2F2] dark:bg-[#18181b] rounded-full p-1 mt-2 shadow-inner border border-gray-100/50 dark:border-gray-800">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`flex-1 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
+              activeTab === 'overview' 
+                ? 'bg-white dark:bg-[#2A2A2A] text-[#FF7A00] shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            Vue d'ensemble
+          </button>
+          <button
+            onClick={() => setActiveTab('events')}
+            className={`flex-1 py-2.5 rounded-full text-[13px] font-bold transition-all duration-200 ${
+              activeTab === 'events' 
+                ? 'bg-white dark:bg-[#2A2A2A] text-[#FF7A00] shadow-sm' 
+                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+            }`}
+          >
+            Par événement
+          </button>
+        </div>
+
+        {activeTab === 'overview' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-6"
+          >
+            <div className="flex justify-between bg-white dark:bg-[#1A1A1A] rounded-[16px] p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="flex flex-col items-center gap-1.5 flex-1 relative">
+                <div className="w-8 h-8 rounded-full bg-[#FFF3E6] dark:bg-[#FF7A00]/20 flex items-center justify-center">
+                  <ArrowDownLeft className="w-4 h-4 text-[#FF7A00]" strokeWidth={2.5} />
                 </div>
-                <p className="text-gray-500 dark:text-gray-400 text-[15px]">Aucune transaction pour le moment.</p>
+                <span className="text-[11px] font-semibold text-gray-500">Total gagné</span>
+                <span className="text-[13px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">
+                  {isLoadingStats ? '...' : (stats?.totalEarned?.toLocaleString('fr-FR') || 0)} F CFA
+                </span>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[1px] h-10 bg-gray-100 dark:bg-gray-800" />
+              </div>
+
+              <div className="flex flex-col items-center gap-1.5 flex-1 relative">
+                <div className="w-8 h-8 rounded-full bg-[#E8F5E9] dark:bg-green-900/30 flex items-center justify-center">
+                  <ArrowUpRight className="w-4 h-4 text-[#4CAF50]" strokeWidth={2.5} />
+                </div>
+                <span className="text-[11px] font-semibold text-gray-500">Total retiré</span>
+                <span className="text-[13px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">
+                  {isLoadingStats ? '...' : (stats?.totalWithdrawn?.toLocaleString('fr-FR') || 0)} F CFA
+                </span>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[1px] h-10 bg-gray-100 dark:bg-gray-800" />
+              </div>
+
+              <div className="flex flex-col items-center gap-1.5 flex-1">
+                <div className="w-8 h-8 rounded-full bg-[#F3E5F5] dark:bg-purple-900/30 flex items-center justify-center">
+                  <Calendar className="w-4 h-4 text-[#9C27B0]" strokeWidth={2} />
+                </div>
+                <span className="text-[11px] font-semibold text-gray-500 text-center leading-tight px-1">Événements actifs</span>
+                <span className="text-[14px] font-extrabold text-gray-900 dark:text-white">
+                  {isLoadingStats ? '...' : (stats?.activeEventsCount || 0)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Transactions récentes</h3>
+                <button onClick={() => setActiveTab('events')} className="text-[13px] font-bold text-[#FF7A00]">Voir tout &gt;</button>
+              </div>
+
+              {isLoadingTx ? (
+                Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="w-full h-[76px] bg-white dark:bg-[#1A1A1A] rounded-[16px] animate-pulse border border-gray-100 dark:border-gray-800" />
+                ))
+              ) : !transactions || transactions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
+                  <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-[14px] font-medium">Aucune transaction pour le moment.</p>
+                </div>
+              ) : (
+                transactions.slice(0, 10).map((tx) => (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    key={tx.id} 
+                    onClick={() => setSelectedTx(tx)}
+                    className="w-full bg-white dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-row items-center gap-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)] cursor-pointer active:scale-[0.98] transition-all"
+                  >
+                    <div className={`w-[44px] h-[44px] rounded-full flex items-center justify-center shrink-0 border ${
+                      tx.type === 'DEPOSIT' 
+                        ? 'bg-[#E8F5E9] dark:bg-green-900/30 text-[#4CAF50] border-[#C8E6C9] dark:border-green-800'
+                        : 'bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] border-[#FFE4C4] dark:border-[#FF7A00]/20'
+                    }`}>
+                      {tx.type === 'DEPOSIT' ? <ArrowDownLeft size={22} strokeWidth={2.5} /> : <ArrowUpRight size={22} strokeWidth={2.5} />}
+                    </div>
+                    
+                    <div className="flex flex-col flex-1 justify-center">
+                      <span className="font-bold text-[14px] text-gray-900 dark:text-white line-clamp-1">{tx.description}</span>
+                      <span className="text-[12px] font-medium text-gray-500 flex items-center">
+                        {new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' •')}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className={`font-extrabold text-[15px] ${
+                        tx.type === 'DEPOSIT' ? 'text-[#4CAF50]' : 'text-gray-900 dark:text-white'
+                      }`}>
+                        {tx.type === 'DEPOSIT' ? '+' : '- '} {tx.amount.toLocaleString('fr-FR')} F
+                      </span>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 mt-1 rounded-full ${
+                        (tx.status || 'COMPLETED') === 'COMPLETED' ? 'bg-[#E8F5E9] text-[#4CAF50] dark:bg-green-900/30 dark:text-green-400' :
+                        tx.status === 'PENDING' ? 'bg-[#FFF3E6] text-[#FF7A00] dark:bg-orange-900/30 dark:text-orange-400' :
+                        'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
+                      }`}>
+                        {(tx.status || 'COMPLETED') === 'COMPLETED' ? 'Réussi' : tx.status === 'PENDING' ? 'En cours' : 'Échec'}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'events' && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-4"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Fonds par événement</h3>
+            </div>
+
+            {isLoadingStats ? (
+               Array(2).fill(0).map((_, i) => (
+                <div key={i} className="w-full h-[110px] bg-white dark:bg-[#1A1A1A] rounded-[20px] animate-pulse border border-gray-100 dark:border-gray-800" />
+              ))
+            ) : !stats?.poolEvents || stats.poolEvents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-gray-400" />
+                </div>
+                <p className="text-gray-500 text-[14px] font-medium">Aucun événement avec cagnotte débloquée.</p>
               </div>
             ) : (
-              transactions.map((tx) => (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  key={tx.id} 
-                  onClick={() => setSelectedTx(tx)}
-                  className="w-full bg-white dark:bg-[#18181b] rounded-2xl p-4 flex items-center justify-between border border-gray-100 dark:border-gray-800 cursor-pointer active:scale-[0.98] transition-transform"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                      tx.type === 'DEPOSIT' 
-                        ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                        : 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
-                    }`}>
-                      {tx.type === 'DEPOSIT' ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-[15px] text-gray-900 dark:text-white line-clamp-1 text-left">{tx.description}</span>
-                      <span className="text-[13px] text-gray-500 flex items-center gap-1 text-left">
-                        {new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                        {tx.status === 'PENDING' && <><AlertCircle size={12} className="text-yellow-500 ml-1"/> En cours</>}
-                        {(tx.status || 'COMPLETED') === 'FAILED' && <><AlertCircle size={12} className="text-red-500 ml-1"/> Échec</>}
+              stats.poolEvents.map((evt) => (
+                <div key={evt.id} className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                  <div className="w-[100px] h-[80px] rounded-[14px] bg-gray-200 dark:bg-gray-800 overflow-hidden relative shrink-0">
+                    <SafeImage src={evt.coverImage || undefined} alt={evt.title} className="w-full h-full object-cover" />
+                    <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                      <div className={`w-1.5 h-1.5 rounded-full ${new Date(evt.startAt) > new Date() ? 'bg-[#4CAF50]' : 'bg-gray-400'}`} />
+                      <span className="text-[10px] font-bold text-white leading-none">
+                        {new Date(evt.startAt) > new Date() ? 'En cours' : 'Terminé'}
                       </span>
                     </div>
                   </div>
-                  <div className={`font-semibold shrink-0 text-[15px] ${
-                    tx.type === 'DEPOSIT' 
-                      ? 'text-green-600 dark:text-green-400' 
-                      : 'text-gray-900 dark:text-white'
-                  }`}>
-                    {tx.type === 'DEPOSIT' ? '+' : '-'}{tx.amount} F
+
+                  <div className="flex flex-col flex-1 py-1">
+                    <h4 className="font-bold text-[15px] text-gray-900 dark:text-white line-clamp-1">{evt.title}</h4>
+                    <div className="flex items-center gap-1.5 mt-1 text-gray-500">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span className="text-[11px] font-medium">
+                        {new Date(evt.startAt).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                      <span className="text-[11px] font-medium line-clamp-1">{evt.city}</span>
+                    </div>
                   </div>
-                </motion.div>
+
+                  <div className="flex flex-col items-end gap-2 pr-1 shrink-0 h-full justify-between py-1">
+                    <div className="flex items-start justify-between w-full">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[11px] font-semibold text-gray-500">Débloqué</span>
+                        <span className="text-[14px] font-extrabold text-gray-900 dark:text-white">{evt.poolCollected.toLocaleString('fr-FR')} F</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))
             )}
-          </div>
-        </div>
-
+          </motion.div>
+        )}
       </div>
 
-      {/* Transaction Details Modal */}
       <BottomSheet open={!!selectedTx} onClose={() => setSelectedTx(null)}>
         {selectedTx && (
-          <div className="p-6 flex flex-col gap-6">
+          <div className="p-6 flex flex-col gap-6 font-poppins">
             <div className="flex flex-col items-center gap-2 mb-2">
               <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
                 selectedTx.type === 'DEPOSIT' 
-                  ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400'
-                  : 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400'
+                  ? 'bg-[#E8F5E9] dark:bg-green-900/30 text-[#4CAF50]'
+                  : 'bg-[#FFF3E6] dark:bg-[#FF7A00]/20 text-[#FF7A00]'
               }`}>
                 {selectedTx.type === 'DEPOSIT' ? <ArrowDownLeft size={32} /> : <ArrowUpRight size={32} />}
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-                {selectedTx.type === 'DEPOSIT' ? '+' : '-'}{selectedTx.amount} F CFA
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mt-2">
+                {selectedTx.type === 'DEPOSIT' ? '+' : '-'} {selectedTx.amount.toLocaleString('fr-FR')} F CFA
               </h2>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                (selectedTx.status || 'COMPLETED') === 'COMPLETED' ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' :
-                selectedTx.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400' :
-                'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400'
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                (selectedTx.status || 'COMPLETED') === 'COMPLETED' ? 'bg-[#E8F5E9] dark:bg-green-900/30 text-[#4CAF50]' :
+                selectedTx.status === 'PENDING' ? 'bg-[#FFF3E6] dark:bg-orange-900/30 text-[#FF7A00]' :
+                'bg-red-50 dark:bg-red-900/30 text-red-500'
               }`}>
                 {(selectedTx.status || 'COMPLETED') === 'COMPLETED' ? 'Terminé' : selectedTx.status === 'PENDING' ? 'En cours' : 'Échoué'}
               </span>
             </div>
 
-            <div className="bg-gray-50 dark:bg-[#18181b] rounded-2xl p-4 flex flex-col gap-4 border border-gray-100 dark:border-gray-800">
+            <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] rounded-2xl p-4 flex flex-col gap-4 border border-gray-100 dark:border-gray-800">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500 dark:text-gray-400">Type</span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                <span className="text-[14px] font-medium text-gray-500">Type</span>
+                <span className="text-[14px] font-bold text-gray-900 dark:text-white">
                   {selectedTx.type === 'DEPOSIT' ? 'Dépôt' : selectedTx.type === 'REFUND' ? 'Remboursement' : 'Retrait'}
                 </span>
               </div>
               <div className="h-[1px] bg-gray-200 dark:bg-gray-800 w-full" />
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500 dark:text-gray-400">Date</span>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                <span className="text-[14px] font-medium text-gray-500">Date</span>
+                <span className="text-[14px] font-bold text-gray-900 dark:text-white">
                   {new Date(selectedTx.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               <div className="h-[1px] bg-gray-200 dark:bg-gray-800 w-full" />
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500 dark:text-gray-400">ID Transaction</span>
-                <span className="text-sm font-mono text-gray-900 dark:text-white text-right max-w-[180px] truncate">
+                <span className="text-[14px] font-medium text-gray-500">ID Transaction</span>
+                <span className="text-[14px] font-bold font-mono text-gray-900 dark:text-white text-right max-w-[180px] truncate">
                   {selectedTx.id}
                 </span>
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-[#18181b] rounded-2xl p-4 border border-gray-100 dark:border-gray-800">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Description</h3>
-              <p className="text-sm text-gray-900 dark:text-white leading-relaxed">
+            <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] rounded-2xl p-4 border border-gray-100 dark:border-gray-800">
+              <h3 className="text-[14px] font-medium text-gray-500 mb-2">Description</h3>
+              <p className="text-[14px] font-semibold text-gray-900 dark:text-white leading-relaxed">
                 {selectedTx.description}
               </p>
             </div>
 
-            <Button onClick={() => setSelectedTx(null)} className="w-full mt-4 h-12 rounded-[16px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700">
+            <Button onClick={() => setSelectedTx(null)} className="w-full mt-4 h-[56px] rounded-[16px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 font-bold text-[16px]">
               Fermer
             </Button>
           </div>
         )}
       </BottomSheet>
 
-
-
-      {/* Modals */}
       {showWalletPinModal && (
-        <div className="fixed inset-0 z-[100] bg-[#F9FAFB] dark:bg-[#09090b]">
+        <div className="fixed inset-0 z-[100] bg-[#F8F9FA] dark:bg-[#09090b]">
           <WalletPinManager 
             isChangeMode={true}
             onClose={() => setShowWalletPinModal(false)} 
