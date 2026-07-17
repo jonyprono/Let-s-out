@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import type { WebSocket } from 'ws'
 import { sendPushToUser } from '../../services/push.service'
+import { aiService } from '../../services/ai.service'
 
 // In-memory map: userId -> Set of WebSocket connections
 const connections = new Map<string, Set<WebSocket>>()
@@ -68,11 +69,15 @@ export default async function chatRoutes(app: FastifyInstance) {
         }
 
         if (msg.type === 'message' && msg.content) {
-          // Verify member
-          const member = await app.prisma.conversationMember.findUnique({
-            where: { conversationId_userId: { conversationId: msg.conversationId, userId } },
+          // Verify member and fetch conversation with members
+          const conversation = await app.prisma.conversation.findUnique({
+            where: { id: msg.conversationId },
+            include: { members: { include: { user: true } } }
           })
-          if (!member) return
+          if (!conversation) return
+
+          const sender = conversation.members.find(m => m.userId === userId)
+          if (!sender) return
 
           const message = await app.prisma.message.create({
             data: {
@@ -96,6 +101,80 @@ export default async function chatRoutes(app: FastifyInstance) {
             type: 'new_message',
             message,
           }, undefined)
+
+          // ── AI Bot Logic ──
+          const isSenderAdmin = sender.user.role === 'ADMIN'
+          const botMembers = conversation.members.filter(m => m.user.isBot)
+
+          if (botMembers.length > 0) {
+            let shouldReply = false
+            let currentPaused = conversation.isBotPaused
+
+            if (isSenderAdmin) {
+              // Admin took over, pause bot
+              await app.prisma.conversation.update({
+                where: { id: conversation.id },
+                data: { isBotPaused: true, adminLastMessageAt: new Date() }
+              })
+            } else {
+              // Normal user
+              if (currentPaused && conversation.adminLastMessageAt) {
+                const minutesSinceAdmin = (new Date().getTime() - conversation.adminLastMessageAt.getTime()) / 60000
+                if (minutesSinceAdmin > 5) {
+                  await app.prisma.conversation.update({
+                    where: { id: conversation.id },
+                    data: { isBotPaused: false }
+                  })
+                  currentPaused = false
+                }
+              }
+
+              if (!currentPaused) {
+                shouldReply = true
+              }
+            }
+
+            if (shouldReply) {
+              const bot = botMembers[0]
+              
+              // Send typing indicator for bot
+              const botProfile = await app.prisma.profile.findUnique({ where: { userId: bot.userId }, select: { displayName: true }})
+              broadcastToConversation(app, conversation.id, {
+                type: 'typing',
+                userId: bot.userId,
+                conversationId: conversation.id,
+                displayName: botProfile?.displayName ?? 'Bot',
+              }, bot.userId)
+
+              app.prisma.message.findMany({ where: { conversationId: conversation.id }, orderBy: { createdAt: 'desc' }, take: 10 })
+                .then(history => {
+                  const formattedHistory = history.reverse().map(m => ({ role: m.senderId === bot.userId ? 'bot' : 'user', content: m.content || '' }))
+                  // Pop the current message since we pass it separately
+                  formattedHistory.pop()
+                  return aiService.generateSupportResponse(bot.userId, conversation.id, formattedHistory, msg.content!)
+                })
+                .then(replyContent => {
+                  if (replyContent) {
+                    return app.prisma.message.create({
+                      data: {
+                        conversationId: conversation.id,
+                        senderId: bot.userId,
+                        type: 'TEXT',
+                        content: replyContent
+                      },
+                      include: { sender: { select: { profile: { select: { username: true, displayName: true, avatarUrl: true } } } } }
+                    })
+                  }
+                })
+                .then(replyMsg => {
+                  if (replyMsg) {
+                    broadcastToConversation(app, conversation.id, { type: 'new_message', message: replyMsg }, undefined)
+                    return app.prisma.conversation.update({ where: { id: conversation.id }, data: { lastMessageAt: new Date() } })
+                  }
+                })
+                .catch(console.error)
+            }
+          }
         }
 
         if (msg.type === 'typing') {

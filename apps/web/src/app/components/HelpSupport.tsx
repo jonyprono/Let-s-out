@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuthStore } from '@/stores/auth.store';
+import { chatApi } from '@/features/chat/api';
+import { toast } from 'sonner';
 import {
   ArrowLeft01Icon,
   HelpCircleIcon,
@@ -17,13 +19,26 @@ export default function HelpSupport() {
   const displayName = user?.profile?.displayName?.split(' ')[0] || 'Utilisateur';
 
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [isStartingChat, setIsStartingChat] = useState(false);
 
   const supportAgents = [
-    { id: 1, name: 'Armand', role: 'Support Client', rating: 4.8, img: 'https://i.pravatar.cc/150?u=armand' },
-    { id: 2, name: 'Estelle', role: 'Support Technique', rating: 4.9, img: 'https://i.pravatar.cc/150?u=estelle' },
-    { id: 3, name: 'Brice', role: 'Support Paiements', rating: 4.7, img: 'https://i.pravatar.cc/150?u=brice' },
-    { id: 4, name: 'Aïcha', role: 'Support Général', rating: 4.8, img: 'https://i.pravatar.cc/150?u=aicha' },
+    { id: 'bot_armand', name: 'Armand', role: 'Support Client', rating: '4.8', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Armand&backgroundColor=b6e3f4' },
+    { id: 'bot_estelle', name: 'Estelle', role: 'Support Technique', rating: '4.9', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Estelle&backgroundColor=ffdfbf' },
+    { id: 'bot_brice', name: 'Brice', role: 'Support Paiements', rating: '4.7', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Brice&backgroundColor=c0aede' },
+    { id: 'bot_aicha', name: 'Aïcha', role: 'Support Général', rating: '4.8', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aicha&backgroundColor=ffb8b8' },
   ];
+
+  const handleStartChat = async (botId: string) => {
+    try {
+      setIsStartingChat(true);
+      const conversation = await chatApi.createDM(botId);
+      navigate(`/chat/${conversation.id}`);
+    } catch (e) {
+      toast.error('Erreur lors de la création de la discussion');
+    } finally {
+      setIsStartingChat(false);
+    }
+  };
 
   const faqs = [
     {
@@ -179,7 +194,11 @@ export default function HelpSupport() {
                   <span className="text-[#FF7A00]">⭐</span>
                   <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">{agent.rating}</span>
                 </div>
-                <button className="w-full h-8 flex items-center justify-center gap-1.5 bg-transparent border border-orange-200 dark:border-[#FF7A00]/30 text-[#FF7A00] rounded-full active:scale-95 transition-transform">
+                <button 
+                  onClick={() => handleStartChat(agent.id)}
+                  disabled={isStartingChat}
+                  className="w-full h-8 flex items-center justify-center gap-1.5 bg-transparent border border-orange-200 dark:border-[#FF7A00]/30 text-[#FF7A00] rounded-full active:scale-95 transition-transform disabled:opacity-50"
+                >
                   <Message01Icon size={14} strokeWidth={2} />
                   <span className="text-[11px] font-bold">Discuter</span>
                 </button>

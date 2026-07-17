@@ -23,6 +23,7 @@
     "@fastify/static": "^6.12.0",
     "@fastify/type-provider-typebox": "^2.0.0",
     "@fastify/websocket": "^10.0.1",
+    "@google/generative-ai": "^0.24.1",
     "@letsout/types": "workspace:*",
     "@prisma/client": "^5.19.1",
     "bcryptjs": "^2.4.3",
