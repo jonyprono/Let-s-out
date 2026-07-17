@@ -124,16 +124,26 @@ export default async function chatRoutes(app: FastifyInstance) {
               })
             } else {
               // Normal user — check if bot was paused by admin
-              if (currentPaused && conversation.adminLastMessageAt) {
-                const minutesSinceAdmin = (Date.now() - conversation.adminLastMessageAt.getTime()) / 60000
-                app.log.info(`[BOT] Bot was paused, ${minutesSinceAdmin.toFixed(1)} min since admin message`)
-                if (minutesSinceAdmin > 5) {
+              if (currentPaused) {
+                if (!conversation.adminLastMessageAt) {
+                  // Paused but no admin timestamp? Unpause immediately
                   await app.prisma.conversation.update({
                     where: { id: conversation.id },
                     data: { isBotPaused: false }
                   })
                   currentPaused = false
-                  app.log.info(`[BOT] Bot auto-reactivated after 5 min in conv ${conversation.id}`)
+                  app.log.info(`[BOT] Bot auto-reactivated (no admin timestamp) in conv ${conversation.id}`)
+                } else {
+                  const minutesSinceAdmin = (Date.now() - conversation.adminLastMessageAt.getTime()) / 60000
+                  app.log.info(`[BOT] Bot was paused, ${minutesSinceAdmin.toFixed(1)} min since admin message`)
+                  if (minutesSinceAdmin > 5) {
+                    await app.prisma.conversation.update({
+                      where: { id: conversation.id },
+                      data: { isBotPaused: false }
+                    })
+                    currentPaused = false
+                    app.log.info(`[BOT] Bot auto-reactivated after 5 min in conv ${conversation.id}`)
+                  }
                 }
               }
 
@@ -179,7 +189,7 @@ export default async function chatRoutes(app: FastifyInstance) {
                     .slice(0, reversed.length - 1)
                     .map(m => ({ role: m.senderId === bot.userId ? 'bot' : 'user', content: m.content || '...' }))
                   app.log.info(`[BOT] History length: ${formattedHistory.length}`)
-                  return aiService.generateSupportResponse(bot.userId, conversation.id, formattedHistory, msg.content!)
+                  return aiService.generateSupportResponse(bot.userId, conversation.id, formattedHistory, msg.content || '[Fichier/Image joint]')
                 })
                 .then(replyContent => {
                   app.log.info(`[BOT] Got reply: "${replyContent?.substring(0, 80)}..."`)

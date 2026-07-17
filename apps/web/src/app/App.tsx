@@ -126,7 +126,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   const p: any = user?.profile || {}
   const isProfileIncomplete = !p.displayName
-  if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
+  if (user?.role !== 'ADMIN' && isProfileIncomplete) return <Navigate to="/onboarding" replace />
 
   return <>{children}</>
 }
@@ -145,7 +145,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
 
     const p: any = user?.profile || {}
     const isProfileIncomplete = !p.displayName
-    if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
+    if (user?.role !== 'ADMIN' && isProfileIncomplete) return <Navigate to="/onboarding" replace />
     return <Navigate to="/home" replace />
   }
   return <>{children}</>
@@ -161,7 +161,7 @@ function RootRoute() {
 
     const p: any = user?.profile || {}
     const isProfileIncomplete = !p.displayName
-    if (isProfileIncomplete) return <Navigate to="/onboarding" replace />
+    if (user?.role !== 'ADMIN' && isProfileIncomplete) return <Navigate to="/onboarding" replace />
     return <Navigate to="/home" replace />
   }
 
