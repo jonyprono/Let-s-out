@@ -481,7 +481,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </div>
 
             <div className="flex items-center gap-2 mb-2">
-              <div className={`flex-1 flex items-center gap-2 px-3 h-9 rounded-full bg-gray-100 dark:bg-[#1A1A1A] border transition-colors ${
+              <div className={`flex-1 min-w-0 flex items-center gap-1.5 px-3 h-9 rounded-full bg-gray-100 dark:bg-[#1A1A1A] border transition-colors ${
                 eventSearchFocused || eventSearch ? 'border-[#FF7A00]' : 'border-transparent'
               }`}>
                 <Search01Icon className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.5} />
@@ -492,7 +492,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onChange={e => setEventSearch(e.target.value)}
                   onFocus={() => setEventSearchFocused(true)}
                   onBlur={() => setEventSearchFocused(false)}
-                  className="flex-1 text-[12px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0"
+                  className="flex-1 text-[12px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0 w-full text-ellipsis"
                 />
                 {eventSearch && (
                   <button onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}>
