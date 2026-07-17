@@ -40,6 +40,9 @@ interface WalletStats {
     city: string
     coverUrl: string | null
     poolCollected: number
+    netCredited: number
+    alreadyWithdrawn: number
+    available: number
     status: string
   }[]
 }
@@ -120,7 +123,7 @@ export function Wallet() {
   })
 
   const withdrawMutation = useMutation({
-    mutationFn: async (payload: { amount: number; phone: string; network: string; eventTitle?: string }) => {
+    mutationFn: async (payload: { amount: number; phone: string; network: string; eventTitle?: string; eventId?: string }) => {
       const res = await apiClient.post('/wallet/payout', payload, { headers: { 'x-wallet-pin-token': pinToken } })
       return res.data
     },
@@ -328,7 +331,12 @@ export function Wallet() {
             </div>
 
             <Button 
-              onClick={() => withdrawMutation.mutate({ amount: Number(withdrawData.amount), phone: `${country.code}${phoneNumber.replace(/\\s+/g, '')}`, network: selectedOperator.id })}
+              onClick={() => withdrawMutation.mutate({ 
+                amount: Number(withdrawData.amount), 
+                phone: `${country.code}${phoneNumber.replace(/\s+/g, '')}`, 
+                network: selectedOperator.id,
+                ...(selectedWithdrawEvent ? { eventTitle: selectedWithdrawEvent.title, eventId: selectedWithdrawEvent.id } : {})
+              })}
               disabled={withdrawMutation.isPending}
               className="w-full h-[56px] rounded-[16px] bg-gradient-to-r from-[#FF7A00] to-[#FF991C] hover:opacity-90 text-white font-bold text-[16px] mt-2 shadow-[0_4px_14px_rgba(255,122,0,0.3)] transition-transform active:scale-[0.98]"
             >
@@ -552,14 +560,14 @@ export function Wallet() {
                       <div className="flex items-start justify-between w-full">
                         <div className="flex flex-col items-end w-full">
                           <span className="text-[10px] font-semibold text-gray-500">Solde disponible</span>
-                          <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.poolCollected.toLocaleString('fr-FR')} F</span>
+                          <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
                         </div>
                       </div>
                       <button 
                         onClick={() => {
-                          setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.poolCollected });
+                          setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.available });
                           setWithdrawMode(true);
-                          setWithdrawData({ amount: evt.poolCollected.toString() });
+                          setWithdrawData({ amount: evt.available.toString() });
                         }}
                         className="bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition-transform"
                       >
@@ -686,14 +694,14 @@ export function Wallet() {
                     <div className="flex items-start justify-between w-full">
                       <div className="flex flex-col items-end w-full">
                         <span className="text-[10px] font-semibold text-gray-500">Solde disponible</span>
-                        <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.poolCollected.toLocaleString('fr-FR')} F</span>
+                        <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
                       </div>
                     </div>
                     <button 
                       onClick={() => {
-                        setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.poolCollected });
+                        setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.available });
                         setWithdrawMode(true);
-                        setWithdrawData({ amount: evt.poolCollected.toString() });
+                        setWithdrawData({ amount: evt.available.toString() });
                       }}
                       className="bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition-transform"
                     >
@@ -778,10 +786,10 @@ export function Wallet() {
               <button 
                 key={evt.id}
                 onClick={() => { 
-                  setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.poolCollected });
+                  setSelectedWithdrawEvent({ id: evt.id, title: evt.title, amount: evt.available });
                   setShowEventSelector(false);
                   setWithdrawMode(true);
-                  setWithdrawData({ amount: evt.poolCollected.toString() });
+                  setWithdrawData({ amount: evt.available.toString() });
                 }}
                 className="w-full bg-white dark:bg-[#1A1A1A] rounded-[20px] p-3 flex flex-row items-center gap-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.04)] active:scale-[0.98] transition-transform text-left"
               >
@@ -814,7 +822,7 @@ export function Wallet() {
                 {/* Amount + arrow */}
                 <div className="flex flex-col items-end gap-1.5 shrink-0 border-l border-gray-100 dark:border-gray-800 pl-4">
                   <span className="text-[11px] font-semibold text-gray-500 whitespace-nowrap">Solde dispo.</span>
-                  <span className="text-[14px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">{evt.poolCollected.toLocaleString('fr-FR')} F</span>
+                  <span className="text-[14px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">{evt.available.toLocaleString('fr-FR')} F</span>
                   <div className="w-8 h-8 rounded-full bg-[#FFF3E6] dark:bg-[#FF7A00]/20 flex items-center justify-center text-[#FF7A00]">
                     <ArrowUpRight size={16} strokeWidth={2.5} />
                   </div>

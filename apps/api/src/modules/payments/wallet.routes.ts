@@ -222,12 +222,28 @@ export default async function walletRoutes(app: FastifyInstance) {
       orderBy: { startAt: 'desc' }
     })
 
+    // Pour chaque événement, calculer le montant déjà retiré (refId = eventId)
+    const poolEventsWithAvailable = wallet ? await Promise.all(
+      poolEvents.map(async (evt) => {
+        const withdrawnAgg = await app.prisma.walletTransaction.aggregate({
+          where: { walletId: wallet.id, type: 'WITHDRAWAL', refId: evt.id },
+          _sum: { amount: true },
+        })
+        const alreadyWithdrawn = withdrawnAgg._sum.amount || 0
+        // Montant net crédité (poolCollected - 10% commission)
+        const netCredited = Math.round(evt.poolCollected * 0.9)
+        // Solde restant disponible pour cet événement (min avec solde wallet)
+        const available = Math.max(0, netCredited - alreadyWithdrawn)
+        return { ...evt, netCredited, alreadyWithdrawn, available }
+      })
+    ) : poolEvents.map(evt => ({ ...evt, netCredited: Math.round(evt.poolCollected * 0.9), alreadyWithdrawn: 0, available: Math.round(evt.poolCollected * 0.9) }))
+
     return reply.send({ 
       data: {
         totalEarned,
         totalWithdrawn,
         activeEventsCount,
-        poolEvents
+        poolEvents: poolEventsWithAvailable
       }
     })
   })
@@ -254,7 +270,7 @@ export default async function walletRoutes(app: FastifyInstance) {
   // Retrait (Payout) vers Mobile Money
   app.post('/payout', { preHandler: [app.authenticate, verifyWalletPin] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { amount, phone, network, eventTitle } = req.body as { amount: number; phone: string; network: string; eventTitle?: string }
+    const { amount, phone, network, eventTitle, eventId } = req.body as { amount: number; phone: string; network: string; eventTitle?: string; eventId?: string }
 
     if (!amount || amount <= 0) return reply.code(400).send({ error: 'Montant invalide' })
     if (!phone) return reply.code(400).send({ error: 'Numéro de téléphone requis' })
@@ -278,8 +294,8 @@ export default async function walletRoutes(app: FastifyInstance) {
               amount,
               type: 'WITHDRAWAL',
               balanceAfter: wallet.balance - amount,
-              description: eventTitle ? `Retrait (${eventTitle})` : `Retrait Mobile Money`,
-              refId: phone,
+              description: eventTitle ? `Retrait - ${eventTitle}` : `Retrait Mobile Money`,
+              refId: eventId || phone,
             },
           }),
         ])
@@ -331,8 +347,8 @@ export default async function walletRoutes(app: FastifyInstance) {
             amount,
             type: 'WITHDRAWAL',
             balanceAfter: wallet.balance - amount,
-            description: eventTitle ? `Retrait (${eventTitle})` : `Retrait Mobile Money`,
-            refId: payoutData.v1?.payout?.id?.toString() || phone,
+            description: eventTitle ? `Retrait - ${eventTitle}` : `Retrait Mobile Money`,
+            refId: eventId || payoutData.v1?.payout?.id?.toString() || phone,
           },
         }),
       ])
