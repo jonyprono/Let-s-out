@@ -541,34 +541,34 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
                   {/* Grid Stats */}
                   <div className="flex flex-col gap-[12px]">
-                    <div className="flex items-center justify-between pb-[12px] border-b border-[#CED1D3] border-dashed">
-                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Objectif</span>
-                      <span className="text-[14px] font-semibold font-inter text-[#007BFF]">{cagnoteBudget.toLocaleString()} F CFA</span>
+                    <div className="flex items-center justify-between pb-[12px] border-b border-[#CED1D3] dark:border-[#444] border-dashed">
+                      <span className="text-[14px] font-normal font-poppins text-[#404040] dark:text-gray-300">Objectif</span>
+                      <span className="text-[14px] font-semibold font-inter text-[#007BFF] dark:text-[#3B82F6]">{cagnoteBudget.toLocaleString()} F CFA</span>
                     </div>
                     <div className="flex items-center justify-between pb-[12px]">
-                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Collecté</span>
-                      <span className="text-[14px] font-bold font-inter text-[#00A35F]">{cagnoteCollected.toLocaleString()} F</span>
+                      <span className="text-[14px] font-normal font-poppins text-[#404040] dark:text-gray-300">Collecté</span>
+                      <span className="text-[14px] font-bold font-inter text-[#00A35F] dark:text-[#10B981]">{cagnoteCollected.toLocaleString()} F</span>
                     </div>
                     <div className="flex items-center justify-between pb-[12px]">
-                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Restant</span>
+                      <span className="text-[14px] font-normal font-poppins text-[#404040] dark:text-gray-300">Restant</span>
                       <span className="text-[14px] font-bold font-inter text-[#FF7A00]">{cagnoteRemaining.toLocaleString()} F</span>
                     </div>
                     <div className="flex items-center justify-between pb-[12px]">
-                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Progression</span>
+                      <span className="text-[14px] font-normal font-poppins text-[#404040] dark:text-gray-300">Progression</span>
                       <div className="flex items-center justify-center px-[3px] py-[1px] bg-[#FF7A00] rounded-[4px] min-w-[36px] h-[22px]">
                         <span className="text-[14px] font-medium font-inter text-white">{cagnoteProgress}%</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between pt-[4px]">
-                      <span className="text-[14px] font-normal font-poppins text-[#404040]">Participation</span>
-                      <span className="text-[14px] font-normal font-inter text-[#1B1818]">
-                        A partir de <span className="text-[#007BFF] font-semibold">{(minPoolAmount || 0).toLocaleString()}F</span>
+                      <span className="text-[14px] font-normal font-poppins text-[#404040] dark:text-gray-300">Participation</span>
+                      <span className="text-[14px] font-normal font-inter text-[#1B1818] dark:text-white">
+                        A partir de <span className="text-[#007BFF] dark:text-[#3B82F6] font-semibold">{(minPoolAmount || 0).toLocaleString()}F</span>
                       </span>
                     </div>
                   </div>
 
                   {event.registrationDeadline && (
-                    <div className="mt-[16px] flex flex-row items-start p-[12px_16px] gap-[12px] bg-[#FFF9EC] rounded-[8px] w-full box-border">
+                    <div className="mt-[16px] flex flex-row items-start p-[12px_16px] gap-[12px] bg-[#FFF9EC] dark:bg-orange-500/10 rounded-[8px] w-full box-border">
                       <div className="flex-none w-[20px] h-[20px] relative flex items-center justify-center">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path d="M4.93367 4.9344C6.79823 3.06984 7.73051 2.13756 8.82101 1.83001C9.59168 1.61265 10.4075 1.61265 11.1782 1.83001C12.2687 2.13756 13.2009 3.06984 15.0655 4.9344C16.9301 6.79896 17.8623 7.73124 18.1699 8.82174C18.3873 9.59241 18.3873 10.4082 18.1699 11.1789C17.8623 12.2694 16.9301 13.2017 15.0655 15.0662C13.2009 16.9308 12.2687 17.8631 11.1782 18.1707C10.4075 18.388 9.59168 18.388 8.82101 18.1707C7.73051 17.8631 6.79823 16.9308 4.93367 15.0662C3.06911 13.2017 2.13683 12.2694 1.82928 11.1789C1.61192 10.4082 1.61192 9.59241 1.82928 8.82174C2.13683 7.73124 3.06911 6.79896 4.93367 4.9344Z" stroke="#FF7A00" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
@@ -576,17 +576,16 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           <path d="M10.1038 13.1253H9.99959M10.2079 13.1253C10.2079 13.2404 10.1147 13.3337 9.99959 13.3337C9.88451 13.3337 9.79126 13.2404 9.79126 13.1253C9.79126 13.0102 9.88451 12.917 9.99959 12.917C10.1147 12.917 10.2079 13.0102 10.2079 13.1253Z" stroke="#FF7A00" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
-                      <div className="flex-1 font-inter font-medium text-[12px] leading-[16px] text-[#404040]">
+                      <div className="flex-1 font-inter font-medium text-[12px] leading-[16px] text-[#404040] dark:text-gray-300">
                         Date limite d'inscription: <span className="text-[#FF7A00]">{format(new Date(event.registrationDeadline), "dd MMMM yyyy", { locale: fr })}</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Bouton Gérer la cagnotte pour les organisateurs */}
                   {isOrganizer && new Date() > new Date(event?.registrationDeadline || event?.startAt || new Date()) && (
                     <button
                       onClick={() => setShowPoolManagementModal(true)}
-                      className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] bg-orange-50 text-[14px] font-medium text-[#FF7A00] active:scale-95 transition-transform"
+                      className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] dark:border-[#444] bg-orange-50 dark:bg-orange-500/10 text-[14px] font-medium text-[#FF7A00] active:scale-95 transition-transform"
                     >
                       <Briefcase className="w-4 h-4" />
                       Gérer la cagnotte
@@ -603,7 +602,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           toast.info("Rejoignez l'événement avant de contribuer.")
                         }
                       }}
-                      className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] bg-white text-[14px] font-medium text-[#1B1818] active:scale-95 transition-transform mt-[16px]"
+                      className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-[14px] font-medium text-[#1B1818] dark:text-white active:scale-95 transition-transform mt-[16px]"
                     >
                       <span className="text-[16px]">💵</span>
                       Contribuer à nouveau

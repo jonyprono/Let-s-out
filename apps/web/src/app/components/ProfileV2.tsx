@@ -428,7 +428,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <Calendar className="w-3.5 h-3.5 text-[#FF7A00]" />
             </div>
             <div className="text-center">
-              <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{createdEvents.length}</p>
+              <p className="font-poppins font-medium text-[15px] text-gray-700 dark:text-gray-200 leading-tight">{createdEvents.length}</p>
               <p className="font-inter text-[10px] text-gray-500">Créés</p>
             </div>
           </div>
@@ -437,7 +437,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <Activity className="w-3.5 h-3.5 text-[#FF7A00]" />
             </div>
             <div className="text-center">
-              <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{pastEvents.length}</p>
+              <p className="font-poppins font-medium text-[15px] text-gray-700 dark:text-gray-200 leading-tight">{pastEvents.length}</p>
               <p className="font-inter text-[10px] text-gray-500">Rejoints</p>
             </div>
           </div>
@@ -446,7 +446,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <Users className="w-3.5 h-3.5 text-[#FF7A00]" />
             </div>
             <div className="text-center">
-              <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{friends.length}</p>
+              <p className="font-poppins font-medium text-[15px] text-gray-700 dark:text-gray-200 leading-tight">{friends.length}</p>
               <p className="font-inter text-[10px] text-gray-500">Amis</p>
             </div>
           </div>
@@ -455,7 +455,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <svg className="w-3.5 h-3.5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
             <div className="text-center">
-              <p className="font-poppins font-medium text-[15px] text-gray-700 leading-tight">{rating ?? '–'}</p>
+              <p className="font-poppins font-medium text-[15px] text-gray-700 dark:text-gray-200 leading-tight">{rating ?? '–'}</p>
               <p className="font-inter text-[10px] text-gray-500">Note</p>
             </div>
           </div>
@@ -468,7 +468,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           <button 
             onClick={() => setActiveTab('profil')}
             className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
-              activeTab === 'profil' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+              activeTab === 'profil' ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/10' : 'bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400'
             }`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'profil' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -478,7 +478,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           <button 
             onClick={() => setActiveTab('events')}
             className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
-              activeTab === 'events' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+              activeTab === 'events' ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/10' : 'bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400'
             }`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'events' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -488,7 +488,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           <button 
             onClick={() => navigate(isOwnProfile ? '/friends' : `/friends/${targetUserId}`)}
             className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
-              activeTab === 'friends' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+              activeTab === 'friends' ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/10' : 'bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400'
             }`}
           >
             <Users className={`w-[18px] h-[18px] ${activeTab === 'friends' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}`} />
@@ -498,7 +498,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           <button 
             onClick={() => navigate(isOwnProfile ? '/friends?tab=following' : `/friends/${targetUserId}?tab=following`)}
             className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
-              activeTab === 'following' ? 'bg-[#FFF2D3] text-[#FF7A00]' : 'bg-[#FAFAFA] text-[#56514F]'
+              activeTab === 'following' ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/10' : 'bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400'
             }`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'following' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -549,7 +549,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   else if (i.toLowerCase().includes('bien-être')) icon = '🧘‍♀️';
 
                   return (
-                    <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FAFAFA] border border-[#F5F5F4] rounded-full text-[13px] font-medium text-gray-700">
+                    <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#F5F5F4] dark:border-[#333] rounded-full text-[13px] font-medium text-gray-700 dark:text-gray-300">
                       <span>{icon}</span>
                       <span>{i}</span>
                     </div>
@@ -560,7 +560,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 {isOwnProfile && (
                   <button
                     onClick={() => setShowEditModal(true)}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-white border border-dashed border-[#D4D4D4] rounded-full text-[13px] font-medium text-gray-700 active:scale-95 transition-transform"
+                    className="flex items-center gap-1.5 px-4 py-1.5 bg-white dark:bg-[#222] border border-dashed border-[#D4D4D4] dark:border-[#555] rounded-full text-[13px] font-medium text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
                   >
                     <span className="text-gray-400 text-[16px] leading-[0]">+</span> Ajouter
                   </button>
@@ -585,10 +585,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                       <div
                         key={b.badge}
                         onClick={() => { if (isOwnProfile) setSelectedBadge(b) }}
-                        className={`w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] transition-transform ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
+                        className={`w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] dark:bg-[#1A1A1A] transition-transform ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
                       >
                         {b.icon}
-                        <span className="text-[10px] font-bold text-[#1B1818] text-center leading-[12px] whitespace-pre-wrap">{b.title}</span>
+                        <span className="text-[10px] font-bold text-[#1B1818] dark:text-white text-center leading-[12px] whitespace-pre-wrap">{b.title}</span>
                       </div>
                     );
                   } else {
@@ -596,7 +596,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                       <div
                         key={b.badge}
                         onClick={() => { if (isOwnProfile) setSelectedBadge(b) }}
-                        className={`w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] opacity-60 transition-transform relative overflow-hidden ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
+                        className={`w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] dark:bg-[#1A1A1A] opacity-60 transition-transform relative overflow-hidden ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
                       >
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
                           <div className="h-full bg-[#FF7A00]/50 transition-all" style={{ width: `${pct}%` }} />
@@ -639,13 +639,13 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-[#FF7A00]" />
               </div>
-              <p className="text-[13px] font-medium text-gray-700 text-center">Événements<br/>créés</p>
+              <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 text-center">Événements<br/>créés</p>
             </div>
-            <div onClick={() => navigate(isOwnProfile ? '/profile/events-joined' : `/profile/${targetUserId}/events-joined`)} className="w-full bg-[#FAFAFA] border border-[#F5F5F4] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
+            <div onClick={() => navigate(isOwnProfile ? '/profile/events-joined' : `/profile/${targetUserId}/events-joined`)} className="w-full bg-[#FAFAFA] dark:bg-[#111] border border-[#F5F5F4] dark:border-[#222] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
                 <Activity className="w-5 h-5 text-[#FF7A00]" />
               </div>
-              <p className="text-[13px] font-medium text-gray-700 text-center">Événements<br/>rejoints</p>
+              <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 text-center">Événements<br/>rejoints</p>
             </div>
           </div>
         )}

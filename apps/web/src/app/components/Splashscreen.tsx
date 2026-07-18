@@ -111,8 +111,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
 
   return (
     <div
-      className="w-full h-full flex flex-col flex-1 relative overflow-y-auto overflow-x-hidden"
-      style={{ backgroundColor: '#FFFFFF' }}
+      className="w-full h-full flex flex-col flex-1 relative overflow-y-auto overflow-x-hidden bg-white dark:bg-[#121212]"
     >
       <div className="flex flex-col flex-1 px-6 pt-4 pb-3 justify-between w-full max-w-[390px] mx-auto">
 
@@ -122,9 +121,9 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
           {currentIndex === 1 && (
             <button 
               onClick={onComplete} 
-              className="flex items-center gap-1 font-poppins text-[14px] font-medium text-[#525252] focus:outline-none hover:opacity-75"
+              className="flex items-center gap-1 font-poppins text-[14px] font-medium text-[#525252] dark:text-gray-300 focus:outline-none hover:opacity-75"
             >
-              Passer <span className="text-[#A3A3A3] text-[12px] font-bold tracking-tighter">&gt;&gt;</span>
+              Passer <span className="text-[#A3A3A3] dark:text-gray-400 text-[12px] font-bold tracking-tighter">&gt;&gt;</span>
             </button>
           )}
         </div>
@@ -220,7 +219,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
                   </h2>
                   
                   {/* Description courte */}
-                  <p className="font-inter text-[14px] font-normal leading-[20px] text-center text-[#404040] w-full max-w-[288px]">
+                  <p className="font-inter text-[14px] font-normal leading-[20px] text-center text-[#404040] dark:text-gray-300 w-full max-w-[288px]">
                     {current.description}
                   </p>
                 </div>

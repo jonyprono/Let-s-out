@@ -111,8 +111,8 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
 
   const toggleInterest = (interest: string) => {
     setSelectedInterests(prev =>
-      prev.includes(interest)
-        ? prev.filter(i => i !== interest)
+      prev.some(i => i.toLowerCase() === interest.toLowerCase())
+        ? prev.filter(i => i.toLowerCase() !== interest.toLowerCase())
         : [...prev, interest]
     )
   }
@@ -329,7 +329,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             
             <div className="flex flex-wrap gap-2.5 pt-2">
               {AVAILABLE_INTERESTS.map(interest => {
-                const isSelected = selectedInterests.includes(interest)
+                const isSelected = selectedInterests.some(i => i.toLowerCase() === interest.toLowerCase())
                 const icon = getInterestIcon(interest)
 
                 return (
