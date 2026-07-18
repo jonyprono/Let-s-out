@@ -84,6 +84,7 @@ export async function sendToToken(token: string, payload: PushPayload): Promise<
         title: payload.title,
         body: payload.body,
         imageUrl: payload.imageUrl,
+        icon: '/logoci.svg',
       },
       data: {
         ...(payload.data || {}),
