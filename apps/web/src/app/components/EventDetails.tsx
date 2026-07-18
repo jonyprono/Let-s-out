@@ -95,6 +95,30 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     enabled: !!id,
     refetchOnWindowFocus: true,
     staleTime: 5_000,
+    initialData: () => {
+      // 1. Chercher dans le feed public
+      const feedData = qc.getQueryData<any>(['feed']);
+      const inFeed = feedData?.pages?.flatMap((p: any) => p.data)?.find((e: any) => e.id === id);
+      if (inFeed) return inFeed;
+
+      // 2. Chercher dans la map
+      const mapData = qc.getQueryData<any>(['events-map']);
+      const inMap = mapData?.find((e: any) => e.id === id);
+      if (inMap) return inMap;
+
+      // 3. Chercher dans l'activité de l'utilisateur (My Events)
+      const activityData = qc.getQueryData<any>(['users', 'activity', user?.id]);
+      if (activityData) {
+        const inJoined = activityData.joinedEvents?.find((e: any) => e.id === id);
+        if (inJoined) return inJoined;
+        const inCreated = activityData.createdEvents?.find((e: any) => e.id === id);
+        if (inCreated) return inCreated;
+        const inPast = activityData.pastEvents?.find((e: any) => e.id === id);
+        if (inPast) return inPast;
+      }
+
+      return undefined;
+    },
   })
 
 

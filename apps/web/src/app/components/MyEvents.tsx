@@ -11,6 +11,8 @@ import { useFavoritesStore } from '@/stores/favorites.store';
 import { getEventParticipationMode } from '@/lib/utils';
 import { ToggleButton } from '@/components/ui/toggle-button';
 
+import { useLocation } from 'react-router';
+
 interface MyEventsProps {
   onNavigate: (screen: string, id?: string) => void;
 }
@@ -34,7 +36,8 @@ function formatPrice(event: any): string {
 }
 
 export function MyEvents({ onNavigate }: MyEventsProps) {
-  const [activeTab, setActiveTab] = useState<TabKey>('upcoming');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<TabKey>(location.state?.tab || 'upcoming');
   const user = useAuthStore(state => state.user);
 
   const { data: notifData } = useNotifications();

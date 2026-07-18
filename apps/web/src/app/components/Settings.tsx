@@ -13,7 +13,7 @@ import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
-import { LanguageModal } from '@/features/users/components/LanguageModal';
+import { PreferencesModal } from '@/features/users/components/PreferencesModal';
 import { ChangePasswordModal } from '@/features/users/components/ChangePasswordModal';
 import { PrivacyModal } from '@/features/users/components/PrivacyModal';
 import { EditPhoneModal } from '@/features/users/components/EditPhoneModal';
@@ -111,13 +111,14 @@ export function Settings({ onBack }: SettingsProps) {
 
   // Modal states — all preserved
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showLangModal, setShowLangModal] = useState(false);
+  const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [showPassModal, setShowPassModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'rejected' | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [deleteReason, setDeleteReason] = useState('');
 
@@ -386,7 +387,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconColor="text-blue-500"
               title="Préférences"
               subtitle="Langue, thème, notifications"
-              onClick={() => setShowLangModal(true)}
+              onClick={() => setShowPreferencesModal(true)}
             />
             <SettingsRow
               icon={<WalletIcon className="w-4 h-4" />}
@@ -418,7 +419,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconColor="text-red-500"
               title="Mes favoris"
               subtitle="Événements et organisateurs favoris"
-              onClick={() => navigate('/favorites')}
+              onClick={() => navigate('/my-events', { state: { tab: 'favorites' } })}
             />
             <SettingsRow
               icon={<Award className="w-4 h-4" />}
@@ -503,7 +504,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconColor="text-yellow-500"
               title="Noter Let's Out"
               subtitle="Donnez votre avis"
-              onClick={() => toast.info('Bientôt disponible sur les stores !')}
+              onClick={() => setShowRatingModal(true)}
             />
             <SettingsRow
               icon={<Share2 className="w-4 h-4" />}
@@ -561,11 +562,55 @@ export function Settings({ onBack }: SettingsProps) {
 
       {/* ── Modales (toutes préservées) ─────────────────────────────────────── */}
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
-      {showLangModal && <LanguageModal onClose={() => setShowLangModal(false)} />}
+      {showPreferencesModal && <PreferencesModal onClose={() => setShowPreferencesModal(false)} />}
       {showPassModal && <ChangePasswordModal onClose={() => setShowPassModal(false)} />}
       {showPrivacyModal && <PrivacyModal onClose={() => setShowPrivacyModal(false)} />}
       {showPhoneModal && <EditPhoneModal onClose={() => setShowPhoneModal(false)} />}
       {showEmailModal && <EditEmailModal onClose={() => setShowEmailModal(false)} />}
+
+      {/* ── Modale de note (Rating) ────────────────────────────────────────── */}
+      {showRatingModal && createPortal(
+        <div 
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center px-4 pb-6 sm:p-4"
+          onClick={() => setShowRatingModal(false)}
+        >
+          <div 
+            className="bg-white dark:bg-[#1A1A1A] w-full max-w-sm rounded-[32px] p-6 shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center text-center gap-3 mb-6">
+              <div className="w-16 h-16 rounded-full bg-yellow-50 dark:bg-yellow-500/10 flex items-center justify-center">
+                <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" />
+              </div>
+              <h2 className="text-[20px] font-bold text-gray-900 dark:text-white">Noter Let's Out</h2>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
+                Où souhaitez-vous laisser votre avis ?
+              </p>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  window.open('https://play.google.com/store/apps/details?id=app.letsout.android', '_blank');
+                  setShowRatingModal(false);
+                }}
+                className="w-full py-4 bg-gray-50 dark:bg-[#222] hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-2xl flex items-center justify-center gap-3 font-semibold text-gray-900 dark:text-white transition-colors border border-gray-100 dark:border-[#333]"
+              >
+                Google Play Store
+              </button>
+              <button
+                onClick={() => {
+                  window.open('https://apps.apple.com/app/lets-out/id123456789', '_blank');
+                  setShowRatingModal(false);
+                }}
+                className="w-full py-4 bg-gray-50 dark:bg-[#222] hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-2xl flex items-center justify-center gap-3 font-semibold text-gray-900 dark:text-white transition-colors border border-gray-100 dark:border-[#333]"
+              >
+                Apple App Store
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* ── Modale suppression de compte ─────────────────────────────────────── */}
       {showDeleteModal && createPortal(
