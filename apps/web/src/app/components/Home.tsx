@@ -130,6 +130,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const [showPermissions, setShowPermissions] = useState(false);
   const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const featuredScrollRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
   const isOffline = !useIsOnline();
   const { user } = useAuthStore();
@@ -210,6 +211,30 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const events: Event[] = rawEvents;
   // "À ne pas manquer" = top 6 by featured score
   const featuredEvents = sortFeaturedEvents(events).slice(0, 6);
+
+  // Auto-scroll pour "À ne pas manquer"
+  useEffect(() => {
+    if (!featuredScrollRef.current || featuredEvents.length === 0) return;
+    
+    const interval = setInterval(() => {
+      setFeaturedIndex(prev => {
+        const next = (prev + 1) % featuredEvents.length;
+        const el = featuredScrollRef.current;
+        if (el) {
+          // Si on est au dernier élément, on scrolle au début (0)
+          if (next === 0) {
+            el.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            // Sinon on avance d'une carte (environ 85% de la largeur)
+            el.scrollTo({ left: next * (el.offsetWidth * 0.85), behavior: 'smooth' });
+          }
+        }
+        return next;
+      });
+    }, 4500); // Défilement toutes les 4.5 secondes
+
+    return () => clearInterval(interval);
+  }, [featuredEvents.length]);
   // "Populaires" = sorted by attendee count (independent list, no deduplication)
   const popularEvents = sortPopularEvents(events);
 
@@ -436,6 +461,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   ) : featuredEvents.length > 0 ? (
                     <>
                       <div
+                        ref={featuredScrollRef}
                         className="flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory"
                         style={{ scrollbarWidth: 'none' }}
                         onScroll={(e) => {

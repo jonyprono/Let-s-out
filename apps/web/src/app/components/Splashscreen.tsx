@@ -57,6 +57,16 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
     }
   }, [currentIndex, autoPlayDone])
 
+  /* Auto-advance pour les écrans du carrousel */
+  useEffect(() => {
+    if (currentIndex > 0 && currentIndex < onboardingScreens.length - 1) {
+      const timer = setTimeout(() => {
+        setCurrentIndex(prev => prev + 1)
+      }, 3500)
+      return () => clearTimeout(timer)
+    }
+  }, [currentIndex])
+
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
 
