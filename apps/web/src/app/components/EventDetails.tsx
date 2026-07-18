@@ -341,6 +341,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const maxAttendees = event.maxAttendees
   const isFull = maxAttendees != null && maxAttendees > 0 && attendeeCount >= maxAttendees
   const isPastEvent = event?.startAt ? new Date(event.startAt) < new Date() : false
+  const deadline = event?.registrationDeadline || event?.startAt || event?.date
+  const isPastDeadline = deadline ? new Date(deadline) < new Date() : false
 
   const organizerName = event.creator?.profile?.displayName || 'Organisateur'
   const organizerAvatar = event.creator?.profile?.avatarUrl
@@ -596,16 +598,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   {(hasJoined || participationPaid) && (
                     <button
                       onClick={() => {
+                        if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
                         if (isCreator || participationPaid) {
                           navigate(`/events/${id}/pay?type=contribution`)
                         } else {
                           toast.info("Rejoignez l'événement avant de contribuer.")
                         }
                       }}
-                      className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-[14px] font-medium text-[#1B1818] dark:text-white active:scale-95 transition-transform mt-[16px]"
+                      disabled={isPastDeadline}
+                      className={`w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-[14px] font-medium text-[#1B1818] dark:text-white mt-[16px] ${isPastDeadline ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 transition-transform'}`}
                     >
                       <span className="text-[16px]">💵</span>
-                      Contribuer à nouveau
+                      {isPastDeadline ? 'Date limite dépassée' : 'Contribuer à nouveau'}
                     </button>
                   )}
                 </div>
@@ -671,12 +675,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             !isPastEvent && (
               <Button
                 onClick={() => {
+                  if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
                   handleJoin();
                 }}
-                disabled={joinMutation.isPending || isFull}
+                disabled={joinMutation.isPending || isFull || isPastDeadline}
                 className="flex-1 rounded-full font-medium text-[14px] font-poppins"
               >
-                {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : "Rejoindre l'événement"}
+                {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : "Rejoindre l'événement"}
               </Button>
             )
           )}

@@ -166,7 +166,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 
     const { eventId, userId } = meta
     if (!eventId || !userId) {
-      app.log.warn('[FedaPay webhook] Missing eventId or userId in metadata', { meta })
+      app.log.warn({ meta }, '[FedaPay webhook] Missing eventId or userId in metadata')
       return reply.send({ received: true })
     }
 
@@ -259,7 +259,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       await handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount })
       reply.send({ message: 'Booking confirmed (sandbox/dev)', eventId })
     } catch (e) {
-      app.log.error('[dev/confirm-booking] Error in handleConfirmedBooking', e)
+      app.log.error({ err: e }, '[dev/confirm-booking] Error in handleConfirmedBooking')
       reply.code(500).send({ error: 'Internal Server Error during booking confirmation' })
     }
   })

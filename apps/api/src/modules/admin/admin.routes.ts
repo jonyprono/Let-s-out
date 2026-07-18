@@ -1,6 +1,9 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { createAndSendNotification } from '../notifications/notifications.routes'
+import { writeAuditLog } from '../../services/audit.service'
+import { releaseFunds } from '../payments/event-payout.routes'
+import { format } from 'date-fns'
 
 const KYC_STATUSES = ['pending', 'verified', 'rejected'] as const
 
@@ -222,5 +225,168 @@ export default async function adminRoutes(app: FastifyInstance) {
 
     await app.prisma.admin.delete({ where: { id } })
     return reply.send({ success: true })
+  })
+  // ── Audit Logs ─────────────────────────────────────────────────────
+  app.get('/audit/logs', async (req, reply) => {
+    const query = z.object({
+      action: z.string().optional(),
+      eventId: z.string().optional(),
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(100).default(50),
+    }).parse(req.query)
+
+    const where: any = {}
+    if (query.action) where.action = query.action
+    if (query.eventId) where.eventId = query.eventId
+
+    const [total, rows] = await Promise.all([
+      app.prisma.auditLog.count({ where }),
+      app.prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+      }),
+    ])
+
+    return reply.send({
+      data: rows,
+      total,
+      page: query.page,
+      limit: query.limit,
+      pages: Math.ceil(total / query.limit) || 1,
+    })
+  })
+
+  // ── Export CSV des logs d'audit ─────────────────────────────────────
+  app.get('/audit/export', async (_req, reply) => {
+    const rows = await app.prisma.auditLog.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
+
+    const header = ['ID', 'Date', 'Action', 'Actor ID', 'Actor Role', 'Event ID', 'Target Type', 'Target ID', 'Amount', 'IP Address', 'User Agent', 'Comment']
+    const csvRows = rows.map(r => [
+      r.id,
+      format(r.createdAt, "yyyy-MM-dd HH:mm:ss"),
+      r.action,
+      r.actorId || '',
+      r.actorRole || '',
+      r.eventId || '',
+      r.targetType || '',
+      r.targetId || '',
+      r.amount?.toString() || '',
+      r.ipAddress || '',
+      r.userAgent || '',
+      r.comment || ''
+    ])
+
+    const csvContent = [header, ...csvRows]
+      .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+
+    reply.header('Content-Type', 'text/csv; charset=utf-8')
+    reply.header('Content-Disposition', 'attachment; filename="audit_logs.csv"')
+    return reply.send(csvContent)
+  })
+
+  // ── Gestion des Payouts ─────────────────────────────────────────────
+  app.get('/payouts', async (req, reply) => {
+    const query = z.object({
+      status: z.string().optional(),
+      page: z.coerce.number().int().min(1).default(1),
+      limit: z.coerce.number().int().min(1).max(50).default(20),
+    }).parse(req.query)
+
+    const where: any = {}
+    if (query.status) where.status = query.status
+
+    const [total, rows] = await Promise.all([
+      app.prisma.eventPayoutRequest.count({ where }),
+      app.prisma.eventPayoutRequest.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+        include: {
+          event: { select: { title: true, poolCollected: true, poolWithdrawn: true } }
+        }
+      })
+    ])
+
+    return reply.send({
+      data: rows,
+      total,
+      page: query.page,
+      limit: query.limit,
+      pages: Math.ceil(total / query.limit) || 1,
+    })
+  })
+
+  app.post('/payouts/:id/force-approve', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    
+    const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
+      where: { id },
+      include: { event: true }
+    })
+    if (!payoutReq) return reply.code(404).send({ error: 'Request not found' })
+    if (['APPROVED', 'EXPIRED'].includes(payoutReq.status)) {
+      return reply.code(400).send({ error: `Cannot approve request with status ${payoutReq.status}` })
+    }
+
+    const adminUser = req.user as { sub: string }
+
+    await releaseFunds(app, payoutReq.eventId, payoutReq.requestedBy, payoutReq.amount, payoutReq.event.title)
+
+    const updated = await app.prisma.eventPayoutRequest.update({
+      where: { id },
+      data: { status: 'APPROVED' }
+    })
+
+    await writeAuditLog(app.prisma, {
+      actorId: adminUser.sub,
+      actorRole: 'ADMIN',
+      action: 'PAYOUT_APPROVED',
+      targetType: 'payoutRequest',
+      targetId: id,
+      eventId: payoutReq.eventId,
+      amount: payoutReq.amount,
+      comment: 'Forcé par un administrateur',
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    })
+
+    return reply.send({ data: updated, message: 'Fonds débloqués de force par l\'admin' })
+  })
+
+  app.post('/payouts/:id/reject', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const { reason } = z.object({ reason: z.string() }).parse(req.body)
+
+    const payoutReq = await app.prisma.eventPayoutRequest.findUnique({ where: { id } })
+    if (!payoutReq) return reply.code(404).send({ error: 'Request not found' })
+    if (payoutReq.status === 'APPROVED') return reply.code(400).send({ error: 'Cannot reject already approved payout' })
+
+    const adminUser = req.user as { sub: string }
+
+    const updated = await app.prisma.eventPayoutRequest.update({
+      where: { id },
+      data: { status: 'REJECTED', rejectionReason: reason || 'Refusé par administrateur' }
+    })
+
+    await writeAuditLog(app.prisma, {
+      actorId: adminUser.sub,
+      actorRole: 'ADMIN',
+      action: 'PAYOUT_REJECTED',
+      targetType: 'payoutRequest',
+      targetId: id,
+      eventId: payoutReq.eventId,
+      amount: payoutReq.amount,
+      comment: reason || 'Refus manuel',
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent']
+    })
+
+    return reply.send({ data: updated, message: 'Requête rejetée' })
   })
 }

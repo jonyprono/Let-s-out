@@ -134,6 +134,12 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       const availableAmount = event.poolCollected - (event.poolWithdrawn || 0)
       if (availableAmount <= 0) return reply.code(400).send({ error: 'Aucun fond disponible à débloquer' })
 
+      // Sécurité : le déblocage ne peut se faire qu'une fois les inscriptions clôturées
+      const deadline = event.registrationDeadline || event.startAt
+      if (new Date() < new Date(deadline)) {
+        return reply.code(400).send({ error: 'La cagnotte doit être clôturée (date limite dépassée) avant de demander le déblocage.' })
+      }
+
       // Prevent re-request if already PENDING/VOTING/APPROVED
       if (event.payoutRequest && ['PENDING', 'VOTING', 'APPROVED'].includes(event.payoutRequest.status)) {
         return reply.code(400).send({ error: 'Une demande de déblocage est déjà en cours ou a été approuvée.' })
@@ -527,7 +533,7 @@ async function settleExpiredVote(
 // ─── HELPER: Release funds with commission tracking ───────────────────────────
 const SYSTEM_WALLET_USER_ID = 'SYSTEM_PLATFORM'
 
-async function releaseFunds(
+export async function releaseFunds(
   app: FastifyInstance,
   eventId: string,
   creatorId: string,

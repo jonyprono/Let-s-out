@@ -937,10 +937,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({
       where: { id },
-      select: { conversationId: true, userId: true }
+      select: { conversation: { select: { id: true } }, creatorId: true }
     })
 
-    if (event?.userId === sub) {
+    if (event?.creatorId === sub) {
       return reply.code(400).send({ error: 'Organizer cannot leave' })
     }
 
@@ -965,10 +965,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
       )
     }
 
-    if (event?.conversationId) {
+    if (event?.conversation?.id) {
       operations.push(
         app.prisma.conversationMember.deleteMany({
-          where: { conversationId: event.conversationId, userId: sub }
+          where: { conversationId: event.conversation.id, userId: sub }
         })
       )
     }

@@ -109,6 +109,8 @@ import { AdminKycDetailPage } from '@/app/components/admin/AdminKycDetailPage'
 import { AdminAdminsPage } from '@/app/components/admin/AdminAdminsPage'
 import { AdminSupportChats } from './components/admin/AdminSupportChats'
 import { AdminBotPrompts } from './components/admin/AdminBotPrompts'
+import { AdminAuditLogsPage } from './components/admin/AdminAuditLogsPage'
+import { AdminPayoutsPage } from './components/admin/AdminPayoutsPage'
 import { EventPayoutApproval } from './components/EventPayoutApproval';
 import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
 
@@ -254,6 +256,8 @@ export default function App() {
             <Route path="admins" element={<AdminAdminsPage />} />
             <Route path="support" element={<AdminSupportChats />} />
             <Route path="bots" element={<AdminBotPrompts />} />
+            <Route path="audit" element={<AdminAuditLogsPage />} />
+            <Route path="payouts" element={<AdminPayoutsPage />} />
           </Route>
 
           {/* Protected app */}
