@@ -22,96 +22,52 @@ type BadgeDef = {
 };
 
 function BadgeIcon({ children }: { children: React.ReactNode }) {
-  return <div className="w-8 h-8 flex items-center justify-center">{children}</div>;
+  return <div className="w-[40px] h-[40px] flex items-center justify-center text-[32px]">{children}</div>;
 }
 
 const ALL_BADGES: BadgeDef[] = [
   {
     badge: 'Early adopter',
-    title: 'Early\nadopter',
-    icon: (
-      <BadgeIcon>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
-          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
-        </svg>
-      </BadgeIcon>
-    ),
+    title: 'Early adopter',
+    icon: <BadgeIcon>🚀</BadgeIcon>,
     description: 'Récompense les pionniers qui ont rejoint Let\'s Out lors du lancement.',
     howTo: 'Créez votre compte pendant la phase de lancement de l\'application.',
     getProgress: (_a, _f) => ({ current: 1, target: 1 }),
   },
   {
     badge: 'Social Star',
-    title: 'Social\nStar',
-    icon: (
-      <BadgeIcon>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-        </svg>
-      </BadgeIcon>
-    ),
+    title: 'Social star',
+    icon: <BadgeIcon>⭐</BadgeIcon>,
     description: 'Décerné aux membres avec une grande vie sociale sur la plateforme.',
     howTo: 'Ajoutez 10 amis sur Let\'s Out pour débloquer ce badge.',
     getProgress: (_a, friends) => ({ current: friends.length, target: 10 }),
   },
   {
     badge: 'Party Maker',
-    title: 'Party\nMaker',
-    icon: (
-      <BadgeIcon>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5.8 11.3 2 22l10.7-3.79"/>
-          <path d="M4 3h.01"/>
-          <path d="M22 8h.01"/>
-          <path d="M15 2h.01"/>
-          <path d="M22 20h.01"/>
-          <path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12v0c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/>
-          <path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11v0c-.1.5-.55.85-1.06.85H17"/>
-          <path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98v0C9.72 4.9 9.37 5.35 9.37 5.86V6"/>
-          <path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z"/>
-        </svg>
-      </BadgeIcon>
-    ),
+    title: 'Party maker',
+    icon: <BadgeIcon>🎉</BadgeIcon>,
     description: 'Pour les organisateurs dont la cagnotte atteint au moins 90% de son objectif.',
     howTo: 'Organisez un événement avec cagnotte et atteignez 90% de l\'objectif.',
     getProgress: (activity, _f) => {
       const events = activity?.createdEvents ?? [];
-      // Find the best pool percentage across all created events
       const poolEvents = events.filter((e: any) => e.poolTarget > 0);
       if (poolEvents.length === 0) return { current: 0, target: 90 };
       const best = Math.max(...poolEvents.map((e: any) => {
-        const pct = e.poolTarget > 0 ? Math.round((e.poolCollected ?? 0) / e.poolTarget * 100) : 0;
-        return pct;
+        return e.poolTarget > 0 ? Math.round((e.poolCollected ?? 0) / e.poolTarget * 100) : 0;
       }));
       return { current: Math.min(best, 90), target: 90 };
     },
   },
   {
     badge: 'Top Donateur',
-    title: 'Top\nDonateur',
-    icon: (
-      <BadgeIcon>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 12v10H4V12"/>
-          <path d="M22 7H2v5h20V7z"/>
-          <path d="M12 22V7"/>
-          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-        </svg>
-      </BadgeIcon>
-    ),
+    title: 'Top donateur',
+    icon: <BadgeIcon>🎁</BadgeIcon>,
     description: 'Récompense la générosité envers la communauté.',
     howTo: 'Contribuez au moins 2 fois à la cagnotte de 5 événements différents.',
     getProgress: (activity, _f) => {
-      // Count pool events where totalPaid suggests at least 2 contributions
-      // activity.bookings has the raw booking data including totalPaid and event.poolMinAmount
       const poolBookings = (activity?.bookings ?? []).filter((b: any) =>
         b.event?.poolTarget > 0 && b.totalPaid > 0
       );
-      // Consider "contributed twice" if totalPaid >= 2 * (poolMinAmount || 1)
       const doubleContributed = poolBookings.filter((b: any) => {
         const minAmount = b.event?.poolMinAmount || 1;
         return b.totalPaid >= minAmount * 2;
@@ -121,59 +77,32 @@ const ALL_BADGES: BadgeDef[] = [
   },
   {
     badge: 'Top Org.',
-    title: 'Top\nOrg.',
-    icon: (
-      <BadgeIcon>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-          <path d="M4 22h16"/>
-          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
-          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
-          <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
-        </svg>
-      </BadgeIcon>
-    ),
-    description: 'Décerné aux organisateurs les mieux notés de la communauté.',
-    howTo: 'Maintenez une note moyenne de 4.5/5 après avoir reçu 5 avis.',
-    getProgress: (_a, _f, profileData) => ({
-      current: Math.min(profileData?.detailedStats?.reviewCount ?? 0, 5),
-      target: 5,
-    }),
+    title: 'Top org.',
+    icon: <BadgeIcon>🎖️</BadgeIcon>,
+    description: 'Décerné aux créateurs d\'événements les plus réussis.',
+    howTo: 'Organisez 5 événements avec une note moyenne supérieure à 4.5/5.',
+    getProgress: (activity, _f, profileData) => {
+      const events = activity?.createdEvents ?? [];
+      const highlyRated = events.filter((_e: any) => profileData?.rating && profileData.rating >= 4.5);
+      return { current: highlyRated.length, target: 5 };
+    },
   },
   {
     badge: 'Ponctuel',
     title: 'Ponctuel',
-    icon: (
-      <BadgeIcon>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-      </BadgeIcon>
-    ),
+    icon: <BadgeIcon>⏰</BadgeIcon>,
     description: 'Décerné aux organisateurs qui respectent toujours les horaires.',
     howTo: 'Obtenez une note de ponctualité ≥ 4.5/5 sur au moins 3 évaluations.',
     getProgress: (_a, _f, profileData) => {
       const stats = profileData?.detailedStats;
       const count = stats?.reviewCount ?? 0;
-      // Progress = count of reviews (up to 3), unlocked when avg >= 4.5
       return { current: Math.min(count, 3), target: 3 };
     },
   },
   {
     badge: 'Accueillant',
     title: 'Accueil-\nlant',
-    icon: (
-      <BadgeIcon>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      </BadgeIcon>
-    ),
+    icon: <BadgeIcon>🤗</BadgeIcon>,
     description: 'Pour les organisateurs chaleureux et souriants.',
     howTo: 'Obtenez une note d\'attitude ≥ 4.5/5 sur au moins 3 évaluations.',
     getProgress: (_a, _f, profileData) => {
@@ -184,13 +113,7 @@ const ALL_BADGES: BadgeDef[] = [
   {
     badge: 'Fiable',
     title: 'Fiable',
-    icon: (
-      <BadgeIcon>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-      </BadgeIcon>
-    ),
+    icon: <BadgeIcon>✅</BadgeIcon>,
     description: 'Pour ceux dont les événements correspondent toujours aux descriptions.',
     howTo: 'Obtenez une note de fiabilité ≥ 4.5/5 sur au moins 3 évaluations.',
     getProgress: (_a, _f, profileData) => {
@@ -662,11 +585,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                       <div
                         key={b.badge}
                         onClick={() => { if (isOwnProfile) setSelectedBadge(b) }}
-                        className={`w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 transition-transform shadow-sm ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
-                        style={{ background: 'linear-gradient(243.43deg, #FFD439 16.67%, #4CAF50 83.33%)' }}
+                        className={`w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] transition-transform ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
                       >
-                        <div className="w-6 h-6 flex items-center justify-center text-white drop-shadow-md">{b.icon}</div>
-                        <span className="text-[9px] font-bold text-white text-center leading-[10px] whitespace-pre-wrap drop-shadow-sm">{b.title}</span>
+                        {b.icon}
+                        <span className="text-[10px] font-bold text-[#1B1818] text-center leading-[12px] whitespace-pre-wrap">{b.title}</span>
                       </div>
                     );
                   } else {
@@ -674,7 +596,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                       <div
                         key={b.badge}
                         onClick={() => { if (isOwnProfile) setSelectedBadge(b) }}
-                        className={`w-[64px] h-[74px] rounded-lg flex flex-col items-center justify-center gap-1.5 flex-shrink-0 bg-gray-100 border border-dashed border-gray-300 opacity-60 transition-transform relative overflow-hidden ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
+                        className={`w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] opacity-60 transition-transform relative overflow-hidden ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
                       >
                         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
                           <div className="h-full bg-[#FF7A00]/50 transition-all" style={{ width: `${pct}%` }} />
