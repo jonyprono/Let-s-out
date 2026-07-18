@@ -97,7 +97,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
   return (
-    <div className={`${authShell} bg-white overflow-y-auto min-h-[100dvh] w-full flex flex-col`}>
+    <div className={`${authShell} bg-white dark:bg-[#121212] overflow-y-auto min-h-[100dvh] w-full flex flex-col`}>
       <div className="flex flex-col flex-1 px-4 sm:px-6 py-6 justify-center w-full max-w-full max-w-[390px] mx-auto">
         
         <div className="flex flex-col justify-center w-full pb-2">
@@ -113,10 +113,10 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Titres */}
           <div className="flex flex-col items-center gap-[4px] w-full">
-            <h1 className="text-center text-[#1B1818] font-poppins text-[22px] sm:text-[24px] font-medium leading-tight sm:leading-[32px]">
+            <h1 className="text-center text-[#1B1818] dark:text-white font-poppins text-[22px] sm:text-[24px] font-medium leading-tight sm:leading-[32px]">
               Connectez-vous
             </h1>
-            <p className="text-center text-[#56514F] font-inter text-[16px] font-normal leading-[24px]">
+            <p className="text-center text-[#56514F] dark:text-gray-300 font-inter text-[16px] font-normal leading-[24px]">
               Rejoignez des événements près de vous et vivez des expériences inoubliables.
             </p>
           </div>
@@ -126,7 +126,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col gap-3 w-full">
           {/* Téléphone */}
           <div className="flex flex-col gap-1">
-            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Numéro de téléphone</label>
+            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">Numéro de téléphone</label>
             <PhoneInputField
               country={country}
               onCountryChange={c => { setCountry(c); resetPhone() }}
@@ -138,7 +138,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Mot de passe */}
           <div className="flex flex-col gap-1">
-            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818]">Mot de passe</label>
+            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">Mot de passe</label>
             <Input
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -209,7 +209,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* "Vous êtes nouveau ?" */}
           <div className="flex items-center justify-center gap-[4px] sm:gap-[8px] w-full mt-2 text-center whitespace-nowrap overflow-hidden text-ellipsis">
-            <span className="font-inter text-[13px] font-normal text-[#56514F] leading-[20px]">
+            <span className="font-inter text-[13px] font-normal text-[#56514F] dark:text-gray-300 leading-[20px]">
               Vous êtes nouveau sur Let's Out ?
             </span>
             <button
@@ -224,7 +224,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Mentions légales */}
           <div className="w-full text-center flex flex-wrap justify-center gap-x-[3px]">
-            <span className="font-inter text-[11px] font-normal leading-[16px] text-[#766F6E]">
+            <span className="font-inter text-[11px] font-normal leading-[16px] text-[#766F6E] dark:text-gray-400">
               En continuant, vous acceptez nos
             </span>
             <span
@@ -233,7 +233,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             >
               Conditions d'Utilisation
             </span>
-            <span className="font-inter text-[11px] font-normal leading-[16px] text-[#766F6E]">
+            <span className="font-inter text-[11px] font-normal leading-[16px] text-[#766F6E] dark:text-gray-400">
               et notre
             </span>
             <span

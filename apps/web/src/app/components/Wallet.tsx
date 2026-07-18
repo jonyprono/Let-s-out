@@ -167,7 +167,7 @@ export function Wallet() {
           <p className="text-gray-500">
             Votre profil n'est pas encore vérifié. Vous devez vérifier votre identité pour accéder au portefeuille.
           </p>
-          <Button onClick={() => navigate('/settings')} className="mt-4 bg-[#FF7A00] hover:bg-[#e66a00] text-white rounded-[16px] h-12 px-6 font-bold">
+          <Button onClick={() => navigate('/verify-profile')} className="mt-4 bg-[#FF7A00] hover:bg-[#e66a00] text-white rounded-[16px] h-12 px-6 font-bold">
             Vérifier mon profil
           </Button>
         </div>

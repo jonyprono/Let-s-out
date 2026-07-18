@@ -117,26 +117,29 @@ export function PreferencesModal({ onClose }: Props) {
           {/* Notifications Section */}
           <div>
             <h3 className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Notifications</h3>
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-[#222] rounded-2xl border border-gray-100 dark:border-[#333]">
+            <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-[#222] rounded-2xl border border-gray-100 dark:border-[#333]">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${notifications ? 'bg-orange-50 dark:bg-orange-500/10' : 'bg-gray-200 dark:bg-[#333]'}`}>
-                  <Bell className={`w-5 h-5 ${notifications ? 'text-[#FF7A00]' : 'text-gray-500'}`} />
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${notifications ? 'bg-orange-50 dark:bg-[#FF7A00]/15' : 'bg-gray-200 dark:bg-[#2A2A2A]'}`}>
+                  <Bell className={`w-4 h-4 ${notifications ? 'text-[#FF7A00]' : 'text-gray-400'}`} />
                 </div>
                 <div>
-                  <p className="text-[14px] font-semibold text-gray-900 dark:text-white">Push Notifications</p>
-                  <p className="text-[12px] text-gray-500 dark:text-gray-400">Recevez des alertes importantes</p>
+                  <p className="text-[13px] font-semibold text-gray-900 dark:text-white leading-tight">Notifications push</p>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-tight">Recevez des alertes importantes</p>
                 </div>
               </div>
-              
-              {/* Toggle switch */}
+
+              {/* iOS-style toggle */}
               <button
                 onClick={() => setNotifications(!notifications)}
-                className={`relative w-12 h-7 flex items-center rounded-full transition-colors ${notifications ? 'bg-[#FF7A00]' : 'bg-gray-300 dark:bg-[#444]'}`}
+                aria-checked={notifications}
+                role="switch"
+                className={`relative inline-flex h-[28px] w-[50px] flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${notifications ? 'bg-[#FF7A00]' : 'bg-gray-300 dark:bg-[#444]'}`}
               >
-                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notifications ? 'translate-x-6' : 'translate-x-1'}`} />
+                <span className={`inline-block h-[22px] w-[22px] transform rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ${notifications ? 'translate-x-[25px]' : 'translate-x-[3px]'}`} />
               </button>
             </div>
           </div>
+
           
         </div>
 

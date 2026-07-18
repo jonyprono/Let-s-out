@@ -10,7 +10,6 @@ import {
   Alert01Icon,
   Message01Icon,
   ArrowRight01Icon,
-  Clock01Icon
 } from 'hugeicons-react';
 
 export default function HelpSupport() {
@@ -87,10 +86,7 @@ export default function HelpSupport() {
             </p>
           </div>
         </div>
-        <button className="flex items-center gap-1.5 h-9 px-3 border border-gray-200 dark:border-gray-800 rounded-full active:scale-95 transition-transform bg-white dark:bg-black shadow-sm">
-          <Clock01Icon size={16} className="text-gray-700 dark:text-gray-300" strokeWidth={1.8} />
-          <span className="text-[12px] font-semibold text-gray-700 dark:text-gray-300">Historique</span>
-        </button>
+
       </div>
 
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>

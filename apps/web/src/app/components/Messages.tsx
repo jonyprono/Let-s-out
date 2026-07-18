@@ -458,7 +458,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu }: { c
         
         {/* Bottom Row */}
         <div className="w-full flex flex-row items-center gap-[8px] h-[16px]">
-          <p className="flex-1 font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-[#525252] truncate">
+          <p className="flex-1 font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-[#525252] dark:text-[#A3A3A3] truncate">
             {conv.lastMsgPrefix && <span className="font-medium mr-1">{conv.lastMsgPrefix}</span>}
             {conv.lastMsg}
           </p>

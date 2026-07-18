@@ -250,6 +250,8 @@ export function ChatDetails() {
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null)
   const [pickerMsgId, setPickerMsgId] = useState<string | null>(null)
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null)
+  // Reply-to state: message quoted when sending a file
+  const [replyToMsg, setReplyToMsg] = useState<{ id: string; content: string; senderName: string; type: string } | null>(null)
   const [localDeletedMessages, setLocalDeletedMessagesState] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(`deleted-messages-${id}`)
@@ -322,7 +324,12 @@ export function ChatDetails() {
     if (!inputText.trim() || !id) return
     const text = inputText
     setInputText('')
-    sendMsg({ content: text, type: 'TEXT' })
+    const payload: any = { content: text, type: 'TEXT' }
+    if (replyToMsg) {
+      payload.replyToId = replyToMsg.id
+      setReplyToMsg(null)
+    }
+    sendMsg(payload)
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -333,6 +340,7 @@ export function ChatDetails() {
     const msgType = isVideo ? 'VIDEO' : 'IMAGE'
     const tempId = `optimistic-${Date.now()}`
     const localUrl = URL.createObjectURL(file)
+    const currentReply = replyToMsg
 
     qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
       ...old,
@@ -347,15 +355,20 @@ export function ChatDetails() {
         reactions: [],
         sender: { id: user?.id, profile: user?.profile },
         _optimistic: true,
+        ...(currentReply ? { replyToId: currentReply.id } : {})
       }
     ])
+
+    setReplyToMsg(null)
 
     try {
       if (Capacitor.isNativePlatform()) {
         await saveFileLocally(file, file.name)
       }
       const url = await chatApi.uploadMedia(file)
-      sendMsg({ content: url, type: msgType })
+      const payload: any = { content: url, type: msgType }
+      if (currentReply) payload.replyToId = currentReply.id
+      sendMsg(payload)
     } catch {
       toast.error("Erreur lors de l'envoi du fichier.")
     } finally {
@@ -844,7 +857,28 @@ export function ChatDetails() {
       </div>
 
       {/* Input Area — fixed at the bottom (nav is hidden for /chat/ routes) */}
-      <div className="fixed left-0 right-0 z-20 bg-[var(--color-background-primary)] border-t border-[#F2F2F2] px-4 py-3 flex items-center gap-3" style={{ bottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <div className="fixed left-0 right-0 z-20 bg-[var(--color-background-primary)] border-t border-[#F2F2F2] dark:border-[#222] flex flex-col" style={{ bottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        {/* Reply preview banner */}
+        {replyToMsg && (
+          <div className="flex items-center gap-3 px-4 pt-3 pb-1">
+            <div className="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-[#2A2A2A] rounded-2xl px-3 py-2 min-w-0">
+              <div className="w-[3px] h-full min-h-[28px] bg-[#FF7A00] rounded-full flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[11px] font-semibold text-[#FF7A00] truncate">{replyToMsg.senderName}</span>
+                <span className="text-[12px] text-gray-500 dark:text-gray-400 truncate">
+                  {replyToMsg.type === 'IMAGE' ? '📷 Photo' : replyToMsg.type === 'VIDEO' ? '🎥 Vidéo' : replyToMsg.content}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setReplyToMsg(null)}
+              className="w-7 h-7 rounded-full bg-gray-200 dark:bg-[#333] flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform"
+            >
+              <X className="w-3.5 h-3.5 text-gray-500 dark:text-gray-300" />
+            </button>
+          </div>
+        )}
+        <div className="flex items-center gap-3 px-4 py-3">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
         {isBlocked ? (
           <div className="flex-1 flex items-center justify-center h-[48px] bg-[#F9F9F9] dark:bg-[#2A2A2A] border border-[#DFDFDF] dark:border-[#333] rounded-full px-[16px] gap-[8px]">
@@ -886,6 +920,7 @@ export function ChatDetails() {
             <Send className="w-[22px] h-[22px] ml-1" />
           </button>
         )}
+        </div>
       </div>
 
       {showContributeModal && event && hasActivePool(event) && (
@@ -1042,6 +1077,20 @@ export function ChatDetails() {
                   >
                     <span className="w-[22px] h-[22px]" style={{ display: 'inline-block', background: 'currentColor', maskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%2215 14 20 9 15 4%22%3E%3C/polyline%3E%3Cpath d=%22M4 20v-7a4 4 0 0 1 4-4h12%22%3E%3C/path%3E%3C/svg%3E")', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} />
                     Transférer
+                  </button>
+                )}
+                {!msg.isDeleted && (
+                  <button
+                    onClick={() => {
+                      const senderName = msg.sender?.profile?.displayName?.split(' ')[0] ?? 'Utilisateur'
+                      setReplyToMsg({ id: msg.id, content: msg.content ?? '', senderName, type: msg.type ?? 'TEXT' })
+                      setPickerMsgId(null)
+                    }}
+                    className="flex items-center gap-4 px-4 py-4 text-[16px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 rounded-2xl transition-colors text-left"
+                  >
+                    {/* Reply icon */}
+                    <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+                    Répondre
                   </button>
                 )}
                 <button

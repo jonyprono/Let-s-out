@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ChevronLeft, ChevronRight, Globe, Lock, Bell, Shield, HelpCircle,
-  LogOut, User, Loader2, QrCode,
+  LogOut, User, Loader2,
   CheckCircle2, Trash2, AlertTriangle, Wallet as WalletIcon,
   Star, MessageCircle, AlertCircle, Share2, Heart, Award,
   Calendar, Bot, FileText, Info,
@@ -199,9 +199,7 @@ export function Settings({ onBack }: SettingsProps) {
               </p>
             </div>
           </div>
-          <button className="w-9 h-9 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <QrCode className="w-4.5 h-4.5 text-gray-700 dark:text-gray-300" />
-          </button>
+
         </div>
       </div>
 
