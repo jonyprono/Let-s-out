@@ -9,7 +9,7 @@ import { CarouselIndicators } from '@/components/ui/progress-bar'
    Écrans 1-3 → Carrousel avec Stepper 3 barres
 ───────────────────────────────────────────────────────────────── */
 const onboardingScreens = [
-  { id: 0, type: 'logo' as const, image: '/logo.png' },
+  { id: 0, type: 'logo' as const, image: '/logo.svg' },
   {
     id: 1,
     type: 'slide' as const,
@@ -150,9 +150,9 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
             >
               {/* Logo Lets Out (image PNG avec icône + texte) */}
               <img
-                src="/logo.png"
+                src="/logo.svg"
                 alt="Let's Out"
-                className="w-[220px] h-auto object-contain"
+                className="w-[220px] h-auto object-contain dark:invert"
               />
             </motion.div>
           )}

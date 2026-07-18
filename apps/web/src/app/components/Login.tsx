@@ -106,9 +106,9 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           <div className="flex flex-col items-center w-full gap-1 mb-4">
           {/* Logo */}
           <img 
-            src="/logoci.png" 
+            src="/logoci.svg" 
             alt="Let's Out" 
-            className="w-[80px] h-[80px] sm:w-[96px] sm:h-[96px] object-contain mx-auto" 
+            className="w-[80px] h-[80px] sm:w-[96px] sm:h-[96px] object-contain mx-auto dark:invert" 
           />
 
           {/* Titres */}
