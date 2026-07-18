@@ -317,16 +317,31 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       const start = ev.startAt ? new Date(ev.startAt) : null;
       const end = (ev as any).endAt ? new Date((ev as any).endAt) : null;
       tabMatch = !!start && start <= now && (!end || end >= now);
-    } else if (tabFilter === 'weekend') {
-      // Ce week-end : samedi ou dimanche prochain
+    } else if (tabFilter === 'tonight') {
+      // Ce soir : entre ce soir 18h et demain matin 6h
       const start = ev.startAt ? new Date(ev.startAt) : null;
       if (start) {
-        const day = new Date();
-        const dayOfWeek = day.getDay(); // 0=dim, 6=sam
-        const daysToSat = (6 - dayOfWeek + 7) % 7 || 7;
-        const sat = new Date(day); sat.setDate(day.getDate() + daysToSat); sat.setHours(0,0,0,0);
-        const sun = new Date(sat); sun.setDate(sat.getDate() + 1); sun.setHours(23,59,59,999);
-        tabMatch = start >= sat && start <= sun;
+        const todayEvening = new Date(now); todayEvening.setHours(18, 0, 0, 0);
+        const tomorrowMorning = new Date(now); tomorrowMorning.setDate(now.getDate() + 1); tomorrowMorning.setHours(6, 0, 0, 0);
+        tabMatch = start >= todayEvening && start <= tomorrowMorning;
+      } else {
+        tabMatch = false;
+      }
+    } else if (tabFilter === 'weekend') {
+      // Ce week-end : entre vendredi soir et dimanche soir
+      const start = ev.startAt ? new Date(ev.startAt) : null;
+      if (start) {
+        const dow = now.getDay();
+        const daysToSat = (6 - dow + 7) % 7;
+        const sat = new Date(now); sat.setDate(now.getDate() + daysToSat); sat.setHours(0, 0, 0, 0);
+        const sun = new Date(sat); sun.setDate(sat.getDate() + 1); sun.setHours(23, 59, 59, 999);
+        // If today is Sunday (dow === 0), weekend should include today
+        if (dow === 0) {
+          const pastSat = new Date(now); pastSat.setDate(now.getDate() - 1); pastSat.setHours(0, 0, 0, 0);
+          tabMatch = start >= pastSat && start <= sun;
+        } else {
+          tabMatch = start >= sat && start <= sun;
+        }
       } else {
         tabMatch = false;
       }
@@ -337,8 +352,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     }
     // tabFilter === null = 'Tout' : pas de filtre supplémentaire
 
-    if (searchActive) return textMatch && tabMatch && (!selectedIconCategory || ev.category === selectedIconCategory);
-    return textMatch && cityMatch && tabMatch && (!selectedIconCategory || ev.category === selectedIconCategory);
+    const categoryMatch = (!selectedIconCategory || ev.category === selectedIconCategory);
+
+    return textMatch && (searchActive ? true : cityMatch) && tabMatch && categoryMatch;
   });
 
   // Nombre de notifications non lues (directement depuis unreadCount renvoyé par l'API)

@@ -129,6 +129,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const [activeFilter, setActiveFilter] = useState('discover');
   const [showPermissions, setShowPermissions] = useState(false);
   const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const featuredScrollRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
@@ -181,29 +182,44 @@ export function Home({ userData, onNavigate }: HomeProps) {
   let rawEvents: Event[] = eventsData?.pages.flatMap(page => page.data) || [];
 
   // Local filter layer to guarantee accuracy
-  if (activeFilter && activeFilter !== 'discover') {
+  if ((activeFilter && activeFilter !== 'discover') || searchQuery.trim() !== '') {
     const now = new Date();
+    const query = searchQuery.trim().toLowerCase();
+    
     rawEvents = rawEvents.filter(ev => {
-      const start = ev.startAt ? new Date(ev.startAt) : null;
-      const end = (ev as any).endAt ? new Date((ev as any).endAt) : null;
-      if (!start) return false;
-      if (activeFilter === 'ongoing') {
-        return start <= now && (!end || end >= now);
-      } else if (activeFilter === 'tonight') {
-        const todayEvening = new Date(now); todayEvening.setHours(18, 0, 0, 0);
-        const tomorrowMorning = new Date(now); tomorrowMorning.setDate(now.getDate() + 1); tomorrowMorning.setHours(6, 0, 0, 0);
-        return start >= todayEvening && start <= tomorrowMorning;
-      } else if (activeFilter === 'tomorrow') {
-        const tom = new Date(now); tom.setDate(now.getDate() + 1); tom.setHours(0, 0, 0, 0);
-        const dayAfter = new Date(tom); dayAfter.setDate(tom.getDate() + 1);
-        return start >= tom && start <= dayAfter;
-      } else if (activeFilter === 'weekend') {
-        const dow = now.getDay();
-        const daysToSat = (6 - dow + 7) % 7 || 7;
-        const sat = new Date(now); sat.setDate(now.getDate() + daysToSat); sat.setHours(0, 0, 0, 0);
-        const sun = new Date(sat); sun.setDate(sat.getDate() + 1); sun.setHours(23, 59, 59, 999);
-        return start >= sat && start <= sun;
+      // 1. Text search
+      if (query !== '') {
+        const matchesTitle = ev.title.toLowerCase().includes(query);
+        const matchesCity = ev.city?.toLowerCase().includes(query) ?? false;
+        const matchesLocation = (ev as any).location?.toLowerCase().includes(query) ?? false;
+        if (!matchesTitle && !matchesCity && !matchesLocation) return false;
       }
+
+      // 2. Time filter
+      if (activeFilter && activeFilter !== 'discover') {
+        const start = ev.startAt ? new Date(ev.startAt) : null;
+        const end = (ev as any).endAt ? new Date((ev as any).endAt) : null;
+        if (!start) return false;
+        
+        if (activeFilter === 'ongoing') {
+          return start <= now && (!end || end >= now);
+        } else if (activeFilter === 'tonight') {
+          const todayEvening = new Date(now); todayEvening.setHours(18, 0, 0, 0);
+          const tomorrowMorning = new Date(now); tomorrowMorning.setDate(now.getDate() + 1); tomorrowMorning.setHours(6, 0, 0, 0);
+          return start >= todayEvening && start <= tomorrowMorning;
+        } else if (activeFilter === 'tomorrow') {
+          const tom = new Date(now); tom.setDate(now.getDate() + 1); tom.setHours(0, 0, 0, 0);
+          const dayAfter = new Date(tom); dayAfter.setDate(tom.getDate() + 1);
+          return start >= tom && start <= dayAfter;
+        } else if (activeFilter === 'weekend') {
+          const dow = now.getDay();
+          const daysToSat = (6 - dow + 7) % 7 || 7;
+          const sat = new Date(now); sat.setDate(now.getDate() + daysToSat); sat.setHours(0, 0, 0, 0);
+          const sun = new Date(sat); sun.setDate(sat.getDate() + 1); sun.setHours(23, 59, 59, 999);
+          if (start < sat || start > sun) return false;
+        }
+      }
+      
       return true;
     });
   }
@@ -373,14 +389,24 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
         {/* Search bar + Filter chips */}
         <div className="px-4 pb-2">
-          <button
-            onClick={() => onNavigate('explorer')}
-            className="w-full flex items-center gap-3 px-4 bg-gray-100 dark:bg-[#1A1A1A] rounded-full text-left active:opacity-70 transition-opacity mb-2"
+          <div
+            className="w-full flex items-center gap-3 px-4 bg-gray-100 dark:bg-[#1A1A1A] rounded-full text-left mb-2 transition-colors focus-within:ring-2 focus-within:ring-[#FF7A00]/50"
             style={{ height: 'clamp(36px, 5vh, 44px)' }}
           >
             <Search01Icon className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
-            <span className="flex-1 text-[13px] text-gray-400 truncate">Concerts, artistes, lieux, événements...</span>
-          </button>
+            <input
+              type="text"
+              placeholder="Concerts, artistes, lieux, événements..."
+              className="flex-1 text-[13px] text-gray-900 dark:text-white bg-transparent outline-none truncate placeholder:text-gray-400"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            )}
+          </div>
 
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
             {TIME_FILTERS.map((f) => {

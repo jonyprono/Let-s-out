@@ -91,7 +91,7 @@ export function AppBootstrap() {
               body: notification.body || '',
               extra: data,
               smallIcon: 'ic_launcher',
-              icon: '/logoci.svg',
+              iconColor: '#FF7A00',
               largeIcon: '/logoci.svg',
               actionTypeId: data.type === 'NEW_MESSAGE' ? 'REPLY_ACTION' : undefined,
             },

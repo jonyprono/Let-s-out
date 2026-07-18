@@ -128,15 +128,25 @@ export function PreferencesModal({ onClose }: Props) {
                 </div>
               </div>
 
-              {/* iOS-style toggle */}
-              <button
+              {/* Custom Non/Oui Switch */}
+              <div 
+                className="relative flex items-center bg-[#F2F4F7] dark:bg-[#2A2A2A] rounded-full p-[3px] cursor-pointer"
                 onClick={() => setNotifications(!notifications)}
-                aria-checked={notifications}
-                role="switch"
-                className={`relative inline-flex h-[28px] w-[50px] flex-shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none ${notifications ? 'bg-[#FF7A00]' : 'bg-gray-300 dark:bg-[#444]'}`}
+                style={{ width: '96px', height: '46px' }}
               >
-                <span className={`inline-block h-[22px] w-[22px] transform rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ${notifications ? 'translate-x-[25px]' : 'translate-x-[3px]'}`} />
-              </button>
+                {/* Thumb */}
+                <div 
+                  className={`absolute w-[40px] h-[40px] bg-white dark:bg-[#444] rounded-full shadow-sm transition-transform duration-300 ease-in-out ${notifications ? 'translate-x-[50px]' : 'translate-x-0'}`} 
+                />
+                <div className="relative z-10 flex items-center justify-between w-full h-full">
+                  <span className={`w-1/2 text-center text-[14px] font-bold transition-colors duration-300 ${!notifications ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                    Non
+                  </span>
+                  <span className={`w-1/2 text-center text-[14px] font-bold transition-colors duration-300 ${notifications ? 'text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
+                    Oui
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
