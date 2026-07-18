@@ -185,7 +185,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
         {/* Séparateur Ou */}
         <div className="my-3 w-full">
-          <Divider label="Ou" className="text-[#404040] font-inter text-[12px] font-normal leading-[16px]" />
+          <Divider label="Ou" className="text-[#404040] dark:text-gray-400 font-inter text-[12px] font-normal leading-[16px]" />
         </div>
 
         {/* Bouton Google */}
@@ -220,7 +220,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             </button>
           </div>
 
-          <div className="w-full h-[1px] bg-[#D4D4D4] mb-2" />
+          <div className="w-full h-[1px] bg-[#D4D4D4] dark:bg-[#2A2A2A] mb-2" />
 
           {/* Mentions légales */}
           <div className="w-full text-center flex flex-wrap justify-center gap-x-[3px]">

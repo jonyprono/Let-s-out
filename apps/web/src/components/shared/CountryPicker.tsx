@@ -108,7 +108,7 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
             className="bg-[var(--color-background-primary)] rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden max-h-[80vh] animate-in fade-in zoom-in-95 duration-200"
           >
             {/* Barre de recherche */}
-            <div className="px-4 py-3 border-b border-[#E0E0E0] shrink-0 bg-[var(--color-background-primary)]">
+            <div className="px-4 py-3 border-b border-[var(--border-default)] dark:border-[#2A2A2A] shrink-0 bg-[var(--color-background-primary)]">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-poppins font-semibold text-[16px] text-[var(--color-text-primary)]">Choisir un pays</span>
                 <button type="button" onClick={() => setOpen(false)} className="p-1 active:scale-95 transition-transform">
@@ -147,13 +147,13 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
                     key={`${c.code}-${c.cca2}-${i}`}
                     type="button"
                     onClick={() => select(c)}
-                    className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[#FAFAFA] active:bg-[#F2F2F2] text-left transition-colors border-b border-[#F0F0F0] last:border-0 ${
-                      value.cca2 === c.cca2 ? 'bg-[#FAFAFA]' : ''
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[#FAFAFA] dark:hover:bg-[#2A2A2A] active:bg-[#F2F2F2] dark:active:bg-[#333] text-left transition-colors border-b border-[#F0F0F0] dark:border-[#2A2A2A] last:border-0 ${
+                      value.cca2 === c.cca2 ? 'bg-[#FAFAFA] dark:bg-[#2A2A2A]' : ''
                     }`}
                   >
                     <span className="text-2xl leading-none w-8 text-center shrink-0">{c.flag}</span>
                     <span className="flex-1 text-[15px] text-[var(--color-text-primary)] font-medium font-poppins truncate">{c.frName}</span>
-                    <span className="text-[13px] text-[#766F6E] shrink-0 font-medium">{c.code}</span>
+                    <span className="text-[13px] text-[var(--color-text-secondary)] shrink-0 font-medium">{c.code}</span>
                   </button>
                 ))
               )}

@@ -204,7 +204,7 @@ export default function HelpSupport() {
 
           <div className="px-4">
             <div className="w-full bg-orange-50 dark:bg-[#FF7A00]/10 rounded-xl py-3 flex items-center justify-center gap-2">
-              <Clock01Icon size={16} className="text-[#FF7A00]" strokeWidth={2} />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#FF7A00]"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span className="text-[12px] font-bold text-[#FF7A00]">Délai de réponse moyen : 2 minutes</span>
             </div>
           </div>
