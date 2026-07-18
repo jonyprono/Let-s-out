@@ -431,13 +431,26 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
   });
 
   const payoutMut = useMutation({
-    mutationFn: async () => apiClient.post(`/events/${event.id}/payout/request`),
+    mutationFn: async ({ voteDurationHours }: { voteDurationHours?: number } = {}) =>
+      apiClient.post(`/events/${event.id}/payout/request`, { voteDurationHours: voteDurationHours ?? 48 }),
     onSuccess: () => {
       setShowPayoutConfirm(false);
       setTimeout(() => setShowPayoutSuccess(true), 350);
       qc.invalidateQueries({ queryKey: ['events', event.id] });
     },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du déblocage')
+  });
+
+  // Vote mutation (OUI / NON) — used by validators
+  const voteMut = useMutation({
+    mutationFn: async (vote: 'YES' | 'NO') =>
+      apiClient.post(`/events/${event.id}/payout/vote`, { vote }),
+    onSuccess: (_, vote) => {
+      toast.success(vote === 'YES' ? '✅ Vote OUI enregistré' : '❌ Vote NON enregistré');
+      qc.invalidateQueries({ queryKey: ['events', event.id] });
+      qc.invalidateQueries({ queryKey: ['events', event.id, 'payout-status'] });
+    },
+    onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du vote')
   });
 
   if (hasPot) {
@@ -454,8 +467,21 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const isVoteOpen = event.validatorVoteStatus === 'OPEN';
     const isVoteClosed = event.validatorVoteStatus === 'CLOSED';
     const hasPayoutRequest = !!event.payoutRequest;
-    const isPayoutPending = event.payoutRequest?.status === 'PENDING';
-    const isPayoutApproved = event.payoutRequest?.status === 'APPROVED';
+    const payoutStatus = event.payoutRequest?.status;
+    const isPayoutPending = payoutStatus === 'PENDING' || payoutStatus === 'VOTING';
+    const isPayoutApproved = payoutStatus === 'APPROVED';
+
+    // ── Fetch live vote status from /payout/status ──
+    const { data: voteStatusData } = useQuery({
+      queryKey: ['events', event.id, 'payout-status'],
+      queryFn: async () => {
+        const res = await apiClient.get(`/events/${event.id}/payout/status`);
+        return res.data?.data;
+      },
+      enabled: !!isPayoutPending,
+      refetchInterval: isPayoutPending ? 15000 : false, // poll every 15s while vote active
+    });
+    const voteStats = voteStatusData?.voteStats;
 
     const allVotesCount = event.validatorVotes?.length || 0;
     const expectedVotes = event.expectedValidatorVotes || 0;
@@ -464,20 +490,21 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
     const allCandidatesValidated = event.validatorCandidates?.length > 0 && event.validatorIds?.length === event.validatorCandidates?.length;
     const canCloseVote = isVoteOpen && (isAllVoted || isPastDeadline || allCandidatesValidated);
     
+    const availableBalance = collected - (event.poolWithdrawn || 0);
     const hasValidators = (event.validatorCandidates?.length > 0) || (event.validatorIds?.length > 0);
-    const canPayout = collected > 0 && (hasValidators ? isVoteClosed : true);
-    const canClosePool = collected === 0 || event.poolReleased;
+    const canPayout = availableBalance > 0 && (hasValidators ? isVoteClosed : true);
+    const canClosePool = false; // "clôturer la cagnotte" is no longer permanent if partial payouts exist, or we can just keep it based on manual action. Let's let the user close it manually if they want, but poolReleased doesn't auto-close it.
 
-    const commission = Math.round(collected * 0.10);
-    const totalToReceive = collected - commission;
+    const commission = Math.round(availableBalance * 0.10);
+    const totalToReceive = availableBalance - commission;
 
     const handlePayoutClick = () => {
-      if (collected <= 0) return toast.error("La cagnotte est vide.");
+      if (availableBalance <= 0) return toast.error("La cagnotte disponible est vide.");
       if (hasValidators && !isVoteClosed) {
         return toast.error(isVoteOpen ? "Vous devez clôturer le vote d'abord" : "Vous devez d'abord lancer le vote des validateurs");
       }
       if (isPayoutPending) return toast.error("Le déblocage est déjà en cours d'approbation");
-      if (event.poolReleased || isPayoutApproved) return toast.error("Les fonds ont déjà été débloqués");
+      if (isPayoutApproved && availableBalance <= 0) return toast.error("Tous les fonds disponibles ont déjà été débloqués.");
       setShowPayoutConfirm(true);
     };
 
@@ -504,7 +531,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
       setStep('validator-vote');
     };
 
-    const isContributionFrozen = isVoteOpen || isVoteClosed || hasPayoutRequest || event.poolReleased;
+    const isContributionFrozen = isVoteOpen || isVoteClosed;
     const handleContributeClick = () => {
       if (isPastDeadline || isFull || isContributionFrozen) {
         return toast.error("Les contributions sont fermées.");
@@ -539,12 +566,17 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
       <div className="flex flex-col gap-3">
         <div className={`rounded-[12px] p-4 shadow-sm border ${bgClass}`}>
           <p className="text-[14px] text-gray-500 mb-1">
-            {event.poolReleased ? "Fonds débloqués" : (isFull ? "Solde disponible" : "Cagnotte")}
+            {isFull ? "Solde disponible" : "Cagnotte"}
           </p>
           <p className="text-[20px] font-bold text-gray-900 dark:text-white leading-tight">
             {collected.toLocaleString('fr-FR')} F CFA
           </p>
-          {!event.poolReleased && !isFull && (
+          {(event.poolWithdrawn > 0) && (
+            <p className="text-[12px] text-[#FF7A00] font-semibold mt-0.5">
+              Disponible pour retrait: {availableBalance.toLocaleString('fr-FR')} F
+            </p>
+          )}
+          {!isFull && (
             <p className="text-[13px] text-gray-500 mt-0.5">
               sur {event.poolTarget?.toLocaleString('fr-FR')} F CFA
             </p>
@@ -558,6 +590,79 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
             </span>
           </div>
         </div>
+
+        {/* ── Vote FinTech Panel — Visible quand une demande est VOTING/PENDING ── */}
+        {isPayoutPending && (
+          <div className="rounded-[12px] p-4 border border-[#FF7A00]/30 bg-orange-50 dark:bg-[#1f1200] shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[13px] font-bold text-[#FF7A00]">🗳️ Vote de déblocage en cours</p>
+              {voteStats?.hoursRemaining !== null && voteStats?.hoursRemaining !== undefined && (
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                  ⏱ {voteStats.hoursRemaining}h restantes
+                </span>
+              )}
+            </div>
+
+            {voteStats ? (
+              <>
+                {/* Barre de progression OUI vers 70% */}
+                <div className="mb-3">
+                  <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+                    <span>{voteStats.yesCount} OUI · {voteStats.noCount} NON · {voteStats.pendingCount} en attente</span>
+                    <span>{voteStats.pct}% / {voteStats.thresholdPct}% requis</span>
+                  </div>
+                  <div className="h-[6px] bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${voteStats.pct >= voteStats.thresholdPct ? 'bg-[#10B981]' : 'bg-[#FF7A00]'}`}
+                      style={{ width: `${Math.min(100, (voteStats.pct / voteStats.thresholdPct) * 100)}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                    <span>{voteStats.totalEligible} votant(s) éligible(s)</span>
+                    <span>{voteStats.votedCount} vote(s) exprimé(s)</span>
+                  </div>
+                </div>
+
+                {/* Boutons OUI / NON pour le validateur connecté */}
+                {voteStats.hasVoted ? (
+                  <div className={`flex items-center gap-2 mt-2 p-2 rounded-lg ${
+                    voteStats.myVote === 'YES' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
+                  }`}>
+                    <span className="text-[13px] font-semibold">
+                      {voteStats.myVote === 'YES' ? '✅ Vous avez voté OUI' : '❌ Vous avez voté NON'}
+                    </span>
+                    <span className="text-[11px] text-gray-500">(vote non modifiable)</span>
+                  </div>
+                ) : voteStats.totalEligible > 0 && (
+                  // Afficher les boutons uniquement si l'utilisateur est dans le snapshot et n'est pas l'organisateur
+                  me?.id !== event.creatorId && (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => voteMut.mutate('YES')}
+                        disabled={voteMut.isPending}
+                        className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-[8px] bg-[#10B981] text-white text-[13px] font-bold active:scale-95 transition-transform disabled:opacity-50"
+                      >
+                        ✅ OUI — Débloquer
+                      </button>
+                      <button
+                        onClick={() => voteMut.mutate('NO')}
+                        disabled={voteMut.isPending}
+                        className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-[8px] bg-red-500 text-white text-[13px] font-bold active:scale-95 transition-transform disabled:opacity-50"
+                      >
+                        ❌ NON — Refuser
+                      </button>
+                    </div>
+                  )
+                )}
+              </>
+            ) : (
+              <div className="flex items-center gap-2 text-gray-500">
+                <div className="w-4 h-4 rounded-full border-2 border-[#FF7A00] border-t-transparent animate-spin" />
+                <span className="text-[12px]">Chargement des statistiques...</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 1. Contribuer */}
         <button
@@ -591,8 +696,8 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
         {/* 3. Débloquer */}
         <button
           onClick={handlePayoutClick}
-          disabled={!canPayout || payoutMut.isPending || isPayoutPending || event.poolReleased || isPayoutApproved}
-          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${(!canPayout || isPayoutPending || event.poolReleased || isPayoutApproved) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+          disabled={!canPayout || payoutMut.isPending || isPayoutPending || (isPayoutApproved && availableBalance <= 0)}
+          className={`flex flex-row justify-center items-center p-[10px_16px] gap-[8px] w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] transition-transform text-[14px] font-medium text-gray-900 dark:text-white ${(!canPayout || isPayoutPending || (isPayoutApproved && availableBalance <= 0)) ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
         >
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M1.68091 14.582C3.51388 14.582 4.99981 16.0679 4.99981 17.9009" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
@@ -603,7 +708,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
             <path d="M12.5 12.082C12.5 13.4627 11.3807 14.582 10 14.582C8.61925 14.582 7.5 13.4627 7.5 12.082C7.5 10.7013 8.61925 9.58203 10 9.58203C11.3807 9.58203 12.5 10.7013 12.5 12.082Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M7.91666 4.16732C7.91666 4.16732 9.4165 2.08398 10 2.08398C10.5835 2.08398 12.0833 4.16732 12.0833 4.16732M10 6.66732V2.50065" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          {payoutMut.isPending ? "Traitement..." : isPayoutPending ? "Déblocage en cours..." : (event.poolReleased || isPayoutApproved) ? "Fonds débloqués" : "Débloquer les fonds"}
+          {payoutMut.isPending ? "Traitement..." : isPayoutPending ? "Déblocage en cours..." : (isPayoutApproved && availableBalance <= 0) ? "Fonds débloqués" : "Débloquer les fonds"}
         </button>
 
         {/* 3.1 Approuver (if co-host or validator) */}
@@ -741,7 +846,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
             </div>
 
             <PrimaryButton 
-              onClick={() => payoutMut.mutate()} 
+              onClick={() => payoutMut.mutate({})} 
               loading={payoutMut.isPending}
               className="w-full"
             >

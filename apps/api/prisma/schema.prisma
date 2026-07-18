@@ -176,6 +176,7 @@ model Event {
   poolMinAmount    Float?
   joinCode         String?       @unique
   poolCollected    Float         @default(0)
+  poolWithdrawn    Float         @default(0)
   poolReleased     Boolean       @default(false)
   coHostIds        String[]      @default([])
   validatorVoteStatus String?    // null | 'OPEN' | 'CLOSED'
@@ -575,16 +576,49 @@ model Admin {
 }
 
 model EventPayoutRequest {
-  id          String   @id @default(cuid())
-  eventId     String   @unique
-  requestedBy String
-  amount      Float
-  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
-  approvals   String[] @default([])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                  String   @id @default(cuid())
+  eventId             String   @unique
+  requestedBy         String
+  amount              Float
+  // PENDING | VOTING | APPROVED | REJECTED | EXPIRED
+  status              String   @default("PENDING")
+  approvals           String[] @default([])   // IDs des votants OUI
+  rejections          String[] @default([])   // IDs des votants NON
+  snapshotVoterIds    String[] @default([])   // Snapshot des votants éligibles au moment de la demande
+  voteDurationHours   Int      @default(48)   // Durée paramétrable du vote
+  threshold           Float    @default(0.70) // Seuil de majorité (70%)
+  expiresAt           DateTime?              // Date/heure d'expiration du vote
+  rejectionReason     String?                // Raison du refus
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event               Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  @@index([status])
+  @@index([expiresAt])
   @@map("event_payout_requests")
+}
+
+// Journal d'audit immuable — FinTech Audit 8
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?                      // Utilisateur ayant effectué l'action
+  actorRole    String?                      // USER | ORGANIZER | VALIDATOR | ADMIN | SYSTEM
+  action       String                       // PAYOUT_REQUEST | VOTE_YES | VOTE_NO | PAYOUT_APPROVED | PAYOUT_REJECTED | PAYOUT_EXPIRED | WALLET_WITHDRAWAL | FUND_RELEASED
+  targetType   String?                      // event | payoutRequest | wallet | booking
+  targetId     String?                      // ID de la ressource concernée
+  eventId      String?
+  oldValue     Json?
+  newValue     Json?
+  amount       Float?
+  ipAddress    String?
+  userAgent    String?
+  comment      String?
+  createdAt    DateTime @default(now())
+
+  @@index([actorId])
+  @@index([eventId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
 }

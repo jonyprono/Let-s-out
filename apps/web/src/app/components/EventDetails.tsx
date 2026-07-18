@@ -593,7 +593,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   )}
 
                   {/* "Contribuer à nouveau" if already joined */}
-                  {(hasJoined || participationPaid) && !event.poolReleased && (
+                  {(hasJoined || participationPaid) && (
                     <button
                       onClick={() => {
                         if (isCreator || participationPaid) {
@@ -607,12 +607,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       <span className="text-[16px]">💵</span>
                       Contribuer à nouveau
                     </button>
-                  )}
-
-                  {event.poolReleased && (
-                    <div className="mt-[16px] p-3 rounded-[8px] bg-red-50 text-red-600 text-[13px] text-center font-medium border border-red-100">
-                      Cette cagnotte est désormais clôturée.
-                    </div>
                   )}
                 </div>
               ) : (
@@ -677,16 +671,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             !isPastEvent && (
               <Button
                 onClick={() => {
-                  if (event.poolReleased) {
-                    toast.info("L'événement et la cagnotte sont clôturés.");
-                    return;
-                  }
                   handleJoin();
                 }}
-                disabled={joinMutation.isPending || isFull || event.poolReleased}
+                disabled={joinMutation.isPending || isFull}
                 className="flex-1 rounded-full font-medium text-[14px] font-poppins"
               >
-                {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : event.poolReleased ? 'Clôturé' : isFull ? 'Complet' : "Rejoindre l'événement"}
+                {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : "Rejoindre l'événement"}
               </Button>
             )
           )}
