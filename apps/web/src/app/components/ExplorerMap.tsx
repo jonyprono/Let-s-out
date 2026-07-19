@@ -108,9 +108,17 @@ function makePinIcon(events: Event[], isSelected: boolean) {
           ">
             <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 12px; color: #111827;">${count} événements</span>
           </div>
-          <svg width="30" height="38" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="${isSelected ? '#E06A00' : '#FF7A00'}"/>
-            <circle cx="18" cy="18" r="7" fill="white"/>
+          <svg width="23" height="32" viewBox="0 0 23 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g clip-path="url(#clip0_889_3402)">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4284 0C5.21653 0 0.185181 4.99311 0.185181 11.1724C0.185181 17.7931 5.01978 20.2759 8.44896 26.0138C10.6414 29.6828 9.99491 32 11.4284 32C12.9182 32 12.2717 29.6276 14.4079 26.0689C17.556 20.6345 22.6717 17.8207 22.6717 11.1724C22.6717 4.99311 17.6403 0 11.4284 0Z" fill="${isSelected ? '#E06A00' : '#FF7A00'}"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4429 30.2702C11.2413 30.2702 11.1838 30.2136 10.8382 29.1674C10.5504 28.2627 10.1185 26.8772 8.99582 25.1808C7.90179 23.5126 6.75024 22.1554 5.65627 20.8548C3.09406 17.7447 1.05005 15.3129 1.05005 10.9305C1.07884 5.36038 5.71384 0.864746 11.4429 0.864746C17.1718 0.864746 21.8068 5.38866 21.8068 10.9305C21.8068 15.3129 19.7916 17.7729 17.2006 20.8831C16.1355 22.1837 15.0127 23.5409 13.9186 25.1808C12.8247 26.8489 12.364 28.2062 12.0762 29.1109C11.7307 30.2136 11.6444 30.2702 11.4429 30.2702Z" fill="#FF991C"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4286 15.5674C13.8168 15.5674 15.7529 13.6313 15.7529 11.243C15.7529 8.85479 13.8168 6.9187 11.4286 6.9187C9.04033 6.9187 7.10425 8.85479 7.10425 11.243C7.10425 13.6313 9.04033 15.5674 11.4286 15.5674Z" fill="white"/>
+            </g>
+            <defs>
+            <clipPath id="clip0_889_3402">
+            <rect width="22.8571" height="32" fill="white"/>
+            </clipPath>
+            </defs>
           </svg>
         </div>`,
       iconSize: [120, 70],
@@ -148,9 +156,17 @@ function makePinIcon(events: Event[], isSelected: boolean) {
           <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
           <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: ${isOngoing ? '#FF7A00' : '#6B7280'}; white-space: nowrap; margin-top: 1px;">${isOngoing ? '<span style="color:#FF7A00">En cours</span>' + subLabel.slice(8) : subLabel}</div>
         </div>
-        <svg width="28" height="36" viewBox="0 0 36 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 0C8.059 0 0 8.059 0 18C0 27.405 16.2 43.2 17.1 44.1C17.55 44.55 18.45 44.55 18.9 44.1C19.8 43.2 36 27.405 36 18C36 8.059 27.941 0 18 0Z" fill="${isSelected ? '#E06A00' : '#FF7A00'}"/>
-          <circle cx="18" cy="18" r="7" fill="white"/>
+        <svg width="23" height="32" viewBox="0 0 23 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_889_3402)">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4284 0C5.21653 0 0.185181 4.99311 0.185181 11.1724C0.185181 17.7931 5.01978 20.2759 8.44896 26.0138C10.6414 29.6828 9.99491 32 11.4284 32C12.9182 32 12.2717 29.6276 14.4079 26.0689C17.556 20.6345 22.6717 17.8207 22.6717 11.1724C22.6717 4.99311 17.6403 0 11.4284 0Z" fill="${isSelected ? '#E06A00' : '#FF7A00'}"/>
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4429 30.2702C11.2413 30.2702 11.1838 30.2136 10.8382 29.1674C10.5504 28.2627 10.1185 26.8772 8.99582 25.1808C7.90179 23.5126 6.75024 22.1554 5.65627 20.8548C3.09406 17.7447 1.05005 15.3129 1.05005 10.9305C1.07884 5.36038 5.71384 0.864746 11.4429 0.864746C17.1718 0.864746 21.8068 5.38866 21.8068 10.9305C21.8068 15.3129 19.7916 17.7729 17.2006 20.8831C16.1355 22.1837 15.0127 23.5409 13.9186 25.1808C12.8247 26.8489 12.364 28.2062 12.0762 29.1109C11.7307 30.2136 11.6444 30.2702 11.4429 30.2702Z" fill="#FF991C"/>
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M11.4286 15.5674C13.8168 15.5674 15.7529 13.6313 15.7529 11.243C15.7529 8.85479 13.8168 6.9187 11.4286 6.9187C9.04033 6.9187 7.10425 8.85479 7.10425 11.243C7.10425 13.6313 9.04033 15.5674 11.4286 15.5674Z" fill="white"/>
+          </g>
+          <defs>
+          <clipPath id="clip0_889_3402">
+          <rect width="22.8571" height="32" fill="white"/>
+          </clipPath>
+          </defs>
         </svg>
       </div>`,
     iconSize: [200, 90],
@@ -262,7 +278,7 @@ export default function ExplorerMap({
         <div
           className="absolute left-0 right-0 z-[1000] px-4"
           style={{
-            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
+            bottom: '12px',
             pointerEvents: 'all',
             animation: 'slideUpCard 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both',
           }}
@@ -289,8 +305,8 @@ export default function ExplorerMap({
         style={{
           right: 16,
           bottom: hasCard
-            ? 'calc(env(safe-area-inset-bottom, 0px) + 210px)'
-            : 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
+            ? '140px'
+            : '20px',
           transition: 'bottom 0.2s ease',
         }}
       >
