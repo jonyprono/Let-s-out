@@ -308,7 +308,6 @@ export function Settings({ onBack }: SettingsProps) {
               <div className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
                 <Shield className="w-4 h-4 text-green-500" />
               </div>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-300 mt-1" />
             </div>
             <p className="text-[10px] font-bold text-gray-800 dark:text-white leading-tight">Sécurité</p>
             <p className="text-[9px] text-gray-400 leading-tight">Votre compte est sécurisé</p>
