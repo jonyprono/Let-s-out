@@ -112,7 +112,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
 
           <div className="space-y-4">
             {/* Join Code block */}
-            <div className="rounded-2xl bg-[#FFF8EE] p-6 flex flex-col items-center gap-4">
+            <div className="rounded-2xl bg-[#FFF8EE] dark:bg-[#FF7A00]/10 border border-transparent dark:border-[#FF7A00]/20 p-6 flex flex-col items-center gap-4">
               <span className="text-[36px] font-bold text-gray-900 dark:text-white tracking-widest leading-none">
                 {joinCode}
               </span>
@@ -126,7 +126,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
             </div>
 
             {/* QR Code block */}
-            <div className="rounded-2xl bg-[#FFF8EE] p-6 flex flex-col items-center gap-5">
+            <div className="rounded-2xl bg-[#FFF8EE] dark:bg-[#FF7A00]/10 border border-transparent dark:border-[#FF7A00]/20 p-6 flex flex-col items-center gap-5">
               <div className="bg-white dark:bg-[#1A1A1A] p-3 rounded-xl shadow-sm">
                 <QRCodeSVG
                   id="share-qr-code"
@@ -145,7 +145,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
             </div>
 
             {/* Link block */}
-            <div className="rounded-2xl bg-[#FFF8EE] p-5 flex flex-col items-center gap-4">
+            <div className="rounded-2xl bg-[#FFF8EE] dark:bg-[#FF7A00]/10 border border-transparent dark:border-[#FF7A00]/20 p-5 flex flex-col items-center gap-4">
               <p className="text-[13px] text-gray-900 dark:text-white font-medium text-center break-all">
                 {eventLink}
               </p>
