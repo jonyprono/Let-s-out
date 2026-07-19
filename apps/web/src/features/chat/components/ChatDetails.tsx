@@ -252,6 +252,8 @@ export function ChatDetails() {
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null)
   // Reply-to state: message quoted when sending a file
   const [replyToMsg, setReplyToMsg] = useState<{ id: string; content: string; senderName: string; type: string } | null>(null)
+  // Pending file with optional caption (image + text)
+  const [pendingFile, setPendingFile] = useState<{ file: File; localUrl: string } | null>(null)
   const [localDeletedMessages, setLocalDeletedMessagesState] = useState<string[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(`deleted-messages-${id}`)
@@ -270,7 +272,9 @@ export function ChatDetails() {
     })
   }
   const [typingUser, setTypingUser] = useState<string | null>(null)
-  const [longPressTimer, setLongPressTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
+  // Use ref for long-press timer to avoid re-renders
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const touchMovedRef = useRef(false)
 
   const { openUserProfile } = useUserProfile()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -337,7 +341,17 @@ export function ChatDetails() {
     if (!file || !id) return
     
     const isVideo = file.type.startsWith('video/')
-    const msgType = isVideo ? 'VIDEO' : 'IMAGE'
+    const isImage = file.type.startsWith('image/')
+    
+    // For images: show preview with optional caption input
+    if (isImage) {
+      const localUrl = URL.createObjectURL(file)
+      setPendingFile({ file, localUrl })
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    
+    const msgType = isVideo ? 'VIDEO' : 'FILE'
     const tempId = `optimistic-${Date.now()}`
     const localUrl = URL.createObjectURL(file)
     const currentReply = replyToMsg
@@ -374,6 +388,51 @@ export function ChatDetails() {
     } finally {
       qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => old.filter(m => m.id !== tempId))
       if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  // Send pending image with optional caption
+  const handleSendPendingFile = async (caption?: string) => {
+    if (!pendingFile || !id) return
+    const { file, localUrl } = pendingFile
+    const msgType = 'IMAGE'
+    const tempId = `optimistic-${Date.now()}`
+    const currentReply = replyToMsg
+
+    setPendingFile(null)
+    setReplyToMsg(null)
+
+    qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
+      ...old,
+      {
+        id: tempId,
+        content: localUrl,
+        type: msgType,
+        caption: caption || null,
+        senderId: user?.id || '',
+        conversationId: id,
+        createdAt: new Date().toISOString(),
+        isDeleted: false,
+        reactions: [],
+        sender: { id: user?.id, profile: user?.profile },
+        _optimistic: true,
+        ...(currentReply ? { replyToId: currentReply.id } : {})
+      }
+    ])
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await saveFileLocally(file, file.name)
+      }
+      const url = await chatApi.uploadMedia(file)
+      const payload: any = { content: url, type: msgType }
+      if (caption?.trim()) payload.caption = caption.trim()
+      if (currentReply) payload.replyToId = currentReply.id
+      sendMsg(payload)
+    } catch {
+      toast.error("Erreur lors de l'envoi de l'image.")
+    } finally {
+      qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => old.filter(m => m.id !== tempId))
     }
   }
 
@@ -494,15 +553,19 @@ export function ChatDetails() {
     } catch { /* ignore */ }
   }, [id, qc])
 
-  // Long press to open reaction picker
+  // Long press to open reaction picker (500ms, cancel on move)
   const handlePressStart = (msgId: string) => {
-    const timer = setTimeout(() => {
-      setPickerMsgId(msgId)
+    touchMovedRef.current = false
+    longPressTimerRef.current = setTimeout(() => {
+      if (!touchMovedRef.current) setPickerMsgId(msgId)
     }, 500)
-    setLongPressTimer(timer)
   }
   const handlePressEnd = () => {
-    if (longPressTimer) clearTimeout(longPressTimer)
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
+  }
+  const handlePressMove = () => {
+    touchMovedRef.current = true
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
   }
 
   // Message actions
@@ -750,8 +813,10 @@ export function ChatDetails() {
                   className={`relative ${pickerMsgId === msg.id ? 'z-50' : ''}`}
                   onMouseDown={() => handlePressStart(msg.id)}
                   onMouseUp={handlePressEnd}
+                  onMouseMove={handlePressMove}
                   onTouchStart={() => handlePressStart(msg.id)}
                   onTouchEnd={handlePressEnd}
+                  onTouchMove={handlePressMove}
                 >
                   {showSenderInfo && isFirstInGroup && (
                     <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-1 pl-10 pr-10`}>
@@ -1114,6 +1179,59 @@ export function ChatDetails() {
           )
         })()}
       </BottomSheet>
+
+      {/* Image Preview + Caption Modal */}
+      {pendingFile && (
+        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col animate-in fade-in duration-200">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 pt-safe-4 pt-4 pb-3">
+            <button
+              onClick={() => setPendingFile(null)}
+              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+            <span className="text-white font-semibold text-[15px]">Envoyer une image</span>
+            <div className="w-10" />
+          </div>
+
+          {/* Preview */}
+          <div className="flex-1 flex items-center justify-center px-4 overflow-hidden">
+            <img
+              src={pendingFile.localUrl}
+              alt="Aperçu"
+              className="max-w-full max-h-full rounded-2xl object-contain shadow-xl"
+            />
+          </div>
+
+          {/* Caption input + send */}
+          <div className="px-4 pb-safe-4 pb-4 pt-3 flex items-end gap-3">
+            <div className="flex-1 flex items-center gap-2 min-h-[48px] bg-white/10 backdrop-blur-md rounded-3xl px-4 border border-white/20 focus-within:border-[#FF7A00]/60">
+              <textarea
+                rows={1}
+                autoFocus
+                placeholder="Ajouter une légende..."
+                id="caption-input"
+                className="flex-1 bg-transparent py-3 text-[14px] text-white placeholder:text-white/50 focus:outline-none resize-none no-scrollbar"
+                style={{ maxHeight: '96px' }}
+                onChange={(e) => {
+                  e.target.style.height = 'auto';
+                  e.target.style.height = Math.min(e.target.scrollHeight, 96) + 'px';
+                }}
+              />
+            </div>
+            <button
+              onClick={() => {
+                const el = document.getElementById('caption-input') as HTMLTextAreaElement | null;
+                handleSendPendingFile(el?.value || undefined);
+              }}
+              className="w-12 h-12 rounded-full bg-[#FF7A00] flex items-center justify-center shadow-lg active:scale-95 transition-transform flex-shrink-0"
+            >
+              <Send className="w-5 h-5 text-white ml-0.5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -167,6 +167,7 @@ export function useConversationMessages(conversationId: string) {
     queryKey: ['chat', 'messages', conversationId],
     queryFn: () => chatApi.getMessages(conversationId).then(sortMessagesChronological),
     enabled: !!conversationId,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache for faster loading
   })
 }
 
