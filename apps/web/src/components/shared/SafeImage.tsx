@@ -44,11 +44,8 @@ function resolveImageSrc(src: string): string {
     ? `${API_BASE}${fixedSrc.startsWith('/') ? '' : '/'}${fixedSrc}`
     : fixedSrc
 
-  // Apply auto format, auto quality, and sensible width for Cloudinary images
-  if (finalSrc.includes('res.cloudinary.com') && finalSrc.includes('/upload/') && !finalSrc.includes('/upload/f_')) {
-    finalSrc = finalSrc.replace('/upload/', '/upload/f_auto,q_auto,w_800/')
-  }
-
+  // Removed aggressive Cloudinary compression to avoid on-the-fly generation delays
+  // Images will load as uploaded or as transformed by the backend directly.
   return finalSrc
 }
 
