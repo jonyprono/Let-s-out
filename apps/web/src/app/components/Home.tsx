@@ -506,6 +506,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
                             onClick={() => onNavigate('event-details', event.id)}
                           />
                         ))}
+                        {/* Spacer for right padding on scroll end */}
+                        <div className="shrink-0 w-4" />
                       </div>
                       {/* Pagination dots */}
                       <div className="flex justify-center gap-1.5 mt-2">
