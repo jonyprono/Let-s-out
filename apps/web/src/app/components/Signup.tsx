@@ -434,7 +434,7 @@ export function Signup({ onBack }: SignupProps) {
   const buttonLabel = (isGoogleMode && step === 6) || step === 7 ? "Rejoindre Let's Out" : 'Suivant'
 
   return (
-    <div className="w-full h-full flex flex-col flex-1 bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
+    <div className="w-full h-full flex flex-col flex-1 bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden relative">
       <div id="recaptcha-container" />
 
       {/* ── Header ─────────────────────────────────────── */}
@@ -446,9 +446,9 @@ export function Signup({ onBack }: SignupProps) {
             aria-label="Retour"
             className="absolute left-0 w-9 h-9 flex items-center justify-center active:scale-95 transition-transform"
           >
-            <ArrowLeft01Icon className="w-5 h-5 text-[var(--color-text-primary)]" strokeWidth={2} />
+            <ArrowLeft01Icon className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
-          <span className="font-poppins text-[15px] font-semibold text-[var(--color-text-primary)]">
+          <span className="font-poppins text-[15px] font-semibold text-gray-900 dark:text-white">
             Inscription
           </span>
         </div>
@@ -466,14 +466,14 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 1: PHONE ── */}
         {!isGoogleMode && step === 1 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Quel est votre numéro de téléphone&nbsp;?
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
               Vous recevrez un code de vérification<br />pour confirmer votre numéro
             </p>
 
-            <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+            <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
               Numéro de téléphone
             </label>
             <div className="mb-8">
@@ -485,7 +485,7 @@ export function Signup({ onBack }: SignupProps) {
               />
             </div>
 
-            <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-3 block">
+            <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-3 block">
               Recevoir le code par
             </label>
             <div className="flex gap-3">
@@ -497,9 +497,9 @@ export function Signup({ onBack }: SignupProps) {
                     key={ch}
                     type="button"
                     onClick={() => setCurrentChannel(val)}
-                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-[var(--border-default)] transition-colors gap-2 bg-white dark:bg-[#1A1A1A]"
+                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-gray-200 dark:border-white/10 transition-colors gap-2 bg-white dark:bg-[#1A1A1A]"
                   >
-                    <span className="flex-1 text-left font-poppins text-[15px] font-medium text-[var(--color-text-primary)]">
+                    <span className="flex-1 text-left font-poppins text-[15px] font-medium text-gray-900 dark:text-white">
                       {ch}
                     </span>
                     {/* Radio indicator */}
@@ -507,7 +507,7 @@ export function Signup({ onBack }: SignupProps) {
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                         isActive
                           ? 'border-[var(--brand-orange-500)]'
-                          : 'border-[var(--border-default)]'
+                          : 'border-gray-200 dark:border-white/10'
                       }`}
                     >
                       {isActive && (
@@ -524,16 +524,16 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 2: OTP ── */}
         {!isGoogleMode && step === 2 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Quel est le code reçu&nbsp;?
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
               Code à {OTP_LENGTH} chiffres envoyé par{' '}
-              <strong className="text-[var(--color-text-primary)]">
+              <strong className="text-gray-900 dark:text-white">
                 {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}
               </strong>{' '}au
               <br />
-              <strong className="text-[var(--color-text-primary)]">
+              <strong className="text-gray-900 dark:text-white">
                 {formatPhone(country.code, phone)}
               </strong>
             </p>
@@ -554,10 +554,10 @@ export function Signup({ onBack }: SignupProps) {
                   value={d}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleOtpKey(i, e)}
-                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-[var(--color-text-primary)] ${
+                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white ${
                     d
                       ? 'border-[var(--brand-orange-500)]'
-                      : 'border-[var(--border-default)]'
+                      : 'border-gray-200 dark:border-white/10'
                   } focus:border-[var(--brand-orange-500)]`}
                 />
               ))}
@@ -568,7 +568,7 @@ export function Signup({ onBack }: SignupProps) {
               <button
                 onClick={handleResend}
                 disabled={countdown > 0}
-                className="flex items-center gap-1.5 font-poppins text-[13px] text-[var(--color-text-secondary)] disabled:opacity-50 transition-opacity"
+                className="flex items-center gap-1.5 font-poppins text-[13px] text-gray-500 dark:text-gray-400 disabled:opacity-50 transition-opacity"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -581,7 +581,7 @@ export function Signup({ onBack }: SignupProps) {
                 Renvoyer le code
               </button>
               {countdown > 0 && (
-                <span className="font-poppins text-[13px] text-[var(--color-text-secondary)]">
+                <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
                   dans{' '}
                   {String(Math.floor(countdown / 60)).padStart(2, '0')}:
                   {String(countdown % 60).padStart(2, '0')}
@@ -594,10 +594,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 3: NAME ── */}
         {step === 3 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Quel est votre nom&nbsp;?
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
               Ces informations aideront vos amis à vous reconnaître et ne seront visibles que sur Let's Out.
             </p>
             <div className="flex flex-col gap-4">
@@ -620,10 +620,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 4: BIRTHDAY ── */}
         {step === 4 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Et votre date d'anniversaire&nbsp;?
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
               Cette information restera privée et nous aidera à vous faire les meilleures suggestions d'événements possibles.
             </p>
 
@@ -674,10 +674,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 5: CITY ── */}
         {step === 5 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Dans quelle ville habitez-vous&nbsp;?
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
               Indiquez votre ville pour trouver des événements et rencontrer des amis près de vous.
             </p>
 
@@ -712,9 +712,9 @@ export function Signup({ onBack }: SignupProps) {
 
               {/* Dropdown suggestions */}
               {showCitySuggestions && citySuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 rounded-[16px] border border-[var(--border-default)] shadow-lg z-50 overflow-hidden bg-white dark:bg-[#1A1A1A]">
+                <div className="absolute top-full left-0 right-0 mt-1 rounded-[16px] border border-gray-200 dark:border-white/10 shadow-lg z-50 overflow-hidden bg-white dark:bg-[#1A1A1A]">
                   {citySearching && (
-                    <div className="px-4 py-3 font-poppins text-[13px] text-[var(--color-text-secondary)]">
+                    <div className="px-4 py-3 font-poppins text-[13px] text-gray-500 dark:text-gray-400">
                       Recherche...
                     </div>
                   )}
@@ -738,7 +738,7 @@ export function Signup({ onBack }: SignupProps) {
                         strokeWidth={1.2}
                         className="text-[var(--color-icon-secondary)] shrink-0"
                       />
-                      <span className="font-poppins text-[14px] text-[var(--color-text-primary)]">
+                      <span className="font-poppins text-[14px] text-gray-900 dark:text-white">
                         {s.label}
                       </span>
                     </button>
@@ -752,10 +752,10 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 6: INTERESTS ── */}
         {step === 6 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Quels sont vos centres d'intérêts&nbsp;?
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
               Indiquez au moins un centre d'intérêt afin d'obtenir les meilleures recommandations d'activités pour vous.
             </p>
             <div className="flex flex-wrap gap-2.5">
@@ -775,17 +775,17 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 7: PASSWORD ── */}
         {step === 7 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Créez votre mot de passe
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-7">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-7">
               Définissez un mot de passe robuste et sécurisé de connexion à votre compte
             </p>
 
             <div className="flex flex-col gap-5 mb-5">
               {/* Mot de passe */}
               <div>
-                <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+                <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
                   Mot de passe
                 </label>
                 <Input
@@ -809,7 +809,7 @@ export function Signup({ onBack }: SignupProps) {
 
               {/* Confirmer mot de passe */}
               <div>
-                <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+                <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
                   Confirmer mot de passe
                 </label>
                 <Input
@@ -849,7 +849,7 @@ export function Signup({ onBack }: SignupProps) {
                   </div>
                   <span
                     className={`font-poppins text-[12px] leading-[18px] ${
-                      ok ? 'text-[#34C759]' : 'text-[var(--color-text-secondary)]'
+                      ok ? 'text-[#34C759]' : 'text-gray-500 dark:text-gray-400'
                     }`}
                   >
                     {label}
@@ -863,7 +863,7 @@ export function Signup({ onBack }: SignupProps) {
 
       {/* ── Bottom Area ─────────────────────────────────── */}
       <div 
-        className="px-5 pt-3 mt-auto shrink-0 bg-[var(--color-background-primary)]"
+        className="px-5 pt-3 mt-auto shrink-0 bg-white dark:bg-black"
         style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}
       >
         {/* CGU — uniquement à l'étape 7 */}
@@ -876,14 +876,14 @@ export function Signup({ onBack }: SignupProps) {
               className={`mt-0.5 w-5 h-5 rounded flex items-center justify-center shrink-0 border transition-colors ${
                 acceptedTerms
                   ? 'bg-[var(--brand-orange-500)] border-[var(--brand-orange-500)]'
-                  : 'border-[var(--border-default)] bg-white dark:bg-[#1A1A1A]'
+                  : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A]'
               }`}
             >
               {acceptedTerms && (
                 <Tick01Icon width={16} height={16} strokeWidth={3.5} className="text-white" />
               )}
             </div>
-            <span className="font-poppins text-[12px] leading-relaxed text-[var(--color-text-secondary)]">
+            <span className="font-poppins text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">
               Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
               <span className="text-[var(--brand-orange-500)] font-semibold">
                 Conditions d'Utilisation

@@ -61,8 +61,11 @@ export function JoinPrivateEvent() {
       
       await BarcodeScanner.addListener('barcodesScanned', async (result: any) => {
         if (result.barcodes && result.barcodes.length > 0) {
-          const value = result.barcodes[0].displayValue || result.barcodes[0].rawValue;
+          let value = result.barcodes[0].displayValue || result.barcodes[0].rawValue;
           if (value) {
+            if (value.includes('/event/join/')) {
+              value = value.split('/event/join/').pop() || value;
+            }
             await stopScan();
             setCode(value);
             handleJoin(value);
@@ -91,7 +94,11 @@ export function JoinPrivateEvent() {
   const handleJoin = async (submitCode: string = code) => {
     if (isLoading) return; // Prevent duplicate requests
     
-    const finalCode = submitCode.trim();
+    let finalCode = submitCode.trim();
+    if (finalCode.includes('/event/join/')) {
+      finalCode = finalCode.split('/event/join/').pop() || finalCode;
+    }
+    
     if (!finalCode) {
       toast.error('Veuillez entrer un code');
       return;
@@ -130,12 +137,15 @@ export function JoinPrivateEvent() {
         </div>
         
         {/* Scanner overlay hole */}
-        <div className="flex-1 border-[40px] border-black/50 relative">
-          <div className="absolute inset-0 border-2 border-action-primary shadow-[0_0_0_4000px_rgba(0,0,0,0.5)]">
-            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-action-primary -ml-[2px] -mt-[2px]" />
-            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-action-primary -mr-[2px] -mt-[2px]" />
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-action-primary -ml-[2px] -mb-[2px]" />
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-action-primary -mr-[2px] -mb-[2px]" />
+        <div className="flex-1 flex items-center justify-center relative overflow-hidden pointer-events-none">
+          <div className="relative w-64 h-64 pointer-events-auto">
+            <div className="absolute inset-0 shadow-[0_0_0_4000px_rgba(0,0,0,0.6)] rounded-3xl" />
+            <div className="absolute inset-0 border-2 border-action-primary/50 rounded-3xl bg-transparent" />
+            {/* Corners */}
+            <div className="absolute top-0 left-0 w-10 h-10 border-t-[4px] border-l-[4px] border-action-primary rounded-tl-3xl -ml-[2px] -mt-[2px]" />
+            <div className="absolute top-0 right-0 w-10 h-10 border-t-[4px] border-r-[4px] border-action-primary rounded-tr-3xl -mr-[2px] -mt-[2px]" />
+            <div className="absolute bottom-0 left-0 w-10 h-10 border-b-[4px] border-l-[4px] border-action-primary rounded-bl-3xl -ml-[2px] -mb-[2px]" />
+            <div className="absolute bottom-0 right-0 w-10 h-10 border-b-[4px] border-r-[4px] border-action-primary rounded-br-3xl -mr-[2px] -mb-[2px]" />
           </div>
         </div>
 

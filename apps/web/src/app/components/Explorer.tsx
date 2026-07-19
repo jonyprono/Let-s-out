@@ -20,16 +20,34 @@ interface ExplorerProps {
 
 // Filtres supprimés
 
-import { Basketball01Icon, PaintBoardIcon, Moon01Icon, MusicNote01Icon, StarIcon, Settings01Icon, Mic01Icon } from 'hugeicons-react';
+import { 
+  PaintBoardIcon, 
+  MaskTheater01Icon, 
+  FootballIcon, 
+  HealthIcon, 
+  KitchenUtensilsIcon, 
+  DrinkIcon, 
+  MoleculesIcon, 
+  PartyIcon, 
+  HandPrayerIcon, 
+  ShoppingBag02Icon, 
+  MusicNote03Icon, 
+  CameraVideoIcon 
+} from 'hugeicons-react';
 
 const CATEGORY_LABELS = [
-  { id: 'MUSIC',      label: 'Concerts',    icon: MusicNote01Icon },
-  { id: 'NIGHTLIFE',  label: 'Fêtes',       icon: Moon01Icon },
-  { id: 'CONFERENCE', label: 'Conférences', icon: Mic01Icon },
-  { id: 'WORKSHOP',   label: 'Ateliers',    icon: Settings01Icon },
-  { id: 'SPORT',      label: 'Sports',      icon: Basketball01Icon },
-  { id: 'CULTURE',    label: 'Arts',        icon: PaintBoardIcon },
-  { id: 'OTHER',      label: 'Autres',      icon: StarIcon },
+  { id: 'CULTURE',    label: 'Art et culture',            icon: PaintBoardIcon },
+  { id: 'OTHER',      label: 'Comédie',                   icon: MaskTheater01Icon },
+  { id: 'SPORT',      label: 'Sport',                     icon: FootballIcon },
+  { id: 'WELLNESS',   label: 'Santé et bien-être',        icon: HealthIcon },
+  { id: 'FOOD',       label: 'Cuisine et gastronomie',    icon: KitchenUtensilsIcon },
+  { id: 'NIGHTLIFE',  label: 'Boissons',                  icon: DrinkIcon },
+  { id: 'SOCIAL',     label: 'Réseautage professionnel',  icon: MoleculesIcon },
+  { id: 'NIGHTLIFE',  label: 'Fêtes',                     icon: PartyIcon },
+  { id: 'OTHER',      label: 'Religion',                  icon: HandPrayerIcon },
+  { id: 'LIFESTYLE',  label: 'Shopping',                  icon: ShoppingBag02Icon },
+  { id: 'MUSIC',      label: 'Musique et son',            icon: MusicNote03Icon },
+  { id: 'ART',        label: 'Télévision et cinéma',      icon: CameraVideoIcon }
 ];
 
 // Filter tabs — pill style with border

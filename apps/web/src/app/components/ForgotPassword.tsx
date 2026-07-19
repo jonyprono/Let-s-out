@@ -230,7 +230,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const isLoading = sendingOtp || checkingTarget || isFirebaseSending || isFirebaseVerifying || checkingOtp || resetting
 
   return (
-    <div className="w-full h-full flex flex-col flex-1 bg-[var(--color-background-primary)] text-[var(--color-text-primary)] overflow-hidden relative">
+    <div className="w-full h-full flex flex-col flex-1 bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden relative">
       <div id="recaptcha-container-fp" />
 
       {/* ── Header ─────────────────────────────────────── */}
@@ -241,9 +241,9 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             aria-label="Retour"
             className="absolute left-0 w-9 h-9 flex items-center justify-center active:scale-95 transition-transform"
           >
-            <ArrowLeft01Icon className="w-5 h-5 text-[var(--color-text-primary)]" strokeWidth={2} />
+            <ArrowLeft01Icon className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
-          <span className="font-poppins text-[15px] font-semibold text-[var(--color-text-primary)]">
+          <span className="font-poppins text-[15px] font-semibold text-gray-900 dark:text-white">
             Réinitialiser votre mot de passe
           </span>
         </div>
@@ -262,14 +262,14 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {/* ── STEP 1: PHONE ── */}
         {step === 1 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Entrez votre numéro de téléphone
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
               Entrez le numéro de téléphone lié à votre compte pour recevoir un code et réinitialiser votre mot de passe.
             </p>
 
-            <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+            <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
               Numéro de téléphone
             </label>
             <div className="mb-8">
@@ -281,7 +281,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               />
             </div>
 
-            <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-3 block">
+            <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-3 block">
               Recevoir le code par
             </label>
             <div className="flex gap-3">
@@ -293,16 +293,16 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                     key={ch}
                     type="button"
                     onClick={() => setCurrentChannel(val)}
-                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-[var(--border-default)] transition-colors gap-2 bg-white dark:bg-[#1A1A1A]"
+                    className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-gray-200 dark:border-white/10 transition-colors gap-2 bg-white dark:bg-[#1A1A1A]"
                   >
-                    <span className="flex-1 text-left font-poppins text-[15px] font-medium text-[var(--color-text-primary)]">
+                    <span className="flex-1 text-left font-poppins text-[15px] font-medium text-gray-900 dark:text-white">
                       {ch}
                     </span>
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
                         isActive
                           ? 'border-[var(--brand-orange-500)]'
-                          : 'border-[var(--border-default)]'
+                          : 'border-gray-200 dark:border-white/10'
                       }`}
                     >
                       {isActive && (
@@ -319,16 +319,16 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {/* ── STEP 2: OTP ── */}
         {step === 2 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Quel est le code reçu&nbsp;?
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-8">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
               Code à {OTP_LENGTH} chiffres envoyé par{' '}
-              <strong className="text-[var(--color-text-primary)]">
+              <strong className="text-gray-900 dark:text-white">
                 {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}
               </strong>{' '}au
               <br />
-              <strong className="text-[var(--color-text-primary)]">
+              <strong className="text-gray-900 dark:text-white">
                 {formatPhone(country.code, phone)}
               </strong>
             </p>
@@ -350,10 +350,10 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleOtpKey(i, e)}
                   onPaste={i === 0 ? handleOtpPaste : undefined}
-                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-[var(--color-text-primary)] ${
+                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white ${
                     d
                       ? 'border-[var(--brand-orange-500)]'
-                      : 'border-[var(--border-default)]'
+                      : 'border-gray-200 dark:border-white/10'
                   } focus:border-[var(--brand-orange-500)]`}
                 />
               ))}
@@ -364,13 +364,13 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               <button
                 onClick={handleResend}
                 disabled={countdown > 0}
-                className="flex items-center gap-1.5 font-poppins text-[13px] text-[var(--color-text-secondary)] disabled:opacity-50 transition-opacity"
+                className="flex items-center gap-1.5 font-poppins text-[13px] text-gray-500 dark:text-gray-400 disabled:opacity-50 transition-opacity"
               >
                 <RefreshIcon className="w-4 h-4" strokeWidth={2} />
                 Renvoyer le code
               </button>
               {countdown > 0 && (
-                <span className="font-poppins text-[13px] text-[var(--color-text-secondary)]">
+                <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
                   dans{' '}
                   {String(Math.floor(countdown / 60)).padStart(2, '0')}:
                   {String(countdown % 60).padStart(2, '0')}
@@ -383,17 +383,17 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {/* ── STEP 3: NEW PASSWORD ── */}
         {step === 3 && (
           <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-[var(--color-text-primary)] mb-2">
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               Nouveau mot de passe
             </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-[var(--color-text-secondary)] mb-7">
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-7">
               Définissez un nouveau mot de passe robuste et sécurisé pour protéger votre compte
             </p>
 
             <div className="flex flex-col gap-5 mb-5">
               {/* Mot de passe */}
               <div>
-                <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+                <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
                   Mot de passe
                 </label>
                 <Input
@@ -417,7 +417,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
               {/* Confirmer mot de passe */}
               <div>
-                <label className="font-poppins text-[13px] font-medium text-[var(--color-text-secondary)] mb-2 block">
+                <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
                   Confirmer mot de passe
                 </label>
                 <Input
@@ -457,7 +457,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                   </div>
                   <span
                     className={`font-poppins text-[12px] leading-[18px] ${
-                      ok ? 'text-[#34C759]' : 'text-[var(--color-text-secondary)]'
+                      ok ? 'text-[#34C759]' : 'text-gray-500 dark:text-gray-400'
                     }`}
                   >
                     {label}
@@ -471,7 +471,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
 
       {/* ── Bottom Button ───────────────────────────── */}
       <div 
-        className="px-5 pt-3 mt-auto shrink-0 bg-[var(--color-background-primary)]"
+        className="px-5 pt-3 mt-auto shrink-0 bg-white dark:bg-black"
         style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}
       >
         <PrimaryButton
