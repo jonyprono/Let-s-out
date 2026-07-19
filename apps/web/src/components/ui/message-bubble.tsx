@@ -117,7 +117,7 @@ export function MessageBubble({
       
       <div className={cn("flex max-w-[85%] sm:max-w-[75%] flex-col gap-1", isSender ? "items-end" : "items-start")}>
         {imageUrl ? (
-          <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--border-secondary)] relative group">
+          <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--border-secondary)] relative group flex flex-col">
             <img 
               src={imageUrl} 
               alt="attachment" 
@@ -129,8 +129,20 @@ export function MessageBubble({
                 }
               }}
             />
-            <div className={cn("absolute bottom-2 right-2 px-2 py-0.5 rounded-full text-[10px] text-white bg-black/50")}>
-              {time}
+            {/* Caption (like WhatsApp) */}
+            {content && (
+              <div className={cn(
+                "px-3 pt-2 pb-1 text-[13px] font-poppins whitespace-pre-wrap break-words",
+                isSender ? "text-[#1B1818] dark:text-white" : "text-[#1B1818] dark:text-white"
+              )}>
+                {content}
+              </div>
+            )}
+            <div className={cn("absolute bottom-2 right-2 px-2 py-0.5 rounded-full text-[10px] text-white bg-black/50", content && "relative bottom-auto right-auto self-end px-2 py-0.5 rounded-full text-[10px] bg-black/10 dark:bg-white/10 text-[var(--color-text-secondary)] mb-1 mr-2")}>
+              <span className="inline-flex items-center gap-1">
+                {time}
+                {isSender && renderStatusIcon()}
+              </span>
             </div>
           </div>
         ) : (

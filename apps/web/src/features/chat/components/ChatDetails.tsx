@@ -406,9 +406,9 @@ export function ChatDetails() {
       ...old,
       {
         id: tempId,
-        content: localUrl,
+        content: caption || null,       // caption goes in content
+        mediaUrl: localUrl,             // blob URL for instant preview
         type: msgType,
-        caption: caption || null,
         senderId: user?.id || '',
         conversationId: id,
         createdAt: new Date().toISOString(),

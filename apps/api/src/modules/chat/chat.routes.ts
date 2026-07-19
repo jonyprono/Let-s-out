@@ -215,11 +215,11 @@ export default async function chatRoutes(app: FastifyInstance) {
             data: { lastMessageAt: new Date() },
           })
 
-          // Broadcast to all conversation members
+          // Broadcast to all conversation members except the sender
           broadcastToConversation(app, msg.conversationId, {
             type: 'new_message',
             message,
-          }, undefined)
+          }, userId)
 
           // AI Bot Logic has been moved out
         }
@@ -552,15 +552,20 @@ export default async function chatRoutes(app: FastifyInstance) {
 
     const convosWithUnread = await Promise.all(
       convos.map(async (c) => {
-        const unreadCount = c.lastReadAt 
+        // Count messages from others (not self) after last read — avoids showing own sends as "unread"
+        const unreadCount = c.lastReadAt
           ? await app.prisma.message.count({
               where: {
                 conversationId: c.conversationId,
                 createdAt: { gt: c.lastReadAt },
-              }
+                senderId: { not: sub },
+              },
             })
           : await app.prisma.message.count({
-              where: { conversationId: c.conversationId }
+              where: {
+                conversationId: c.conversationId,
+                senderId: { not: sub },
+              },
             })
 
         return {
