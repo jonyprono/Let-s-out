@@ -23,6 +23,7 @@ async function bootstrap() {
   await app.register(import('./plugins/cookie'))
   await app.register(import('./plugins/jwt'))
   await app.register(import('./plugins/prisma'))
+  await app.register(import('@fastify/compress'), { global: true })
   await app.register(import('./plugins/websocket'))
   await app.register(import('@fastify/multipart'), { limits: { fileSize: 10 * 1024 * 1024 } }) // 10MB limit
   

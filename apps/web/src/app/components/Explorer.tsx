@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router';
 import { Loader2, ChevronLeft, Lock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -110,16 +110,21 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [currentLocation, setCurrentLocation] = useState('');
   const [mapSearch, setMapSearch] = useState('');
   const [eventSearch, setEventSearch] = useState('');
-  const { data: eventsData, refetch } = useQuery({
+  const { data: eventsPages, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['events', 'explorer'],
-    queryFn: async () => {
-      const res = await eventsApi.list({ limit: 500 });
-      return res.data.data || [];
+    queryFn: async ({ pageParam = 0 }) => {
+      const res = await eventsApi.list({ limit: 30, offset: pageParam as number });
+      return res.data;
     },
+    getNextPageParam: (lastPage: any, allPages) => {
+      const loaded = allPages.reduce((acc, p) => acc + (p?.data?.length || 0), 0);
+      return loaded < (lastPage?.total || 0) ? loaded : undefined;
+    },
+    initialPageParam: 0,
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
-  const events = eventsData || [];
+  const events = eventsPages?.pages.flatMap((p: any) => p?.data || []) ?? [];
 
   const handleRefresh = async () => {
     await refetch();
@@ -658,6 +663,20 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         />
                       ))}
                     </div>
+                    {hasNextPage && (
+                      <div className="flex justify-center pt-4">
+                        <button
+                          onClick={() => fetchNextPage()}
+                          disabled={isFetchingNextPage}
+                          className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-gray-700 dark:text-gray-300 active:scale-95 transition-all disabled:opacity-50"
+                        >
+                          {isFetchingNextPage ? (
+                            <svg className="animate-spin w-4 h-4 text-[#FF7A00]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                          ) : null}
+                          {isFetchingNextPage ? 'Chargement...' : 'Voir plus d\'événements'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (

@@ -139,20 +139,20 @@ export default async function eventsRoutes(app: FastifyInstance) {
     })
 
     // Filter out events the user has already reviewed
-    const pendingEvents = [];
-    for (const b of bookings) {
-      const existingReview = await app.prisma.review.findUnique({
-        where: {
-          userId_eventId: {
-            userId: sub,
-            eventId: b.eventId,
-          }
-        }
-      });
-      if (!existingReview) {
-        pendingEvents.push(b.event);
-      }
-    }
+    const eventIds = bookings.map(b => b.eventId);
+    const existingReviews = await app.prisma.review.findMany({
+      where: {
+        userId: sub,
+        eventId: { in: eventIds }
+      },
+      select: { eventId: true }
+    });
+    
+    const reviewedEventIds = new Set(existingReviews.map(r => r.eventId));
+    
+    const pendingEvents = bookings
+      .filter(b => !reviewedEventIds.has(b.eventId))
+      .map(b => b.event);
 
     return reply.send({ data: pendingEvents, total: pendingEvents.length })
   })
@@ -449,15 +449,21 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const acceptedValidators: string[] = [...event.validatorIds]
     if (eligibleVotersCount > 0) {
-      for (const candidateId of event.validatorCandidates) {
-        if (acceptedValidators.includes(candidateId)) continue
-
-        const yesVotes = await app.prisma.validatorVote.count({
-          where: { eventId: id, candidateId, vote: true }
-        })
-
-        if (yesVotes / eligibleVotersCount >= threshold) {
-          acceptedValidators.push(candidateId)
+      const candidatesToCheck = event.validatorCandidates.filter(c => !acceptedValidators.includes(c));
+      if (candidatesToCheck.length > 0) {
+        const voteCounts = await app.prisma.validatorVote.groupBy({
+          by: ['candidateId'],
+          where: { eventId: id, candidateId: { in: candidatesToCheck }, vote: true },
+          _count: { vote: true }
+        });
+        
+        const voteMap = new Map(voteCounts.map(v => [v.candidateId, v._count.vote]));
+        
+        for (const candidateId of candidatesToCheck) {
+          const yesVotes = voteMap.get(candidateId) || 0;
+          if (yesVotes / eligibleVotersCount >= threshold) {
+            acceptedValidators.push(candidateId);
+          }
         }
       }
     }

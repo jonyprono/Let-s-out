@@ -171,12 +171,14 @@ export function Home({ userData, onNavigate }: HomeProps) {
     queryKey: ['users', 'activity', user?.id],
     queryFn: () => usersApi.getActivity(user!.id),
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes — données peu volatiles
   });
 
   // Friends count for stats
   const { data: friends } = useQuery({
     queryKey: ['users', 'friends'],
     queryFn: () => usersApi.getFriends(),
+    staleTime: 5 * 60 * 1000, // 5 minutes — liste d'amis peu volatile
   });
 
   let rawEvents: Event[] = eventsData?.pages.flatMap(page => page.data) || [];
@@ -272,6 +274,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
       return data;
     },
     enabled: !!user?.profile?.username,
+    staleTime: 5 * 60 * 1000, // 5 minutes — profil peu volatile
   });
 
   const ratingStr = myProfile?.detailedStats?.rating?.toFixed(1) ?? '0.0';
