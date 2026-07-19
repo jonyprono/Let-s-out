@@ -29,8 +29,57 @@ export class AiService {
         select: { botPrompt: true, profile: true }
       });
 
-      const systemPrompt = bot?.botPrompt ||
+      let systemPrompt = bot?.botPrompt ||
         `Tu es ${bot?.profile?.displayName || 'un agent'}, un assistant du support client pour l'application Let's Out. Sois bref, concis et très utile. Tu parles en français. Ne dis jamais que tu es une IA ou un robot. Réponds directement aux questions de l'utilisateur.`;
+
+      // --- RAG ARCHITECTURE: INJECT SYSTEM CONTEXT ---
+      try {
+        const conversation = await prisma.conversation.findUnique({
+          where: { id: _conversationId },
+          include: {
+            members: {
+              include: { user: { include: { profile: true, wallet: true } } }
+            }
+          }
+        });
+
+        if (conversation) {
+          const userMember = conversation.members.find(m => !m.user.isBot && !m.userId.startsWith('bot_'));
+          
+          let contextString = `\n\n<SYSTEM_CONTEXT>\nVoici les informations exactes et en temps réel concernant l'utilisateur. Utilise-les (si nécessaire) pour lui donner une réponse personnalisée :\n`;
+          
+          if (userMember?.user) {
+            const u = userMember.user;
+            contextString += `- Utilisateur : ${u.profile?.displayName || u.profile?.username || 'Anonyme'}\n`;
+            contextString += `- Statut KYC : ${u.profile?.kycStatus || 'pending'}\n`;
+            contextString += `- Solde de son Portefeuille (Wallet) : ${u.wallet?.balance || 0} F CFA\n`;
+
+            // Fetch the user's most recent event to give context, since the bot is in a 1-on-1 chat
+            const latestEvent = await prisma.event.findFirst({
+              where: { creatorId: u.id },
+              orderBy: { createdAt: 'desc' }
+            });
+
+            if (latestEvent) {
+              contextString += `\nL'utilisateur a récemment créé l'événement suivant (à titre d'information s'il pose une question dessus) :\n`;
+              contextString += `- Événement : ${latestEvent.title}\n`;
+              contextString += `- Statut : ${latestEvent.status}\n`;
+              contextString += `- Cagnotte récoltée : ${latestEvent.poolCollected} F CFA\n`;
+              if (latestEvent.registrationDeadline) {
+                contextString += `- Date limite d'inscription à l'événement : ${latestEvent.registrationDeadline.toISOString()}\n`;
+              } else {
+                contextString += `- Date limite d'inscription à l'événement : Non définie (prendre la date de début de l'événement)\n`;
+              }
+            }
+          }
+          
+          contextString += `</SYSTEM_CONTEXT>`;
+          systemPrompt += contextString;
+        }
+      } catch (ctxErr) {
+        console.error('[AI] Error fetching RAG context:', ctxErr);
+      }
+      // -----------------------------------------------
 
       // Build messages array for Groq (OpenAI-compatible format)
       const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
