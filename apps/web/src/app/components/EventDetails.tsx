@@ -12,7 +12,11 @@ import {
   X,
   Briefcase,
   Users,
+  Navigation
 } from 'lucide-react'
+import { MapContainer, TileLayer, Marker } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
 import { Button } from '@/components/ui/button'
 import { SaveEventButton } from '@/components/ui/save-event-button'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -55,6 +59,16 @@ const CustomChatIcon = () => (
     <path d="M5.20833 5.625H12.7083M5.20833 8.95833H9.79167M0.625 7.29167C0.625 6.64934 0.636217 6.02233 0.657575 5.41692C0.72735 3.43903 0.762242 2.45007 1.56672 1.63954C2.37121 0.829008 3.38808 0.7855 5.42183 0.698492C6.53764 0.65075 7.72575 0.625 8.95833 0.625C10.1909 0.625 11.379 0.65075 12.4948 0.698492C14.5286 0.7855 15.5455 0.829008 16.3499 1.63954C17.1544 2.45007 17.1893 3.43903 17.2591 5.41692C17.2804 6.02233 17.2917 6.64934 17.2917 7.29167C17.2917 7.934 17.2804 8.561 17.2591 9.16642C17.1893 11.1443 17.1544 12.1333 16.3499 12.9438C15.5455 13.7543 14.5286 13.7978 12.4948 13.8848C11.8832 13.911 11.2498 13.9306 10.5994 13.9429C9.98183 13.9546 9.673 13.9605 9.40167 14.0638C9.13033 14.1672 8.90208 14.3629 8.44542 14.7544L6.62919 16.3118C6.51894 16.4063 6.37849 16.4583 6.23326 16.4583C5.89732 16.4583 5.625 16.186 5.625 15.8501V13.8932C5.55702 13.8905 5.48929 13.8878 5.42182 13.8848C3.38807 13.7978 2.37121 13.7543 1.56672 12.9437C0.762242 12.1332 0.72735 11.1443 0.657575 9.16642C0.636217 8.561 0.625 7.934 0.625 7.29167Z" stroke="white" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 )
+
+const customMarkerIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 interface EventDetailsProps {
   onBack?: () => void
@@ -448,13 +462,70 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="flex items-center gap-3">
                 <Calendar className="w-[18px] h-[18px] text-[var(--color-text-secondary)] shrink-0" />
                 <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] capitalize leading-snug">
-                  {formattedDate}, {formattedStart} - {formattedEnd}
+                  {formattedDate}, {formattedStart} à {formattedEnd}
                 </p>
               </div>
             </div>
           </div>
 
           <div className="px-4 pb-6 space-y-[20px] mt-4">
+
+            {/* S'y rendre — Navigation */}
+            {(event.latitude && event.longitude) && (() => {
+              const lat = event.latitude as number;
+              const lng = event.longitude as number;
+
+              const openNavigation = () => {
+                const label = encodeURIComponent(event.title || 'Événement');
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (isIOS) {
+                  // Essayer Apple Maps, puis fallback Google Maps
+                  window.open(`maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=d`, '_blank');
+                } else {
+                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${label}`, '_blank');
+                }
+              };
+
+              return (
+                <div>
+                  <div className="flex items-center justify-between mb-[10px]">
+                    <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)]">S'y rendre</h2>
+                    <button
+                      onClick={openNavigation}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--brand-orange-500)] text-white text-[12px] font-semibold active:scale-95 transition-transform shadow-sm"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                      Itinéraire
+                    </button>
+                  </div>
+                  <div className="rounded-[14px] overflow-hidden border border-[var(--border-default)] h-[160px] relative">
+                    <MapContainer
+                      center={[lat, lng]}
+                      zoom={15}
+                      scrollWheelZoom={false}
+                      dragging={false}
+                      zoomControl={false}
+                      doubleClickZoom={false}
+                      style={{ height: '100%', width: '100%' }}
+                      attributionControl={false}
+                    >
+                      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                      <Marker position={[lat, lng]} icon={customMarkerIcon} />
+                    </MapContainer>
+                    {/* Overlay cliquable pour ouvrir la nav */}
+                    <div
+                      className="absolute inset-0 z-[400] cursor-pointer"
+                      onClick={openNavigation}
+                    />
+                  </div>
+                  {event.address && (
+                    <p className="text-[12px] text-[var(--color-text-secondary)] mt-2 text-center">
+                      {event.address}{event.city ? `, ${event.city}` : ''}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* À propos */}
             {event.description && (
@@ -743,7 +814,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-[28px] font-mono font-bold text-gray-800 dark:text-gray-200 tracking-widest bg-gray-200/50 px-4 py-2 rounded-xl">
-                  {event.joinCode || '—'}
+                  {event.joinCode || '-'}
                 </span>
                 <button
                   onClick={() => {

@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, WifiOff, RefreshCw } from 'lucide-react';
 import { Search01Icon } from 'hugeicons-react';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { eventsApi, type Event } from '@/features/events/api';
+import { eventsApi } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
 import { usersApi } from '@/features/users/api';
 import { hapticFeedback } from '@/lib/haptics';
@@ -117,7 +117,7 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="white" strokeWidth="1.8" strokeLinejoin="round"/>
           </svg>
         </div>
-        <span className="text-white font-bold text-[16px] leading-none">{rating > 0 ? rating.toFixed(1) : '—'}</span>
+        <span className="text-white font-bold text-[16px] leading-none">{rating > 0 ? rating.toFixed(1) : '-'}</span>
         <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Note moyenne<br/>reçue</span>
       </div>
     </div>
@@ -193,7 +193,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
   if (query || (activeFilter && activeFilter !== 'discover')) {
     const now = new Date();
     
-    events = events.filter(ev => {
+    events = events.filter((ev: any) => {
       // 1. Text search
       if (query !== '') {
         const matchesTitle = ev?.title?.toLowerCase().includes(query);
@@ -265,7 +265,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0,0,0,0);
   const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 7);
   const allJoined: any[] = activity?.joinedEvents || [];
-  const eventsThisWeek = events.filter(e => {
+  const eventsThisWeek = events.filter((e: any) => {
     if (!e?.startAt) return false;
     const s = new Date(e.startAt);
     return s >= weekStart && s <= weekEnd;

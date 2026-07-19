@@ -559,12 +559,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] text-[var(--color-text-secondary)]">Date</span>
                   <span className="text-[13px] font-medium text-[var(--color-text-primary)] text-right truncate max-w-[200px]">
-                    {startDate ? `${formatDateFr(startDate)}, ${startTime.replace(':', 'h')}${endTime ? ` - ${endTime.replace(':', 'h')}` : ''}` : '—'}
+                    {startDate ? `${formatDateFr(startDate)}, ${startTime.replace(':', 'h')}${endTime ? ` à ${endTime.replace(':', 'h')}` : ''}` : '-'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] text-[var(--color-text-secondary)]">Lieu</span>
-                  <span className="text-[13px] font-medium text-[var(--color-text-primary)] text-right truncate max-w-[200px]">{address || city || '—'}</span>
+                  <span className="text-[13px] font-medium text-[var(--color-text-primary)] text-right truncate max-w-[200px]">{address || city || '-'}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] text-[var(--color-text-secondary)]">Participation</span>

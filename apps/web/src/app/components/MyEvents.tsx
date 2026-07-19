@@ -53,7 +53,6 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
   const allJoined: any[] = activity?.joinedEvents || [];
   const allPast: any[] = activity?.pastEvents || [];
   const upcomingEvents = allJoined.filter((e: any) => e?.startAt && new Date(e.startAt) >= now);
-  const pastEvents = allJoined.filter((e: any) => e?.startAt && new Date(e.startAt) < now);
   
   const { favorites } = useFavoritesStore();
   const favoriteEvents: any[] = Object.values(favorites).sort((a, b) => {
