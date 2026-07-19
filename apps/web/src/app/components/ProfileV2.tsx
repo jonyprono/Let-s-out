@@ -422,9 +422,9 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
       {/* Stats - moved above tabs to match Figma */}
       <div className="px-4 mb-6 shrink-0">
-        <div className="grid grid-cols-4 gap-2 bg-[#FEFEFA] border border-[#F5F5F4] rounded-2xl py-3 px-2">
-          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]">
-            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+        <div className="grid grid-cols-4 gap-2 bg-[#FEFEFA] dark:bg-[#1A1A1A] border border-[#F5F5F4] dark:border-gray-800 rounded-2xl py-3 px-2">
+          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4] dark:border-gray-800">
+            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] dark:bg-[#FF7A00]/10 flex items-center justify-center">
               <Calendar className="w-3.5 h-3.5 text-[#FF7A00]" />
             </div>
             <div className="text-center">
@@ -432,8 +432,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <p className="font-inter text-[10px] text-gray-500">Créés</p>
             </div>
           </div>
-          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]">
-            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4] dark:border-gray-800">
+            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] dark:bg-[#FF7A00]/10 flex items-center justify-center">
               <Activity className="w-3.5 h-3.5 text-[#FF7A00]" />
             </div>
             <div className="text-center">
@@ -441,8 +441,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <p className="font-inter text-[10px] text-gray-500">Rejoints</p>
             </div>
           </div>
-          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4]" onClick={() => navigate(isOwnProfile ? '/friends' : `/friends/${targetUserId}`)}>
-            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4] dark:border-gray-800" onClick={() => navigate(isOwnProfile ? '/friends' : `/friends/${targetUserId}`)}>
+            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] dark:bg-[#FF7A00]/10 flex items-center justify-center">
               <Users className="w-3.5 h-3.5 text-[#FF7A00]" />
             </div>
             <div className="text-center">
@@ -451,7 +451,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] flex items-center justify-center">
+            <div className="w-7 h-7 rounded-full bg-[#FFF9EC] dark:bg-[#FF7A00]/10 flex items-center justify-center">
               <svg className="w-3.5 h-3.5 text-[#FF7A00]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             </div>
             <div className="text-center">
@@ -514,11 +514,11 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
             {/* Evénements en commun — real count from API */}
             {!isOwnProfile && commonEventsCount > 0 && (
-              <div className="w-full bg-[#FFF9EC] border border-[#FFE5B4] rounded-xl p-3 flex items-center gap-3">
+              <div className="w-full bg-[#FFF9EC] dark:bg-[#FF7A00]/10 border border-[#FFE5B4] dark:border-[#FF7A00]/20 rounded-xl p-3 flex items-center gap-3">
                 <div className="bg-[#FF7A00] p-1.5 rounded-lg text-white">
                   <Calendar className="w-4 h-4" />
                 </div>
-                <p className="text-[13px] font-medium text-gray-800">
+                <p className="text-[13px] font-medium text-gray-800 dark:text-gray-200">
                   {String(commonEventsCount).padStart(2, '0')} Événement{commonEventsCount > 1 ? 's' : ''} en commun
                 </p>
               </div>
