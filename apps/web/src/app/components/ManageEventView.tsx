@@ -115,7 +115,7 @@ export function ManageEventView({
       <div className="px-5 pt-4 pt-safe-4 pb-2 flex items-center justify-between border-b border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] shadow-sm flex-shrink-0">
         <button
           onClick={onBack}
-          className="w-10 h-10 bg-[#F5F5F5] rounded-full flex items-center justify-center active:scale-95 transition-transform"
+          className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-gray-500 flex-shrink-0"
         >
           <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
         </button>

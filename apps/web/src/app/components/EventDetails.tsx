@@ -11,6 +11,7 @@ import {
   BadgeCheck,
   X,
   Briefcase,
+  Users,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SaveEventButton } from '@/components/ui/save-event-button'
@@ -380,9 +381,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         <div className="flex-shrink-0 bg-[var(--color-background-primary)] z-10 px-4 pt-safe-4 pt-4 pb-4 flex items-center justify-between min-h-[64px] shadow-sm">
           <button
             onClick={handleBack}
-            className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform flex-shrink-0"
+            className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)] flex-shrink-0"
           >
-            <ChevronLeft className="w-6 h-6 text-[var(--color-text-primary)]" strokeWidth={2.5} />
+            <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
           </button>
 
           <span className="text-[16px] font-semibold text-[var(--color-text-primary)] font-poppins">Détails événement</span>
@@ -846,7 +847,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-10 text-gray-400 text-[14px]">Aucun participant pour le moment.</div>
+                <div className="flex flex-col items-center justify-center py-16 px-4">
+                  <div className="w-16 h-16 bg-gray-50 dark:bg-[#2A2A2A] rounded-full flex items-center justify-center mb-4">
+                    <Users className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 dark:text-gray-400 text-[15px] font-medium text-center">
+                    Aucun participant pour le moment.
+                  </p>
+                </div>
               )}
             </div>
           </div>

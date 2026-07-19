@@ -52,18 +52,30 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
   const copyLink = () => copyText(eventLink, setLinkCopied, 'Lien copié !');
 
   const shareNative = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: eventTitle,
-          text: `Rejoignez "${eventTitle}" sur Let's Out !`,
-          url: eventLink,
-        });
-      } catch {
+    try {
+      // Use Capacitor Share plugin for native share sheet on iOS/Android
+      const { Share } = await import('@capacitor/share');
+      await Share.share({
+        title: eventTitle,
+        text: `Rejoignez "${eventTitle}" sur Let's Out !`,
+        url: eventLink,
+        dialogTitle: 'Partager avec',
+      });
+    } catch (err) {
+      // Fallback to web navigator.share or copyLink if it fails (e.g., cancelled or unsupported)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: eventTitle,
+            text: `Rejoignez "${eventTitle}" sur Let's Out !`,
+            url: eventLink,
+          });
+        } catch {
+          copyLink();
+        }
+      } else {
         copyLink();
       }
-    } else {
-      copyLink();
     }
   };
 

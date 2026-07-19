@@ -29,6 +29,9 @@ project(':capacitor-local-notifications').projectDir = new File('../../../node_m
 include ':capacitor-push-notifications'
 project(':capacitor-push-notifications').projectDir = new File('../../../node_modules/.pnpm/@capacitor+push-notifications@8.1.1_@capacitor+core@8.3.1/node_modules/@capacitor/push-notifications/android')
 
+include ':capacitor-share'
+project(':capacitor-share').projectDir = new File('../../../node_modules/.pnpm/@capacitor+share@8.0.1_@capacitor+core@8.3.1/node_modules/@capacitor/share/android')
+
 include ':capacitor-status-bar'
 project(':capacitor-status-bar').projectDir = new File('../../../node_modules/.pnpm/@capacitor+status-bar@8.0.2_@capacitor+core@8.3.1/node_modules/@capacitor/status-bar/android')
 
