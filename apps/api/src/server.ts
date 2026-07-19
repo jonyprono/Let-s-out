@@ -23,7 +23,11 @@ async function bootstrap() {
   await app.register(import('./plugins/cookie'))
   await app.register(import('./plugins/jwt'))
   await app.register(import('./plugins/prisma'))
-  await app.register(import('@fastify/compress'), { global: true })
+  await app.register(import('@fastify/compress'), { 
+    global: true,
+    // On exclut les images en ne compressant que les requêtes JSON, texte, CSS et JS
+    customTypes: /text\/html|text\/css|application\/json|application\/javascript|text\/plain/
+  })
   await app.register(import('./plugins/websocket'))
   await app.register(import('@fastify/multipart'), { limits: { fileSize: 10 * 1024 * 1024 } }) // 10MB limit
   

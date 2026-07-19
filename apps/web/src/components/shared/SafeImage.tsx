@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const API_BASE = (() => {
   const envUrl = import.meta.env.VITE_API_URL as string | undefined
@@ -52,11 +52,19 @@ function resolveImageSrc(src: string): string {
 export function SafeImage({ src, alt, className, fallback, onError, onLoad, style, priority, cacheKey, ...rest }: SafeImageProps) {
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
 
   // Reset state when src changes (e.g. after avatar update)
   useEffect(() => {
     setError(false)
     setLoaded(false)
+  }, [src, cacheKey])
+
+  // Check if image is already cached and loaded when mounting
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setLoaded(true)
+    }
   }, [src, cacheKey])
 
 
@@ -96,6 +104,7 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
         />
       )}
       <img
+        ref={imgRef}
         src={resolvedSrc}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
