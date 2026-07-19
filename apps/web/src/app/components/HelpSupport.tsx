@@ -67,7 +67,7 @@ export default function HelpSupport() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-black overflow-hidden relative pb-20">
+    <div className="flex flex-col h-full bg-white dark:bg-black overflow-hidden relative">
       {/* ── Header ── */}
       <div className="flex items-center justify-between px-4 pt-safe-3 pt-3 pb-4">
         <div className="flex items-center gap-3">
@@ -211,7 +211,7 @@ export default function HelpSupport() {
         </div>
 
         {/* ── Questions Fréquentes ── */}
-        <div className="px-4 pb-28">
+        <div className="px-4 pb-[120px]">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[16px] font-bold text-gray-900 dark:text-white">Questions fréquentes</h3>
             <button className="text-[12px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
