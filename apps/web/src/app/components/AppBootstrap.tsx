@@ -75,106 +75,9 @@ export function AppBootstrap() {
         }
       }).catch(() => {})
 
-      // ── 2. FOREGROUND notifications — show as local notification ─────────
-      // On Android, push notifications are silent when the app is in foreground.
-      // We must display them manually.
-      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
-        const data = notification.data || {}
-        // Don't show calls as local notifications — CallOverlay handles them
-        if (data.type === 'INCOMING_CALL') return
-
-        await LocalNotifications.schedule({
-          notifications: [
-            {
-              id: Math.floor(Math.random() * 100000),
-              title: notification.title || "Let's Out",
-              body: notification.body || '',
-              extra: data,
-              smallIcon: 'ic_launcher',
-              iconColor: '#FF7A00',
-              largeIcon: '/logoci.svg',
-              actionTypeId: data.type === 'NEW_MESSAGE' ? 'REPLY_ACTION' : undefined,
-            },
-          ],
-        }).catch(() => {})
-      })
-
-      // Configuration des Actions Locales (Pour la réponse rapide type WhatsApp)
-      const actionTypes = {
-        types: [
-          {
-            id: 'REPLY_ACTION',
-            actions: [
-              {
-                id: 'reply',
-                title: 'Répondre',
-                input: true,
-                inputPlaceholder: 'Votre message...'
-              }
-            ]
-          }
-        ]
-      };
-      
-      LocalNotifications.registerActionTypes(actionTypes).catch(() => {});
-
-      // Écoute des actions de notifications locales
-      LocalNotifications.addListener('localNotificationActionPerformed', async (notificationAction) => {
-        const data = notificationAction.notification.extra || {};
-        
-        // Si l'utilisateur a utilisé le bouton "Répondre"
-        if (notificationAction.actionId === 'reply' && notificationAction.inputValue) {
-           const conversationId = data.conversationId;
-           if (conversationId) {
-             try {
-               await chatApi.sendMessage(
-                 conversationId, 
-                 notificationAction.inputValue,
-                 'TEXT'
-               );
-               console.log('[LocalNotifications] Reply sent seamlessly!');
-             } catch (e) {
-               console.error('[LocalNotifications] Failed to send reply:', e);
-             }
-           }
-           return;
-        }
-
-        // Sinon, routage classique comme pour les pushs
-        handleNotificationRouting(data);
-      });
-
-      PushNotifications.addListener('pushNotificationActionPerformed', async (notificationAction: any) => {
-        const data = notificationAction.notification?.data || notificationAction.data || {}
-        
-        // Si l'utilisateur a utilisé le bouton "Répondre" depuis le Push en background
-        if (notificationAction.actionId === 'reply' && notificationAction.inputValue) {
-           const conversationId = data.conversationId;
-           if (conversationId) {
-             try {
-               await chatApi.sendMessage(
-                 conversationId, 
-                 notificationAction.inputValue,
-                 'TEXT'
-               );
-               console.log('[PushNotifications] Reply sent seamlessly from background!');
-             } catch (e) {
-               console.error('[PushNotifications] Failed to send reply:', e);
-             }
-           }
-           return;
-        }
-
-        handleNotificationRouting(data);
-      });
-
+      // ── Helper: navigate based on notification data ────────────────────
       const handleNotificationRouting = (data: any) => {
-
-        // ── INCOMING CALL (background) ───────────────────────────────────
         if (data?.type === 'INCOMING_CALL') {
-          // The WebSocket may have already relayed the offer if the app was alive.
-          // In all cases, dispatch the call_offer event so the CallOverlay can show.
-          // If the WS had already delivered it, this is a no-op (the overlay is already shown).
           try {
             const offer = data.offer ? JSON.parse(data.offer) : null
             window.dispatchEvent(new CustomEvent('ws:webrtc', {
@@ -182,14 +85,11 @@ export function AppBootstrap() {
                 type: 'call_offer',
                 conversationId: data.conversationId,
                 callerId: data.callerId,
-                // ⚠️ userId est requis par useWebRTC pour identifier l'appelant (data.userId)
                 userId: data.callerId,
                 mediaType: data.mediaType || 'audio',
                 offer,
                 callerName: data.callerName || '',
                 callerAvatar: data.callerAvatar || '',
-                // If no offer available (app was killed before WS sent it),
-                // we mark it as a "push-only" call — the WS reconnection will retry
                 pushOnly: !offer,
               }
             }))
@@ -199,34 +99,112 @@ export function AppBootstrap() {
           return
         }
 
-        // ── NEW MESSAGE → open specific chat ────────────────────────────
         if (data?.type === 'NEW_MESSAGE') {
-          if (data?.conversationId) {
-            navigate(`/chat/${data.conversationId}`)
-          } else {
-            navigate('/messages')
+          navigate(data?.conversationId ? `/chat/${data.conversationId}` : '/messages')
+          return
+        }
+
+        if (data?.eventId) { navigate(`/events/${data.eventId}`); return }
+        if (data?.bookingId) { navigate(`/payments/${data.bookingId}`); return }
+        if (data?.type === 'FRIEND_REQUEST') { navigate('/friend-requests'); return }
+      }
+
+      // ── Helper: send a quick reply with auth token refresh fallback ────
+      const sendQuickReply = async (conversationId: string, text: string) => {
+        let token = useAuthStore.getState().accessToken
+        if (!token) {
+          try {
+            await useAuthStore.getState().refreshUser()
+            token = useAuthStore.getState().accessToken
+          } catch {
+            console.warn('[QuickReply] Could not refresh token')
+          }
+        }
+        if (!token) {
+          console.error('[QuickReply] No auth token — aborting')
+          return
+        }
+        await chatApi.sendMessage(conversationId, { content: text, type: 'TEXT' })
+        console.log('[QuickReply] Sent to', conversationId)
+      }
+
+      // ── 2. Foreground push → show as local notification ────────────────
+      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
+        const data = notification.data || {}
+        if (data.type === 'INCOMING_CALL') return   // CallOverlay handles this
+
+        // Don't show notification for messages sent by the current user
+        const currentUserId = useAuthStore.getState().user?.id
+        if (data.type === 'NEW_MESSAGE' && data.senderId && data.senderId === currentUserId) return
+
+        // Don't show notification if the user already has that chat open
+        if (data.type === 'NEW_MESSAGE' && data.conversationId) {
+          const currentPath = window.location.pathname
+          if (currentPath === `/chat/${data.conversationId}`) return
+        }
+
+        await LocalNotifications.schedule({
+          notifications: [{
+            id: Math.floor(Math.random() * 100000),
+            title: notification.title || "Let's Out",
+            body: notification.body || '',
+            extra: { ...data },   // spread so Capacitor serialises it correctly
+            smallIcon: 'ic_launcher',
+            iconColor: '#FF7A00',
+            largeIcon: '/logoci.svg',
+            actionTypeId: data.type === 'NEW_MESSAGE' ? 'REPLY_ACTION' : undefined,
+          }],
+        }).catch(() => {})
+      })
+
+      // ── 3. Register "Répondre" action type (WhatsApp-style quick reply) ─
+      LocalNotifications.registerActionTypes({
+        types: [{
+          id: 'REPLY_ACTION',
+          actions: [{
+            id: 'reply',
+            title: 'Répondre',
+            input: true,
+            inputPlaceholder: 'Votre message...',
+          }],
+        }],
+      }).catch(() => {})
+
+      // ── 4. Local notification action (foreground: tap or reply) ─────────
+      LocalNotifications.addListener('localNotificationActionPerformed', async (action) => {
+        const data = action.notification.extra || {}
+
+        if (action.actionId === 'reply') {
+          const text = action.inputValue?.trim()
+          const conversationId = data.conversationId
+          if (conversationId && text) {
+            try { await sendQuickReply(conversationId, text) }
+            catch (e) { console.error('[LocalNotifications] Quick reply failed:', e) }
           }
           return
         }
 
-        // ── EVENT deep link ──────────────────────────────────────────────
-        if (data?.eventId) {
-          navigate(`/events/${data.eventId}`)
+        // actionId === 'tap' (or anything else) → open chat/screen
+        handleNotificationRouting(data)
+      })
+
+      // ── 5. Push notification action (background / killed app) ───────────
+      PushNotifications.addListener('pushNotificationActionPerformed', async (action: any) => {
+        const data = action.notification?.data || action.data || {}
+
+        if (action.actionId === 'reply') {
+          const text = (action.inputValue ?? '').trim()
+          const conversationId = data.conversationId
+          if (conversationId && text) {
+            try { await sendQuickReply(conversationId, text) }
+            catch (e) { console.error('[PushNotifications] Quick reply failed:', e) }
+          }
           return
         }
 
-        // ── PAYMENT deep link ────────────────────────────────────────────
-        if (data?.bookingId) {
-          navigate(`/payments/${data.bookingId}`)
-          return
-        }
-
-        // ── FRIEND REQUEST ───────────────────────────────────────────────
-        if (data?.type === 'FRIEND_REQUEST') {
-          navigate('/friend-requests')
-          return
-        }
-      }
+        // actionId === 'tap' → open chat/screen
+        handleNotificationRouting(data)
+      })
     }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps

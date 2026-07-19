@@ -840,9 +840,9 @@ export function ChatDetails() {
                     avatarUrl={senderAvatar || undefined}
                     showSpacer={showSenderInfo && !isFirstInGroup}
                     onAvatarClick={() => openProfile(msg.senderId, senderName, senderAvatar)}
-                    imageUrl={isImage && msg.content ? msg.content : undefined}
-                    onImageClick={() => setFullscreenImage(msg.content ?? null)}
-                    content={!isMedia && !msg.isDeleted && msg.type !== 'POLL' ? (msg.content ?? undefined) : undefined}
+                    imageUrl={isImage && (msg.mediaUrl || msg.content) ? (msg.mediaUrl || msg.content || undefined) : undefined}
+                    onImageClick={() => setFullscreenImage((msg.mediaUrl || msg.content) ?? null)}
+                    content={!isMedia && !msg.isDeleted && msg.type !== 'POLL' ? (msg.content ?? undefined) : (msg.mediaUrl ? (msg.content ?? undefined) : undefined)}
                   >
                     {msg.isDeleted ? (
                       <div className="flex items-center gap-2 italic text-[#FF7A00]">
@@ -871,9 +871,9 @@ export function ChatDetails() {
                           {(event as any)?.validatorVoteStatus === 'CLOSED' ? 'Voir les résultats' : 'Voter'}
                         </button>
                       </div>
-                    ) : isVideo && msg.content ? (
+                    ) : isVideo && (msg.mediaUrl || msg.content) ? (
                       <div className="relative">
-                        <VideoMessage src={msg.content} isMe={isMe} />
+                        <VideoMessage src={(msg.mediaUrl || msg.content) as string} isMe={isMe} />
                         <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full">
                           <div className="flex items-center gap-1 justify-end">
                             <span className="text-[9px] font-medium text-white">
@@ -883,9 +883,9 @@ export function ChatDetails() {
                           </div>
                         </div>
                       </div>
-                    ) : isAudio && msg.content ? (
+                    ) : isAudio && (msg.mediaUrl || msg.content) ? (
                       <div className="w-[200px] flex flex-col py-1">
-                        <AudioMessage src={msg.content} />
+                        <AudioMessage src={(msg.mediaUrl || msg.content) as string} />
                         <div className="flex items-center justify-end gap-1 mt-1 -mb-1 pr-2">
                           <span className="text-[10px] font-medium opacity-70" style={{ color: isMe ? '#1B1818' : 'var(--color-text-secondary)' }}>
                             {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}

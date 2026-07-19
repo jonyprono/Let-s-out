@@ -367,9 +367,20 @@ export default async function chatRoutes(app: FastifyInstance) {
     async (req, reply) => {
       const { sub, role } = req.user as { sub: string; role?: string }
       const { conversationId } = req.params as { conversationId: string }
-      const { content, type = 'TEXT' } = req.body as { content: string; type?: string }
+      const { content, type = 'TEXT', mediaUrl, caption, replyToId } = req.body as { content?: string; type?: string; mediaUrl?: string; caption?: string; replyToId?: string }
 
-      if (!content?.trim()) return reply.code(400).send({ error: 'Content required' })
+      let finalContent = content
+      let finalMediaUrl = mediaUrl
+
+      // Compatibility: The frontend used to send the image URL in `content`.
+      // If we receive a media URL in `mediaUrl`, we use it. If we only receive `content` but type is IMAGE/VIDEO/FILE,
+      // it means the old behavior where the URL is in `content`.
+      if ((type === 'IMAGE' || type === 'VIDEO' || type === 'FILE' || type === 'AUDIO') && !mediaUrl) {
+        finalMediaUrl = content
+        finalContent = caption
+      }
+
+      if (!finalContent?.trim() && !finalMediaUrl?.trim()) return reply.code(400).send({ error: 'Content or media required' })
 
       const conversation = await app.prisma.conversation.findUnique({
         where: { id: conversationId },
@@ -412,7 +423,7 @@ export default async function chatRoutes(app: FastifyInstance) {
       }
 
       const message = await app.prisma.message.create({
-        data: { conversationId, senderId: effectiveSenderId, content, type: type as any },
+        data: { conversationId, senderId: effectiveSenderId, content: finalContent, mediaUrl: finalMediaUrl, type: type as any, replyToId },
         include: {
           sender: {
             select: {
@@ -439,25 +450,27 @@ export default async function chatRoutes(app: FastifyInstance) {
       // Notify other members who are offline/not the sender
       const offlineMembers = conversation?.members.filter(m => m.userId !== sub) || []
       
+      const safeContentForBody = finalContent || ''
+
       if (offlineMembers.length > 0) {
         await app.prisma.notification.createMany({
           data: offlineMembers.map(m => ({
             userId: m.userId,
             type: 'NEW_MESSAGE',
             title: `Nouveau message dans ${groupName}`,
-            body: `${message.sender.profile?.displayName}: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+            body: `${message.sender.profile?.displayName}: ${safeContentForBody.substring(0, 50)}${safeContentForBody.length > 50 ? '...' : ''}`,
             data: { conversationId, messageId: message.id }
           }))
         })
 
-        // Send FCM push notification for offline members
+        const safeContent = finalContent || ''
         const senderName = message.sender.profile?.displayName ?? 'Quelqu\'un'
         const msgPreviewRaw = type === 'TEXT'
-          ? content.substring(0, 60) + (content.length > 60 ? '...' : '')
+          ? safeContent.substring(0, 60) + (safeContent.length > 60 ? '...' : '')
           : type === 'IMAGE' ? '📷 Photo'
           : type === 'VIDEO' ? '🎥 Vidéo'
           : type === 'AUDIO' ? '🎵 Message vocal'
-          : content.substring(0, 60)
+          : safeContent.substring(0, 60)
 
         const isGroup = conversation?.isGroup === true;
         const pushTitle = isGroup ? (conversation.name || 'Groupe') : senderName;
@@ -472,6 +485,7 @@ export default async function chatRoutes(app: FastifyInstance) {
                 type: 'NEW_MESSAGE',
                 conversationId,
                 messageId: message.id,
+                senderId: effectiveSenderId,  // lets client suppress own-msg notifications
               },
             })
           )

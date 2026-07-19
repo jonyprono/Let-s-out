@@ -72,7 +72,7 @@ export function EventSuccessScreen() {
 
 
   return (
-    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
+    <div className="w-full h-full bg-white dark:bg-[#121212] flex flex-col font-poppins">
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-[16px] pb-[100px] flex flex-col items-center justify-center" style={{ scrollbarWidth: 'none' }}>
 
@@ -86,33 +86,37 @@ export function EventSuccessScreen() {
 
         {/* Title */}
         <h1 className="text-[20px] font-semibold text-[#22C55E] mb-[12px] text-center">Participation validée !</h1>
-        <p className="text-[12px] font-normal font-inter text-[#404040] text-center mb-[32px] leading-relaxed max-w-[300px]">
+        <p className="text-[12px] font-normal font-inter text-[#6B6B6B] dark:text-[#A0A0A0] text-center mb-[32px] leading-relaxed max-w-[300px]">
           Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres participants.
         </p>
 
         {/* Summary card */}
-        <div className="w-full rounded-[8px] border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] p-[16px] shadow-sm max-w-[358px]">
-          <h2 className="text-[14px] font-semibold text-[#1B1818] mb-[16px]">{event.title}</h2>
-          <div className="flex flex-col gap-[12px]">
+        <div className="w-full rounded-[12px] border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1E1E1E] p-[20px] shadow-sm max-w-[358px]">
+          <h2 className="text-[14px] font-semibold text-[#1B1818] dark:text-white mb-[16px]">{event.title}</h2>
+          <div className="flex flex-col gap-[14px]">
             <div className="flex items-start justify-between gap-4">
-              <span className="text-[14px] font-inter text-[var(--color-text-secondary)]">Date</span>
-              <span className="text-[14px] font-inter text-[#1B1818] text-right">
+              <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]">Date</span>
+              <span className="text-[13px] font-inter font-medium text-[#1B1818] dark:text-white text-right">
                 {formattedDate}, {formattedHour}
               </span>
             </div>
+            <div className="w-full h-px bg-gray-100 dark:bg-white/5" />
             <div className="flex items-start justify-between gap-4">
-              <span className="text-[14px] font-inter text-[var(--color-text-secondary)]">Lieu</span>
-              <span className="text-[14px] font-inter text-[#1B1818] text-right">
+              <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]">Lieu</span>
+              <span className="text-[13px] font-inter font-medium text-[#1B1818] dark:text-white text-right">
                 {event.address ? `${event.address}` : ''}{event.city ? ` (${event.city})` : event.address ? '' : 'Lieu non précisé'}
               </span>
             </div>
             {amountPaid > 0 && (
-              <div className="flex items-start justify-between gap-4">
-                <span className="text-[14px] font-inter text-[var(--color-text-secondary)]">Votre participation</span>
-                <span className="text-[14px] font-inter text-[#1B1818] text-right">
-                  {amountPaid.toLocaleString('fr-FR')} F
-                </span>
-              </div>
+              <>
+                <div className="w-full h-px bg-gray-100 dark:bg-white/5" />
+                <div className="flex items-start justify-between gap-4">
+                  <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]">Votre participation</span>
+                  <span className="text-[13px] font-inter font-semibold text-[#FF9500] text-right">
+                    {amountPaid.toLocaleString('fr-FR')} F
+                  </span>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -120,18 +124,18 @@ export function EventSuccessScreen() {
       </div>
 
       {/* Sticky footer */}
-      <div className="fixed bottom-0 left-0 right-0 px-[16px] py-[12px] bg-white dark:bg-[#1A1A1A] max-w-[390px] mx-auto w-full z-40 pb-safe-4 flex flex-col gap-[12px]">
+      <div className="fixed bottom-0 left-0 right-0 px-[16px] py-[12px] bg-white dark:bg-[#121212] border-t border-gray-100 dark:border-white/10 max-w-[390px] mx-auto w-full z-40 pb-safe-4 flex flex-col gap-[10px]">
         <button
           onClick={goToChat}
           disabled={isJoiningChat}
-          className="w-full h-[40px] rounded-[1000px] text-white font-medium text-[14px] active:scale-95 transition-transform flex items-center justify-center disabled:opacity-70"
-          style={{ background: '#FF9500' }}
+          className="w-full h-[48px] rounded-[1000px] text-white font-semibold text-[14px] active:scale-95 transition-transform flex items-center justify-center disabled:opacity-70"
+          style={{ background: isJoiningChat ? '#FF9500aa' : '#FF9500' }}
         >
           {isJoiningChat ? 'Chargement...' : 'Rejoindre le groupe'}
         </button>
         <button
           onClick={() => navigate(`/events/${id}`)}
-          className="w-full h-[40px] rounded-[1000px] text-[var(--color-text-primary)] font-medium text-[14px] active:scale-95 transition-transform bg-white dark:bg-[#1A1A1A] border border-[var(--border-default)]"
+          className="w-full h-[44px] rounded-[1000px] text-[#1B1818] dark:text-white font-medium text-[14px] active:scale-95 transition-transform bg-transparent border border-gray-200 dark:border-white/20"
         >
           Retour à l'événement
         </button>

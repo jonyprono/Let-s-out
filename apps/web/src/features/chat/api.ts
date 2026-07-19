@@ -43,6 +43,7 @@ export interface MessageReaction {
 export interface Message {
   id: string
   content: string | null
+  mediaUrl?: string | null
   type: string
   senderId: string
   conversationId: string
@@ -86,8 +87,8 @@ export const chatApi = {
     return data.url
   },
 
-  sendMessage: async (conversationId: string, content: string, type: string = 'TEXT'): Promise<Message> => {
-    const { data } = await apiClient.post(`/chat/conversations/${conversationId}/messages`, { content, type })
+  sendMessage: async (conversationId: string, payload: { content: string, type?: string, mediaUrl?: string, replyToId?: string, caption?: string }) => {
+    const { data } = await apiClient.post(`/chat/conversations/${conversationId}/messages`, payload)
     return data
   },
 
@@ -184,9 +185,9 @@ export function useSendMessage(conversationId: string) {
   const qc = useQueryClient()
   const { user } = useAuthStore()
   return useMutation({
-    mutationFn: ({ content, type }: { content: string; type?: string }) =>
-      chatApi.sendMessage(conversationId, content, type),
-    onMutate: async ({ content, type }) => {
+    mutationFn: (payload: { content: string; type?: string; mediaUrl?: string; replyToId?: string; caption?: string }) =>
+      chatApi.sendMessage(conversationId, payload),
+    onMutate: async (payload) => {
       // Cancel in-flight queries
       await qc.cancelQueries({ queryKey: ['chat', 'messages', conversationId] })
       // Snapshot previous value
@@ -194,13 +195,14 @@ export function useSendMessage(conversationId: string) {
       // Optimistically insert message
       const optimisticMsg: Message = {
         id: `optimistic-${Date.now()}`,
-        content,
-        type: type || 'TEXT',
+        content: payload.content,
+        type: (payload.type as any) || 'TEXT',
         senderId: user?.id || '',
         conversationId,
         createdAt: new Date().toISOString(),
         isDeleted: false,
         reactions: [],
+        mediaUrl: payload.mediaUrl || null,
         sender: {
           id: user?.id,
           profile: {
