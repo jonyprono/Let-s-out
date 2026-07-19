@@ -497,6 +497,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             mapGeoLoading={false}
             onGeolocate={() => {}}
             onNavigate={onNavigate}
+            onSwitchToList={() => setViewMode('list')}
           />
         </div>
       )}
