@@ -35,11 +35,11 @@ export function CreatedEventsList() {
   const publishedEvents = createdEvents;
 
   const upcomingEvents = useMemo(() => {
-    return publishedEvents.filter((e: any) => new Date(e.startAt) > new Date());
+    return publishedEvents.filter((e: any) => e?.startAt && new Date(e.startAt) > new Date());
   }, [publishedEvents]);
 
   const pastEvents = useMemo(() => {
-    return publishedEvents.filter((e: any) => new Date(e.startAt) <= new Date());
+    return publishedEvents.filter((e: any) => e?.startAt && new Date(e.startAt) <= new Date());
   }, [publishedEvents]);
 
   // Aggregate stats

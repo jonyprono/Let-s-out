@@ -181,26 +181,31 @@ export function Home({ userData, onNavigate }: HomeProps) {
     staleTime: 5 * 60 * 1000, // 5 minutes — liste d'amis peu volatile
   });
 
-  let rawEvents: Event[] = eventsData?.pages.flatMap(page => page.data) || [];
+  const rawEvents = useMemo(() => {
+    if (!eventsData) return [];
+    return eventsData.pages.flatMap(p => p.data || []).filter(Boolean);
+  }, [eventsData]);
+
+  let events = rawEvents;
+  const query = searchQuery.trim().toLowerCase();
 
   // Local filter layer to guarantee accuracy
-  if ((activeFilter && activeFilter !== 'discover') || searchQuery.trim() !== '') {
+  if (query || (activeFilter && activeFilter !== 'discover')) {
     const now = new Date();
-    const query = searchQuery.trim().toLowerCase();
     
-    rawEvents = rawEvents.filter(ev => {
+    events = events.filter(ev => {
       // 1. Text search
       if (query !== '') {
-        const matchesTitle = ev.title.toLowerCase().includes(query);
-        const matchesCity = ev.city?.toLowerCase().includes(query) ?? false;
-        const matchesLocation = (ev as any).location?.toLowerCase().includes(query) ?? false;
+        const matchesTitle = ev?.title?.toLowerCase().includes(query);
+        const matchesCity = ev?.city?.toLowerCase().includes(query) ?? false;
+        const matchesLocation = (ev as any)?.location?.toLowerCase().includes(query) ?? false;
         if (!matchesTitle && !matchesCity && !matchesLocation) return false;
       }
 
       // 2. Time filter
       if (activeFilter && activeFilter !== 'discover') {
-        const start = ev.startAt ? new Date(ev.startAt) : null;
-        const end = (ev as any).endAt ? new Date((ev as any).endAt) : null;
+        const start = ev?.startAt ? new Date(ev.startAt) : null;
+        const end = (ev as any)?.endAt ? new Date((ev as any).endAt) : null;
         if (!start) return false;
         
         if (activeFilter === 'ongoing') {
@@ -226,7 +231,6 @@ export function Home({ userData, onNavigate }: HomeProps) {
     });
   }
 
-  const events: Event[] = rawEvents;
   // "À ne pas manquer" = top 6 by featured score
   const featuredEvents = sortFeaturedEvents(events).slice(0, 6);
 
@@ -262,6 +266,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 7);
   const allJoined: any[] = activity?.joinedEvents || [];
   const eventsThisWeek = events.filter(e => {
+    if (!e?.startAt) return false;
     const s = new Date(e.startAt);
     return s >= weekStart && s <= weekEnd;
   }).length;

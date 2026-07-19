@@ -32,11 +32,11 @@ export function JoinedEventsList() {
   const joinedEvents = activity?.joinedEvents ?? [];
 
   const upcomingEvents = useMemo(() => {
-    return joinedEvents.filter((e: any) => new Date(e.startAt) > new Date());
+    return joinedEvents.filter((e: any) => e?.startAt && new Date(e.startAt) > new Date());
   }, [joinedEvents]);
 
   const pastEvents = useMemo(() => {
-    return joinedEvents.filter((e: any) => new Date(e.startAt) <= new Date());
+    return joinedEvents.filter((e: any) => e?.startAt && new Date(e.startAt) <= new Date());
   }, [joinedEvents]);
 
   // Aggregate stats

@@ -52,10 +52,14 @@ export function MyEvents({ onNavigate }: MyEventsProps) {
   const now = new Date();
   const allJoined: any[] = activity?.joinedEvents || [];
   const allPast: any[] = activity?.pastEvents || [];
-  const upcomingEvents = allJoined.filter((e: any) => new Date(e.startAt) >= now);
+  const upcomingEvents = allJoined.filter((e: any) => e?.startAt && new Date(e.startAt) >= now);
+  const pastEvents = allJoined.filter((e: any) => e?.startAt && new Date(e.startAt) < now);
   
   const { favorites } = useFavoritesStore();
-  const favoriteEvents: any[] = Object.values(favorites).sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+  const favoriteEvents: any[] = Object.values(favorites).sort((a, b) => {
+    if (!a?.startAt || !b?.startAt) return 0;
+    return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+  });
 
   const currentList = (() => {
     switch (activeTab) {

@@ -323,6 +323,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   // + filtre de catégorie par onglet actif
   const now = new Date();
   const filteredEvents = events.filter(ev => {
+    if (!ev) return false;
     const searchLower = eventSearch.trim().toLowerCase();
     const searchActive = searchLower.length >= 2;
     const textMatch = !searchActive ||
@@ -339,12 +340,12 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     let tabMatch = true;
     if (tabFilter === 'ongoing') {
       // En ce moment : a commencé et pas encore terminé
-      const start = ev.startAt ? new Date(ev.startAt) : null;
-      const end = (ev as any).endAt ? new Date((ev as any).endAt) : null;
+      const start = ev?.startAt ? new Date(ev.startAt) : null;
+      const end = (ev as any)?.endAt ? new Date((ev as any).endAt) : null;
       tabMatch = !!start && start <= now && (!end || end >= now);
     } else if (tabFilter === 'tonight') {
       // Ce soir : entre ce soir 18h et demain matin 6h
-      const start = ev.startAt ? new Date(ev.startAt) : null;
+      const start = ev?.startAt ? new Date(ev.startAt) : null;
       if (start) {
         const todayEvening = new Date(now); todayEvening.setHours(18, 0, 0, 0);
         const tomorrowMorning = new Date(now); tomorrowMorning.setDate(now.getDate() + 1); tomorrowMorning.setHours(6, 0, 0, 0);
@@ -354,7 +355,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       }
     } else if (tabFilter === 'weekend') {
       // Ce week-end : entre vendredi soir et dimanche soir
-      const start = ev.startAt ? new Date(ev.startAt) : null;
+      const start = ev?.startAt ? new Date(ev.startAt) : null;
       if (start) {
         const dow = now.getDay();
         const daysToSat = (6 - dow + 7) % 7;
@@ -372,7 +373,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       }
     } else if (tabFilter === 'recommended') {
       // Pour vous : événements à venir seulement
-      const start = ev.startAt ? new Date(ev.startAt) : null;
+      const start = ev?.startAt ? new Date(ev.startAt) : null;
       tabMatch = !!start && start > now;
     }
     // tabFilter === null = 'Tout' : pas de filtre supplémentaire
@@ -386,16 +387,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const unreadNotifCount = notificationsData?.unreadCount ?? 0;
 
   const mapEvents = filteredEvents.map((ev, i) => ({
-    id: ev.id,
-    title: ev.title,
-    city: ev.city || currentLocation,
-    address: ev.address || '',
-    latitude: ev.latitude || 6.36536 + (i * 0.002),
-    longitude: ev.longitude || 2.41833 + (i * 0.002),
-    startAt: ev.startAt,
-    currentAttendees: ev.currentAttendees || 0,
-    participationMode: ev.price === 0 ? 'Gratuit' : 'Payant',
-    coverUrl: ev.coverUrl || ''
+    id: ev?.id,
+    title: ev?.title,
+    city: ev?.city || currentLocation,
+    address: ev?.address || '',
+    latitude: ev?.latitude || 6.36536 + (i * 0.002),
+    longitude: ev?.longitude || 2.41833 + (i * 0.002),
+    startAt: ev?.startAt,
+    currentAttendees: ev?.currentAttendees || 0,
+    participationMode: ev?.price === 0 ? 'Gratuit' : 'Payant',
+    coverUrl: ev?.coverUrl || ''
   })) as any[];
 
   if (viewAll) {
