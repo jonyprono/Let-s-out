@@ -752,6 +752,12 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     }
 
+    if (body.registrationDeadline && new Date(body.registrationDeadline).getTime() !== event.registrationDeadline?.getTime()) {
+      if (event.poolCollected > 0) {
+        return reply.code(403).send({ error: "La date limite ne peut plus être modifiée car des contributions ont déjà été reçues." })
+      }
+    }
+
     const updated = await app.prisma.event.update({
       where: { id },
       data: body,

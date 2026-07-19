@@ -137,6 +137,23 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       // Sécurité : le déblocage ne peut se faire qu'une fois les inscriptions clôturées
       const deadline = event.registrationDeadline || event.startAt
       if (new Date() < new Date(deadline)) {
+        // Tracer la tentative frauduleuse dans le journal d'audit
+        await writeAuditLog(app.prisma as any, {
+          actorId: userId,
+          actorRole: 'ORGANIZER',
+          action: 'PAYOUT_REJECTED',
+          targetType: 'event',
+          targetId: eventId,
+          eventId,
+          comment: 'REJETÉ - DATE LIMITE NON ATTEINTE',
+          newValue: {
+            registrationDeadline: deadline,
+            dateAction: new Date().toISOString(),
+            reason: 'Tentative de déblocage avant la date limite d\'inscription',
+          },
+          ipAddress,
+          userAgent: request.headers['user-agent'],
+        })
         return reply.code(400).send({ error: 'La cagnotte doit être clôturée (date limite dépassée) avant de demander le déblocage.' })
       }
 
@@ -245,6 +262,12 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         include: { payoutRequest: true },
       })
       if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
+
+      // Sécurité : impossible de voter si la date limite n'est pas atteinte (sécurité en profondeur)
+      const voteDeadline = event.registrationDeadline || event.startAt
+      if (new Date() < new Date(voteDeadline)) {
+        return reply.code(403).send({ error: 'Le vote ne peut être exprimé qu\'après la date limite d\'inscription à la cagnotte.' })
+      }
 
       const payoutReq = event.payoutRequest
       if (!payoutReq) return reply.code(404).send({ error: 'Aucune demande de déblocage active' })

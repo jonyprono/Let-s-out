@@ -546,9 +546,11 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
       closeMut.mutate();
     };
 
-    let voteText = "Lancer le vote des validateurs";
+    let voteText = hasValidators ? "Lancer le vote des validateurs" : "Sélectionner les validateurs";
     if (isVoteOpen) voteText = closeVoteMut.isPending ? "Clôture en cours..." : "Clôturer le vote";
-    else if (isVoteClosed) voteText = "Vote clôturé";
+    else if (isVoteClosed) voteText = "✅ Vote clôturé";
+    else if (!isPastDeadline) voteText = "Vote (disponible après le délai)";
+    else if (hasPayoutRequest) voteText = "Déblocage déjà demandé";
 
     // Group attendees by user ID to sum their paidAmount
     const groupedContributions = attendees.reduce((acc: any, booking: any) => {
@@ -566,6 +568,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
 
     return (
       <div className="flex flex-col gap-3">
+        {/* ── Carte solde principal ── */}
         <div className={`rounded-[12px] p-4 shadow-sm border ${bgClass}`}>
           <p className="text-[14px] text-gray-500 mb-1">
             {isFull ? "Solde disponible" : "Cagnotte"}
@@ -591,6 +594,49 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
               {Math.round(pct)}%
             </span>
           </div>
+
+          {/* ── Bandeau délai d'inscription ── */}
+          {(() => {
+            const deadlineDate = event.registrationDeadline || event.startAt;
+            if (!deadlineDate) return null;
+            const dDate = new Date(deadlineDate);
+            const now = new Date();
+            if (now < dDate) {
+              const diffMs = dDate.getTime() - now.getTime();
+              const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+              const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+              const label = diffDays > 1 ? `${diffDays} jours` : `${diffHours}h`;
+              return (
+                <div className="mt-3 px-3 py-2 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
+                  <span className="text-[14px] mt-0.5">⏳</span>
+                  <div>
+                    <p className="text-[12px] font-bold text-amber-700 dark:text-amber-400">Contributions en cours</p>
+                    <p className="text-[11px] text-amber-600 dark:text-amber-500">
+                      Clôture dans {label} — Le déblocage sera possible le {format(dDate, "dd MMM yyyy à HH'h'mm", { locale: fr })}
+                    </p>
+                  </div>
+                </div>
+              );
+            } else {
+              if (isPayoutApproved && availableBalance <= 0) {
+                return (
+                  <div className="mt-3 px-3 py-2 rounded-[8px] bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 flex items-start gap-2">
+                    <span className="text-[14px] mt-0.5">✅</span>
+                    <p className="text-[12px] font-bold text-green-700 dark:text-green-400">Tous les fonds ont été transférés</p>
+                  </div>
+                );
+              }
+              return (
+                <div className="mt-3 px-3 py-2 rounded-[8px] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 flex items-start gap-2">
+                  <span className="text-[14px] mt-0.5">🔓</span>
+                  <div>
+                    <p className="text-[12px] font-bold text-blue-700 dark:text-blue-400">Date limite d’inscription clôturée</p>
+                    <p className="text-[11px] text-blue-600 dark:text-blue-500">Le vote et le déblocage des fonds sont maintenant disponibles.</p>
+                  </div>
+                </div>
+              );
+            }
+          })()}
         </div>
 
         {/* ── Vote FinTech Panel — Visible quand une demande est VOTING/PENDING ── */}
@@ -710,7 +756,16 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
             <path d="M12.5 12.082C12.5 13.4627 11.3807 14.582 10 14.582C8.61925 14.582 7.5 13.4627 7.5 12.082C7.5 10.7013 8.61925 9.58203 10 9.58203C11.3807 9.58203 12.5 10.7013 12.5 12.082Z" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M7.91666 4.16732C7.91666 4.16732 9.4165 2.08398 10 2.08398C10.5835 2.08398 12.0833 4.16732 12.0833 4.16732M10 6.66732V2.50065" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          {payoutMut.isPending ? "Traitement..." : isPayoutPending ? "Déblocage en cours..." : (isPayoutApproved && availableBalance <= 0) ? "Fonds débloqués" : "Débloquer les fonds"}
+          {payoutMut.isPending
+            ? "Traitement..."
+            : !isPastDeadline
+              ? `Déblocage dispo le ${format(new Date(event.registrationDeadline || event.startAt), "dd/MM", { locale: fr })}`
+              : isPayoutPending
+                ? "Déblocage en cours d'approbation..."
+                : (isPayoutApproved && availableBalance <= 0)
+                  ? "Fonds débloqués ✅"
+                  : "Débloquer les fonds"
+          }
         </button>
 
         {/* 3.1 Approuver (if co-host or validator) */}
