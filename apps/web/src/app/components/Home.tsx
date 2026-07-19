@@ -484,14 +484,14 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   </div>
 
                   {isLoading ? (
-                    <div className="flex gap-4 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: 'none' }}>
+                    <div className="flex gap-4 overflow-x-auto px-4 pb-2 after:content-[''] after:w-px after:shrink-0" style={{ scrollbarWidth: 'none' }}>
                       {[1, 2, 3].map(i => <FeaturedSkeleton key={i} />)}
                     </div>
                   ) : featuredEvents.length > 0 ? (
                     <>
                       <div
                         ref={featuredScrollRef}
-                        className="flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory"
+                        className="flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory after:content-[''] after:w-px after:shrink-0"
                         style={{ scrollbarWidth: 'none' }}
                         onScroll={(e) => {
                           const el = e.currentTarget;
@@ -506,8 +506,6 @@ export function Home({ userData, onNavigate }: HomeProps) {
                             onClick={() => onNavigate('event-details', event.id)}
                           />
                         ))}
-                        {/* Spacer for right padding on scroll end */}
-                        <div className="shrink-0 w-4" />
                       </div>
                       {/* Pagination dots */}
                       <div className="flex justify-center gap-1.5 mt-2">

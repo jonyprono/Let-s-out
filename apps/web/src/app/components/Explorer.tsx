@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router';
 import { Loader2, ChevronLeft, Lock } from 'lucide-react';
@@ -87,6 +87,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [eventSearchFocused, setEventSearchFocused] = useState(false);
   const [viewAll, setViewAll] = useState<'featured' | 'nearby' | null>(null);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const featuredScrollRef = useRef<HTMLDivElement>(null);
 
 
 
@@ -635,13 +637,35 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         </h2>
                         <button onClick={() => setViewAll('featured')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
                       </div>
-                      <div className="flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+                      <div 
+                        ref={featuredScrollRef}
+                        className="flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory after:content-[''] after:w-px after:shrink-0" 
+                        style={{ scrollbarWidth: 'none' }}
+                        onScroll={(e) => {
+                          const el = e.currentTarget;
+                          const idx = Math.round(el.scrollLeft / (el.offsetWidth * 0.7));
+                          setFeaturedIndex(idx);
+                        }}
+                      >
                         {sortFeaturedEvents(filteredEvents).slice(0, 6).map((ev, idx) => (
                           <SquareEventCard
                             key={ev.id}
                             event={ev}
                             onClick={() => onNavigate('event-details', ev.id)}
                             badge={idx === 0 ? 'À LA UNE' : idx === 1 ? 'POPULAIRE' : 'NOUVEAU'}
+                          />
+                        ))}
+                      </div>
+                      {/* Pagination dots */}
+                      <div className="flex justify-center gap-1.5 mt-2">
+                        {sortFeaturedEvents(filteredEvents).slice(0, 6).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`rounded-full transition-all ${
+                              i === featuredIndex
+                                ? 'w-5 h-1.5 bg-[#FF7A00]'
+                                : 'w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600'
+                            }`}
                           />
                         ))}
                       </div>
