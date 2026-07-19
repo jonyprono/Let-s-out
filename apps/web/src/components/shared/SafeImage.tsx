@@ -40,9 +40,16 @@ function resolveImageSrc(src: string): string {
     .replace(/http:\/\/localhost:\d+/g, API_BASE)
     .replace(/http:\/\/127\.0\.0\.1:\d+/g, API_BASE)
 
-  return (!fixedSrc.startsWith('http') && !fixedSrc.startsWith('data:') && !fixedSrc.startsWith('blob:'))
+  let finalSrc = (!fixedSrc.startsWith('http') && !fixedSrc.startsWith('data:') && !fixedSrc.startsWith('blob:'))
     ? `${API_BASE}${fixedSrc.startsWith('/') ? '' : '/'}${fixedSrc}`
     : fixedSrc
+
+  // Apply auto format, auto quality, and sensible width for Cloudinary images
+  if (finalSrc.includes('res.cloudinary.com') && finalSrc.includes('/upload/') && !finalSrc.includes('/upload/f_')) {
+    finalSrc = finalSrc.replace('/upload/', '/upload/f_auto,q_auto,w_800/')
+  }
+
+  return finalSrc
 }
 
 export function SafeImage({ src, alt, className, fallback, onError, onLoad, style, priority, cacheKey, ...rest }: SafeImageProps) {

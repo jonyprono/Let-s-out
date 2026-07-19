@@ -136,6 +136,7 @@ export function useConversations() {
   return useQuery({
     queryKey: ['chat', 'conversations'],
     queryFn: chatApi.getConversations,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
@@ -144,6 +145,7 @@ export function useConversation(conversationId: string) {
     queryKey: ['chat', 'conversation', conversationId],
     queryFn: () => chatApi.getConversation(conversationId),
     enabled: !!conversationId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 

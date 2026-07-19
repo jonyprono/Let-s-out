@@ -78,29 +78,21 @@ export function PaymentPage() {
     }
     // Sync the transaction with our backend
     if (eventId) {
-      try {
-        await apiClient.post('/payments/sync-missed', { eventId })
-      } catch (syncErr: any) {
-        // In sandbox mode, FedaPay may not send webhooks — use dev/confirm as fallback
-        if (isSandbox) {
-          console.warn('Sandbox: sync-missed failed, using dev/confirm as fallback')
-          try {
-            // Use 30s timeout: Render cold start + heavy DB ops can take up to 20s
-            await apiClient.post(
-              '/payments/dev/confirm-booking',
-              { eventId, amount },
-              { timeout: 30000 },
-            )
-            // Backend processes async — wait 3s before re-fetching so DB is updated
-            await new Promise((r) => setTimeout(r, 3000))
-          } catch (confirmErr) {
-            console.warn('Dev confirm also failed', confirmErr)
-            throw new Error("Impossible de valider le paiement. Assurez-vous d'avoir déployé le backend avec les correctifs Sandbox.")
-          }
-        } else {
-          // In live mode: webhook will handle it asynchronously — no fallback needed, but sync-missed failed
+      if (isSandbox) {
+        try {
+          await apiClient.post('/payments/dev/confirm-booking', { eventId, amount })
+        } catch (confirmErr) {
+          console.warn('Dev confirm failed', confirmErr)
+          throw new Error("Impossible de valider le paiement Sandbox. Assurez-vous d'avoir déployé le backend.")
+        }
+      } else {
+        try {
+          await apiClient.post('/payments/sync-missed', { eventId })
+        } catch (syncErr) {
+          console.warn('sync-missed failed', syncErr)
           throw new Error('La synchronisation du paiement a échoué. Le webhook prendra le relais.')
-        }      }
+        }
+      }
     }
     // Force re-fetch all relevant data
     await qc.invalidateQueries({ queryKey: ['chat'] })
@@ -182,7 +174,7 @@ export function PaymentPage() {
     return (
       <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
         <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
-          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')} className="w-9 h-9 flex items-center justify-center active:scale-95">
+          <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
             <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
           <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">
@@ -240,7 +232,7 @@ export function PaymentPage() {
             Contribuer à nouveau
           </Button>
           <button
-            onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')}
+            onClick={() => navigate(-1)}
             className="w-full h-[52px] flex items-center justify-center gap-2 rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
           >
             <ChevronLeft className="w-5 h-5" />
