@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import { useAuthStore } from '@/stores/auth.store';
-import { Check, X } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 
 const VoteBoxIcon = () => (
@@ -64,30 +64,21 @@ export function EventValidatorsVote() {
     enabled: !!id,
   });
 
-  const [localVotes, setLocalVotes] = useState<Record<string, boolean>>({});
+  const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleVote = (candidateId: string, vote: boolean) => {
-    setLocalVotes(prev => ({ ...prev, [candidateId]: vote }));
-  };
-
   const handleSubmit = async () => {
-    const votesToSubmit = Object.entries(localVotes);
-    if (votesToSubmit.length === 0) return;
+    if (!selectedCandidate) return;
 
     setIsSubmitting(true);
     try {
-      await Promise.all(
-        votesToSubmit.map(([candidateId, vote]) =>
-          apiClient.post(`/events/${id}/validators/vote`, { candidateId, vote })
-        )
-      );
-      toast.success('Votes enregistrés');
+      await apiClient.post(`/events/${id}/pool/validate`, { mode: 'DELEGATE', delegatedToId: selectedCandidate });
+      toast.success('Vote enregistré');
       qc.invalidateQueries({ queryKey: ['events', id] });
       setIsSuccess(true);
     } catch (err: any) {
-      toast.error('Erreur lors de la soumission de vos votes');
+      toast.error('Erreur lors de la soumission de votre vote');
     } finally {
       setIsSubmitting(false);
     }
@@ -112,8 +103,9 @@ export function EventValidatorsVote() {
   const currentUser = useAuthStore.getState().user;
   
   // Si l'utilisateur a déjà voté au moins une fois, ou s'il vient de réussir son vote, ou si c'est clos, on affiche les résultats ou le succès
-  const hasVotedForAtLeastOne = (event.validatorVotes || []).some((v: any) => v.userId === currentUser?.id);
-  const showResults = isClosed || hasVotedForAtLeastOne;
+  const myBooking = attendees.find((a: any) => a.userId === currentUser?.id);
+  const hasVoted = myBooking?.poolValidationStatus === 'DELEGATED' || myBooking?.poolValidationStatus === 'VALIDATED';
+  const showResults = isClosed || hasVoted;
   const showSuccess = isSuccess;
 
   return (
@@ -141,73 +133,44 @@ export function EventValidatorsVote() {
           <div className="flex-1 flex flex-col items-center justify-center -mt-10 gap-6 animate-in fade-in zoom-in duration-500">
             <VoteBoxIcon />
             <p className="text-center text-[14px] text-gray-900 dark:text-white font-medium max-w-[250px] leading-relaxed">
-              Votre vote a été bien enregistré.<br/>
-              Les résultats seront bientôt disponibles.
+              Votre choix a été bien enregistré.<br/>
+              L'organisateur sera notifié de votre validation.
             </p>
           </div>
         ) : (
           <>
             {showResults ? (
-              <h2 className="text-[16px] font-semibold text-[#FF7A00] mb-1">Résultats du vote</h2>
+              <h2 className="text-[16px] font-semibold text-[#FF7A00] mb-1">Vote enregistré</h2>
             ) : (
               <p className="text-[12px] text-[#404040] dark:text-gray-400 font-inter leading-relaxed">
-                Votez pour les participants que vous souhaitez élire validateurs de déblocage des fonds de la cagnotte. 
-                Chaque participant doit avoir au moins {Math.round((event.validatorThreshold || 0.5) * 100)}% de vote positif pour être élu validateur.
+                Choisissez le participant à qui vous souhaitez déléguer la validation du déblocage des fonds de la cagnotte. 
               </p>
             )}
 
             <div className="flex flex-col gap-1">
               {candidates.map((cand: any) => {
-                const yesVotes = (event.validatorVotes || []).filter((v: any) => v.candidateId === cand.userId && v.vote).length;
-                const eligibleVoters = attendees.filter((a: any) => a.userId !== event.creatorId);
-                const totalEligible = eligibleVoters.length;
-                const pct = totalEligible > 0 ? Math.round((yesVotes / totalEligible) * 100) : 0;
-                
-                const currentLocalVote = localVotes[cand.userId];
 
                 return (
-                  <div key={cand.userId} className="w-full bg-[#FEFEFA] dark:bg-[#1A1A1A] border border-[#F5F5F4] dark:border-gray-800 rounded-lg p-2.5 flex items-center gap-3 h-[52px]">
+                  <button 
+                    key={cand.userId} 
+                    onClick={() => !showResults && setSelectedCandidate(cand.userId)}
+                    disabled={showResults}
+                    className={`w-full bg-[#FEFEFA] dark:bg-[#1A1A1A] border rounded-lg p-2.5 flex items-center gap-3 h-[52px] text-left transition-colors ${selectedCandidate === cand.userId ? 'border-[#FF7A00] bg-[#FF7A00]/5 dark:bg-[#FF7A00]/10' : 'border-[#F5F5F4] dark:border-gray-800'}`}
+                  >
                     <img src={cand.user?.profile?.avatarUrl || `https://ui-avatars.com/api/?name=${cand.user?.profile?.displayName}`} alt="" className="w-8 h-8 rounded-full object-cover shrink-0 bg-gray-100" />
                     
                     <div className="flex-1 flex flex-col justify-center min-w-0">
-                      <span className="text-[12px] text-[#1B1818] dark:text-white font-medium line-clamp-1">{cand.user?.profile?.displayName}</span>
+                      <span className="text-[14px] text-[#1B1818] dark:text-white font-medium line-clamp-1">{cand.user?.profile?.displayName}</span>
                     </div>
 
-                    {showResults ? (
-                      <div className="flex items-center gap-3 w-[150px] shrink-0">
-                        <div className="flex-1 h-1 bg-gray-100 dark:bg-[#333333] rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-[#FF7A00] rounded-full transition-all duration-1000"
-                            style={{ width: `${Math.min(pct, 100)}%` }}
-                          />
+                    {!showResults && (
+                      <div className="flex items-center shrink-0 h-[28px] pr-1">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedCandidate === cand.userId ? 'border-[#FF7A00]' : 'border-gray-300 dark:border-gray-600'}`}>
+                           {selectedCandidate === cand.userId && <div className="w-2.5 h-2.5 bg-[#FF7A00] rounded-full" />}
                         </div>
-                        <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 w-8 text-right shrink-0">{pct} %</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 shrink-0 h-[28px]">
-                        <button 
-                          onClick={() => handleVote(cand.userId, true)}
-                          className={`w-[44px] h-full rounded-lg border-[0.5px] flex items-center justify-center transition-all ${
-                            currentLocalVote === true 
-                              ? 'bg-[#22C55E] border-[#22C55E] text-white shadow-sm' 
-                              : 'bg-[#F0FDF4] border-[#22C55E] text-[#22C55E]'
-                          }`}
-                        >
-                          <Check className="w-4 h-4 stroke-[3px]" />
-                        </button>
-                        <button 
-                          onClick={() => handleVote(cand.userId, false)}
-                          className={`w-[44px] h-full rounded-lg border-[0.5px] flex items-center justify-center transition-all ${
-                            currentLocalVote === false 
-                              ? 'bg-[#EF4444] border-[#EF4444] text-white shadow-sm' 
-                              : 'bg-[#FEF2F2] border-[#EF4444] text-[#EF4444]'
-                          }`}
-                        >
-                          <X className="w-4 h-4 stroke-[3px]" />
-                        </button>
                       </div>
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -220,7 +183,7 @@ export function EventValidatorsVote() {
         <div className="absolute bottom-0 left-0 w-full px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent dark:from-[#0a0a0b] dark:via-[#0a0a0b] z-20">
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || Object.keys(localVotes).length !== candidates.length}
+            disabled={isSubmitting || !selectedCandidate}
             className="w-full h-14 rounded-full bg-[#FF7A00] hover:bg-[#FF7A00]/90 text-white font-semibold text-[16px] shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
           >
             {isSubmitting ? 'Enregistrement...' : 'Voter'}
