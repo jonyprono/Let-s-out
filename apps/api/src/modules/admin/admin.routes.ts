@@ -389,4 +389,27 @@ export default async function adminRoutes(app: FastifyInstance) {
 
     return reply.send({ data: updated, message: 'Requête rejetée' })
   })
+
+  // ── Feature Flags ─────────────────────────────────────────────────
+  // GET /admin/feature-flags — liste tous les flags
+  app.get('/feature-flags', async (_req, reply) => {
+    const flags = await app.prisma.featureFlag.findMany({
+      orderBy: { key: 'asc' },
+    })
+    return reply.send({ data: flags })
+  })
+
+  // PUT /admin/feature-flags/:key — active ou désactive un flag
+  app.put('/feature-flags/:key', async (req, reply) => {
+    const { key } = req.params as { key: string }
+    const { isActive, description } = req.body as { isActive: boolean; description?: string }
+
+    const flag = await app.prisma.featureFlag.upsert({
+      where: { key },
+      update: { isActive, ...(description !== undefined ? { description } : {}) },
+      create: { key, isActive: isActive ?? false, description: description ?? '' },
+    })
+
+    return reply.send({ data: flag })
+  })
 }

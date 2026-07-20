@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router'
-import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet } from 'lucide-react'
+import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet, ToggleRight } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/admin/bots', end: false, label: 'Agents IA', icon: Bot },
   { to: '/admin/audit', end: false, label: 'Audit FinTech', icon: FileText },
   { to: '/admin/payouts', end: false, label: 'Déblocages', icon: Wallet },
+  { to: '/admin/feature-flags', end: false, label: 'Feature Flags', icon: ToggleRight },
 ]
 
 export function AdminLayout() {

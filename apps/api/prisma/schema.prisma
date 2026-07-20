@@ -622,3 +622,14 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+// Feature flags — activation/désactivation de sections de l'app par l'admin
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique // ex: "profile_pro_banner", "event_transport_card"
+  isActive    Boolean  @default(false)
+  description String   @default("")
+  updatedAt   DateTime @updatedAt
+
+  @@map("feature_flags")
+}

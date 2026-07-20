@@ -16,10 +16,12 @@ import { useNotifications } from '@/features/notifications/api';
 import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { apiClient } from '@/lib/api-client';
+import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags';
 
 export function AccountMenu() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { isEnabled } = useFeatureFlags();
   const { data: notifData } = useNotifications();
   const unreadCount = (notifData as any)?.unreadCount ?? 0;
 
@@ -203,20 +205,22 @@ export function AccountMenu() {
           </div>
         </div>
 
-        {/* ── PRO Banner ── */}
-        <div className="bg-[#FF7A00] rounded-2xl px-4 py-3 flex items-center justify-between active:scale-[0.98] transition-transform cursor-pointer">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-white font-bold text-[15px]">Pass Let's Out</span>
-              <span className="bg-white text-[#FF7A00] text-[10px] font-bold px-1.5 py-0.5 rounded-md">PRO</span>
+        {/* ── PRO Banner (masquable via feature flag) ── */}
+        {isEnabled(FLAG_KEYS.PROFILE_PRO_BANNER) && (
+          <div className="bg-[#FF7A00] rounded-2xl px-4 py-3 flex items-center justify-between active:scale-[0.98] transition-transform cursor-pointer">
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-white font-bold text-[15px]">Pass Let's Out</span>
+                <span className="bg-white text-[#FF7A00] text-[10px] font-bold px-1.5 py-0.5 rounded-md">PRO</span>
+              </div>
+              <span className="text-white/85 text-[12px] font-medium">Plus d'avantages exclusifs</span>
             </div>
-            <span className="text-white/85 text-[12px] font-medium">Plus d'avantages exclusifs</span>
+            <button className="flex items-center gap-1 bg-white/20 rounded-full px-3 py-1.5 active:scale-95 transition-transform">
+              <span className="text-white text-[11px] font-semibold whitespace-nowrap">Voir mes avantages</span>
+              <ArrowRight01Icon size={14} className="text-white" strokeWidth={2.5} />
+            </button>
           </div>
-          <button className="flex items-center gap-1 bg-white/20 rounded-full px-3 py-1.5 active:scale-95 transition-transform">
-            <span className="text-white text-[11px] font-semibold whitespace-nowrap">Voir mes avantages</span>
-            <ArrowRight01Icon size={14} className="text-white" strokeWidth={2.5} />
-          </button>
-        </div>
+        )}
       </div>
 
       {/* ── Menu List ── */}

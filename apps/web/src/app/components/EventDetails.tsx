@@ -19,6 +19,7 @@ import L from 'leaflet'
 import { Button } from '@/components/ui/button'
 import { SaveEventButton } from '@/components/ui/save-event-button'
 import { TopBar } from '@/components/ui/TopBar'
+import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
 import { Share08Icon } from 'hugeicons-react'
@@ -171,6 +172,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     queryFn: () => eventsApi.getPendingBookings(id!).then(r => r.data),
     enabled: !!id && isOrganizer && showPendingModal,
   })
+
+  const { isEnabled } = useFeatureFlags()
 
   const hasJoined = (!!myBookingData && myBookingData.status !== 'CANCELLED') || isCreator
 
@@ -466,8 +469,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
           <div className="px-4 pb-6 space-y-[20px] mt-4">
 
-            {/* S'y rendre — Navigation */}
-            {(event.latitude && event.longitude) && (() => {
+            {/* S'y rendre — Navigation (masquable via feature flag) */}
+            {isEnabled(FLAG_KEYS.EVENT_TRANSPORT_CARD) && (event.latitude && event.longitude) && (() => {
               const lat = event.latitude as number;
               const lng = event.longitude as number;
 

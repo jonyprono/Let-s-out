@@ -113,6 +113,7 @@ import { AdminAuditLogsPage } from './components/admin/AdminAuditLogsPage'
 import { AdminPayoutsPage } from './components/admin/AdminPayoutsPage'
 import { EventPayoutApproval } from './components/EventPayoutApproval';
 import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
+import AdminFeatureFlagsPage from './components/admin/AdminFeatureFlagsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
@@ -258,6 +259,7 @@ export default function App() {
             <Route path="bots" element={<AdminBotPrompts />} />
             <Route path="audit" element={<AdminAuditLogsPage />} />
             <Route path="payouts" element={<AdminPayoutsPage />} />
+            <Route path="feature-flags" element={<AdminFeatureFlagsPage />} />
           </Route>
 
           {/* Protected app */}
