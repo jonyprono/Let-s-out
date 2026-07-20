@@ -97,6 +97,11 @@ export async function evaluateUserBadges(prisma: PrismaClient, userId: string) {
   // 3. Evaluate each badge
   const newBadgeIds: string[] = []
   for (const badge of allBadges) {
+    // Check if badge is expired (endDate has passed)
+    if (badge.endDate && badge.endDate < new Date()) {
+      continue
+    }
+
     const logic = badge.conditionsLogic as unknown as ConditionLogic
     const isEligible = evaluateLogic(logic, stats)
     

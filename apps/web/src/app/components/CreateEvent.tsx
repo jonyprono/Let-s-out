@@ -436,11 +436,52 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         coHostIds: selectedCoOrgs.map(o => o.id),
       }
 
+      // Optimistic Update
+      const optimisticEvent = {
+        id: editEventId || `temp-${Date.now()}`,
+        ...payload,
+        creator: { id: me?.id, profile: me?.profile },
+        bookings: []
+      }
+      
+      qc.setQueryData(['my-events'], (old: any) => {
+        if (!old) return old
+        const created = old.data?.createdEvents || []
+        // Update if exists, else prepend
+        const existingIdx = created.findIndex((e: any) => e.id === optimisticEvent.id)
+        if (existingIdx >= 0) created[existingIdx] = { ...created[existingIdx], ...optimisticEvent }
+        else created.unshift(optimisticEvent)
+        
+        return { ...old, data: { ...old.data, createdEvents: created } }
+      })
+
+      // Also update home page events if it's published (though here it's draft)
+      qc.setQueryData(['events'], (old: any) => {
+        if (!old || !old.pages) return old
+        const pages = old.pages.map((page: any) => {
+          const events = page.data || []
+          const existingIdx = events.findIndex((e: any) => e.id === optimisticEvent.id)
+          if (existingIdx >= 0) events[existingIdx] = { ...events[existingIdx], ...optimisticEvent }
+          else if (payload.status === 'PUBLISHED' && !payload.isPrivate) events.unshift(optimisticEvent)
+          return { ...page, data: events }
+        })
+        return { ...old, pages }
+      })
+
       let res
       if (editEventId) {
         res = await apiClient.patch(`/events/${editEventId}`, payload)
       } else {
         res = await apiClient.post('/events', payload)
+      }
+      
+      // Update cache with real ID if it was a creation
+      if (!editEventId && res.data?.id) {
+         qc.setQueryData(['my-events'], (old: any) => {
+            if (!old) return old
+            const created = (old.data?.createdEvents || []).map((e: any) => e.id === optimisticEvent.id ? { ...e, id: res.data.id } : e)
+            return { ...old, data: { ...old.data, createdEvents: created } }
+         })
       }
 
       const eventId = editEventId || res.data?.id
@@ -472,11 +513,26 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     setPublishing(true)
     try {
       if (enablePool && poolTarget) await savePoolToEvent()
+      
+      // Optimistic publish
+      qc.setQueryData(['my-events'], (old: any) => {
+        if (!old) return old
+        const created = (old.data?.createdEvents || []).map((e: any) => e.id === eventId ? { ...e, status: 'PUBLISHED' } : e)
+        return { ...old, data: { ...old.data, createdEvents: created } }
+      })
+      qc.setQueryData(['events'], (old: any) => {
+        if (!old || !old.pages) return old
+        // Actually we would need to know the full event to unshift it to home page if it wasn't there
+        // Simple invalidation will handle the home page properly if we don't have the full object
+        return old
+      })
+
       await apiClient.put(`/events/${eventId}/publish`)
       clearCreateEventDraft()
       toast.success('🎉 Événement publié avec succès !')
       qc.invalidateQueries({ queryKey: ['users', 'activity'] })
       qc.invalidateQueries({ queryKey: ['events'] })
+      qc.invalidateQueries({ queryKey: ['my-events'] })
       setStep('published')
     } catch (err: any) {
       console.error('Publish Error:', err)

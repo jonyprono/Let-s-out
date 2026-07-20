@@ -40,6 +40,7 @@ type Badge = {
   xpReward: number
   conditionsLogic: ConditionLogic
   isActive: boolean
+  endDate?: string | null
 }
 
 // Hexagon wrapper for preview
@@ -108,6 +109,7 @@ export function AdminBadgesPage() {
         category: 'standard',
         xpReward: 100,
         isActive: true,
+        endDate: null,
         conditionsLogic: { type: 'AND', rules: [{ field: 'eventsCreated', operator: 'GTE', value: 1 }] }
       })
       setIconMode('emoji')
@@ -340,6 +342,18 @@ export function AdminBadgesPage() {
                         <div className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${editingBadge.isActive ? 'bg-action-primary' : 'bg-white/20'}`} onClick={() => setEditingBadge({ ...editingBadge, isActive: !editingBadge.isActive })}>
                           <div className={`w-4 h-4 rounded-full bg-black transition-transform ${editingBadge.isActive ? 'translate-x-6' : 'translate-x-0 bg-white'}`} />
                         </div>
+                      </div>
+                      <div className="pt-2">
+                        <label className="text-sm font-semibold text-white/90 mb-2 block">
+                          Date de fin de validité <span className="text-white/40 font-normal">(Optionnel)</span>
+                        </label>
+                        <input 
+                          type="datetime-local" 
+                          value={editingBadge.endDate ? new Date(new Date(editingBadge.endDate).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0,16) : ''} 
+                          onChange={e => setEditingBadge({ ...editingBadge, endDate: e.target.value ? new Date(e.target.value).toISOString() : null })} 
+                          className="w-full bg-white/5 border border-white/10 focus:border-action-primary rounded-xl px-4 py-3 text-white transition-all outline-none" 
+                        />
+                        <p className="text-[10px] text-white/40 mt-1">Passé cette date, ce badge ne sera plus attribué (ex: Early Adopter).</p>
                       </div>
                     </div>
                   </div>

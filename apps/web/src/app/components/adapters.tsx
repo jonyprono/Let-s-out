@@ -174,21 +174,9 @@ export function Explorer() {
 
 // ─── MyEvents ─────────────────────────────────────────────────────────────────
 export function MyEvents() {
-  const nav = useNavigate()
   return (
     <Suspense fallback={<PageLoader />}>
-      <MyEventsBase
-        onNavigate={(screen: string, id?: string) => {
-          const map: Record<string, string> = {
-            'notifications': '/notifications',
-            'explorer': '/explorer',
-            'messages': '/messages',
-            'profile': '/profile',
-          }
-          if (screen === 'event-details' && id) nav(`/events/${id}`)
-          else if (map[screen]) nav(map[screen])
-        }}
-      />
+      <MyEventsBase />
     </Suspense>
   )
 }

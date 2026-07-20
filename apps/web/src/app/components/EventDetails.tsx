@@ -22,7 +22,7 @@ import { TopBar } from '@/components/ui/TopBar'
 import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
-import { Share08Icon } from 'hugeicons-react'
+import { Share08Icon, PencilEdit01Icon } from 'hugeicons-react'
 import { chatApi } from '@/features/chat/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
@@ -401,6 +401,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           containerClassName="flex-shrink-0 bg-[var(--color-background-primary)] z-10 pt-safe-4 pt-4 shadow-sm"
           rightAction={
             <>
+              {isOrganizer && (
+                <button 
+                  onClick={() => navigate('/events/create', { state: { editEventId: event.id, eventData: event } })}
+                  className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[#FF7A00]"
+                >
+                  <PencilEdit01Icon className="w-5 h-5" strokeWidth={2} />
+                </button>
+              )}
               <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
                 <Share08Icon className="w-5 h-5" strokeWidth={1.8} />
               </button>

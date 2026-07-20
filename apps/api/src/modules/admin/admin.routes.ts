@@ -432,6 +432,7 @@ export default async function adminRoutes(app: FastifyInstance) {
       xpReward: z.number().default(0),
       conditionsLogic: z.any(),
       isActive: z.boolean().default(true),
+      endDate: z.string().nullable().optional(),
     })
     const body = schema.parse(req.body)
 
@@ -439,6 +440,7 @@ export default async function adminRoutes(app: FastifyInstance) {
       data: {
         ...body,
         conditionsLogic: body.conditionsLogic || {},
+        endDate: body.endDate ? new Date(body.endDate) : null,
       },
     })
 
@@ -456,12 +458,18 @@ export default async function adminRoutes(app: FastifyInstance) {
       xpReward: z.number().optional(),
       conditionsLogic: z.any().optional(),
       isActive: z.boolean().optional(),
+      endDate: z.string().nullable().optional(),
     })
     const body = schema.parse(req.body)
 
+    const dataToUpdate: any = { ...body }
+    if (body.endDate !== undefined) {
+      dataToUpdate.endDate = body.endDate ? new Date(body.endDate) : null
+    }
+
     const badge = await app.prisma.badge.update({
       where: { id },
-      data: body,
+      data: dataToUpdate,
     })
 
     return reply.send({ data: badge })

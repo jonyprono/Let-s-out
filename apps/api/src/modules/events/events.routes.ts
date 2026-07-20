@@ -157,6 +157,42 @@ export default async function eventsRoutes(app: FastifyInstance) {
     return reply.send({ data: pendingEvents, total: pendingEvents.length })
   })
 
+  // Get current user events (created and joined)
+  app.get('/me', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+
+    const createdEvents = await app.prisma.event.findMany({
+      where: { creatorId: sub },
+      orderBy: { startAt: 'desc' },
+      include: {
+        creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
+        bookings: { select: { id: true } },
+      }
+    })
+
+    const joinedBookings = await app.prisma.booking.findMany({
+      where: { userId: sub, status: { in: ['CONFIRMED', 'PENDING'] } },
+      include: {
+        event: {
+          include: {
+            creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
+            bookings: { select: { id: true } }
+          }
+        }
+      },
+      orderBy: { event: { startAt: 'desc' } }
+    })
+    
+    const joinedEvents = joinedBookings.map(b => b.event)
+
+    return reply.send({
+      data: {
+        createdEvents,
+        joinedEvents
+      }
+    })
+  })
+
   // List events (with filters) — optionally authenticated to filter blocked creators
   app.get('/', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
     const { category, city, status = 'PUBLISHED', limit = '20', offset = '0', search, upcoming, maxPrice, date, time, ongoing } = req.query as any

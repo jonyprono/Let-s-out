@@ -442,6 +442,7 @@ model Badge {
   xpReward        Int      @default(0)
   conditionsLogic Json
   isActive        Boolean  @default(true)
+  endDate         DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
