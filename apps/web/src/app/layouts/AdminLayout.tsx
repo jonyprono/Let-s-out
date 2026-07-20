@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth.store'
 
 const navItems = [
   { to: '/admin', end: true, label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/badges', end: false, label: 'Badges & Récompenses', icon: Medal01Icon },
   { to: '/admin/kyc', end: false, label: 'Vérifications KYC', icon: ShieldCheck },
   { to: '/admin/admins', end: false, label: 'Administrateurs', icon: Shield },
   { to: '/admin/support', end: false, label: 'Chats Support', icon: MessageSquare },
@@ -12,7 +13,6 @@ const navItems = [
   { to: '/admin/audit', end: false, label: 'Audit FinTech', icon: FileText },
   { to: '/admin/payouts', end: false, label: 'Déblocages', icon: Wallet },
   { to: '/admin/feature-flags', end: false, label: 'Feature Flags', icon: ToggleRight },
-  { to: '/admin/badges', end: false, label: 'Badges & Récompenses', icon: Medal01Icon },
 ]
 
 export function AdminLayout() {

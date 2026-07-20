@@ -12,118 +12,6 @@ import { useNavigate, useParams } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
 import { toast } from 'sonner';
 
-type BadgeDef = {
-  badge: string;
-  title: string;
-  icon: React.ReactNode;
-  description: string;
-  howTo: string;
-  getProgress: (activity: any, friends: any[], profileData?: any) => { current: number; target: number };
-};
-
-function BadgeIcon({ children }: { children: React.ReactNode }) {
-  return <div className="w-[40px] h-[40px] flex items-center justify-center text-[32px]">{children}</div>;
-}
-
-const ALL_BADGES: BadgeDef[] = [
-  {
-    badge: 'Early adopter',
-    title: 'Early adopter',
-    icon: <BadgeIcon>🚀</BadgeIcon>,
-    description: 'Récompense les pionniers qui ont rejoint Let\'s Out lors du lancement.',
-    howTo: 'Créez votre compte pendant la phase de lancement de l\'application.',
-    getProgress: (_a, _f) => ({ current: 1, target: 1 }),
-  },
-  {
-    badge: 'Social Star',
-    title: 'Social star',
-    icon: <BadgeIcon>⭐</BadgeIcon>,
-    description: 'Décerné aux membres avec une grande vie sociale sur la plateforme.',
-    howTo: 'Ajoutez 10 amis sur Let\'s Out pour débloquer ce badge.',
-    getProgress: (_a, friends) => ({ current: friends.length, target: 10 }),
-  },
-  {
-    badge: 'Party Maker',
-    title: 'Party maker',
-    icon: <BadgeIcon>🎉</BadgeIcon>,
-    description: 'Pour les organisateurs dont la cagnotte atteint au moins 90% de son objectif.',
-    howTo: 'Organisez un événement avec cagnotte et atteignez 90% de l\'objectif.',
-    getProgress: (activity, _f) => {
-      const events = activity?.createdEvents ?? [];
-      const poolEvents = events.filter((e: any) => e.poolTarget > 0);
-      if (poolEvents.length === 0) return { current: 0, target: 90 };
-      const best = Math.max(...poolEvents.map((e: any) => {
-        return e.poolTarget > 0 ? Math.round((e.poolCollected ?? 0) / e.poolTarget * 100) : 0;
-      }));
-      return { current: Math.min(best, 90), target: 90 };
-    },
-  },
-  {
-    badge: 'Top Donateur',
-    title: 'Top donateur',
-    icon: <BadgeIcon>🎁</BadgeIcon>,
-    description: 'Récompense la générosité envers la communauté.',
-    howTo: 'Contribuez au moins 2 fois à la cagnotte de 5 événements différents.',
-    getProgress: (activity, _f) => {
-      const poolBookings = (activity?.bookings ?? []).filter((b: any) =>
-        b.event?.poolTarget > 0 && b.totalPaid > 0
-      );
-      const doubleContributed = poolBookings.filter((b: any) => {
-        const minAmount = b.event?.poolMinAmount || 1;
-        return b.totalPaid >= minAmount * 2;
-      });
-      return { current: doubleContributed.length, target: 5 };
-    },
-  },
-  {
-    badge: 'Top Org.',
-    title: 'Top org.',
-    icon: <BadgeIcon>🎖️</BadgeIcon>,
-    description: 'Décerné aux créateurs d\'événements les plus réussis.',
-    howTo: 'Organisez 5 événements avec une note moyenne supérieure à 4.5/5.',
-    getProgress: (activity, _f, profileData) => {
-      const events = activity?.createdEvents ?? [];
-      const highlyRated = events.filter((_e: any) => profileData?.rating && profileData.rating >= 4.5);
-      return { current: highlyRated.length, target: 5 };
-    },
-  },
-  {
-    badge: 'Ponctuel',
-    title: 'Ponctuel',
-    icon: <BadgeIcon>⏰</BadgeIcon>,
-    description: 'Décerné aux organisateurs qui respectent toujours les horaires.',
-    howTo: 'Obtenez une note de ponctualité ≥ 4.5/5 sur au moins 3 évaluations.',
-    getProgress: (_a, _f, profileData) => {
-      const stats = profileData?.detailedStats;
-      const count = stats?.reviewCount ?? 0;
-      return { current: Math.min(count, 3), target: 3 };
-    },
-  },
-  {
-    badge: 'Accueillant',
-    title: 'Accueil-\nlant',
-    icon: <BadgeIcon>🤗</BadgeIcon>,
-    description: 'Pour les organisateurs chaleureux et souriants.',
-    howTo: 'Obtenez une note d\'attitude ≥ 4.5/5 sur au moins 3 évaluations.',
-    getProgress: (_a, _f, profileData) => {
-      const count = profileData?.detailedStats?.reviewCount ?? 0;
-      return { current: Math.min(count, 3), target: 3 };
-    },
-  },
-  {
-    badge: 'Fiable',
-    title: 'Fiable',
-    icon: <BadgeIcon>✅</BadgeIcon>,
-    description: 'Pour ceux dont les événements correspondent toujours aux descriptions.',
-    howTo: 'Obtenez une note de fiabilité ≥ 4.5/5 sur au moins 3 évaluations.',
-    getProgress: (_a, _f, profileData) => {
-      const count = profileData?.detailedStats?.reviewCount ?? 0;
-      return { current: Math.min(count, 3), target: 3 };
-    },
-  },
-];
-
-
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
@@ -139,7 +27,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
-  const [selectedBadge, setSelectedBadge] = useState<BadgeDef | null>(null);
   const { username } = useParams<{ username?: string }>();
 
   // Scroll to top whenever the profile page mounts
@@ -572,41 +459,34 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             <div className="shrink-0 w-full">
               <h3 className="font-inter text-[14px] font-medium text-gray-500 mb-3">Badges</h3>
               <div className="flex flex-wrap gap-3 pb-2">
-                {ALL_BADGES.map((b) => {
-                  const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === b.badge);
-                  const prog = b.getProgress(activity, friends, viewedProfile);
-                  const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
-                  const isEarned = hasBadge || pct >= 100;
-
-                  if (!isOwnProfile && !isEarned) return null;
-
-                  if (isEarned) {
-                    return (
-                      <div
-                        key={b.badge}
-                        onClick={() => { if (isOwnProfile) setSelectedBadge(b) }}
-                        className={`w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] dark:bg-[#1A1A1A] transition-transform ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
-                      >
-                        {b.icon}
-                        <span className="text-[10px] font-bold text-[#1B1818] dark:text-white text-center leading-[12px] whitespace-pre-wrap">{b.title}</span>
+                {isOwnProfile ? (
+                  <div className="w-full flex justify-between items-center bg-[#FFF8F3] border border-orange-100 rounded-2xl p-4 cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/badges')}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-[#FF7A00] to-[#FFA755] rounded-xl flex items-center justify-center text-white text-2xl drop-shadow-md">
+                        🏅
                       </div>
-                    );
-                  } else {
-                    return (
-                      <div
-                        key={b.badge}
-                        onClick={() => { if (isOwnProfile) setSelectedBadge(b) }}
-                        className={`w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] dark:bg-[#1A1A1A] opacity-60 transition-transform relative overflow-hidden ${isOwnProfile ? 'cursor-pointer active:scale-95' : ''}`}
-                      >
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
-                          <div className="h-full bg-[#FF7A00]/50 transition-all" style={{ width: `${pct}%` }} />
-                        </div>
-                        <div className="w-6 h-6 flex items-center justify-center text-gray-400">{b.icon}</div>
-                        <span className="text-[9px] font-bold text-gray-400 text-center leading-[10px] whitespace-pre-wrap">{b.title}</span>
+                      <div>
+                        <h4 className="text-[14px] font-bold text-black leading-tight">Badges & Récompenses</h4>
+                        <p className="text-[12px] text-gray-500 font-medium">Consultez votre progression !</p>
                       </div>
-                    );
-                  }
-                })}
+                    </div>
+                    <ChevronLeft className="w-5 h-5 text-gray-400 rotate-180" />
+                  </div>
+                ) : (
+                  displayProfile?.user?.badges?.length > 0 ? (
+                    displayProfile.user.badges.map((userBadge: any) => (
+                      <div
+                        key={userBadge.id}
+                        className="w-[87px] h-[84px] rounded-[8px] flex flex-col items-center justify-center gap-2 flex-shrink-0 bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-gray-100 dark:border-white/5"
+                      >
+                        <div className="text-2xl">{userBadge.badge?.icon || '🏅'}</div>
+                        <span className="text-[10px] font-bold text-[#1B1818] dark:text-white text-center leading-[12px] whitespace-pre-wrap">{userBadge.badge?.name || 'Badge'}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-[12px] text-gray-400 italic">Aucun badge obtenu.</p>
+                  )
+                )}
               </div>
             </div>
 
@@ -650,73 +530,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           </div>
         )}
       </div>
-
-      {/* Badge Detail Bottom Sheet */}
-      {selectedBadge && (() => {
-        const hasBadge = displayProfile?.user?.badges?.some((userBadge: any) => userBadge.badge === selectedBadge.badge);
-        const prog = selectedBadge.getProgress(activity, friends, viewedProfile);
-        const pct = Math.min(100, Math.round((prog.current / prog.target) * 100));
-        const isEarned = hasBadge || pct >= 100;
-        return (
-          <div className="fixed inset-0 z-50 flex items-end justify-center" onClick={() => setSelectedBadge(null)}>
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            <div
-              className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl shadow-2xl flex flex-col"
-              style={{ maxHeight: '85dvh' }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Handle */}
-              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-                <div className="w-10 h-1 bg-gray-200 dark:bg-gray-700 rounded-full" />
-              </div>
-
-              {/* Close button */}
-              <button
-                onClick={() => setSelectedBadge(null)}
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-              </button>
-
-              {/* Scrollable content */}
-              <div className="overflow-y-auto flex-1 px-6 pb-8 pt-2" style={{ scrollbarWidth: 'none' }}>
-                {/* Badge icon */}
-                <div className="flex flex-col items-center mb-4">
-                  <div
-                    className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-3 ${!isEarned ? 'bg-gray-100 grayscale' : ''}`}
-                    style={isEarned ? { background: 'linear-gradient(243.43deg, #FFD439 16.67%, #FF7A00 83.33%)' } : {}}
-                  >
-                    <div className="scale-[2]">{selectedBadge.icon}</div>
-                  </div>
-                  <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">{selectedBadge.title.replace('\n', ' ')}</h3>
-                  {isEarned && (
-                    <span className="mt-2 px-3 py-1 bg-green-100 text-green-700 text-[11px] font-semibold rounded-full flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> Obtenu
-                    </span>
-                  )}
-                </div>
-
-                {/* Description */}
-                <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-4">{selectedBadge.description}</p>
-
-                {/* How to get + progress */}
-                <div className="bg-[#FFF9EC] border border-[#FFE5B4] rounded-2xl p-4">
-                  <p className="text-[12px] font-semibold text-[#FF7A00] mb-2">Comment l'obtenir ?</p>
-                  <p className="text-[13px] text-gray-700 dark:text-gray-300 mb-3">{selectedBadge.howTo}</p>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[11px] text-gray-500">Progression</span>
-                    <span className="text-[11px] font-bold text-[#FF7A00]">{prog.current} / {prog.target}</span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-[#FF7A00] rounded-full transition-all" style={{ width: `${pct}%` }} />
-                  </div>
-                  <p className="text-right text-[10px] text-gray-400 mt-1">{pct}%{isEarned ? ' — Félicitations !' : ''}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
 
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
     </div>
