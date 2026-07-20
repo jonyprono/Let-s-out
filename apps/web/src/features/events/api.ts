@@ -145,6 +145,9 @@ export const eventsApi = {
   rejectBooking: async (eventId: string, bookingId: string) => {
     return apiClient.patch(`/events/${eventId}/bookings/${bookingId}/reject`)
   },
+
+  requestRefund: (id: string, reason: string) =>
+    apiClient.post(`/events/${id}/pool/refund-request`, { reason }),
   
   // Reviews
   getPendingEvaluations: async () => {

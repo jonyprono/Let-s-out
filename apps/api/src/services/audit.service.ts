@@ -12,6 +12,10 @@ export type AuditAction =
   | 'WALLET_DEPOSIT'
   | 'POOL_CLOSED'
   | 'CONTRIBUTION'
+  | 'POOL_VALIDATED'
+  | 'POOL_DELEGATED'
+  | 'DELEGATION_REVOKED'
+  | 'REFUND_REQUESTED'
 
 export interface AuditEntry {
   actorId?: string

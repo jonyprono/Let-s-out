@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
-import { writeAuditLog, resolveVoteResult } from '../../services/audit.service'
+import { writeAuditLog } from '../../services/audit.service'
+import { calculateAvailablePoolAmount } from './pool.service'
 
 export default async function eventPayoutRoutes(app: FastifyInstance) {
   app.addHook('onRequest', async (request, reply) => {
@@ -11,546 +12,291 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     }
   })
 
-  // ─── HELPER: Compute eligible voters snapshot ────────────────────────────
-  // Eligible = contributors (bookings with totalPaid > 0) excluding the creator
-  // Snapshot is taken at payout request time.
-  async function getEligibleVoters(eventId: string, creatorId: string): Promise<string[]> {
-    const bookings = await app.prisma.booking.findMany({
-      where: {
-        eventId,
-        totalPaid: { gt: 0 },
-        status: { not: 'REFUNDED' }, // Remboursés = perdent leur droit de vote
-      },
-      select: { userId: true },
-    })
-    // Remove creator, deduplicate
-    const ids = [...new Set(bookings.map(b => b.userId).filter(id => id !== creatorId))]
+  // ─── POST /:id/pool/validate ──────────────────────────────────────────────
+  // Participant validates their part or delegates
+  app.post<{ Params: { id: string }; Body: { mode: 'VALIDATE' | 'DELEGATE', delegatedToId?: string } }>(
+    '/:id/pool/validate',
+    async (request, reply) => {
+      const { sub: userId } = request.user as { sub: string }
+      const eventId = request.params.id
+      const { mode, delegatedToId } = request.body
+      const ipAddress = request.ip
 
-    // If large group (>10), use designated validators only
-    const event = await app.prisma.event.findUnique({
-      where: { id: eventId },
-      select: { validatorIds: true, coHostIds: true },
-    })
-    const validatorIds = event?.validatorIds ?? []
-    const coHostIds = (event?.coHostIds ?? []).filter(id => id !== creatorId)
-
-    if (validatorIds.length > 0 || coHostIds.length > 0) {
-      // Grand groupe: use designated validators + co-hosts
-      return [...new Set([...validatorIds, ...coHostIds].filter(id => id !== creatorId))]
-    }
-
-    return ids
-  }
-
-  // ─── HELPER: Resolve and settle the vote ─────────────────────────────────
-  async function trySettleVote(
-    eventId: string,
-    payoutReqId: string,
-    approvals: string[],
-    rejections: string[],
-    snapshotVoterIds: string[],
-    threshold: number,
-    eventTitle: string,
-    creatorId: string,
-    amount: number,
-    ipAddress?: string
-  ) {
-    const yesCount = approvals.length
-    const noCount = rejections.length
-    const totalEligible = snapshotVoterIds.length || 1
-
-    const result = resolveVoteResult(yesCount, noCount, totalEligible, threshold)
-
-    if (result === 'APPROVED') {
-      await app.prisma.eventPayoutRequest.update({
-        where: { id: payoutReqId },
-        data: { status: 'APPROVED' },
+      const booking = await (app as any).prisma.booking.findUnique({
+        where: { userId_eventId: { userId, eventId } },
       })
-      await releaseFunds(app, eventId, creatorId, amount, eventTitle)
-      await writeAuditLog(app.prisma as any, {
-        action: 'PAYOUT_APPROVED',
-        targetType: 'payoutRequest',
-        targetId: payoutReqId,
+      if (!booking) return reply.code(404).send({ error: 'Réservation non trouvée' })
+      if (booking.status === 'REFUNDED') return reply.code(400).send({ error: 'Réservation remboursée' })
+
+      const newStatus = mode === 'VALIDATE' ? 'VALIDATED' : 'DELEGATED'
+      if (mode === 'DELEGATE' && !delegatedToId) {
+        return reply.code(400).send({ error: 'Le champ delegatedToId est requis pour une délégation' })
+      }
+
+      await (app as any).prisma.booking.update({
+        where: { id: booking.id },
+        data: { poolValidationStatus: newStatus, delegatedToId: mode === 'DELEGATE' ? delegatedToId : null },
+      })
+
+      await writeAuditLog((app as any).prisma, {
+        actorId: userId,
+        actorRole: 'PARTICIPANT',
+        action: mode === 'VALIDATE' ? 'POOL_VALIDATED' : 'POOL_DELEGATED',
+        targetType: 'booking',
+        targetId: booking.id,
         eventId,
-        actorRole: 'SYSTEM',
-        newValue: { yesCount, noCount, totalEligible, threshold },
-        amount,
+        newValue: { poolValidationStatus: newStatus, delegatedToId },
         ipAddress,
       })
-      await createAndSendNotification(app, {
-        userId: creatorId,
-        type: 'SYSTEM',
-        title: '💸 Fonds débloqués',
-        body: `La cagnotte de "${eventTitle}" a été approuvée (${yesCount}/${totalEligible} voix). Les fonds ont été transférés.`,
-        data: { eventId, screen: 'wallet' },
-      })
-      return 'APPROVED'
-    }
 
-    if (result === 'REJECTED') {
-      await app.prisma.eventPayoutRequest.update({
-        where: { id: payoutReqId },
-        data: { status: 'REJECTED', rejectionReason: `Majorité insuffisante: ${yesCount}/${totalEligible} voix (seuil: ${Math.round(threshold * 100)}%)` },
+      return reply.send({ message: `Choix de validation enregistré: ${newStatus}` })
+    }
+  )
+
+  // ─── POST /:id/pool/revoke-delegation ──────────────────────────────────
+  app.post<{ Params: { id: string } }>(
+    '/:id/pool/revoke-delegation',
+    async (request, reply) => {
+      const { sub: userId } = request.user as { sub: string }
+      const eventId = request.params.id
+      const ipAddress = request.ip
+
+      const booking = await (app as any).prisma.booking.findUnique({
+        where: { userId_eventId: { userId, eventId } },
       })
-      await writeAuditLog(app.prisma as any, {
-        action: 'PAYOUT_REJECTED',
-        targetType: 'payoutRequest',
-        targetId: payoutReqId,
+      if (!booking) return reply.code(404).send({ error: 'Réservation non trouvée' })
+      if (booking.poolValidationStatus !== 'DELEGATED' || !booking.delegatedToId) {
+        return reply.code(400).send({ error: 'Aucune délégation à révoquer' })
+      }
+      
+      const oldDelegateId = booking.delegatedToId;
+
+      await (app as any).prisma.booking.update({
+        where: { id: booking.id },
+        data: { poolValidationStatus: 'PENDING', delegatedToId: null },
+      })
+
+      await writeAuditLog((app as any).prisma, {
+        actorId: userId,
+        actorRole: 'PARTICIPANT',
+        action: 'DELEGATION_REVOKED',
+        targetType: 'booking',
+        targetId: booking.id,
         eventId,
-        actorRole: 'SYSTEM',
-        newValue: { yesCount, noCount, totalEligible, threshold },
-        amount,
+        oldValue: { poolValidationStatus: 'DELEGATED', delegatedToId: oldDelegateId },
+        newValue: { poolValidationStatus: 'PENDING', delegatedToId: null },
         ipAddress,
       })
+      
+      const userProfile = await (app as any).prisma.profile.findUnique({ where: { userId } })
+      
       await createAndSendNotification(app, {
-        userId: creatorId,
+        userId: oldDelegateId,
         type: 'SYSTEM',
-        title: '❌ Retrait refusé',
-        body: `Majorité insuffisante pour "${eventTitle}" (${yesCount}/${totalEligible} voix, ${Math.round(threshold * 100)}% requis). Vous pouvez soumettre une nouvelle demande dans 12h.`,
+        title: 'Délégation annulée',
+        body: `${userProfile?.displayName || 'Un participant'} a révoqué sa délégation.`,
         data: { eventId },
       })
-      return 'REJECTED'
-    }
 
-    return 'PENDING'
-  }
+      return reply.send({ message: 'Délégation révoquée avec succès' })
+    }
+  )
+
+  // ─── POST /:id/pool/refund-request ───────────────────────────────────────
+  // Participant requests refund
+  app.post<{ Params: { id: string }; Body: { reason: string } }>(
+    '/:id/pool/refund-request',
+    async (request, reply) => {
+      const { sub: userId } = request.user as { sub: string }
+      const eventId = request.params.id
+      const { reason } = request.body
+      const ipAddress = request.ip
+
+      const booking = await (app as any).prisma.booking.findUnique({
+        where: { userId_eventId: { userId, eventId } },
+        include: { event: true }
+      })
+      if (!booking) return reply.code(404).send({ error: 'Réservation non trouvée' })
+      if (booking.totalPaid <= 0) return reply.code(400).send({ error: 'Aucun montant payé' })
+      if (booking.status === 'REFUNDED') return reply.code(400).send({ error: 'Déjà remboursé' })
+
+      const existingReq = await (app as any).prisma.participantRefundRequest.findFirst({
+        where: { bookingId: booking.id, status: 'PENDING' }
+      })
+      if (existingReq) return reply.code(400).send({ error: 'Une demande est déjà en cours' })
+
+      const refundReq = await (app as any).prisma.participantRefundRequest.create({
+        data: {
+          userId,
+          eventId,
+          bookingId: booking.id,
+          amount: booking.totalPaid,
+          reason,
+        }
+      })
+
+      await writeAuditLog((app as any).prisma, {
+        actorId: userId,
+        actorRole: 'PARTICIPANT',
+        action: 'REFUND_REQUESTED',
+        targetType: 'refundRequest',
+        targetId: refundReq.id,
+        eventId,
+        amount: booking.totalPaid,
+        comment: reason,
+        ipAddress,
+      })
+
+      // Notify organizer
+      await createAndSendNotification(app, {
+        userId: booking.event.creatorId,
+        type: 'SYSTEM',
+        title: 'Demande de désistement',
+        body: `Un participant a demandé le remboursement de sa part (${booking.totalPaid}). Motif: ${reason}`,
+        data: { eventId, refundRequestId: refundReq.id },
+      })
+
+      return reply.send({ data: refundReq, message: 'Demande de remboursement soumise.' })
+    }
+  )
 
   // ─── POST /:id/payout/request ─────────────────────────────────────────────
-  app.post<{ Params: { id: string }; Body: { voteDurationHours?: number } }>(
+  // Organizer requests payout (partial or full)
+  app.post<{ Params: { id: string }; Body: { amount?: number } }>(
     '/:id/payout/request',
     async (request, reply) => {
       const { sub: userId } = request.user as { sub: string }
       const eventId = request.params.id
-      const voteDurationHours = request.body?.voteDurationHours ?? 48
+      const requestedAmount = request.body?.amount
       const ipAddress = request.ip
 
-      const event = await app.prisma.event.findUnique({
+      const event = await (app as any).prisma.event.findUnique({
         where: { id: eventId },
-        include: { payoutRequest: true },
       })
 
       if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
       if (event.creatorId !== userId) return reply.code(403).send({ error: 'Seul le créateur peut demander le déblocage' })
-      const availableAmount = event.poolCollected - (event.poolWithdrawn || 0)
-      if (availableAmount <= 0) return reply.code(400).send({ error: 'Aucun fond disponible à débloquer' })
+      
+      const maxCollected = event.poolCollected - (event.poolWithdrawn || 0)
+      if (maxCollected <= 0) return reply.code(400).send({ error: 'Aucun fond disponible dans la cagnotte globale' })
+      
+      const amountToWithdraw = requestedAmount ? Math.min(requestedAmount, maxCollected) : maxCollected;
 
-      // Sécurité : le déblocage ne peut se faire qu'une fois les inscriptions clôturées
-      const deadline = event.registrationDeadline || event.startAt
-      if (new Date() < new Date(deadline)) {
-        // Tracer la tentative frauduleuse dans le journal d'audit
-        await writeAuditLog(app.prisma as any, {
-          actorId: userId,
-          actorRole: 'ORGANIZER',
-          action: 'PAYOUT_REJECTED',
-          targetType: 'event',
-          targetId: eventId,
-          eventId,
-          comment: 'REJETÉ - DATE LIMITE NON ATTEINTE',
-          newValue: {
-            registrationDeadline: deadline,
-            dateAction: new Date().toISOString(),
-            reason: 'Tentative de déblocage avant la date limite d\'inscription',
-          },
-          ipAddress,
-          userAgent: request.headers['user-agent'],
+      // Close the pool from new entries (late joiners) and apply penalties if enabled
+      if (!event.poolClosedAt) {
+        await (app as any).prisma.event.update({
+          where: { id: eventId },
+          data: { poolClosedAt: new Date() }
         })
-        return reply.code(400).send({ error: 'La cagnotte doit être clôturée (date limite dépassée) avant de demander le déblocage.' })
-      }
 
-      // Prevent re-request if already PENDING/VOTING/APPROVED
-      if (event.payoutRequest && ['PENDING', 'VOTING', 'APPROVED'].includes(event.payoutRequest.status)) {
-        return reply.code(400).send({ error: 'Une demande de déblocage est déjà en cours ou a été approuvée.' })
-      }
+        if (event.enableNonVoterPenalties) {
+          const bookings = await (app as any).prisma.booking.findMany({
+            where: { eventId, status: { not: 'REFUNDED' }, totalPaid: { gt: 0 } },
+            select: { userId: true, poolValidationStatus: true, delegatedToId: true }
+          })
+          
+          const bookingsMap = new Map(bookings.map((b: any) => [b.userId, b]))
+          const penalties: Record<string, number> = {}
 
-      // Cool-down after rejection: 12h minimum
-      if (event.payoutRequest?.status === 'REJECTED' && event.payoutRequest.updatedAt) {
-        const elapsed = Date.now() - new Date(event.payoutRequest.updatedAt).getTime()
-        if (elapsed < 12 * 60 * 60 * 1000) {
-          const remainingMin = Math.ceil((12 * 60 * 60 * 1000 - elapsed) / 60000)
-          return reply.code(429).send({ error: `Retrait refusé récemment. Veuillez attendre encore ${remainingMin} minute(s) avant de soumettre une nouvelle demande.` })
+          for (const b of bookings) {
+            if (b.poolValidationStatus === 'PENDING') {
+              penalties[b.userId] = (penalties[b.userId] || 0) + 1; // 1 point for non-voter
+            } else if (b.poolValidationStatus === 'DELEGATED' && b.delegatedToId) {
+              const delegatee = bookingsMap.get(b.delegatedToId) as any;
+              if (!delegatee || delegatee.poolValidationStatus !== 'VALIDATED') {
+                penalties[b.delegatedToId] = (penalties[b.delegatedToId] || 0) + 1; // +1 point for the negligent validator per blocked person
+              }
+            }
+          }
+
+          // Apply penalties in DB
+          for (const [uid, penaltyScore] of Object.entries(penalties)) {
+             await (app as any).prisma.profile.update({
+               where: { userId: uid },
+               data: { reliabilityScore: { decrement: penaltyScore } }
+             }).catch(() => {}) // Ignore if profile doesn't exist
+          }
         }
       }
 
-      if (event.validatorVoteStatus === 'OPEN') {
-        return reply.code(400).send({ error: 'Le vote des validateurs est toujours en cours. Veuillez le clôturer d\'abord.' })
-      }
+      const { availableAmount } = await calculateAvailablePoolAmount(app, eventId)
+      // On retire ce qui a déjà été retiré du availableAmount global si besoin,
+      // Wait: `availableAmount` is the sum of ALL VALIDATED parts. If I have 50 000 validated, and I already withdrew 20 000, maxAvailableNow is 30 000.
+      const maxAvailableNow = Math.min(availableAmount - event.poolWithdrawn, maxCollected)
 
-      // Build voter snapshot
-      const snapshotVoterIds = await getEligibleVoters(eventId, userId)
-      const needsApproval = snapshotVoterIds.length > 0
-      const expiresAt = needsApproval ? new Date(Date.now() + voteDurationHours * 60 * 60 * 1000) : null
-
-      const newRequest = await app.prisma.eventPayoutRequest.upsert({
-        where: { eventId },
-        create: {
+      if (maxAvailableNow >= amountToWithdraw && amountToWithdraw > 0) {
+        // We can release funds immediately
+        await releaseFunds(app, eventId, userId, amountToWithdraw, event.title)
+        
+        await writeAuditLog((app as any).prisma, {
+          actorId: userId,
+          actorRole: 'ORGANIZER',
+          action: 'PAYOUT_APPROVED',
+          targetType: 'event',
+          targetId: eventId,
           eventId,
-          requestedBy: userId,
-          amount: availableAmount,
-          status: needsApproval ? 'VOTING' : 'APPROVED',
-          approvals: [],
-          rejections: [],
-          snapshotVoterIds,
-          voteDurationHours,
-          threshold: 0.70,
-          expiresAt,
-        },
-        update: {
-          requestedBy: userId,
-          amount: availableAmount,
-          status: needsApproval ? 'VOTING' : 'APPROVED',
-          approvals: [],
-          rejections: [],
-          snapshotVoterIds,
-          voteDurationHours,
-          threshold: 0.70,
-          expiresAt,
-          updatedAt: new Date(),
-        },
-      })
+          amount: amountToWithdraw,
+          ipAddress,
+        })
+        
+        return reply.send({ message: `Fonds débloqués avec succès: ${amountToWithdraw}` })
+      } else {
+        // Insufficient unlocked funds, notify pending users
+        const pendingBookings = await (app as any).prisma.booking.findMany({
+          where: { eventId, poolValidationStatus: 'PENDING', totalPaid: { gt: 0 } },
+          select: { userId: true }
+        })
 
-      await writeAuditLog(app.prisma as any, {
-        actorId: userId,
-        actorRole: 'ORGANIZER',
-        action: 'PAYOUT_REQUEST',
-        targetType: 'payoutRequest',
-        targetId: newRequest.id,
-        eventId,
-        amount: availableAmount,
-        newValue: { snapshotVoterIds, voteDurationHours, expiresAt },
-        ipAddress,
-        userAgent: request.headers['user-agent'],
-      })
+        const pendingUserIds = pendingBookings.map((b: any) => b.userId)
+        if (pendingUserIds.length > 0) {
+          await createAndSendNotificationMany(app, pendingUserIds.map((voterId: string) => ({
+            userId: voterId,
+            type: 'SYSTEM',
+            title: 'Action requise : Budget',
+            body: `L'organisateur de "${event.title}" a besoin de votre validation pour utiliser les fonds. Veuillez valider votre part ou la déléguer.`,
+            data: { eventId, screen: 'pool-validation' },
+          })))
+        }
 
-      // No approval required — release funds immediately
-      if (!needsApproval) {
-        await releaseFunds(app, eventId, userId, availableAmount, event.title)
-        return reply.send({ data: { ...newRequest, status: 'APPROVED' }, message: 'Fonds débloqués avec succès (aucun validateur requis)' })
+        return reply.code(400).send({ 
+          error: 'Fonds débloqués insuffisants.', 
+          details: { 
+            requested: amountToWithdraw, 
+            unlocked: Math.max(0, maxAvailableNow),
+            notifiedCount: pendingUserIds.length
+          } 
+        })
       }
-
-      // Notify eligible voters
-      await createAndSendNotificationMany(app, snapshotVoterIds.map(voterId => ({
-        userId: voterId,
-        type: 'SYSTEM' as const,
-        title: '🗳️ Vote requis',
-        body: `L'organisateur de "${event.title}" demande le déblocage de la cagnotte. Votre vote est requis (expire dans ${voteDurationHours}h).`,
-        data: { eventId, screen: 'payout-vote', payoutRequestId: newRequest.id },
-      })))
-
-      return reply.send({
-        data: newRequest,
-        message: `Demande envoyée. ${snapshotVoterIds.length} votant(s) notifié(s). Vote expire dans ${voteDurationHours}h.`,
-      })
     }
   )
-
-  // ─── POST /:id/payout/vote ─────────────────────────────────────────────────
-  // Vote OUI ou NON — Pas d'abstention
-  app.post<{ Params: { id: string }; Body: { vote: 'YES' | 'NO' } }>(
-    '/:id/payout/vote',
-    async (request, reply) => {
-      const { sub: userId } = request.user as { sub: string }
-      const eventId = request.params.id
-      const { vote } = request.body
-      const ipAddress = request.ip
-
-      if (!['YES', 'NO'].includes(vote)) {
-        return reply.code(400).send({ error: 'Vote invalide. Choisissez YES ou NO.' })
-      }
-
-      const event = await app.prisma.event.findUnique({
-        where: { id: eventId },
-        include: { payoutRequest: true },
-      })
-      if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
-
-      // Sécurité : impossible de voter si la date limite n'est pas atteinte (sécurité en profondeur)
-      const voteDeadline = event.registrationDeadline || event.startAt
-      if (new Date() < new Date(voteDeadline)) {
-        return reply.code(403).send({ error: 'Le vote ne peut être exprimé qu\'après la date limite d\'inscription à la cagnotte.' })
-      }
-
-      const payoutReq = event.payoutRequest
-      if (!payoutReq) return reply.code(404).send({ error: 'Aucune demande de déblocage active' })
-      if (!['VOTING', 'PENDING'].includes(payoutReq.status)) {
-        return reply.code(400).send({ error: `Vote impossible, la demande est en statut: ${payoutReq.status}` })
-      }
-
-      // Check expiration
-      if (payoutReq.expiresAt && new Date() > new Date(payoutReq.expiresAt)) {
-        // Settle expired vote
-        await settleExpiredVote(app, eventId, payoutReq, event.creatorId, event.title, ipAddress)
-        return reply.code(400).send({ error: 'Le délai de vote est expiré. La demande a été clôturée automatiquement.' })
-      }
-
-      // Check eligibility (must be in snapshot)
-      if (!payoutReq.snapshotVoterIds.includes(userId)) {
-        return reply.code(403).send({ error: 'Vous n\'êtes pas éligible pour voter sur cette demande.' })
-      }
-
-      // Vote cannot be changed once cast
-      const hasVotedYes = payoutReq.approvals.includes(userId)
-      const hasVotedNo = payoutReq.rejections.includes(userId)
-      if (hasVotedYes || hasVotedNo) {
-        return reply.code(400).send({ error: 'Vous avez déjà voté. Un vote exprimé ne peut pas être modifié.' })
-      }
-
-      // Record vote
-      const newApprovals = vote === 'YES' ? [...payoutReq.approvals, userId] : payoutReq.approvals
-      const newRejections = vote === 'NO' ? [...payoutReq.rejections, userId] : payoutReq.rejections
-
-      await app.prisma.eventPayoutRequest.update({
-        where: { id: payoutReq.id },
-        data: { approvals: newApprovals, rejections: newRejections },
-      })
-
-      // Audit log
-      await writeAuditLog(app.prisma as any, {
-        actorId: userId,
-        actorRole: 'VALIDATOR',
-        action: vote === 'YES' ? 'VOTE_YES' : 'VOTE_NO',
-        targetType: 'payoutRequest',
-        targetId: payoutReq.id,
-        eventId,
-        newValue: { vote, yesCount: newApprovals.length, noCount: newRejections.length, totalEligible: payoutReq.snapshotVoterIds.length },
-        ipAddress,
-        userAgent: request.headers['user-agent'],
-      })
-
-      // Check if all eligible voters have voted
-      const allVoted = payoutReq.snapshotVoterIds.every(
-        id => newApprovals.includes(id) || newRejections.includes(id)
-      )
-
-      let finalStatus = 'VOTING'
-      if (allVoted) {
-        finalStatus = await trySettleVote(
-          eventId, payoutReq.id, newApprovals, newRejections,
-          payoutReq.snapshotVoterIds, payoutReq.threshold,
-          event.title, event.creatorId, payoutReq.amount, ipAddress
-        )
-      }
-
-      const yesCount = newApprovals.length
-      const noCount = newRejections.length
-      const totalEligible = payoutReq.snapshotVoterIds.length
-      const pct = Math.round((yesCount / totalEligible) * 100)
-
-      return reply.send({
-        data: { status: finalStatus, yesCount, noCount, totalEligible, pct, threshold: Math.round(payoutReq.threshold * 100) },
-        message: `Vote enregistré. ${yesCount}/${totalEligible} pour (${pct}%), ${noCount} contre. Seuil requis: ${Math.round(payoutReq.threshold * 100)}%.`,
-      })
-    }
-  )
-
-  // ─── POST /:id/payout/approve (backward-compat alias → vote YES) ──────────
-  app.post<{ Params: { id: string } }>('/:id/payout/approve', async (request, reply) => {
-    // Redirect to the new vote endpoint internally
-    ;(request as any).body = { vote: 'YES' }
-    return reply.redirect(307, `/${request.params.id}/payout/vote`)
-  })
-
-  // ─── POST /:id/payout/reject (backward-compat alias → vote NO) ───────────
-  app.post<{ Params: { id: string }; Body: { reason?: string } }>('/:id/payout/reject', async (request, reply) => {
-    const { sub: userId } = request.user as { sub: string }
-    const eventId = request.params.id
-    const { reason } = request.body || {}
-    const ipAddress = request.ip
-
-    const event = await app.prisma.event.findUnique({
-      where: { id: eventId },
-      include: { payoutRequest: true },
-    })
-    if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
-
-    const payoutReq = event.payoutRequest
-    if (!payoutReq) return reply.code(404).send({ error: 'Aucune demande de déblocage trouvée' })
-    if (!['VOTING', 'PENDING'].includes(payoutReq.status)) {
-      return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
-    }
-    if (!payoutReq.snapshotVoterIds.includes(userId)) {
-      return reply.code(403).send({ error: 'Vous n\'êtes pas éligible pour voter.' })
-    }
-    if (payoutReq.approvals.includes(userId) || payoutReq.rejections.includes(userId)) {
-      return reply.code(400).send({ error: 'Vous avez déjà voté. Un vote exprimé ne peut pas être modifié.' })
-    }
-
-    const newRejections = [...payoutReq.rejections, userId]
-    await app.prisma.eventPayoutRequest.update({
-      where: { id: payoutReq.id },
-      data: { rejections: newRejections, rejectionReason: reason },
-    })
-
-    await writeAuditLog(app.prisma as any, {
-      actorId: userId,
-      actorRole: 'VALIDATOR',
-      action: 'VOTE_NO',
-      targetType: 'payoutRequest',
-      targetId: payoutReq.id,
-      eventId,
-      comment: reason,
-      newValue: { noCount: newRejections.length, totalEligible: payoutReq.snapshotVoterIds.length },
-      ipAddress,
-      userAgent: request.headers['user-agent'],
-    })
-
-    // Check if all voted
-    const allVoted = payoutReq.snapshotVoterIds.every(
-      id => payoutReq.approvals.includes(id) || newRejections.includes(id)
-    )
-    if (allVoted) {
-      await trySettleVote(
-        eventId, payoutReq.id, payoutReq.approvals, newRejections,
-        payoutReq.snapshotVoterIds, payoutReq.threshold,
-        event.title, event.creatorId, payoutReq.amount, ipAddress
-      )
-    }
-
-    const user = await app.prisma.user.findUnique({ where: { id: userId }, include: { profile: true } })
-    await createAndSendNotification(app, {
-      userId: event.creatorId,
-      type: 'SYSTEM',
-      title: '❌ Vote contre reçu',
-      body: `${user?.profile?.displayName || 'Un votant'} a voté CONTRE le déblocage pour "${event.title}".${reason ? ` Motif: ${reason}` : ''}`,
-      data: { eventId },
-    })
-
-    return reply.send({ message: 'Vote contre enregistré.' })
-  })
 
   // ─── GET /:id/payout/status ───────────────────────────────────────────────
   app.get<{ Params: { id: string } }>('/:id/payout/status', async (request, reply) => {
-    const { sub: userId } = request.user as { sub: string }
     const eventId = request.params.id
-
-    const payoutReq = await app.prisma.eventPayoutRequest.findUnique({ where: { eventId } })
-    if (!payoutReq) return reply.send({ data: null })
-
-    // Auto-settle if expired
-    if (payoutReq.expiresAt && new Date() > new Date(payoutReq.expiresAt) && ['VOTING', 'PENDING'].includes(payoutReq.status)) {
-      const event = await app.prisma.event.findUnique({ where: { id: eventId } })
-      if (event) {
-        await settleExpiredVote(app, eventId, payoutReq, event.creatorId, event.title)
-        const updated = await app.prisma.eventPayoutRequest.findUnique({ where: { eventId } })
-        return reply.send({ data: buildVoteStats(updated!, userId) })
-      }
-    }
-
-    return reply.send({ data: buildVoteStats(payoutReq, userId) })
+    const stats = await calculateAvailablePoolAmount(app, eventId)
+    const event = await (app as any).prisma.event.findUnique({ where: { id: eventId } })
+    
+    return reply.send({ 
+      data: {
+        totalCollected: event?.poolCollected || 0,
+        totalWithdrawn: event?.poolWithdrawn || 0,
+        unlockedAmount: stats.availableAmount,
+        pendingCount: stats.pendingCount,
+        poolClosedAt: event?.poolClosedAt
+      } 
+    })
   })
 
   // ─── GET /:id/payout/audit ────────────────────────────────────────────────
   app.get<{ Params: { id: string } }>('/:id/payout/audit', async (request, reply) => {
     const eventId = request.params.id
-    const logs = await (app.prisma as any).auditLog.findMany({
+    const logs = await (app as any).prisma.auditLog.findMany({
       where: { eventId },
       orderBy: { createdAt: 'desc' },
       take: 100,
     })
     return reply.send({ data: logs })
   })
-}
-
-// ─── HELPER: Build vote statistics response ──────────────────────────────────
-function buildVoteStats(payoutReq: any, currentUserId: string) {
-  const yesCount = payoutReq.approvals?.length ?? 0
-  const noCount = payoutReq.rejections?.length ?? 0
-  const totalEligible = payoutReq.snapshotVoterIds?.length ?? 0
-  const votedCount = yesCount + noCount
-  const pendingCount = totalEligible - votedCount
-  const pct = totalEligible > 0 ? Math.round((yesCount / totalEligible) * 100) : 0
-  const thresholdPct = Math.round((payoutReq.threshold ?? 0.70) * 100)
-
-  const hasVoted = payoutReq.approvals?.includes(currentUserId) || payoutReq.rejections?.includes(currentUserId)
-  const myVote = payoutReq.approvals?.includes(currentUserId) ? 'YES' : payoutReq.rejections?.includes(currentUserId) ? 'NO' : null
-
-  const expiresAt = payoutReq.expiresAt
-  const msRemaining = expiresAt ? Math.max(0, new Date(expiresAt).getTime() - Date.now()) : null
-  const hoursRemaining = msRemaining !== null ? Math.floor(msRemaining / 3600000) : null
-
-  return {
-    ...payoutReq,
-    voteStats: {
-      yesCount,
-      noCount,
-      pendingCount,
-      totalEligible,
-      votedCount,
-      pct,
-      thresholdPct,
-      hoursRemaining,
-      hasVoted,
-      myVote,
-    },
-  }
-}
-
-// ─── HELPER: Settle expired vote ─────────────────────────────────────────────
-async function settleExpiredVote(
-  app: FastifyInstance,
-  eventId: string,
-  payoutReq: any,
-  creatorId: string,
-  eventTitle: string,
-  ipAddress?: string
-) {
-  const { approvals, rejections, snapshotVoterIds, threshold, id: payoutReqId, amount } = payoutReq
-  const yesCount = approvals?.length ?? 0
-  const noCount = rejections?.length ?? 0
-  const totalEligible = snapshotVoterIds?.length ?? 1
-
-  const result = resolveVoteResult(yesCount, noCount, totalEligible, threshold ?? 0.70)
-
-  const finalStatus = result === 'APPROVED' ? 'APPROVED' : result === 'EXPIRED' ? 'EXPIRED' : 'REJECTED'
-
-  await app.prisma.eventPayoutRequest.update({
-    where: { id: payoutReqId },
-    data: {
-      status: finalStatus,
-      rejectionReason: finalStatus === 'REJECTED'
-        ? `Majorité insuffisante à expiration: ${yesCount}/${totalEligible} voix`
-        : finalStatus === 'EXPIRED'
-        ? 'Aucun vote reçu à expiration'
-        : undefined,
-    },
-  })
-
-  await writeAuditLog(app.prisma as any, {
-    actorRole: 'SYSTEM',
-    action: finalStatus === 'APPROVED' ? 'PAYOUT_APPROVED' : 'PAYOUT_EXPIRED',
-    targetType: 'payoutRequest',
-    targetId: payoutReqId,
-    eventId,
-    newValue: { finalStatus, yesCount, noCount, totalEligible, reason: 'EXPIRATION' },
-    amount,
-    ipAddress,
-  })
-
-  if (finalStatus === 'APPROVED') {
-    await releaseFunds(app, eventId, creatorId, amount, eventTitle)
-    await createAndSendNotification(app, {
-      userId: creatorId,
-      type: 'SYSTEM',
-      title: '💸 Fonds débloqués (vote expiré)',
-      body: `Le vote pour "${eventTitle}" a expiré. Avec ${yesCount}/${totalEligible} voix pour, les fonds ont été débloqués.`,
-      data: { eventId, screen: 'wallet' },
-    })
-  } else if (finalStatus === 'EXPIRED') {
-    await createAndSendNotification(app, {
-      userId: creatorId,
-      type: 'SYSTEM',
-      title: '⏳ Aucun vote reçu',
-      body: `Le vote pour "${eventTitle}" a expiré sans aucune participation. La demande a été annulée. Vous pouvez en soumettre une nouvelle.`,
-      data: { eventId },
-    })
-  } else {
-    await createAndSendNotification(app, {
-      userId: creatorId,
-      type: 'SYSTEM',
-      title: '❌ Retrait refusé (expiration)',
-      body: `Majorité insuffisante pour "${eventTitle}" à expiration du vote (${yesCount}/${totalEligible} voix). Vous pouvez soumettre une nouvelle demande dans 12h.`,
-      data: { eventId },
-    })
-  }
 }
 
 // ─── HELPER: Release funds with commission tracking ───────────────────────────
@@ -563,12 +309,11 @@ export async function releaseFunds(
   amount: number,
   eventTitle: string
 ) {
-  // Commission: amounts in integers (XOF, no decimals needed)
   const commissionRate = 0.10
   const commissionAmount = Math.round(amount * commissionRate)
   const netAmount = amount - commissionAmount
 
-  await app.prisma.$transaction(async (tx) => {
+  await (app as any).prisma.$transaction(async (tx: any) => {
     // 1. Mark event pool as released and track withdrawn amount
     await tx.event.update({
       where: { id: eventId },
@@ -593,7 +338,7 @@ export async function releaseFunds(
       },
     })
 
-    // 3. Credit platform/system wallet (commission tracking — Audit 5)
+    // 3. Credit platform/system wallet (commission tracking)
     const systemWallet = await tx.wallet.upsert({
       where: { userId: SYSTEM_WALLET_USER_ID },
       create: { userId: SYSTEM_WALLET_USER_ID, balance: commissionAmount, currency: 'XOF' },
@@ -610,16 +355,5 @@ export async function releaseFunds(
         refId: eventId,
       },
     })
-  })
-
-  // Audit log for fund release
-  await writeAuditLog(app.prisma as any, {
-    actorRole: 'SYSTEM',
-    action: 'FUND_RELEASED',
-    targetType: 'event',
-    targetId: eventId,
-    eventId,
-    amount: netAmount,
-    newValue: { grossAmount: amount, commission: commissionAmount, netAmount, creatorId },
   })
 }

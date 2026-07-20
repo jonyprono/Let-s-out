@@ -49,6 +49,7 @@ model User {
   reviews          Review[]
   wallet           Wallet?
   validatorVotes   ValidatorVote[]      @relation("UserValidatorVotes")
+  refundRequests   ParticipantRefundRequest[]
 
   @@map("users")
 }
@@ -87,6 +88,7 @@ model Profile {
   kycRejectedReason String?
   kycSubmittedAt    DateTime?
   kycReviewedAt     DateTime?
+  reliabilityScore  Int       @default(100)
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
@@ -178,6 +180,9 @@ model Event {
   poolCollected    Float         @default(0)
   poolWithdrawn    Float         @default(0)
   poolReleased     Boolean       @default(false)
+  isBudgetAnnounced Boolean      @default(false)
+  enableNonVoterPenalties Boolean @default(false)
+  poolClosedAt     DateTime?
   coHostIds        String[]      @default([])
   validatorVoteStatus String?    // null | 'OPEN' | 'CLOSED'
   validatorCandidates String[]   @default([])
@@ -189,6 +194,7 @@ model Event {
   reviews          Review[]
   payoutRequest    EventPayoutRequest?
   validatorVotes   ValidatorVote[]
+  refundRequests   ParticipantRefundRequest[]
 
   @@index([creatorId])
   @@index([status])
@@ -207,16 +213,40 @@ model Booking {
   quantity  Int           @default(1)
   totalPaid Float         @default(0)
   notes     String?
+  poolValidationStatus PoolValidationStatus @default(PENDING)
+  delegatedToId        String?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   event     Event         @relation(fields: [eventId], references: [id])
   user      User          @relation(fields: [userId], references: [id])
   payment   Payment?
+  refundRequests ParticipantRefundRequest[]
 
   @@unique([userId, eventId])
   @@index([userId])
   @@index([eventId])
   @@map("bookings")
+}
+
+model ParticipantRefundRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  eventId     String
+  bookingId   String
+  amount      Float
+  reason      String
+  status      RefundRequestStatus @default(PENDING)
+  reviewedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+  event       Event    @relation(fields: [eventId], references: [id])
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+
+  @@index([eventId])
+  @@index([userId])
+  @@map("participant_refund_requests")
 }
 
 model ValidatorVote {
@@ -477,6 +507,18 @@ enum UserRole {
   USER
   ORGANIZER
   ADMIN
+}
+
+enum PoolValidationStatus {
+  PENDING
+  VALIDATED
+  DELEGATED
+}
+
+enum RefundRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum AuthProvider {

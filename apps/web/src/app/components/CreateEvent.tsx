@@ -251,6 +251,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [enablePool, setEnablePool] = useState(sessionDraft?.enablePool ?? false)
   const [poolDescription, setPoolDescription] = useState(sessionDraft?.poolDescription ?? '')
   const [poolTarget, setPoolTarget] = useState(sessionDraft?.poolTarget ?? '')
+  const [enableNonVoterPenalties, setEnableNonVoterPenalties] = useState(sessionDraft?.enableNonVoterPenalties ?? false)
   const [poolMinAmount, setPoolMinAmount] = useState(sessionDraft?.poolMinAmount ?? '')
 
   useEffect(() => {
@@ -259,14 +260,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       regEndDate, regEndTime,
       address, city, lat, lon, privacy, allowGuestInvites, description,
       participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
-      enablePool, poolDescription, poolTarget, poolMinAmount
+      enablePool, poolDescription, poolTarget, poolMinAmount, enableNonVoterPenalties
     }
   }, [
     title, category, startDate, startTime, hasEndDate, endDate, endTime,
     regEndDate, regEndTime,
     address, city, lat, lon, privacy, allowGuestInvites, description,
     participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
-    enablePool, poolDescription, poolTarget, poolMinAmount
+    enablePool, poolDescription, poolTarget, poolMinAmount, enableNonVoterPenalties
   ])
 
   const fileRef = useRef<HTMLInputElement>(null)
@@ -354,6 +355,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (d.isPrivate !== undefined) setPrivacy(d.isPrivate ? 'PRIVATE' : 'PUBLIC')
       if (d.description) setDescription(d.description)
       if (d.coverUrl) setCoverPreview(d.coverUrl)
+            if (d.enableNonVoterPenalties !== undefined) setEnableNonVoterPenalties(d.enableNonVoterPenalties)
       if (d.poolTarget !== undefined && d.poolTarget !== null) {
         setEnablePool(true)
         setParticipationMode('cagnotte')
@@ -1055,6 +1057,25 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       rows={4}
                       className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
                     />
+                  </div>
+
+                  {/* Pénalités d'abstention */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between p-4 border border-[var(--border-default)] rounded-[12px] bg-[var(--color-background-primary)]">
+                      <div>
+                        <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1">Activer les pénalités pour les abstentionnistes</p>
+                        <p className="text-[11px] text-[var(--color-text-muted)] leading-snug">Si un participant ne valide ni ne délègue à la fin du délai, sa part sera débloquée automatiquement.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={enableNonVoterPenalties}
+                          onChange={(e) => setEnableNonVoterPenalties(e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#FF7A00]"></div>
+                      </label>
+                    </div>
                   </div>
 
                   {/* Participation minimale */}

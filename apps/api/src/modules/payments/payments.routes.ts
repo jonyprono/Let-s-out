@@ -6,7 +6,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
   // Initier une transaction FedaPay
   app.post('/fedapay/initiate', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { eventId, amount: customAmount } = req.body as { eventId: string; amount?: number }
+    const { eventId, amount: customAmount, poolValidationStatus, delegatedToId } = req.body as { eventId: string; amount?: number; poolValidationStatus?: string; delegatedToId?: string }
 
     const event = await app.prisma.event.findUnique({
       where: { id: eventId },
@@ -41,6 +41,20 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     const isPoolContributionRequest = customAmount !== undefined && event.poolTarget && event.poolTarget > 0
     if (!isPoolContributionRequest && event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
       return reply.code(400).send({ error: 'Événement complet' })
+    }
+    
+    const eventDetails = await app.prisma.event.findUnique({ where: { id: eventId } })
+    if (eventDetails?.poolClosedAt) {
+      return reply.code(403).send({ error: 'La cagnotte de cet événement est fermée (décaissement en cours).' })
+    }
+    if (isPoolContributionRequest && eventDetails?.startAt) {
+      const hoursToEvent = (new Date(eventDetails.startAt).getTime() - Date.now()) / (1000 * 60 * 60);
+      if (hoursToEvent < 48 && hoursToEvent > -24 * 365) { // Ensure we don't block extremely old events if testing
+        return reply.code(403).send({ error: 'Les contributions à la cagnotte sont fermées 48h avant l\'événement.' })
+      }
+    }
+    if (eventDetails?.isBudgetAnnounced && isPoolContributionRequest && !poolValidationStatus) {
+      return reply.code(400).send({ error: 'Vous devez choisir un mode de validation pour cette cagnotte (Validation ou Délégation).' })
     }
 
     const user = await app.prisma.user.findUnique({
@@ -85,7 +99,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
           email: user.email || `${user.id}@letsout.app`,
           ...(user.phone ? { phone_number: { number: user.phone.replace(/^\+229/, ''), country: 'BJ' } } : {}),
         },
-        metadata: JSON.stringify({ eventId, userId: sub }),
+        metadata: JSON.stringify({ eventId, userId: sub, poolValidationStatus, delegatedToId }),
       }),
     })
     const txData = (await txRes.json()) as any
@@ -157,21 +171,21 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     const { transaction } = body
     if (transaction?.status !== 'approved') return reply.send({ received: true })
 
-    let meta: { eventId?: string; userId?: string } = {}
+    let meta: { eventId?: string; userId?: string; poolValidationStatus?: string; delegatedToId?: string } = {}
     try {
       // FedaPay sandbox may nest metadata differently
       const rawMeta = transaction.metadata || transaction.custom_metadata || {}
       meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
     } catch {}
 
-    const { eventId, userId } = meta
+    const { eventId, userId, poolValidationStatus, delegatedToId } = meta
     if (!eventId || !userId) {
       app.log.warn({ meta }, '[FedaPay webhook] Missing eventId or userId in metadata')
       return reply.send({ received: true })
     }
 
     try {
-      await handleConfirmedBooking(app, { eventId, userId, amount: transaction.amount })
+      await handleConfirmedBooking(app, { eventId, userId, amount: transaction.amount, poolValidationStatus, delegatedToId })
     } catch (e) { app.log.error(e) }
 
     return reply.send({ received: true })
@@ -212,7 +226,12 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       })
       
       if (missedTx) {
-        await handleConfirmedBooking(app, { eventId, userId: sub, amount: missedTx.amount })
+        let meta: any = {}
+        try {
+          const rawMeta = missedTx.metadata || missedTx.custom_metadata || {}
+          meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
+        } catch {}
+        await handleConfirmedBooking(app, { eventId, userId: sub, amount: missedTx.amount, poolValidationStatus: meta.poolValidationStatus, delegatedToId: meta.delegatedToId })
         return reply.send({ success: true, message: 'Paiement synchronisé' })
       }
       return reply.code(404).send({ error: 'Aucune transaction approuvée trouvée' })
@@ -228,7 +247,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     // Block in production UNLESS using sandbox keys (testing mode)
     if (process.env.NODE_ENV === 'production' && !isSandboxKey && process.env.MOCK_PAYMENTS !== 'true') return reply.code(404).send()
     const { sub } = req.user as { sub: string }
-    const { eventId, amount: customAmount } = req.body as { eventId: string; amount?: number }
+    const { eventId, amount: customAmount, poolValidationStatus, delegatedToId } = req.body as { eventId: string; amount?: number; poolValidationStatus?: string; delegatedToId?: string }
 
     const event = await app.prisma.event.findUnique({
       where: { id: eventId },
@@ -256,7 +275,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     // We now await this since the frontend has a 30s timeout for this fallback route.
     // This ensures DB is fully updated before replying 200, so subsequent queries (my-booking, chat) succeed.
     try {
-      await handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount })
+      await handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount, poolValidationStatus, delegatedToId })
       reply.send({ message: 'Booking confirmed (sandbox/dev)', eventId })
     } catch (e) {
       app.log.error({ err: e }, '[dev/confirm-booking] Error in handleConfirmedBooking')
@@ -299,7 +318,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 // ── Shared helper: finalize a confirmed booking ──────────────────────────────
 async function handleConfirmedBooking(
   app: FastifyInstance,
-  { eventId, userId, amount }: { eventId: string; userId: string; amount: number },
+  { eventId, userId, amount, poolValidationStatus, delegatedToId }: { eventId: string; userId: string; amount: number; poolValidationStatus?: string; delegatedToId?: string },
 ) {
   const existingBooking = await app.prisma.booking.findUnique({
     where: { userId_eventId: { userId, eventId } },
@@ -312,11 +331,22 @@ async function handleConfirmedBooking(
   })
   const isPoolContribution = !!(eventForPool?.poolTarget && eventForPool.poolTarget > 0)
 
+  const finalPoolStatus = poolValidationStatus ? poolValidationStatus : (existingBooking?.poolValidationStatus || 'PENDING')
+  const finalDelegatedToId = delegatedToId ? delegatedToId : existingBooking?.delegatedToId
+
   const [booking] = await app.prisma.$transaction([
     app.prisma.booking.upsert({
       where: { userId_eventId: { userId, eventId } },
-      create: { userId, eventId, status: 'CONFIRMED', totalPaid: amount },
-      update: { status: 'CONFIRMED', totalPaid: { increment: amount } },
+      create: { 
+        userId, eventId, status: 'CONFIRMED', totalPaid: amount,
+        poolValidationStatus: finalPoolStatus as any,
+        delegatedToId: finalDelegatedToId || null
+      },
+      update: { 
+        status: 'CONFIRMED', totalPaid: { increment: amount },
+        poolValidationStatus: finalPoolStatus as any,
+        delegatedToId: finalDelegatedToId || null
+      },
     }),
     ...(isNewParticipant
       ? [app.prisma.event.update({ where: { id: eventId }, data: { currentAttendees: { increment: 1 } } })]

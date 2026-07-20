@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import {
   MapPin,
@@ -11,7 +11,8 @@ import {
   X,
   Briefcase,
   Users,
-  Navigation
+  Navigation,
+  Shield
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -100,6 +101,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [showReleaseModal, setShowReleaseModal] = useState(false)
   const [showPoolManagementModal, setShowPoolManagementModal] = useState(false)
+  const [showRefundModal, setShowRefundModal] = useState(false)
+  const [refundReason, setRefundReason] = useState('')
 
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const favorite = isFavorite(id || '')
@@ -195,6 +198,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         toast.error(err?.response?.data?.message || "Impossible de rejoindre l'événement.")
       }
     },
+  })
+
+  const refundMutation = useMutation({
+    mutationFn: (reason: string) => eventsApi.requestRefund(id!, reason),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['events', id] })
+      qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
+      setShowRefundModal(false)
+      toast.success('Demande de remboursement envoyée.')
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error || "Erreur lors de la demande de remboursement.")
+    }
   })
 
   const releasePoolMutation = useMutation({
@@ -389,6 +405,23 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const displayedAttendees = attendeesData?.data?.slice(0, 4) || []
   const extraCount = Math.max(0, attendeeCount - 4)
+
+  const delegationsMap = useMemo(() => {
+    const map: Record<string, any[]> = {}
+    const list = Array.isArray(attendeesData) ? attendeesData : (attendeesData?.data || [])
+    list.forEach((b: any) => {
+      if (b.delegatedToId && b.poolValidationStatus === 'DELEGATED') {
+        if (!map[b.delegatedToId]) map[b.delegatedToId] = []
+        map[b.delegatedToId].push(b)
+      }
+    })
+    return map
+  }, [attendeesData])
+
+  const myDelegatedBookings = delegationsMap[user?.id || ''] || []
+  
+  const myBooking = Array.isArray(attendeesData) ? attendeesData.find((b: any) => b.userId === user?.id) : attendeesData?.data?.find((b: any) => b.userId === user?.id);
+  const isNegligentValidator = myDelegatedBookings.length > 0 && myBooking?.poolValidationStatus === 'PENDING' && event?.poolClosedAt;
 
   return (
     <>
@@ -691,6 +724,15 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       {isPastDeadline ? 'Date limite dépassée' : 'Contribuer à nouveau'}
                     </button>
                   )}
+
+                  {hasJoined && participationPaid && event.poolTarget > 0 && !isCreator && (
+                    <button
+                      onClick={() => setShowRefundModal(true)}
+                      className={`w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/10 text-[14px] font-medium text-red-600 dark:text-red-400 mt-[8px] active:scale-95 transition-transform`}
+                    >
+                      Demander un remboursement
+                    </button>
+                  )}
                 </div>
               ) : (
                 /* ── STANDARD PARTICIPATION BLOCK ── */
@@ -703,18 +745,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               )}
             </div>
 
-            {/* Payout Approval Banner for Validators and Co-hosts */}
-            {event && !!user && user.id !== event.creatorId && (event.validatorIds?.includes(user.id) || event.coHostIds?.includes(user.id)) && event.payoutRequest?.status === 'PENDING' && !event.payoutRequest.approvals.includes(user.id) && (
+            {/* Payout Approval Banner for Participants */}
+            {event && !!user && user.id !== event.creatorId && event.poolClosedAt && myBooking?.poolValidationStatus === 'PENDING' && !isNegligentValidator && (
               <div className="mt-4 p-4 rounded-xl border border-[#10B981] bg-[#F0FDF4] dark:bg-[#10B981]/10 dark:border-[#10B981]/30">
-                <h3 className="text-[15px] font-bold text-[#047857] dark:text-[#34D399] mb-1">Approbation requise</h3>
+                <h3 className="text-[15px] font-bold text-[#047857] dark:text-[#34D399] mb-1">Validation requise</h3>
                 <p className="text-[13px] text-[#065F46] dark:text-[#A7F3D0] mb-3 leading-tight">
-                  L'organisateur a demandé le déblocage des fonds. Veuillez approuver la demande pour autoriser le transfert.
+                  L'organisateur a demandé le déblocage des fonds. Veuillez valider votre part ou la déléguer pour autoriser le transfert.
                 </p>
                 <button
-                  onClick={() => navigate(`/events/${event.id}/approve-payout`)}
+                  onClick={() => navigate(`/events/${event.id}/pool-validation`)}
                   className="w-full flex items-center justify-center py-[10px] bg-[#10B981] text-white text-[14px] font-bold rounded-[8px] active:scale-95 transition-transform"
                 >
-                  Examiner la demande de déblocage
+                  Valider ma part
                 </button>
               </div>
             )}
@@ -844,6 +886,38 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         </div>
       )}
 
+      {/* Refund Modal */}
+      {showRefundModal && (
+        <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
+          <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[20px] shadow-2xl p-5 pb-[calc(1rem+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom duration-300">
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">Demander un remboursement</h3>
+            <p className="text-[14px] text-gray-500 mb-4">Veuillez indiquer la raison de votre désistement. Votre demande sera soumise à l'organisateur.</p>
+            <textarea
+              className="w-full h-24 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#222] text-[14px] mb-4 focus:outline-none focus:border-red-500"
+              placeholder="Raison du remboursement..."
+              value={refundReason}
+              onChange={(e) => setRefundReason(e.target.value)}
+            />
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 rounded-full h-12"
+                onClick={() => { setShowRefundModal(false); setRefundReason(''); }}
+              >
+                Annuler
+              </Button>
+              <Button
+                className="flex-1 rounded-full h-12 bg-red-500 hover:bg-red-600 text-white"
+                disabled={!refundReason.trim() || refundMutation.isPending}
+                onClick={() => refundMutation.mutate(refundReason)}
+              >
+                {refundMutation.isPending ? 'Envoi...' : 'Confirmer'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Release Pool Modal */}
       {showReleaseModal && event && (
         <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
@@ -895,32 +969,60 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     const name = booking?.user?.profile?.displayName || '?'
                     const isVerified = booking?.user?.profile?.isVerified
                     return (
-                      <button
-                        key={booking.id}
-                        className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 dark:bg-[#222222] transition-colors text-left"
-                        onClick={() => openUserProfile(
-                          booking.user.id, 
-                          { displayName: name, avatarUrl: avatar },
-                          { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
-                        )}
-                      >
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
-                          <SafeImage
-                            src={avatar}
-                            alt={name}
-                            className="w-full h-full object-cover"
-                            fallback={
-                              <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white font-bold text-[14px]">
-                                {name.charAt(0).toUpperCase()}
+                      <div key={booking.id} className="flex flex-col border-b border-gray-100 dark:border-gray-800 last:border-0">
+                        <button
+                          className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 dark:bg-[#222222] transition-colors text-left"
+                          onClick={() => openUserProfile(
+                            booking.user.id, 
+                            { displayName: name, avatarUrl: avatar },
+                            { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                          )}
+                        >
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                            <SafeImage
+                              src={avatar}
+                              alt={name}
+                              className="w-full h-full object-cover"
+                              fallback={
+                                <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white font-bold text-[14px]">
+                                  {name.charAt(0).toUpperCase()}
+                                </div>
+                              }
+                            />
+                          </div>
+                          <div className="flex flex-col flex-1 items-start">
+                            <div className="flex items-center gap-1">
+                              <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
+                              {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
+                            </div>
+                            {delegationsMap[booking.user.id] && delegationsMap[booking.user.id].length > 0 && (
+                              <div className="flex items-center gap-1 mt-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                                <Shield className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                <span className="text-[11px] font-medium text-blue-700 dark:text-blue-300">
+                                  Validateur ({delegationsMap[booking.user.id].length} personne{delegationsMap[booking.user.id].length > 1 ? 's' : ''})
+                                </span>
                               </div>
-                            }
-                          />
-                        </div>
-                        <div className="flex items-center gap-1 flex-1">
-                          <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
-                          {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
-                        </div>
-                      </button>
+                            )}
+                          </div>
+                        </button>
+                        {delegationsMap[booking.user.id] && delegationsMap[booking.user.id].length > 0 && (
+                          <div className="px-5 pb-3 pt-1">
+                            <p className="text-[12px] text-gray-500 dark:text-gray-400 mb-2">A reçu les délégations de :</p>
+                            <div className="flex flex-wrap gap-2">
+                              {delegationsMap[booking.user.id].map((delBooking: any) => (
+                                <div key={delBooking.id} className="flex items-center gap-1.5 bg-gray-100 dark:bg-[#333] px-2 py-1 rounded-full">
+                                  <div className="w-4 h-4 rounded-full overflow-hidden bg-gray-200">
+                                    <img src={delBooking.user?.profile?.avatarUrl || ''} className="w-full h-full object-cover" />
+                                  </div>
+                                  <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300">
+                                    {delBooking.user?.profile?.displayName || 'Anonyme'}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )
                   })}
                 </div>

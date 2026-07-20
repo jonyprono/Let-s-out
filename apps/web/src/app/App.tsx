@@ -112,7 +112,7 @@ import { AdminSupportChats } from './components/admin/AdminSupportChats'
 import { AdminBotPrompts } from './components/admin/AdminBotPrompts'
 import { AdminAuditLogsPage } from './components/admin/AdminAuditLogsPage'
 import { AdminPayoutsPage } from './components/admin/AdminPayoutsPage'
-import { EventPayoutApproval } from './components/EventPayoutApproval';
+import { EventPoolValidation } from './components/EventPoolValidation';
 import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
 import AdminFeatureFlagsPage from './components/admin/AdminFeatureFlagsPage'
 import { AdminBadgesPage } from './components/admin/AdminBadgesPage'
@@ -274,7 +274,7 @@ export default function App() {
             <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/events/:id/manage" element={<ManageEvent />} />
             <Route path="/events/:id/validators-vote" element={<EventValidatorsVote />} />
-            <Route path="/events/:id/approve-payout" element={<EventPayoutApproval />} />
+            <Route path="/events/:id/pool-validation" element={<EventPoolValidation />} />
             <Route path="/events/:id/success" element={<EventSuccessScreen />} />
             <Route path="/scan-qr" element={<JoinPrivateEvent />} />
             <Route path="/events/:id/pay" element={<PaymentPage />} />
