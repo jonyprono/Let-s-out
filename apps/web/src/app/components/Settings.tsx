@@ -424,7 +424,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconColor="text-yellow-500"
               title="Mes badges"
               subtitle="Vos badges et récompenses"
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/badges')}
               isLast
             />
           </div>
