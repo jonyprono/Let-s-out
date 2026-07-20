@@ -428,6 +428,8 @@ export default async function adminRoutes(app: FastifyInstance) {
       name: z.string().min(1),
       description: z.string(),
       icon: z.string(),
+      category: z.string().default('standard'),
+      xpReward: z.number().default(0),
       conditionsLogic: z.any(),
       isActive: z.boolean().default(true),
     })
@@ -450,6 +452,8 @@ export default async function adminRoutes(app: FastifyInstance) {
       name: z.string().min(1).optional(),
       description: z.string().optional(),
       icon: z.string().optional(),
+      category: z.string().optional(),
+      xpReward: z.number().optional(),
       conditionsLogic: z.any().optional(),
       isActive: z.boolean().optional(),
     })

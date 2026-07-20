@@ -438,6 +438,8 @@ model Badge {
   name            String
   description     String
   icon            String
+  category        String   @default("standard") // standard, rare, legendaire
+  xpReward        Int      @default(0)
   conditionsLogic Json
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())

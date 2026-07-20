@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 
 export type Operator = 'EQ' | 'GT' | 'GTE' | 'LT' | 'LTE'
-export type Field = 'eventsCreated' | 'eventsJoined' | 'friendsCount' | 'rating' | 'accountAgeDays'
+export type Field = 'eventsCreated' | 'eventsJoined' | 'friendsCount' | 'rating' | 'accountAgeDays' | 'votesParticipated' | 'timesAppointedValidator' | 'validationsPerformed'
 
 export interface Rule {
   field: Field
@@ -45,7 +45,10 @@ export async function evaluateUserBadges(prisma: PrismaClient, userId: string) {
     eventsJoinedCount,
     friendsCount,
     _profile,
-    eventsForRating
+    eventsForRating,
+    votesParticipated,
+    timesAppointedValidator,
+    validationsPerformed
   ] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
     prisma.event.count({ where: { creatorId: userId } }),
@@ -57,7 +60,10 @@ export async function evaluateUserBadges(prisma: PrismaClient, userId: string) {
       }
     }),
     prisma.profile.findUnique({ where: { userId } }),
-    prisma.event.findMany({ where: { creatorId: userId }, include: { reviews: true } })
+    prisma.event.findMany({ where: { creatorId: userId }, include: { reviews: true } }),
+    prisma.validatorVote.count({ where: { userId } }),
+    prisma.event.count({ where: { validatorIds: { has: userId } } }),
+    prisma.validatorVote.count({ where: { userId, event: { validatorIds: { has: userId } } } })
   ])
 
   if (!user) return
@@ -79,7 +85,10 @@ export async function evaluateUserBadges(prisma: PrismaClient, userId: string) {
     eventsJoined: eventsJoinedCount,
     friendsCount,
     rating,
-    accountAgeDays
+    accountAgeDays,
+    votesParticipated,
+    timesAppointedValidator,
+    validationsPerformed
   }
 
   // 2. Fetch all active badges
