@@ -942,4 +942,49 @@ export default async function usersRoutes(app: FastifyInstance) {
     const result = await evaluateUserBadges(app.prisma, sub)
     return reply.send({ data: result || { newBadgeIds: [] } })
   })
+
+  // Get user's raw stats for badge progression display
+  app.get('/me/badges/stats', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+
+    const [
+      user,
+      eventsCreated,
+      eventsJoined,
+      friendsCount,
+      eventsForRating,
+      votesParticipated,
+      timesAppointedValidator,
+      validationsPerformed
+    ] = await Promise.all([
+      app.prisma.user.findUnique({ where: { id: sub }, select: { createdAt: true } }),
+      app.prisma.event.count({ where: { creatorId: sub } }),
+      app.prisma.booking.count({ where: { userId: sub, status: { not: 'CANCELLED' } } }),
+      app.prisma.friendship.count({ where: { status: 'ACCEPTED', OR: [{ initiatorId: sub }, { receiverId: sub }] } }),
+      app.prisma.event.findMany({ where: { creatorId: sub }, include: { reviews: true } }),
+      app.prisma.validatorVote.count({ where: { userId: sub } }),
+      app.prisma.event.count({ where: { validatorIds: { has: sub } } }),
+      app.prisma.validatorVote.count({ where: { userId: sub, event: { validatorIds: { has: sub } } } })
+    ])
+
+    let reviewCount = 0, totalRating = 0
+    for (const e of eventsForRating) {
+      for (const r of e.reviews) { reviewCount++; totalRating += r.rating }
+    }
+    const rating = reviewCount > 0 ? totalRating / reviewCount : 0
+    const accountAgeDays = user ? Math.floor((Date.now() - user.createdAt.getTime()) / (1000 * 60 * 60 * 24)) : 0
+
+    return reply.send({
+      data: {
+        eventsCreated,
+        eventsJoined,
+        friendsCount,
+        rating: Math.round(rating * 10) / 10,
+        accountAgeDays,
+        votesParticipated,
+        timesAppointedValidator,
+        validationsPerformed
+      }
+    })
+  })
 }

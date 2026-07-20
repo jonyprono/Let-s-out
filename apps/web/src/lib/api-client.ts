@@ -143,9 +143,11 @@ apiClient.interceptors.response.use(
         return apiClient(original)
       } catch (err) {
         processQueue(err, null)
+        // Determine redirect target before clearing state
+        const wasAdmin = useAuthStore.getState().user?.role === 'ADMIN'
         useAuthStore.getState().logout()
         if (!useAuthStore.getState().isLoggingOut) {
-          window.location.href = '/welcome'
+          window.location.href = wasAdmin ? '/admin/login' : '/welcome'
         }
         return Promise.reject(err)
       } finally {

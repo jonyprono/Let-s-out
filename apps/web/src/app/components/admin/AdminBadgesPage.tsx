@@ -169,10 +169,13 @@ export function AdminBadgesPage() {
           <h1 className="text-3xl font-bold text-white tracking-tight">Moteur de Badges</h1>
           <p className="text-white/50 text-sm mt-1.5">Gérez les badges et leurs règles d'attribution automatiques.</p>
         </div>
-        <Button onClick={() => openModal()} className="bg-action-primary text-black hover:bg-action-primary/90 font-bold px-6 py-2 h-auto rounded-xl shadow-[0_0_20px_rgba(255,122,0,0.3)]">
-          <Plus className="w-5 h-5 mr-2" />
+        <button
+          onClick={() => openModal()}
+          className="flex items-center gap-2 bg-[#FF7A00] hover:bg-[#E86E00] text-black font-bold px-5 py-2.5 rounded-xl shadow-[0_0_20px_rgba(255,122,0,0.35)] transition-colors text-sm"
+        >
+          <Plus className="w-4 h-4" />
           Nouveau Badge
-        </Button>
+        </button>
       </div>
 
       {isLoading ? (
@@ -239,11 +242,11 @@ export function AdminBadgesPage() {
 
       {/* CREATE / EDIT MODAL */}
       {isModalOpen && editingBadge && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 lg:p-10">
-          <div className="bg-[#111113] border border-white/10 rounded-[32px] w-full max-w-5xl overflow-hidden flex flex-col md:flex-row max-h-full shadow-2xl">
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 lg:p-10" style={{ overflowY: 'auto' }}>
+          <div className="bg-[#111113] border border-white/10 rounded-[32px] w-full max-w-5xl overflow-hidden flex flex-col md:flex-row md:max-h-[90vh] my-auto shadow-2xl">
             
             {/* Left side: Form */}
-            <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,122,0,0.3) transparent' }}>
               <div className="p-6 md:p-8 space-y-8">
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-1">{editingBadge.id ? 'Modifier le badge' : 'Créer un badge'}</h2>

@@ -4,6 +4,7 @@ import { Shield, Loader2, Eye, EyeOff } from 'lucide-react'
 import { isFieldValid } from '@/lib/validation'
 import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { updateAdminActivity } from '@/app/components/admin/AdminRoute'
 
 export function AdminLoginPage() {
   const [target, setTarget] = useState('')
@@ -43,6 +44,7 @@ export function AdminLoginPage() {
       setAccessToken(accessToken)
       setRefreshToken(refreshToken)
       setUser(authUser)
+      updateAdminActivity() // Démarrer le timer d'activité dès la connexion
       navigate('/admin', { replace: true })
 
     } catch (err: any) {

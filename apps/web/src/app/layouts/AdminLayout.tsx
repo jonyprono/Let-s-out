@@ -1,7 +1,9 @@
+import { useEffect, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router'
 import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet, ToggleRight } from 'lucide-react'
 import { Medal01Icon } from 'hugeicons-react'
 import { useAuthStore } from '@/stores/auth.store'
+import { updateAdminActivity } from '@/app/components/admin/AdminRoute'
 
 const navItems = [
   { to: '/admin', end: true, label: 'Dashboard', icon: LayoutDashboard },
@@ -24,6 +26,21 @@ export function AdminLayout() {
     logout()
     navigate('/admin/login', { replace: true })
   }
+
+  // Reset inactivity timer on any user interaction within the admin area
+  const handleActivity = useCallback(() => {
+    updateAdminActivity()
+  }, [])
+
+  useEffect(() => {
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click']
+    events.forEach(evt => window.addEventListener(evt, handleActivity, { passive: true }))
+    // Mark active immediately on mount
+    updateAdminActivity()
+    return () => {
+      events.forEach(evt => window.removeEventListener(evt, handleActivity))
+    }
+  }, [handleActivity])
 
   return (
     <div className="h-screen w-screen bg-[#0a0a0b] text-[#f5f5f5] flex overflow-hidden">
