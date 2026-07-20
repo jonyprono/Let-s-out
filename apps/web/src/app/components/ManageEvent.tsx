@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { ArrowLeft01Icon } from 'hugeicons-react';
+import { BackButton } from '@/components/ui/BackButton';
 import { Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -72,11 +72,12 @@ export function ManageEvent() {
           className="absolute inset-0 bg-cover bg-center" 
           style={{ backgroundImage: `url(${event.coverUrl || '/Checker.png'})` }} 
         />
-        <div className="absolute top-0 left-0 w-full p-4 pt-12 z-10 flex items-center">
-          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm">
-            <ArrowLeft01Icon className="w-5 h-5 text-gray-700 dark:text-white" />
-          </button>
-          <span className="ml-3 font-semibold text-gray-900 dark:text-white drop-shadow-md">Gestion événement</span>
+        <div className="absolute top-0 left-0 w-full p-4 pt-12 z-10 flex items-center gap-3">
+          <BackButton 
+            onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} 
+            className="bg-white/80 dark:bg-black/50 backdrop-blur shadow-sm" 
+          />
+          <span className="font-semibold text-gray-900 dark:text-white drop-shadow-md">Gestion événement</span>
         </div>
       </div>
 
@@ -1106,9 +1107,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
     <div className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       {/* Header */}
       <div className="px-4 py-4 flex items-center sticky top-0 bg-[#F9F9F9] dark:bg-[#0a0a0b] z-10 pt-10">
-        <button onClick={onBack} className="w-8 h-8 flex items-center justify-center mr-3 active:scale-95 transition-transform">
-          <ArrowLeft01Icon className="w-6 h-6 text-gray-500" />
-        </button>
+        <BackButton onClick={onBack} className="mr-3 shrink-0" />
         <span className="text-[16px] font-bold text-gray-900 dark:text-white">Ajouter une cagnotte</span>
       </div>
 

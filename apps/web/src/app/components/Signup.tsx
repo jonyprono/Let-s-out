@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router'
 import {
-  ArrowLeft01Icon,
   ViewIcon,
   ViewOffSlashIcon,
   Tick01Icon,
@@ -9,6 +8,7 @@ import {
   Cancel01Icon,
   Calendar01Icon,
 } from 'hugeicons-react'
+import { BackButton } from '@/components/ui/BackButton';
 import {
   useSendOtp,
   useRegister,
@@ -441,13 +441,11 @@ export function Signup({ onBack }: SignupProps) {
       <div className="px-4 pt-5 pb-0 shrink-0">
         {/* Titre "Inscription" centré avec flèche retour */}
         <div className="flex items-center justify-center relative mb-3">
-          <button
+          <BackButton
             onClick={handlePrev}
             aria-label="Retour"
-            className="absolute left-0 w-9 h-9 flex items-center justify-center active:scale-95 transition-transform"
-          >
-            <ArrowLeft01Icon className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
-          </button>
+            className="absolute left-0 shrink-0"
+          />
           <span className="font-poppins text-[15px] font-semibold text-gray-900 dark:text-white">
             Inscription
           </span>

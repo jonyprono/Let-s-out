@@ -3,7 +3,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNotifications, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '@/features/notifications/api';
 import { filterActiveNotifications } from '@/lib/notifications-group';
-import { ArrowLeft01Icon, UserAdd01Icon, WalletDone02Icon, WalletAdd01Icon, TickDouble01Icon, Settings03Icon, Notification01Icon, UserMultiple02Icon } from 'hugeicons-react';
+import { UserAdd01Icon, WalletDone02Icon, WalletAdd01Icon, TickDouble01Icon, Settings03Icon, Notification01Icon, UserMultiple02Icon } from 'hugeicons-react';
+import { TopBar } from '@/components/ui/TopBar';
 
 interface NotificationsProps {
   onBack: () => void;
@@ -142,17 +143,11 @@ export function Notifications({ onBack }: NotificationsProps) {
     const cfg = TYPE_CONFIG[selectedNotification.type] ?? TYPE_CONFIG.default;
     return (
       <div className="fixed inset-0 z-50 bg-[#F8F7FF] dark:bg-[#09090b] flex flex-col animate-in slide-in-from-right-8 duration-200">
-        <div className="px-4 py-4 pt-safe-4 flex items-center justify-center relative border-b border-transparent bg-white dark:bg-[#09090b]">
-          <button 
-            onClick={() => setSelectedNotification(null)} 
-            className="absolute left-4 p-2 -ml-2 text-[#A3A3A3] hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <ArrowLeft01Icon className="w-6 h-6" />
-          </button>
-          <h1 className="font-[Poppins] font-medium text-[16px] text-gray-900 dark:text-white">
-            {cfg.label}
-          </h1>
-        </div>
+        <TopBar 
+          title={cfg.label} 
+          onBack={() => setSelectedNotification(null)}
+          containerClassName="bg-white dark:bg-[#09090b] border-b border-transparent pt-safe-4"
+        />
         <div className="flex-1 overflow-y-auto p-4 pt-6 bg-[#F8F7FF] dark:bg-[#111111]">
           <p className="font-sans text-[14px] leading-[20px] text-[#404040] dark:text-gray-300">
             {selectedNotification.body}
@@ -172,12 +167,11 @@ export function Notifications({ onBack }: NotificationsProps) {
 
   return (
     <div className="w-full h-full flex flex-col bg-white dark:bg-[#111111]">
-      <div className="px-4 py-4 pt-safe-4 flex items-center justify-center relative">
-        <button onClick={onBack} className="absolute left-4 p-2 -ml-2 text-[#A3A3A3] hover:text-gray-900 dark:hover:text-white transition-colors">
-          <ArrowLeft01Icon className="w-6 h-6" />
-        </button>
-        <h1 className="font-[Poppins] font-medium text-[16px] text-gray-900 dark:text-white">Notifications</h1>
-      </div>
+      <TopBar 
+        title="Notifications" 
+        onBack={onBack}
+        containerClassName="pt-safe-4"
+      />
 
       <div className="flex items-center gap-2 px-4 mb-2 mt-2">
         <button 

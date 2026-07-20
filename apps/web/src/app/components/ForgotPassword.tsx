@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { ViewIcon, ViewOffSlashIcon, Tick01Icon, ArrowLeft01Icon, RefreshIcon } from 'hugeicons-react'
+import { ViewIcon, ViewOffSlashIcon, Tick01Icon, RefreshIcon } from 'hugeicons-react'
+import { BackButton } from '@/components/ui/BackButton';
 import { useSendOtp, useCheckTarget, useCheckOtp, useResetPassword } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth'
@@ -236,13 +237,11 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       {/* ── Header ─────────────────────────────────────── */}
       <div className="px-4 pt-5 pb-0 shrink-0">
         <div className="flex items-center justify-center relative mb-3">
-          <button
+          <BackButton
             onClick={handlePrev}
             aria-label="Retour"
-            className="absolute left-0 w-9 h-9 flex items-center justify-center active:scale-95 transition-transform"
-          >
-            <ArrowLeft01Icon className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
-          </button>
+            className="absolute left-0 shrink-0"
+          />
           <span className="font-poppins text-[15px] font-semibold text-gray-900 dark:text-white">
             Réinitialiser votre mot de passe
           </span>

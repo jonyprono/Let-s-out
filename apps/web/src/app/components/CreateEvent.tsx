@@ -6,7 +6,6 @@ import {
   Calendar01Icon as HugeCalendar,
   Clock01Icon as HugeClock,
   UserIcon,
-  ArrowLeft01Icon,
   PaintBoardIcon,
   MaskTheater01Icon,
   FootballIcon,
@@ -26,6 +25,7 @@ import {
   Image01Icon,
   AlertDiamondIcon
 } from 'hugeicons-react'
+import { BackButton } from '@/components/ui/BackButton';
 
 import { SettingsToggle } from '@/components/shared/SettingsToggle'
 
@@ -670,10 +670,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col">
         <div className="px-5 pt-safe-6 pb-3 border-b border-[var(--border-tertiary)] shrink-0">
           <div className="flex items-center gap-3">
-            <button onClick={() => setShowOrganizerSearch(false)}
-              className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center active:scale-95 transition-transform">
-              <ArrowLeft01Icon className="w-5 h-5 text-[var(--color-icon-primary)]" strokeWidth={2} />
-            </button>
+            <BackButton 
+              onClick={() => setShowOrganizerSearch(false)}
+              className="rounded-full bg-[var(--color-background-secondary)]" 
+            />
             <div className="flex-1 relative">
               <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-icon-muted)]" />
               <input

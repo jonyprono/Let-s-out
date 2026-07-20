@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft01Icon } from 'hugeicons-react';
+import { TopBar } from '@/components/ui/TopBar';
 import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { useAuthStore } from '@/stores/auth.store';
@@ -59,12 +59,11 @@ export function CreatedEventsList() {
       <div className="relative w-full pb-6" style={{ background: 'url(/Checker.png) top/cover no-repeat' }}>
         
         {/* Top Navbar */}
-        <div className="flex items-center px-4 pt-12 pb-4">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-gray-500">
-            <ArrowLeft01Icon className="w-6 h-6" />
-          </button>
-          <h1 className="text-[17px] font-semibold text-gray-900 ml-2">Evénements créés</h1>
-        </div>
+        <TopBar 
+          title="Evénements créés"
+          onBack={() => navigate(-1)}
+          containerClassName="pt-12 pb-4 bg-transparent"
+        />
 
         {/* Stats Card */}
         <div className="mx-4 bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 flex items-center justify-between shadow-sm border border-gray-100 dark:border-gray-800">
