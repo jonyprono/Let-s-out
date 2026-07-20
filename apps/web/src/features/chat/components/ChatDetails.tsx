@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { ChevronLeft, Send, Play, MapPin, Calendar, Users, Share2, X, MoreVertical, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -192,6 +192,23 @@ export function ChatDetails() {
   })
   const { mutate: sendMsg } = useSendMessage(id!)
   const { data: presence } = useConversationPresence(id!)
+
+  const { data: attendeesData } = useQuery({
+    queryKey: ['events', event?.id, 'attendees'],
+    queryFn: () => eventsApi.getAttendees(event!.id).then(r => r.data),
+    enabled: !!event?.id && (event as any)?.validatorVoteStatus === 'OPEN',
+  })
+
+  const delegateMut = useMutation({
+    mutationFn: async (candidateId: string) => {
+      await apiClient.post(`/events/${event?.id}/pool/validate`, { mode: 'DELEGATE', delegatedToId: candidateId })
+    },
+    onSuccess: () => {
+      toast.success("Votre choix a été enregistré !")
+      qc.invalidateQueries({ queryKey: ['events', event?.id, 'attendees'] })
+    },
+    onError: (err: any) => toast.error(err.response?.data?.error || "Erreur lors du vote")
+  })
 
   const isGroup = conversation?.isGroup ?? false
   
@@ -714,25 +731,73 @@ export function ChatDetails() {
           </div>
         )}
 
-        {(event as any)?.validatorVoteStatus === 'OPEN' && (
-          <div className="px-4 pb-2 relative z-20">
-            <div className="bg-[#FFF2D3] dark:bg-[#332200] border border-[#FFD073] dark:border-[#CC6600] rounded-lg p-3 flex items-center justify-between shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
-                 onClick={() => event && navigate(`/events/${event.id}/validators-vote`)}>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#FF7A00]/20 flex items-center justify-center shrink-0">
-                  <span className="text-lg">📊</span>
+        {(event as any)?.validatorVoteStatus === 'OPEN' && (() => {
+          const pollMsg = messages?.find(m => m.type === 'POLL' && !m.isDeleted);
+          let pollData: any = null;
+          try { pollData = JSON.parse(pollMsg?.content || "{}"); } catch(e) {}
+          
+          if (pollData?.deadline && new Date(pollData.deadline) < new Date()) {
+            return null; // Deadline passed
+          }
+          
+          const attendeesList = Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || [];
+          const myBooking = attendeesList.find((b: any) => b.userId === user?.id);
+          const hasVoted = myBooking?.poolValidationStatus === 'DELEGATED' || myBooking?.poolValidationStatus === 'VALIDATED';
+          
+          const candidatesData = pollData?.candidates || [];
+
+          if (candidatesData.length === 0 && !pollMsg) return null; // Avoid empty banner if no poll msg yet
+
+          return (
+            <div className="px-4 pb-4 relative z-20">
+              <div className="bg-[#FFF2D3] dark:bg-[#332200] border border-[#FFD073] dark:border-[#CC6600] rounded-xl p-4 shadow-sm">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-[#FF7A00]/20 flex items-center justify-center shrink-0 mt-1">
+                    <span className="text-xl">🗳️</span>
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-bold text-[#CC6600] dark:text-[#FFB366] mb-1">Vote des validateurs</p>
+                    <p className="text-[13px] text-[#CC6600]/90 dark:text-[#FFB366]/90 leading-snug">
+                      {hasVoted ? "Vous avez déjà voté." : "L'organisateur a lancé le vote. Choisissez le participant à qui vous déléguez la validation du déblocage des fonds."}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[13px] font-bold text-[#CC6600] dark:text-[#FFB366]">Vote des validateurs en cours</p>
-                  <p className="text-[11px] text-[#CC6600]/80 dark:text-[#FFB366]/80">Votre avis est requis pour débloquer les fonds</p>
-                </div>
+
+                {!hasVoted && candidatesData.length > 0 && (
+                  <div className="flex flex-col gap-2 mt-2">
+                    {candidatesData.map((cand: any) => (
+                      <button
+                        key={cand.id}
+                        onClick={() => {
+                           if (!delegateMut.isPending) delegateMut.mutate(cand.id);
+                        }}
+                        disabled={delegateMut.isPending}
+                        className="flex items-center gap-3 p-3 bg-white dark:bg-black/20 rounded-lg border border-[#FFD073]/50 dark:border-[#CC6600]/50 hover:bg-orange-50 dark:hover:bg-black/40 transition-colors text-left active:scale-[0.98] disabled:opacity-50"
+                      >
+                        <SafeImage 
+                          src={cand.avatarUrl || `https://ui-avatars.com/api/?name=${cand.displayName}`} 
+                          alt=""
+                          className="w-8 h-8 rounded-full object-cover" 
+                        />
+                        <span className="flex-1 font-semibold text-gray-900 dark:text-white text-[14px]">{cand.displayName}</span>
+                        <div className="w-5 h-5 rounded-full border-2 border-[#FFD073] dark:border-[#CC6600]"></div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {hasVoted && (
+                  <div className="mt-2 p-3 bg-white/50 dark:bg-black/20 rounded-lg flex items-center justify-center border border-[#FFD073]/50">
+                    <span className="text-[#CC6600] dark:text-[#FFB366] font-semibold text-[13px] flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      Vote enregistré
+                    </span>
+                  </div>
+                )}
               </div>
-              <button className="text-[12px] font-bold text-white bg-[#FF7A00] hover:bg-[#E66E00] px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-transform">
-                Voter
-              </button>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* Messages Area */}
@@ -853,23 +918,10 @@ export function ChatDetails() {
                         </span>
                       </div>
                     ) : msg.type === 'POLL' ? (
-                      <div className="w-[240px] flex flex-col gap-3 p-1">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'color-mix(in srgb, currentColor 15%, transparent)' }}>
-                            <span className="text-lg">📊</span>
-                          </div>
-                          <div>
-                            <p className="text-[13px] font-bold" style={{ color: 'currentColor' }}>Vote des validateurs</p>
-                            <p className="text-[11px]" style={{ color: 'color-mix(in srgb, currentColor 80%, transparent)' }}>Votre avis est requis pour débloquer les fonds</p>
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => navigate(`/events/${conversation?.eventId}/validators-vote`)}
-                          className="w-full py-2 rounded-lg font-bold text-sm transition-transform active:scale-95"
-                          style={{ backgroundColor: 'color-mix(in srgb, currentColor 10%, transparent)', color: 'currentColor' }}
-                        >
-                          {(event as any)?.validatorVoteStatus === 'CLOSED' ? 'Voir les résultats' : 'Voter'}
-                        </button>
+                      <div className="flex flex-col gap-1 p-2 text-center text-sm opacity-80 min-w-[200px]" style={{ color: 'currentColor' }}>
+                         <span className="text-xl mb-1">📊</span>
+                         <span className="font-bold">Vote des validateurs</span>
+                         <span className="text-xs mt-1 opacity-80">Retrouvez le vote épinglé en haut de la conversation.</span>
                       </div>
                     ) : isVideo && (msg.mediaUrl || msg.content) ? (
                       <div className="relative">

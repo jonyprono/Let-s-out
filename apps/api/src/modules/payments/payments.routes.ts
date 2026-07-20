@@ -44,15 +44,6 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     }
     
     const eventDetails = await app.prisma.event.findUnique({ where: { id: eventId } })
-    if (eventDetails?.poolClosedAt) {
-      return reply.code(403).send({ error: 'La cagnotte de cet événement est fermée (décaissement en cours).' })
-    }
-    if (isPoolContributionRequest && eventDetails?.startAt) {
-      const hoursToEvent = (new Date(eventDetails.startAt).getTime() - Date.now()) / (1000 * 60 * 60);
-      if (hoursToEvent < 48 && hoursToEvent > -24 * 365) { // Ensure we don't block extremely old events if testing
-        return reply.code(403).send({ error: 'Les contributions à la cagnotte sont fermées 48h avant l\'événement.' })
-      }
-    }
     if (eventDetails?.isBudgetAnnounced && isPoolContributionRequest && !poolValidationStatus) {
       return reply.code(400).send({ error: 'Vous devez choisir un mode de validation pour cette cagnotte (Validation ou Délégation).' })
     }

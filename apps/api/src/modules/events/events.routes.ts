@@ -315,7 +315,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
   app.post('/:id/validators/start', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub: userId } = req.user as { sub: string }
     const { id } = req.params as { id: string }
-    const { candidates, threshold } = req.body as { candidates: string[], threshold?: number }
+    const { candidates, voteDeadline } = req.body as { candidates: string[], voteDeadline?: string }
 
     const event = await app.prisma.event.findUnique({ where: { id }, include: { conversation: true } })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
@@ -327,18 +327,32 @@ export default async function eventsRoutes(app: FastifyInstance) {
       data: {
         validatorVoteStatus: 'OPEN',
         validatorCandidates: candidates,
-        validatorThreshold: threshold || 0.5,
       }
     })
 
     // Create poll message in conversation
     if (event.conversation) {
+      // Get candidates profiles to display in chat
+      const candidateUsers = await app.prisma.user.findMany({
+        where: { id: { in: candidates } },
+        include: { profile: true }
+      });
+      const candidatesData = candidateUsers.map(u => ({
+        id: u.id,
+        displayName: u.profile?.displayName || u.username,
+        avatarUrl: u.profile?.avatarUrl
+      }));
+
       const pollMsg = await app.prisma.message.create({
         data: {
           conversationId: event.conversation.id,
           senderId: userId,
           type: 'POLL',
-          content: 'Vote des validateurs en cours',
+          content: JSON.stringify({ 
+            text: "🗳️ L'organisateur a lancé le vote des validateurs. Choisissez votre validateur.",
+            candidates: candidatesData,
+            deadline: voteDeadline
+          }),
         }
       })
       await app.prisma.conversation.update({

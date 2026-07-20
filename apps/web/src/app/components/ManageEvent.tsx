@@ -108,7 +108,7 @@ export function ManageEvent() {
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} />}
         {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
-        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} />}
+        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} />}
       </div>
     </div>
   );
@@ -399,7 +399,7 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
 // ----------------------------------------------------------------------
 // TAB: CAGNOTTE INLINE
 // ----------------------------------------------------------------------
-function TabCagnotteInline({ event }: { event: any }) {
+function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) => void }) {
   const qc = useQueryClient();
   const hasPot = event.poolTarget && event.poolTarget > 0;
 
@@ -501,6 +501,17 @@ function TabCagnotteInline({ event }: { event: any }) {
 
       {/* ── Actions ── */}
       <div className="bg-white dark:bg-[#1A1A1A] rounded-[12px] p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+        <h4 className="text-[14px] font-semibold mb-3 text-gray-900 dark:text-white">Actions</h4>
+
+        <div className="flex flex-col gap-3 mb-6">
+          <button
+            onClick={() => setStep('validator-vote')}
+            className="w-full h-10 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2A2A2A] text-gray-900 dark:text-white rounded-lg text-[14px] font-semibold active:scale-95 transition-transform"
+          >
+            Lancer le vote des validateurs
+          </button>
+        </div>
+
         <h4 className="text-[14px] font-semibold mb-3 text-gray-900 dark:text-white">Déblocage</h4>
         
         {maxAvailableNow > 0 ? (
