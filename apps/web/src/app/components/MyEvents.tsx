@@ -1,47 +1,28 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router';
 import { ChevronLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { RowEventCard } from '@/components/ui/event-cards-v2';
+import { useFavoritesStore } from '@/stores/favorites.store';
 
-// ── EventRowCard Component ──────────────────────────────────────────────────
-function EventRowCard({ event, onClick }: { event: any; onClick: () => void }) {
-  return (
-    <div 
-      onClick={onClick}
-      className="w-full bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 p-3 flex gap-3 cursor-pointer active:scale-95 transition-transform shadow-sm"
-    >
-      <div 
-        className="w-[80px] h-[80px] rounded-xl bg-gray-200 shrink-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${event.coverUrl || '/Checker.png'})` }}
-      />
-      <div className="flex flex-col justify-center flex-1">
-        <div className="flex justify-between items-start mb-1">
-          <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white leading-tight line-clamp-1">{event.title}</h3>
-          {event.status === 'DRAFT' && (
-            <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded">Brouillon</span>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 text-gray-500 mb-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <span className="text-[12px]">{format(new Date(event.startAt), 'dd MMMM yyyy - HH:mm', { locale: fr })}</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-gray-500">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-          <span className="text-[12px]">{event.city ? event.city : 'En ligne'}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── MyEvents Page ────────────────────────────────────────────────────────────
 export function MyEvents() {
   const navigate = useNavigate();
-  const [mainTab, setMainTab] = useState<'created' | 'joined'>('created');
+  const location = useLocation();
+  
+  const [mainTab, setMainTab] = useState<'created' | 'joined' | 'favorites'>('created');
   const [subTab, setSubTab] = useState<'ongoing' | 'past' | 'drafts'>('ongoing');
+
+  useEffect(() => {
+    if (location.state?.tab === 'favorites') {
+      setMainTab('favorites');
+    }
+  }, [location.state]);
+
+  const favoritesObj = useFavoritesStore(s => s.favorites);
+  const favoriteEvents = useMemo(() => Object.values(favoritesObj), [favoritesObj]);
 
   const { data: myEventsResponse, isLoading } = useQuery({
     queryKey: ['my-events'],
@@ -70,19 +51,21 @@ export function MyEvents() {
       if (subTab === 'ongoing') return createdOngoing;
       if (subTab === 'past') return createdPast;
       if (subTab === 'drafts') return createdDrafts;
-    } else {
+    } else if (mainTab === 'joined') {
       if (subTab === 'ongoing') return joinedOngoing;
       if (subTab === 'past') return joinedPast;
+    } else if (mainTab === 'favorites') {
+      return favoriteEvents;
     }
     return [];
-  }, [mainTab, subTab, createdOngoing, createdPast, createdDrafts, joinedOngoing, joinedPast]);
+  }, [mainTab, subTab, createdOngoing, createdPast, createdDrafts, joinedOngoing, joinedPast, favoriteEvents]);
 
   const handleSubTabSwitch = (tab: 'ongoing' | 'past' | 'drafts') => setSubTab(tab);
   
-  const handleMainTabSwitch = (tab: 'created' | 'joined') => {
+  const handleMainTabSwitch = (tab: 'created' | 'joined' | 'favorites') => {
     setMainTab(tab);
-    if (tab === 'joined' && subTab === 'drafts') {
-      setSubTab('ongoing'); // Joined doesn't have drafts
+    if ((tab === 'joined' || tab === 'favorites') && subTab === 'drafts') {
+      setSubTab('ongoing'); // Joined/Favorites don't have drafts
     }
   };
 
@@ -113,7 +96,6 @@ export function MyEvents() {
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         <div className="p-4 space-y-5">
           
-          {/* Main Tabs */}
           <div className="flex bg-gray-200/60 dark:bg-[#222] p-1 rounded-xl">
             <button
               onClick={() => handleMainTabSwitch('created')}
@@ -127,31 +109,39 @@ export function MyEvents() {
             >
               Rejoints
             </button>
+            <button
+              onClick={() => handleMainTabSwitch('favorites')}
+              className={`flex-1 py-2 text-[14px] font-semibold rounded-lg transition-all ${mainTab === 'favorites' ? 'bg-white dark:bg-[#333] shadow-sm text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+            >
+              Favoris
+            </button>
           </div>
 
           {/* Sub Tabs */}
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-            <button
-              onClick={() => handleSubTabSwitch('ongoing')}
-              className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${subTab === 'ongoing' ? 'bg-[#FF7A00] text-white' : 'bg-white dark:bg-[#222] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#333]'}`}
-            >
-              En cours
-            </button>
-            <button
-              onClick={() => handleSubTabSwitch('past')}
-              className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${subTab === 'past' ? 'bg-[#FF7A00] text-white' : 'bg-white dark:bg-[#222] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#333]'}`}
-            >
-              Passés
-            </button>
-            {mainTab === 'created' && (
+          {mainTab !== 'favorites' && (
+            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
               <button
-                onClick={() => handleSubTabSwitch('drafts')}
-                className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${subTab === 'drafts' ? 'bg-[#FF7A00] text-white' : 'bg-white dark:bg-[#222] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#333]'}`}
+                onClick={() => handleSubTabSwitch('ongoing')}
+                className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${subTab === 'ongoing' ? 'bg-[#FF7A00] text-white' : 'bg-white dark:bg-[#222] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#333]'}`}
               >
-                Brouillons
+                En cours
               </button>
-            )}
-          </div>
+              <button
+                onClick={() => handleSubTabSwitch('past')}
+                className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${subTab === 'past' ? 'bg-[#FF7A00] text-white' : 'bg-white dark:bg-[#222] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#333]'}`}
+              >
+                Passés
+              </button>
+              {mainTab === 'created' && (
+                <button
+                  onClick={() => handleSubTabSwitch('drafts')}
+                  className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${subTab === 'drafts' ? 'bg-[#FF7A00] text-white' : 'bg-white dark:bg-[#222] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#333]'}`}
+                >
+                  Brouillons
+                </button>
+              )}
+            </div>
+          )}
 
           {/* List */}
           {isLoading ? (
@@ -171,7 +161,7 @@ export function MyEvents() {
           ) : (
             <div className="space-y-3 pb-safe">
               {displayedEvents.map((event: any) => (
-                <EventRowCard key={event.id} event={event} onClick={() => onEventClick(event)} />
+                <RowEventCard key={event.id} event={event} onClick={() => onEventClick(event)} />
               ))}
             </div>
           )}

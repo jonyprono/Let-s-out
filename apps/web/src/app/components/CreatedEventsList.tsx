@@ -1,11 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
+import { RowEventCard } from '@/components/ui/event-cards-v2';
 import { TopBar } from '@/components/ui/TopBar';
 import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { useAuthStore } from '@/stores/auth.store';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { useParams } from 'react-router';
 
 export function CreatedEventsList() {
@@ -127,7 +126,7 @@ export function CreatedEventsList() {
               <p className="text-[13px] text-gray-400">Aucun événement à venir.</p>
             ) : (
               upcomingEvents.map((ev: any) => (
-                <EventRowCard key={ev.id} event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
+                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
               ))
             )}
           </div>
@@ -138,7 +137,7 @@ export function CreatedEventsList() {
               <p className="text-[13px] text-gray-400">Aucun événement passé.</p>
             ) : (
               pastEvents.map((ev: any) => (
-                <EventRowCard key={ev.id} event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
+                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
               ))
             )}
           </div>
@@ -148,7 +147,7 @@ export function CreatedEventsList() {
               <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6">Non publiés (Brouillons)</h2>
               <div className="flex flex-col gap-3">
                 {drafts.map((ev: any) => (
-                  <EventRowCard key={ev.id} event={ev} onClick={() => navigate(`/events/create`, { state: { editEventId: ev.id, eventData: ev } })} />
+                  <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/create`, { state: { editEventId: ev.id, eventData: ev } })} />
                 ))}
               </div>
             </>
@@ -209,29 +208,4 @@ function CagnotteRowCard({ event, onClick }: { event: any; onClick: () => void }
       </div>
     </div>
   )
-}
-
-function EventRowCard({ event, onClick }: { event: any; onClick: () => void }) {
-  return (
-    <div 
-      onClick={onClick}
-      className="w-full bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 p-3 flex gap-3 cursor-pointer active:scale-95 transition-transform shadow-sm"
-    >
-      <div 
-        className="w-[80px] h-[80px] rounded-xl bg-gray-200 shrink-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${event.coverUrl || '/Checker.png'})` }}
-      />
-      <div className="flex flex-col justify-center flex-1">
-        <h3 className="text-[15px] font-semibold text-gray-900 dark:text-white leading-tight mb-1">{event.title}</h3>
-        <div className="flex items-center gap-1.5 text-gray-500 mb-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <span className="text-[12px]">{format(new Date(event.startAt), 'dd MMMM yyyy - HH:mm', { locale: fr })}</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-gray-500">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-          <span className="text-[12px]">{event.city ? `${event.city}` : 'En ligne'}</span>
-        </div>
-      </div>
-    </div>
-  );
 }
