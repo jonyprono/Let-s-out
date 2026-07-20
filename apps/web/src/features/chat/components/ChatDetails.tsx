@@ -744,9 +744,19 @@ export function ChatDetails() {
           const myBooking = attendeesList.find((b: any) => b.userId === user?.id);
           const hasVoted = myBooking?.poolValidationStatus === 'DELEGATED' || myBooking?.poolValidationStatus === 'VALIDATED';
           
-          const candidatesData = pollData?.candidates || [];
+          let candidatesData = pollData?.candidates || [];
+          if (candidatesData.length === 0 && (event as any)?.validatorCandidates?.length > 0) {
+            const fallbackIds = (event as any).validatorCandidates;
+            candidatesData = attendeesList
+               .filter((b: any) => fallbackIds.includes(b.userId))
+               .map((b: any) => ({
+                 id: b.userId,
+                 displayName: b.user?.profile?.displayName || b.user?.profile?.username || 'Utilisateur',
+                 avatarUrl: b.user?.profile?.avatarUrl
+               }));
+          }
 
-          if (candidatesData.length === 0 && !pollMsg) return null; // Avoid empty banner if no poll msg yet
+          if (candidatesData.length === 0) return null; // Avoid empty banner if no candidates found at all
 
           return (
             <div className="px-4 pb-4 relative z-20">
