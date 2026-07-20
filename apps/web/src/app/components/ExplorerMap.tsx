@@ -7,12 +7,21 @@ import type { Event } from '@/features/events/api'
 import { RowEventCard } from '@/components/ui/event-cards-v2'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { Geolocation } from '@capacitor/geolocation'
+import { useMap } from 'react-leaflet'
+
+// Composant utilitaire pour récupérer l'instance de la carte
+function MapAccessor({ onMap }: { onMap: (map: L.Map) => void }) {
+  const map = useMap()
+  useEffect(() => {
+    onMap(map)
+  }, [map, onMap])
+  return null
+}
 
 interface ExplorerMapProps {
   events: Event[]
   mapCenter: [number, number]
-  mapGeoLoading: boolean
-  onGeolocate: () => void
   onNavigate: (screen: string, id?: string) => void
   onSwitchToList?: () => void
 }
@@ -48,7 +57,8 @@ function clusterEvents(events: Event[], zoom: number): Array<{
       const count = cluster.events.length
       cluster.events.forEach((ev, i) => {
         const angle = (i / count) * Math.PI * 2
-        const offset = zoom >= 17 ? 0.00015 : 0.0003
+        // Offset bien plus grand pour éviter qu'ils se superposent (environ 90-100m)
+        const offset = zoom >= 17 ? 0.0006 : 0.001
         clusters.push({
           lat: cluster.lat + Math.cos(angle) * offset,
           lon: cluster.lon + Math.sin(angle) * offset,
@@ -217,14 +227,42 @@ function ZoomWatcher({
 export default function ExplorerMap({
   events,
   mapCenter,
-  mapGeoLoading,
-  onGeolocate,
   onNavigate,
   onSwitchToList,
 }: ExplorerMapProps) {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [zoom, setZoom] = useState(13)
   const [zoomTarget, setZoomTarget] = useState<{ lat: number; lon: number; id: number } | null>(null)
+  const [mapRef, setMapRef] = useState<L.Map | null>(null)
+  const [isLocating, setIsLocating] = useState(false)
+
+  const handleGeolocateReal = async () => {
+    if (!mapRef) return
+    setIsLocating(true)
+    try {
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
+      mapRef.flyTo([position.coords.latitude, position.coords.longitude], 15, { duration: 0.8 })
+    } catch (e) {
+      console.error('Erreur géolocalisation', e)
+    } finally {
+      setIsLocating(false)
+    }
+  }
+
+  const handleFabClick = () => {
+    if (selectedEvent && selectedEvent.latitude && selectedEvent.longitude) {
+      const lat = selectedEvent.latitude
+      const lng = selectedEvent.longitude
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      if (isIOS) {
+        window.open(`maps://?daddr=${lat},${lng}`, '_blank')
+      } else {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank')
+      }
+    } else {
+      handleGeolocateReal()
+    }
+  }
 
   const validEvents = events.filter((e) => e?.latitude && e?.longitude)
   const clusters = useMemo(() => clusterEvents(validEvents, zoom), [validEvents, zoom])
@@ -254,6 +292,7 @@ export default function ExplorerMap({
         style={{ width: '100%', height: '100%' }}
         zoomControl={false}
       >
+        <MapAccessor onMap={setMapRef} />
         <ZoomWatcher onZoom={setZoom} onMapClick={closeCard} zoomTarget={zoomTarget} />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
@@ -314,10 +353,10 @@ export default function ExplorerMap({
         </div>
       )}
 
-      {/* ── Geolocate FAB ── */}
+      {/* ── Geolocate / Navigate FAB ── */}
       <button
-        onClick={onGeolocate}
-        disabled={mapGeoLoading}
+        onClick={handleFabClick}
+        disabled={isLocating}
         className="absolute z-[900] w-11 h-11 bg-white dark:bg-[#1A1A1A] rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-all border border-gray-100 dark:border-white/10"
         style={{
           right: 16,
@@ -327,7 +366,7 @@ export default function ExplorerMap({
           transition: 'bottom 0.2s ease',
         }}
       >
-        {mapGeoLoading
+        {isLocating
           ? <Loader2 className="w-5 h-5 animate-spin text-[#FF7A00]" />
           : <Navigation className="w-5 h-5 text-[#FF7A00]" />}
       </button>

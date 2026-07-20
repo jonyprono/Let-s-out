@@ -494,8 +494,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <ExplorerMap
             events={mapEvents}
             mapCenter={currentLocation === 'Abomey-Calavi' ? [6.4485, 2.3556] : [6.36536, 2.41833]}
-            mapGeoLoading={false}
-            onGeolocate={() => {}}
             onNavigate={onNavigate}
             onSwitchToList={() => setViewMode('list')}
           />
