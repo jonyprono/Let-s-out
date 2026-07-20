@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import {
-  ChevronLeft,
   MapPin,
   Calendar,
   Loader2,
@@ -19,6 +18,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { Button } from '@/components/ui/button'
 import { SaveEventButton } from '@/components/ui/save-event-button'
+import { TopBar } from '@/components/ui/TopBar'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
 import { Share08Icon } from 'hugeicons-react'
@@ -392,23 +392,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
 
         {/* Header */}
-        <div className="flex-shrink-0 bg-[var(--color-background-primary)] z-10 px-4 pt-safe-4 pt-4 pb-4 flex items-center justify-between min-h-[64px] shadow-sm">
-          <button
-            onClick={handleBack}
-            className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)] flex-shrink-0"
-          >
-            <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
-          </button>
-
-          <span className="text-[16px] font-semibold text-[var(--color-text-primary)] font-poppins">Détails événement</span>
-
-          <div className="flex items-center gap-2 -mr-2">
-            <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
-              <Share08Icon className="w-5 h-5" strokeWidth={1.8} />
-            </button>
-            <SaveEventButton saved={favorite} onClick={handleFavorite} className="w-9 h-9" />
-          </div>
-        </div>
+        <TopBar
+          title="Détails événement"
+          onBack={handleBack}
+          containerClassName="flex-shrink-0 bg-[var(--color-background-primary)] z-10 pt-safe-4 pt-4 shadow-sm"
+          rightAction={
+            <>
+              <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
+                <Share08Icon className="w-5 h-5" strokeWidth={1.8} />
+              </button>
+              <SaveEventButton saved={favorite} onClick={handleFavorite} className="w-9 h-9" />
+            </>
+          }
+        />
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto pb-28" style={{ scrollbarWidth: 'none' }}>
