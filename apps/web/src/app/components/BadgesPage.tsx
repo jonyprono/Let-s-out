@@ -288,6 +288,15 @@ export function BadgesPage() {
     : activeTab === 'en_cours' ? lockedBadges
     : badges
 
+  const totalXp = earnedBadges.reduce((acc, b) => acc + (b.xpReward || 0), 0)
+  const currentLevel = Math.floor((1 + Math.sqrt(1 + 8 * totalXp / 100)) / 2)
+  const xpForCurrentLevel = (100 * currentLevel * (currentLevel - 1)) / 2
+  const xpForNextLevel = (100 * (currentLevel + 1) * currentLevel) / 2
+  const xpProgressInLevel = totalXp - xpForCurrentLevel
+  const xpNeededForNextLevel = xpForNextLevel - xpForCurrentLevel
+  const levelProgressPct = Math.min(100, Math.round((xpProgressInLevel / xpNeededForNextLevel) * 100))
+
+
   return (
     <div
       className="flex flex-col w-full bg-white"
@@ -311,7 +320,7 @@ export function BadgesPage() {
           <div className="flex items-center gap-4 relative z-10">
             <div className="drop-shadow-md">
               <Hexagon color="url(#orangeGradient)" size={64}>
-                <span className="text-white font-bold text-xl">12</span>
+                <span className="text-white font-bold text-xl">{currentLevel}</span>
               </Hexagon>
               <svg width="0" height="0">
                 <defs>
@@ -323,16 +332,16 @@ export function BadgesPage() {
               </svg>
             </div>
             <div className="flex-1">
-              <h2 className="text-[18px] font-bold text-black leading-tight">Niveau 12</h2>
+              <h2 className="text-[18px] font-bold text-black leading-tight">Niveau {currentLevel}</h2>
               <p className="text-[13px] text-gray-500 font-medium mt-0.5">Vous progressez bien !</p>
             </div>
           </div>
           <div className="mt-5 relative z-10">
             <div className="flex justify-between items-center mb-1.5">
               <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden mr-3">
-                <div className="h-full bg-[#FF7A00] rounded-full" style={{ width: '62.5%' }} />
+                <div className="h-full bg-[#FF7A00] rounded-full" style={{ width: `${levelProgressPct}%` }} />
               </div>
-              <span className="text-[11px] text-gray-400 font-bold tracking-tight shrink-0">750 / 1200 XP</span>
+              <span className="text-[11px] text-gray-400 font-bold tracking-tight shrink-0">{xpProgressInLevel} / {xpNeededForNextLevel} XP</span>
             </div>
           </div>
         </div>
@@ -345,7 +354,7 @@ export function BadgesPage() {
             <span className="text-[10px] text-gray-500 font-medium leading-tight px-1">Obtenus</span>
           </div>
           <div className="flex flex-col items-center py-1">
-            <span className="text-lg mb-1">🎧</span>
+            <span className="text-lg mb-1">⏳</span>
             <span className="text-[16px] font-bold text-black">{lockedBadges.length}</span>
             <span className="text-[10px] text-gray-500 font-medium leading-tight px-1">En cours</span>
           </div>
