@@ -23,7 +23,8 @@ function clusterEvents(events: Event[], zoom: number): Array<{
   lon: number
   events: Event[]
 }> {
-  const radius = zoom >= 15 ? 0.005 : zoom >= 13 ? 0.02 : 0.05
+  const isDeepZoom = zoom >= 15
+  const radius = zoom >= 16 ? 0.0005 : zoom >= 14 ? 0.01 : 0.05
   const clusters: Array<{ lat: number; lon: number; events: Event[] }> = []
   const used = new Set<string>()
 
@@ -41,7 +42,22 @@ function clusterEvents(events: Event[], zoom: number): Array<{
         used.add(other.id)
       }
     }
-    clusters.push(cluster)
+
+    if (isDeepZoom && cluster.events.length > 1) {
+      // Spiderfy: spread identical/very close coordinates in a small circle
+      const count = cluster.events.length
+      cluster.events.forEach((ev, i) => {
+        const angle = (i / count) * Math.PI * 2
+        const offset = zoom >= 17 ? 0.00015 : 0.0003
+        clusters.push({
+          lat: cluster.lat + Math.cos(angle) * offset,
+          lon: cluster.lon + Math.sin(angle) * offset,
+          events: [ev]
+        })
+      })
+    } else {
+      clusters.push(cluster)
+    }
   }
   return clusters
 }
@@ -191,7 +207,8 @@ function ZoomWatcher({
   useEffect(() => {
     if (zoomTarget) {
       const currentZoom = map.getZoom()
-      map.flyTo([zoomTarget.lat, zoomTarget.lon], currentZoom + 2, { duration: 0.5 })
+      const targetZoom = Math.max(currentZoom + 2, 16)
+      map.flyTo([zoomTarget.lat, zoomTarget.lon], targetZoom, { duration: 0.5 })
     }
   }, [zoomTarget, map])
   return null
