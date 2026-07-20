@@ -240,7 +240,11 @@ export default function ExplorerMap({
     if (!mapRef) return
     setIsLocating(true)
     try {
-      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true })
+      const position = await Geolocation.getCurrentPosition({ 
+        enableHighAccuracy: false, 
+        timeout: 5000, 
+        maximumAge: 10000 
+      })
       mapRef.flyTo([position.coords.latitude, position.coords.longitude], 15, { duration: 0.8 })
     } catch (e) {
       console.error('Erreur géolocalisation', e)
