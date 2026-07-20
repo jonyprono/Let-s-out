@@ -1223,6 +1223,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     // Compute Badges for Organizer
     const creatorId = event.creatorId;
     if (creatorId) {
+      const { assignBadgeByName } = await import('../../services/badge.service')
       const allReviewsForCreator = await app.prisma.review.findMany({
         where: { event: { creatorId: creatorId } },
       });
@@ -1238,9 +1239,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
         const avgReliability = relReviews.length > 0 ? relReviews.reduce((acc, r) => acc + (r.reliabilityRating || 0), 0) / relReviews.length : 0;
 
         const assignBadge = async (badgeName: string) => {
-          const existingBadge = await app.prisma.userBadge.findFirst({ where: { userId: creatorId, badge: badgeName } });
-          if (!existingBadge) {
-            await app.prisma.userBadge.create({ data: { userId: creatorId, badge: badgeName } });
+          const success = await assignBadgeByName(app.prisma, creatorId, badgeName);
+          if (success) {
             // Notify the creator
             await createAndSendNotification(app, {
               userId: creatorId,

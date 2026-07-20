@@ -331,6 +331,7 @@ async function handleConfirmedBooking(
   // ── Badge logic after confirmed pool contribution ─────────────────────────
   if (isPoolContribution) {
     try {
+      const { assignBadgeByName } = await import('../../services/badge.service')
       // ── Badge "Top Donateur" ───────────────────────────────────────────────
       // Counts events where this user contributed at least twice
       // A 2nd+ contribution = existingBooking already had totalPaid > 0 before this payment
@@ -353,9 +354,8 @@ async function handleConfirmedBooking(
         // Since we now know this event qualifies (2nd+ contribution), check total qualifying events
         if (doubleContributions >= 5) {
           const badgeName = 'Top Donateur';
-          const existingBadge = await app.prisma.userBadge.findFirst({ where: { userId, badge: badgeName } });
-          if (!existingBadge) {
-            await app.prisma.userBadge.create({ data: { userId, badge: badgeName } });
+          const success = await assignBadgeByName(app.prisma, userId, badgeName);
+          if (success) {
             await createAndSendNotification(app, {
               userId,
               type: 'NEW_BADGE' as any,
@@ -381,9 +381,8 @@ async function handleConfirmedBooking(
         if (pct >= 0.9) {
           const creatorId = updatedEvent!.creatorId;
           const badgeName = 'Party Maker';
-          const existingBadge = await app.prisma.userBadge.findFirst({ where: { userId: creatorId, badge: badgeName } });
-          if (!existingBadge) {
-            await app.prisma.userBadge.create({ data: { userId: creatorId, badge: badgeName } });
+          const success = await assignBadgeByName(app.prisma, creatorId, badgeName);
+          if (success) {
             await createAndSendNotification(app, {
               userId: creatorId,
               type: 'NEW_BADGE' as any,

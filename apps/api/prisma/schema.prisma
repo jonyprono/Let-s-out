@@ -433,14 +433,31 @@ model Review {
   @@map("reviews")
 }
 
+model Badge {
+  id              String   @id @default(cuid())
+  name            String
+  description     String
+  icon            String
+  conditionsLogic Json
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userBadges      UserBadge[]
+
+  @@map("badges")
+}
+
 model UserBadge {
   id        String   @id @default(cuid())
   userId    String
-  badge     String
+  badgeId   String
   earnedAt  DateTime @default(now())
+  
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, badge])
+  @@unique([userId, badgeId])
   @@map("user_badges")
 }
 

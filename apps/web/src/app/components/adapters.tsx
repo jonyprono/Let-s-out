@@ -43,6 +43,7 @@ const CreatedEventsListBase = lazy(() => import('@/app/components/CreatedEventsL
 const JoinedEventsListBase = lazy(() => import('@/app/components/JoinedEventsList').then(m => ({ default: m.JoinedEventsList })))
 const ManageEventBase = lazy(() => import('@/app/components/ManageEvent').then(m => ({ default: m.ManageEvent })))
 const AccountMenuBase = lazy(() => import('@/app/components/AccountMenu').then(m => ({ default: m.AccountMenu })))
+const BadgesPageBase = lazy(() => import('@/app/components/BadgesPage').then(m => ({ default: m.BadgesPage })))
 
 // ─── Splashscreen ─────────────────────────────────────────────────────────────
 export function Splashscreen() {
@@ -365,6 +366,14 @@ export function AccountMenu() {
   return (
     <Suspense fallback={<PageLoader />}>
       <AccountMenuBase />
+    </Suspense>
+  )
+}
+
+export function BadgesPage() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <BadgesPageBase />
     </Suspense>
   )
 }

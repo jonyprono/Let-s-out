@@ -5,6 +5,7 @@ import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { createAndSendNotification } from '../notifications/notifications.routes'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
+import { evaluateUserBadges } from '../../services/badge.service'
 
 async function getDetailedStats(app: FastifyInstance, userId: string) {
   const events = await app.prisma.event.findMany({
@@ -911,5 +912,34 @@ export default async function usersRoutes(app: FastifyInstance) {
     })
 
     return reply.send({ success: true })
+  })
+
+  // ── Badges ────────────────────────────────────────────────────────
+
+  // Get user's earned badges and all available badges
+  app.get('/me/badges', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+
+    const [allBadges, userBadges] = await Promise.all([
+      app.prisma.badge.findMany({ where: { isActive: true }, orderBy: { createdAt: 'desc' } }),
+      app.prisma.userBadge.findMany({ where: { userId: sub } })
+    ])
+
+    const earnedBadgeIds = new Set(userBadges.map(ub => ub.badgeId))
+    
+    const enrichedBadges = allBadges.map(b => ({
+      ...b,
+      isEarned: earnedBadgeIds.has(b.id),
+      earnedAt: userBadges.find(ub => ub.badgeId === b.id)?.earnedAt || null
+    }))
+
+    return reply.send({ data: enrichedBadges })
+  })
+
+  // Trigger evaluation of badges
+  app.post('/me/badges/evaluate', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const result = await evaluateUserBadges(app.prisma, sub)
+    return reply.send({ data: result || { newBadgeIds: [] } })
   })
 }

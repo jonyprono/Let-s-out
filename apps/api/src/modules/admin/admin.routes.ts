@@ -412,4 +412,65 @@ export default async function adminRoutes(app: FastifyInstance) {
 
     return reply.send({ data: flag })
   })
+
+  // ── Badges ────────────────────────────────────────────────────────
+  // GET /admin/badges — liste tous les badges
+  app.get('/badges', async (_req, reply) => {
+    const badges = await app.prisma.badge.findMany({
+      orderBy: { createdAt: 'desc' },
+    })
+    return reply.send({ data: badges })
+  })
+
+  // POST /admin/badges — créer un badge
+  app.post('/badges', async (req, reply) => {
+    const schema = z.object({
+      name: z.string().min(1),
+      description: z.string(),
+      icon: z.string(),
+      conditionsLogic: z.any(),
+      isActive: z.boolean().default(true),
+    })
+    const body = schema.parse(req.body)
+
+    const badge = await app.prisma.badge.create({
+      data: {
+        ...body,
+        conditionsLogic: body.conditionsLogic || {},
+      },
+    })
+
+    return reply.status(201).send({ data: badge })
+  })
+
+  // PUT /admin/badges/:id — modifier un badge
+  app.put('/badges/:id', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const schema = z.object({
+      name: z.string().min(1).optional(),
+      description: z.string().optional(),
+      icon: z.string().optional(),
+      conditionsLogic: z.any().optional(),
+      isActive: z.boolean().optional(),
+    })
+    const body = schema.parse(req.body)
+
+    const badge = await app.prisma.badge.update({
+      where: { id },
+      data: body,
+    })
+
+    return reply.send({ data: badge })
+  })
+
+  // DELETE /admin/badges/:id — supprimer un badge
+  app.delete('/badges/:id', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    
+    await app.prisma.badge.delete({
+      where: { id },
+    })
+
+    return reply.send({ success: true })
+  })
 }

@@ -95,6 +95,7 @@ import {
   JoinedEventsList,
   ManageEvent,
   AccountMenu,
+  BadgesPage,
 } from '@/app/components/adapters'
 import { EventValidatorsVote } from '@/app/pages/EventValidatorsVote'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
@@ -114,6 +115,7 @@ import { AdminPayoutsPage } from './components/admin/AdminPayoutsPage'
 import { EventPayoutApproval } from './components/EventPayoutApproval';
 import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
 import AdminFeatureFlagsPage from './components/admin/AdminFeatureFlagsPage'
+import { AdminBadgesPage } from './components/admin/AdminBadgesPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
@@ -260,6 +262,7 @@ export default function App() {
             <Route path="audit" element={<AdminAuditLogsPage />} />
             <Route path="payouts" element={<AdminPayoutsPage />} />
             <Route path="feature-flags" element={<AdminFeatureFlagsPage />} />
+            <Route path="badges" element={<AdminBadgesPage />} />
           </Route>
 
           {/* Protected app */}
@@ -284,6 +287,7 @@ export default function App() {
             <Route path="/chat/:id" element={<ChatDetails />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/account" element={<AccountMenu />} />
+            <Route path="/badges" element={<BadgesPage />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/profile/events-created" element={<CreatedEventsList />} />
