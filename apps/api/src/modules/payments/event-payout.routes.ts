@@ -357,7 +357,8 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         totalWithdrawn: event?.poolWithdrawn || 0,
         unlockedAmount: stats.availableAmount,
         pendingCount: stats.pendingCount,
-        poolClosedAt: event?.poolClosedAt
+        poolClosedAt: event?.poolClosedAt,
+        hasPool: stats.hasPool
       } 
     })
   })

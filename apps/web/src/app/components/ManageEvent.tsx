@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Briefcase } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
@@ -53,7 +53,7 @@ export function ManageEvent() {
     return <div className="w-full h-full flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]">Événement introuvable</div>;
   }
 
-  const hasPot = event.poolTarget && event.poolTarget > 0;
+  const hasPot = Boolean(event.poolTarget && event.poolTarget > 0);
   
   // If we are in the cagnotte flow (form, summary, success) and it's not the active display, render fullscreen
   if (activeTab === 'cagnotte' && cagnotteStep === 'validator-vote') {
@@ -112,7 +112,7 @@ export function ManageEvent() {
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
         {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
-        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
+        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} setCagnotteStep={setCagnotteStep} />}
       </div>
     </div>
   );
@@ -420,10 +420,10 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
 // ----------------------------------------------------------------------
 // TAB: CAGNOTTE INLINE
 // ----------------------------------------------------------------------
-function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] }) {
+function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, attendees: any[], setCagnotteStep: (s: any) => void }) {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const hasPot = event.poolTarget && event.poolTarget > 0;
+  const hasPot = Boolean(event.poolTarget && event.poolTarget > 0);
   const isCreator = user?.id === event.creatorId;
   const isCoHost = (event.coHostIds || []).includes(user?.id);
 
@@ -449,7 +449,27 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
 
   // payout mutation kept for future inline use
 
-  if (!hasPot) return null;
+  if (!hasPot) {
+    return (
+      <div className="w-full flex-1 flex flex-col items-center justify-center p-6 bg-white dark:bg-[#1A1A1A] rounded-xl border border-gray-100 dark:border-gray-800 mt-4">
+        <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-4">
+          <Briefcase className="w-8 h-8 text-orange-500" />
+        </div>
+        <h2 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2 text-center">Aucune cagnotte</h2>
+        <p className="text-[14px] text-gray-500 text-center mb-6 max-w-[280px]">
+          Cet événement ne dispose pas de cagnotte.
+        </p>
+        {(isCreator || isCoHost) && (
+          <button
+            onClick={() => setCagnotteStep('setup')}
+            className="px-6 py-3 bg-[#FF7A00] text-white rounded-[12px] font-bold text-[14px] active:scale-95 transition-transform"
+          >
+            Créer une cagnotte
+          </button>
+        )}
+      </div>
+    );
+  }
 
   const totalCollected = statusData?.totalCollected || 0;
   const totalWithdrawn = statusData?.totalWithdrawn || 0;

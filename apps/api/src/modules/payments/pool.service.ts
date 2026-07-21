@@ -17,11 +17,15 @@ export interface PoolBookingInfo {
 export async function calculateAvailablePoolAmount(
   app: FastifyInstance,
   eventId: string
-): Promise<{ availableAmount: number; totalCollected: number; pendingCount: number; breakdowns: PoolBookingInfo[] }> {
+): Promise<{ availableAmount: number; totalCollected: number; pendingCount: number; breakdowns: PoolBookingInfo[]; hasPool: boolean }> {
   const event = await (app as any).prisma.event.findUnique({
     where: { id: eventId },
-    select: { enableNonVoterPenalties: true, poolClosedAt: true }
+    select: { enableNonVoterPenalties: true, poolClosedAt: true, poolTarget: true }
   });
+  
+  if (!event || !event.poolTarget || event.poolTarget <= 0) {
+    return { availableAmount: 0, totalCollected: 0, pendingCount: 0, breakdowns: [], hasPool: false };
+  }
   
   // On récupère toutes les réservations avec leurs déductions
   const bookings = await (app as any).prisma.booking.findMany({
@@ -92,5 +96,5 @@ export async function calculateAvailablePoolAmount(
     }
   }
 
-  return { availableAmount, totalCollected, pendingCount, breakdowns };
+  return { availableAmount, totalCollected, pendingCount, breakdowns, hasPool: true };
 }
