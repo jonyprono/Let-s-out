@@ -37,17 +37,17 @@ import {
 
 const CATEGORY_LABELS = [
   { id: 'CULTURE',    label: 'Art et culture',            icon: PaintBoardIcon },
-  { id: 'OTHER',      label: 'Comédie',                   icon: MaskTheater01Icon },
+  { id: 'GAMING',     label: 'Comédie',                   icon: MaskTheater01Icon },
   { id: 'SPORT',      label: 'Sport',                     icon: FootballIcon },
   { id: 'WELLNESS',   label: 'Santé et bien-être',        icon: HealthIcon },
   { id: 'FOOD',       label: 'Cuisine et gastronomie',    icon: KitchenUtensilsIcon },
-  { id: 'NIGHTLIFE',  label: 'Boissons',                  icon: DrinkIcon },
+  { id: 'LIFESTYLE',  label: 'Boissons',                  icon: DrinkIcon },
   { id: 'SOCIAL',     label: 'Réseautage professionnel',  icon: MoleculesIcon },
   { id: 'NIGHTLIFE',  label: 'Fêtes',                     icon: PartyIcon },
   { id: 'OTHER',      label: 'Religion',                  icon: HandPrayerIcon },
-  { id: 'LIFESTYLE',  label: 'Shopping',                  icon: ShoppingBag02Icon },
+  { id: 'TECH',       label: 'Shopping',                  icon: ShoppingBag02Icon },
   { id: 'MUSIC',      label: 'Musique et son',            icon: MusicNote03Icon },
-  { id: 'ART',        label: 'Télévision et cinéma',      icon: CameraVideoIcon }
+  { id: 'ART',        label: 'Télévision et cinéma',      icon: CameraVideoIcon },
 ];
 
 // Filter tabs — pill style with border
