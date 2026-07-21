@@ -799,15 +799,24 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const body = req.body as any;
 
+    // Determine effective new values
     const newPrice = body.price !== undefined ? body.price : event.price;
+    // poolTarget: null means organizer is removing the pool (switching to free)
+    const isRemovingPool = body.poolTarget === null;
     const newPoolTarget = body.poolTarget !== undefined ? body.poolTarget : event.poolTarget;
-    const needsVerification = (newPrice && newPrice > 0) || (newPoolTarget && newPoolTarget > 0);
 
+    // KYC check only when setting/keeping a paid feature — not when removing it
+    const needsVerification = !isRemovingPool && ((newPrice && newPrice > 0) || (newPoolTarget && newPoolTarget > 0));
     if (needsVerification) {
       const userProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
       if (userProfile?.kycStatus !== 'verified') {
         return reply.code(403).send({ error: "Le profil doit être vérifié (KYC) pour activer cette option financière." })
       }
+    }
+
+    // Guard: cannot remove pool if contributions already collected
+    if (isRemovingPool && event.poolCollected > 0) {
+      return reply.code(400).send({ error: "Impossible de supprimer la cagnotte : des contributions ont déjà été reçues. Vous devez rembourser les participants d'abord." })
     }
 
     if (body.registrationDeadline && new Date(body.registrationDeadline).getTime() !== event.registrationDeadline?.getTime()) {

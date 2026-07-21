@@ -416,6 +416,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         ? new Date(`${endDate}T${endTime}`).toISOString()
         : new Date(`${startDate}T${startTime}`).toISOString()
 
+      const isEdit = !!(location.state?.editEventId || createdEventId)
+
       const payload = {
         title: title.trim(),
         description: description.trim() || undefined,
@@ -432,10 +434,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         price: amount ? parseFloat(amount) : undefined,
         isPrivate: privacy === 'PRIVATE',
         coverUrl,
-        poolTarget: enablePool && poolTarget ? parseFloat(poolTarget) : undefined,
-        poolMode: enablePool && poolTarget ? (poolMinAmount ? 'minimum' : 'libre') : undefined,
-        poolMinAmount: enablePool && poolMinAmount ? parseFloat(poolMinAmount) : undefined,
-        poolDescription: enablePool && poolDescription ? poolDescription.trim() : undefined,
+        // Cagnotte fields: send explicit null on edit to erase from DB when switching to free
+        poolTarget: enablePool && poolTarget
+          ? parseFloat(poolTarget)
+          : isEdit ? null : undefined,
+        poolMode: enablePool && poolTarget
+          ? (poolMinAmount ? 'minimum' : 'libre')
+          : isEdit ? null : undefined,
+        poolMinAmount: enablePool && poolMinAmount
+          ? parseFloat(poolMinAmount)
+          : isEdit ? null : undefined,
+        poolDescription: enablePool && poolDescription
+          ? poolDescription.trim()
+          : isEdit ? null : undefined,
         registrationDeadline: regEndDate && regEndTime ? new Date(`${regEndDate}T${regEndTime}`).toISOString() : undefined,
         status: 'DRAFT',
         coHostIds: selectedCoOrgs.map(o => o.id),
