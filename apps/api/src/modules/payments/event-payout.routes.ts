@@ -168,7 +168,6 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       const { sub: userId } = request.user as { sub: string }
       const eventId = request.params.id
       const requestedAmount = request.body?.amount
-      const ipAddress = request.ip
 
       const event = await (app as any).prisma.event.findUnique({
         where: { id: eventId },
@@ -361,7 +360,6 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       where: { eventId },
       orderBy: { createdAt: 'desc' },
       take: 100,
-    })
     })
     return reply.send({ data: logs })
   })

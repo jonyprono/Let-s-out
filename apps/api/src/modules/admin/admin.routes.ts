@@ -336,7 +336,7 @@ export default async function adminRoutes(app: FastifyInstance) {
 
     const adminUser = req.user as { sub: string }
 
-    await releaseFunds(app, payoutReq.eventId, payoutReq.requestedBy, payoutReq.amount, payoutReq.event.title)
+    await releaseFunds(app, payoutReq.eventId, payoutReq.requestedBy, payoutReq.amount, payoutReq.event.title, payoutReq.id)
 
     const updated = await app.prisma.eventPayoutRequest.update({
       where: { id },
