@@ -273,6 +273,8 @@ export default function App() {
             <Route path="/events/create" element={<CreateEvent />} />
             <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/events/:id/manage" element={<ManageEvent />} />
+            <Route path="/events/:id/payout-request" element={<PayoutRequestScreen />} />
+            <Route path="/events/:id/payout-approval/:payoutId" element={<PayoutApprovalScreen />} />
             <Route path="/events/:id/validators-vote" element={<EventValidatorsVote />} />
             <Route path="/events/:id/pool-validation" element={<EventPoolValidation />} />
             <Route path="/events/:id/success" element={<EventSuccessScreen />} />

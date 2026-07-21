@@ -488,35 +488,26 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
   return (
     <div className="flex flex-col gap-4">
       {/* ── Carte solde principal ── */}
-      <div className="rounded-[12px] p-4 shadow-sm border bg-white dark:bg-[#1A1A1A] border-gray-100 dark:border-gray-800">
-        <p className="text-[14px] text-gray-500 mb-1">Total collecté</p>
+      <div className="rounded-[12px] p-4 shadow-sm border bg-[#F4F9F7] dark:bg-[#101F18] border-green-50 dark:border-green-900/30">
+        <p className="text-[13px] text-gray-600 dark:text-gray-400 font-medium mb-2">Cagnotte</p>
         <p className="text-[24px] font-bold text-gray-900 dark:text-white leading-tight">
           {totalCollected.toLocaleString('fr-FR')} F CFA
         </p>
+        {event.poolTarget ? (
+          <p className="text-[12px] text-gray-500 mb-4 mt-1">sur {event.poolTarget.toLocaleString('fr-FR')} F CFA</p>
+        ) : (
+          <p className="text-[12px] text-gray-500 mb-4 mt-1">Objectif non défini</p>
+        )}
 
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-100 dark:border-green-900/30">
-            <p className="text-[12px] text-green-700 dark:text-green-400">Total débloqué</p>
-            <p className="text-[16px] font-bold text-green-700 dark:text-green-400">
-              {unlockedAmount.toLocaleString('fr-FR')} F
-            </p>
+        <div className="flex items-center gap-3">
+          <div className="flex-1 bg-green-100 dark:bg-green-900/40 rounded-full h-2 flex overflow-hidden">
+            <div className="bg-[#10B981] h-2 rounded-full transition-all" style={{ width: `${Math.min(100, Math.max(0, event.poolTarget ? (totalCollected / event.poolTarget) * 100 : 0))}%` }}></div>
           </div>
-          <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-100 dark:border-orange-900/30">
-            <p className="text-[12px] text-[#FF7A00]">Total bloqué</p>
-            <p className="text-[16px] font-bold text-[#FF7A00]">
-              {totalBlocked.toLocaleString('fr-FR')} F
-            </p>
-          </div>
+          <span className="bg-[#10B981] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">{event.poolTarget ? Math.min(100, Math.round((totalCollected / event.poolTarget) * 100)) : 0}%</span>
         </div>
         
-        {totalWithdrawn > 0 && (
-          <p className="text-[12px] text-gray-500 mt-3 italic">
-            Déjà retiré: {totalWithdrawn.toLocaleString('fr-FR')} F
-          </p>
-        )}
-        
         {poolClosedAt && (
-          <div className="mt-3 px-3 py-2 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
+          <div className="mt-4 px-3 py-2 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
             <span className="text-[14px] mt-0.5">🔒</span>
             <p className="text-[12px] font-bold text-amber-700 dark:text-amber-400">La cagnotte est fermée aux nouveaux versements.</p>
           </div>
@@ -547,7 +538,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
               </button>
               
               <button
-                onClick={() => setExpandedSection(expandedSection === 'payout-form' ? null : 'payout-form')}
+                onClick={() => navigate(`/events/${event.id}/payout-request`)}
                 className="w-full h-[44px] border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2A2A2A] text-gray-900 dark:text-white rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
@@ -564,36 +555,7 @@ function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep:
             </>
           )}
         </div>
-
-        {expandedSection === 'payout-form' && isCreator && (
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-            {maxAvailableNow > 0 ? (
-              <div className="flex flex-col gap-3">
-                <div>
-                  <label className="text-[12px] text-gray-500 mb-1 block">Montant à retirer (Max: {maxAvailableNow.toLocaleString('fr-FR')} F)</label>
-                  <input 
-                    type="number" 
-                    value={amountToWithdraw}
-                    onChange={(e) => setAmountToWithdraw(e.target.value)}
-                    placeholder="Montant"
-                    className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-[14px] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
-                  />
-                </div>
-                <button
-                  onClick={handlePayoutClick}
-                  disabled={payoutMut.isPending || !amountToWithdraw}
-                  className="w-full h-[44px] bg-[#10B981] hover:bg-[#10B981]/90 text-white rounded-lg text-[14px] font-bold active:scale-95 transition-transform disabled:opacity-50"
-                >
-                  {payoutMut.isPending ? "Traitement..." : "Retirer les fonds"}
-                </button>
-              </div>
-            ) : (
-              <p className="text-[13px] text-gray-500 text-center py-2">
-                Aucun fond n'est disponible pour le retrait.
-              </p>
-            )}
-          </div>
-        )}
+        </div>
       </div>
 
       {/* ── Sections dépliables ── */}
