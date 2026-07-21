@@ -607,12 +607,12 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
                 {contributions.slice(0, 5).map(c => (
                   <div key={c.userId} className="flex justify-between items-center text-[13px]">
                     <div className="flex items-center gap-2">
-                      {c.user.profile?.avatarUrl ? (
+                      {c.user?.profile?.avatarUrl ? (
                         <SafeImage src={c.user.profile.avatarUrl} alt="Avatar" className="w-6 h-6 rounded-full object-cover shrink-0" />
                       ) : (
                         <UserAvatarIcon size={24} className="shrink-0" />
                       )}
-                      <span className="text-gray-800 dark:text-gray-200">{c.user.profile?.displayName || 'Anonyme'}</span>
+                      <span className="text-gray-800 dark:text-gray-200">{c.user?.profile?.displayName || 'Anonyme'}</span>
                     </div>
                     <span className="font-semibold text-[#FF7A00]">{c.totalPaid.toLocaleString('fr-FR')} F</span>
                   </div>
@@ -627,7 +627,7 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
                 <h5 className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-3">Mes validations</h5>
                 {user && attendees.find(a => a.userId === user.id)?.poolValidationStatus === 'DELEGATED' ? (
                   <div className="text-[13px] text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-[#222] p-3 rounded-lg">
-                    Vous avez délégué votre part à {attendees.find(x => x.userId === attendees.find(a => a.userId === user.id)?.delegatedToId)?.user.profile?.displayName || 'un validateur'}
+                    Vous avez délégué votre part à {attendees.find(x => x.userId === attendees.find(a => a.userId === user.id)?.delegatedToId)?.user?.profile?.displayName || 'un validateur'}
                   </div>
                 ) : (
                   <p className="text-[13px] text-gray-500">Aucun historique de validation.</p>

@@ -260,7 +260,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
               data: {
                 payoutRequestId: newPayoutReq.id,
                 bookingId: b.id,
-                amountDeducted: deduct,
+                amount: deduct,
                 validationStatusSnapshot: b.poolValidationStatus,
                 delegatedToSnapshot: b.delegatedToId
               }
