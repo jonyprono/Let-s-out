@@ -22,6 +22,7 @@ export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuthStore();
   const initialTab = (searchParams.get('tab') as 'details' | 'participants' | 'cagnotte') || 'details';
   const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'cagnotte'>(initialTab);
   const [cagnotteStep, setCagnotteStep] = useState<'empty' | 'form' | 'summary' | 'success' | 'validator-vote'>('empty');
@@ -107,7 +108,7 @@ export function ManageEvent() {
 
       {/* Tab Content */}
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
-        {activeTab === 'details' && <TabDetails event={event} />}
+        {activeTab === 'details' && <TabDetails event={event} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
         {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
         {activeTab === 'cagnotte' && <TabCagnotteInline event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
       </div>
@@ -118,7 +119,8 @@ export function ManageEvent() {
 // ----------------------------------------------------------------------
 // TAB: DETAILS
 // ----------------------------------------------------------------------
-function TabDetails({ event }: { event: any }) {
+function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
+  const navigate = useNavigate();
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const qc = useQueryClient();
@@ -193,12 +195,14 @@ function TabDetails({ event }: { event: any }) {
           </div>
         ))}
 
-        <button 
-          onClick={() => setShowSearchModal(true)}
-          className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-[13px] font-semibold text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
-        >
-          Ajouter
-        </button>
+        {isCreator && (
+          <button 
+            onClick={() => setShowSearchModal(true)}
+            className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-[13px] font-semibold text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
+          >
+            Ajouter
+          </button>
+        )}
       </div>
 
       {showSearchModal && (
@@ -245,6 +249,20 @@ function TabDetails({ event }: { event: any }) {
              </div>
           </div>
         </div>
+      )}
+
+      {/* Modifier l'événement — organisateur uniquement */}
+      {isCreator && (
+        <button
+          onClick={() => navigate('/events/create', { state: { editEventId: event.id, eventData: event } })}
+          className="w-full py-3.5 mb-6 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Modifier l'événement
+        </button>
       )}
 
     </div>

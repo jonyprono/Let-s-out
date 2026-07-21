@@ -50,7 +50,7 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     const profile = await app.prisma.profile.findUnique({
       where: { userId },
-      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: true } } },
+      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: { include: { badge: true } } } } },
     })
     if (!profile) return reply.code(404).send({ error: 'User not found' })
 
@@ -115,14 +115,14 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     let profile = await app.prisma.profile.findUnique({
       where: { username },
-      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: true } } },
+      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: { include: { badge: true } } } } },
     })
     
     // Fallback: If username wasn't found, try treating the parameter as a userId
     if (!profile) {
       profile = await app.prisma.profile.findUnique({
         where: { userId: username },
-        include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: true } } },
+        include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: { include: { badge: true } } } } },
       })
     }
     
