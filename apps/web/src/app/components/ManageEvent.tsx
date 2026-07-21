@@ -497,29 +497,57 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
 
       {/* ── Actions ── */}
       <div className="flex flex-col gap-2 mt-4">
+        {/* Déposer une contribution */}
         <button
           onClick={() => navigate(`/events/${event.id}/pay`)}
           className="w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="1.25"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="2"/><path d="M12 13h4"/></svg>
+          <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.833 19.3359C19.833 20.7166 18.7137 21.8359 17.333 21.8359C15.9522 21.8359 14.833 20.7166 14.833 19.3359C14.833 17.9552 15.9522 16.8359 17.333 16.8359C18.7137 16.8359 19.833 17.9552 19.833 19.3359Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M13.3333 13.2247C12.2139 13.2194 10.893 13.0933 9.21123 12.7596C8.25404 12.5696 7.33325 13.2813 7.33325 14.2571V24.2742C7.33325 24.9625 7.8059 25.567 8.47805 25.7152C15.4429 27.2511 16.5824 25.4454 21.3333 25.4454C22.844 25.4454 24.0694 25.588 25.0095 25.7655C26.1052 25.9725 27.3333 25.1334 27.3333 24.0183V14.2435C27.3333 13.6753 27.0089 13.161 26.4662 12.9928C25.6561 12.7417 24.2785 12.4226 22.3333 12.3379" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M7.33325 16.336C9.28458 16.336 11.0381 14.741 11.2623 13.0901M23.8338 12.8359C23.8338 14.8756 25.5988 16.805 27.3333 16.805M27.3333 22.336C25.4342 22.336 23.5934 23.6462 23.4353 25.4343M11.3337 25.8321C11.3337 23.6229 9.54288 21.8321 7.33374 21.8321" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M14.8333 10.8359C14.8333 10.8359 16.6331 8.33594 17.3333 8.33594M17.3333 8.33594C18.0335 8.33594 19.8333 10.8359 19.8333 10.8359M17.3333 8.33594V13.8359" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
           <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Déposer une contribution</span>
         </button>
 
         {isCreator && (
           <>
+            {/* Lancer le vote des validateurs */}
+            <button
+              onClick={() => navigate(`/events/${event.id}/validators-vote`)}
+              className="w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            >
+              <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.6416 9.71792C21.0506 9.71792 20.755 9.71792 20.4858 9.61803C20.4484 9.60415 20.4116 9.58889 20.3753 9.57226C20.1143 9.45253 19.9054 9.24357 19.4874 8.82565C18.5255 7.86375 18.0446 7.3828 17.4528 7.33845C17.3733 7.33249 17.2933 7.33249 17.2138 7.33845C16.622 7.3828 16.141 7.86375 15.1791 8.82564C14.7612 9.24357 14.5522 9.45253 14.2912 9.57226C14.255 9.58889 14.2181 9.60415 14.1807 9.61803C13.9115 9.71792 13.616 9.71792 13.025 9.71792H12.9159C11.408 9.71792 10.6541 9.71792 10.1856 10.1864C9.71719 10.6548 9.71719 11.4088 9.71719 12.9167V13.0257C9.71719 13.6167 9.71719 13.9122 9.6173 14.1815C9.60342 14.2188 9.58816 14.2557 9.57153 14.292C9.4518 14.553 9.24284 14.7619 8.82491 15.1798C7.86302 16.1417 7.38207 16.6227 7.33772 17.2145C7.33176 17.294 7.33176 17.374 7.33772 17.4535C7.38207 18.0453 7.86302 18.5262 8.82491 19.4881C9.24284 19.9061 9.4518 20.115 9.57153 20.376C9.58816 20.4123 9.60342 20.4491 9.6173 20.4865C9.71719 20.7557 9.71719 21.0513 9.71719 21.6423V21.7513C9.71719 23.2592 9.71719 24.0132 10.1856 24.4816C10.6541 24.9501 11.408 24.9501 12.9159 24.9501H13.025C13.616 24.9501 13.9115 24.9501 14.1807 25.0499C14.2181 25.0638 14.255 25.0791 14.2912 25.0957C14.5522 25.2155 14.7612 25.4244 15.1791 25.8423C16.141 26.8042 16.622 27.2852 17.2138 27.3295C17.2933 27.3355 17.3733 27.3355 17.4528 27.3295C18.0446 27.2852 18.5255 26.8042 19.4874 25.8423C19.9054 25.4244 20.1143 25.2155 20.3753 25.0957C20.4116 25.0791 20.4484 25.0638 20.4858 25.0499C20.755 24.9501 21.0506 24.9501 21.6416 24.9501H21.7505C23.2584 24.9501 24.0125 24.9501 24.4809 24.4816C24.9494 24.0132 24.9494 23.2592 24.9494 21.7513V21.6423C24.9494 21.0513 24.9494 20.7557 25.0492 20.4865C25.0631 20.4491 25.0783 20.4123 25.0949 20.376C25.2147 20.115 25.4237 19.9061 25.8416 19.4881C26.8035 18.5262 27.2845 18.0453 27.3288 17.4535C27.3348 17.374 27.3348 17.294 27.3288 17.2145C27.2845 16.6227 26.8035 16.1417 25.8416 15.1798C25.4237 14.7619 25.2147 14.553 25.0949 14.292C25.0783 14.2557 25.0631 14.2188 25.0492 14.1815C24.9494 13.9122 24.9494 13.6167 24.9494 13.0257V12.9167C24.9494 11.4088 24.9494 10.6548 24.4809 10.1864C24.0125 9.71792 23.2584 9.71792 21.7505 9.71792H21.6416Z" stroke="#737373" strokeWidth="1.5"/>
+                <path d="M13.8333 21.832C14.5319 20.6243 15.8377 19.8117 17.3333 19.8117C18.8289 19.8117 20.1347 20.6243 20.8333 21.832M19.3333 15.332C19.3333 16.4366 18.4379 17.332 17.3333 17.332C16.2288 17.332 15.3333 16.4366 15.3333 15.332C15.3333 14.2275 16.2288 13.332 17.3333 13.332C18.4379 13.332 19.3333 14.2275 19.3333 15.332Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Lancer le vote des validateurs</span>
+            </button>
+
+            {/* Débloquer les fonds */}
             <button
               onClick={() => navigate(`/events/${event.id}/payout-request`)}
               className="w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="1.25"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+              <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.833 19.3359C19.833 20.7166 18.7137 21.8359 17.333 21.8359C15.9522 21.8359 14.833 20.7166 14.833 19.3359C14.833 17.9552 15.9522 16.8359 17.333 16.8359C18.7137 16.8359 19.833 17.9552 19.833 19.3359Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.3333 13.2247C12.2139 13.2194 10.893 13.0933 9.21123 12.7596C8.25404 12.5696 7.33325 13.2813 7.33325 14.2571V24.2742C7.33325 24.9625 7.8059 25.567 8.47805 25.7152C15.4429 27.2511 16.5824 25.4454 21.3333 25.4454C22.844 25.4454 24.0694 25.588 25.0095 25.7655C26.1052 25.9725 27.3333 25.1334 27.3333 24.0183V14.2435C27.3333 13.6753 27.0089 13.161 26.4662 12.9928C25.6561 12.7417 24.2785 12.4226 22.3333 12.3379" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.33325 16.336C9.28458 16.336 11.0381 14.741 11.2623 13.0901M23.8338 12.8359C23.8338 14.8756 25.5988 16.805 27.3333 16.805M27.3333 22.336C25.4342 22.336 23.5934 23.6462 23.4353 25.4343M11.3337 25.8321C11.3337 23.6229 9.54288 21.8321 7.33374 21.8321" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Débloquer les fonds</span>
             </button>
 
+            {/* Clôturer la cagnotte */}
             <button
               onClick={() => {/* TODO close pot */}}
               className="w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#737373" strokeWidth="1.25"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M23.3333 16.1667H11.6667C10.6541 16.1667 9.83333 16.9874 9.83333 18V24.5C9.83333 25.5126 10.6541 26.3333 11.6667 26.3333H23.3333C24.3459 26.3333 25.1667 25.5126 25.1667 24.5V18C25.1667 16.9874 24.3459 16.1667 23.3333 16.1667Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.5 16.1667V13.4167C13.5 12.2006 13.9829 11.0337 14.8424 10.1742C15.7019 9.31473 16.8688 8.83337 18.0848 8.83337C19.3009 8.83337 20.4677 9.31473 21.3272 10.1742C22.1868 11.0337 22.6681 12.2006 22.6681 13.4167V16.1667" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="17.5" cy="21.5" r="1.5" fill="#737373"/>
+              </svg>
               <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Clôturer la cagnotte</span>
             </button>
           </>
