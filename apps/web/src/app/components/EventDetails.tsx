@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import {
   MapPin,
@@ -179,6 +179,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const { isEnabled } = useFeatureFlags()
 
   const hasJoined = (!!myBookingData && myBookingData.status !== 'CANCELLED') || isCreator
+
+  useEffect(() => {
+    if (user && event && event.status !== 'DRAFT') {
+      if (hasJoined || isOrganizer) {
+        navigate(`/events/${id}/manage`, { replace: true })
+      }
+    }
+  }, [user, event, hasJoined, isOrganizer, id, navigate])
 
   const joinMutation = useMutation({
     mutationFn: () => eventsApi.join(id!),

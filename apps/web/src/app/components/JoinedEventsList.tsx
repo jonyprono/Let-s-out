@@ -113,7 +113,7 @@ export function JoinedEventsList() {
               <p className="text-[13px] text-gray-400">Aucun événement à venir.</p>
             ) : (
               upcomingEvents.map((ev: any) => (
-                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}`)} />
+                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage`)} />
               ))
             )}
           </div>
@@ -124,7 +124,7 @@ export function JoinedEventsList() {
               <p className="text-[13px] text-gray-400">Aucun événement passé.</p>
             ) : (
               pastEvents.map((ev: any) => (
-                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}`)} />
+                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage`)} />
               ))
             )}
           </div>
@@ -137,7 +137,7 @@ export function JoinedEventsList() {
               <p className="text-[13px] text-gray-400">Vous n'avez participé à aucune cagnotte.</p>
             ) : (
               cagnottes.map((ev: any) => (
-                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}`)} />
+                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage?tab=cagnotte`)} />
               ))
             )}
           </div>

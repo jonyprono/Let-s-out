@@ -78,7 +78,9 @@ export function ManageEvent() {
             onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} 
             className="bg-white/80 dark:bg-black/50 backdrop-blur shadow-sm" 
           />
-          <span className="font-semibold text-gray-900 dark:text-white drop-shadow-md">Gestion événement</span>
+          <span className="font-semibold text-gray-900 dark:text-white drop-shadow-md">
+            {(user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)) ? "Gestion événement" : "Détails événement"}
+          </span>
         </div>
       </div>
 
@@ -423,6 +425,7 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
   const { user } = useAuthStore();
   const hasPot = event.poolTarget && event.poolTarget > 0;
   const isCreator = user?.id === event.creatorId;
+  const isCoHost = (event.coHostIds || []).includes(user?.id);
 
   const [expandedSection, setExpandedSection] = useState<'participations' | 'validators' | 'payouts' | 'payout-form' | null>(null);
 
@@ -517,7 +520,7 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
       <div className="flex flex-col gap-2 mt-4">
         {/* Déposer une contribution */}
         <button
-          onClick={() => navigate(`/events/${event.id}/pay`)}
+          onClick={() => navigate(`/events/${event.id}/pay?type=contribution`)}
           className="w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
           <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -529,7 +532,7 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
           <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Déposer une contribution</span>
         </button>
 
-        {isCreator && (
+        { (isCreator || isCoHost) && (
           <>
             {/* Lancer le vote des validateurs */}
             <button
@@ -594,7 +597,7 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
           </div>
           {expandedSection === 'participations' && (
             <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800">
-              <button onClick={() => navigate(`/events/${event.id}/pay`)} className="w-full h-9 mb-4 mt-4 border border-[#FF7A00] text-[#FF7A00] rounded-lg text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+              <button onClick={() => navigate(`/events/${event.id}/pay?type=contribution`)} className="w-full h-9 mb-4 mt-4 border border-[#FF7A00] text-[#FF7A00] rounded-lg text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform">
                 Contribuer à nouveau
               </button>
               <div className="flex flex-col gap-3">
