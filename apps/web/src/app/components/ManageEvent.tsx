@@ -472,10 +472,13 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
   const validatorsList = Array.from(validatorsMap.values());
   const payoutsList = auditData?.filter((l: any) => l.action.includes('PAYOUT')) || [];
 
+  const progressPercent = event.poolTarget ? Math.min(100, Math.round((totalCollected / event.poolTarget) * 100)) : 0;
+  const isGoalReached = event.poolTarget && totalCollected >= event.poolTarget;
+
   return (
     <div className="flex flex-col gap-4">
       {/* ── Carte solde principal ── */}
-      <div className="rounded-[12px] p-4 shadow-sm border bg-[#F4F9F7] dark:bg-[#101F18] border-green-50 dark:border-green-900/30">
+      <div className={`rounded-[12px] p-4 shadow-sm border ${isGoalReached ? 'bg-[#F4F9F7] dark:bg-[#101F18] border-green-50 dark:border-green-900/30' : 'bg-[#FFF9EC] dark:bg-[#2A1F13] border-[#FFE8B3] dark:border-[#FF7A00]/30'}`}>
         <p className="text-[13px] text-gray-600 dark:text-gray-400 font-medium mb-2">Cagnotte</p>
         <p className="text-[24px] font-bold text-gray-900 dark:text-white leading-tight">
           {totalCollected.toLocaleString('fr-FR')} F CFA
@@ -487,20 +490,20 @@ function TabCagnotteInline({ event, attendees }: { event: any, attendees: any[] 
         )}
 
         <div className="flex items-center gap-3">
-          <div className="flex-1 bg-green-100 dark:bg-green-900/40 rounded-full h-2 flex overflow-hidden">
-            <div className="bg-[#10B981] h-2 rounded-full transition-all" style={{ width: `${Math.min(100, Math.max(0, event.poolTarget ? (totalCollected / event.poolTarget) * 100 : 0))}%` }}></div>
+          <div className={`flex-1 rounded-full h-2 flex overflow-hidden ${isGoalReached ? 'bg-green-100 dark:bg-green-900/40' : 'bg-white dark:bg-[#1A1A1A]'}`}>
+            <div className={`h-2 rounded-full transition-all ${isGoalReached ? 'bg-[#10B981]' : 'bg-[#FF7A00]'}`} style={{ width: `${progressPercent}%` }}></div>
           </div>
-          <span className="bg-[#10B981] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">{event.poolTarget ? Math.min(100, Math.round((totalCollected / event.poolTarget) * 100)) : 0}%</span>
+          <span className={`text-white text-[10px] font-bold px-1.5 py-0.5 rounded ${isGoalReached ? 'bg-[#10B981]' : 'bg-[#FF7A00]'}`}>{progressPercent}%</span>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-green-200/50 dark:border-green-800/30 flex justify-between">
+        <div className={`mt-4 pt-4 border-t flex justify-between ${isGoalReached ? 'border-green-200/50 dark:border-green-800/30' : 'border-[#FFE8B3]/50 dark:border-[#FF7A00]/20'}`}>
           <div className="flex flex-col">
             <span className="text-[11px] text-gray-500 uppercase tracking-wide">Collecté</span>
             <span className="font-semibold text-gray-900 dark:text-white">{totalCollected.toLocaleString('fr-FR')} F</span>
           </div>
           <div className="flex flex-col items-center">
             <span className="text-[11px] text-gray-500 uppercase tracking-wide">Débloqué</span>
-            <span className="font-semibold text-green-600">{unlockedAmount.toLocaleString('fr-FR')} F</span>
+            <span className={`font-semibold ${isGoalReached ? 'text-green-600' : 'text-[#FF7A00]'}`}>{unlockedAmount.toLocaleString('fr-FR')} F</span>
           </div>
           <div className="flex flex-col items-end">
             <span className="text-[11px] text-gray-500 uppercase tracking-wide">Disponible</span>
