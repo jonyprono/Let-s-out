@@ -113,6 +113,8 @@ import { AdminBotPrompts } from './components/admin/AdminBotPrompts'
 import { AdminAuditLogsPage } from './components/admin/AdminAuditLogsPage'
 import { AdminPayoutsPage } from './components/admin/AdminPayoutsPage'
 import { EventPoolValidation } from './components/EventPoolValidation';
+import { PayoutRequestScreen } from './components/PayoutRequestScreen';
+import { PayoutApprovalScreen } from './components/PayoutApprovalScreen';
 import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
 import AdminFeatureFlagsPage from './components/admin/AdminFeatureFlagsPage'
 import { AdminBadgesPage } from './components/admin/AdminBadgesPage'

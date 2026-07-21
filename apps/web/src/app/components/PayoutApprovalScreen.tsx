@@ -166,7 +166,7 @@ export function PayoutApprovalScreen() {
         </button>
       </div>
 
-      <BottomSheet isOpen={step === 'approve-sheet'} onClose={() => setStep('view')}>
+      <BottomSheet open={step === 'approve-sheet'} onClose={() => setStep('view')}>
         <div className="p-5 pb-10">
           <div className="w-12 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6" />
           <h3 className="text-[18px] font-bold text-center text-gray-900 dark:text-white mb-4">Approuver le retrait ?</h3>
@@ -193,7 +193,7 @@ export function PayoutApprovalScreen() {
         </div>
       </BottomSheet>
 
-      <BottomSheet isOpen={step === 'reject-sheet'} onClose={() => setStep('view')}>
+      <BottomSheet open={step === 'reject-sheet'} onClose={() => setStep('view')}>
         <div className="p-5 pb-10">
           <div className="w-12 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6" />
           <h3 className="text-[18px] font-bold text-center text-gray-900 dark:text-white mb-4">Refuser le déblocage ?</h3>
