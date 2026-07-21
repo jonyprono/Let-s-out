@@ -1065,7 +1065,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       include: { 
         user: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
         payoutItems: {
-          select: { amount: true, payoutRequest: { select: { status: true } } }
+          select: { amountDeducted: true, payoutRequest: { select: { status: true } } }
         }
       },
       take: Number(limit),
@@ -1075,7 +1075,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const data = bookings.map(b => {
       const deducted = b.payoutItems
         .filter((item: any) => item.payoutRequest.status !== 'REJECTED' && item.payoutRequest.status !== 'CANCELLED')
-        .reduce((sum: number, item: any) => sum + item.amount, 0);
+        .reduce((sum: number, item: any) => sum + item.amountDeducted, 0);
       return {
         ...b,
         remainingAmount: Math.max(0, b.totalPaid - deducted)
