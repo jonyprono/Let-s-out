@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { Loader2 } from 'lucide-react';
@@ -108,7 +109,7 @@ export function ManageEvent() {
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} />}
         {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
-        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} />}
+        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} setStep={setCagnotteStep} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
       </div>
     </div>
   );
@@ -399,16 +400,29 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
 // ----------------------------------------------------------------------
 // TAB: CAGNOTTE INLINE
 // ----------------------------------------------------------------------
-function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) => void }) {
+function TabCagnotteInline({ event, setStep, attendees }: { event: any, setStep: (s: any) => void, attendees: any[] }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
   const hasPot = event.poolTarget && event.poolTarget > 0;
+  const isCreator = user?.id === event.creatorId;
 
   const [amountToWithdraw, setAmountToWithdraw] = useState<string>('');
+  const [expandedSection, setExpandedSection] = useState<'participations' | 'validators' | 'payouts' | 'payout-form' | null>(null);
 
   const { data: statusData, refetch: refetchStatus } = useQuery({
     queryKey: ['events', event.id, 'payout-status'],
     queryFn: async () => {
       const res = await apiClient.get(`/events/${event.id}/payout/status`);
+      return res.data?.data;
+    },
+    enabled: hasPot,
+  });
+
+  const { data: auditData } = useQuery({
+    queryKey: ['events', event.id, 'payout-audit'],
+    queryFn: async () => {
+      const res = await apiClient.get(`/events/${event.id}/payout/audit`);
       return res.data?.data;
     },
     enabled: hasPot,
@@ -422,6 +436,7 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
       qc.invalidateQueries({ queryKey: ['events', event.id] });
       refetchStatus();
       setAmountToWithdraw('');
+      setExpandedSection(null);
     },
     onError: (err: any) => {
       if (err.response?.data?.details?.notifiedCount > 0) {
@@ -438,7 +453,6 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
   const totalCollected = statusData?.totalCollected || 0;
   const totalWithdrawn = statusData?.totalWithdrawn || 0;
   const unlockedAmount = statusData?.unlockedAmount || 0;
-  const pendingCount = statusData?.pendingCount || 0;
   const poolClosedAt = statusData?.poolClosedAt;
 
   const maxAvailableNow = Math.min(Math.max(0, unlockedAmount - totalWithdrawn), Math.max(0, totalCollected - totalWithdrawn));
@@ -457,9 +471,19 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
     payoutMut.mutate(amt);
   };
 
-  const handleRemindPending = () => {
-    payoutMut.mutate(totalCollected + 1);
-  };
+  const contributions = attendees.filter(a => a.totalPaid > 0);
+  const validatorsMap = new Map();
+  attendees.forEach(a => {
+    if (a.delegatedToId && a.poolValidationStatus === 'DELEGATED') {
+      const v = attendees.find(x => x.userId === a.delegatedToId);
+      if (v) {
+        if (!validatorsMap.has(v.userId)) validatorsMap.set(v.userId, { ...v, delegatedCount: 0 });
+        validatorsMap.get(v.userId).delegatedCount += 1;
+      }
+    }
+  });
+  const validatorsList = Array.from(validatorsMap.values());
+  const payoutsList = auditData?.filter((l: any) => l.action.includes('PAYOUT')) || [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -503,55 +527,187 @@ function TabCagnotteInline({ event, setStep }: { event: any, setStep: (s: any) =
       <div className="bg-white dark:bg-[#1A1A1A] rounded-[12px] p-4 shadow-sm border border-gray-100 dark:border-gray-800">
         <h4 className="text-[14px] font-semibold mb-3 text-gray-900 dark:text-white">Actions</h4>
 
-        <div className="flex flex-col gap-3 mb-6">
+        <div className="flex flex-col gap-3">
           <button
-            onClick={() => setStep('validator-vote')}
-            className="w-full h-10 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2A2A2A] text-gray-900 dark:text-white rounded-lg text-[14px] font-semibold active:scale-95 transition-transform"
+            onClick={() => navigate(`/events/${event.id}/pay`)}
+            className="w-full h-[44px] bg-[#FF7A00] text-white rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
           >
-            Lancer le vote des validateurs
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><circle cx="10" cy="13" r="2"/><path d="M12 13h4"/></svg>
+            Déposer une contribution
           </button>
+
+          {isCreator && (
+            <>
+              <button
+                onClick={() => setStep('validator-vote')}
+                className="w-full h-[44px] border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2A2A2A] text-gray-900 dark:text-white rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                Lancer le vote des validateurs
+              </button>
+              
+              <button
+                onClick={() => setExpandedSection(expandedSection === 'payout-form' ? null : 'payout-form')}
+                className="w-full h-[44px] border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2A2A2A] text-gray-900 dark:text-white rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Débloquer les fonds
+              </button>
+
+              <button
+                onClick={() => {/* TODO close pot */}}
+                className="w-full h-[44px] border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#2A2A2A] text-gray-900 dark:text-white rounded-lg text-[14px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Clôturer la cagnotte
+              </button>
+            </>
+          )}
         </div>
 
-        <h4 className="text-[14px] font-semibold mb-3 text-gray-900 dark:text-white">Déblocage</h4>
-        
-        {maxAvailableNow > 0 ? (
-          <div className="flex flex-col gap-3">
-            <div>
-              <label className="text-[12px] text-gray-500 mb-1 block">Montant à retirer (Max: {maxAvailableNow.toLocaleString('fr-FR')} F)</label>
-              <input 
-                type="number" 
-                value={amountToWithdraw}
-                onChange={(e) => setAmountToWithdraw(e.target.value)}
-                placeholder="Montant"
-                className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-[14px] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
-              />
-            </div>
-            <button
-              onClick={handlePayoutClick}
-              disabled={payoutMut.isPending || !amountToWithdraw}
-              className="w-full h-10 bg-[#10B981] hover:bg-[#10B981]/90 text-white rounded-lg text-[14px] font-bold active:scale-95 transition-transform disabled:opacity-50"
-            >
-              {payoutMut.isPending ? "Traitement..." : "Retirer les fonds"}
-            </button>
+        {expandedSection === 'payout-form' && isCreator && (
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+            {maxAvailableNow > 0 ? (
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="text-[12px] text-gray-500 mb-1 block">Montant à retirer (Max: {maxAvailableNow.toLocaleString('fr-FR')} F)</label>
+                  <input 
+                    type="number" 
+                    value={amountToWithdraw}
+                    onChange={(e) => setAmountToWithdraw(e.target.value)}
+                    placeholder="Montant"
+                    className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-[14px] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
+                  />
+                </div>
+                <button
+                  onClick={handlePayoutClick}
+                  disabled={payoutMut.isPending || !amountToWithdraw}
+                  className="w-full h-[44px] bg-[#10B981] hover:bg-[#10B981]/90 text-white rounded-lg text-[14px] font-bold active:scale-95 transition-transform disabled:opacity-50"
+                >
+                  {payoutMut.isPending ? "Traitement..." : "Retirer les fonds"}
+                </button>
+              </div>
+            ) : (
+              <p className="text-[13px] text-gray-500 text-center py-2">
+                Aucun fond n'est disponible pour le retrait.
+              </p>
+            )}
           </div>
-        ) : (
-          <p className="text-[13px] text-gray-500 text-center py-2">
-            Aucun fond n'est disponible pour le retrait.
-          </p>
+        )}
+      </div>
+
+      {/* ── Sections dépliables ── */}
+      <div className="bg-white dark:bg-[#1A1A1A] rounded-[12px] overflow-hidden shadow-sm border border-gray-100 dark:border-gray-800">
+        {/* Participations */}
+        <div 
+          onClick={() => setExpandedSection(expandedSection === 'participations' ? null : 'participations')}
+          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#222] transition-colors"
+        >
+          <div className="flex items-center gap-3 text-gray-900 dark:text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span className="font-semibold text-[15px]">Participations</span>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 transition-transform ${expandedSection === 'participations' ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        {expandedSection === 'participations' && (
+          <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800">
+            <button onClick={() => navigate(`/events/${event.id}/pay`)} className="w-full h-9 mb-4 mt-4 border border-[#FF7A00] text-[#FF7A00] rounded-lg text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+              Contribuer à nouveau
+            </button>
+            <div className="flex flex-col gap-3">
+              {contributions.slice(0, 5).map(c => (
+                <div key={c.userId} className="flex justify-between items-center text-[13px]">
+                  <div className="flex items-center gap-2">
+                    {c.user.profile?.avatarUrl ? (
+                      <SafeImage src={c.user.profile.avatarUrl} alt="Avatar" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <UserAvatarIcon size={24} className="shrink-0" />
+                    )}
+                    <span className="text-gray-800 dark:text-gray-200">{c.user.profile?.displayName || 'Anonyme'}</span>
+                  </div>
+                  <span className="font-semibold text-[#FF7A00]">{c.totalPaid.toLocaleString('fr-FR')} F</span>
+                </div>
+              ))}
+              {contributions.length === 0 && <p className="text-[13px] text-gray-500 text-center py-2">Aucune participation.</p>}
+              {contributions.length > 5 && (
+                <button className="text-[13px] text-[#FF7A00] font-semibold mt-2">Voir tout ({contributions.length})</button>
+              )}
+            </div>
+            {/* Mes validations (historique) */}
+            <div className="mt-5 pt-4 border-t border-dashed border-gray-200 dark:border-gray-800">
+              <h5 className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-3">Mes validations</h5>
+              {user && attendees.find(a => a.userId === user.id)?.poolValidationStatus === 'DELEGATED' ? (
+                <div className="text-[13px] text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-[#222] p-3 rounded-lg">
+                  Vous avez délégué votre part à {attendees.find(x => x.userId === attendees.find(a => a.userId === user.id)?.delegatedToId)?.user.profile?.displayName || 'un validateur'}
+                </div>
+              ) : (
+                <p className="text-[13px] text-gray-500">Aucun historique de validation.</p>
+              )}
+            </div>
+          </div>
         )}
 
-        {pendingCount > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-             <button
-                onClick={handleRemindPending}
-                disabled={payoutMut.isPending}
-                className="w-full h-10 border border-[#FF7A00] text-[#FF7A00] rounded-lg text-[14px] font-semibold active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                Relancer les {pendingCount} indécis
-             </button>
-             <p className="text-[11px] text-gray-400 mt-2 text-center">
-               Envoie une notification aux participants n'ayant pas encore validé.
-             </p>
+        <div className="h-[1px] bg-gray-100 dark:bg-gray-800" />
+
+        {/* Validateurs */}
+        <div 
+          onClick={() => setExpandedSection(expandedSection === 'validators' ? null : 'validators')}
+          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#222] transition-colors"
+        >
+          <div className="flex items-center gap-3 text-gray-900 dark:text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span className="font-semibold text-[15px]">Validateurs</span>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 transition-transform ${expandedSection === 'validators' ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        {expandedSection === 'validators' && (
+          <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+            <div className="flex flex-col gap-3">
+              {validatorsList.map(v => (
+                <div key={v.userId} className="flex justify-between items-center text-[13px]">
+                  <div className="flex items-center gap-2">
+                    {v.user.profile?.avatarUrl ? (
+                      <SafeImage src={v.user.profile.avatarUrl} alt="Avatar" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <UserAvatarIcon size={24} className="shrink-0" />
+                    )}
+                    <span className="text-gray-800 dark:text-gray-200">{v.user.profile?.displayName}</span>
+                  </div>
+                  <span className="text-gray-500">{v.delegatedCount} délégation(s)</span>
+                </div>
+              ))}
+              {validatorsList.length === 0 && <p className="text-[13px] text-gray-500 text-center py-2">Aucun validateur désigné.</p>}
+            </div>
+          </div>
+        )}
+
+        <div className="h-[1px] bg-gray-100 dark:bg-gray-800" />
+
+        {/* Retraits */}
+        <div 
+          onClick={() => setExpandedSection(expandedSection === 'payouts' ? null : 'payouts')}
+          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#222] transition-colors"
+        >
+          <div className="flex items-center gap-3 text-gray-900 dark:text-white">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h4l2-9 5 18 3-9h6"/></svg>
+            <span className="font-semibold text-[15px]">Retraits</span>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 transition-transform ${expandedSection === 'payouts' ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        {expandedSection === 'payouts' && (
+          <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+            <div className="flex flex-col gap-3">
+              {payoutsList.map((l: any) => (
+                <div key={l.id} className="text-[13px] flex flex-col gap-1 bg-gray-50 dark:bg-[#222] p-3 rounded-lg">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-gray-800 dark:text-gray-200">Demande de {l.amount?.toLocaleString('fr-FR')} F</span>
+                    <span className="text-[#FF7A00] font-medium text-[11px] uppercase bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded">{l.action.replace('PAYOUT_', '')}</span>
+                  </div>
+                  <span className="text-gray-500 text-[11px]">{format(new Date(l.createdAt), "dd MMM yyyy HH:mm")}</span>
+                </div>
+              ))}
+              {payoutsList.length === 0 && <p className="text-[13px] text-gray-500 text-center py-2">Aucun retrait.</p>}
+            </div>
           </div>
         )}
       </div>

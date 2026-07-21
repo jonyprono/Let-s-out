@@ -50,6 +50,7 @@ model User {
   wallet           Wallet?
   validatorVotes   ValidatorVote[]      @relation("UserValidatorVotes")
   refundRequests   ParticipantRefundRequest[]
+  payoutApprovals  PayoutApproval[]
 
   @@map("users")
 }
@@ -219,7 +220,7 @@ model Booking {
   updatedAt DateTime      @updatedAt
   event     Event         @relation(fields: [eventId], references: [id])
   user      User          @relation(fields: [userId], references: [id])
-  payment   Payment?
+  payments  Payment[]
   refundRequests ParticipantRefundRequest[]
   payoutItems    PayoutBookingItem[]
 
@@ -385,7 +386,7 @@ model WalletTransaction {
 model Payment {
   id              String        @id @default(cuid())
   userId          String
-  bookingId       String?       @unique
+  bookingId       String?
   stripePaymentId String?       @unique
   amount          Float
   currency        String        @default("EUR")
@@ -617,6 +618,7 @@ enum WalletTxType {
   PAYMENT
   REFUND
   TRANSFER
+  POOL_PAYOUT
 }
 
 enum ReportReason {
@@ -674,10 +676,29 @@ model EventPayoutRequest {
 
   event               Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   payoutItems         PayoutBookingItem[]
+  approvalsList       PayoutApproval[]
 
   @@index([status])
   @@index([expiresAt])
   @@map("event_payout_requests")
+}
+
+model PayoutApproval {
+  id              String             @id @default(cuid())
+  payoutRequestId String
+  userId          String
+  role            String             // "VALIDATOR" | "COHOST"
+  status          String             @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  rejectionReason String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  payoutRequest   EventPayoutRequest @relation(fields: [payoutRequestId], references: [id], onDelete: Cascade)
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([payoutRequestId, userId])
+  @@index([payoutRequestId])
+  @@index([userId])
 }
 
 // Journal d'audit immuable — FinTech Audit 8

@@ -172,6 +172,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
       const event = await (app as any).prisma.event.findUnique({
         where: { id: eventId },
+        select: { id: true, creatorId: true, coHostIds: true, poolCollected: true, poolWithdrawn: true, poolClosedAt: true, enableNonVoterPenalties: true, title: true }
       })
 
       if (!event) return reply.code(404).send({ error: 'Événement non trouvé' })
@@ -224,13 +225,13 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       const maxAvailableNow = Math.min(availableAmount, maxCollected)
 
       if (maxAvailableNow >= amountToWithdraw && amountToWithdraw > 0) {
-        // Create an EventPayoutRequest and PayoutBookingItems
+        // Create an EventPayoutRequest as PENDING
         const newPayoutReq = await (app as any).prisma.eventPayoutRequest.create({
           data: {
             eventId,
             requestedBy: userId,
             amount: amountToWithdraw,
-            status: 'COMPLETED'
+            status: 'PENDING'
           }
         });
 
@@ -239,6 +240,8 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         
         let remainingToDeduct = amountToWithdraw;
         const totalValidatedFunds = validatedBookings.reduce((sum, b) => sum + b.remainingAmount, 0);
+
+        const involvedValidatorIds = new Set<string>();
 
         for (const b of validatedBookings) {
           if (remainingToDeduct <= 0) break;
@@ -261,24 +264,49 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
               }
             });
             remainingToDeduct -= deduct;
+            involvedValidatorIds.add(b.delegatedToId || b.userId); // Add delegatee or self
           }
         }
 
-        // We can release funds immediately
-        await releaseFunds(app, eventId, userId, amountToWithdraw, event.title)
-        
-        await writeAuditLog((app as any).prisma, {
-          actorId: userId,
-          actorRole: 'ORGANIZER',
-          action: 'PAYOUT_APPROVED',
-          targetType: 'event',
-          targetId: eventId,
-          eventId,
-          amount: amountToWithdraw,
-          ipAddress,
-        })
-        
-        return reply.send({ message: `Fonds débloqués avec succès: ${amountToWithdraw}` })
+        // Create PayoutApproval records for involved validators
+        const approvalPromises = [];
+        for (const vid of involvedValidatorIds) {
+          approvalPromises.push(
+            (app as any).prisma.payoutApproval.create({
+              data: { payoutRequestId: newPayoutReq.id, userId: vid, role: 'VALIDATOR' }
+            })
+          );
+        }
+
+        // Create PayoutApproval records for cohosts
+        const coHostIds = event.coHostIds || [];
+        for (const cid of coHostIds) {
+          // Avoid duplicate if a cohost is also a validator
+          if (!involvedValidatorIds.has(cid)) {
+            approvalPromises.push(
+              (app as any).prisma.payoutApproval.create({
+                data: { payoutRequestId: newPayoutReq.id, userId: cid, role: 'COHOST' }
+              })
+            );
+          } else {
+            // Update the existing record to reflect dual role, or just keep it as VALIDATOR. Let's keep it simple.
+          }
+        }
+        await Promise.all(approvalPromises);
+
+        // Notify approvers
+        const approversToNotify = Array.from(new Set([...involvedValidatorIds, ...coHostIds]));
+        if (approversToNotify.length > 0) {
+          await createAndSendNotificationMany(app, approversToNotify.map((uid: string) => ({
+            userId: uid,
+            type: 'SYSTEM',
+            title: 'Approbation de retrait requise',
+            body: `L'organisateur de "${event.title}" a demandé un retrait de ${amountToWithdraw} F CFA. Votre approbation est requise.`,
+            data: { eventId, screen: 'payout-approval' },
+          })));
+        }
+
+        return reply.send({ message: `Demande de retrait de ${amountToWithdraw} F initiée. En attente d'approbation.` })
       } else {
         // Insufficient unlocked funds, notify pending users
         const pendingBookings = await (app as any).prisma.booking.findMany({
@@ -334,7 +362,109 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       orderBy: { createdAt: 'desc' },
       take: 100,
     })
+    })
     return reply.send({ data: logs })
+  })
+
+  // ─── POST /:id/payout/:payoutId/approve ───────────────────────────────────
+  app.post<{ Params: { id: string, payoutId: string } }>('/:id/payout/:payoutId/approve', async (request, reply) => {
+    const { sub: userId } = request.user as { sub: string }
+    const { id: eventId, payoutId } = request.params
+
+    const payoutReq = await (app as any).prisma.eventPayoutRequest.findUnique({
+      where: { id: payoutId },
+      include: { event: true, approvalsList: true }
+    })
+
+    if (!payoutReq || payoutReq.eventId !== eventId) return reply.code(404).send({ error: 'Demande non trouvée' })
+    if (payoutReq.status !== 'PENDING') return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
+
+    const myApproval = payoutReq.approvalsList.find((a: any) => a.userId === userId)
+    if (!myApproval) return reply.code(403).send({ error: 'Vous n\'êtes pas autorisé à approuver cette demande' })
+    if (myApproval.status !== 'PENDING') return reply.code(400).send({ error: 'Vous avez déjà répondu' })
+
+    await (app as any).prisma.$transaction(async (tx: any) => {
+      // 1. Mark my approval
+      await tx.payoutApproval.update({
+        where: { id: myApproval.id },
+        data: { status: 'APPROVED' }
+      })
+
+      // 2. Check if ALL approvals are now APPROVED
+      const updatedApprovals = await tx.payoutApproval.findMany({ where: { payoutRequestId: payoutId } })
+      const allApproved = updatedApprovals.every((a: any) => a.status === 'APPROVED')
+
+      if (allApproved) {
+        // Complete the payout
+        await tx.eventPayoutRequest.update({
+          where: { id: payoutId },
+          data: { status: 'COMPLETED' }
+        })
+
+        await releaseFunds(app, eventId, payoutReq.requestedBy, payoutReq.amount, payoutReq.event.title, payoutId)
+
+        await writeAuditLog(tx, {
+          actorId: payoutReq.requestedBy,
+          actorRole: 'ORGANIZER',
+          action: 'PAYOUT_APPROVED',
+          targetType: 'event',
+          targetId: eventId,
+          eventId,
+          amount: payoutReq.amount,
+          ipAddress: request.ip,
+        })
+      }
+    })
+
+    return reply.send({ message: 'Approbation enregistrée' })
+  })
+
+  // ─── POST /:id/payout/:payoutId/reject ────────────────────────────────────
+  app.post<{ Params: { id: string, payoutId: string }; Body: { reason?: string } }>('/:id/payout/:payoutId/reject', async (request, reply) => {
+    const { sub: userId } = request.user as { sub: string }
+    const { id: eventId, payoutId } = request.params
+    const { reason } = request.body || {}
+
+    const payoutReq = await (app as any).prisma.eventPayoutRequest.findUnique({
+      where: { id: payoutId },
+      include: { event: true, approvalsList: true }
+    })
+
+    if (!payoutReq || payoutReq.eventId !== eventId) return reply.code(404).send({ error: 'Demande non trouvée' })
+    if (payoutReq.status !== 'PENDING') return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
+
+    const myApproval = payoutReq.approvalsList.find((a: any) => a.userId === userId)
+    if (!myApproval) return reply.code(403).send({ error: 'Vous n\'êtes pas autorisé à rejeter cette demande' })
+    if (myApproval.status !== 'PENDING') return reply.code(400).send({ error: 'Vous avez déjà répondu' })
+
+    await (app as any).prisma.$transaction(async (tx: any) => {
+      // 1. Mark my approval as rejected
+      await tx.payoutApproval.update({
+        where: { id: myApproval.id },
+        data: { status: 'REJECTED', rejectionReason: reason }
+      })
+
+      // 2. Reject the whole request and delete PayoutBookingItems to unfreeze funds
+      await tx.eventPayoutRequest.update({
+        where: { id: payoutId },
+        data: { status: 'REJECTED', rejectionReason: reason || 'Rejeté par un validateur ou co-organisateur' }
+      })
+
+      await tx.payoutBookingItem.deleteMany({
+        where: { payoutRequestId: payoutId }
+      })
+    })
+
+    // Notify organizer
+    await createAndSendNotification(app, {
+      userId: payoutReq.requestedBy,
+      type: 'SYSTEM',
+      title: 'Demande de retrait refusée',
+      body: `Votre demande de retrait de ${payoutReq.amount} F a été refusée. Les fonds sont de nouveau disponibles.`,
+      data: { eventId },
+    })
+
+    return reply.send({ message: 'Rejet enregistré et fonds libérés' })
   })
 }
 
@@ -346,7 +476,8 @@ export async function releaseFunds(
   eventId: string,
   creatorId: string,
   amount: number,
-  eventTitle: string
+  eventTitle: string,
+  payoutRequestId: string
 ) {
   const commissionRate = 0.10
   const commissionAmount = Math.round(amount * commissionRate)
@@ -370,10 +501,10 @@ export async function releaseFunds(
       data: {
         walletId: creatorWallet.id,
         amount: netAmount,
-        type: 'DEPOSIT',
+        type: 'POOL_PAYOUT',
         balanceAfter: creatorWallet.balance + netAmount,
         description: `Déblocage cagnotte "${eventTitle}" (net après ${commissionAmount} XOF commission)`,
-        refId: eventId,
+        refId: payoutRequestId,
       },
     })
 
@@ -388,10 +519,10 @@ export async function releaseFunds(
       data: {
         walletId: systemWallet.id,
         amount: commissionAmount,
-        type: 'DEPOSIT',
+        type: 'POOL_PAYOUT',
         balanceAfter: systemWallet.balance + commissionAmount,
         description: `Commission 10% — "${eventTitle}" (event: ${eventId})`,
-        refId: eventId,
+        refId: payoutRequestId,
       },
     })
   })
