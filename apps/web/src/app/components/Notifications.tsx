@@ -128,7 +128,7 @@ export function Notifications({ onBack }: NotificationsProps) {
         if (d?.eventId) navigate(`/events/${d.eventId}`);
         break;
       case 'POOL_UNLOCK_REQUEST':
-        if (d?.eventId && d?.payoutId) navigate(`/events/${d.eventId}/payout/${d.payoutId}/approve`);
+        if (d?.eventId && d?.payoutId) navigate(`/events/${d.eventId}/payout-approval/${d.payoutId}`);
         else if (d?.eventId) navigate(`/events/${d.eventId}`);
         break;
       case 'POOL_UNLOCK_APPROVED':

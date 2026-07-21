@@ -299,8 +299,8 @@ export function BadgesPage() {
 
   return (
     <div
-      className="flex flex-col w-full bg-white"
-      style={{ minHeight: '100dvh', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      className="flex flex-col w-full bg-white overflow-hidden"
+      style={{ height: '100dvh', maxHeight: '100dvh' }}
     >
       {/* Header — sticky, respects status bar */}
       <div className="pt-[env(safe-area-inset-top,44px)] pb-3 px-4 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-50 border-b border-gray-100/50">
@@ -312,7 +312,7 @@ export function BadgesPage() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-10" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 overflow-y-auto px-4 pb-28" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
 
         {/* Banner Niveau */}
         <div className="bg-[#FFF8F3] rounded-[20px] p-5 mb-5 flex flex-col relative overflow-hidden mt-4">

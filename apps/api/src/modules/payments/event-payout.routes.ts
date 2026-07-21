@@ -302,9 +302,15 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
           await createAndSendNotificationMany(app, approversToNotify.map((uid: string) => ({
             userId: uid,
             type: 'POOL_UNLOCK_REQUEST',
-            title: 'Demande de validation',
-            body: `L'organisateur de "${event.title}" a initié un déblocage de ${amountToWithdraw} F CFA pour "${reason}". Consultez la cagnotte pour approuver la demande.`,
-            data: { eventId, screen: 'payout-approval' },
+            title: '💰 Validation requise',
+            body: `"${event.title}" — Déblocage de ${amountToWithdraw.toLocaleString('fr-FR')} F CFA demandé. Motif : ${reason}. Appuyez pour approuver ou refuser.`,
+            data: {
+              eventId,
+              payoutId: newPayoutReq.id,
+              amount: String(amountToWithdraw),
+              reason,
+              screen: 'payout-approval',
+            },
           })));
         }
 
