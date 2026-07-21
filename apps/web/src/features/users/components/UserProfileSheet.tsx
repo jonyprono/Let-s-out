@@ -200,7 +200,9 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
             onClick={() => {
               if (resolvedUserId) {
                 onClose()
-                navigate(`/profile/${resolvedUserId}`)
+                navigate(`/profile/${resolvedUserId}`, { 
+                  state: { profile: profile || { displayName, avatarUrl, userId: resolvedUserId } } 
+                })
               }
             }}
             className="flex flex-row justify-center items-center px-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] rounded-[8px] active:scale-95 transition-transform mt-1"

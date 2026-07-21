@@ -8,7 +8,7 @@ import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
 import { chatApi } from '@/features/chat/api';
 
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate, useParams, useLocation } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
 import { toast } from 'sonner';
 
@@ -28,6 +28,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
   const { username } = useParams<{ username?: string }>();
+  const location = useLocation();
+  const preloadedProfile = location.state?.profile;
 
   // Scroll to top whenever the profile page mounts
   useEffect(() => {
@@ -47,7 +49,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     retry: false,
   });
 
-  const displayProfile = isOwnProfile ? (viewedProfile || profile) : viewedProfile;
+  const displayProfile = isOwnProfile ? (viewedProfile || profile) : (viewedProfile || preloadedProfile);
   const targetUserId = displayProfile?.userId || displayProfile?.id || displayProfile?.user?.id;
   const isProfileVerified = displayProfile?.kycStatus === 'verified';
 
@@ -164,7 +166,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     );
   }
 
-  if (username && !isOwnProfile && !viewedProfile && isLoadingProfile) {
+  if (username && !isOwnProfile && !displayProfile && isLoadingProfile) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0b]">
         <div className="flex flex-col items-center gap-4">
