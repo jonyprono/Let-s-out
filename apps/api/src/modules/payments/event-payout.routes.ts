@@ -162,12 +162,14 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
   // ─── POST /:id/payout/request ─────────────────────────────────────────────
   // Organizer requests payout (partial or full)
-  app.post<{ Params: { id: string }; Body: { amount?: number } }>(
+  app.post<{ Params: { id: string }; Body: { amount?: number; reason?: string } }>(
     '/:id/payout/request',
     async (request, reply) => {
       const { sub: userId } = request.user as { sub: string }
       const eventId = request.params.id
-      const requestedAmount = request.body?.amount
+      const { amount: requestedAmount, reason } = request.body || {}
+
+      if (!reason) return reply.code(400).send({ error: 'Le motif de déblocage est requis' })
 
       const event = await (app as any).prisma.event.findUnique({
         where: { id: eventId },
@@ -230,7 +232,8 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
             eventId,
             requestedBy: userId,
             amount: amountToWithdraw,
-            status: 'PENDING'
+            status: 'PENDING',
+            reason: reason,
           }
         });
 
@@ -298,9 +301,9 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         if (approversToNotify.length > 0) {
           await createAndSendNotificationMany(app, approversToNotify.map((uid: string) => ({
             userId: uid,
-            type: 'SYSTEM',
-            title: 'Approbation de retrait requise',
-            body: `L'organisateur de "${event.title}" a demandé un retrait de ${amountToWithdraw} F CFA. Votre approbation est requise.`,
+            type: 'POOL_UNLOCK_REQUEST',
+            title: 'Demande de validation',
+            body: `L'organisateur de "${event.title}" a initié un déblocage de ${amountToWithdraw} F CFA pour "${reason}". Consultez la cagnotte pour approuver la demande.`,
             data: { eventId, screen: 'payout-approval' },
           })));
         }
@@ -364,6 +367,25 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     return reply.send({ data: logs })
   })
 
+  // ─── GET /:id/payout/:payoutId ────────────────────────────────────────────
+  app.get<{ Params: { id: string; payoutId: string } }>('/:id/payout/:payoutId', async (request, reply) => {
+    const { id: eventId, payoutId } = request.params
+
+    const payoutReq = await (app as any).prisma.eventPayoutRequest.findUnique({
+      where: { id: payoutId },
+      include: {
+        event: { select: { title: true, poolDescription: true, creator: { select: { profile: { select: { displayName: true, avatarUrl: true } } } } } },
+        approvalsList: { include: { user: { select: { profile: { select: { displayName: true, avatarUrl: true } } } } } },
+      }
+    })
+
+    if (!payoutReq || payoutReq.eventId !== eventId) {
+      return reply.code(404).send({ error: 'Demande non trouvée' })
+    }
+
+    return reply.send({ data: payoutReq })
+  })
+
   // ─── POST /:id/payout/:payoutId/approve ───────────────────────────────────
   app.post<{ Params: { id: string, payoutId: string } }>('/:id/payout/:payoutId/approve', async (request, reply) => {
     const { sub: userId } = request.user as { sub: string }
@@ -399,7 +421,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
           data: { status: 'COMPLETED' }
         })
 
-        await releaseFunds(app, eventId, payoutReq.requestedBy, payoutReq.amount, payoutReq.event.title, payoutId)
+        await releaseFunds(app, eventId, payoutReq.requestedBy, payoutReq.amount, payoutReq.event.title, payoutId, payoutReq.reason)
 
         await writeAuditLog(tx, {
           actorId: payoutReq.requestedBy,
@@ -475,7 +497,8 @@ export async function releaseFunds(
   creatorId: string,
   amount: number,
   eventTitle: string,
-  payoutRequestId: string
+  payoutRequestId: string,
+  reason?: string | null
 ) {
   const commissionRate = 0.10
   const commissionAmount = Math.round(amount * commissionRate)
@@ -501,7 +524,7 @@ export async function releaseFunds(
         amount: netAmount,
         type: 'POOL_PAYOUT',
         balanceAfter: creatorWallet.balance + netAmount,
-        description: `Déblocage cagnotte "${eventTitle}" (net après ${commissionAmount} XOF commission)`,
+        description: `Déblocage cagnotte "${eventTitle}"${reason ? ` - Motif: ${reason}` : ''} (net après ${commissionAmount} XOF commission)`,
         refId: payoutRequestId,
       },
     })

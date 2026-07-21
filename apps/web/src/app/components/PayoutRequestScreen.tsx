@@ -13,6 +13,8 @@ export function PayoutRequestScreen() {
   const qc = useQueryClient();
 
   const [amountToWithdraw, setAmountToWithdraw] = useState<string>('');
+  const [reasonCategory, setReasonCategory] = useState<string>('Location de salle');
+  const [customReason, setCustomReason] = useState<string>('');
   const [step, setStep] = useState<'form' | 'success'>('form');
 
   const { data: event, isLoading: eventLoading } = useQuery({
@@ -33,8 +35,8 @@ export function PayoutRequestScreen() {
   });
 
   const payoutMut = useMutation({
-    mutationFn: async (amount: number) =>
-      apiClient.post(`/events/${id}/payout/request`, { amount }),
+    mutationFn: async (data: { amount: number; reason: string }) =>
+      apiClient.post(`/events/${id}/payout/request`, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['events', id] });
       setStep('success');
@@ -65,6 +67,8 @@ export function PayoutRequestScreen() {
   const commission = numericAmount * 0.02;
   const amountToReceive = numericAmount - commission;
 
+  const finalReason = reasonCategory === 'Autre' ? customReason.trim() : reasonCategory;
+
   const handleConfirm = () => {
     if (numericAmount < 5000) {
       return toast.error("Le montant minimum de retrait est de 5 000 F CFA.");
@@ -72,7 +76,10 @@ export function PayoutRequestScreen() {
     if (numericAmount > maxAvailableNow) {
       return toast.error("Montant supérieur au solde disponible.");
     }
-    payoutMut.mutate(numericAmount);
+    if (reasonCategory === 'Autre' && !customReason.trim()) {
+      return toast.error("Veuillez préciser le motif de déblocage.");
+    }
+    payoutMut.mutate({ amount: numericAmount, reason: finalReason });
   };
 
   if (step === 'success') {
@@ -143,6 +150,32 @@ export function PayoutRequestScreen() {
           </div>
         </div>
 
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-[16px] p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-6">
+          <h3 className="font-semibold text-gray-900 dark:text-white text-[15px] mb-4">Motif du déblocage</h3>
+          
+          <select 
+            value={reasonCategory}
+            onChange={(e) => setReasonCategory(e.target.value)}
+            className="w-full bg-gray-50 dark:bg-[#222] border-0 rounded-xl px-4 py-3 text-[15px] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF7A00] mb-3"
+          >
+            <option value="Location de salle">Location de salle</option>
+            <option value="Frais traiteur">Frais traiteur</option>
+            <option value="Transport">Transport</option>
+            <option value="Décoration">Décoration</option>
+            <option value="Autre">Autre</option>
+          </select>
+
+          {reasonCategory === 'Autre' && (
+            <input 
+              type="text"
+              value={customReason}
+              onChange={(e) => setCustomReason(e.target.value)}
+              placeholder="Précisez le motif..."
+              className="w-full bg-gray-50 dark:bg-[#222] border-0 rounded-xl px-4 py-3 text-[15px] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF7A00]"
+            />
+          )}
+        </div>
+
         <div className="bg-white dark:bg-[#1A1A1A] rounded-[16px] p-5 shadow-sm border border-gray-100 dark:border-gray-800">
           <h4 className="text-[13px] font-semibold text-gray-400 uppercase tracking-wider mb-4">Détails</h4>
           <div className="space-y-3 text-[13px]">
@@ -165,7 +198,7 @@ export function PayoutRequestScreen() {
       <div className="p-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800 fixed bottom-0 left-0 right-0 max-w-[768px] mx-auto z-10 pb-safe">
         <button
           onClick={handleConfirm}
-          disabled={!amountToWithdraw || numericAmount < 5000 || numericAmount > maxAvailableNow || payoutMut.isPending}
+          disabled={!amountToWithdraw || numericAmount < 5000 || numericAmount > maxAvailableNow || payoutMut.isPending || (reasonCategory === 'Autre' && !customReason.trim())}
           className="w-full h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-bold active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {payoutMut.isPending && <Loader2 className="w-5 h-5 animate-spin" />}

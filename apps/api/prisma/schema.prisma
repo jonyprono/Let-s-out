@@ -603,6 +603,10 @@ enum NotifType {
   SYSTEM
   JOIN_CONFIRMED
   EVENT_REVIEW_REQUEST
+  POOL_NEW
+  POOL_UNLOCK_REQUEST
+  POOL_UNLOCK_APPROVED
+  POOL_VOTE_STARTED
 }
 
 enum PaymentStatus {
@@ -670,6 +674,7 @@ model EventPayoutRequest {
   voteDurationHours   Int      @default(48)   // Durée paramétrable du vote
   threshold           Float    @default(0.70) // Seuil de majorité (70%)
   expiresAt           DateTime?              // Date/heure d'expiration du vote
+  reason              String?                // Motif du déblocage
   rejectionReason     String?                // Raison du refus
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt

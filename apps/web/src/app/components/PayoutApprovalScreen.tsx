@@ -4,8 +4,9 @@ import { BackButton } from '@/components/ui/BackButton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Tag, User, Calendar, Banknote, ShieldCheck, ShieldX } from 'lucide-react';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 
 export function PayoutApprovalScreen() {
@@ -16,25 +17,16 @@ export function PayoutApprovalScreen() {
   const [step, setStep] = useState<'view' | 'approve-sheet' | 'reject-sheet' | 'success-approve' | 'success-reject'>('view');
   const [note, setNote] = useState('');
 
-  const { data: event, isLoading: eventLoading } = useQuery({
-    queryKey: ['events', id],
+  // Fetch the payout request directly (includes reason, approvalsList, event)
+  const { data: payoutReq, isLoading } = useQuery({
+    queryKey: ['events', id, 'payout', payoutId],
     queryFn: async () => {
-      const res = await apiClient.get(`/events/${id}`);
-      return res.data?.data;
-    }
-  });
-
-  const { data: auditData, isLoading: auditLoading } = useQuery({
-    queryKey: ['events', id, 'payout-audit'],
-    queryFn: async () => {
-      const res = await apiClient.get(`/events/${id}/payout/audit`);
+      const res = await apiClient.get(`/events/${id}/payout/${payoutId}`);
       return res.data?.data;
     },
-    enabled: !!event,
+    enabled: !!id && !!payoutId,
   });
 
-  const payout = auditData?.find((p: any) => p.payoutRequestId === payoutId) || auditData?.[0]; // fallback for demo if needed
-  
   const approveMut = useMutation({
     mutationFn: async () =>
       apiClient.post(`/events/${id}/payout/${payoutId}/approve`),
@@ -49,7 +41,7 @@ export function PayoutApprovalScreen() {
 
   const rejectMut = useMutation({
     mutationFn: async () =>
-      apiClient.post(`/events/${id}/payout/${payoutId}/reject`),
+      apiClient.post(`/events/${id}/payout/${payoutId}/reject`, { reason: note }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['events', id] });
       setStep('success-reject');
@@ -59,7 +51,7 @@ export function PayoutApprovalScreen() {
     }
   });
 
-  if (eventLoading || auditLoading) {
+  if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         <Loader2 className="w-8 h-8 animate-spin text-[#FF7A00]" />
@@ -67,11 +59,18 @@ export function PayoutApprovalScreen() {
     );
   }
 
-  if (!event) return null;
+  if (!payoutReq) return null;
 
-  const amount = payout?.amount || 15000;
-  const initiatorName = event.creator?.profile?.displayName || 'Organisateur';
-  const requestDate = payout?.createdAt || new Date().toISOString();
+  const amount = payoutReq.amount ?? 0;
+  const reason = payoutReq.reason ?? 'Non précisé';
+  const initiatorName = payoutReq.event?.creator?.profile?.displayName ?? 'Organisateur';
+  const requestDate = payoutReq.createdAt ?? new Date().toISOString();
+  const eventTitle = payoutReq.event?.title ?? '';
+  const poolDescription = payoutReq.event?.poolDescription ?? 'Frais Généraux';
+
+  const approvals = payoutReq.approvalsList ?? [];
+  const approvedCount = approvals.filter((a: any) => a.status === 'APPROVED').length;
+  const totalApprovers = approvals.length;
 
   if (step === 'success-approve' || step === 'success-reject') {
     const isApprove = step === 'success-approve';
@@ -80,18 +79,18 @@ export function PayoutApprovalScreen() {
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
           <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-sm ${isApprove ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
             {isApprove ? (
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <ShieldCheck className="w-10 h-10 text-[#10B981]" />
             ) : (
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+              <ShieldX className="w-10 h-10 text-[#EF4444]" />
             )}
           </div>
           <h2 className={`text-[20px] font-bold mb-2 ${isApprove ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
             {isApprove ? 'Retrait approuvé !' : 'Déblocage refusé !'}
           </h2>
           <p className="text-[14px] text-gray-500 mb-8 max-w-[280px]">
-            {isApprove 
-              ? "Top! Votre validation de déblocage des fonds a été bien pris en compte."
-              : "Le refus de déblocage des fonds a été bien pris en compte."}
+            {isApprove
+              ? "Top ! Votre validation a bien été prise en compte."
+              : "Le refus de déblocage a bien été enregistré."}
           </p>
           <button
             onClick={() => navigate(`/events/${id}/manage?tab=cagnotte`)}
@@ -106,80 +105,143 @@ export function PayoutApprovalScreen() {
 
   return (
     <div className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b]">
+      {/* Header */}
       <div className="flex items-center px-4 h-14 bg-white dark:bg-[#1A1A1A] border-b border-gray-100 dark:border-gray-800 sticky top-0 z-10">
         <BackButton />
-        <h1 className="text-[16px] font-semibold text-gray-900 dark:text-white ml-2">Demande de déblocage de fonds</h1>
+        <h1 className="text-[16px] font-semibold text-gray-900 dark:text-white ml-2">Demande de déblocage</h1>
       </div>
 
-      <div className="flex-1 p-4 pb-24 overflow-y-auto">
-        <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-[12px] p-4 mb-6">
-          <h3 className="text-[15px] text-gray-900 dark:text-white font-semibold mb-3">{event.title}</h3>
-          <div className="flex justify-between items-center">
-            <span className="text-[13px] text-gray-600 dark:text-gray-400">Montant du retrait</span>
-            <span className="text-[15px] font-bold text-[#FF7A00]">
-              {amount.toLocaleString('fr-FR')} F
-            </span>
+      <div className="flex-1 p-4 pb-28 overflow-y-auto space-y-4">
+        {/* Amount hero card */}
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-[18px] p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+          <p className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{eventTitle}</p>
+          <p className="text-[32px] font-bold text-gray-900 dark:text-white">
+            {amount.toLocaleString('fr-FR')} <span className="text-[18px] text-gray-400">F CFA</span>
+          </p>
+          <p className="text-[12px] text-gray-400 mt-1">Demandé le {format(new Date(requestDate), 'dd MMMM yyyy', { locale: fr })}</p>
+        </div>
+
+        {/* Reason – highlighted prominently */}
+        <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/40 rounded-[16px] p-4 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 mt-0.5">
+            <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">Motif du déblocage</p>
+            <p className="text-[15px] font-semibold text-gray-900 dark:text-white">{reason}</p>
           </div>
         </div>
 
-        <div className="mb-6">
-          <h4 className="text-[13px] font-semibold text-gray-400 uppercase tracking-wider mb-4">Détails</h4>
-          <div className="space-y-4 text-[13px]">
-            <div className="flex justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Événement</span>
-              <span className="text-gray-900 dark:text-white font-medium max-w-[150px] truncate">{event.title}</span>
+        {/* Details */}
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-[16px] p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+          <h4 className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider mb-4">Détails</h4>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                <User className="w-4 h-4 text-gray-500" />
+              </div>
+              <div className="flex-1 flex justify-between">
+                <span className="text-[13px] text-gray-500">Initiateur</span>
+                <span className="text-[13px] text-gray-900 dark:text-white font-medium">{initiatorName}</span>
+              </div>
             </div>
-            <div className="flex justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Cagnotte</span>
-              <span className="text-gray-900 dark:text-white font-medium">{event.poolDescription || 'Frais Généraux'}</span>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                <Banknote className="w-4 h-4 text-gray-500" />
+              </div>
+              <div className="flex-1 flex justify-between">
+                <span className="text-[13px] text-gray-500">Cagnotte</span>
+                <span className="text-[13px] text-gray-900 dark:text-white font-medium">{poolDescription}</span>
+              </div>
             </div>
-            <div className="flex justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Initiateur</span>
-              <span className="text-gray-900 dark:text-white font-medium">{initiatorName}</span>
-            </div>
-            <div className="flex justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
-              <span className="text-gray-500">Date de la demande</span>
-              <span className="text-gray-900 dark:text-white font-medium">{format(new Date(requestDate), 'dd/MM/yyyy')}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Montant du retrait</span>
-              <span className="text-gray-900 dark:text-white font-medium">{amount.toLocaleString('fr-FR')} F</span>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                <Calendar className="w-4 h-4 text-gray-500" />
+              </div>
+              <div className="flex-1 flex justify-between">
+                <span className="text-[13px] text-gray-500">Date de la demande</span>
+                <span className="text-[13px] text-gray-900 dark:text-white font-medium">{format(new Date(requestDate), 'dd/MM/yyyy')}</span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Approvals progress */}
+        {totalApprovers > 0 && (
+          <div className="bg-white dark:bg-[#1A1A1A] rounded-[16px] p-5 shadow-sm border border-gray-100 dark:border-gray-800">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-[12px] font-semibold text-gray-400 uppercase tracking-wider">Approbations</h4>
+              <span className="text-[13px] font-bold text-[#FF7A00]">{approvedCount}/{totalApprovers}</span>
+            </div>
+            <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#FF7A00] rounded-full transition-all duration-500"
+                style={{ width: `${totalApprovers > 0 ? (approvedCount / totalApprovers) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="mt-3 space-y-2">
+              {approvals.map((a: any) => (
+                <div key={a.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-500">
+                      {a.user?.profile?.displayName?.[0]?.toUpperCase() ?? '?'}
+                    </div>
+                    <span className="text-[13px] text-gray-700 dark:text-gray-300">
+                      {a.user?.profile?.displayName ?? 'Inconnu'}
+                    </span>
+                  </div>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                    a.status === 'APPROVED' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                    a.status === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                    'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                  }`}>
+                    {a.status === 'APPROVED' ? 'Approuvé' : a.status === 'REJECTED' ? 'Refusé' : 'En attente'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Actions */}
       <div className="p-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800 fixed bottom-0 left-0 right-0 max-w-[768px] mx-auto z-10 pb-safe flex gap-3">
         <button
           onClick={() => setStep('reject-sheet')}
           className="flex-1 h-[48px] bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-[15px] font-semibold active:scale-95 transition-transform flex items-center justify-center gap-2"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+          <ShieldX className="w-4 h-4" />
           Refuser
         </button>
         <button
           onClick={() => setStep('approve-sheet')}
           className="flex-1 h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-semibold active:scale-95 transition-transform flex items-center justify-center gap-2"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <ShieldCheck className="w-4 h-4" />
           Approuver
         </button>
       </div>
 
+      {/* Approve Bottom Sheet */}
       <BottomSheet open={step === 'approve-sheet'} onClose={() => setStep('view')}>
         <div className="p-5 pb-10">
           <div className="w-12 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6" />
-          <h3 className="text-[18px] font-bold text-center text-gray-900 dark:text-white mb-4">Approuver le retrait ?</h3>
-          <p className="text-[14px] text-gray-600 dark:text-gray-400 text-center mb-6">
-            Approuver le déblocage de <strong>{amount.toLocaleString('fr-FR')} F</strong> des fonds de la cagnotte <strong>{event.poolDescription || 'Frais Généraux'}</strong> de l'événement <strong>{event.title}</strong> ?
+          <h3 className="text-[18px] font-bold text-center text-gray-900 dark:text-white mb-2">Approuver le retrait ?</h3>
+          <p className="text-[14px] text-gray-500 text-center mb-1">
+            <strong className="text-gray-900 dark:text-white">{amount.toLocaleString('fr-FR')} F CFA</strong>
           </p>
-          <div className="mb-6">
+          {/* Show the reason in the confirmation sheet too */}
+          <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl px-4 py-2.5 mb-5 flex items-center gap-2">
+            <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-[13px] text-amber-700 dark:text-amber-400">Motif : <strong>{reason}</strong></p>
+          </div>
+          <div className="mb-5">
             <label className="text-[13px] text-gray-500 mb-2 block">Note (optionnel)</label>
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder="Ajouter une note..."
-              className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[14px] h-24 resize-none focus:ring-2 focus:ring-[#FF7A00] focus:border-transparent outline-none"
+              className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[14px] h-20 resize-none focus:ring-2 focus:ring-[#FF7A00] focus:border-transparent outline-none"
             />
           </div>
           <button
@@ -188,34 +250,36 @@ export function PayoutApprovalScreen() {
             className="w-full h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-bold active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {approveMut.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
-            Confirmer
+            Confirmer l'approbation
           </button>
         </div>
       </BottomSheet>
 
+      {/* Reject Bottom Sheet */}
       <BottomSheet open={step === 'reject-sheet'} onClose={() => setStep('view')}>
         <div className="p-5 pb-10">
           <div className="w-12 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-6" />
           <h3 className="text-[18px] font-bold text-center text-gray-900 dark:text-white mb-4">Refuser le déblocage ?</h3>
-          <p className="text-[14px] text-gray-600 dark:text-gray-400 text-center mb-6">
-            Refuser le déblocage de <strong>{amount.toLocaleString('fr-FR')} F</strong> des fonds de la cagnotte <strong>{event.poolDescription || 'Frais Généraux'}</strong> de l'événement <strong>{event.title}</strong> ?
-          </p>
-          <div className="mb-6">
-            <label className="text-[13px] text-gray-500 mb-2 block">Motif du refus</label>
+          <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-xl px-4 py-2.5 mb-5 flex items-center gap-2">
+            <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <p className="text-[13px] text-amber-700 dark:text-amber-400">Motif demandé : <strong>{reason}</strong></p>
+          </div>
+          <div className="mb-5">
+            <label className="text-[13px] text-gray-500 mb-2 block">Motif du refus <span className="text-red-500">*</span></label>
             <textarea
               value={note}
               onChange={e => setNote(e.target.value)}
-              placeholder="Indiquer le motif..."
+              placeholder="Indiquer pourquoi vous refusez..."
               className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[14px] h-24 resize-none focus:ring-2 focus:ring-[#FF7A00] focus:border-transparent outline-none"
             />
           </div>
           <button
             onClick={() => rejectMut.mutate()}
             disabled={rejectMut.isPending || !note.trim()}
-            className="w-full h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-bold active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full h-[48px] bg-red-500 text-white rounded-xl text-[15px] font-bold active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {rejectMut.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
-            Confirmer
+            Confirmer le refus
           </button>
         </div>
       </BottomSheet>
