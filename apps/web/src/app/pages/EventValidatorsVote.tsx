@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router';
 import { apiClient } from '@/lib/api-client';
@@ -67,6 +67,23 @@ export function EventValidatorsVote() {
   const [selectedCandidate, setSelectedCandidate] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const currentUser = useAuthStore.getState().user;
+  const attendees = attendeesData?.data || [];
+  const myBooking = attendees.find((a: any) => a.userId === currentUser?.id);
+  const initialDelegatedTo = myBooking?.delegatedToId || null;
+  
+  const myDelegatedBookings = attendees.filter((b: any) => b.delegatedToId === currentUser?.id);
+  const myAvailableAmount = myBooking?.remainingAmount ?? 0;
+  const isValidatorForActiveDelegator = myDelegatedBookings.some((b: any) => (b.remainingAmount ?? 0) > 0);
+  const canValidateOrDelegate = myAvailableAmount > 0 || isValidatorForActiveDelegator;
+
+  useEffect(() => {
+    if (initialDelegatedTo && !selectedCandidate) {
+      setSelectedCandidate(initialDelegatedTo);
+    }
+  }, [initialDelegatedTo]);
 
   const handleSubmit = async () => {
     if (!selectedCandidate) return;
@@ -74,11 +91,14 @@ export function EventValidatorsVote() {
     setIsSubmitting(true);
     try {
       await apiClient.post(`/events/${id}/pool/validate`, { mode: 'DELEGATE', delegatedToId: selectedCandidate });
-      toast.success('Vote enregistré');
+      toast.success('Choix enregistré');
       qc.invalidateQueries({ queryKey: ['events', id] });
+      qc.invalidateQueries({ queryKey: ['events', id, 'attendees'] });
+      setSuccessMessage(`Votre choix a été bien enregistré.\nL'organisateur sera notifié de votre décision.`);
       setIsSuccess(true);
+      setTimeout(() => setIsSuccess(false), 2500); // Hide success screen after a bit to show the list again
     } catch (err: any) {
-      toast.error('Erreur lors de la soumission de votre vote');
+      toast.error('Erreur lors de la soumission de votre choix');
     } finally {
       setIsSubmitting(false);
     }
@@ -97,16 +117,13 @@ export function EventValidatorsVote() {
     );
   }
 
-  const attendees = attendeesData?.data || [];
   const candidates = attendees.filter((a: any) => event.validatorCandidates?.includes(a.userId));
-  const isClosed = event.validatorVoteStatus === 'CLOSED';
-  const currentUser = useAuthStore.getState().user;
   
-  // Si l'utilisateur a déjà voté au moins une fois, ou s'il vient de réussir son vote, ou si c'est clos, on affiche les résultats ou le succès
-  const myBooking = attendees.find((a: any) => a.userId === currentUser?.id);
-  const hasVoted = myBooking?.poolValidationStatus === 'DELEGATED' || myBooking?.poolValidationStatus === 'VALIDATED';
-  const showResults = isClosed || hasVoted;
+
+
   const showSuccess = isSuccess;
+  
+  const hasChangedSelection = selectedCandidate !== initialDelegatedTo;
 
   return (
     <div className="flex flex-col w-full h-[100dvh] bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-hidden relative">
@@ -125,27 +142,38 @@ export function EventValidatorsVote() {
           <h3 className="font-medium text-[16px] text-[#1B1818] line-clamp-1">{event.title}</h3>
           <div className="flex justify-between items-center w-full mt-auto">
             <span className="text-[14px] text-[#737373]">Cagnotte</span>
-            <span className="text-[14px] font-semibold text-[#FF7A00]">Frais généraux</span>
+            <span className="text-[14px] font-bold text-[#FF7A00]">Frais généraux</span>
           </div>
         </div>
 
-        {showSuccess ? (
+        {!canValidateOrDelegate ? (
+          <div className="flex-1 flex flex-col items-center justify-center -mt-10 gap-6 animate-in fade-in zoom-in duration-500 text-center">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-2">
+              <span className="text-2xl">🛡️</span>
+            </div>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">Aucune délégation requise</h3>
+            <p className="text-[14px] text-gray-500 max-w-[280px]">
+              La totalité de votre part a déjà été débloquée lors de précédents retraits. Vous n'avez plus de fonds en jeu à déléguer.
+            </p>
+            <button 
+              onClick={() => navigate(-1)}
+              className="mt-4 px-6 py-2 rounded-full bg-[#FF7A00] text-white hover:bg-[#FF7A00]/90"
+            >
+              Retour
+            </button>
+          </div>
+        ) : showSuccess ? (
           <div className="flex-1 flex flex-col items-center justify-center -mt-10 gap-6 animate-in fade-in zoom-in duration-500">
             <VoteBoxIcon />
-            <p className="text-center text-[14px] text-gray-900 dark:text-white font-medium max-w-[250px] leading-relaxed">
-              Votre choix a été bien enregistré.<br/>
-              L'organisateur sera notifié de votre validation.
+            <p className="text-center text-[14px] text-gray-900 dark:text-white font-medium max-w-[250px] leading-relaxed whitespace-pre-line">
+              {successMessage}
             </p>
           </div>
         ) : (
           <>
-            {showResults ? (
-              <h2 className="text-[16px] font-semibold text-[#FF7A00] mb-1">Vote enregistré</h2>
-            ) : (
-              <p className="text-[12px] text-[#404040] dark:text-gray-400 font-inter leading-relaxed">
-                Choisissez le participant à qui vous souhaitez déléguer la validation du déblocage des fonds de la cagnotte. 
-              </p>
-            )}
+            <p className="text-[12px] text-[#404040] dark:text-gray-400 font-inter leading-relaxed">
+              Choisissez le participant à qui vous souhaitez déléguer la validation du déblocage des fonds de la cagnotte. Vous pouvez modifier votre choix à tout moment.
+            </p>
 
             <div className="flex flex-col gap-1">
               {candidates.map((cand: any) => {
@@ -153,23 +181,22 @@ export function EventValidatorsVote() {
                 return (
                   <button 
                     key={cand.userId} 
-                    onClick={() => !showResults && setSelectedCandidate(cand.userId)}
-                    disabled={showResults}
+                    onClick={() => setSelectedCandidate(cand.userId)}
                     className={`w-full bg-[#FEFEFA] dark:bg-[#1A1A1A] border rounded-lg p-2.5 flex items-center gap-3 h-[52px] text-left transition-colors ${selectedCandidate === cand.userId ? 'border-[#FF7A00] bg-[#FF7A00]/5 dark:bg-[#FF7A00]/10' : 'border-[#F5F5F4] dark:border-gray-800'}`}
                   >
                     <img src={cand.user?.profile?.avatarUrl || `https://ui-avatars.com/api/?name=${cand.user?.profile?.displayName}`} alt="" className="w-8 h-8 rounded-full object-cover shrink-0 bg-gray-100" />
                     
                     <div className="flex-1 flex flex-col justify-center min-w-0">
-                      <span className="text-[14px] text-[#1B1818] dark:text-white font-medium line-clamp-1">{cand.user?.profile?.displayName}</span>
+                      <span className="text-[14px] text-[#1B1818] dark:text-white font-medium line-clamp-1">
+                        {cand.user?.profile?.displayName} {initialDelegatedTo === cand.userId && <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full ml-1">Choix actuel</span>}
+                      </span>
                     </div>
 
-                    {!showResults && (
-                      <div className="flex items-center shrink-0 h-[28px] pr-1">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedCandidate === cand.userId ? 'border-[#FF7A00]' : 'border-gray-300 dark:border-gray-600'}`}>
-                           {selectedCandidate === cand.userId && <div className="w-2.5 h-2.5 bg-[#FF7A00] rounded-full" />}
-                        </div>
+                    <div className="flex items-center shrink-0 h-[28px] pr-1">
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedCandidate === cand.userId ? 'border-[#FF7A00]' : 'border-gray-300 dark:border-gray-600'}`}>
+                         {selectedCandidate === cand.userId && <div className="w-2.5 h-2.5 bg-[#FF7A00] rounded-full" />}
                       </div>
-                    )}
+                    </div>
                   </button>
                 );
               })}
@@ -179,14 +206,14 @@ export function EventValidatorsVote() {
       </div>
 
       {/* Bottom Sticky Button */}
-      {!showResults && !showSuccess && (
-        <div className="absolute bottom-0 left-0 w-full px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent dark:from-[#0a0a0b] dark:via-[#0a0a0b] z-20">
+      {!showSuccess && (
+        <div className="absolute bottom-0 left-0 w-full px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent dark:from-[#0a0a0b] dark:via-[#0a0a0b] z-20 flex flex-col gap-2">
           <Button
             onClick={handleSubmit}
-            disabled={isSubmitting || !selectedCandidate}
+            disabled={isSubmitting || !selectedCandidate || !hasChangedSelection}
             className="w-full h-14 rounded-full bg-[#FF7A00] hover:bg-[#FF7A00]/90 text-white font-semibold text-[16px] shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
           >
-            {isSubmitting ? 'Enregistrement...' : 'Voter'}
+            {isSubmitting ? 'Enregistrement...' : hasChangedSelection ? 'Valider mon choix' : 'Choix actuel'}
           </Button>
         </div>
       )}

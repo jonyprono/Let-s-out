@@ -101,7 +101,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
           select: { user: { select: { profile: { select: { avatarUrl: true } } } } },
         },
         _count: { select: { bookings: true } },
-        payoutRequest: true,
+        payoutRequests: true,
       },
       orderBy: { startAt: 'asc' },
       take: 10,
@@ -339,7 +339,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       });
       const candidatesData = candidateUsers.map(u => ({
         id: u.id,
-        displayName: u.profile?.displayName || u.username,
+        displayName: u.profile?.displayName || u.profile?.username || 'Anonyme',
         avatarUrl: u.profile?.avatarUrl
       }));
 
@@ -450,8 +450,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
       // Notifier les validateurs retenus
       if (finalEvent.validatorIds.length > 0) {
-        const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
-          where: { eventId: id }
+        const payoutReq = await app.prisma.eventPayoutRequest.findFirst({
+          where: { eventId: id },
+          orderBy: { createdAt: 'desc' }
         })
 
         await createAndSendNotificationMany(app, finalEvent.validatorIds.map(valId => ({
@@ -528,8 +529,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     // Notifier les validateurs retenus
     if (updatedEvent.validatorIds.length > 0) {
-      const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
-        where: { eventId: id }
+      const payoutReq = await app.prisma.eventPayoutRequest.findFirst({
+        where: { eventId: id },
+        orderBy: { createdAt: 'desc' }
       })
 
       await createAndSendNotificationMany(app, updatedEvent.validatorIds.map(valId => ({
@@ -580,7 +582,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       include: {
         creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true, followersCount: true, eventsCount: true } } } },
         _count: { select: { bookings: true } },
-        payoutRequest: true
+        payoutRequests: true
       },
     })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
@@ -1051,12 +1053,27 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const bookings = await app.prisma.booking.findMany({
       where: { eventId: id, status: 'CONFIRMED' },
-      include: { user: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } } },
+      include: { 
+        user: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
+        payoutItems: {
+          select: { amountDeducted: true, payoutRequest: { select: { status: true } } }
+        }
+      },
       take: Number(limit),
       skip: Number(offset),
     })
 
-    return reply.send({ data: bookings })
+    const data = bookings.map(b => {
+      const deducted = b.payoutItems
+        .filter((item: any) => item.payoutRequest.status !== 'REJECTED' && item.payoutRequest.status !== 'CANCELLED')
+        .reduce((sum: number, item: any) => sum + item.amountDeducted, 0);
+      return {
+        ...b,
+        remainingAmount: Math.max(0, b.totalPaid - deducted)
+      }
+    });
+
+    return reply.send({ data })
   })
 
   // Join private event via code (QR scan)

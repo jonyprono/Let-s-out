@@ -423,6 +423,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const myBooking = Array.isArray(attendeesData) ? attendeesData.find((b: any) => b.userId === user?.id) : attendeesData?.data?.find((b: any) => b.userId === user?.id);
   const isNegligentValidator = myDelegatedBookings.length > 0 && myBooking?.poolValidationStatus === 'PENDING' && event?.poolClosedAt;
 
+  const myAvailableAmount = myBooking?.remainingAmount ?? 0;
+  const isValidatorForActiveDelegator = myDelegatedBookings.some((b: any) => (b.remainingAmount ?? 0) > 0);
+  const canValidateOrDelegate = myAvailableAmount > 0 || isValidatorForActiveDelegator;
+
   return (
     <>
       <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
@@ -746,7 +750,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             </div>
 
             {/* Payout Approval Banner for Participants */}
-            {event && !!user && user.id !== event.creatorId && event.poolClosedAt && myBooking?.poolValidationStatus === 'PENDING' && !isNegligentValidator && (
+            {event && !!user && user.id !== event.creatorId && event.poolClosedAt && myBooking?.poolValidationStatus === 'PENDING' && !isNegligentValidator && canValidateOrDelegate && (
               <div className="mt-4 p-4 rounded-xl border border-[#10B981] bg-[#F0FDF4] dark:bg-[#10B981]/10 dark:border-[#10B981]/30">
                 <h3 className="text-[15px] font-bold text-[#047857] dark:text-[#34D399] mb-1">Validation requise</h3>
                 <p className="text-[13px] text-[#065F46] dark:text-[#A7F3D0] mb-3 leading-tight">

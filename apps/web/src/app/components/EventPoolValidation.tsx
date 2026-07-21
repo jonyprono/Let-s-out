@@ -73,6 +73,12 @@ export function EventPoolValidation() {
   const attendees = Array.isArray(attendeesData) ? attendeesData : (attendeesData?.data || []);
   
   const myBooking = attendees.find((b: any) => b.userId === me.id);
+  const myDelegatedBookings = attendees.filter((b: any) => b.delegatedToId === me.id);
+  
+  const myAvailableAmount = myBooking?.remainingAmount ?? 0;
+  const isValidatorForActiveDelegator = myDelegatedBookings.some((b: any) => (b.remainingAmount ?? 0) > 0);
+  const canValidateOrDelegate = myAvailableAmount > 0 || isValidatorForActiveDelegator;
+
   const hasDelegated = myBooking?.poolValidationStatus === 'DELEGATED' && myBooking?.delegatedToId;
 
   // Compute power for selected delegatee
@@ -112,7 +118,23 @@ export function EventPoolValidation() {
 
       <div className="flex-1 overflow-y-auto pb-28 px-4 font-poppins flex flex-col gap-6 relative z-10">
         
-        {hasDelegated ? (
+        {!canValidateOrDelegate ? (
+          <div className="mt-6 flex flex-col items-center justify-center h-full gap-4 text-center">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-2">
+              <ShieldX className="w-8 h-8 text-gray-500" />
+            </div>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">Aucune validation requise</h3>
+            <p className="text-[14px] text-gray-500">
+              La totalité de votre part a déjà été débloquée lors de précédents retraits. Vous n'avez plus de fonds en jeu à valider.
+            </p>
+            <Button 
+              onClick={() => navigate(`/events/${id}`)}
+              className="mt-4 px-6 rounded-full bg-[#FF7A00] text-white hover:bg-[#FF7A00]/90"
+            >
+              Retour à l'événement
+            </Button>
+          </div>
+        ) : hasDelegated ? (
           <div className="mt-6 flex flex-col items-center gap-4 text-center">
             <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-2">
               <ShieldX className="w-8 h-8 text-[#FF7A00]" />

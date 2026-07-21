@@ -192,7 +192,7 @@ model Event {
   conversation     Conversation? @relation("EventConversation")
   creator          User          @relation("EventCreator", fields: [creatorId], references: [id])
   reviews          Review[]
-  payoutRequest    EventPayoutRequest?
+  payoutRequests   EventPayoutRequest[]
   validatorVotes   ValidatorVote[]
   refundRequests   ParticipantRefundRequest[]
 
@@ -221,6 +221,7 @@ model Booking {
   user      User          @relation(fields: [userId], references: [id])
   payment   Payment?
   refundRequests ParticipantRefundRequest[]
+  payoutItems    PayoutBookingItem[]
 
   @@unique([userId, eventId])
   @@index([userId])
@@ -397,6 +398,23 @@ model Payment {
 
   @@index([userId])
   @@map("payments")
+}
+
+model PayoutBookingItem {
+  id                     String               @id @default(cuid())
+  payoutRequestId        String
+  bookingId              String
+  amountDeducted         Float
+  validationStatusSnapshot PoolValidationStatus
+  delegatedToSnapshot    String?
+  createdAt              DateTime             @default(now())
+
+  payoutRequest          EventPayoutRequest   @relation(fields: [payoutRequestId], references: [id], onDelete: Cascade)
+  booking                Booking              @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([payoutRequestId])
+  @@index([bookingId])
+  @@map("payout_booking_items")
 }
 
 model Friendship {
@@ -639,7 +657,7 @@ model Admin {
 
 model EventPayoutRequest {
   id                  String   @id @default(cuid())
-  eventId             String   @unique
+  eventId             String
   requestedBy         String
   amount              Float
   // PENDING | VOTING | APPROVED | REJECTED | EXPIRED
@@ -655,6 +673,7 @@ model EventPayoutRequest {
   updatedAt           DateTime @updatedAt
 
   event               Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  payoutItems         PayoutBookingItem[]
 
   @@index([status])
   @@index([expiresAt])

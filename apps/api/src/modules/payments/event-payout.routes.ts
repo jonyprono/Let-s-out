@@ -14,7 +14,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
   // ─── POST /:id/pool/validate ──────────────────────────────────────────────
   // Participant validates their part or delegates
-  app.post<{ Params: { id: string }; Body: { mode: 'VALIDATE' | 'DELEGATE', delegatedToId?: string } }>(
+  app.post<{ Params: { id: string }; Body: { mode: 'VALIDATE' | 'DELEGATE' | 'REVOKE', delegatedToId?: string } }>(
     '/:id/pool/validate',
     async (request, reply) => {
       const { sub: userId } = request.user as { sub: string }
@@ -28,7 +28,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       if (!booking) return reply.code(404).send({ error: 'Réservation non trouvée' })
       if (booking.status === 'REFUNDED') return reply.code(400).send({ error: 'Réservation remboursée' })
 
-      const newStatus = mode === 'VALIDATE' ? 'VALIDATED' : 'DELEGATED'
+      const newStatus = mode === 'VALIDATE' ? 'VALIDATED' : mode === 'DELEGATE' ? 'DELEGATED' : 'PENDING'
       if (mode === 'DELEGATE' && !delegatedToId) {
         return reply.code(400).send({ error: 'Le champ delegatedToId est requis pour une délégation' })
       }
@@ -41,7 +41,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       await writeAuditLog((app as any).prisma, {
         actorId: userId,
         actorRole: 'PARTICIPANT',
-        action: mode === 'VALIDATE' ? 'POOL_VALIDATED' : 'POOL_DELEGATED',
+        action: mode === 'VALIDATE' ? 'POOL_VALIDATED' : mode === 'DELEGATE' ? 'POOL_DELEGATED' : 'DELEGATION_REVOKED',
         targetType: 'booking',
         targetId: booking.id,
         eventId,
@@ -219,12 +219,51 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         }
       }
 
-      const { availableAmount } = await calculateAvailablePoolAmount(app, eventId)
-      // On retire ce qui a déjà été retiré du availableAmount global si besoin,
-      // Wait: `availableAmount` is the sum of ALL VALIDATED parts. If I have 50 000 validated, and I already withdrew 20 000, maxAvailableNow is 30 000.
-      const maxAvailableNow = Math.min(availableAmount - event.poolWithdrawn, maxCollected)
+      const { availableAmount, breakdowns } = await calculateAvailablePoolAmount(app, eventId)
+      // `availableAmount` already excludes amounts from existing PayoutBookingItems!
+      const maxAvailableNow = Math.min(availableAmount, maxCollected)
 
       if (maxAvailableNow >= amountToWithdraw && amountToWithdraw > 0) {
+        // Create an EventPayoutRequest and PayoutBookingItems
+        const newPayoutReq = await (app as any).prisma.eventPayoutRequest.create({
+          data: {
+            eventId,
+            requestedBy: userId,
+            amount: amountToWithdraw,
+            status: 'COMPLETED'
+          }
+        });
+
+        // Distribute amountToWithdraw among validated bookings
+        const validatedBookings = breakdowns.filter(b => b.isValidated && b.remainingAmount > 0);
+        
+        let remainingToDeduct = amountToWithdraw;
+        const totalValidatedFunds = validatedBookings.reduce((sum, b) => sum + b.remainingAmount, 0);
+
+        for (const b of validatedBookings) {
+          if (remainingToDeduct <= 0) break;
+          // Proportionate deduction
+          const proportion = b.remainingAmount / totalValidatedFunds;
+          let deduct = Math.min(b.remainingAmount, amountToWithdraw * proportion);
+          
+          // Fix precision errors
+          deduct = Math.round(deduct * 100) / 100;
+          if (deduct > remainingToDeduct) deduct = remainingToDeduct;
+          
+          if (deduct > 0) {
+            await (app as any).prisma.payoutBookingItem.create({
+              data: {
+                payoutRequestId: newPayoutReq.id,
+                bookingId: b.id,
+                amountDeducted: deduct,
+                validationStatusSnapshot: b.poolValidationStatus,
+                delegatedToSnapshot: b.delegatedToId
+              }
+            });
+            remainingToDeduct -= deduct;
+          }
+        }
+
         // We can release funds immediately
         await releaseFunds(app, eventId, userId, amountToWithdraw, event.title)
         
