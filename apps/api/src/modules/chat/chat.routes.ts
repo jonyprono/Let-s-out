@@ -751,10 +751,11 @@ export default async function chatRoutes(app: FastifyInstance) {
         ...conv,
         members: conv.members.filter(m => m.user !== null)
       }))
-      reply.send(safe)
+      return safe
     } catch (err) {
       app.log.error(`[admin/bot-conversations] ${String(err)}`)
-      reply.code(500).send({ error: 'Erreur lors de la récupération des conversations de support.' })
+      reply.code(500)
+      return { error: 'Erreur lors de la récupération des conversations de support.' }
     }
   })
 
