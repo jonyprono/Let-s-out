@@ -51,7 +51,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // ── Production: silent auto-recovery strategy ──────────────────────────
-    if (!IS_DEV) {
+    // TEMPORARILY DISABLED for debugging — show the error screen immediately
+    if (false && !IS_DEV) {
       const attemptCount = Number(sessionStorage.getItem('error-recovery-count') || '0')
 
       if (attemptCount === 0) {
@@ -230,7 +231,7 @@ export class ErrorBoundary extends Component<Props, State> {
           {this.state.error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-xl max-w-[90vw] overflow-auto text-left w-full sm:max-w-[420px]">
               <p className="text-[11px] font-mono text-red-600 whitespace-pre-wrap break-all">
-                {this.state.error.toString()}
+                {this.state.error.stack || this.state.error.toString()}
               </p>
             </div>
           )}
