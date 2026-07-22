@@ -687,7 +687,7 @@ export default async function chatRoutes(app: FastifyInstance) {
   })
 
   // ── Admin Bot Management ──────────────────────────────────────────────────
-  app.get('/admin/bots', { preHandler: [app.authenticate, app.requireAdmin] }, async (_req, reply) => {
+  app.get('/admin/bots', { preHandler: [app.requireAdmin] }, async (_req, reply) => {
     try {
       const bots = await app.prisma.user.findMany({
         where: { isBot: true },
@@ -700,7 +700,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }
   })
 
-  app.put('/admin/bots/:id', { preHandler: [app.authenticate, app.requireAdmin] }, async (req, reply) => {
+  app.put('/admin/bots/:id', { preHandler: [app.requireAdmin] }, async (req, reply) => {
     try {
       const { id } = req.params as { id: string }
       const { botPrompt } = req.body as { botPrompt: string }
@@ -715,7 +715,7 @@ export default async function chatRoutes(app: FastifyInstance) {
     }
   })
 
-  app.get('/admin/bot-conversations', { preHandler: [app.authenticate, app.requireAdmin] }, async (_req, reply) => {
+  app.get('/admin/bot-conversations', { preHandler: [app.requireAdmin] }, async (_req, reply) => {
     try {
       const conversations = await app.prisma.conversation.findMany({
         where: {
