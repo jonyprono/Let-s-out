@@ -382,9 +382,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const attendeeCount = event._count?.bookings ?? event.currentAttendees ?? 0
   const maxAttendees = event.maxAttendees
   const isFull = maxAttendees != null && maxAttendees > 0 && attendeeCount >= maxAttendees
-  const isPastEvent = event?.startAt ? new Date(event.startAt) < new Date() : false
+  const isPastEvent = event?.startAt ? parseSafeDate(event.startAt) < new Date() : false
   const deadline = event?.registrationDeadline || event?.startAt || event?.date
-  const isPastDeadline = deadline ? new Date(deadline) < new Date() : false
+  const isPastDeadline = deadline ? parseSafeDate(deadline) < new Date() : false
 
   const organizerName = event.creator?.profile?.displayName || 'Organisateur'
   const organizerAvatar = event.creator?.profile?.avatarUrl
@@ -703,12 +703,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         </svg>
                       </div>
                       <div className="flex-1 font-inter font-medium text-[12px] leading-[16px] text-[#404040] dark:text-gray-300">
-                        Date limite d'inscription: <span className="text-[#FF7A00]">{format(new Date(event.registrationDeadline), "dd MMMM yyyy", { locale: fr })}</span>
+                        Date limite d'inscription: <span className="text-[#FF7A00]">
+                          {(() => {
+                            try {
+                              return format(parseSafeDate(event.registrationDeadline), "dd MMMM yyyy", { locale: fr });
+                            } catch(e) { return "Date non précisée" }
+                          })()}
+                        </span>
                       </div>
                     </div>
                   )}
 
-                  {isOrganizer && new Date() > new Date(event?.registrationDeadline || event?.startAt || new Date()) && (
+                  {isOrganizer && new Date() > parseSafeDate(event?.registrationDeadline || event?.startAt) && (
                     <button
                       onClick={() => setShowPoolManagementModal(true)}
                       className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] dark:border-[#444] bg-orange-50 dark:bg-orange-500/10 text-[14px] font-medium text-[#FF7A00] active:scale-95 transition-transform"

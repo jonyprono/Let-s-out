@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
-import { Loader2, Briefcase } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
