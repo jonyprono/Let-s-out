@@ -8,13 +8,14 @@ import { fr } from 'date-fns/locale';
 export function AdminSupportChats() {
   const navigate = useNavigate();
 
-  const { data: conversations, isLoading, refetch } = useQuery({
+  const { data: conversations, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['admin', 'bot-conversations'],
     queryFn: async () => {
       const { data } = await apiClient.get('/chat/admin/bot-conversations');
       return data as any[];
     },
-    refetchInterval: 15000
+    refetchInterval: 15000,
+    retry: 1, // Only retry once — don't hammer a broken endpoint
   });
 
   if (isLoading) {
@@ -22,6 +23,27 @@ export function AdminSupportChats() {
       <div className="p-8 flex items-center justify-center text-white/50">
         <RefreshCw className="w-5 h-5 animate-spin mr-2" />
         Chargement des conversations...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center gap-4 text-center">
+        <ShieldAlert className="w-10 h-10 text-amber-400" />
+        <div>
+          <p className="text-white font-semibold mb-1">Impossible de charger les conversations de support</p>
+          <p className="text-white/40 text-sm max-w-sm">
+            {(error as any)?.response?.data?.error || 'Une erreur est survenue côté serveur. Les données seront disponibles dès que le serveur sera prêt.'}
+          </p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-white/60 hover:bg-white/10 transition-colors flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Réessayer
+        </button>
       </div>
     );
   }

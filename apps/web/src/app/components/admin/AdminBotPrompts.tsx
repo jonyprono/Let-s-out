@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Bot, Save, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Bot, Save, Loader2, ChevronDown, ChevronUp, AlertTriangle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function AdminBotPrompts() {
@@ -10,12 +10,13 @@ export function AdminBotPrompts() {
   const [editPrompt, setEditPrompt] = useState<string>('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const { data: bots, isLoading } = useQuery({
+  const { data: bots, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['admin', 'bots'],
     queryFn: async () => {
       const { data } = await apiClient.get('/chat/admin/bots');
       return data as any[];
-    }
+    },
+    retry: 1,
   });
 
   const updateMutation = useMutation({
@@ -47,6 +48,27 @@ export function AdminBotPrompts() {
       <div className="p-8 flex items-center justify-center text-white/50">
         <Loader2 className="w-5 h-5 animate-spin mr-2" />
         Chargement des agents...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center gap-4 text-center">
+        <AlertTriangle className="w-10 h-10 text-amber-400" />
+        <div>
+          <p className="text-white font-semibold mb-1">Impossible de charger les agents IA</p>
+          <p className="text-white/40 text-sm max-w-sm">
+            {(error as any)?.response?.data?.error || 'Une erreur est survenue côté serveur. Vérifiez que des bots ont bien été créés en base.'}
+          </p>
+        </div>
+        <button
+          onClick={() => refetch()}
+          className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-white/60 hover:bg-white/10 transition-colors flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Réessayer
+        </button>
       </div>
     );
   }

@@ -688,37 +688,72 @@ export default async function chatRoutes(app: FastifyInstance) {
 
   // ── Admin Bot Management ──────────────────────────────────────────────────
   app.get('/admin/bots', async (_req, reply) => {
-    // Ideally verify admin role here
-    const bots = await app.prisma.user.findMany({
-      where: { isBot: true },
-      include: { profile: true }
-    })
-    reply.send(bots)
+    try {
+      const bots = await app.prisma.user.findMany({
+        where: { isBot: true },
+        include: { profile: true }
+      })
+      reply.send(bots)
+    } catch (err) {
+      app.log.error(`[admin/bots] ${String(err)}`)
+      reply.code(500).send({ error: 'Erreur lors de la récupération des agents IA.' })
+    }
   })
 
   app.put('/admin/bots/:id', async (req, reply) => {
-    const { id } = req.params as { id: string }
-    const { botPrompt } = req.body as { botPrompt: string }
-    const updated = await app.prisma.user.update({
-      where: { id },
-      data: { botPrompt }
-    })
-    reply.send(updated)
+    try {
+      const { id } = req.params as { id: string }
+      const { botPrompt } = req.body as { botPrompt: string }
+      const updated = await app.prisma.user.update({
+        where: { id },
+        data: { botPrompt }
+      })
+      reply.send(updated)
+    } catch (err) {
+      app.log.error(`[admin/bots PUT] ${String(err)}`)
+      reply.code(500).send({ error: 'Erreur lors de la mise à jour de l\'agent.' })
+    }
   })
 
   app.get('/admin/bot-conversations', async (_req, reply) => {
-    // Fetch conversations where a bot is a member
-    const conversations = await app.prisma.conversation.findMany({
-      where: {
-        members: { some: { user: { isBot: true } } }
-      },
-      include: {
-        members: { include: { user: { include: { profile: true } } } },
-        messages: { orderBy: { createdAt: 'desc' }, take: 1 }
-      },
-      orderBy: { lastMessageAt: 'desc' }
-    })
-    reply.send(conversations)
+    try {
+      const conversations = await app.prisma.conversation.findMany({
+        where: {
+          members: { some: { user: { isBot: true } } }
+        },
+        include: {
+          // Use a separate select to avoid crash when a member's user was hard-deleted
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  isBot: true,
+                  profile: {
+                    select: {
+                      displayName: true,
+                      avatarUrl: true,
+                      username: true,
+                    }
+                  }
+                }
+              }
+            }
+          },
+          messages: { orderBy: { createdAt: 'desc' }, take: 1 }
+        },
+        orderBy: { lastMessageAt: 'desc' }
+      })
+      // Filter out members whose user record was hard-deleted (user = null)
+      const safe = conversations.map(conv => ({
+        ...conv,
+        members: conv.members.filter(m => m.user !== null)
+      }))
+      reply.send(safe)
+    } catch (err) {
+      app.log.error(`[admin/bot-conversations] ${String(err)}`)
+      reply.code(500).send({ error: 'Erreur lors de la récupération des conversations de support.' })
+    }
   })
 
   // Get messages in a conversation
