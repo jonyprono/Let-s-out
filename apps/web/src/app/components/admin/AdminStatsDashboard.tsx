@@ -265,7 +265,7 @@ export function AdminStatsDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-[#1A1A1A] rounded-2xl p-5 border border-white/5">
             <p className="text-sm text-white/50 mb-1">Total Entrant (Historique)</p>
-            <p className="text-2xl font-bold text-white">{(payments.totalIncomingAllTime).toLocaleString('fr-FR')} F</p>
+            <p className="text-2xl font-bold text-white">{((payments.totalIncomingAllTime) || 0).toLocaleString('fr-FR')} F</p>
             <p className="text-xs text-white/40 mt-2">Tous les paiements réussis</p>
           </div>
           <div 
@@ -288,7 +288,7 @@ export function AdminStatsDashboard() {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-action-primary mb-1">Commission Plateforme</p>
-                <p className="text-xl font-bold text-white mt-1">{(payments.totalCommissionsPerceived).toLocaleString('fr-FR')} F</p>
+                <p className="text-xl font-bold text-white mt-1">{((payments.totalCommissionsPerceived) || 0).toLocaleString('fr-FR')} F</p>
                 <div className="text-xs text-white/50 mt-2 flex items-center gap-2">
                   <span>Taux actuel : <strong className="text-white">{commissionData ? (commissionData * 100).toFixed(1) : 0}%</strong></span>
                   <button onClick={() => setIsEditingCommission(true)} className="p-1 bg-white/10 rounded hover:bg-white/20 text-white transition-colors">
