@@ -93,7 +93,7 @@ function processQueue(error: unknown, token: string | null = null) {
 }
 
 // Endpoints that should NOT trigger the network error toast
-const silentEndpoints = ['/notifications', '/auth/me', '/auth/refresh']
+const silentEndpoints = ['/notifications', '/auth/me', '/auth/refresh', '/chat/admin']
 const isSilent = (url?: string) => silentEndpoints.some(e => url?.includes(e))
 
 // Auth endpoints that should NOT trigger 401 refresh logic

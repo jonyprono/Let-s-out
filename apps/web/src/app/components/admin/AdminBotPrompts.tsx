@@ -16,7 +16,8 @@ export function AdminBotPrompts() {
       const { data } = await apiClient.get('/chat/admin/bots');
       return data as any[];
     },
-    retry: 1,
+    retry: false, // A single error state is enough — there's a manual Retry button
+    staleTime: 60_000, // Consider data fresh for 1 minute
   });
 
   const updateMutation = useMutation({

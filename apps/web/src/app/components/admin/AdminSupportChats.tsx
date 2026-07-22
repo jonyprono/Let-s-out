@@ -14,8 +14,8 @@ export function AdminSupportChats() {
       const { data } = await apiClient.get('/chat/admin/bot-conversations');
       return data as any[];
     },
-    refetchInterval: 15000,
-    retry: 1, // Only retry once — don't hammer a broken endpoint
+    retry: false, // A single error state is enough — there's a manual Retry button
+    staleTime: 60_000, // Consider data fresh for 1 minute
   });
 
   if (isLoading) {

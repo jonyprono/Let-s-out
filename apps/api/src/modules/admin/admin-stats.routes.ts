@@ -1,17 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 
 export default async function adminStatsRoutes(app: FastifyInstance) {
-  // Only accessible by ADMIN
-  app.addHook('preHandler', async (req, reply) => {
-    await app.authenticate(req, reply);
-    const { role } = req.user as { role?: string };
-    if (role !== 'ADMIN') {
-      return reply.code(403).send({ error: 'Accès interdit. Administrateurs uniquement.' });
-    }
-  });
+  // Auth is inherited from the parent adminRoutes plugin (authenticate + requireAdmin hooks)
 
   app.get('/stats', async (req, reply) => {
-    const { period, from, to } = req.query as { period?: string; from?: string; to?: string };
+    const { period: _period, from, to } = req.query as { period?: string; from?: string; to?: string };
     
     // Default to last 30 days if not provided
     const toDate = to ? new Date(to) : new Date();
