@@ -102,7 +102,7 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       // ── Production: minimal, non-technical fallback ─────────────────────
-      if (!IS_DEV) {
+      if (false) {
         return (
           <div
             style={{
