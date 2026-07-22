@@ -34,11 +34,13 @@ interface AuthState {
   user: AuthUser | null
   isLoading: boolean
   isLoggingOut: boolean
+  _hasHydrated: boolean
   // Actions
   setAccessToken: (token: string) => void
   setRefreshToken: (token: string) => void
   setUser: (user: AuthUser) => void
   setLoggingOut: (value: boolean) => void
+  setHasHydrated: (value: boolean) => void
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -51,6 +53,9 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: false,
       isLoggingOut: false,
+      _hasHydrated: false,
+
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
 
       setAccessToken: (token) => set({ accessToken: token }),
 
@@ -91,6 +96,10 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage),
       // Persist both token AND user — user is still re-validated on boot via AppBootstrap
       partialize: (state) => ({ accessToken: state.accessToken, refreshToken: state.refreshToken, user: state.user }),
+      onRehydrateStorage: () => (state) => {
+        // Called once localStorage hydration is complete
+        state?.setHasHydrated(true)
+      },
       // Guard against corrupted persisted state (e.g. Firebase error objects with {code, message})
       // that would cause React error #31 when rendered
       merge: (persisted: any, current) => {

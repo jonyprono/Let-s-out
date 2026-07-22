@@ -89,6 +89,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const { id } = useParams<{ id: string }>()
   const qc = useQueryClient()
   const user = useAuthStore((s) => s.user)
+  const hasHydrated = useAuthStore((s) => s._hasHydrated)
   const { openUserProfile } = useUserProfile()
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showContributeModal, setShowContributeModal] = useState(false)
@@ -323,6 +324,17 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   };
 
   // ─── Loading / Error states ───────────────────────────────────────────────
+
+  // ─── Wait for auth store hydration ─────────────────────────────────────────
+  // Without this, Zustand rehydrates from localStorage AFTER first render,
+  // causing user to flip null→defined mid-render which can crash hooks order (#310)
+  if (!hasHydrated) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-background-white">
+        <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
