@@ -56,7 +56,7 @@ export default async function adminStatsRoutes(app: FastifyInstance) {
         app.prisma.friendship.count({ where: { status: 'BLOCKED' } }),
       ]);
 
-      reply.send({
+      return {
         computedAt: new Date().toISOString(),
         users: {
           total: totalUsers,
@@ -92,10 +92,11 @@ export default async function adminStatsRoutes(app: FastifyInstance) {
           blockedUsers,
           avgFriendsPerUser: totalUsers > 0 ? totalFriendships / totalUsers : 0,
         }
-      });
+      };
     } catch (err) {
       app.log.error(`[Admin Stats] ${String(err)}`);
-      reply.code(500).send({ error: 'Failed to compute admin stats' });
+      reply.code(500);
+      return { error: 'Failed to compute admin stats' };
     }
   });
 }
