@@ -229,12 +229,21 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       const maxAvailableNow = Math.min(availableAmount, maxCollected)
 
       if (maxAvailableNow >= amountToWithdraw && amountToWithdraw > 0) {
+        // Fetch commission rate from settings (default 2%)
+        const commissionSetting = await (app as any).prisma.systemSetting.findUnique({
+          where: { key: 'PAYOUT_COMMISSION_RATE' }
+        });
+        const commissionRate = commissionSetting ? parseFloat(commissionSetting.value) : 0.02;
+        const commissionAmount = amountToWithdraw * commissionRate;
+
         // Create an EventPayoutRequest as PENDING
         const newPayoutReq = await (app as any).prisma.eventPayoutRequest.create({
           data: {
             eventId,
             requestedBy: userId,
             amount: amountToWithdraw,
+            commissionRate,
+            commissionAmount,
             status: 'PENDING',
             reason: reason,
           }
@@ -354,6 +363,11 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     const stats = await calculateAvailablePoolAmount(app, eventId)
     const event = await (app as any).prisma.event.findUnique({ where: { id: eventId } })
     
+    const commissionSetting = await (app as any).prisma.systemSetting.findUnique({
+      where: { key: 'PAYOUT_COMMISSION_RATE' }
+    });
+    const commissionRate = commissionSetting ? parseFloat(commissionSetting.value) : 0.02;
+
     return reply.send({ 
       data: {
         totalCollected: event?.poolCollected || 0,
@@ -361,7 +375,8 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         unlockedAmount: stats.availableAmount,
         pendingCount: stats.pendingCount,
         poolClosedAt: event?.poolClosedAt,
-        hasPool: stats.hasPool
+        hasPool: stats.hasPool,
+        commissionRate
       } 
     })
   })

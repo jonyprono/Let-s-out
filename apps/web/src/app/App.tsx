@@ -118,7 +118,8 @@ import { PayoutApprovalScreen } from './components/PayoutApprovalScreen';
 import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
 import AdminFeatureFlagsPage from './components/admin/AdminFeatureFlagsPage'
 import { AdminBadgesPage } from './components/admin/AdminBadgesPage'
-
+import AdminUsersPage from './components/admin/AdminUsersPage'
+import AdminEventsPage from './components/admin/AdminEventsPage'
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
@@ -256,6 +257,8 @@ export default function App() {
             }
           >
             <Route index element={<AdminDashboardPage />} />
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="events" element={<AdminEventsPage />} />
             <Route path="kyc" element={<AdminKycListPage />} />
             <Route path="kyc/:userId" element={<AdminKycDetailPage />} />
             <Route path="admins" element={<AdminAdminsPage />} />

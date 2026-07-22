@@ -661,11 +661,23 @@ model Admin {
   @@map("admins")
 }
 
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_settings")
+}
+
 model EventPayoutRequest {
   id                  String   @id @default(cuid())
   eventId             String
   requestedBy         String
   amount              Float
+  commissionRate      Float    @default(0.02)
+  commissionAmount    Float    @default(0)
   // PENDING | VOTING | APPROVED | REJECTED | EXPIRED
   status              String   @default("PENDING")
   approvals           String[] @default([])   // IDs des votants OUI

@@ -56,6 +56,11 @@ export default async function adminStatsRoutes(app: FastifyInstance) {
         app.prisma.friendship.count({ where: { status: 'BLOCKED' } }),
       ]);
 
+      const [totalIncomingAllTime, totalCompletedPayouts] = await Promise.all([
+        app.prisma.payment.aggregate({ _sum: { amount: true }, where: { status: 'SUCCEEDED' } }),
+        app.prisma.eventPayoutRequest.aggregate({ _sum: { amount: true, commissionAmount: true }, _count: true, where: { status: 'APPROVED' } })
+      ]);
+
       return {
         computedAt: new Date().toISOString(),
         users: {
@@ -84,6 +89,10 @@ export default async function adminStatsRoutes(app: FastifyInstance) {
           transactions: transactionsPeriod,
           activePoolsCount,
           openValidatorVotes,
+          totalIncomingAllTime: totalIncomingAllTime._sum.amount || 0,
+          totalCompletedPayouts: totalCompletedPayouts._sum.amount || 0,
+          completedPayoutsCount: totalCompletedPayouts._count || 0,
+          totalCommissionsPerceived: totalCompletedPayouts._sum.commissionAmount || 0,
         },
         engagement: {
           totalBadges,

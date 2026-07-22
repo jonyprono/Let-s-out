@@ -28,6 +28,10 @@ export interface AdminStatsResponse {
     transactions: number;
     activePoolsCount: number;
     openValidatorVotes: number;
+    totalIncomingAllTime: number;
+    totalCompletedPayouts: number;
+    completedPayoutsCount: number;
+    totalCommissionsPerceived: number;
   };
   engagement: {
     totalBadges: number;

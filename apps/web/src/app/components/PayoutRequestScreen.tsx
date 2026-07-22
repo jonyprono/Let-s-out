@@ -63,8 +63,9 @@ export function PayoutRequestScreen() {
   const maxAvailableNow = Math.min(Math.max(0, unlockedAmount - totalWithdrawn), Math.max(0, totalCollected - totalWithdrawn));
   const numericAmount = parseFloat(amountToWithdraw) || 0;
   
-  // Platform fee assumption (e.g. 2%)
-  const commission = numericAmount * 0.02;
+  // Platform fee assumption dynamically fetched from backend
+  const commissionRate = statusData.commissionRate ?? 0.02;
+  const commission = numericAmount * commissionRate;
   const amountToReceive = numericAmount - commission;
 
   const finalReason = reasonCategory === 'Autre' ? customReason.trim() : reasonCategory;
@@ -140,7 +141,7 @@ export function PayoutRequestScreen() {
               <span className="text-gray-900 dark:text-white font-medium">{numericAmount.toLocaleString('fr-FR')} F</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Commission (2%)</span>
+              <span className="text-gray-500">Commission ({(commissionRate * 100).toFixed(0)}%)</span>
               <span className="text-red-500 font-medium">- {commission.toLocaleString('fr-FR')} F</span>
             </div>
             <div className="flex justify-between pt-2 border-t border-dashed border-gray-200 dark:border-gray-700">

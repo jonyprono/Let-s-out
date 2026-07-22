@@ -314,8 +314,7 @@ export class AuthController {
       return reply.code(401).send({ error: 'Invalid or expired refresh token' })
     }
 
-    let actualUserId = userId;
-    let role = 'USER';
+    let actualUserId: string = userId as string;
     
     if (token === 'admin_no_refresh_token_needed') {
       // Decode the expired access token to get the admin's ID
@@ -326,7 +325,7 @@ export class AuthController {
           const decoded = this.app.jwt.decode(expiredToken) as { sub: string, role: string }
           if (decoded && decoded.role === 'ADMIN') {
             actualUserId = decoded.sub
-            role = 'ADMIN'
+
           } else {
             return reply.code(401).send({ error: 'Invalid admin token' })
           }

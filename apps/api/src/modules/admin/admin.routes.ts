@@ -5,6 +5,7 @@ import { writeAuditLog } from '../../services/audit.service'
 import { releaseFunds } from '../payments/event-payout.routes'
 import { format } from 'date-fns'
 import adminStatsRoutes from './admin-stats.routes'
+import adminListsRoutes from './admin-lists.routes'
 
 const KYC_STATUSES = ['pending', 'verified', 'rejected'] as const
 
@@ -489,4 +490,5 @@ export default async function adminRoutes(app: FastifyInstance) {
 
   // Register stats routes
   app.register(adminStatsRoutes)
+  app.register(adminListsRoutes)
 }
