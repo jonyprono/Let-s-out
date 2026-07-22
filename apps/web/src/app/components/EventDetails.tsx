@@ -323,6 +323,22 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     }
   };
 
+  // ─── useMemo hooks — MUST be before any early return ────────────────────────
+  // React requires the same number of hooks to be called on every render.
+  // Any hook placed after a conditional return would be skipped on slow devices
+  // (e.g. while isLoading=true) causing Error #310 on the next re-render.
+  const delegationsMap = useMemo(() => {
+    const map: Record<string, any[]> = {}
+    const list = Array.isArray(attendeesData) ? attendeesData : (attendeesData?.data || [])
+    list.forEach((b: any) => {
+      if (b.delegatedToId && b.poolValidationStatus === 'DELEGATED') {
+        if (!map[b.delegatedToId]) map[b.delegatedToId] = []
+        map[b.delegatedToId].push(b)
+      }
+    })
+    return map
+  }, [attendeesData])
+
   // ─── Loading / Error states ───────────────────────────────────────────────
 
   // ─── Wait for auth store hydration ─────────────────────────────────────────
@@ -408,21 +424,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const { budget: cagnoteBudget, collected: cagnoteCollected, remaining: cagnoteRemaining, progress: cagnoteProgress } = computePoolStats(event)
   const participationPaid = hasPaidParticipation(event, myBookingData ?? null)
   const minPoolAmount = event.poolMinAmount || event.poolTarget
-
-  const displayedAttendees = attendeesData?.data?.slice(0, 4) || []
-  const extraCount = Math.max(0, attendeeCount - 4)
-
-  const delegationsMap = useMemo(() => {
-    const map: Record<string, any[]> = {}
-    const list = Array.isArray(attendeesData) ? attendeesData : (attendeesData?.data || [])
-    list.forEach((b: any) => {
-      if (b.delegatedToId && b.poolValidationStatus === 'DELEGATED') {
-        if (!map[b.delegatedToId]) map[b.delegatedToId] = []
-        map[b.delegatedToId].push(b)
-      }
-    })
-    return map
-  }, [attendeesData])
 
   const myDelegatedBookings = delegationsMap[user?.id || ''] || []
   
