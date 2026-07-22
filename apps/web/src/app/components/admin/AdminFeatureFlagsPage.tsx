@@ -17,6 +17,13 @@ const DEFAULT_FLAGS = [
     icon: '🗺️',
     section: 'Événement',
   },
+  {
+    key: FLAG_KEYS.ENABLE_NON_VOTER_PENALTIES,
+    label: 'Pénalités pour abstentionnistes',
+    description: 'Active les pénalités globales si un participant ne valide ni ne délègue à la fin du délai (sa part est débloquée automatiquement).',
+    icon: '⚖️',
+    section: 'Cagnotte',
+  },
 ]
 
 export default function AdminFeatureFlagsPage() {

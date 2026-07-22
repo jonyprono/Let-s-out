@@ -13,6 +13,7 @@ export interface FeatureFlag {
 export const FLAG_KEYS = {
   PROFILE_PRO_BANNER: 'profile_pro_banner',
   EVENT_TRANSPORT_CARD: 'event_transport_card',
+  ENABLE_NON_VOTER_PENALTIES: 'enable_non_voter_penalties',
 } as const
 
 type FlagKey = (typeof FLAG_KEYS)[keyof typeof FLAG_KEYS]

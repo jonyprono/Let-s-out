@@ -191,7 +191,10 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
           data: { poolClosedAt: new Date() }
         })
 
-        if (event.enableNonVoterPenalties) {
+        const flag = await (app as any).prisma.featureFlag.findUnique({ where: { key: 'enable_non_voter_penalties' } })
+        const enableNonVoterPenalties = flag?.isActive ?? false
+
+        if (enableNonVoterPenalties) {
           const bookings = await (app as any).prisma.booking.findMany({
             where: { eventId, status: { not: 'REFUNDED' }, totalPaid: { gt: 0 } },
             select: { userId: true, poolValidationStatus: true, delegatedToId: true }

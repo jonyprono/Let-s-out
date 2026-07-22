@@ -49,7 +49,8 @@ export async function calculateAvailablePoolAmount(
   let pendingCount = 0;
   const breakdowns: PoolBookingInfo[] = [];
 
-  const applyPenalties = event?.enableNonVoterPenalties && event?.poolClosedAt;
+  const flag = await (app as any).prisma.featureFlag.findUnique({ where: { key: 'enable_non_voter_penalties' } });
+  const applyPenalties = flag?.isActive && event?.poolClosedAt;
 
   for (const b of bookings) {
     if (b.totalPaid > 0) {

@@ -254,7 +254,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [enablePool, setEnablePool] = useState(sessionDraft?.enablePool ?? false)
   const [poolDescription, setPoolDescription] = useState(sessionDraft?.poolDescription ?? '')
   const [poolTarget, setPoolTarget] = useState(sessionDraft?.poolTarget ?? '')
-  const [enableNonVoterPenalties, setEnableNonVoterPenalties] = useState(sessionDraft?.enableNonVoterPenalties ?? false)
   const [poolMinAmount, setPoolMinAmount] = useState(sessionDraft?.poolMinAmount ?? '')
 
   useEffect(() => {
@@ -263,14 +262,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       regEndDate, regEndTime,
       address, city, lat, lon, privacy, allowGuestInvites, description,
       participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
-      enablePool, poolDescription, poolTarget, poolMinAmount, enableNonVoterPenalties
+      enablePool, poolDescription, poolTarget, poolMinAmount
     }
   }, [
     title, category, startDate, startTime, hasEndDate, endDate, endTime,
     regEndDate, regEndTime,
     address, city, lat, lon, privacy, allowGuestInvites, description,
     participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
-    enablePool, poolDescription, poolTarget, poolMinAmount, enableNonVoterPenalties
+    enablePool, poolDescription, poolTarget, poolMinAmount
   ])
 
   const fileRef = useRef<HTMLInputElement>(null)
@@ -358,7 +357,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (d.isPrivate !== undefined) setPrivacy(d.isPrivate ? 'PRIVATE' : 'PUBLIC')
       if (d.description) setDescription(d.description)
       if (d.coverUrl) setCoverPreview(d.coverUrl)
-            if (d.enableNonVoterPenalties !== undefined) setEnableNonVoterPenalties(d.enableNonVoterPenalties)
       if (d.poolTarget !== undefined && d.poolTarget !== null) {
         setEnablePool(true)
         setParticipationMode('cagnotte')
@@ -903,12 +901,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="px-5 mb-4 flex flex-col gap-2">
           {/* Main Organizer */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[var(--brand-orange-500)] text-white flex items-center justify-center font-bold text-[length:var(--font-size-title-small)] shrink-0">
-              {me?.firstName?.[0]?.toUpperCase() || 'A'}
-            </div>
+            {me?.profile?.avatarUrl ? (
+              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                <SafeImage src={me.profile.avatarUrl} alt={me?.profile?.displayName || me?.firstName || 'Organisateur'} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[var(--brand-orange-500)] text-white flex items-center justify-center font-bold text-[length:var(--font-size-title-small)] shrink-0">
+                {me?.profile?.displayName?.[0]?.toUpperCase() || me?.firstName?.[0]?.toUpperCase() || 'A'}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] truncate">
-                {me?.firstName} {me?.lastName}
+                {me?.profile?.displayName || (me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : 'Organisateur')}
               </p>
               <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate">Organisateur de l'événement</p>
             </div>
@@ -1104,24 +1108,6 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     />
                   </div>
 
-                  {/* Pénalités d'abstention */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between p-4 border border-[var(--border-default)] rounded-[12px] bg-[var(--color-background-primary)]">
-                      <div>
-                        <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1">Activer les pénalités pour les abstentionnistes</p>
-                        <p className="text-[11px] text-[var(--color-text-muted)] leading-snug">Si un participant ne valide ni ne délègue à la fin du délai, sa part sera débloquée automatiquement.</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={enableNonVoterPenalties}
-                          onChange={(e) => setEnableNonVoterPenalties(e.target.checked)}
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#FF7A00]"></div>
-                      </label>
-                    </div>
-                  </div>
 
                   {/* Participation minimale */}
                   <div className="mb-2">
