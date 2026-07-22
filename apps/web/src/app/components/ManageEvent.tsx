@@ -88,7 +88,15 @@ export function ManageEvent() {
       <div className="px-4 py-4 shrink-0 bg-white dark:bg-[#1A1A1A]">
         <h1 className="text-[20px] font-bold text-gray-900 dark:text-white mb-1">{event.title}</h1>
         <p className="text-[13px] text-gray-500">
-          {format(new Date(event.startAt), "EEEE d MMMM yyyy, HH'h'mm", { locale: fr }).replace(/^\w/, (c) => c.toUpperCase())}
+          {(() => {
+            try {
+              const d = event.startAt ? new Date(event.startAt) : new Date();
+              if (isNaN(d.getTime())) return 'Date non précisée';
+              return format(d, "EEEE d MMMM yyyy, HH'h'mm", { locale: fr }).replace(/^\w/, (c) => c.toUpperCase());
+            } catch (e) {
+              return 'Date non précisée';
+            }
+          })()}
         </p>
       </div>
 
@@ -162,7 +170,15 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
           </div>
           <div className="flex justify-between border-b border-gray-50 dark:border-gray-800 py-2">
             <span className="text-gray-500">Date</span>
-            <span className="text-gray-900 dark:text-white font-medium">{format(new Date(event.startAt), 'EEEE d MMMM yyyy', { locale: fr }).replace(/^\w/, (c) => c.toUpperCase())}</span>
+            <span className="text-gray-900 dark:text-white font-medium">
+              {(() => {
+                try {
+                  const d = event.startAt ? new Date(event.startAt) : new Date();
+                  if (isNaN(d.getTime())) return 'Date non précisée';
+                  return format(d, 'EEEE d MMMM yyyy', { locale: fr }).replace(/^\w/, (c) => c.toUpperCase());
+                } catch(e) { return 'Date non précisée'; }
+              })()}
+            </span>
           </div>
           <div className="flex justify-between border-b border-gray-50 dark:border-gray-800 py-2">
             <span className="text-gray-500">Lieu</span>
@@ -170,7 +186,15 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
           </div>
           <div className="flex justify-between pt-2">
             <span className="text-gray-500">Heure</span>
-            <span className="text-gray-900 dark:text-white font-medium">{format(new Date(event.startAt), 'HH:mm')}</span>
+            <span className="text-gray-900 dark:text-white font-medium">
+              {(() => {
+                try {
+                  const d = event.startAt ? new Date(event.startAt) : new Date();
+                  if (isNaN(d.getTime())) return '--:--';
+                  return format(d, 'HH:mm');
+                } catch(e) { return '--:--'; }
+              })()}
+            </span>
           </div>
         </div>
       </div>
@@ -452,19 +476,31 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
   if (!hasPot) {
     return (
       <div className="w-full flex-1 flex flex-col items-center justify-center p-6 bg-white dark:bg-[#1A1A1A] rounded-xl border border-gray-100 dark:border-gray-800 mt-4">
-        <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-4">
-          <Briefcase className="w-8 h-8 text-orange-500" />
+        <div className="mb-6 flex justify-center">
+          {/* Custom empty state illustration matching design */}
+          <div className="w-[128px] h-[165px] bg-orange-50 dark:bg-orange-900/20 rounded-[20px] flex flex-col items-center justify-center relative overflow-hidden">
+             <Briefcase className="w-14 h-14 text-[#FF7A00] mb-2" />
+             <div className="absolute bottom-4 right-4 w-8 h-8 bg-white dark:bg-[#1A1A1A] rounded-full flex items-center justify-center shadow-sm">
+                <span className="text-[#FF7A00] text-[18px] font-bold">!</span>
+             </div>
+          </div>
         </div>
-        <h2 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2 text-center">Aucune cagnotte</h2>
-        <p className="text-[14px] text-gray-500 text-center mb-6 max-w-[280px]">
-          Cet événement ne dispose pas de cagnotte.
+        <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center">Aucune cagnotte ajoutée</h2>
+        <p className="text-[14px] text-[#737373] text-center mb-8 max-w-[280px] leading-relaxed">
+          Ajoutez une cagnotte à l'événement pour mutualiser les frais.
         </p>
         {(isCreator || isCoHost) && (
           <button
             onClick={() => setCagnotteStep('setup')}
-            className="px-6 py-3 bg-[#FF7A00] text-white rounded-[12px] font-bold text-[14px] active:scale-95 transition-transform"
+            className="w-full py-3.5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
           >
-            Créer une cagnotte
+            <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19.833 19.3359C19.833 20.7166 18.7137 21.8359 17.333 21.8359C15.9522 21.8359 14.833 20.7166 14.833 19.3359C14.833 17.9552 15.9522 16.8359 17.333 16.8359C18.7137 16.8359 19.833 17.9552 19.833 19.3359Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M13.3333 13.2247C12.2139 13.2194 10.893 13.0933 9.21123 12.7596C8.25404 12.5696 7.33325 13.2813 7.33325 14.2571V24.2742C7.33325 24.9625 7.8059 25.567 8.47805 25.7152C15.4429 27.2511 16.5824 25.4454 21.3333 25.4454C22.844 25.4454 24.0694 25.588 25.0095 25.7655C26.1052 25.9725 27.3333 25.1334 27.3333 24.0183V14.2435C27.3333 13.6753 27.0089 13.161 26.4662 12.9928C25.6561 12.7417 24.2785 12.4226 22.3333 12.3379" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M7.33325 16.336C9.28458 16.336 11.0381 14.741 11.2623 13.0901M23.8338 12.8359C23.8338 14.8756 25.5988 16.805 27.3333 16.805M27.3333 22.336C25.4342 22.336 23.5934 23.6462 23.4353 25.4343M11.3337 25.8321C11.3337 23.6229 9.54288 21.8321 7.33374 21.8321" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14.8333 10.8359C14.8333 10.8359 16.6331 8.33594 17.3333 8.33594M17.3333 8.33594C18.0335 8.33594 19.8333 10.8359 19.8333 10.8359M17.3333 8.33594V13.8359" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Ajouter une cagnotte
           </button>
         )}
       </div>
