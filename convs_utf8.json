@@ -1,0 +1,739 @@
+﻿[
+    {
+        "id":  "cmroso51l0009fb10w6hqpjad",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-20T16:31:38.072Z",
+        "createdAt":  "2026-07-17T10:27:56.937Z",
+        "updatedAt":  "2026-07-20T16:31:38.073Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmroso51l000cfb10mq5h57i9",
+                            "conversationId":  "cmroso51l0009fb10w6hqpjad",
+                            "userId":  "bot_estelle",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T10:27:56.937Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_estelle",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Estelle",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Estelle\u0026backgroundColor=ffdfbf",
+                                                         "username":  "bot_estelle"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmroso51l000bfb10gdywkw78",
+                            "conversationId":  "cmroso51l0009fb10w6hqpjad",
+                            "userId":  "cmrdvclmn0006v2p00gluk2da",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T10:27:56.937Z",
+                            "lastReadAt":  "2026-07-22T10:54:35.857Z",
+                            "lastDeliveredAt":  "2026-07-22T10:54:35.677Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrdvclmn0006v2p00gluk2da",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Houansou Maxime  Max",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1783786844/chat_uploads/dce74814-0ea7-4b55-9af5-b64747099c06-641d7e3b-328f-4378-96b4-d548a1514dbb.jpg",
+                                                         "username":  "houansoumaxime_4514"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrtfzdbp001mu5y2b1e066k4",
+                             "conversationId":  "cmroso51l0009fb10w6hqpjad",
+                             "senderId":  "bot_estelle",
+                             "type":  "TEXT",
+                             "content":  "Je vais bien, merci ! Je suis toujours prête à t\u0027aider avec tes problèmes de Let\u0027s Out, mais je vais te dire la vérité, je suis un peu perdue dans cette conversation.\n\nSi tu veux vraiment parler de quelque chose de sérieux, je suis là pour t\u0027aider. Sinon, je suppose que je peux continuer à jouer le jeu, mais je crois que nous sommes un peu éloignés de la vraie raison pour laquelle tu es venu me voir.\n\nSi tu veux, on peut continuer à plaisanter, mais si tu as vraiment besoin de mon aide pour quelque chose, dis-le-moi et je vais faire de mon mieux pour t\u0027aider.",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-20T16:31:36.757Z",
+                             "updatedAt":  "2026-07-20T16:31:36.757Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrp4n5ls002k5c6q2cygf58y",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-19T17:21:08.820Z",
+        "createdAt":  "2026-07-17T16:03:06.401Z",
+        "updatedAt":  "2026-07-19T17:21:08.821Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrp4n5lt002n5c6qoddyehuw",
+                            "conversationId":  "cmrp4n5ls002k5c6q2cygf58y",
+                            "userId":  "bot_armand",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T16:03:06.401Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_armand",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Armand",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Armand\u0026backgroundColor=b6e3f4",
+                                                         "username":  "bot_armand"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrp4n5lt002m5c6qs13jehmj",
+                            "conversationId":  "cmrp4n5ls002k5c6q2cygf58y",
+                            "userId":  "cmrjiei8h000619dt9qbssd5a",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T16:03:06.401Z",
+                            "lastReadAt":  "2026-07-19T17:59:47.625Z",
+                            "lastDeliveredAt":  "2026-07-19T17:59:47.447Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrjiei8h000619dt9qbssd5a",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Letsout Out",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1784375450/chat_uploads/17d52f4d-040f-4bf0-8450-a789b093a4c0-70351f92-252e-4a05-bf35-40c5b0d1d281.jpg",
+                                                         "username":  "letsout8_4366"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrs2b6wn0013y2c2zu68plv5",
+                             "conversationId":  "cmrp4n5ls002k5c6q2cygf58y",
+                             "senderId":  "bot_armand",
+                             "type":  "TEXT",
+                             "content":  "Je comprends mieux maintenant. Il semblerait que vous ayez partagé une capture d\u0027écran de l\u0027application Let\u0027s Out. C\u0027est très bien !\n\nMalheureusement, je ne peux pas visualiser l\u0027image directement. Mais vous pouvez me décrire ce que vous avez dessus ou me dire quel est le problème ou la question que vous avez liée à cette image. Je serai ravi de vous aider !",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-19T17:21:07.511Z",
+                             "updatedAt":  "2026-07-19T17:21:07.511Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrosdor40002fb10u86tc0po",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-19T16:54:55.299Z",
+        "createdAt":  "2026-07-17T10:19:49.265Z",
+        "updatedAt":  "2026-07-19T16:54:55.302Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrosdor40005fb10f9trgd8p",
+                            "conversationId":  "cmrosdor40002fb10u86tc0po",
+                            "userId":  "bot_armand",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T10:19:49.265Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_armand",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Armand",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Armand\u0026backgroundColor=b6e3f4",
+                                                         "username":  "bot_armand"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrosdor40004fb10qyxeuryg",
+                            "conversationId":  "cmrosdor40002fb10u86tc0po",
+                            "userId":  "cmrdvclmn0006v2p00gluk2da",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T10:19:49.265Z",
+                            "lastReadAt":  "2026-07-22T12:56:02.447Z",
+                            "lastDeliveredAt":  "2026-07-22T12:56:02.261Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrdvclmn0006v2p00gluk2da",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Houansou Maxime  Max",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1783786844/chat_uploads/dce74814-0ea7-4b55-9af5-b64747099c06-641d7e3b-328f-4378-96b4-d548a1514dbb.jpg",
+                                                         "username":  "houansoumaxime_4514"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrs1dgrb0004y2c29vnbdm9n",
+                             "conversationId":  "cmrosdor40002fb10u86tc0po",
+                             "senderId":  "bot_armand",
+                             "type":  "TEXT",
+                             "content":  "Bonjour ! Je suis Armand, votre agent de support client à Let\u0027s Out. Je suis là pour vous aider à résoudre votre problème ou à répondre à vos questions.\n\nVous aviez demandé à contacter un administrateur, n\u0027est-ce pas ? Je peux vous aider à contacter Estelle, notre administrateur technique, ou Brice, notre administrateur paiements. Quel est votre problème ou votre question ? Je vais faire de mon mieux pour vous aider !",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-19T16:54:53.975Z",
+                             "updatedAt":  "2026-07-19T16:54:53.975Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrrnvkhc000crlpcec4qsv50",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-19T10:37:36.227Z",
+        "createdAt":  "2026-07-19T10:37:03.985Z",
+        "updatedAt":  "2026-07-19T10:37:36.228Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrrnvkhc000frlpcb5cq1zdy",
+                            "conversationId":  "cmrrnvkhc000crlpcec4qsv50",
+                            "userId":  "bot_estelle",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-19T10:37:03.985Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_estelle",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Estelle",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Estelle\u0026backgroundColor=ffdfbf",
+                                                         "username":  "bot_estelle"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrrnvkhc000erlpceci4g03a",
+                            "conversationId":  "cmrrnvkhc000crlpcec4qsv50",
+                            "userId":  "cmrjiei8h000619dt9qbssd5a",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-19T10:37:03.985Z",
+                            "lastReadAt":  "2026-07-19T10:37:39.873Z",
+                            "lastDeliveredAt":  "2026-07-19T10:37:39.712Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrjiei8h000619dt9qbssd5a",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Letsout Out",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1784375450/chat_uploads/17d52f4d-040f-4bf0-8450-a789b093a4c0-70351f92-252e-4a05-bf35-40c5b0d1d281.jpg",
+                                                         "username":  "letsout8_4366"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrrnw8bn000mrlpcqb9ks0i9",
+                             "conversationId":  "cmrrnvkhc000crlpcec4qsv50",
+                             "senderId":  "bot_estelle",
+                             "type":  "TEXT",
+                             "content":  "Je suis l\u0027agent de support technique de Let\u0027s Out. Mon rôle est de vous aider à résoudre les problèmes techniques que vous pourriez rencontrer sur l\u0027application, tels que des bugs, des problèmes d\u0027OTP, des erreurs d\u0027affichage, des comptes inaccessibles, etc. Je suis là pour vous guider et vous apporter des solutions claires et précises. Qu\u0027est-ce que je peux faire pour vous aujourd\u0027hui ?",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-19T10:37:34.883Z",
+                             "updatedAt":  "2026-07-19T10:37:34.883Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrqik1xq0017ct7tlr9rh0fc",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-18T15:20:26.570Z",
+        "createdAt":  "2026-07-18T15:20:22.479Z",
+        "updatedAt":  "2026-07-18T15:20:26.571Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrqik1xq001act7t2ct9l9uw",
+                            "conversationId":  "cmrqik1xq0017ct7tlr9rh0fc",
+                            "userId":  "bot_brice",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-18T15:20:22.479Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_brice",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Brice",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Brice\u0026backgroundColor=c0aede",
+                                                         "username":  "bot_brice"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrqik1xq0019ct7ty1yf01ul",
+                            "conversationId":  "cmrqik1xq0017ct7tlr9rh0fc",
+                            "userId":  "cmrke4wu3001gy0uq1avtw0i3",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-18T15:20:22.479Z",
+                            "lastReadAt":  "2026-07-18T15:20:28.632Z",
+                            "lastDeliveredAt":  "2026-07-18T15:20:28.439Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrke4wu3001gy0uq1avtw0i3",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Carlos Soglo",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1784380404/chat_uploads/85f16360-7ae2-433f-9d91-b66d3f507222-12bcb7f4-263a-4819-a302-18bb11e00ac7.jpg",
+                                                         "username":  "carlossoglo60_5267"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrqik41k001cct7tqraspccy",
+                             "conversationId":  "cmrqik1xq0017ct7tlr9rh0fc",
+                             "senderId":  "bot_brice",
+                             "type":  "TEXT",
+                             "content":  "Bonjour ! Je suis Brice, votre agent de support Let\u0027s Out. Comment puis-je vous aider aujourd\u0027hui ?",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-18T15:20:25.208Z",
+                             "updatedAt":  "2026-07-18T15:20:25.208Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrqifd4w000gct7tfet2bhpq",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-18T15:19:12.360Z",
+        "createdAt":  "2026-07-18T15:16:43.587Z",
+        "updatedAt":  "2026-07-18T15:19:12.361Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrqifd4w000jct7ti8xx0js9",
+                            "conversationId":  "cmrqifd4w000gct7tfet2bhpq",
+                            "userId":  "bot_armand",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-18T15:16:43.587Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_armand",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Armand",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Armand\u0026backgroundColor=b6e3f4",
+                                                         "username":  "bot_armand"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrqifd4w000ict7tsin6x1ou",
+                            "conversationId":  "cmrqifd4w000gct7tfet2bhpq",
+                            "userId":  "cmrke4wu3001gy0uq1avtw0i3",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-18T15:16:43.587Z",
+                            "lastReadAt":  "2026-07-18T15:19:16.300Z",
+                            "lastDeliveredAt":  "2026-07-18T15:19:16.105Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrke4wu3001gy0uq1avtw0i3",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Carlos Soglo",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1784380404/chat_uploads/85f16360-7ae2-433f-9d91-b66d3f507222-12bcb7f4-263a-4819-a302-18bb11e00ac7.jpg",
+                                                         "username":  "carlossoglo60_5267"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrqiiir8000yct7tv8ps0om8",
+                             "conversationId":  "cmrqifd4w000gct7tfet2bhpq",
+                             "senderId":  "bot_armand",
+                             "type":  "TEXT",
+                             "content":  "Donc vous avez des questions ou des problèmes spécifiques avec Let\u0027s Out ? Essayons de les résoudre ensemble ! Qu\u0027est-ce qui vous tracasse en particulier ?",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-18T15:19:10.964Z",
+                             "updatedAt":  "2026-07-18T15:19:10.964Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrp3czfj00275c6qzgky97lp",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-17T15:27:54.857Z",
+        "createdAt":  "2026-07-17T15:27:12.224Z",
+        "updatedAt":  "2026-07-17T15:27:54.858Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrp3czfj002a5c6q010v3aoq",
+                            "conversationId":  "cmrp3czfj00275c6qzgky97lp",
+                            "userId":  "bot_aicha",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T15:27:12.224Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_aicha",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Aïcha",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Aicha\u0026backgroundColor=ffb8b8",
+                                                         "username":  "bot_aïcha"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrp3czfj00295c6qxw28o2w9",
+                            "conversationId":  "cmrp3czfj00275c6qzgky97lp",
+                            "userId":  "cmrjiei8h000619dt9qbssd5a",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T15:27:12.224Z",
+                            "lastReadAt":  "2026-07-17T15:27:58.679Z",
+                            "lastDeliveredAt":  "2026-07-17T15:27:58.139Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrjiei8h000619dt9qbssd5a",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Letsout Out",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1784375450/chat_uploads/17d52f4d-040f-4bf0-8450-a789b093a4c0-70351f92-252e-4a05-bf35-40c5b0d1d281.jpg",
+                                                         "username":  "letsout8_4366"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrp3dvbb002h5c6qwk5wxjca",
+                             "conversationId":  "cmrp3czfj00275c6qzgky97lp",
+                             "senderId":  "bot_aicha",
+                             "type":  "TEXT",
+                             "content":  "Très bien, merci ! On se met à l\u0027aise, c\u0027est sympa ! Maintenant, qu\u0027est-ce qui vous amène ici ? Avez-vous besoin d\u0027aide pour votre compte Let\u0027s Out ? 🤔",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-17T15:27:53.424Z",
+                             "updatedAt":  "2026-07-17T15:27:53.424Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrp333zc001p5c6qkmvpac6v",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-17T15:20:37.742Z",
+        "createdAt":  "2026-07-17T15:19:31.560Z",
+        "updatedAt":  "2026-07-17T15:20:37.743Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrp333zc001s5c6q5srtm56m",
+                            "conversationId":  "cmrp333zc001p5c6qkmvpac6v",
+                            "userId":  "bot_estelle",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T15:19:31.560Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_estelle",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Estelle",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Estelle\u0026backgroundColor=ffdfbf",
+                                                         "username":  "bot_estelle"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrp333zc001r5c6q9zi34pio",
+                            "conversationId":  "cmrp333zc001p5c6qkmvpac6v",
+                            "userId":  "cmrkaa9tw0000fn3yst41461y",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T15:19:31.560Z",
+                            "lastReadAt":  "2026-07-17T15:20:41.665Z",
+                            "lastDeliveredAt":  "2026-07-17T15:20:41.470Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrkaa9tw0000fn3yst41461y",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Oswald SATOGUINA",
+                                                         "avatarUrl":  "https://lh3.googleusercontent.com/a/ACg8ocKq9zQh7lOCK6bJmU9lxwi0j-M1aXgGkjFZ0UozNTTDGijULvAk0w=s96-c",
+                                                         "username":  "osatoguina_8818"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrp34i1l00245c6qu3fofw2r",
+                             "conversationId":  "cmrp333zc001p5c6qkmvpac6v",
+                             "senderId":  "bot_estelle",
+                             "type":  "TEXT",
+                             "content":  "Je peux vous aider à contacter un administrateur de Let\u0027s Out. Pour cela, j\u0027ai besoin de quelques informations. Pouvez-vous me donner votre identifiant de compte sur la plateforme ? Cela m\u0027aidera à vérifier vos informations et à vous guider vers le bon administrateur.",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-17T15:20:36.441Z",
+                             "updatedAt":  "2026-07-17T15:20:36.441Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrp32q1o001j5c6q2lpyxtj0",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-17T15:19:17.430Z",
+        "createdAt":  "2026-07-17T15:19:13.501Z",
+        "updatedAt":  "2026-07-17T15:19:17.431Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrp32q1o001m5c6qdchhb9ui",
+                            "conversationId":  "cmrp32q1o001j5c6q2lpyxtj0",
+                            "userId":  "bot_armand",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T15:19:13.501Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_armand",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Armand",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Armand\u0026backgroundColor=b6e3f4",
+                                                         "username":  "bot_armand"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrp32q1o001l5c6qmfm5kuaq",
+                            "conversationId":  "cmrp32q1o001j5c6q2lpyxtj0",
+                            "userId":  "cmrkaa9tw0000fn3yst41461y",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T15:19:13.501Z",
+                            "lastReadAt":  "2026-07-17T15:19:20.262Z",
+                            "lastDeliveredAt":  "2026-07-17T15:19:20.082Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrkaa9tw0000fn3yst41461y",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Oswald SATOGUINA",
+                                                         "avatarUrl":  "https://lh3.googleusercontent.com/a/ACg8ocKq9zQh7lOCK6bJmU9lxwi0j-M1aXgGkjFZ0UozNTTDGijULvAk0w=s96-c",
+                                                         "username":  "osatoguina_8818"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrp32s2h001o5c6qpxraxymw",
+                             "conversationId":  "cmrp32q1o001j5c6q2lpyxtj0",
+                             "senderId":  "bot_armand",
+                             "type":  "TEXT",
+                             "content":  "Bonjour ! Je suis Armand, votre agent de support Let\u0027s Out. Comment puis-je vous aider aujourd\u0027hui ?",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-17T15:19:16.121Z",
+                             "updatedAt":  "2026-07-17T15:19:16.121Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmroxxwrj0004o6kt70h5ckq7",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-17T14:11:01.733Z",
+        "createdAt":  "2026-07-17T12:55:30.848Z",
+        "updatedAt":  "2026-07-17T14:11:01.734Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmroxxwrj0007o6kt90qxgggj",
+                            "conversationId":  "cmroxxwrj0004o6kt70h5ckq7",
+                            "userId":  "bot_brice",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T12:55:30.848Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_brice",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Brice",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Brice\u0026backgroundColor=c0aede",
+                                                         "username":  "bot_brice"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmroxxwrj0006o6ktdl96u9bz",
+                            "conversationId":  "cmroxxwrj0004o6kt70h5ckq7",
+                            "userId":  "cmrdvclmn0006v2p00gluk2da",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T12:55:30.848Z",
+                            "lastReadAt":  "2026-07-17T14:11:07.196Z",
+                            "lastDeliveredAt":  "2026-07-17T14:11:07.023Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrdvclmn0006v2p00gluk2da",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Houansou Maxime  Max",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1783786844/chat_uploads/dce74814-0ea7-4b55-9af5-b64747099c06-641d7e3b-328f-4378-96b4-d548a1514dbb.jpg",
+                                                         "username":  "houansoumaxime_4514"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmrp0mzt2000g5c6qgysz28hl",
+                             "conversationId":  "cmroxxwrj0004o6kt70h5ckq7",
+                             "senderId":  "bot_brice",
+                             "type":  "TEXT",
+                             "content":  "Je m\u0027appelle Brice, je suis votre agent de support pour les questions liées aux paiements et aux transactions sur Let\u0027s Out. J\u0027ai pour missions de vous aider avec les questions relatives aux retraits, aux remboursements, aux frais et à la facturation.",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-17T14:11:00.423Z",
+                             "updatedAt":  "2026-07-17T14:11:00.423Z"
+                         }
+                     ]
+    },
+    {
+        "id":  "cmrowyfq4000959qx945hhim5",
+        "name":  null,
+        "isGroup":  false,
+        "avatarUrl":  null,
+        "eventId":  null,
+        "pinnedMessageId":  null,
+        "lastMessageAt":  "2026-07-17T13:06:31.510Z",
+        "createdAt":  "2026-07-17T12:27:55.804Z",
+        "updatedAt":  "2026-07-17T13:06:31.511Z",
+        "isBotPaused":  false,
+        "adminLastMessageAt":  null,
+        "members":  [
+                        {
+                            "id":  "cmrowyfq4000c59qxi34ptmex",
+                            "conversationId":  "cmrowyfq4000959qx945hhim5",
+                            "userId":  "bot_armand",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T12:27:55.804Z",
+                            "lastReadAt":  null,
+                            "lastDeliveredAt":  null,
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "bot_armand",
+                                         "isBot":  true,
+                                         "profile":  {
+                                                         "displayName":  "Armand",
+                                                         "avatarUrl":  "https://api.dicebear.com/7.x/avataaars/svg?seed=Armand\u0026backgroundColor=b6e3f4",
+                                                         "username":  "bot_armand"
+                                                     }
+                                     }
+                        },
+                        {
+                            "id":  "cmrowyfq4000b59qxxm1smjo2",
+                            "conversationId":  "cmrowyfq4000959qx945hhim5",
+                            "userId":  "cmrgla7oi00045eorjiydjzs1",
+                            "isAdmin":  false,
+                            "joinedAt":  "2026-07-17T12:27:55.804Z",
+                            "lastReadAt":  "2026-07-17T13:06:28.198Z",
+                            "lastDeliveredAt":  "2026-07-17T13:06:28.046Z",
+                            "mutedUntil":  null,
+                            "user":  {
+                                         "id":  "cmrgla7oi00045eorjiydjzs1",
+                                         "isBot":  false,
+                                         "profile":  {
+                                                         "displayName":  "Eunice Aballo Euni",
+                                                         "avatarUrl":  "https://res.cloudinary.com/dy6uzfvym/image/upload/v1783788959/chat_uploads/93dc1fae-e658-4f43-ba56-403eeabc8c94-4a263fd0-974b-4f18-8978-17c7360f43c2.jpg",
+                                                         "username":  "euniceaballo_2484"
+                                                     }
+                                     }
+                        }
+                    ],
+        "messages":  [
+                         {
+                             "id":  "cmroyc1ip00035z43wkqgwd48",
+                             "conversationId":  "cmrowyfq4000959qx945hhim5",
+                             "senderId":  "cmrgla7oi00045eorjiydjzs1",
+                             "type":  "TEXT",
+                             "content":  "cc",
+                             "mediaUrl":  null,
+                             "replyToId":  null,
+                             "isDeleted":  false,
+                             "createdAt":  "2026-07-17T13:06:30.193Z",
+                             "updatedAt":  "2026-07-17T13:06:30.193Z"
+                         }
+                     ]
+    }
+]

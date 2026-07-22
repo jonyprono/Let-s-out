@@ -69,9 +69,9 @@ export function AdminSupportChats() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {conversations?.map((conv) => {
-          const userMember = conv.members.find((m: any) => !m.user?.isBot);
-          const botMember = conv.members.find((m: any) => m.user?.isBot);
+        {(Array.isArray(conversations) ? conversations : [])?.map((conv) => {
+          const userMember = conv.members?.find?.((m: any) => !m.user?.isBot);
+          const botMember = conv.members?.find?.((m: any) => m.user?.isBot);
           const lastMessage = conv.messages?.[0];
 
           return (
@@ -122,7 +122,7 @@ export function AdminSupportChats() {
           );
         })}
 
-        {(!conversations || conversations.length === 0) && (
+        {(!conversations || !Array.isArray(conversations) || conversations.length === 0) && (
           <div className="col-span-full py-16 text-center border-2 border-dashed border-white/10 rounded-2xl">
             <MessageSquare className="w-8 h-8 text-white/20 mx-auto mb-3" />
             <p className="text-white/50">Aucune conversation de support active.</p>

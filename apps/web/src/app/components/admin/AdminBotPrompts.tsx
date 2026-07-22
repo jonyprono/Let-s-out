@@ -86,7 +86,7 @@ export function AdminBotPrompts() {
       </div>
 
       <div className="space-y-4">
-        {bots?.map((bot) => (
+        {(Array.isArray(bots) ? bots : [])?.map((bot) => (
           <div key={bot.id} className="bg-[#1A1A1A] border border-white/10 rounded-2xl overflow-hidden">
             {/* Header */}
             <div

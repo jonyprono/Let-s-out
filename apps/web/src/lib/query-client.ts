@@ -33,15 +33,15 @@ const CACHE_KEY = 'LETSOUT_QUERY_CACHE_V1'
 const CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 24 // 24 hours
 
 const skipCacheKeys = ['auth', 'notifications', 'conversations', 'chat']
-const shouldPersist = (key: string) => !skipCacheKeys.some(k => key.toLowerCase().includes(k))
+const shouldPersist = (keyStr: string) => !skipCacheKeys.some(k => keyStr.includes(k))
 
 /** Save current query cache to localStorage (called on query success) */
 export function saveQueryCache() {
   try {
     const dehydrated = queryClient.getQueryCache().getAll()
       .filter(q => {
-        const key = String(q.queryKey[0])
-        return q.state.status === 'success' && shouldPersist(key)
+        const keyStr = q.queryKey.join(',').toLowerCase()
+        return q.state.status === 'success' && shouldPersist(keyStr)
       })
       .map(q => ({
         queryKey: q.queryKey,
