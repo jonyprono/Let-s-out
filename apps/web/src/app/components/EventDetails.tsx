@@ -324,7 +324,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   // ─── Loading / Error states ───────────────────────────────────────────────
 
-  if (isLoading || bookingLoading) {
+  if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-background-white">
         <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
@@ -811,10 +811,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
                   handleJoin();
                 }}
-                disabled={joinMutation.isPending || isFull || isPastDeadline}
+                disabled={joinMutation.isPending || isFull || isPastDeadline || bookingLoading}
                 className="flex-1 rounded-full font-medium text-[14px] font-poppins"
               >
-                {joinMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : "Rejoindre l'événement"}
+                {joinMutation.isPending || bookingLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : "Rejoindre l'événement"}
               </Button>
             )
           )}

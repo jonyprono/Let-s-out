@@ -141,8 +141,21 @@ apiClient.interceptors.response.use(
         processQueue(null, accessToken)
         original.headers.Authorization = `Bearer ${accessToken}`
         return apiClient(original)
-      } catch (err) {
+      } catch (err: any) {
         processQueue(err, null)
+        
+        const isNetworkError = !err.response && (
+          err.message === 'Network Error' ||
+          err.code === 'ECONNABORTED' ||
+          err.code === 'ERR_NETWORK' ||
+          err.code === 'ERR_CANCELED'
+        )
+
+        // If the refresh failed simply due to a network drop, DO NOT log the user out!
+        if (isNetworkError) {
+          return Promise.reject(err)
+        }
+
         // Determine redirect target before clearing state
         const wasAdmin = useAuthStore.getState().user?.role === 'ADMIN'
         useAuthStore.getState().logout()
