@@ -227,7 +227,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <button 
                 onClick={handleLocate}
                 disabled={isLocating}
-                className="flex items-center gap-2 text-sm font-medium text-action-primary bg-brand-orange-50 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+                className="flex items-center gap-2 text-sm font-medium text-action-primary bg-action-primary/10 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
               >
                 {isLocating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
                 Me localiser
@@ -289,8 +289,8 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   onClick={() => toggleInterest(interest)}
                   className={`px-5 py-2.5 rounded-full border-2 text-sm transition-colors ${
                     selectedInterests.includes(interest)
-                      ? 'border-action-primary bg-brand-orange-50 text-action-primary'
-                      : 'border-border-primary text-text-secondary'
+                      ? 'border-action-primary bg-action-primary/10 text-action-primary dark:bg-action-primary/20'
+                      : 'border-border-primary text-text-secondary hover:border-text-secondary/30'
                   }`}
                 >
                   {interest}
@@ -346,7 +346,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingPhoto}
-                className="text-action-primary text-sm font-semibold bg-brand-orange-50 px-4 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
+                className="text-action-primary text-sm font-semibold bg-action-primary/10 px-4 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
               >
                 {isUploadingPhoto ? 'Upload en cours...' : profilePicture ? 'Changer la photo' : 'Choisir une photo'}
               </button>

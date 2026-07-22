@@ -47,8 +47,8 @@ export function AdminSupportChats() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {conversations?.map((conv) => {
-          const userMember = conv.members.find((m: any) => !m.user.isBot);
-          const botMember = conv.members.find((m: any) => m.user.isBot);
+          const userMember = conv.members.find((m: any) => !m.user?.isBot);
+          const botMember = conv.members.find((m: any) => m.user?.isBot);
           const lastMessage = conv.messages?.[0];
 
           return (

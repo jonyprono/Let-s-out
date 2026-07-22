@@ -150,9 +150,10 @@ apiClient.interceptors.response.use(
           err.code === 'ERR_NETWORK' ||
           err.code === 'ERR_CANCELED'
         )
+        const isServerError = err.response?.status >= 500
 
-        // If the refresh failed simply due to a network drop, DO NOT log the user out!
-        if (isNetworkError) {
+        // If the refresh failed simply due to a network drop or a server error (500), DO NOT log the user out!
+        if (isNetworkError || isServerError) {
           return Promise.reject(err)
         }
 
