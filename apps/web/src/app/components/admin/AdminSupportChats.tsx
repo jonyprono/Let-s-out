@@ -69,64 +69,64 @@ export function AdminSupportChats() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {(Array.isArray(conversations) ? conversations : [])?.map((conv) => {
-          const userMember = conv.members?.find?.((m: any) => !m.user?.isBot);
-          const botMember = conv.members?.find?.((m: any) => m.user?.isBot);
-          const lastMessage = conv.messages?.[0];
-
-          return (
-            <div
-              key={conv.id}
-              onClick={() => navigate(`/chat/${conv.id}`)}
-              className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-5 cursor-pointer hover:border-action-primary/50 hover:shadow-md transition-all"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-[#222]">
-                    <img
-                      src={userMember?.user?.profile?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${userMember?.user?.profile?.displayName}`}
-                      alt="User"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-white">{userMember?.user?.profile?.displayName || 'Utilisateur'}</h3>
-                    <p className="text-xs text-white/50">avec {botMember?.user?.profile?.displayName}</p>
-                  </div>
-                </div>
-                {conv.isBotPaused && (
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500">
-                    <ShieldAlert className="w-3 h-3" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Admin</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-[#111] rounded-xl p-3 mb-3 border border-white/5">
-                <p className="text-sm text-white/80 line-clamp-2">
-                  <span className="font-semibold text-white/40 mr-1">
-                    {lastMessage?.senderId === botMember?.userId ? `${botMember?.user?.profile?.displayName}:` : 'User:'}
-                  </span>
-                  {lastMessage?.content || 'Nouvelle discussion'}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-white/40">
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>{conv.lastMessageAt ? format(new Date(conv.lastMessageAt), 'PPp', { locale: fr }) : 'Inconnu'}</span>
-                </div>
-                <span className="font-semibold text-action-primary">Ouvrir →</span>
-              </div>
-            </div>
-          );
-        })}
-
-        {(!conversations || !Array.isArray(conversations) || conversations.length === 0) && (
+        {(!conversations || !Array.isArray(conversations) || conversations.length === 0) ? (
           <div className="col-span-full py-16 text-center border-2 border-dashed border-white/10 rounded-2xl">
             <MessageSquare className="w-8 h-8 text-white/20 mx-auto mb-3" />
             <p className="text-white/50">Aucune conversation de support active.</p>
           </div>
+        ) : (
+          conversations.map((conv) => {
+            const userMember = conv.members?.find?.((m: any) => !m.user?.isBot);
+            const botMember = conv.members?.find?.((m: any) => m.user?.isBot);
+            const lastMessage = conv.messages?.[0];
+
+            return (
+              <div
+                key={conv.id}
+                onClick={() => navigate(`/chat/${conv.id}`)}
+                className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-5 cursor-pointer hover:border-action-primary/50 hover:shadow-md transition-all"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-[#222]">
+                      <img
+                        src={userMember?.user?.profile?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${userMember?.user?.profile?.displayName}`}
+                        alt="User"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">{userMember?.user?.profile?.displayName || 'Utilisateur'}</h3>
+                      <p className="text-xs text-white/50">avec {botMember?.user?.profile?.displayName}</p>
+                    </div>
+                  </div>
+                  {conv.isBotPaused && (
+                    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500">
+                      <ShieldAlert className="w-3 h-3" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Admin</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-[#111] rounded-xl p-3 mb-3 border border-white/5">
+                  <p className="text-sm text-white/80 line-clamp-2">
+                    <span className="font-semibold text-white/40 mr-1">
+                      {lastMessage?.senderId === botMember?.userId ? `${botMember?.user?.profile?.displayName}:` : 'User:'}
+                    </span>
+                    {lastMessage?.content || 'Nouvelle discussion'}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-white/40">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{conv.lastMessageAt ? format(new Date(conv.lastMessageAt), 'PPp', { locale: fr }) : 'Inconnu'}</span>
+                  </div>
+                  <span className="font-semibold text-action-primary">Ouvrir →</span>
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
     </div>
