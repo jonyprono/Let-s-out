@@ -57,7 +57,8 @@ export const fetchAdminStats = async (period: 'today' | '7d' | '30d' | 'all'): P
       period,
       from: fromDate.toISOString(),
       to: new Date().toISOString()
-    }
+    },
+    timeout: 60000 // Admin stats are heavy (25+ counts), give them up to 60s
   });
 
   return data;
