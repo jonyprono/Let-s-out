@@ -310,9 +310,16 @@ export class AuthController {
       return reply.code(401).send({ error: 'Invalid or expired refresh token' })
     }
 
+    let userRole = 'USER'
     const user = await this.app.prisma.user.findUnique({ where: { id: userId } })
-    if (!user || !user.isActive) {
-      return reply.code(401).send({ error: 'User not found' })
+    
+    if (user) {
+      if (!user.isActive) return reply.code(401).send({ error: 'User not found or inactive' })
+      userRole = user.role
+    } else {
+      const admin = await this.app.prisma.admin.findUnique({ where: { id: userId } })
+      if (!admin) return reply.code(401).send({ error: 'User or Admin not found' })
+      userRole = 'ADMIN'
     }
 
     // Rotate token
@@ -321,7 +328,7 @@ export class AuthController {
       userAgent: req.headers['user-agent'],
       ipAddress: req.ip,
     })
-    const accessToken = this.app.jwt.sign({ sub: user.id, role: user.role })
+    const accessToken = this.app.jwt.sign({ sub: userId, role: userRole })
 
     reply.setCookie('refresh_token', newRefreshToken, {
       httpOnly: true,
