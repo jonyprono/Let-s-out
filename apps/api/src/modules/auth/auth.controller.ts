@@ -342,9 +342,26 @@ export class AuthController {
     reply.clearCookie('refresh_token', { path: '/' }) // Match the path used in setCookie
     return reply.send({ message: 'Logged out' })
   }
-
   async me(req: FastifyRequest, reply: FastifyReply) {
-    const payload = req.user as { sub: string }
+    const payload = req.user as { sub: string, role?: string }
+    
+    if (payload.role === 'ADMIN') {
+      const adminUser = await this.app.prisma.admin.findUnique({
+        where: { id: payload.sub }
+      })
+      if (!adminUser) return reply.code(404).send({ error: 'Admin not found' })
+      return reply.send({
+        ...adminUser,
+        role: 'ADMIN',
+        passwordHash: undefined,
+        profile: {
+          displayName: adminUser.name || 'Admin',
+          username: adminUser.name || 'Admin',
+          email: adminUser.email
+        }
+      })
+    }
+
     const user = await this.app.prisma.user.findUnique({
       where: { id: payload.sub },
       include: { profile: true, badges: true },
