@@ -693,10 +693,11 @@ export default async function chatRoutes(app: FastifyInstance) {
         where: { isBot: true },
         include: { profile: true }
       })
-      reply.send(bots)
+      return bots
     } catch (err) {
       app.log.error(`[admin/bots] ${String(err)}`)
-      reply.code(500).send({ error: 'Erreur lors de la récupération des agents IA.' })
+      reply.code(500)
+      return { error: 'Erreur lors de la récupération des agents IA.' }
     }
   })
 
@@ -708,10 +709,11 @@ export default async function chatRoutes(app: FastifyInstance) {
         where: { id },
         data: { botPrompt }
       })
-      reply.send(updated)
+      return updated
     } catch (err) {
       app.log.error(`[admin/bots PUT] ${String(err)}`)
-      reply.code(500).send({ error: 'Erreur lors de la mise à jour de l\'agent.' })
+      reply.code(500)
+      return { error: 'Erreur lors de la mise à jour de l\'agent.' }
     }
   })
 
