@@ -187,6 +187,12 @@ apiClient.interceptors.response.use(
     }
 
     // ── Network error / timeout ────────────────────────────────────────────
+    // Fix for Capacitor/Axios edge case where XHR onerror throws raw ProgressEvent
+    if (String(error).includes('ProgressEvent') || String(error.message).includes('ProgressEvent')) {
+      error.message = 'Network Error';
+      error.code = 'ERR_NETWORK';
+    }
+
     const isNetworkError = !error.response && (
       error.message === 'Network Error' ||
       error.code === 'ECONNABORTED' ||
