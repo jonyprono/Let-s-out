@@ -397,20 +397,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const participationPaid = hasPaidParticipation(event, myBookingData ?? null)
   const minPoolAmount = event.poolMinAmount || event.poolTarget
 
-  if (isCreator && event.status === 'DRAFT') {
-    return (
-      <ManageEventView
-        event={event}
-        organizerName={organizerName}
-        organizerAvatar={organizerAvatar}
-        formattedDate={formattedDate}
-        formattedStart={formattedStart}
-        formattedEnd={formattedEnd}
-        onBack={handleBack}
-      />
-    )
-  }
-
   const displayedAttendees = attendeesData?.data?.slice(0, 4) || []
   const extraCount = Math.max(0, attendeeCount - 4)
 
@@ -434,6 +420,20 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const myAvailableAmount = myBooking?.remainingAmount ?? 0;
   const isValidatorForActiveDelegator = myDelegatedBookings.some((b: any) => (b.remainingAmount ?? 0) > 0);
   const canValidateOrDelegate = myAvailableAmount > 0 || isValidatorForActiveDelegator;
+
+  if (isCreator && event.status === 'DRAFT') {
+    return (
+      <ManageEventView
+        event={event}
+        organizerName={organizerName}
+        organizerAvatar={organizerAvatar}
+        formattedDate={formattedDate}
+        formattedStart={formattedStart}
+        formattedEnd={formattedEnd}
+        onBack={handleBack}
+      />
+    )
+  }
 
   return (
     <>
