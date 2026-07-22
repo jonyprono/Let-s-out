@@ -131,7 +131,7 @@ apiClient.interceptors.response.use(
         const storedRefreshToken = useAuthStore.getState().refreshToken
         const body = storedRefreshToken ? { refreshToken: storedRefreshToken } : {}
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL}/auth/refresh`,
+          `${resolveApiUrl()}/auth/refresh`,
           body,
           { withCredentials: true },
         )
