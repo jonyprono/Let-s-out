@@ -425,6 +425,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const participationPaid = hasPaidParticipation(event, myBookingData ?? null)
   const minPoolAmount = event.poolMinAmount || event.poolTarget
 
+  const displayedAttendees = attendeesData?.data?.slice(0, 4) || []
+  const extraCount = Math.max(0, attendeeCount - 4)
+
   const myDelegatedBookings = delegationsMap[user?.id || ''] || []
   
   const myBooking = Array.isArray(attendeesData) ? attendeesData.find((b: any) => b.userId === user?.id) : attendeesData?.data?.find((b: any) => b.userId === user?.id);
