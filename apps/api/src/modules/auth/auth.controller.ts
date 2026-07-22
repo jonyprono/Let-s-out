@@ -306,29 +306,60 @@ export class AuthController {
     }
 
     const userId = await this.service.validateRefreshToken(token)
-    if (!userId) {
+    
+    // For admins, the token is a dummy string and doesn't exist in the DB.
+    // However, if validateRefreshToken returns null, we should check if it's the admin dummy token.
+    // If it is, we decode the access token from the request header to find the admin's ID.
+    if (!userId && token !== 'admin_no_refresh_token_needed') {
       return reply.code(401).send({ error: 'Invalid or expired refresh token' })
     }
 
+    let actualUserId = userId;
+    let role = 'USER';
+    
+    if (token === 'admin_no_refresh_token_needed') {
+      // Decode the expired access token to get the admin's ID
+      const authHeader = req.headers.authorization
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        const expiredToken = authHeader.split(' ')[1]
+        try {
+          const decoded = this.app.jwt.decode(expiredToken) as { sub: string, role: string }
+          if (decoded && decoded.role === 'ADMIN') {
+            actualUserId = decoded.sub
+            role = 'ADMIN'
+          } else {
+            return reply.code(401).send({ error: 'Invalid admin token' })
+          }
+        } catch (e) {
+          return reply.code(401).send({ error: 'Invalid admin token format' })
+        }
+      } else {
+        return reply.code(401).send({ error: 'No access token provided for admin refresh' })
+      }
+    }
+
     let userRole = 'USER'
-    const user = await this.app.prisma.user.findUnique({ where: { id: userId } })
+    const user = await this.app.prisma.user.findUnique({ where: { id: actualUserId } })
     
     if (user) {
       if (!user.isActive) return reply.code(401).send({ error: 'User not found or inactive' })
       userRole = user.role
     } else {
-      const admin = await this.app.prisma.admin.findUnique({ where: { id: userId } })
+      const admin = await this.app.prisma.admin.findUnique({ where: { id: actualUserId } })
       if (!admin) return reply.code(401).send({ error: 'User or Admin not found' })
       userRole = 'ADMIN'
     }
 
     // Rotate token
-    await this.service.revokeRefreshToken(token)
-    const newRefreshToken = await this.service.createRefreshToken(userId, {
-      userAgent: req.headers['user-agent'],
-      ipAddress: req.ip,
-    })
-    const accessToken = this.app.jwt.sign({ sub: userId, role: userRole })
+    let newRefreshToken = 'admin_no_refresh_token_needed'
+    if (token !== 'admin_no_refresh_token_needed') {
+      await this.service.revokeRefreshToken(token)
+      newRefreshToken = await this.service.createRefreshToken(actualUserId, {
+        userAgent: req.headers['user-agent'],
+        ipAddress: req.ip,
+      })
+    }
+    const accessToken = this.app.jwt.sign({ sub: actualUserId, role: userRole })
 
     reply.setCookie('refresh_token', newRefreshToken, {
       httpOnly: true,
