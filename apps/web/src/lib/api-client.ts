@@ -130,10 +130,22 @@ apiClient.interceptors.response.use(
         // Also relies on cookie as fallback if body token is missing
         const storedRefreshToken = useAuthStore.getState().refreshToken
         const body = storedRefreshToken ? { refreshToken: storedRefreshToken } : {}
+
+        // For admin sessions, the refresh token is a dummy string.
+        // We include the expired access token in the Authorization header so the
+        // backend can decode it (without verifying expiry) to identify the admin.
+        const refreshHeaders: Record<string, string> = {}
+        if (storedRefreshToken === 'admin_no_refresh_token_needed') {
+          const expiredToken = useAuthStore.getState().accessToken
+          if (expiredToken) {
+            refreshHeaders['Authorization'] = `Bearer ${expiredToken}`
+          }
+        }
+
         const { data } = await axios.post(
           `${resolveApiUrl()}/auth/refresh`,
           body,
-          { withCredentials: true },
+          { withCredentials: true, headers: refreshHeaders },
         )
         const { accessToken, refreshToken } = data
         useAuthStore.getState().setAccessToken(accessToken)
