@@ -27,6 +27,8 @@ export function ManageEvent() {
   const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'cagnotte'>(initialTab);
   const [cagnotteStep, setCagnotteStep] = useState<'empty' | 'form' | 'summary' | 'success' | 'validator-vote'>('empty');
 
+  const qc = useQueryClient();
+
   const { data: event, isLoading } = useQuery({
     queryKey: ['events', id],
     queryFn: async () => {
@@ -34,6 +36,20 @@ export function ManageEvent() {
       return data;
     },
     enabled: !!id,
+    staleTime: 5_000,
+    initialData: () => {
+      // First try the ['events', id] cache (injected optimistically by handlePublish)
+      const cached = qc.getQueryData<any>(['events', id]);
+      if (cached && !Array.isArray(cached)) return cached;
+
+      // Then try ['my-events'] list
+      const myEvents = qc.getQueryData<any>(['my-events']);
+      if (myEvents?.data?.createdEvents) {
+        const found = myEvents.data.createdEvents.find((e: any) => e.id === id);
+        if (found) return found;
+      }
+      return undefined;
+    },
   });
 
   const { data: attendeesData } = useQuery({

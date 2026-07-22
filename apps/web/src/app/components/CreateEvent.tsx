@@ -530,26 +530,56 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     setPublishing(true)
     try {
       if (enablePool && poolTarget) await savePoolToEvent()
-      
-      // Optimistic publish
+
+      // Build the optimistic event object from form data so ManageEvent has instant data
+      const startAt = startDate && startTime ? new Date(`${startDate}T${startTime}`).toISOString() : undefined
+      const endAt = hasEndDate && endDate && endTime ? new Date(`${endDate}T${endTime}`).toISOString() : startAt
+      const optimisticPublishedEvent = {
+        id: eventId,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        category: category || null,
+        startAt,
+        endAt,
+        city: city.trim() || undefined,
+        address: address.trim() || undefined,
+        coverUrl: coverPreview || undefined,
+        status: 'PUBLISHED',
+        isPrivate: privacy === 'PRIVATE',
+        maxAttendees: maxPlaces ? parseInt(maxPlaces) : undefined,
+        price: amount ? parseFloat(amount) : undefined,
+        poolTarget: enablePool && poolTarget ? parseFloat(poolTarget) : undefined,
+        poolMode: enablePool && poolTarget ? (poolMinAmount ? 'minimum' : 'libre') : undefined,
+        poolMinAmount: enablePool && poolMinAmount ? parseFloat(poolMinAmount) : undefined,
+        registrationDeadline: regEndDate && regEndTime ? new Date(`${regEndDate}T${regEndTime}`).toISOString() : undefined,
+        creatorId: me?.id,
+        coHostIds: selectedCoOrgs.map(o => o.id),
+        creator: { id: me?.id, profile: me?.profile },
+        _count: { bookings: 0 },
+        bookings: [],
+        coHosts: [],
+      }
+
+      // Inject into the ['events', id] cache so ManageEvent finds it instantly (no loader, no crash)
+      qc.setQueryData(['events', eventId], optimisticPublishedEvent)
+
+      // Optimistic update in my-events list
       qc.setQueryData(['my-events'], (old: any) => {
         if (!old) return old
         const created = (old.data?.createdEvents || []).map((e: any) => e.id === eventId ? { ...e, status: 'PUBLISHED' } : e)
         return { ...old, data: { ...old.data, createdEvents: created } }
-      })
-      qc.setQueryData(['events'], (old: any) => {
-        if (!old || !old.pages) return old
-        // Actually we would need to know the full event to unshift it to home page if it wasn't there
-        // Simple invalidation will handle the home page properly if we don't have the full object
-        return old
       })
 
       await apiClient.put(`/events/${eventId}/publish`)
       clearCreateEventDraft()
       toast.success('🎉 Événement publié avec succès !')
       qc.invalidateQueries({ queryKey: ['users', 'activity'] })
-      qc.invalidateQueries({ queryKey: ['events'] })
-      qc.invalidateQueries({ queryKey: ['my-events'] })
+      // Invalidate after a short delay so ManageEvent first renders with optimistic data
+      setTimeout(() => {
+        qc.invalidateQueries({ queryKey: ['events', eventId] })
+        qc.invalidateQueries({ queryKey: ['events'] })
+        qc.invalidateQueries({ queryKey: ['my-events'] })
+      }, 1500)
       setStep('published')
     } catch (err: any) {
       console.error('Publish Error:', err)
@@ -702,7 +732,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 Vérifier mon compte
               </button>
               <button
-                onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
+                onClick={() => navigate(createdEventId ? `/events/${createdEventId}/manage` : '/profile')}
                 className="w-full h-[36px] rounded-[9999px] border border-[#D4D4D4] bg-white dark:bg-[#1A1A1A] text-[#404040] font-medium text-[14px] flex items-center justify-center active:scale-[0.98] transition-transform box-border"
                 style={{ fontFamily: 'Poppins, sans-serif' }}
               >
@@ -724,7 +754,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
           {(!requiresVerification || isVerified) && (
             <button
-              onClick={() => navigate(createdEventId ? `/events/${createdEventId}` : '/profile')}
+              onClick={() => navigate(createdEventId ? `/events/${createdEventId}/manage` : '/profile')}
               className="w-full py-[15px] rounded-[100px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[var(--color-text-primary)] font-semibold text-[15px] active:scale-[0.98] transition-transform"
             >
               Voir l'événement
