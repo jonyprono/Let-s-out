@@ -4,6 +4,7 @@ import { createAndSendNotification } from '../notifications/notifications.routes
 import { writeAuditLog } from '../../services/audit.service'
 import { releaseFunds } from '../payments/event-payout.routes'
 import { format } from 'date-fns'
+import adminStatsRoutes from './admin-stats.routes'
 
 const KYC_STATUSES = ['pending', 'verified', 'rejected'] as const
 
@@ -485,4 +486,7 @@ export default async function adminRoutes(app: FastifyInstance) {
 
     return reply.send({ success: true })
   })
+
+  // Register stats routes
+  app.register(adminStatsRoutes)
 }
