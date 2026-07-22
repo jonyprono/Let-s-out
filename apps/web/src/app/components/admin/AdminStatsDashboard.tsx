@@ -45,9 +45,9 @@ export function AdminStatsDashboard() {
 
   const { users, events, payments, engagement, computedAt } = data;
 
-  const kycData = users.kyc.map(k => ({ name: k.kycStatus, value: k._count }));
-  const eventStatusData = events.byStatus.map(e => ({ name: e.status, value: e._count }));
-  const eventCategoryData = events.byCategory.map(e => ({ name: e.category, value: e._count }));
+  const kycData = (Array.isArray(users?.kyc) ? users.kyc : []).map(k => ({ name: k.kycStatus, value: k._count }));
+  const eventStatusData = (Array.isArray(events?.byStatus) ? events.byStatus : []).map(e => ({ name: e.status, value: e._count }));
+  const eventCategoryData = (Array.isArray(events?.byCategory) ? events.byCategory : []).map(e => ({ name: e.category, value: e._count }));
 
   return (
     <div className="p-6 lg:p-10 h-full overflow-y-auto space-y-8">

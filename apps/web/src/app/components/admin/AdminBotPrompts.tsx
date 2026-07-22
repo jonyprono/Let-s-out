@@ -14,7 +14,8 @@ export function AdminBotPrompts() {
     queryKey: ['admin', 'bots'],
     queryFn: async () => {
       const { data } = await apiClient.get('/chat/admin/bots');
-      return data as any[];
+      // Ensure we always return an array even if API returns unexpected shape
+      return Array.isArray(data) ? data : [];
     },
     retry: false, // A single error state is enough — there's a manual Retry button
     staleTime: 60_000, // Consider data fresh for 1 minute
