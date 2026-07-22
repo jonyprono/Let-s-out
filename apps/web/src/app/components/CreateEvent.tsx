@@ -389,7 +389,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
   // Enable/disable 'Next' button
   const isDescriptionValid = description.trim().length >= 3
-  const canGoToStep2 = isFieldValid(title) && !!startDate && !!startTime && !!(address || city) && !!privacy && isDescriptionValid
+  const isStartDateValid = startDate ? new Date(startDate) >= new Date(new Date().setHours(0,0,0,0)) : false;
+  const canGoToStep2 = isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid
   const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
   const canSubmit = canGoToStep2 && !!participationMode && isCagnotteValid
 
@@ -1176,6 +1177,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <input
                 type="date"
                 value={tempStartDate}
+                min={new Date().toISOString().split('T')[0]}
                 onChange={e => setTempStartDate(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
