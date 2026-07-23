@@ -399,7 +399,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       where: { eventId },
       include: {
         approvalsList: true,
-        items: true // PayoutBookingItem to calculate released vs rejected
+        payoutItems: true // PayoutBookingItem to calculate released vs rejected
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -410,7 +410,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         .filter((a: any) => a.status === 'APPROVED')
         .reduce((sum: number, a: any) => {
           // Find items delegated to this validator
-          const items = req.items.filter((i: any) => i.delegatedToSnapshot === a.userId);
+          const items = req.payoutItems.filter((i: any) => i.delegatedToSnapshot === a.userId);
           return sum + items.reduce((s: number, i: any) => s + i.amountDeducted, 0);
         }, 0);
         
