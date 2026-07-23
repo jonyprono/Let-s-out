@@ -96,8 +96,8 @@ export function AdminSupportChats() {
                       />
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-white">{userMember?.user?.profile?.displayName || 'Utilisateur'}</h3>
-                      <p className="text-xs text-white/50">avec {botMember?.user?.profile?.displayName}</p>
+                      <h3 className="text-sm font-bold text-white"><span>{userMember?.user?.profile?.displayName || 'Utilisateur'}</span></h3>
+                      <p className="text-xs text-white/50">avec <span>{botMember?.user?.profile?.displayName}</span></p>
                     </div>
                   </div>
                   {conv.isBotPaused && (
@@ -113,7 +113,7 @@ export function AdminSupportChats() {
                     <span className="font-semibold text-white/40 mr-1">
                       {lastMessage?.senderId === botMember?.userId ? `${botMember?.user?.profile?.displayName}:` : 'User:'}
                     </span>
-                    {lastMessage?.content || 'Nouvelle discussion'}
+                    <span>{lastMessage?.content || 'Nouvelle discussion'}</span>
                   </p>
                 </div>
 
