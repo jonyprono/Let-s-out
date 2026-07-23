@@ -18,7 +18,7 @@ export default fp(async (fastify: FastifyInstance) => {
         where: {
           status: { in: ['PENDING', 'PARTIAL'] }
         },
-        include: { event: true, approvalsList: { where: { status: 'PENDING' } } }
+        include: { event: true, approvalsList: { where: { status: 'PENDING' }, include: { user: { include: { profile: true } } } } }
       })
 
       for (const req of expiredRequests) {
@@ -49,19 +49,54 @@ export default fp(async (fastify: FastifyInstance) => {
               include: { booking: true }
             })
 
+            const affectedBookingIds = affectedItems.map((item: any) => item.bookingId)
+            if (affectedBookingIds.length > 0) {
+              await tx.booking.updateMany({
+                where: { id: { in: affectedBookingIds } },
+                data: { poolValidationStatus: 'PENDING', delegatedToId: null }
+              })
+            }
+
             const affectedUserIds = affectedItems.map((item: any) => item.booking.userId)
-            const uniqueUserIds = [...new Set(affectedUserIds)] as string[]
+            const uniqueUserIds = [...new Set(affectedUserIds)].filter(uid => uid !== req.event.creatorId) as string[]
+
+            const notifications: any[] = []
 
             if (uniqueUserIds.length > 0) {
               // 3. Notify them to fallback
-              const notifications = uniqueUserIds.map((uid: string) => ({
-                userId: uid,
-                type: 'SYSTEM',
-                title: 'Reprise en main requise',
-                body: `Votre validateur n'a pas répondu à temps pour le déblocage de ${req.amount} F sur ${req.event.title} — choisissez qui doit valider votre part.`,
-                data: { eventId: req.eventId, payoutId: req.id, action: 'FALLBACK_REQUIRED' }
-              }))
+              uniqueUserIds.forEach((uid: string) => {
+                notifications.push({
+                  userId: uid,
+                  type: 'SYSTEM',
+                  title: 'Reprise en main requise',
+                  body: `Votre validateur n'a pas répondu à temps pour le déblocage de ${req.amount} F sur ${req.event.title} — choisissez qui doit valider votre part.`,
+                  data: { eventId: req.eventId, payoutId: req.id, action: 'FALLBACK_REQUIRED', screen: 'pool-validation' }
+                })
+              })
+            }
 
+            // 4. Notify the validator
+            notifications.push({
+              userId: approval.userId,
+              type: 'SYSTEM',
+              title: 'Délai de validation dépassé',
+              body: `Vous n'avez pas répondu à temps pour le déblocage de ${req.amount} F sur ${req.event.title}. Vos droits ont été révoqués pour cette demande.`,
+              data: { eventId: req.eventId, payoutId: req.id, screen: 'event-details' }
+            })
+
+            // 5. Notify the organizer
+            if (approval.userId !== req.event.creatorId) {
+              const validatorName = approval.user?.profile?.displayName || 'Un validateur'
+              notifications.push({
+                userId: req.event.creatorId,
+                type: 'SYSTEM',
+                title: 'Un validateur n\'a pas répondu',
+                body: `${validatorName} n'a pas répondu à temps pour le déblocage de ${req.amount} F sur ${req.event.title}. Ses délégataires ont été invités à reprendre la main.`,
+                data: { eventId: req.eventId, payoutId: req.id, screen: 'event-details' }
+              })
+            }
+
+            if (notifications.length > 0) {
               // Note: We don't await this inside the transaction to avoid blocking it for too long, 
               // but createAndSendNotificationMany saves to DB then sends push.
               await createAndSendNotificationMany(fastify, notifications).catch((err: any) => {
