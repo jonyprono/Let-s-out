@@ -608,6 +608,7 @@ enum NotifType {
   POOL_UNLOCK_REQUEST
   POOL_UNLOCK_APPROVED
   POOL_VOTE_STARTED
+  POOL_PAYOUT
 }
 
 enum PaymentStatus {

@@ -199,45 +199,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       
       const amountToWithdraw = requestedAmount ? Math.min(requestedAmount, maxCollected) : maxCollected;
 
-      // Close the pool from new entries (late joiners) and apply penalties if enabled
-      if (!event.poolClosedAt) {
-        await (app as any).prisma.event.update({
-          where: { id: eventId },
-          data: { poolClosedAt: new Date() }
-        })
 
-        const flag = await (app as any).prisma.featureFlag.findUnique({ where: { key: 'enable_non_voter_penalties' } })
-        const enableNonVoterPenalties = flag?.isActive ?? false
-
-        if (enableNonVoterPenalties) {
-          const bookings = await (app as any).prisma.booking.findMany({
-            where: { eventId, status: { not: 'REFUNDED' }, totalPaid: { gt: 0 } },
-            select: { userId: true, poolValidationStatus: true, delegatedToId: true }
-          })
-          
-          const bookingsMap = new Map(bookings.map((b: any) => [b.userId, b]))
-          const penalties: Record<string, number> = {}
-
-          for (const b of bookings) {
-            if (b.poolValidationStatus === 'PENDING') {
-              penalties[b.userId] = (penalties[b.userId] || 0) + 1; // 1 point for non-voter
-            } else if (b.poolValidationStatus === 'DELEGATED' && b.delegatedToId) {
-              const delegatee = bookingsMap.get(b.delegatedToId) as any;
-              if (!delegatee || delegatee.poolValidationStatus !== 'VALIDATED') {
-                penalties[b.delegatedToId] = (penalties[b.delegatedToId] || 0) + 1; // +1 point for the negligent validator per blocked person
-              }
-            }
-          }
-
-          // Apply penalties in DB
-          for (const [uid, penaltyScore] of Object.entries(penalties)) {
-             await (app as any).prisma.profile.update({
-               where: { userId: uid },
-               data: { reliabilityScore: { decrement: penaltyScore } }
-             }).catch(() => {}) // Ignore if profile doesn't exist
-          }
-        }
-      }
 
       const { availableAmount, breakdowns } = await calculateAvailablePoolAmount(app, eventId)
       // `availableAmount` already excludes amounts from existing PayoutBookingItems!
