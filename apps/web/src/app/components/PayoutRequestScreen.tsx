@@ -56,11 +56,9 @@ export function PayoutRequestScreen() {
 
   if (!event || !statusData) return null;
 
-  const totalCollected = statusData.totalCollected || 0;
-  const totalWithdrawn = statusData.totalWithdrawn || 0;
   const unlockedAmount = statusData.unlockedAmount || 0;
   
-  const maxAvailableNow = Math.min(Math.max(0, unlockedAmount - totalWithdrawn), Math.max(0, totalCollected - totalWithdrawn));
+  const maxAvailableNow = unlockedAmount;
   const numericAmount = parseFloat(amountToWithdraw) || 0;
   
   // Platform fee assumption dynamically fetched from backend
@@ -124,16 +122,25 @@ export function PayoutRequestScreen() {
         <div className="bg-white dark:bg-[#1A1A1A] rounded-[16px] p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-6">
           <h3 className="font-semibold text-gray-900 dark:text-white text-[15px] mb-4">Combien souhaitez-vous retirer ?</h3>
           
-          <div className="relative mb-6">
-            <input 
-              type="number"
-              value={amountToWithdraw}
-              onChange={(e) => setAmountToWithdraw(e.target.value)}
-              placeholder="0"
-              className="w-full bg-gray-50 dark:bg-[#222] border-0 rounded-xl px-4 py-4 text-[20px] font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF7A00]"
-            />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">F CFA</span>
-          </div>
+          {maxAvailableNow <= 0 ? (
+            <div className="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-4 mb-6">
+              <p className="text-[13px] text-red-600 dark:text-red-400 font-medium text-center">
+                Aucun fonds débloqué n'est disponible pour le retrait.
+              </p>
+            </div>
+          ) : (
+            <div className="relative mb-6">
+              <input 
+                type="number"
+                value={amountToWithdraw}
+                onChange={(e) => setAmountToWithdraw(e.target.value)}
+                placeholder="0"
+                disabled={maxAvailableNow <= 0}
+                className="w-full bg-gray-50 dark:bg-[#222] border-0 rounded-xl px-4 py-4 text-[20px] font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF7A00] disabled:opacity-50"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">F CFA</span>
+            </div>
+          )}
 
           <div className="space-y-3 pt-4 border-t border-gray-100 dark:border-gray-800 text-[13px]">
             <div className="flex justify-between">
@@ -197,13 +204,12 @@ export function PayoutRequestScreen() {
       </div>
 
       <div className="p-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800 fixed bottom-0 left-0 right-0 max-w-[768px] mx-auto z-10 pb-safe">
-        <button
+        <button 
           onClick={handleConfirm}
-          disabled={!amountToWithdraw || numericAmount < 5000 || numericAmount > maxAvailableNow || payoutMut.isPending || (reasonCategory === 'Autre' && !customReason.trim())}
-          className="w-full h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-bold active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-2"
+          disabled={!amountToWithdraw || numericAmount < 5000 || numericAmount > maxAvailableNow || payoutMut.isPending || (reasonCategory === 'Autre' && !customReason.trim()) || maxAvailableNow <= 0}
+          className="w-full h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
         >
-          {payoutMut.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
-          Confirmer la demande
+          {payoutMut.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmer la demande'}
         </button>
       </div>
     </div>

@@ -606,7 +606,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
   const unlockedAmount = statusData?.unlockedAmount || 0;
   const poolClosedAt = statusData?.poolClosedAt;
 
-  const maxAvailableNow = Math.min(Math.max(0, unlockedAmount - totalWithdrawn), Math.max(0, totalCollected - totalWithdrawn));
+  const maxAvailableNow = unlockedAmount;
 
   const contributions = attendees.filter(a => a.totalPaid > 0);
   const validatorsMap = new Map();
@@ -653,11 +653,17 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
           </div>
           <div className="flex flex-col items-center">
             <span className="text-[11px] text-gray-500 uppercase tracking-wide">Débloqué</span>
-            <span className={`font-semibold ${isGoalReached ? 'text-green-600' : 'text-[#FF7A00]'}`}>{unlockedAmount.toLocaleString('fr-FR')} F</span>
+            <span className={`font-semibold ${isGoalReached ? 'text-green-600' : 'text-[#FF7A00]'}`}>{totalWithdrawn.toLocaleString('fr-FR')} F</span>
           </div>
           <div className="flex flex-col items-end">
             <span className="text-[11px] text-gray-500 uppercase tracking-wide">Disponible</span>
-            <span className="font-semibold text-[#FF7A00]">{maxAvailableNow.toLocaleString('fr-FR')} F</span>
+            {maxAvailableNow > 0 ? (
+              <span className="font-semibold text-[#FF7A00]">{maxAvailableNow.toLocaleString('fr-FR')} F</span>
+            ) : statusData?.pendingCount > 0 ? (
+              <span className="text-[10px] text-gray-500 italic mt-0.5">En attente des validations</span>
+            ) : (
+              <span className="font-semibold text-[#FF7A00]">0 F</span>
+            )}
           </div>
         </div>
         
@@ -689,7 +695,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
           <>
             {/* Lancer le vote des validateurs */}
             <button
-              onClick={() => navigate(`/events/${event.id}/validators-vote`)}
+              onClick={() => setCagnotteStep('validator-vote')}
               className="w-full h-[40px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] dark:border-gray-700 rounded-[8px] flex items-center justify-center gap-2 active:scale-95 transition-transform"
             >
               <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
