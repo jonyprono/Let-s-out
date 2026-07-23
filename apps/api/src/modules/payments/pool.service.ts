@@ -42,15 +42,10 @@ export async function calculateAvailablePoolAmount(
     },
   });
 
-  const bookingsMap = new Map(bookings.map((b: any) => [b.userId, b]));
-  
   let availableAmount = 0;
   let totalCollected = 0;
   let pendingCount = 0;
   const breakdowns: PoolBookingInfo[] = [];
-
-  const flag = await (app as any).prisma.featureFlag.findUnique({ where: { key: 'enable_non_voter_penalties' } });
-  const applyPenalties = flag?.isActive && event?.poolClosedAt;
 
   for (const b of bookings) {
     if (b.totalPaid > 0) {
@@ -63,31 +58,16 @@ export async function calculateAvailablePoolAmount(
       
       const remainingAmount = Math.max(0, b.totalPaid - deducted);
       
-      let isPartValidated = false;
+      // All remaining funds are considered available (eligible) for a payout request
+      let isPartValidated = true;
       
-      const isPastDeadline = event?.validatorVoteDeadline && new Date() > new Date(event.validatorVoteDeadline);
-      
-      if (b.poolValidationStatus === 'VALIDATED') {
-        isPartValidated = true;
-      } else if (b.poolValidationStatus === 'DELEGATED' && b.delegatedToId) {
-        // Resolve delegation
-        const delegatee = bookingsMap.get(b.delegatedToId) as any;
-        if (delegatee && delegatee.poolValidationStatus === 'VALIDATED') {
-          isPartValidated = true;
-        } else if (applyPenalties) {
-          isPartValidated = true;
-        }
-      } else if (b.poolValidationStatus === 'PENDING' && isPastDeadline) {
-        // Auto-validation (Fallback if past initial vote deadline)
-        isPartValidated = true;
-      } else if (applyPenalties) {
-        isPartValidated = true;
+      // We still track pendingCount to know how many haven't made a choice
+      if (b.poolValidationStatus === 'PENDING') {
+        pendingCount++;
       }
 
       if (isPartValidated) {
         availableAmount += remainingAmount;
-      } else if (remainingAmount > 0) {
-        pendingCount++;
       }
 
       breakdowns.push({
