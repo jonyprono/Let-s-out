@@ -21,16 +21,16 @@ export function AdminSupportChats() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center justify-center text-white/50">
+      <div key="loading" className="p-8 flex items-center justify-center text-white/50">
         <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-        Chargement des conversations...
+        <span>Chargement des conversations...</span>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="p-8 flex flex-col items-center justify-center gap-4 text-center">
+      <div key="error" className="p-8 flex flex-col items-center justify-center gap-4 text-center">
         <ShieldAlert className="w-10 h-10 text-amber-400" />
         <div>
           <p className="text-white font-semibold mb-1">Impossible de charger les conversations de support</p>
@@ -50,7 +50,7 @@ export function AdminSupportChats() {
   }
 
   return (
-    <div className="p-6 lg:p-10 h-full overflow-y-auto">
+    <div key="main" className="p-6 lg:p-10 h-full overflow-y-auto">
       <div className="mb-8 flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
