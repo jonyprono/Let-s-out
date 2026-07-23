@@ -138,7 +138,16 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       }
 
       return undefined;
+    }
+  })
+
+  const { data: payoutStatus } = useQuery({
+    queryKey: ['events', id, 'payout', 'status'],
+    queryFn: async () => {
+      const res = await eventsApi.getPayoutStatus(id!)
+      return res.data
     },
+    enabled: !!id && !!event && (event.status === 'COMPLETED' || new Date() > new Date(event.endAt))
   })
 
 
@@ -759,7 +768,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     </button>
                   )}
 
-                  {hasJoined && participationPaid && event.poolTarget > 0 && !isCreator && (
+                  {hasJoined && participationPaid && event.poolTarget > 0 && !isCreator && (event.status === 'COMPLETED' || new Date() > new Date(event.endAt)) && (payoutStatus?.breakdowns?.find((b: any) => b.userId === user?.id)?.remainingAmount > 0) && (
                     <button
                       onClick={() => setShowRefundModal(true)}
                       className={`w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/10 text-[14px] font-medium text-red-600 dark:text-red-400 mt-[8px] active:scale-95 transition-transform`}

@@ -185,9 +185,10 @@ model Event {
   enableNonVoterPenalties Boolean @default(false)
   poolClosedAt     DateTime?
   coHostIds        String[]      @default([])
-  validatorVoteStatus String?    // null | 'OPEN' | 'CLOSED'
-  validatorCandidates String[]   @default([])
-  validatorIds     String[]      @default([])
+  validatorVoteStatus String?  @default("PENDING") // PENDING | OPEN | CLOSED
+  validatorCandidates String[] @default([]) // Array of User IDs
+  validatorIds     String[]      @default([]) // Old validator array
+  validatorVoteDeadline DateTime? // Date limite pour le vote initial des validateurs
   validatorThreshold Float?      @default(0.5)
   bookings         Booking[]
   conversation     Conversation? @relation("EventConversation")
@@ -678,7 +679,7 @@ model EventPayoutRequest {
   amount              Float
   commissionRate      Float    @default(0.02)
   commissionAmount    Float    @default(0)
-  // PENDING | VOTING | APPROVED | REJECTED | EXPIRED
+  // PENDING | VOTING | APPROVED | PARTIAL | COMPLETED | REJECTED | EXPIRED
   status              String   @default("PENDING")
   approvals           String[] @default([])   // IDs des votants OUI
   rejections          String[] @default([])   // IDs des votants NON
@@ -705,7 +706,7 @@ model PayoutApproval {
   payoutRequestId String
   userId          String
   role            String             // "VALIDATOR" | "COHOST"
-  status          String             @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED"
+  status          String             @default("PENDING") // "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED"
   rejectionReason String?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt

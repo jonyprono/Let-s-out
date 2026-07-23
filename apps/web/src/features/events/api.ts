@@ -168,6 +168,10 @@ export const eventsApi = {
     return apiClient.post(`/events/${eventId}/payout/approve`)
   },
 
+  getPayoutStatus: async (eventId: string) => {
+    return apiClient.get(`/events/${eventId}/payout/status`)
+  },
+
   // Upload cover
   uploadCover: async (file: File) => {
     const formData = new FormData()

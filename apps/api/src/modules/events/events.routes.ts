@@ -327,6 +327,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       data: {
         validatorVoteStatus: 'OPEN',
         validatorCandidates: candidates,
+        validatorVoteDeadline: voteDeadline ? new Date(voteDeadline) : null,
       }
     })
 
@@ -555,6 +556,65 @@ export default async function eventsRoutes(app: FastifyInstance) {
     }
 
     return reply.send({ success: true, event: updatedEvent })
+  })
+
+  // Ajouter ou retirer un candidat validateur
+  app.patch('/:id/validators/candidates', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const { action, candidateId } = req.body as { action: 'ADD' | 'REMOVE', candidateId: string }
+
+    const event = await app.prisma.event.findUnique({
+      where: { id },
+      select: { creatorId: true, validatorCandidates: true }
+    })
+    
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+    if (event.creatorId !== userId) return reply.code(403).send({ error: 'Only organizer can modify candidates' })
+
+    if (action === 'ADD') {
+      if (!event.validatorCandidates.includes(candidateId)) {
+        await app.prisma.event.update({
+          where: { id },
+          data: { validatorCandidates: { push: candidateId } }
+        })
+      }
+      return reply.send({ success: true, message: 'Candidat ajouté' })
+    }
+
+    if (action === 'REMOVE') {
+      const newCandidates = event.validatorCandidates.filter(c => c !== candidateId)
+      await app.prisma.event.update({
+        where: { id },
+        data: { validatorCandidates: { set: newCandidates } }
+      })
+
+      // Révoquer les délégations "vivantes" pointant vers ce candidat
+      const affectedBookings = await app.prisma.booking.findMany({
+        where: { eventId: id, delegatedToId: candidateId }
+      })
+
+      if (affectedBookings.length > 0) {
+        await app.prisma.booking.updateMany({
+          where: { eventId: id, delegatedToId: candidateId },
+          data: { poolValidationStatus: 'PENDING', delegatedToId: null }
+        })
+
+        // Notifier les utilisateurs affectés
+        const userIdsToNotify = affectedBookings.map(b => b.userId)
+        await createAndSendNotificationMany(app, userIdsToNotify.map(uid => ({
+          userId: uid,
+          type: 'SYSTEM',
+          title: 'Délégation annulée',
+          body: `Votre validateur a été retiré de la liste. Veuillez choisir un nouveau délégué dès que possible. Si une demande de déblocage est en cours, restez attentif car vous pourriez devoir reprendre la main si votre ancien validateur ne répond pas.`,
+          data: { eventId: id }
+        })))
+      }
+
+      return reply.send({ success: true, message: 'Candidat retiré' })
+    }
+    
+    return reply.code(400).send({ error: 'Invalid action' })
   })
 
   // Helper to get rating

@@ -20,7 +20,7 @@ export async function calculateAvailablePoolAmount(
 ): Promise<{ availableAmount: number; totalCollected: number; pendingCount: number; breakdowns: PoolBookingInfo[]; hasPool: boolean }> {
   const event = await (app as any).prisma.event.findUnique({
     where: { id: eventId },
-    select: { enableNonVoterPenalties: true, poolClosedAt: true, poolTarget: true }
+    select: { enableNonVoterPenalties: true, poolClosedAt: true, poolTarget: true, validatorVoteDeadline: true }
   });
   
   if (!event || !event.poolTarget || event.poolTarget <= 0) {
@@ -65,6 +65,8 @@ export async function calculateAvailablePoolAmount(
       
       let isPartValidated = false;
       
+      const isPastDeadline = event?.validatorVoteDeadline && new Date() > new Date(event.validatorVoteDeadline);
+      
       if (b.poolValidationStatus === 'VALIDATED') {
         isPartValidated = true;
       } else if (b.poolValidationStatus === 'DELEGATED' && b.delegatedToId) {
@@ -75,6 +77,9 @@ export async function calculateAvailablePoolAmount(
         } else if (applyPenalties) {
           isPartValidated = true;
         }
+      } else if (b.poolValidationStatus === 'PENDING' && isPastDeadline) {
+        // Auto-validation (Fallback if past initial vote deadline)
+        isPartValidated = true;
       } else if (applyPenalties) {
         isPartValidated = true;
       }

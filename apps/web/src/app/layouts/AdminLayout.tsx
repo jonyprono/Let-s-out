@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router'
-import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet, ToggleRight } from 'lucide-react'
+import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet, ToggleRight, Settings } from 'lucide-react'
 import { Medal01Icon } from 'hugeicons-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { updateAdminActivity } from '@/app/components/admin/AdminRoute'
@@ -15,6 +15,7 @@ const navItems = [
   { to: '/admin/audit', end: false, label: 'Audit FinTech', icon: FileText },
   { to: '/admin/payouts', end: false, label: 'Déblocages', icon: Wallet },
   { to: '/admin/feature-flags', end: false, label: 'Feature Flags', icon: ToggleRight },
+  { to: '/admin/settings', end: false, label: 'Paramètres Système', icon: Settings },
 ]
 
 export function AdminLayout() {

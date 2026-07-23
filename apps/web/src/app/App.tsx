@@ -118,6 +118,7 @@ import { PayoutApprovalScreen } from './components/PayoutApprovalScreen';
 import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
 import AdminFeatureFlagsPage from './components/admin/AdminFeatureFlagsPage'
 import { AdminBadgesPage } from './components/admin/AdminBadgesPage'
+import AdminSettingsPage from './components/admin/AdminSettingsPage'
 import AdminUsersPage from './components/admin/AdminUsersPage'
 import AdminEventsPage from './components/admin/AdminEventsPage'
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -267,6 +268,7 @@ export default function App() {
             <Route path="audit" element={<AdminAuditLogsPage />} />
             <Route path="payouts" element={<AdminPayoutsPage />} />
             <Route path="feature-flags" element={<AdminFeatureFlagsPage />} />
+            <Route path="settings" element={<AdminSettingsPage />} />
             <Route path="badges" element={<AdminBadgesPage />} />
           </Route>
 

@@ -415,6 +415,27 @@ export default async function adminRoutes(app: FastifyInstance) {
     return reply.send({ data: flag })
   })
 
+  // ── System Settings ────────────────────────────────────────────────
+  app.get('/system-settings', async (_req, reply) => {
+    const settings = await app.prisma.systemSetting.findMany({
+      orderBy: { key: 'asc' },
+    })
+    return reply.send({ data: settings })
+  })
+
+  app.put('/system-settings/:key', async (req, reply) => {
+    const { key } = req.params as { key: string }
+    const { value, description } = req.body as { value: string; description?: string }
+
+    const setting = await app.prisma.systemSetting.upsert({
+      where: { key },
+      update: { value, ...(description !== undefined ? { description } : {}) },
+      create: { key, value, description: description ?? '' },
+    })
+
+    return reply.send({ data: setting })
+  })
+
   // ── Badges ────────────────────────────────────────────────────────
   // GET /admin/badges — liste tous les badges
   app.get('/badges', async (_req, reply) => {

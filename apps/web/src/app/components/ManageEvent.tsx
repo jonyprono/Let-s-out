@@ -135,7 +135,7 @@ export function ManageEvent() {
       {/* Tab Content */}
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
-        {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} />}
+        {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
         {activeTab === 'cagnotte' && <TabCagnotteInline event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} setCagnotteStep={setCagnotteStep} />}
       </div>
     </div>
@@ -314,13 +314,14 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
 // ----------------------------------------------------------------------
 // TAB: PARTICIPANTS
 // ----------------------------------------------------------------------
-function TabParticipants({ event, attendees }: { event: any, attendees: any[] }) {
+function TabParticipants({ event, attendees, isCreator }: { event: any, attendees: any[], isCreator?: boolean }) {
   const { openUserProfile } = useUserProfile();
   const [showInviteOptions, setShowInviteOptions] = useState(false);
   const [showInviteFriends, setShowInviteFriends] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   const { data: friendsData } = useFriends();
+  const qc = useQueryClient();
   const inviteMut = useMutation({
     mutationFn: async (userId: string) => {
       await eventsApi.inviteFriends(event.id, [userId]);
@@ -329,12 +330,25 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
     onError: () => toast.error('Erreur lors de l\'invitation')
   });
 
+  const toggleCandidateMut = useMutation({
+    mutationFn: async ({ action, candidateId }: { action: 'ADD' | 'REMOVE', candidateId: string }) => {
+      await apiClient.patch(`/events/${event.id}/validators/candidates`, { action, candidateId });
+    },
+    onSuccess: () => {
+      toast.success('Liste des candidats mise à jour');
+      qc.invalidateQueries({ queryKey: ['events', event.id] });
+    },
+    onError: () => toast.error('Erreur lors de la mise à jour')
+  });
+
   // Attendees endpoint already returns confirmed participants
   const participants = attendees.map(b => b.user || b);
 
   const isPastDeadline = event.registrationDeadline 
     ? new Date() > new Date(event.registrationDeadline) 
     : new Date() > new Date(event.startAt);
+
+  const validatorCandidates = event.validatorCandidates || [];
 
   return (
     <div className="flex flex-col h-full relative">
@@ -349,31 +363,66 @@ function TabParticipants({ event, attendees }: { event: any, attendees: any[] })
         {participants.length === 0 ? (
           <p className="text-[13px] text-gray-400 text-center py-10">Aucun participant pour le moment.</p>
         ) : (
-          participants.map((user: any) => (
-            <div
-              key={user.id}
-              onClick={() => openUserProfile(
-                user.id,
-                { displayName: user.profile?.displayName || user.profile?.username || 'Utilisateur', avatarUrl: user.profile?.avatarUrl },
-                { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
-              )}
-              className="flex items-center gap-3 px-1 py-3 border-b border-gray-100 dark:border-gray-800 cursor-pointer active:bg-gray-50 dark:active:bg-gray-800 transition-colors"
-            >
-              {/* Avatar */}
-              {user.profile?.avatarUrl ? (
-                <SafeImage
-                  src={user.profile.avatarUrl}
-                  alt={user.profile?.displayName || ''}
-                  className="w-8 h-8 rounded-full object-cover shrink-0"
-                />
-              ) : (
-                <UserAvatarIcon size={32} className="shrink-0" />
-              )}
-              <span className="text-[14px] font-medium text-gray-900 dark:text-white">
-                {user.profile?.displayName || user.profile?.username || 'Utilisateur'}
-              </span>
-            </div>
-          ))
+          participants.map((user: any) => {
+            const isCandidate = validatorCandidates.includes(user.id);
+            return (
+              <div
+                key={user.id}
+                className="flex items-center gap-3 px-1 py-3 border-b border-gray-100 dark:border-gray-800 transition-colors"
+              >
+                {/* Avatar */}
+                <div onClick={() => openUserProfile(
+                    user.id,
+                    { displayName: user.profile?.displayName || user.profile?.username || 'Utilisateur', avatarUrl: user.profile?.avatarUrl },
+                    { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                  )}
+                  className="cursor-pointer shrink-0"
+                >
+                  {user.profile?.avatarUrl ? (
+                    <SafeImage
+                      src={user.profile.avatarUrl}
+                      alt={user.profile?.displayName || ''}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <UserAvatarIcon size={32} />
+                  )}
+                </div>
+                <div 
+                  className="flex-1 min-w-0 cursor-pointer"
+                  onClick={() => openUserProfile(
+                    user.id,
+                    { displayName: user.profile?.displayName || user.profile?.username || 'Utilisateur', avatarUrl: user.profile?.avatarUrl },
+                    { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                  )}
+                >
+                  <span className="text-[14px] font-medium text-gray-900 dark:text-white truncate block">
+                    {user.profile?.displayName || user.profile?.username || 'Utilisateur'}
+                  </span>
+                </div>
+                
+                {isCreator && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCandidateMut.mutate({
+                        action: isCandidate ? 'REMOVE' : 'ADD',
+                        candidateId: user.id
+                      });
+                    }}
+                    disabled={toggleCandidateMut.isPending}
+                    className={`shrink-0 px-3 py-1 rounded-full text-[12px] font-semibold transition-colors ${
+                      isCandidate 
+                        ? 'bg-orange-100 text-[#FF7A00] dark:bg-orange-500/20' 
+                        : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                    }`}
+                  >
+                    {isCandidate ? '★ Candidat' : '☆ Rendre candidat'}
+                  </button>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 
@@ -478,14 +527,6 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
     enabled: hasPot,
   });
 
-  const { data: auditData } = useQuery({
-    queryKey: ['events', event.id, 'payout-audit'],
-    queryFn: async () => {
-      const res = await apiClient.get(`/events/${event.id}/payout/audit`);
-      return res.data?.data;
-    },
-    enabled: hasPot,
-  });
 
   // payout mutation kept for future inline use
 
@@ -620,7 +661,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
     }
   });
   const validatorsList = Array.from(validatorsMap.values());
-  const payoutsList = auditData?.filter((l: any) => l.action.includes('PAYOUT')) || [];
+
 
   const progressPercent = event.poolTarget ? Math.min(100, Math.round((totalCollected / event.poolTarget) * 100)) : 0;
   const isGoalReached = event.poolTarget && totalCollected >= event.poolTarget;
@@ -848,16 +889,35 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
           {expandedSection === 'payouts' && (
             <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-4">
               <div className="flex flex-col gap-3">
-                {payoutsList.map((l: any) => (
-                  <div key={l.id} className="text-[13px] flex flex-col gap-1 bg-gray-50 dark:bg-[#222] p-3 rounded-lg">
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-gray-800 dark:text-gray-200">Demande de {l.amount?.toLocaleString('fr-FR')} F</span>
-                      <span className="text-[#FF7A00] font-medium text-[11px] uppercase bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded">{l.action.replace('PAYOUT_', '')}</span>
+                {(statusData?.requests || []).map((req: any) => (
+                  <div key={req.id} className="text-[13px] flex flex-col gap-2 bg-gray-50 dark:bg-[#222] p-3 rounded-lg border border-gray-100 dark:border-gray-800">
+                    <div className="flex justify-between items-start">
+                      <span className="font-semibold text-gray-800 dark:text-gray-200">Demande de {req.amount?.toLocaleString('fr-FR')} F</span>
+                      {req.status === 'COMPLETED' && <span className="text-green-600 font-medium text-[11px] uppercase bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">Terminé</span>}
+                      {req.status === 'PARTIAL_COMPLETED' && <span className="text-orange-600 font-medium text-[11px] uppercase bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded">Terminé (Partiel)</span>}
+                      {req.status === 'REJECTED' && <span className="text-red-600 font-medium text-[11px] uppercase bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">Refusé</span>}
+                      {req.status === 'PENDING' && <span className="text-gray-600 font-medium text-[11px] uppercase bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">En attente</span>}
+                      {req.status === 'PARTIAL' && <span className="text-blue-600 font-medium text-[11px] uppercase bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">Partiel (En cours)</span>}
                     </div>
-                    <span className="text-gray-500 text-[11px]">{format(new Date(l.createdAt), "dd MMM yyyy HH:mm")}</span>
+                    
+                    {req.status === 'PARTIAL_COMPLETED' && (
+                      <div className="flex flex-col gap-1 mt-1 bg-white dark:bg-[#1A1A1A] p-2 rounded border border-gray-100 dark:border-gray-800">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Montant débloqué :</span>
+                          <span className="text-green-600 font-semibold">{req.releasedAmount?.toLocaleString('fr-FR')} F</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Montant refusé :</span>
+                          <span className="text-red-600 font-semibold">{req.rejectedAmount?.toLocaleString('fr-FR')} F</span>
+                        </div>
+                        <span className="text-[10px] text-gray-400 mt-1 italic">Le montant refusé est de nouveau disponible dans la cagnotte.</span>
+                      </div>
+                    )}
+                    
+                    <span className="text-gray-500 text-[11px]">{format(new Date(req.createdAt), "dd MMM yyyy HH:mm")}</span>
                   </div>
                 ))}
-                {payoutsList.length === 0 && <p className="text-[13px] text-gray-500 text-center py-2">Aucun retrait.</p>}
+                {(statusData?.requests || []).length === 0 && <p className="text-[13px] text-gray-500 text-center py-2">Aucun retrait.</p>}
               </div>
             </div>
           )}

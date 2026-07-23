@@ -29,6 +29,7 @@ async function bootstrap() {
     customTypes: /text\/html|text\/css|application\/json|application\/javascript|text\/plain/
   })
   await app.register(import('./plugins/websocket'))
+  await app.register(import('./plugins/cron'))
   await app.register(import('@fastify/multipart'), { limits: { fileSize: 10 * 1024 * 1024 } }) // 10MB limit
   
   // Serve static files (uploads)

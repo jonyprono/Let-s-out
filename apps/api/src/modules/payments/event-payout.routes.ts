@@ -120,6 +120,21 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       if (booking.totalPaid <= 0) return reply.code(400).send({ error: 'Aucun montant payé' })
       if (booking.status === 'REFUNDED') return reply.code(400).send({ error: 'Déjà remboursé' })
 
+      const isCompleted = booking.event.status === 'COMPLETED'
+      const isPastEnd = new Date() > new Date(booking.event.endAt)
+      if (!isCompleted && !isPastEnd) {
+        return reply.code(400).send({ error: 'L\'événement n\'est pas encore terminé' })
+      }
+
+      // Calculate remaining non-engaged amount
+      const poolStatus = await calculateAvailablePoolAmount(app, eventId)
+      const userBreakdown = poolStatus.breakdowns.find(b => b.userId === userId)
+      const remainingAmount = userBreakdown?.remainingAmount || 0
+
+      if (remainingAmount <= 0) {
+        return reply.code(400).send({ error: 'Aucun montant disponible pour le remboursement' })
+      }
+
       const existingReq = await (app as any).prisma.participantRefundRequest.findFirst({
         where: { bookingId: booking.id, status: 'PENDING' }
       })
@@ -130,7 +145,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
           userId,
           eventId,
           bookingId: booking.id,
-          amount: booking.totalPaid,
+          amount: remainingAmount,
           reason,
         }
       })
@@ -142,7 +157,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         targetType: 'refundRequest',
         targetId: refundReq.id,
         eventId,
-        amount: booking.totalPaid,
+        amount: remainingAmount,
         comment: reason,
         ipAddress,
       })
@@ -152,7 +167,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         userId: booking.event.creatorId,
         type: 'SYSTEM',
         title: 'Demande de désistement',
-        body: `Un participant a demandé le remboursement de sa part (${booking.totalPaid}). Motif: ${reason}`,
+        body: `Un participant a demandé le remboursement de sa part non débloquée (${remainingAmount} F CFA). Motif: ${reason}`,
         data: { eventId, refundRequestId: refundReq.id },
       })
 
@@ -236,6 +251,16 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         const commissionRate = commissionSetting ? parseFloat(commissionSetting.value) : 0.02;
         const commissionAmount = amountToWithdraw * commissionRate;
 
+        // const reasonMessage = reason || 'Demande de retrait partiel';
+        
+        let deadlineHours = 48;
+        const setting = await (app as any).prisma.systemSetting.findUnique({ where: { key: 'PAYOUT_APPROVAL_DEADLINE_HOURS' } });
+        if (setting && !isNaN(Number(setting.value))) {
+          deadlineHours = Number(setting.value);
+        }
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + deadlineHours);
+
         // Create an EventPayoutRequest as PENDING
         const newPayoutReq = await (app as any).prisma.eventPayoutRequest.create({
           data: {
@@ -246,6 +271,8 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
             commissionAmount,
             status: 'PENDING',
             reason: reason,
+            voteDurationHours: deadlineHours,
+            expiresAt: expiresAt
           }
         });
 
@@ -368,6 +395,34 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     });
     const commissionRate = commissionSetting ? parseFloat(commissionSetting.value) : 0.02;
 
+    const payoutRequests = await (app as any).prisma.eventPayoutRequest.findMany({
+      where: { eventId },
+      include: {
+        approvalsList: true,
+        items: true // PayoutBookingItem to calculate released vs rejected
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const enrichedRequests = payoutRequests.map((req: any) => {
+      // Pour PARTIAL_COMPLETED, on veut le montant débloqué et le montant refusé
+      const releasedAmount = req.approvalsList
+        .filter((a: any) => a.status === 'APPROVED')
+        .reduce((sum: number, a: any) => {
+          // Find items delegated to this validator
+          const items = req.items.filter((i: any) => i.delegatedToSnapshot === a.userId);
+          return sum + items.reduce((s: number, i: any) => s + i.amountDeducted, 0);
+        }, 0);
+        
+      const rejectedAmount = req.amount - releasedAmount; // Approximate or exact depending on how it's calculated
+      
+      return {
+        ...req,
+        releasedAmount,
+        rejectedAmount
+      };
+    });
+
     return reply.send({ 
       data: {
         totalCollected: event?.poolCollected || 0,
@@ -376,7 +431,8 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         pendingCount: stats.pendingCount,
         poolClosedAt: event?.poolClosedAt,
         hasPool: stats.hasPool,
-        commissionRate
+        commissionRate,
+        requests: enrichedRequests
       } 
     })
   })
@@ -422,11 +478,14 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     })
 
     if (!payoutReq || payoutReq.eventId !== eventId) return reply.code(404).send({ error: 'Demande non trouvée' })
-    if (payoutReq.status !== 'PENDING') return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
+    if (payoutReq.status !== 'PENDING' && payoutReq.status !== 'PARTIAL') return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
 
     const myApproval = payoutReq.approvalsList.find((a: any) => a.userId === userId)
     if (!myApproval) return reply.code(403).send({ error: 'Vous n\'êtes pas autorisé à approuver cette demande' })
     if (myApproval.status !== 'PENDING') return reply.code(400).send({ error: 'Vous avez déjà répondu' })
+
+    let partialAmount = 0
+    let nextStatus = payoutReq.status
 
     await (app as any).prisma.$transaction(async (tx: any) => {
       // 1. Mark my approval
@@ -435,33 +494,52 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         data: { status: 'APPROVED' }
       })
 
-      // 2. Check if ALL approvals are now APPROVED
+      // 2. Identify the specific PayoutBookingItems for this validator
+      const myItems = await tx.payoutBookingItem.findMany({
+        where: { payoutRequestId: payoutId, delegatedToSnapshot: userId }
+      })
+
+      // 3. Calculate partial amount
+      partialAmount = myItems.reduce((sum: number, item: any) => sum + item.amountDeducted, 0)
+
+      // 4. Check if we need to update the global request status
       const updatedApprovals = await tx.payoutApproval.findMany({ where: { payoutRequestId: payoutId } })
       const allApproved = updatedApprovals.every((a: any) => a.status === 'APPROVED')
+      const anyPending = updatedApprovals.some((a: any) => a.status === 'PENDING')
 
       if (allApproved) {
-        // Complete the payout
+        nextStatus = 'COMPLETED'
+      } else if (!anyPending) {
+        nextStatus = 'PARTIAL_COMPLETED'
+      } else {
+        nextStatus = 'PARTIAL'
+      }
+
+      if (nextStatus !== payoutReq.status) {
         await tx.eventPayoutRequest.update({
           where: { id: payoutId },
-          data: { status: 'COMPLETED' }
-        })
-
-        await releaseFunds(app, eventId, payoutReq.requestedBy, payoutReq.amount, payoutReq.event.title, payoutId, payoutReq.reason)
-
-        await writeAuditLog(tx, {
-          actorId: payoutReq.requestedBy,
-          actorRole: 'ORGANIZER',
-          action: 'PAYOUT_APPROVED',
-          targetType: 'event',
-          targetId: eventId,
-          eventId,
-          amount: payoutReq.amount,
-          ipAddress: request.ip,
+          data: { status: nextStatus }
         })
       }
+      
+      await writeAuditLog(tx, {
+        actorId: userId,
+        actorRole: 'VALIDATOR',
+        action: 'PAYOUT_APPROVED',
+        targetType: 'payoutApproval',
+        targetId: myApproval.id,
+        eventId,
+        amount: partialAmount,
+        ipAddress: request.ip,
+      })
     })
 
-    return reply.send({ message: 'Approbation enregistrée' })
+    // 5. Release funds (outside transaction to avoid nested Prisma transactions)
+    if (partialAmount > 0) {
+      await releaseFunds(app, eventId, payoutReq.requestedBy, partialAmount, payoutReq.event.title, payoutId, payoutReq.reason ? payoutReq.reason + ' (Partiel)' : 'Validation Partielle')
+    }
+
+    return reply.send({ message: 'Approbation partielle enregistrée', partialAmount, status: nextStatus })
   })
 
   // ─── POST /:id/payout/:payoutId/reject ────────────────────────────────────
@@ -476,7 +554,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     })
 
     if (!payoutReq || payoutReq.eventId !== eventId) return reply.code(404).send({ error: 'Demande non trouvée' })
-    if (payoutReq.status !== 'PENDING') return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
+    if (payoutReq.status !== 'PENDING' && payoutReq.status !== 'PARTIAL') return reply.code(400).send({ error: `La demande est déjà ${payoutReq.status}` })
 
     const myApproval = payoutReq.approvalsList.find((a: any) => a.userId === userId)
     if (!myApproval) return reply.code(403).send({ error: 'Vous n\'êtes pas autorisé à rejeter cette demande' })
@@ -489,27 +567,106 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         data: { status: 'REJECTED', rejectionReason: reason }
       })
 
-      // 2. Reject the whole request and delete PayoutBookingItems to unfreeze funds
-      await tx.eventPayoutRequest.update({
-        where: { id: payoutId },
-        data: { status: 'REJECTED', rejectionReason: reason || 'Rejeté par un validateur ou co-organisateur' }
+      // 2. Unfreeze MY delegators' funds by deleting their PayoutBookingItems
+      await tx.payoutBookingItem.deleteMany({
+        where: { payoutRequestId: payoutId, delegatedToSnapshot: userId }
       })
 
-      await tx.payoutBookingItem.deleteMany({
-        where: { payoutRequestId: payoutId }
-      })
+      // 3. Update Request Status
+      const updatedApprovals = await tx.payoutApproval.findMany({ where: { payoutRequestId: payoutId } })
+      const anyPending = updatedApprovals.some((a: any) => a.status === 'PENDING')
+      const allRejected = updatedApprovals.every((a: any) => a.status === 'REJECTED' || a.status === 'EXPIRED')
+      
+      let nextStatus = payoutReq.status
+      if (allRejected) {
+        nextStatus = 'REJECTED'
+      } else if (!anyPending) {
+        nextStatus = 'PARTIAL_COMPLETED'
+      } else {
+        nextStatus = 'PARTIAL'
+      }
+
+      if (nextStatus !== payoutReq.status) {
+        await tx.eventPayoutRequest.update({
+          where: { id: payoutId },
+          data: { status: nextStatus, rejectionReason: allRejected ? (reason || 'Rejeté par tous les validateurs') : payoutReq.rejectionReason }
+        })
+      }
     })
 
     // Notify organizer
     await createAndSendNotification(app, {
       userId: payoutReq.requestedBy,
       type: 'SYSTEM',
-      title: 'Demande de retrait refusée',
-      body: `Votre demande de retrait de ${payoutReq.amount} F a été refusée. Les fonds sont de nouveau disponibles.`,
-      data: { eventId },
+      title: 'Validation partielle refusée',
+      body: `Une validation a été refusée pour votre demande de ${payoutReq.amount} F. La part correspondante est de nouveau disponible.`,
+      data: { eventId, payoutId }
     })
 
-    return reply.send({ message: 'Rejet enregistré et fonds libérés' })
+    return reply.send({ message: 'Refus enregistré, la part correspondante est de nouveau disponible' })
+  })
+
+  // ─── POST /:id/payout/:payoutId/fallback ─────────────────────────────────
+  app.post<{ Params: { id: string, payoutId: string }; Body: { delegatedToId?: string } }>('/:id/payout/:payoutId/fallback', async (request, reply) => {
+    const { sub: userId } = request.user as { sub: string }
+    const { id: eventId, payoutId } = request.params
+    const { delegatedToId } = request.body
+
+    const payoutReq = await (app as any).prisma.eventPayoutRequest.findUnique({
+      where: { id: payoutId },
+    })
+
+    if (!payoutReq || payoutReq.eventId !== eventId) return reply.code(404).send({ error: 'Demande non trouvée' })
+    if (!payoutReq.expiresAt || new Date() <= new Date(payoutReq.expiresAt)) return reply.code(400).send({ error: 'Le délai n\'est pas encore expiré' })
+
+    const booking = await (app as any).prisma.booking.findUnique({
+      where: { userId_eventId: { userId, eventId } }
+    })
+    if (!booking) return reply.code(404).send({ error: 'Réservation non trouvée' })
+
+    await (app as any).prisma.$transaction(async (tx: any) => {
+      // 1. Mettre à jour le choix global
+      await tx.booking.update({
+        where: { id: booking.id },
+        data: {
+          poolValidationStatus: delegatedToId ? 'DELEGATED' : 'VALIDATED',
+          delegatedToId: delegatedToId || null
+        }
+      })
+
+      // 2. Mettre à jour le PayoutBookingItem pour ce retrait
+      await tx.payoutBookingItem.updateMany({
+        where: { payoutRequestId: payoutId, bookingId: booking.id },
+        data: {
+          validationStatusSnapshot: delegatedToId ? 'DELEGATED' : 'VALIDATED',
+          delegatedToSnapshot: delegatedToId || userId
+        }
+      })
+
+      // 3. Créer ou mettre à jour le PayoutApproval du nouveau validateur
+      const newValidatorId = delegatedToId || userId
+      const existingApproval = await tx.payoutApproval.findFirst({
+        where: { payoutRequestId: payoutId, userId: newValidatorId }
+      })
+
+      if (!existingApproval) {
+        await tx.payoutApproval.create({
+          data: {
+            payoutRequestId: payoutId,
+            userId: newValidatorId,
+            role: 'VALIDATOR',
+            status: delegatedToId ? 'PENDING' : 'APPROVED' // Auto-approuvé si auto-validation
+          }
+        })
+      } else if (!delegatedToId) {
+        await tx.payoutApproval.update({
+          where: { id: existingApproval.id },
+          data: { status: 'APPROVED' }
+        })
+      }
+    })
+
+    return reply.send({ message: 'Choix mis à jour' })
   })
 }
 
