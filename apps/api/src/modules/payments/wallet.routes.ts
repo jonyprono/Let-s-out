@@ -273,17 +273,19 @@ export default async function walletRoutes(app: FastifyInstance) {
   // ─ Audit 8: audit log à chaque retrait
   app.post('/payout', { preHandler: [app.authenticate, verifyWalletPin] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { amount, phone, network, eventTitle, eventId } = req.body as { amount: number; phone: string; network: string; eventTitle?: string; eventId?: string }
+    const { amount: rawAmount, phone, network, eventTitle, eventId } = req.body as { amount: number; phone: string; network: string; eventTitle?: string; eventId?: string }
     const idempotencyKey = req.headers['x-idempotency-key'] as string | undefined
     const ipAddress = req.ip
 
-    if (!amount || amount <= 0) return reply.code(400).send({ error: 'Montant invalide' })
+    const amount = Math.floor(Number(rawAmount))
+
+    if (isNaN(amount) || amount <= 0) return reply.code(400).send({ error: 'Montant invalide' })
     if (!phone) return reply.code(400).send({ error: 'Numéro de téléphone requis' })
 
     // ─ Idempotence: if same idempotency key was already used, reject
     if (idempotencyKey) {
       const existing = await app.prisma.walletTransaction.findFirst({
-        where: { refId: idempotencyKey },
+        where: { refId: `idem:${idempotencyKey}` },
       })
       if (existing) {
         return reply.send({ success: true, message: 'Déjà traité (idempotence)', idempotent: true })
@@ -291,28 +293,36 @@ export default async function walletRoutes(app: FastifyInstance) {
     }
 
     try {
+      // 1. DEDUCT FIRST to prevent race condition
+      const idempotencyRef = idempotencyKey ? `idem:${idempotencyKey}` : undefined;
+      const initialRef = idempotencyRef || eventId || phone;
+      
+      const transactionRecord = await app.prisma.$transaction(async (tx) => {
+        const freshWallet = await tx.wallet.findUnique({ where: { userId: sub } })
+        if (!freshWallet || freshWallet.balance < amount) {
+          throw new Error('INSUFFICIENT_BALANCE')
+        }
+        await tx.wallet.update({
+          where: { id: freshWallet.id },
+          data: { balance: { decrement: amount } },
+        })
+        return tx.walletTransaction.create({
+          data: {
+            walletId: freshWallet.id,
+            amount,
+            type: 'WITHDRAWAL',
+            balanceAfter: freshWallet.balance - amount,
+            description: eventTitle ? `Retrait (En cours) - ${eventTitle}` : `Retrait Mobile Money (En cours)`,
+            refId: initialRef,
+          },
+        })
+      })
+
       // MODE DEV: Simuler le succès si pas de clé
       if (!process.env.FEDAPAY_SECRET_KEY) {
-        // ─ Race-condition safe: check balance INSIDE the transaction
-        await app.prisma.$transaction(async (tx) => {
-          const freshWallet = await tx.wallet.findUnique({ where: { userId: sub } })
-          if (!freshWallet || freshWallet.balance < amount) {
-            throw new Error('INSUFFICIENT_BALANCE')
-          }
-          await tx.wallet.update({
-            where: { id: freshWallet.id },
-            data: { balance: { decrement: amount } },
-          })
-          await tx.walletTransaction.create({
-            data: {
-              walletId: freshWallet.id,
-              amount,
-              type: 'WITHDRAWAL',
-              balanceAfter: freshWallet.balance - amount,
-              description: eventTitle ? `Retrait - ${eventTitle}` : `Retrait Mobile Money`,
-              refId: idempotencyKey || eventId || phone,
-            },
-          })
+        await app.prisma.walletTransaction.update({
+           where: { id: transactionRecord.id },
+           data: { description: eventTitle ? `Retrait - ${eventTitle}` : `Retrait Mobile Money` }
         })
 
         await writeAuditLog(app.prisma as any, {
@@ -335,67 +345,79 @@ export default async function walletRoutes(app: FastifyInstance) {
         ? 'https://sandbox-api.fedapay.com/v1' 
         : 'https://api.fedapay.com/v1';
 
-      const payoutRes = await fetch(`${baseUrl}/payouts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}`,
-        },
-        body: JSON.stringify({
-          amount: amount,
-          currency: { iso: 'XOF' },
-          mode: network,
-          customer: { phone_number: { number: phone.replace(/^\+229/, '').replace(/^229/, ''), country: 'BJ' } },
-          send_now: true,
-        }),
-      })
+      try {
+        const payoutRes = await fetch(`${baseUrl}/payouts`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}`,
+          },
+          body: JSON.stringify({
+            amount: amount,
+            currency: { iso: 'XOF' },
+            mode: network,
+            customer: { phone_number: { number: phone.replace(/^\+229/, '').replace(/^229/, ''), country: 'BJ' } },
+            send_now: true,
+          }),
+        })
 
-      const payoutData = (await payoutRes.json()) as any
+        const payoutData = (await payoutRes.json()) as any
 
-      if (!payoutRes.ok || payoutData.error) {
-        app.log.error({ payoutData }, '[FedaPay Payout Error]')
-        const errMsg = payoutData?.message 
-          || payoutData?.error?.message 
-          || (payoutData?.errors ? Object.values(payoutData.errors).flat().join(', ') : null)
-          || 'Erreur lors du transfert FedaPay'
-        return reply.code(500).send({ error: errMsg, details: payoutData })
+        if (!payoutRes.ok || payoutData.error) {
+          const errMsg = payoutData?.message 
+            || payoutData?.error?.message 
+            || (payoutData?.errors ? Object.values(payoutData.errors).flat().join(', ') : null)
+            || 'Erreur lors du transfert FedaPay'
+          throw new Error(errMsg);
+        }
+
+        // FedaPay succeeded! Update transaction ref and description
+        await app.prisma.walletTransaction.update({
+          where: { id: transactionRecord.id },
+          data: {
+            refId: idempotencyRef || eventId || payoutData.v1?.payout?.id?.toString() || phone,
+            description: eventTitle ? `Retrait - ${eventTitle}` : `Retrait Mobile Money`
+          }
+        })
+
+        await writeAuditLog(app.prisma as any, {
+          actorId: sub,
+          actorRole: 'USER',
+          action: 'WALLET_WITHDRAWAL',
+          targetType: 'wallet',
+          eventId,
+          amount,
+          newValue: { phone, network, fedapayId: payoutData.v1?.payout?.id },
+          ipAddress,
+          userAgent: req.headers['user-agent'],
+        })
+
+        return reply.send({ success: true, message: 'Retrait initié avec succès' })
+      } catch (fedaErr: any) {
+         // FEDAPAY FAILED OR NETWORK ERROR -> REFUND WALLET
+         app.log.error(fedaErr, '[FedaPay Payout Error] -> Initiating Refund')
+         await app.prisma.$transaction(async (tx) => {
+           const freshWallet = await tx.wallet.findUnique({ where: { userId: sub } })
+           if (!freshWallet) return;
+           await tx.wallet.update({
+             where: { id: freshWallet.id },
+             data: { balance: { increment: amount } },
+           })
+           await tx.walletTransaction.create({
+             data: {
+               walletId: freshWallet.id,
+               amount,
+               type: 'REFUND',
+               balanceAfter: freshWallet.balance + amount,
+               description: `Remboursement suite à échec de retrait`,
+               refId: initialRef,
+             },
+           })
+         })
+         
+         return reply.code(500).send({ error: 'Erreur lors du retrait, le montant a été recrédité.', details: fedaErr.message })
       }
 
-      // ─ Race-condition safe: check balance INSIDE the transaction
-      await app.prisma.$transaction(async (tx) => {
-        const freshWallet = await tx.wallet.findUnique({ where: { userId: sub } })
-        if (!freshWallet || freshWallet.balance < amount) {
-          throw new Error('INSUFFICIENT_BALANCE')
-        }
-        await tx.wallet.update({
-          where: { id: freshWallet.id },
-          data: { balance: { decrement: amount } },
-        })
-        await tx.walletTransaction.create({
-          data: {
-            walletId: freshWallet.id,
-            amount,
-            type: 'WITHDRAWAL',
-            balanceAfter: freshWallet.balance - amount,
-            description: eventTitle ? `Retrait - ${eventTitle}` : `Retrait Mobile Money`,
-            refId: idempotencyKey || eventId || payoutData.v1?.payout?.id?.toString() || phone,
-          },
-        })
-      })
-
-      await writeAuditLog(app.prisma as any, {
-        actorId: sub,
-        actorRole: 'USER',
-        action: 'WALLET_WITHDRAWAL',
-        targetType: 'wallet',
-        eventId,
-        amount,
-        newValue: { phone, network, fedapayId: payoutData.v1?.payout?.id },
-        ipAddress,
-        userAgent: req.headers['user-agent'],
-      })
-
-      return reply.send({ success: true, message: 'Retrait initié avec succès' })
     } catch (err: any) {
       if (err.message === 'INSUFFICIENT_BALANCE') {
         return reply.code(400).send({ error: 'Solde insuffisant' })
