@@ -453,9 +453,9 @@ async function handleConfirmedBooking(
   await createAndSendNotification(app, {
     userId,
     type: 'PAYMENT_SUCCESS',
-    title: 'Paiement réussi 🎉',
-    body: `Votre paiement pour "${event?.title || "l'événement"}" a été confirmé.`,
-    data: { bookingId: booking.id, eventId, amount: String(amount) },
+    title: '💳 Paiement réussi !',
+    body: `Votre contribution pour "${event?.title || "l'événement"}" a bien été enregistrée. Merci pour votre participation !`,
+    data: { bookingId: booking.id, eventId, amount: String(amount), screen: 'event-details' },
   })
 
   // Notify creator
@@ -467,9 +467,9 @@ async function handleConfirmedBooking(
       await createAndSendNotification(app, {
         userId: event.creatorId,
         type: 'JOIN_CONFIRMED',
-        title: '💰 Nouveau participant payant !',
-        body: `${payerName} a payé et rejoint "${event.title}".`,
-        data: { eventId, joinerId: userId, amount: String(amount) },
+        title: '🎉 Nouveau participant !',
+        body: `${payerName} a payé et rejoint votre événement "${event.title}".`,
+        data: { eventId, joinerId: userId, amount: String(amount), screen: 'event-details' },
       })
     } else {
       await createAndSendNotification(app, {
@@ -477,7 +477,7 @@ async function handleConfirmedBooking(
         type: 'PAYMENT_SUCCESS',
         title: '🎁 Contribution reçue !',
         body: `${payerName} a contribué ${amount} F à la cagnotte de "${event.title}".`,
-        data: { eventId, contributorId: userId, amount: String(amount) },
+        data: { eventId, contributorId: userId, amount: String(amount), screen: 'event-details' },
       })
     }
   }

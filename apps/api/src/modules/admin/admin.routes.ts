@@ -154,9 +154,9 @@ export default async function adminRoutes(app: FastifyInstance) {
     await createAndSendNotification(app, {
       userId,
       type: 'SYSTEM',
-      title: 'Profil vérifié',
-      body: 'Félicitations ! Votre identité a été validée. Votre badge vérifié est actif.',
-      data: { kycStatus: 'verified' },
+      title: '✅ Profil vérifié !',
+      body: 'Félicitations ! Votre identité a été validée par notre équipe. Le badge "Vérifié" est maintenant actif sur votre profil.',
+      data: { kycStatus: 'verified', screen: 'user-profile' },
     })
 
     return reply.send({ success: true, kycStatus: profile.kycStatus })
@@ -184,9 +184,9 @@ export default async function adminRoutes(app: FastifyInstance) {
     await createAndSendNotification(app, {
       userId,
       type: 'SYSTEM',
-      title: 'Vérification refusée',
-      body: body.reason,
-      data: { kycStatus: 'rejected', reason: body.reason },
+      title: '❌ Échec de la vérification',
+      body: `Votre demande de vérification d'identité a été rejetée. Motif : ${body.reason}. Veuillez soumettre de nouveaux documents.`,
+      data: { kycStatus: 'rejected', reason: body.reason, screen: 'user-profile' },
     })
 
     return reply.send({ success: true, kycStatus: profile.kycStatus })

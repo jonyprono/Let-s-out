@@ -539,13 +539,12 @@ export default async function usersRoutes(app: FastifyInstance) {
     const initiatorProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
     const initiatorName = initiatorProfile?.displayName || 'Quelqu\'un'
 
-    // Create Notification
     await createAndSendNotification(app, {
       userId: userId,
       type: 'FRIEND_REQUEST',
-      title: 'Nouvelle demande d\'ami',
-      body: `${initiatorName} vous a envoyé une demande d'ami.`,
-      data: { friendshipId: friendship.id, initiatorId: sub }
+      title: '🙋 Nouvelle demande d\'ami',
+      body: `"${initiatorName}" vous a envoyé une demande d'ami.`,
+      data: { friendshipId: friendship.id, initiatorId: sub, screen: 'user-profile' }
     })
 
     return reply.code(201).send(friendship)
@@ -570,13 +569,12 @@ export default async function usersRoutes(app: FastifyInstance) {
     const receiverProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
     const receiverName = receiverProfile?.displayName || 'Quelqu\'un'
 
-    // Create Notification for the initiator
     await createAndSendNotification(app, {
       userId: friendship.initiatorId,
       type: 'FRIEND_ACCEPTED',
-      title: 'Demande d\'ami acceptée',
-      body: `${receiverName} a accepté votre demande d'ami.`,
-      data: { friendshipId: friendship.id, receiverId: sub }
+      title: '✅ Demande d\'ami acceptée',
+      body: `"${receiverName}" a accepté votre demande d'ami.`,
+      data: { friendshipId: friendship.id, receiverId: sub, screen: 'user-profile' }
     })
 
     return reply.send(updated)
@@ -713,9 +711,9 @@ export default async function usersRoutes(app: FastifyInstance) {
         await createAndSendNotification(app, {
           userId: userId,
           type: 'NEW_FOLLOWER',
-          title: 'Nouvel abonné',
-          body: `${followerProfile.displayName || followerProfile.username} a commencé à vous suivre.`,
-          data: { followerId: sub }
+          title: '🔔 Nouvel abonné !',
+          body: `"${followerProfile.displayName || followerProfile.username}" a commencé à vous suivre. Découvrez son profil !`,
+          data: { followerId: sub, screen: 'user-profile' }
         });
       }
     } catch (e) {

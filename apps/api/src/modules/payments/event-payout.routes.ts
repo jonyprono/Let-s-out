@@ -93,9 +93,9 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       await createAndSendNotification(app, {
         userId: oldDelegateId,
         type: 'SYSTEM',
-        title: 'Délégation annulée',
-        body: `${userProfile?.displayName || 'Un participant'} a révoqué sa délégation.`,
-        data: { eventId },
+        title: '↩️ Délégation révoquée',
+        body: `${userProfile?.displayName || 'Un participant'} a repris le contrôle de sa propre contribution.`,
+        data: { eventId, screen: 'pool-validation' },
       })
 
       return reply.send({ message: 'Délégation révoquée avec succès' })
@@ -166,9 +166,9 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
       await createAndSendNotification(app, {
         userId: booking.event.creatorId,
         type: 'SYSTEM',
-        title: 'Demande de désistement',
+        title: '🔙 Demande de remboursement',
         body: `Un participant a demandé le remboursement de sa part non débloquée (${remainingAmount} F CFA). Motif: ${reason}`,
-        data: { eventId, refundRequestId: refundReq.id },
+        data: { eventId, refundRequestId: refundReq.id, screen: 'event-details' },
       })
 
       return reply.send({ data: refundReq, message: 'Demande de remboursement soumise.' })
@@ -245,6 +245,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         const totalValidatedFunds = validatedBookings.reduce((sum, b) => sum + b.remainingAmount, 0);
 
         const involvedValidatorIds = new Set<string>();
+        const validatorDeductions = new Map<string, number>();
 
         for (const b of validatedBookings) {
           if (remainingToDeduct <= 0) break;
@@ -267,7 +268,9 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
               }
             });
             remainingToDeduct -= deduct;
-            involvedValidatorIds.add(b.delegatedToId || b.userId); // Add delegatee or self
+            const validatorId = b.delegatedToId || b.userId;
+            involvedValidatorIds.add(validatorId); // Add delegatee or self
+            validatorDeductions.set(validatorId, (validatorDeductions.get(validatorId) || 0) + deduct);
           }
         }
 
@@ -300,19 +303,37 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         // Notify approvers
         const approversToNotify = Array.from(new Set([...involvedValidatorIds, ...coHostIds]));
         if (approversToNotify.length > 0) {
-          await createAndSendNotificationMany(app, approversToNotify.map((uid: string) => ({
-            userId: uid,
-            type: 'POOL_UNLOCK_REQUEST',
-            title: '💰 Validation requise',
-            body: `"${event.title}" — Déblocage de ${amountToWithdraw.toLocaleString('fr-FR')} F CFA demandé. Motif : ${reason}. Appuyez pour approuver ou refuser.`,
-            data: {
-              eventId,
-              payoutId: newPayoutReq.id,
-              amount: String(amountToWithdraw),
-              reason,
-              screen: 'payout-approval',
-            },
-          })));
+          const notificationsPayload = approversToNotify.map((uid: string) => {
+            const myShare = validatorDeductions.get(uid);
+            const isCohost = coHostIds.includes(uid);
+            let bodyText = `"${event.title}" — Déblocage de ${amountToWithdraw.toLocaleString('fr-FR')} F CFA demandé.`;
+            
+            if (myShare && myShare > 0) {
+              if (isCohost) {
+                bodyText += ` En tant que co-hôte et validateur, votre part à approuver est de ${myShare.toLocaleString('fr-FR')} F CFA.`;
+              } else {
+                bodyText += ` Votre part à approuver est de ${myShare.toLocaleString('fr-FR')} F CFA.`;
+              }
+            } else if (isCohost) {
+              bodyText += ` En tant que co-hôte, votre supervision est requise.`;
+            }
+            bodyText += ` Motif : ${reason}. Appuyez pour approuver ou refuser.`;
+
+            return {
+              userId: uid,
+              type: 'POOL_UNLOCK_REQUEST',
+              title: '💰 Validation requise',
+              body: bodyText,
+              data: {
+                eventId,
+                payoutId: newPayoutReq.id,
+                amount: String(amountToWithdraw),
+                reason,
+                screen: 'payout-approval',
+              },
+            };
+          });
+          await createAndSendNotificationMany(app, notificationsPayload);
         }
 
         return reply.send({ message: `Demande de retrait de ${amountToWithdraw} F initiée. En attente d'approbation.` })
@@ -328,8 +349,8 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
           await createAndSendNotificationMany(app, pendingUserIds.map((voterId: string) => ({
             userId: voterId,
             type: 'SYSTEM',
-            title: 'Action requise : Budget',
-            body: `L'organisateur de "${event.title}" a besoin de votre validation pour utiliser les fonds. Veuillez valider votre part ou la déléguer.`,
+            title: '⚠️ Action requise : Budget',
+            body: `L'organisateur de "${event.title}" tente de débloquer les fonds. Vous devez d'abord valider votre contribution ou la déléguer !`,
             data: { eventId, screen: 'pool-validation' },
           })))
         }
@@ -560,9 +581,9 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     await createAndSendNotification(app, {
       userId: payoutReq.requestedBy,
       type: 'SYSTEM',
-      title: 'Validation partielle refusée',
-      body: `Une validation a été refusée pour votre demande de ${payoutReq.amount} F. La part correspondante est de nouveau disponible.`,
-      data: { eventId, payoutId }
+      title: '⛔ Validation refusée',
+      body: `Un validateur a refusé votre demande de retrait de ${payoutReq.amount} F CFA. Cette part retourne dans le solde disponible.`,
+      data: { eventId, payoutId, screen: 'event-details' }
     })
 
     return reply.send({ message: 'Refus enregistré, la part correspondante est de nouveau disponible' })

@@ -368,9 +368,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
       await createAndSendNotificationMany(app, bookings.map(b => ({
         userId: b.userId,
         type: 'SYSTEM',
-        title: 'Vote pour les validateurs',
-        body: `L'organisateur de "${event.title}" a lancé le vote pour désigner les validateurs de la cagnotte.`,
-        data: { eventId: id }
+        title: '🗳️ À vos votes !',
+        body: `Le vote pour désigner les validateurs de la cagnotte "${event.title}" est ouvert. Exprimez votre choix dès maintenant.`,
+        data: { eventId: id, screen: 'pool-validation' }
       })))
     }
 
@@ -444,9 +444,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
       await createAndSendNotification(app, {
         userId: event.creatorId,
         type: 'SYSTEM',
-        title: 'Vote terminé',
-        body: `Tous les participants ont voté. Le vote pour "${event.title}" est automatiquement clôturé.`,
-        data: { eventId: id }
+        title: '🏁 Fin des votes',
+        body: `Tous les participants de "${event.title}" ont voté ! Le scrutin pour les validateurs est maintenant clos.`,
+        data: { eventId: id, screen: 'event-details' }
       })
 
       // Notifier les validateurs retenus
@@ -459,9 +459,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
         await createAndSendNotificationMany(app, finalEvent.validatorIds.map(valId => ({
           userId: valId,
           type: 'SYSTEM',
-          title: 'Validation acceptée !',
-          body: `Vous avez été choisi comme validateur pour la cagnotte de "${event.title}".`,
-          data: { eventId: id }
+          title: '🛡️ Félicitations !',
+          body: `Vous avez été élu validateur pour la cagnotte "${event.title}". Vous aurez la responsabilité de protéger les fonds.`,
+          data: { eventId: id, screen: 'pool-validation' }
         })))
 
         // Si un déblocage était déjà demandé, notifier qu'ils doivent approuver
@@ -469,9 +469,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
           await createAndSendNotificationMany(app, finalEvent.validatorIds.map(valId => ({
             userId: valId,
             type: 'SYSTEM',
-            title: 'Veuillez approuver le déblocage',
-            body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
-            data: { eventId: id }
+            title: '💰 Validation de déblocage',
+            body: `L'organisateur de "${event.title}" a demandé un retrait. En tant que validateur, veuillez examiner cette demande !`,
+            data: { eventId: id, payoutId: payoutReq.id, amount: String(payoutReq.amount), screen: 'payout-approval' }
           })))
         }
       }
@@ -538,9 +538,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
       await createAndSendNotificationMany(app, updatedEvent.validatorIds.map(valId => ({
         userId: valId,
         type: 'SYSTEM',
-        title: 'Validation acceptée !',
-        body: `Vous avez été choisi comme validateur pour la cagnotte de "${event.title}".`,
-        data: { eventId: id }
+        title: '🛡️ Félicitations !',
+        body: `Vous avez été élu validateur pour la cagnotte "${event.title}". Vous aurez la responsabilité de protéger les fonds.`,
+        data: { eventId: id, screen: 'pool-validation' }
       })))
 
       // Si un déblocage était déjà demandé, notifier qu'ils doivent approuver
@@ -548,9 +548,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
         await createAndSendNotificationMany(app, updatedEvent.validatorIds.map(valId => ({
           userId: valId,
           type: 'SYSTEM',
-          title: 'Veuillez approuver le déblocage',
-          body: `L'organisateur de "${event.title}" a demandé le déblocage de la cagnotte. Veuillez approuver.`,
-          data: { eventId: id }
+          title: '💰 Validation de déblocage',
+          body: `L'organisateur de "${event.title}" a demandé un retrait. En tant que validateur, veuillez examiner cette demande !`,
+          data: { eventId: id, payoutId: payoutReq.id, amount: String(payoutReq.amount), screen: 'payout-approval' }
         })))
       }
     }
@@ -566,7 +566,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({
       where: { id },
-      select: { creatorId: true, validatorCandidates: true }
+      select: { creatorId: true, validatorCandidates: true, title: true }
     })
     
     if (!event) return reply.code(404).send({ error: 'Event not found' })
@@ -605,9 +605,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
         await createAndSendNotificationMany(app, userIdsToNotify.map(uid => ({
           userId: uid,
           type: 'SYSTEM',
-          title: 'Délégation annulée',
-          body: `Votre validateur a été retiré de la liste. Veuillez choisir un nouveau délégué dès que possible. Si une demande de déblocage est en cours, restez attentif car vous pourriez devoir reprendre la main si votre ancien validateur ne répond pas.`,
-          data: { eventId: id }
+          title: 'ℹ️ Candidature retirée',
+          body: `Votre validateur n'est plus candidat pour "${event.title}". Vos délégations ont été réinitialisées.`,
+          data: { eventId: id, screen: 'pool-validation' }
         })))
       }
 
@@ -809,9 +809,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
           body.coHostIds.map((uid: string) => ({
             userId: uid,
             type: 'SYSTEM',
-            title: '🤝 Nouveau co-organisateur',
-            body: `Vous avez été nommé co-organisateur de "${event.title}".`,
-            data: { eventId: event.id },
+            title: '👑 Nouveau rôle !',
+            body: `Vous êtes désormais co-hôte de l'événement "${event.title}". Votre aide sera précieuse pour la gestion !`,
+            data: { eventId: event.id, screen: 'event-details' },
           }))
         )
       } catch (e) {
@@ -900,9 +900,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
           await createAndSendNotificationMany(app, newCoHosts.map((userId: string) => ({
             userId,
             type: 'CO_HOST_INVITE',
-            title: 'Co-organisateur',
-            body: `Vous avez été ajouté en tant que co-organisateur pour l'événement "${event.title}".`,
-            data: { eventId: id }
+            title: '👑 Nouveau rôle !',
+            body: `Vous êtes désormais co-hôte de l'événement "${event.title}". Votre aide sera précieuse pour la gestion !`,
+            data: { eventId: id, screen: 'event-details' }
           })))
         } catch (e) {
           app.log.warn(`Failed to send co-host notifications: ${e}`)
@@ -919,9 +919,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
         await createAndSendNotificationMany(app, bookings.map(b => ({
           userId: b.userId,
           type: 'EVENT_UPDATE',
-          title: 'Événement mis à jour',
-          body: `L'événement "${event.title}" a été modifié.`,
-          data: { eventId: id }
+          title: '✏️ Événement mis à jour',
+          body: `L'organisateur a apporté des modifications à l'événement "${event.title}". Consultez les nouveaux détails.`,
+          data: { eventId: id, screen: 'event-details' }
         })))
       }
     } catch (e) { app.log.warn(`Failed to send update notifications: ${e}`) }
@@ -949,9 +949,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
         await createAndSendNotificationMany(app, bookings.map(b => ({
           userId: b.userId,
           type: 'EVENT_CANCELLED',
-          title: 'Événement annulé',
-          body: `L'événement "${event.title}" a été annulé par l'organisateur.`,
-          data: { eventId: id }
+          title: '❌ Événement annulé',
+          body: `L'événement "${event.title}" a été malheureusement annulé par son organisateur.`,
+          data: { eventId: id, screen: 'event-details' }
         })))
       }
     } catch (e) { app.log.warn(`Failed to send cancellation notifications: ${e}`) }
@@ -1017,9 +1017,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
         await createAndSendNotification(app, {
           userId: event.creatorId,
           type: 'JOIN_REQUEST',
-          title: 'Demande de participation',
-          body: `${userName} souhaite participer à "${event.title}".`,
-          data: { eventId: id, bookingId: booking.id, requesterId: sub }
+          title: '🙋 Nouvelle demande',
+          body: `"${userName}" souhaite rejoindre votre événement "${event.title}". Acceptez ou refusez sa participation.`,
+          data: { eventId: id, bookingId: booking.id, requesterId: sub, screen: 'event-details' }
         })
       } else {
         await createAndSendNotification(app, {
@@ -1027,7 +1027,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
           type: 'JOIN_CONFIRMED',
           title: '🎉 Nouveau participant !',
           body: `${userName} a rejoint votre événement "${event.title}".`,
-          data: { eventId: id, bookingId: booking.id, joinerId: sub }
+          data: { eventId: id, bookingId: booking.id, joinerId: sub, screen: 'event-details' }
         })
       }
     } catch (e) { app.log.warn(`Failed to send join notification: ${e}`) }
@@ -1201,7 +1201,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
         type: 'JOIN_CONFIRMED',
         title: '🔐 Nouveau participant (privé)',
         body: `${userName} a rejoint "${event.title}" via le code privé.`,
-        data: { eventId: event.id, bookingId: booking.id, joinerId: sub }
+        data: { eventId: event.id, bookingId: booking.id, joinerId: sub, screen: 'event-details' }
       })
     } catch (e) { app.log.warn(`Failed to send notification: ${e}`) }
 
@@ -1242,9 +1242,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
     await createAndSendNotification(app, {
       userId: booking.userId,
       type: 'JOIN_ACCEPTED',
-      title: '✅ Participation acceptée !',
-      body: `Votre demande pour "${event.title}" a été acceptée.`,
-      data: { eventId: id, bookingId },
+      title: '✅ Demande approuvée',
+      body: `Excellente nouvelle ! Votre participation à "${event.title}" a été acceptée.`,
+      data: { eventId: id, bookingId, screen: 'event-details' },
     })
 
     return reply.send(updated)
@@ -1271,7 +1271,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       type: 'JOIN_ACCEPTED', // re-use closest type; frontend shows the body
       title: '❌ Participation refusée',
       body: `Votre demande pour "${event.title}" a été refusée par l'organisateur.`,
-      data: { eventId: id, bookingId },
+      data: { eventId: id, bookingId, screen: 'event-details' },
     })
 
     return reply.send(updated)
@@ -1320,9 +1320,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
       validUserIds.map((uid) => ({
         userId: uid,
         type: 'EVENT_INVITE',
-        title: `${senderName} vous invite 🎉`,
-        body: `Vous êtes invité à "${event.title}".`,
-        data: { eventId: id, inviterId: sub },
+        title: '🎟️ Invitation reçue !',
+        body: `"${senderName}" vous a invité à participer à l'événement "${event.title}". Rejoignez-nous vite pour réserver votre place !`,
+        data: { eventId: id, inviterId: sub, screen: 'event-details' },
       }))
     )
 
@@ -1398,13 +1398,12 @@ export default async function eventsRoutes(app: FastifyInstance) {
         }
       }
 
-      // Notify organizer of a new review
       await createAndSendNotification(app, {
         userId: creatorId,
         type: 'SYSTEM',
         title: 'Nouvel avis reçu 📝',
         body: `Un participant a évalué votre événement "${event.title}".`,
-        data: { eventId: id }
+        data: { eventId: id, screen: 'event-details' }
       });
     }
 
