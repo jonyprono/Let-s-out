@@ -725,9 +725,14 @@ export async function releaseFunds(
   payoutRequestId: string,
   reason?: string | null
 ) {
-  const commissionRate = 0.10
+  // ─ Source de vérité : SystemSetting. Fallback conservatif à 0.10 si la clé est absente.
+  const commissionSetting = await (app as any).prisma.systemSetting.findUnique({
+    where: { key: 'PAYOUT_COMMISSION_RATE' },
+  })
+  const commissionRate = commissionSetting ? parseFloat(commissionSetting.value) : 0.10
   const commissionAmount = Math.round(amount * commissionRate)
   const netAmount = amount - commissionAmount
+  const commissionPct = Math.round(commissionRate * 100)
 
   await (app as any).prisma.$transaction(async (tx: any) => {
     // 1. Mark event pool as released and track withdrawn amount
@@ -767,9 +772,10 @@ export async function releaseFunds(
         amount: commissionAmount,
         type: 'POOL_PAYOUT',
         balanceAfter: systemWallet.balance,
-        description: `Commission 10% — "${eventTitle}" (event: ${eventId})`,
+        description: `Commission ${commissionPct}% — "${eventTitle}" (event: ${eventId})`,
         refId: payoutRequestId,
       },
     })
   })
 }
+

@@ -426,6 +426,11 @@ export default async function adminRoutes(app: FastifyInstance) {
   app.put('/system-settings/:key', async (req, reply) => {
     const { key } = req.params as { key: string }
     const { value, description } = req.body as { value: string; description?: string }
+    const { sub: adminId } = req.user as { sub: string }
+
+    // Fetch previous value for audit log
+    const prevSetting = await app.prisma.systemSetting.findUnique({ where: { key } })
+    const previousValue = prevSetting?.value || null
 
     const setting = await app.prisma.systemSetting.upsert({
       where: { key },
@@ -433,7 +438,42 @@ export default async function adminRoutes(app: FastifyInstance) {
       create: { key, value, description: description ?? '' },
     })
 
+    // Write audit log if value changed
+    if (previousValue !== value) {
+      const { writeAuditLog } = await import('../../services/audit.service')
+      await writeAuditLog(app.prisma, {
+        actorId: adminId,
+        action: 'SETTING_CHANGED',
+        resourceId: key,
+        resourceType: 'SYSTEM_SETTING',
+        metadata: {
+          key,
+          previousValue,
+          newValue: value,
+        },
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+      })
+    }
+
     return reply.send({ data: setting })
+  })
+
+  app.get('/system-settings/:key/history', async (req, reply) => {
+    const { key } = req.params as { key: string }
+    
+    const logs = await app.prisma.auditLog.findMany({
+      where: {
+        resourceType: 'SYSTEM_SETTING',
+        resourceId: key,
+        action: 'SETTING_CHANGED'
+      },
+      orderBy: { createdAt: 'desc' },
+      include: { actor: { include: { profile: { select: { displayName: true } } } } },
+      take: 20
+    })
+
+    return reply.send({ data: logs })
   })
 
   // ── Badges ────────────────────────────────────────────────────────

@@ -223,6 +223,13 @@ export default async function walletRoutes(app: FastifyInstance) {
       orderBy: { startAt: 'desc' }
     })
 
+    // ─ Source de vérité : SystemSetting. Fallback conservatif à 0.10.
+    const commissionSetting = await app.prisma.systemSetting.findUnique({
+      where: { key: 'PAYOUT_COMMISSION_RATE' },
+    })
+    const commissionRate = commissionSetting ? parseFloat(commissionSetting.value) : 0.10
+    const netMultiplier = 1 - commissionRate
+
     // Pour chaque événement, calculer le montant déjà retiré (refId = eventId)
     const poolEventsWithAvailable = wallet ? await Promise.all(
       poolEvents.map(async (evt) => {
@@ -231,13 +238,13 @@ export default async function walletRoutes(app: FastifyInstance) {
           _sum: { amount: true },
         })
         const alreadyWithdrawn = withdrawnAgg._sum.amount || 0
-        // Montant net crédité (poolCollected - 10% commission)
-        const netCredited = Math.round(evt.poolCollected * 0.9)
+        // Montant net crédité (poolCollected - commission)
+        const netCredited = Math.round(evt.poolCollected * netMultiplier)
         // Solde restant disponible pour cet événement (min avec solde wallet)
         const available = Math.max(0, netCredited - alreadyWithdrawn)
         return { ...evt, netCredited, alreadyWithdrawn, available }
       })
-    ) : poolEvents.map(evt => ({ ...evt, netCredited: Math.round(evt.poolCollected * 0.9), alreadyWithdrawn: 0, available: Math.round(evt.poolCollected * 0.9) }))
+    ) : poolEvents.map(evt => ({ ...evt, netCredited: Math.round(evt.poolCollected * netMultiplier), alreadyWithdrawn: 0, available: Math.round(evt.poolCollected * netMultiplier) }))
 
     return reply.send({ 
       data: {

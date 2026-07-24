@@ -62,7 +62,7 @@ export function PayoutRequestScreen() {
   const numericAmount = parseFloat(amountToWithdraw) || 0;
   
   // Platform fee assumption dynamically fetched from backend
-  const commissionRate = statusData.commissionRate ?? 0.02;
+  const commissionRate = statusData.commissionRate ?? 0.10;
   const commission = numericAmount * commissionRate;
   const amountToReceive = numericAmount - commission;
 

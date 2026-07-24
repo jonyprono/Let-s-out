@@ -16,6 +16,7 @@ export type AuditAction =
   | 'POOL_DELEGATED'
   | 'DELEGATION_REVOKED'
   | 'REFUND_REQUESTED'
+  | 'SETTING_CHANGED'
 
 export interface AuditEntry {
   actorId?: string
