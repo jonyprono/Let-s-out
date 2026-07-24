@@ -31,6 +31,13 @@ const DEFAULT_FLAGS = [
     icon: '⚖️',
     section: 'Cagnotte',
   },
+  {
+    key: FLAG_KEYS.NEW_EVENT_BROADCAST,
+    label: 'Diffusion des nouveaux événements',
+    description: "Envoie automatiquement une notification push à TOUS les utilisateurs quand un nouvel événement public est créé. Utile au lancement — à désactiver quand la base d'utilisateurs grandit.",
+    icon: '📣',
+    section: 'Événement',
+  },
 ]
 
 export default function AdminFeatureFlagsPage() {

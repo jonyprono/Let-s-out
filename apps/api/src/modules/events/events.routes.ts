@@ -819,6 +819,60 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     }
 
+    // ── Broadcast to all users (launch phase) ──────────────────────────────
+    // Only for public events that are published at creation time
+    if (!event.isPrivate && event.status === 'PUBLISHED') {
+      try {
+        const broadcastFlag = await (app as any).prisma.featureFlag.findUnique({
+          where: { key: 'new_event_broadcast' },
+        })
+        if (broadcastFlag?.isActive) {
+          // Fire-and-forget — run async in background, never block the response
+          setImmediate(async () => {
+            try {
+              // Fetch all user IDs except the creator
+              const users = await (app as any).prisma.user.findMany({
+                where: { id: { not: sub } },
+                select: { id: true },
+              })
+
+              // Format date
+              const startDate = new Date(event.startAt)
+              const dateStr = startDate.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })
+
+              const city = (event as any).city || (event as any).location || ''
+              const notifBody = city
+                ? `${event.title} — ${city}, le ${dateStr}`
+                : `${event.title} — le ${dateStr}`
+
+              const notifications = users.map((u: { id: string }) => ({
+                userId: u.id,
+                type: 'SYSTEM',
+                title: '🎉 Nouvel événement près de chez vous !',
+                body: notifBody,
+                data: { eventId: event.id, screen: 'event-details' },
+              }))
+
+              // Send in batches of 100 to avoid overwhelming the DB
+              const BATCH = 100
+              for (let i = 0; i < notifications.length; i += BATCH) {
+                await createAndSendNotificationMany(app, notifications.slice(i, i + BATCH))
+              }
+              app.log.info(`[broadcast] Sent new-event notification to ${users.length} users for event ${event.id}`)
+            } catch (broadcastErr) {
+              app.log.warn(`[broadcast] Failed to fan-out event notification: ${broadcastErr}`)
+            }
+          })
+        }
+      } catch (flagErr) {
+        app.log.warn(`[broadcast] Could not check feature flag: ${flagErr}`)
+      }
+    }
+
     return reply.code(201).send(event)
   })
 

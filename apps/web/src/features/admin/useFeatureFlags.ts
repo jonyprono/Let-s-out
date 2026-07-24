@@ -15,6 +15,7 @@ export const FLAG_KEYS = {
   SETTINGS_PRO_BANNER: 'settings_pro_banner',
   EVENT_TRANSPORT_CARD: 'event_transport_card',
   ENABLE_NON_VOTER_PENALTIES: 'enable_non_voter_penalties',
+  NEW_EVENT_BROADCAST: 'new_event_broadcast',
 } as const
 
 type FlagKey = (typeof FLAG_KEYS)[keyof typeof FLAG_KEYS]

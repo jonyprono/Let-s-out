@@ -35,6 +35,16 @@ async function main() {
     },
   })
 
+  await prisma.featureFlag.upsert({
+    where: { key: 'new_event_broadcast' },
+    update: {},
+    create: {
+      key: 'new_event_broadcast',
+      isActive: false,
+      description: "Envoie une notification push à tous les utilisateurs à la création d'un nouvel événement public (phase de lancement)",
+    },
+  })
+
   console.log('📋 Création des system settings par défaut...')
   
   await prisma.systemSetting.upsert({
