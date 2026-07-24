@@ -697,8 +697,11 @@ model EventPayoutRequest {
   payoutItems         PayoutBookingItem[]
   approvalsList       PayoutApproval[]
 
+  idempotencyKey      String?                // Clé d'idempotence pour déduplication
+
   @@index([status])
   @@index([expiresAt])
+  @@unique([eventId, idempotencyKey])
   @@map("event_payout_requests")
 }
 

@@ -21,6 +21,7 @@ import { EditEmailModal } from '@/features/users/components/EditEmailModal';
 import { useLogout, useDeleteAccount } from '@/features/auth/hooks/useAuth';
 import { useSettingsStore } from '@/stores/settings.store';
 import { toast } from 'sonner';
+import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags';
 
 interface SettingsProps {
   onBack?: () => void;
@@ -125,6 +126,7 @@ export function Settings({ onBack }: SettingsProps) {
   const { notifEnabled } = useSettingsStore();
   const { mutate: doLogout, isPending: loggingOut } = useLogout();
   const { mutate: doDeleteAccount, isPending: deletingAccount } = useDeleteAccount();
+  const { isEnabled } = useFeatureFlags();
 
   // Fetch KYC status
   useEffect(() => {
@@ -274,27 +276,29 @@ export function Settings({ onBack }: SettingsProps) {
         </div>
 
         {/* ── Pro banner ───────────────────────────────────────────────────── */}
-        <div
-          className="rounded-2xl p-4 flex items-center gap-3 shadow-sm"
-          style={{ background: 'linear-gradient(135deg, #FF9500 0%, #FF7A00 100%)' }}
-        >
-          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-            <span className="text-[18px]">👑</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="text-white font-bold text-[15px]">Let's Out</span>
-              <span className="px-1.5 py-0.5 bg-white/30 rounded-md text-[10px] font-bold text-white tracking-wide">PRO</span>
-            </div>
-            <p className="text-white/80 text-[12px]">Profitez d'avantages exclusifs</p>
-          </div>
-          <button
-            onClick={() => toast.info('Bientôt disponible !')}
-            className="flex items-center gap-0.5 px-3 py-1.5 bg-white rounded-full text-[12px] font-semibold text-[#FF7A00] active:scale-95 transition-transform flex-shrink-0 whitespace-nowrap"
+        {isEnabled(FLAG_KEYS.SETTINGS_PRO_BANNER) && (
+          <div
+            className="rounded-2xl p-4 flex items-center gap-3 shadow-sm"
+            style={{ background: 'linear-gradient(135deg, #FF9500 0%, #FF7A00 100%)' }}
           >
-            Découvrir <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+              <span className="text-[18px]">👑</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-white font-bold text-[15px]">Let's Out</span>
+                <span className="px-1.5 py-0.5 bg-white/30 rounded-md text-[10px] font-bold text-white tracking-wide">PRO</span>
+              </div>
+              <p className="text-white/80 text-[12px]">Profitez d'avantages exclusifs</p>
+            </div>
+            <button
+              onClick={() => toast.info('Bientôt disponible !')}
+              className="flex items-center gap-0.5 px-3 py-1.5 bg-white rounded-full text-[12px] font-semibold text-[#FF7A00] active:scale-95 transition-transform flex-shrink-0 whitespace-nowrap"
+            >
+              Découvrir <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+        )}
 
         {/* ── 3 stat cards ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-2.5">

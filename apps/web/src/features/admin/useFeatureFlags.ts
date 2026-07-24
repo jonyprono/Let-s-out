@@ -12,6 +12,7 @@ export interface FeatureFlag {
 // Clés connues de l'application
 export const FLAG_KEYS = {
   PROFILE_PRO_BANNER: 'profile_pro_banner',
+  SETTINGS_PRO_BANNER: 'settings_pro_banner',
   EVENT_TRANSPORT_CARD: 'event_transport_card',
   ENABLE_NON_VOTER_PENALTIES: 'enable_non_voter_penalties',
 } as const

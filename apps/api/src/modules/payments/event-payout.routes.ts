@@ -186,6 +186,24 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
       if (!reason) return reply.code(400).send({ error: 'Le motif de déblocage est requis' })
 
+      // ── Validation explicite du montant ─────────────────────────────────────
+      if (requestedAmount !== undefined) {
+        if (typeof requestedAmount !== 'number' || !Number.isFinite(requestedAmount) || requestedAmount <= 0) {
+          return reply.code(400).send({ error: 'Le montant doit être un nombre positif.' })
+        }
+      }
+
+      // ── Idempotence : x-idempotency-key ──────────────────────────────────────
+      const idempotencyKey = (request.headers['x-idempotency-key'] as string | undefined)?.trim()
+      if (idempotencyKey) {
+        const existing = await (app as any).prisma.eventPayoutRequest.findFirst({
+          where: { eventId, idempotencyKey }
+        })
+        if (existing) {
+          return reply.code(200).send({ message: 'Demande déjà enregistrée (idempotent).', payoutRequestId: existing.id })
+        }
+      }
+
       const event = await (app as any).prisma.event.findUnique({
         where: { id: eventId },
         select: { id: true, creatorId: true, coHostIds: true, poolCollected: true, poolWithdrawn: true, poolClosedAt: true, enableNonVoterPenalties: true, title: true }
@@ -223,6 +241,14 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + deadlineHours);
 
+        // ── Race condition guard: verify no active request exists inside the transaction ──
+        const activeRequest = await (app as any).prisma.eventPayoutRequest.findFirst({
+          where: { eventId, status: { in: ['PENDING', 'PARTIAL'] } }
+        })
+        if (activeRequest) {
+          return reply.code(409).send({ error: 'Une demande de déblocage est déjà en cours pour cet événement.' })
+        }
+
         // Create an EventPayoutRequest as PENDING
         const newPayoutReq = await (app as any).prisma.eventPayoutRequest.create({
           data: {
@@ -234,7 +260,8 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
             status: 'PENDING',
             reason: reason,
             voteDurationHours: deadlineHours,
-            expiresAt: expiresAt
+            expiresAt: expiresAt,
+            ...(idempotencyKey ? { idempotencyKey } : {})
           }
         });
 
@@ -470,52 +497,63 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     let partialAmount = 0
     let nextStatus = payoutReq.status
 
-    await (app as any).prisma.$transaction(async (tx: any) => {
-      // 1. Mark my approval
-      await tx.payoutApproval.update({
-        where: { id: myApproval.id },
-        data: { status: 'APPROVED' }
-      })
-
-      // 2. Identify the specific PayoutBookingItems for this validator
-      const myItems = await tx.payoutBookingItem.findMany({
-        where: { payoutRequestId: payoutId, delegatedToSnapshot: userId }
-      })
-
-      // 3. Calculate partial amount
-      partialAmount = myItems.reduce((sum: number, item: any) => sum + item.amountDeducted, 0)
-
-      // 4. Check if we need to update the global request status
-      const updatedApprovals = await tx.payoutApproval.findMany({ where: { payoutRequestId: payoutId } })
-      const allApproved = updatedApprovals.every((a: any) => a.status === 'APPROVED')
-      const anyPending = updatedApprovals.some((a: any) => a.status === 'PENDING')
-
-      if (allApproved) {
-        nextStatus = 'COMPLETED'
-      } else if (!anyPending) {
-        nextStatus = 'PARTIAL_COMPLETED'
-      } else {
-        nextStatus = 'PARTIAL'
-      }
-
-      if (nextStatus !== payoutReq.status) {
-        await tx.eventPayoutRequest.update({
-          where: { id: payoutId },
-          data: { status: nextStatus }
+    try {
+      await (app as any).prisma.$transaction(async (tx: any) => {
+        // 1. Mark my approval atomically
+        const updated = await tx.payoutApproval.updateMany({
+          where: { id: myApproval.id, status: 'PENDING' },
+          data: { status: 'APPROVED' }
         })
-      }
-      
-      await writeAuditLog(tx, {
-        actorId: userId,
-        actorRole: 'VALIDATOR',
-        action: 'PAYOUT_APPROVED',
-        targetType: 'payoutApproval',
-        targetId: myApproval.id,
-        eventId,
-        amount: partialAmount,
-        ipAddress: request.ip,
+
+        if (updated.count === 0) {
+          throw new Error('ALREADY_PROCESSED')
+        }
+
+        // 2. Identify the specific PayoutBookingItems for this validator
+        const myItems = await tx.payoutBookingItem.findMany({
+          where: { payoutRequestId: payoutId, delegatedToSnapshot: userId }
+        })
+
+        // 3. Calculate partial amount
+        partialAmount = myItems.reduce((sum: number, item: any) => sum + item.amountDeducted, 0)
+
+        // 4. Check if we need to update the global request status
+        const updatedApprovals = await tx.payoutApproval.findMany({ where: { payoutRequestId: payoutId } })
+        const allApproved = updatedApprovals.every((a: any) => a.status === 'APPROVED')
+        const anyPending = updatedApprovals.some((a: any) => a.status === 'PENDING')
+
+        if (allApproved) {
+          nextStatus = 'COMPLETED'
+        } else if (!anyPending) {
+          nextStatus = 'PARTIAL_COMPLETED'
+        } else {
+          nextStatus = 'PARTIAL'
+        }
+
+        if (nextStatus !== payoutReq.status) {
+          await tx.eventPayoutRequest.update({
+            where: { id: payoutId },
+            data: { status: nextStatus }
+          })
+        }
+        
+        await writeAuditLog(tx, {
+          actorId: userId,
+          actorRole: 'VALIDATOR',
+          action: 'PAYOUT_APPROVED',
+          targetType: 'payoutApproval',
+          targetId: myApproval.id,
+          eventId,
+          amount: partialAmount,
+          ipAddress: request.ip,
+        })
       })
-    })
+    } catch (error: any) {
+      if (error.message === 'ALREADY_PROCESSED') {
+        return reply.code(400).send({ error: 'Vous avez déjà répondu ou la demande est en cours de traitement.' })
+      }
+      throw error
+    }
 
     // 5. Release funds (outside transaction to avoid nested Prisma transactions)
     if (partialAmount > 0) {
@@ -543,39 +581,61 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
     if (!myApproval) return reply.code(403).send({ error: 'Vous n\'êtes pas autorisé à rejeter cette demande' })
     if (myApproval.status !== 'PENDING') return reply.code(400).send({ error: 'Vous avez déjà répondu' })
 
-    await (app as any).prisma.$transaction(async (tx: any) => {
-      // 1. Mark my approval as rejected
-      await tx.payoutApproval.update({
-        where: { id: myApproval.id },
-        data: { status: 'REJECTED', rejectionReason: reason }
-      })
-
-      // 2. Unfreeze MY delegators' funds by deleting their PayoutBookingItems
-      await tx.payoutBookingItem.deleteMany({
-        where: { payoutRequestId: payoutId, delegatedToSnapshot: userId }
-      })
-
-      // 3. Update Request Status
-      const updatedApprovals = await tx.payoutApproval.findMany({ where: { payoutRequestId: payoutId } })
-      const anyPending = updatedApprovals.some((a: any) => a.status === 'PENDING')
-      const allRejected = updatedApprovals.every((a: any) => a.status === 'REJECTED' || a.status === 'EXPIRED')
-      
-      let nextStatus = payoutReq.status
-      if (allRejected) {
-        nextStatus = 'REJECTED'
-      } else if (!anyPending) {
-        nextStatus = 'PARTIAL_COMPLETED'
-      } else {
-        nextStatus = 'PARTIAL'
-      }
-
-      if (nextStatus !== payoutReq.status) {
-        await tx.eventPayoutRequest.update({
-          where: { id: payoutId },
-          data: { status: nextStatus, rejectionReason: allRejected ? (reason || 'Rejeté par tous les validateurs') : payoutReq.rejectionReason }
+    try {
+      await (app as any).prisma.$transaction(async (tx: any) => {
+        // 1. Mark my approval as rejected atomically
+        const updated = await tx.payoutApproval.updateMany({
+          where: { id: myApproval.id, status: 'PENDING' },
+          data: { status: 'REJECTED', rejectionReason: reason }
         })
+
+        if (updated.count === 0) {
+          throw new Error('ALREADY_PROCESSED')
+        }
+
+        // 2. Unfreeze MY delegators' funds by deleting their PayoutBookingItems
+        await tx.payoutBookingItem.deleteMany({
+          where: { payoutRequestId: payoutId, delegatedToSnapshot: userId }
+        })
+
+        // 3. Update Request Status
+        const updatedApprovals = await tx.payoutApproval.findMany({ where: { payoutRequestId: payoutId } })
+        const anyPending = updatedApprovals.some((a: any) => a.status === 'PENDING')
+        const allRejected = updatedApprovals.every((a: any) => a.status === 'REJECTED' || a.status === 'EXPIRED')
+        
+        let nextStatus = payoutReq.status
+        if (allRejected) {
+          nextStatus = 'REJECTED'
+        } else if (!anyPending) {
+          nextStatus = 'PARTIAL_COMPLETED'
+        } else {
+          nextStatus = 'PARTIAL'
+        }
+
+        if (nextStatus !== payoutReq.status) {
+          await tx.eventPayoutRequest.update({
+            where: { id: payoutId },
+            data: { status: nextStatus, rejectionReason: allRejected ? (reason || 'Rejeté par tous les validateurs') : payoutReq.rejectionReason }
+          })
+        }
+
+        await writeAuditLog(tx, {
+          actorId: userId,
+          actorRole: 'VALIDATOR',
+          action: 'PAYOUT_REJECTED',
+          targetType: 'payoutApproval',
+          targetId: myApproval.id,
+          eventId,
+          comment: reason,
+          ipAddress: request.ip,
+        })
+      })
+    } catch (error: any) {
+      if (error.message === 'ALREADY_PROCESSED') {
+        return reply.code(400).send({ error: 'Vous avez déjà répondu ou la demande est en cours de traitement.' })
       }
-    })
+      throw error
+    }
 
     // Notify organizer
     await createAndSendNotification(app, {

@@ -11,6 +11,13 @@ const DEFAULT_FLAGS = [
     section: 'Profil',
   },
   {
+    key: FLAG_KEYS.SETTINGS_PRO_BANNER,
+    label: 'Bandeau PRO (Paramètres)',
+    description: 'Affiche la bannière publicitaire "Pass Let\'s Out PRO" dans les paramètres de l\'application.',
+    icon: '⚙️',
+    section: 'Paramètres',
+  },
+  {
     key: FLAG_KEYS.EVENT_TRANSPORT_CARD,
     label: 'Carte "S\'y rendre"',
     description: 'Affiche la section navigation GPS sur la page Détails Événement.',
