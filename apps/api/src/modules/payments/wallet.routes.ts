@@ -184,23 +184,60 @@ export default async function walletRoutes(app: FastifyInstance) {
         create: { userId: sub, balance: 0 },
         update: {},
       }),
-      // 2. Stats (total earned / withdrawn / active events)
+      // 2. Stats (total earned / withdrawn / active events / poolEvents)
       (async () => {
         const w = await app.prisma.wallet.findUnique({ where: { userId: sub } })
         if (!w) return { totalEarned: 0, totalWithdrawn: 0, activeEventsCount: 0, poolEvents: [] }
-        const [agg, activeEventsCount] = await Promise.all([
+        
+        const now = new Date()
+        const [agg, activeEventsCount, poolEventsRaw] = await Promise.all([
           app.prisma.walletTransaction.groupBy({
             by: ['type'],
             where: { walletId: w.id },
             _sum: { amount: true },
           }),
           app.prisma.event.count({
-            where: { creatorId: sub, status: 'PUBLISHED', endAt: { gte: new Date() } },
+            where: { creatorId: sub, status: 'PUBLISHED', endAt: { gte: now } },
           }),
+          app.prisma.event.findMany({
+            where: { creatorId: sub, poolCollected: { gt: 0 }, poolReleased: true },
+            select: { id: true, title: true, startAt: true, city: true, coverUrl: true, poolCollected: true, status: true },
+            orderBy: { startAt: 'desc' }
+          })
         ])
+        
         const totalEarned = agg.find(a => a.type === 'DEPOSIT')?._sum?.amount ?? 0
         const totalWithdrawn = agg.find(a => a.type === 'WITHDRAWAL')?._sum?.amount ?? 0
-        return { totalEarned, totalWithdrawn, activeEventsCount, poolEvents: [] }
+
+        const poolEvents = await Promise.all(
+          poolEventsRaw.map(async (evt) => {
+            const payoutRequests = await app.prisma.eventPayoutRequest.findMany({
+              where: { eventId: evt.id },
+              select: { id: true }
+            })
+            const payoutRequestIds = payoutRequests.map(p => p.id)
+            
+            const depositedAgg = payoutRequestIds.length > 0 
+              ? await app.prisma.walletTransaction.aggregate({
+                  where: { walletId: w.id, type: 'POOL_PAYOUT', refId: { in: payoutRequestIds } },
+                  _sum: { amount: true },
+                })
+              : { _sum: { amount: 0 } }
+            
+            const netCredited = depositedAgg._sum.amount || 0
+
+            const withdrawnAgg = await app.prisma.walletTransaction.aggregate({
+              where: { walletId: w.id, type: 'WITHDRAWAL', refId: evt.id },
+              _sum: { amount: true },
+            })
+            const alreadyWithdrawn = withdrawnAgg._sum.amount || 0
+            
+            const available = Math.max(0, netCredited - alreadyWithdrawn)
+            return { ...evt, netCredited, alreadyWithdrawn, available }
+          })
+        )
+
+        return { totalEarned, totalWithdrawn, activeEventsCount, poolEvents }
       })(),
       // 3. Recent transactions (last 10 for instant display; full history lazy-loaded)
       (async () => {
