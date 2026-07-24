@@ -124,7 +124,7 @@ export class EmailService {
     }
     try {
       await this.resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || "Let's Out <noreply@letsout.app>",
+        from: process.env.RESEND_FROM_EMAIL || "Let's Out <tickets@letsout.app>",
         to: data.to,
         subject: "Bienvenue sur Let's Out ! 🎉",
         html: buildWelcomeHtml(data.displayName),
@@ -152,7 +152,7 @@ export class EmailService {
     }
     try {
       await this.resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || "Let's Out <noreply@letsout.app>",
+        from: process.env.RESEND_FROM_EMAIL || "Let's Out <tickets@letsout.app>",
         to: data.to,
         subject: `Confirmation de retrait — ${data.amount.toLocaleString('fr-FR')} F CFA`,
         html: buildWithdrawalReceiptHtml(data),
