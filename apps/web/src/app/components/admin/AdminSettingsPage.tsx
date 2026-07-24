@@ -114,7 +114,7 @@ export default function AdminSettingsPage() {
                       className="h-11 px-6 w-full rounded-xl bg-orange-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-orange-600 disabled:opacity-50 transition-colors"
                     >
                       {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                      Enregistrer
+                      <span>Enregistrer</span>
                     </button>
                   )}
                 </div>

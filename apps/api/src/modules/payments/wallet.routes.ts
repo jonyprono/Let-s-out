@@ -230,21 +230,39 @@ export default async function walletRoutes(app: FastifyInstance) {
     const commissionRate = commissionSetting ? parseFloat(commissionSetting.value) : 0.10
     const netMultiplier = 1 - commissionRate
 
-    // Pour chaque événement, calculer le montant déjà retiré (refId = eventId)
+    // Pour chaque événement, calculer le montant réellement débloqué et le montant déjà retiré
     const poolEventsWithAvailable = wallet ? await Promise.all(
       poolEvents.map(async (evt) => {
+        // 1. Trouver toutes les demandes de déblocage pour cet événement
+        const payoutRequests = await app.prisma.eventPayoutRequest.findMany({
+          where: { eventId: evt.id },
+          select: { id: true }
+        })
+        const payoutRequestIds = payoutRequests.map(p => p.id)
+
+        // 2. Somme de tout ce qui a été réellement crédité (POOL_PAYOUT) sur ce wallet pour ces demandes
+        const depositedAgg = payoutRequestIds.length > 0 
+          ? await app.prisma.walletTransaction.aggregate({
+              where: { walletId: wallet.id, type: 'POOL_PAYOUT', refId: { in: payoutRequestIds } },
+              _sum: { amount: true },
+            })
+          : { _sum: { amount: 0 } }
+        
+        const netCredited = depositedAgg._sum.amount || 0
+
+        // 3. Somme de tout ce qui a été retiré (WITHDRAWAL) spécifiquement pour cet événement
         const withdrawnAgg = await app.prisma.walletTransaction.aggregate({
           where: { walletId: wallet.id, type: 'WITHDRAWAL', refId: evt.id },
           _sum: { amount: true },
         })
         const alreadyWithdrawn = withdrawnAgg._sum.amount || 0
-        // Montant net crédité (poolCollected - commission)
-        const netCredited = Math.round(evt.poolCollected * netMultiplier)
-        // Solde restant disponible pour cet événement (min avec solde wallet)
+        
+        // Solde restant disponible pour cet événement
         const available = Math.max(0, netCredited - alreadyWithdrawn)
+        
         return { ...evt, netCredited, alreadyWithdrawn, available }
       })
-    ) : poolEvents.map(evt => ({ ...evt, netCredited: Math.round(evt.poolCollected * netMultiplier), alreadyWithdrawn: 0, available: Math.round(evt.poolCollected * netMultiplier) }))
+    ) : poolEvents.map(evt => ({ ...evt, netCredited: 0, alreadyWithdrawn: 0, available: 0 }))
 
     return reply.send({ 
       data: {
