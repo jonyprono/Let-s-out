@@ -98,6 +98,8 @@ export function Wallet() {
       return res.data.data
     },
     enabled: !!pinToken,
+    staleTime: 1000 * 60 * 5, // 5 min — données fraîches depuis verify-with-data
+    gcTime: 1000 * 60 * 60,   // 1h en mémoire
   })
 
   // Fetch Wallet Stats
@@ -109,6 +111,8 @@ export function Wallet() {
       return res.data.data
     },
     enabled: !!pinToken,
+    staleTime: 1000 * 60 * 5, // 5 min — données fraîches depuis verify-with-data
+    gcTime: 1000 * 60 * 60,   // 1h en mémoire
   })
 
   // Fetch Transactions
@@ -120,6 +124,8 @@ export function Wallet() {
       return res.data.data
     },
     enabled: !!pinToken,
+    staleTime: 1000 * 60 * 5, // 5 min — données fraîches depuis verify-with-data
+    gcTime: 1000 * 60 * 60,   // 1h en mémoire
   })
 
   const withdrawMutation = useMutation({

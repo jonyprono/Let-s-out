@@ -1,12 +1,13 @@
-import { useState, useMemo, memo, useEffect } from 'react';
+import { useState, useMemo, memo, useEffect, useCallback } from 'react';
 import { Search, X, Pin, PinOff, Bell, BellOff, Circle, Trash2, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useConversations } from '@/features/chat/api';
+import { useConversations, chatApi } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
 import { NewConversationModal } from '@/features/chat/components/NewConversationModal';
 import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { useAuthStore } from '@/stores/auth.store';
+import { useQueryClient } from '@tanstack/react-query';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 
 interface MessagesProps {}
@@ -23,6 +24,33 @@ export function Messages(_props: MessagesProps) {
   const [activeFilter, setActiveFilter] = useState<'all' | 'friends' | 'groups'>('all');
 
   const user = useAuthStore((s) => s.user);
+  const queryClient = useQueryClient();
+
+  // Précharger conversation + messages avant navigation (avec vérification ACL)
+  const prefetchConversation = useCallback((convId: string) => {
+    const allConvs = conversations || []
+    const conv = allConvs.find((c: any) => c.id === convId)
+    if (!conv) return
+
+    // Vérification ACL : l'utilisateur doit être membre avant de charger
+    const isMember = conv.members?.some((m: any) => m.userId === user?.id)
+    if (!isMember) return
+
+    // Pré-remplir immédiatement avec les métadonnées de la liste (zéro skeleton)
+    queryClient.setQueryData(['chat', 'conversation', convId], (old: any) => old ?? conv)
+
+    // Démarrer le préchargement réseau en arrière-plan
+    queryClient.prefetchQuery({
+      queryKey: ['chat', 'conversation', convId],
+      queryFn: () => chatApi.getConversation(convId),
+      staleTime: 5 * 60 * 1000,
+    })
+    queryClient.prefetchQuery({
+      queryKey: ['chat', 'messages', convId],
+      queryFn: () => chatApi.getMessages(convId),
+      staleTime: 5 * 60 * 1000,
+    })
+  }, [conversations, user?.id, queryClient])
 
   const [pinnedConvs, setPinnedConvs] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem('letsout_pinned_convs') || '[]'); } catch { return []; }
@@ -243,7 +271,8 @@ export function Messages(_props: MessagesProps) {
                         onNavigate={() => {
                           if (forceUnreadConvs.includes(conv.id)) toggleReadStatus(conv.id, 1);
                           navigate(`/chat/${conv.id}`)
-                        }} 
+                        }}
+                        onPrefetch={() => prefetchConversation(conv.id)}
                         onContextMenu={(e) => {
                           e.preventDefault();
                           setContextMenu({ x: e.clientX, y: e.clientY, convId: conv.id, unread: conv.unread });
@@ -390,11 +419,12 @@ export function Messages(_props: MessagesProps) {
   );
 }
 
-const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu }: { conv: any; onNavigate: () => void; onContextMenu?: (e: React.MouseEvent) => void }) {
+const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu, onPrefetch }: { conv: any; onNavigate: () => void; onContextMenu?: (e: React.MouseEvent) => void; onPrefetch?: () => void }) {
   const hasUnread = conv.unread > 0;
   return (
     <button
       onClick={onNavigate}
+      onPointerEnter={onPrefetch}
       onContextMenu={onContextMenu}
       className="w-full flex flex-row items-center gap-[8px] h-[48px] text-left transition-colors hover:bg-gray-50/50 active:bg-gray-50 dark:hover:bg-white/5 dark:active:bg-white/10 relative px-[8px] -mx-[8px] rounded-[12px]"
     >

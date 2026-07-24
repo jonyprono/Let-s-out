@@ -75,8 +75,10 @@ export const chatApi = {
     return data
   },
 
-  getMessages: async (conversationId: string): Promise<Message[]> => {
-    const { data } = await apiClient.get(`/chat/conversations/${conversationId}/messages`)
+  getMessages: async (conversationId: string, limit = 30): Promise<Message[]> => {
+    const { data } = await apiClient.get(`/chat/conversations/${conversationId}/messages`, {
+      params: { limit },
+    })
     return data.data
   },
 

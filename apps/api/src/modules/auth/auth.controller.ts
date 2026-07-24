@@ -665,6 +665,21 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60,
     })
 
+    // Step 6: Send welcome email for new Google users (fire-and-forget — never blocks login)
+    if (isNewUser && user.email) {
+      import('../../services/email.service').then(({ EmailService }) => {
+        const emailSvc = new EmailService()
+        emailSvc.sendWelcomeEmail({
+          to: user.email,
+          displayName: user.profile?.displayName || user.email.split('@')[0],
+        }).catch((err: unknown) => {
+          this.app.log.warn({ err }, '[Welcome Email] Failed to send for new Google user')
+        })
+      }).catch((err: unknown) => {
+        this.app.log.warn({ err }, '[Welcome Email] Failed to import EmailService')
+      })
+    }
+
     return reply.send({
       accessToken,
       refreshToken,

@@ -54,7 +54,13 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
 
   const verifyMutation = useMutation({
     mutationFn: async (p: string) => {
-      const res = await apiClient.post<{ success: boolean; token: string }>('/wallet/pin/verify', { pin: p })
+      // Utilise l'endpoint atomique : 1 seule requête au lieu de 4
+      const res = await apiClient.post<{
+        token: string
+        wallet: { id: string; balance: number }
+        stats: { totalEarned: number; totalWithdrawn: number; activeEventsCount: number; poolEvents: any[] }
+        recentTransactions: any[]
+      }>('/wallet/pin/verify-with-data', { pin: p })
       return { ...res.data, pin: p }
     },
     onSuccess: (data) => {
@@ -64,7 +70,13 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
         setStep('SETUP_1')
         setError(null)
       } else {
-        onVerified?.(data.token)
+        // Pré-remplir le cache React Query AVANT d'appeler onVerified
+        // → Wallet.tsx s'affiche immédiatement sans skeleton (données déjà présentes)
+        const token = data.token
+        queryClient.setQueryData(['wallet', token], data.wallet)
+        queryClient.setQueryData(['wallet-stats', token], data.stats)
+        queryClient.setQueryData(['wallet-transactions', token], data.recentTransactions)
+        onVerified?.(token)
       }
     },
     onError: (err: any) => {

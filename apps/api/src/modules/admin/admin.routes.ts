@@ -444,9 +444,9 @@ export default async function adminRoutes(app: FastifyInstance) {
       await writeAuditLog(app.prisma, {
         actorId: adminId,
         action: 'SETTING_CHANGED',
-        resourceId: key,
-        resourceType: 'SYSTEM_SETTING',
-        metadata: {
+        targetId: key,
+        targetType: 'SYSTEM_SETTING',
+        newValue: {
           key,
           previousValue,
           newValue: value,
@@ -464,12 +464,11 @@ export default async function adminRoutes(app: FastifyInstance) {
     
     const logs = await app.prisma.auditLog.findMany({
       where: {
-        resourceType: 'SYSTEM_SETTING',
-        resourceId: key,
+        targetType: 'SYSTEM_SETTING',
+        targetId: key,
         action: 'SETTING_CHANGED'
       },
       orderBy: { createdAt: 'desc' },
-      include: { actor: { include: { profile: { select: { displayName: true } } } } },
       take: 20
     })
 

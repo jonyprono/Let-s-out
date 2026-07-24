@@ -32,7 +32,7 @@ export const queryClient = new QueryClient({
 const CACHE_KEY = 'LETSOUT_QUERY_CACHE_V1'
 const CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 24 // 24 hours
 
-const skipCacheKeys = ['auth', 'notifications', 'conversations', 'chat']
+const skipCacheKeys = ['auth', 'notifications', 'conversations', 'chat', 'wallet']
 const shouldPersist = (keyStr: string) => !skipCacheKeys.some(k => keyStr.includes(k))
 
 /** Save current query cache to localStorage (called on query success) */

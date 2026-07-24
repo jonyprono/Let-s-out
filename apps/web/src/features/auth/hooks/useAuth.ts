@@ -143,7 +143,32 @@ export function useLogout() {
       }
     },
     onSettled: () => {
+      // 1. Vider le cache React Query en mémoire
       qc.clear()
+
+      // 2. Purger le cache persisté localStorage (données app)
+      localStorage.removeItem('LETSOUT_QUERY_CACHE_V1')
+
+      // 3. Purger les clés UI/chat sensibles
+      const sensitiveKeys = [
+        'letsout_pinned_convs',
+        'letsout_muted_convs',
+        'letsout_hidden_convs',
+        'letsout_forceread_convs',
+        'letsout_forceunread_convs',
+        'pending_google_signup',
+      ]
+      sensitiveKeys.forEach(k => localStorage.removeItem(k))
+
+      // 4. Purger les clés deleted-messages-* (pattern dynamique)
+      const patternKeys: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key?.startsWith('deleted-messages-')) patternKeys.push(key)
+      }
+      patternKeys.forEach(k => localStorage.removeItem(k))
+
+      // 5. Réinitialiser le store Zustand (efface letsout-auth via persist)
       logout()
       setLoggingOut(false)
       navigate('/welcome', { replace: true })
