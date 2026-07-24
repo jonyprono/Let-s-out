@@ -1,12 +1,14 @@
 import { useEffect, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router'
-import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet, ToggleRight, Settings } from 'lucide-react'
+import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet, ToggleRight, Settings, Users, Calendar } from 'lucide-react'
 import { Medal01Icon } from 'hugeicons-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { updateAdminActivity } from '@/app/components/admin/AdminRoute'
 
 const navItems = [
   { to: '/admin', end: true, label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/users', end: false, label: 'Utilisateurs', icon: Users },
+  { to: '/admin/events', end: false, label: 'Événements', icon: Calendar },
   { to: '/admin/badges', end: false, label: 'Badges & Récompenses', icon: Medal01Icon },
   { to: '/admin/kyc', end: false, label: 'Vérifications KYC', icon: ShieldCheck },
   { to: '/admin/admins', end: false, label: 'Administrateurs', icon: Shield },

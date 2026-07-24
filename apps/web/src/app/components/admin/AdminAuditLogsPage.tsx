@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { FileText, Download, Filter } from 'lucide-react'
+import { FileText, Download, Filter, X } from 'lucide-react'
 import { auditAdminApi } from '@/features/admin/api/audit-admin.api'
 import { format } from 'date-fns'
 import { useAuthStore } from '@/stores/auth.store'
@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth.store'
 export function AdminAuditLogsPage() {
   const [page, setPage] = useState(1)
   const [actionFilter, setActionFilter] = useState<string>('')
+  const [selectedLog, setSelectedLog] = useState<any | null>(null)
   
   const token = useAuthStore(s => s.accessToken)
 
@@ -93,7 +94,11 @@ export function AdminAuditLogsPage() {
                 </tr>
               ) : (
                 data?.data.map((log) => (
-                  <tr key={log.id} className="hover:bg-white/5 transition-colors">
+                  <tr 
+                    key={log.id} 
+                    className="hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => setSelectedLog(log)}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-xs text-white/50">
                       {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss')}
                     </td>
@@ -153,6 +158,108 @@ export function AdminAuditLogsPage() {
           </div>
         )}
       </div>
+
+      {/* Modal Détails Log */}
+      {selectedLog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedLog(null)}>
+          <div className="bg-[#1A1A1A] border border-white/10 rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-white/5">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <span className="px-2 py-1 bg-action-primary/20 text-action-primary rounded text-sm">
+                  {selectedLog.action}
+                </span>
+              </h2>
+              <button onClick={() => setSelectedLog(null)} className="p-2 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Date</p>
+                  <p className="text-sm text-white/90 font-mono">{format(new Date(selectedLog.createdAt), 'dd/MM/yyyy HH:mm:ss')}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Acteur</p>
+                  <p className="text-sm text-white/90 font-mono">{selectedLog.actorId || '-'}</p>
+                  {selectedLog.actorRole && <p className="text-xs text-action-primary">{selectedLog.actorRole}</p>}
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">ID Log</p>
+                  <p className="text-sm text-white/90 font-mono">{selectedLog.id}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Montant</p>
+                  <p className="text-sm text-emerald-400 font-bold">{selectedLog.amount ? `${selectedLog.amount.toLocaleString('fr-FR')} F CFA` : '-'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-6">
+                 <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Target Type</p>
+                  <p className="text-sm text-white/90">{selectedLog.targetType || '-'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Target ID</p>
+                  <p className="text-sm text-white/90 font-mono">{selectedLog.targetId || '-'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Event ID</p>
+                  <p className="text-sm text-white/90 font-mono">{selectedLog.eventId || '-'}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-6">
+                <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">IP Address</p>
+                  <p className="text-sm text-white/70 font-mono">{selectedLog.ipAddress || '-'}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">User Agent</p>
+                  <p className="text-xs text-white/50">{selectedLog.userAgent || '-'}</p>
+                </div>
+              </div>
+
+              {selectedLog.comment && (
+                <div className="space-y-2 border-t border-white/5 pt-6">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Commentaire</p>
+                  <div className="p-3 bg-white/5 rounded-lg border border-white/10 text-sm text-white/80">
+                    {selectedLog.comment}
+                  </div>
+                </div>
+              )}
+
+              {(selectedLog.oldValue || selectedLog.newValue) && (
+                <div className="space-y-4 border-t border-white/5 pt-6">
+                  <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Modifications de données (JSON)</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedLog.oldValue && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-red-400">Ancienne Valeur</p>
+                        <pre className="p-3 bg-black/50 rounded-lg border border-white/10 text-xs text-white/70 overflow-x-auto">
+                          {JSON.stringify(selectedLog.oldValue, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                    {selectedLog.newValue && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-emerald-400">Nouvelle Valeur</p>
+                        <pre className="p-3 bg-black/50 rounded-lg border border-white/10 text-xs text-white/70 overflow-x-auto">
+                          {JSON.stringify(selectedLog.newValue, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
