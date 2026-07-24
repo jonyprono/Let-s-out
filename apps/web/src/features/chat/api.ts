@@ -163,7 +163,7 @@ export function useConversationPresence(conversationId: string) {
 
 function sortMessagesChronological(messages: Message[]): Message[] {
   return [...messages].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   )
 }
 
@@ -216,8 +216,8 @@ export function useSendMessage(conversationId: string) {
         _optimistic: true,
       } as any
       qc.setQueryData<Message[]>(['chat', 'messages', conversationId], (old = []) => [
-        ...old,
         optimisticMsg,
+        ...old,
       ])
       return { prev }
     },

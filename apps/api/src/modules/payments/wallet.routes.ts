@@ -387,30 +387,37 @@ export default async function walletRoutes(app: FastifyInstance) {
     if (isNaN(amount) || amount <= 0) return reply.code(400).send({ error: 'Montant invalide' })
     if (!phone) return reply.code(400).send({ error: 'Numéro de téléphone requis' })
 
-    // ─ Idempotence: if same idempotency key was already used, reject
-    if (idempotencyKey) {
-      const existing = await app.prisma.walletTransaction.findFirst({
-        where: { refId: `idem:${idempotencyKey}` },
-      })
-      if (existing) {
-        return reply.send({ success: true, message: 'Déjà traité (idempotence)', idempotent: true })
-      }
-    }
-
     try {
-      // 1. DEDUCT FIRST to prevent race condition
       const idempotencyRef = idempotencyKey ? `idem:${idempotencyKey}` : undefined;
       const initialRef = idempotencyRef || eventId || phone;
       
       const transactionRecord = await app.prisma.$transaction(async (tx) => {
+        // 1. Idempotency check inside the transaction (Repeatable Read / Read Committed)
+        if (idempotencyRef) {
+          const existing = await tx.walletTransaction.findFirst({
+            where: { refId: idempotencyRef },
+          })
+          if (existing) {
+            throw new Error('IDEMPOTENCY_ALREADY_PROCESSED')
+          }
+        }
+
+        // 2. Read current balance for reference
         const freshWallet = await tx.wallet.findUnique({ where: { userId: sub } })
         if (!freshWallet || freshWallet.balance < amount) {
           throw new Error('INSUFFICIENT_BALANCE')
         }
-        await tx.wallet.update({
-          where: { id: freshWallet.id },
+
+        // 3. ATOMIC DECREMENT: Only succeeds if balance is still >= amount
+        const updateResult = await tx.wallet.updateMany({
+          where: { id: freshWallet.id, balance: { gte: amount } },
           data: { balance: { decrement: amount } },
         })
+
+        if (updateResult.count === 0) {
+          throw new Error('INSUFFICIENT_BALANCE') // Race condition prevented
+        }
+
         return tx.walletTransaction.create({
           data: {
             walletId: freshWallet.id,
@@ -422,6 +429,7 @@ export default async function walletRoutes(app: FastifyInstance) {
           },
         })
       })
+
 
       // MODE DEV: Simuler le succès si pas de clé
       if (!process.env.FEDAPAY_SECRET_KEY) {
@@ -572,6 +580,9 @@ export default async function walletRoutes(app: FastifyInstance) {
     } catch (err: any) {
       if (err.message === 'INSUFFICIENT_BALANCE') {
         return reply.code(400).send({ error: 'Solde insuffisant' })
+      }
+      if (err.message === 'IDEMPOTENCY_ALREADY_PROCESSED') {
+        return reply.send({ success: true, message: 'Déjà traité (idempotence)', idempotent: true })
       }
       app.log.error('[Payout Error]', err)
       return reply.code(500).send({ error: 'Erreur interne lors du retrait' })
