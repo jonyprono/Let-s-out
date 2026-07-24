@@ -96,24 +96,28 @@ export default function AdminSettingsPage() {
               </div>
               
               <div className="flex items-center gap-3">
-                <input
-                  type={def.type}
-                  step="0.01"
-                  className="flex-1 max-w-[200px] h-11 px-4 rounded-xl border border-white/[0.1] bg-black/40 text-white focus:outline-none focus:border-orange-500 transition-colors"
-                  value={displayValue}
-                  onChange={(e) => handleValueChange(def.key, e.target.value)}
-                />
+                <div className="flex-1 max-w-[200px]">
+                  <input
+                    type={def.type}
+                    step="0.01"
+                    className="w-full h-11 px-4 rounded-xl border border-white/[0.1] bg-black/40 text-white focus:outline-none focus:border-orange-500 transition-colors"
+                    value={displayValue}
+                    onChange={(e) => handleValueChange(def.key, e.target.value)}
+                  />
+                </div>
                 
-                {isEdited && (
-                  <button
-                    onClick={() => handleSave(def.key)}
-                    disabled={isUpdating}
-                    className="h-11 px-6 rounded-xl bg-orange-500 text-white font-semibold flex items-center gap-2 hover:bg-orange-600 disabled:opacity-50 transition-colors"
-                  >
-                    {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Enregistrer
-                  </button>
-                )}
+                <div className="min-w-[150px]">
+                  {isEdited && (
+                    <button
+                      onClick={() => handleSave(def.key)}
+                      disabled={isUpdating}
+                      className="h-11 px-6 w-full rounded-xl bg-orange-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                    >
+                      {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Enregistrer
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )
