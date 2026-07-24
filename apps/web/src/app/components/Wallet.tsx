@@ -436,7 +436,7 @@ export function Wallet() {
             <div className="w-10 h-10 rounded-full bg-[#FF7A00] flex items-center justify-center shadow-md shadow-orange-500/20">
               <ArrowUpRight className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-[11px] font-bold text-gray-900 dark:text-white text-center leading-tight">Retirer des<br/>fonds</span>
+            <span className="text-[11px] font-bold text-gray-900 dark:text-white text-center leading-tight">Retirer</span>
           </button>
 
           <button onClick={() => { setActiveTab('overview'); setTimeout(() => document.getElementById('tx-list')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="flex-1 flex flex-col items-center gap-2 px-1 py-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
@@ -607,11 +607,11 @@ export function Wallet() {
                     className="w-full bg-white dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-row items-center gap-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_8px_rgba(0,0,0,0.02)] cursor-pointer active:scale-[0.98] transition-all"
                   >
                     <div className={`w-[44px] h-[44px] rounded-full flex items-center justify-center shrink-0 border ${
-                      tx.type === 'DEPOSIT' 
+                      ['DEPOSIT', 'POOL_PAYOUT', 'REFUND'].includes(tx.type) 
                         ? 'bg-[#E8F5E9] dark:bg-green-900/30 text-[#4CAF50] border-[#C8E6C9] dark:border-green-800'
                         : 'bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] border-[#FFE4C4] dark:border-[#FF7A00]/20'
                     }`}>
-                      {tx.type === 'DEPOSIT' ? <ArrowDownLeft size={22} strokeWidth={2.5} /> : <ArrowUpRight size={22} strokeWidth={2.5} />}
+                      {['DEPOSIT', 'POOL_PAYOUT', 'REFUND'].includes(tx.type) ? <ArrowDownLeft size={22} strokeWidth={2.5} /> : <ArrowUpRight size={22} strokeWidth={2.5} />}
                     </div>
                     
                     <div className="flex flex-col flex-1 justify-center">
@@ -623,9 +623,9 @@ export function Wallet() {
 
                     <div className="flex flex-col items-end shrink-0">
                       <span className={`font-extrabold text-[15px] ${
-                        tx.type === 'DEPOSIT' ? 'text-[#4CAF50]' : 'text-gray-900 dark:text-white'
+                        ['DEPOSIT', 'POOL_PAYOUT', 'REFUND'].includes(tx.type) ? 'text-[#4CAF50]' : 'text-gray-900 dark:text-white'
                       }`}>
-                        {tx.type === 'DEPOSIT' ? '+' : '- '} {tx.amount.toLocaleString('fr-FR')} F
+                        {['DEPOSIT', 'POOL_PAYOUT', 'REFUND'].includes(tx.type) ? '+' : '- '} {tx.amount.toLocaleString('fr-FR')} F
                       </span>
                       <span className={`text-[11px] font-bold px-2 py-0.5 mt-1 rounded-full ${
                         (tx.status || 'COMPLETED') === 'COMPLETED' ? 'bg-[#E8F5E9] text-[#4CAF50] dark:bg-green-900/30 dark:text-green-400' :
