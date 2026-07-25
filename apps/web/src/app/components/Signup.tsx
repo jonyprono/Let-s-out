@@ -487,7 +487,10 @@ export function Signup({ onBack }: SignupProps) {
               Recevoir le code par
             </label>
             <div className="flex gap-3">
-              {(['SMS', 'Whatsapp'] as const).map((ch) => {
+              {/* TODO: réactiver le bouton WhatsApp quand prêt 
+                 (['SMS', 'Whatsapp'] as const)
+              */}
+              {(['SMS'] as const).map((ch) => {
                 const val = ch.toLowerCase() as 'sms' | 'whatsapp'
                 const isActive = currentChannel === val
                 return (

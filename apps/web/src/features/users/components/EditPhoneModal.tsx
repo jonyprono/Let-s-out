@@ -272,6 +272,7 @@ export function EditPhoneModal({ onClose }: Props) {
                   Moyen de réception
                 </label>
                 <div className="flex gap-3">
+                  {/* TODO: réactiver le bouton WhatsApp quand prêt 
                   <button
                     onClick={() => setCurrentChannel('whatsapp')}
                     className={`flex-1 py-3 rounded-xl border transition-colors flex items-center justify-center font-medium ${
@@ -282,6 +283,7 @@ export function EditPhoneModal({ onClose }: Props) {
                   >
                     WhatsApp
                   </button>
+                  */}
                   <button
                     onClick={() => setCurrentChannel('sms')}
                     className={`flex-1 py-3 rounded-xl border transition-colors flex items-center justify-center font-medium ${

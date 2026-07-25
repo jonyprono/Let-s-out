@@ -323,6 +323,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                 {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
                 
                 <div className="flex gap-3 w-[80%] mt-4">
+                  {/* TODO: réactiver le bouton WhatsApp quand prêt 
                   <button
                     onClick={() => setCurrentChannel('whatsapp')}
                     className={`flex-1 py-3 rounded-[12px] border transition-colors flex items-center justify-center font-medium ${
@@ -333,6 +334,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                   >
                     WhatsApp
                   </button>
+                  */}
                   <button
                     onClick={() => setCurrentChannel('sms')}
                     className={`flex-1 py-3 rounded-[12px] border transition-colors flex items-center justify-center font-medium ${

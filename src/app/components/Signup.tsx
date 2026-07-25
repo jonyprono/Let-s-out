@@ -121,6 +121,7 @@ export function Signup({ onComplete, onBack }: SignupProps) {
                 <span className="text-sm">SMS</span>
               </button>
 
+              {/* TODO: réactiver le bouton WhatsApp quand prêt
               <button
                 onClick={() => setVerificationMethod('whatsapp')}
                 className={`w-full px-4 py-4 rounded-xl border-2 flex items-center gap-3 ${
@@ -138,7 +139,9 @@ export function Signup({ onComplete, onBack }: SignupProps) {
                 </div>
                 <span className="text-sm">WhatsApp</span>
               </button>
+              */}
             </div>
+
           </div>
         )}
 
