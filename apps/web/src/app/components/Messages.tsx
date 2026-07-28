@@ -1,6 +1,7 @@
 import { useState, useMemo, memo, useEffect, useCallback } from 'react';
 import { Search, X, Pin, PinOff, Bell, BellOff, Circle, Trash2, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { useConversations, chatApi } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
 import { NewConversationModal } from '@/features/chat/components/NewConversationModal';
@@ -15,6 +16,7 @@ interface MessagesProps {}
 
 
 export function Messages(_props: MessagesProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   useChatSocket();
   const { data: conversations, isLoading, refetch } = useConversations();
@@ -133,12 +135,12 @@ export function Messages(_props: MessagesProps) {
           }
 
           const lastMessage = conv.messages?.[0];
-          let lastMsg = lastMessage?.content || 'Nouvelle conversation';
+          let lastMsg = lastMessage?.content || t('messages.types.newConversation');
           let lastMsgPrefix = '';
 
-          if (lastMessage?.type === 'IMAGE') lastMsg = '📷 Photo';
-          else if (lastMessage?.type === 'AUDIO') lastMsg = '🎙️ Audio';
-          else if (lastMessage?.type === 'VIDEO') lastMsg = '🎥 Vidéo';
+          if (lastMessage?.type === 'IMAGE') lastMsg = t('messages.types.photo');
+          else if (lastMessage?.type === 'AUDIO') lastMsg = t('messages.types.audio');
+          else if (lastMessage?.type === 'VIDEO') lastMsg = t('messages.types.video');
           else if (conv.isGroup && lastMessage?.sender?.profile?.displayName) {
             lastMsgPrefix = lastMessage.sender.profile.displayName.split(' ')[0] + ': ';
           }
@@ -193,7 +195,7 @@ export function Messages(_props: MessagesProps) {
       <div className="flex flex-col items-start w-full bg-[#FFFFFF] dark:bg-[#0a0a0b] sticky top-0 z-20">
         {/* App bar */}
         <div className="flex flex-row items-center px-[16px] pt-[calc(env(safe-area-inset-top)+12px)] pb-[12px] gap-[12px] w-full min-h-[56px] box-border">
-          <h1 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5]">Messages</h1>
+          <h1 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5]">{t('messages.title')}</h1>
         </div>
 
         {visibleConversations.length > 0 || searchQuery ? (
@@ -205,7 +207,7 @@ export function Messages(_props: MessagesProps) {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Rechercher une conversation..."
+                placeholder={t('messages.searchPlaceholder')}
                 className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] dark:text-[#f5f5f5] placeholder:text-[#BDBDBD] font-['Inter_Display'] min-w-0"
               />
               {searchQuery && (
@@ -218,9 +220,9 @@ export function Messages(_props: MessagesProps) {
             {/* Filter Tabs */}
             <div className="w-full flex items-center gap-[4px] overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               {[
-                { key: 'all' as const, label: 'Tout' },
-                { key: 'friends' as const, label: 'Ami(e)s' },
-                { key: 'groups' as const, label: 'Groupes' },
+                { key: 'all' as const, label: t('messages.tabs.all') },
+                { key: 'friends' as const, label: t('messages.tabs.friends') },
+                { key: 'groups' as const, label: t('messages.tabs.groups') },
               ].map(tab => {
                 const isActive = activeFilter === tab.key;
                 return (
@@ -318,10 +320,10 @@ export function Messages(_props: MessagesProps) {
                 {/* Text and supporting text */}
                 <div className="flex flex-col items-center gap-[8px] w-full max-w-[320px]">
                   <h3 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5] text-center">
-                    Faites le premier pas
+                    {t('messages.noConversations')}
                   </h3>
                   <p className="font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-center text-[#404040] dark:text-[#a3a3a3]">
-                    Faites connaissance, partagez vos idées ou préparez votre prochaine sortie. Il ne manque plus qu'un premier message.
+                    {t('messages.noConversationsSub')}
                   </p>
                 </div>
 
@@ -335,7 +337,7 @@ export function Messages(_props: MessagesProps) {
                   <path d="M12.9167 8.75016H7.08333M10 5.8335V11.6668" stroke="white" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                   <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#FFFFFF]">
-                    Démarrer une conversation
+                    {t('messages.newChat')}
                   </span>
                 </button>
               </div>
@@ -376,9 +378,9 @@ export function Messages(_props: MessagesProps) {
             onClick={() => togglePin(contextMenu.convId)}
           >
             {pinnedConvs.includes(contextMenu.convId) ? (
-              <><PinOff className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Désépingler</span></>
+              <><PinOff className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">{t('messages.contextMenu.unpin')}</span></>
             ) : (
-              <><Pin className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Épingler</span></>
+              <><Pin className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">{t('messages.contextMenu.pin')}</span></>
             )}
           </button>
           
@@ -387,9 +389,9 @@ export function Messages(_props: MessagesProps) {
             onClick={() => toggleMute(contextMenu.convId)}
           >
             {mutedConvs.includes(contextMenu.convId) ? (
-              <><Bell className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Réactiver le son</span></>
+              <><Bell className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">{t('messages.contextMenu.unmute')}</span></>
             ) : (
-              <><BellOff className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Mettre en sourdine</span></>
+              <><BellOff className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">{t('messages.contextMenu.mute')}</span></>
             )}
           </button>
 
@@ -398,9 +400,9 @@ export function Messages(_props: MessagesProps) {
             onClick={() => toggleReadStatus(contextMenu.convId, contextMenu.unread)}
           >
             {(forceUnreadConvs.includes(contextMenu.convId) || (contextMenu.unread > 0 && !forceReadConvs.includes(contextMenu.convId))) ? (
-              <><CheckCircle2 className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Marquer comme lu</span></>
+              <><CheckCircle2 className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">{t('messages.contextMenu.markRead')}</span></>
             ) : (
-              <><Circle className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">Marquer comme non lu</span></>
+              <><Circle className="w-[18px] h-[18px] text-gray-500 dark:text-gray-400" /><span className="text-[14px] font-medium text-gray-700">{t('messages.contextMenu.markUnread')}</span></>
             )}
           </button>
 
@@ -411,7 +413,7 @@ export function Messages(_props: MessagesProps) {
             onClick={() => hideConversation(contextMenu.convId)}
           >
             <Trash2 className="w-[18px] h-[18px] text-red-500" />
-            <span className="text-[14px] font-medium text-red-500">Supprimer</span>
+            <span className="text-[14px] font-medium text-red-500">{t('messages.contextMenu.delete')}</span>
           </button>
         </div>
       )}

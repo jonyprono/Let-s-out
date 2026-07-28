@@ -4,6 +4,15 @@ import { initReactI18next } from 'react-i18next';
 // English translations
 const en = {
   translation: {
+    nav: {
+      home: 'Home',
+      explore: 'Explore',
+      create: 'Create',
+      messages: 'Messages',
+      account: 'Account',
+      profile: 'Profile',
+      createEvent: 'Create event',
+    },
     settings: {
       title: 'Settings',
       cards: {
@@ -294,6 +303,34 @@ const en = {
         friendsSubtitle: 'Send friend requests to get started',
       }
     },
+    messages: {
+      title: 'Messages',
+      searchPlaceholder: 'Search a conversation...',
+      tabs: {
+        all: 'All',
+        friends: 'Friends',
+        groups: 'Groups',
+      },
+      types: {
+        photo: '📷 Photo',
+        audio: '🎙️ Audio',
+        video: '🎥 Video',
+        newConversation: 'New conversation',
+      },
+      noConversations: 'No conversations yet',
+      noConversationsSub: 'Start chatting with your friends or join groups!',
+      newChat: 'New message',
+      addFriend: 'Add friend',
+      contextMenu: {
+        pin: 'Pin',
+        unpin: 'Unpin',
+        mute: 'Mute',
+        unmute: 'Unmute',
+        markRead: 'Mark as read',
+        markUnread: 'Mark as unread',
+        delete: 'Delete',
+      },
+    },
     wallet: {
       title: 'My Wallet',
       accessRestricted: 'Restricted Access',
@@ -412,6 +449,15 @@ const en = {
 // French translations
 const fr = {
   translation: {
+    nav: {
+      home: 'Accueil',
+      explore: 'Explorer',
+      create: 'Créer',
+      messages: 'Messages',
+      account: 'Compte',
+      profile: 'Profil',
+      createEvent: 'Créer un événement',
+    },
     settings: {
       title: 'Paramètres',
       cards: {
@@ -701,6 +747,34 @@ const fr = {
         friends: 'Aucun ami',
         friendsSubtitle: "Envoyez des demandes d'amis pour commencer",
       }
+    },
+    messages: {
+      title: 'Messages',
+      searchPlaceholder: 'Rechercher une conversation...',
+      tabs: {
+        all: 'Tout',
+        friends: 'Ami(e)s',
+        groups: 'Groupes',
+      },
+      types: {
+        photo: '📷 Photo',
+        audio: '🎙️ Audio',
+        video: '🎥 Vidéo',
+        newConversation: 'Nouvelle conversation',
+      },
+      noConversations: 'Aucune conversation',
+      noConversationsSub: 'Commencez à discuter avec vos amis ou rejoignez des groupes !',
+      newChat: 'Nouveau message',
+      addFriend: 'Ajouter un ami',
+      contextMenu: {
+        pin: 'Épingler',
+        unpin: 'Désépingler',
+        mute: 'Mettre en sourdine',
+        unmute: 'Réactiver le son',
+        markRead: 'Marquer comme lu',
+        markUnread: 'Marquer comme non lu',
+        delete: 'Supprimer',
+      },
     },
     wallet: {
       title: 'Mon Portefeuille',

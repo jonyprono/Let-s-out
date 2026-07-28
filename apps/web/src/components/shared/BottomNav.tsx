@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import {
   Home04Icon as Home,
   Search01Icon as Search,
@@ -31,18 +32,19 @@ type NavTab = {
   label: string
 }
 
-const leftTabs: NavTab[] = [
-  { path: '/home',      icon: Home,          label: 'Accueil' },
-  { path: '/explorer',  icon: Search,        label: 'Explorer' },
-]
-const rightTabs: NavTab[] = [
-  { path: '/messages',  icon: ChatBubbleIcon,    label: 'Messages' },
-  { path: '/account',   icon: User,          label: 'Compte' },
-]
-
 export function BottomNav() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const leftTabs: NavTab[] = [
+    { path: '/home',      icon: Home,          label: t('nav.home') },
+    { path: '/explorer',  icon: Search,        label: t('nav.explore') },
+  ]
+  const rightTabs: NavTab[] = [
+    { path: '/messages',  icon: ChatBubbleIcon,    label: t('nav.messages') },
+    { path: '/account',   icon: User,          label: t('nav.account') },
+  ]
 
   const { data: conversations } = useConversations()
   const totalUnread = conversations
@@ -101,7 +103,7 @@ export function BottomNav() {
           onClick={() => navigate('/events/create')}
           className="flex flex-col items-center justify-center"
           style={{ width: '78px', height: '32px' }}
-          aria-label="Créer un événement"
+          aria-label={t('nav.createEvent')}
         >
           <div
             className="flex items-center justify-center"

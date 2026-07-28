@@ -1,6 +1,7 @@
 
 import { cn } from "@/lib/utils"
 import { Home, Search, Plus, MessageSquare, User } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export interface BottomNavProps {
   activeTab: "home" | "explore" | "messages" | "profile";
@@ -10,11 +11,12 @@ export interface BottomNavProps {
 }
 
 export function BottomNav({ activeTab, onTabChange, onAddClick, className }: BottomNavProps) {
+  const { t } = useTranslation()
   const tabs = [
-    { id: "home", label: "Accueil", icon: Home },
-    { id: "explore", label: "Explorer", icon: Search },
-    { id: "messages", label: "Messages", icon: MessageSquare },
-    { id: "profile", label: "Profil", icon: User },
+    { id: "home", label: t('nav.home'), icon: Home },
+    { id: "explore", label: t('nav.explore'), icon: Search },
+    { id: "messages", label: t('nav.messages'), icon: MessageSquare },
+    { id: "profile", label: t('nav.profile'), icon: User },
   ] as const;
 
   return (
