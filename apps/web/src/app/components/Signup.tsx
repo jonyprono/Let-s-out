@@ -45,6 +45,7 @@ import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { Input } from '@/components/ui/input'
 import { isFieldValid } from '@/lib/validation'
 import { ProgressBar } from '@/components/ui/progress-bar'
+import { useTranslation } from 'react-i18next'
 
 const INTERESTS_LIST = [
   'Social',
@@ -73,6 +74,7 @@ function validatePhone(code: string, phone: string) {
 
 
 export function Signup({ onBack }: SignupProps) {
+  const { t } = useTranslation()
   const nav = useNavigate()
   const location = useLocation()
   const queryParams = new URLSearchParams(location.search)
@@ -192,14 +194,14 @@ export function Signup({ onBack }: SignupProps) {
     if (step === 1) {
       if (!phone.trim()) return
       if (!currentChannel) {
-        toast.error('Veuillez sélectionner SMS ou Whatsapp.')
+        toast.error(t('signup.errorSelectChannel'))
         return
       }
       if (!validatePhone(country.code, phone)) {
         return toast.error(
           country.code === '+229'
-            ? 'Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.'
-            : 'Le format de votre numéro de téléphone est incorrect.'
+            ? t('signup.errorBenin')
+            : t('signup.errorPhone')
         )
       }
       const triggerOtpSend = async () => {
@@ -228,7 +230,7 @@ export function Signup({ onBack }: SignupProps) {
             setConfirmationResult(null)
             sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
               onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-              onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || "Erreur d'envoi du code") },
+              onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || t('signup.errorResend')) },
             })
           } finally { setIsFirebaseSending(false) }
         } else {
@@ -271,17 +273,17 @@ export function Signup({ onBack }: SignupProps) {
             const token = await result.user.getIdToken()
             setIdToken(token); setStep(3)
           }
-        } catch { toast.error('Code SMS invalide ou expiré') }
+        } catch { toast.error(t('signup.errorSmsOtp')) }
         finally { setIsFirebaseVerifying(false) }
       } else {
         checkOtp({ target: fullPhone, code: codeStr }, {
           onSuccess: () => setStep(3),
-          onError: () => toast.error('Code invalide ou expiré. Vérifiez et réessayez.'),
+          onError: () => toast.error(t('signup.errorOtp')),
         })
       }
     } else if (step === 4) {
       if (!birthday) {
-        toast.error("Veuillez renseigner votre date de naissance.")
+        toast.error(t('signup.errorBirthdate'))
         return
       }
       const birthDate = new Date(birthday)
@@ -290,7 +292,7 @@ export function Signup({ onBack }: SignupProps) {
       const m = today.getMonth() - birthDate.getMonth()
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
       if (age < 18) {
-        toast.error("Vous devez avoir au moins 18 ans pour vous inscrire.")
+        toast.error(t('signup.errorAge'))
         return
       }
       setStep((s) => s + 1)
@@ -306,7 +308,7 @@ export function Signup({ onBack }: SignupProps) {
           localStorage.removeItem('pending_google_signup')
           nav('/home')
         } catch (e: any) {
-          toast.error(e?.response?.data?.error || "Erreur lors de l'enregistrement")
+          toast.error(e?.response?.data?.error || t('signup.errorSaving'))
         } finally {
           setIsFirebaseVerifying(false)
         }
@@ -335,10 +337,10 @@ export function Signup({ onBack }: SignupProps) {
           },
           onError: (e: any) => {
             const msg = e.response?.data?.error || ''
-            if (msg.includes('exists') || msg.includes('USER_ALREADY_EXISTS')) toast.error('Numéro de téléphone ou mot de passe incorrect. Veuillez vous connecter.')
-            else if (msg.includes('OTP') || msg.includes('code') || msg.includes('expiré')) { toast.error('Code expiré. Veuillez recommencer.'); setStep(1) }
-            else if (e.message === 'Network Error') toast.error('Erreur réseau : serveur inaccessible')
-            else toast.error("Erreur lors de l'inscription")
+            if (msg.includes('exists') || msg.includes('USER_ALREADY_EXISTS')) toast.error(t('signup.errorExists'))
+            else if (msg.includes('OTP') || msg.includes('code') || msg.includes('expiré')) { toast.error(t('signup.errorCodeExpired')); setStep(1) }
+            else if (e.message === 'Network Error') toast.error(t('signup.errorNetwork'))
+            else toast.error(t('signup.errorRegistration'))
           },
         })
       }
@@ -373,7 +375,7 @@ export function Signup({ onBack }: SignupProps) {
         await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
         setTimeout(() => listener.remove(), 60000)
         setCountdown(59)
-        toast.success('Code renvoyé par SMS')
+        toast.success(t('signup.successResend'))
         setTimeout(() => otpRefs.current[0]?.focus(), 100)
       } else {
         if (!window.recaptchaVerifier) {
@@ -381,7 +383,7 @@ export function Signup({ onBack }: SignupProps) {
         }
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
         setConfirmationResult(confirmation); setCountdown(59)
-        toast.success('Code renvoyé par SMS')
+        toast.success(t('signup.successResend'))
         setTimeout(() => otpRefs.current[0]?.focus(), 100)
       }
     } catch {
@@ -391,8 +393,8 @@ export function Signup({ onBack }: SignupProps) {
       }
       setConfirmationResult(null)
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
-        onSuccess: () => { setCountdown(59); toast.success('Code renvoyé'); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-        onError: () => toast.error('Impossible de renvoyer le code'),
+        onSuccess: () => { setCountdown(59); toast.success(t('signup.successResendAlt')); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
+        onError: () => toast.error(t('signup.errorResend')),
       })
     } finally { setIsFirebaseSending(false) }
   }
@@ -431,7 +433,7 @@ export function Signup({ onBack }: SignupProps) {
 
   const isLoading = sendingOtp || registering || checkingTarget || isFirebaseSending || checkingOtp || isFirebaseVerifying
 
-  const buttonLabel = (isGoogleMode && step === 6) || step === 7 ? "Rejoindre Let's Out" : 'Suivant'
+  const buttonLabel = (isGoogleMode && step === 6) || step === 7 ? t('signup.buttonJoin') : t('signup.buttonNext')
 
   return (
     <div className="w-full h-full flex flex-col flex-1 bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden relative">
@@ -447,7 +449,7 @@ export function Signup({ onBack }: SignupProps) {
             className="absolute left-0 shrink-0"
           />
           <span className="font-poppins text-[15px] font-semibold text-gray-900 dark:text-white">
-            Inscription
+            {t('signup.title')}
           </span>
         </div>
 
@@ -465,14 +467,14 @@ export function Signup({ onBack }: SignupProps) {
         {!isGoogleMode && step === 1 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Quel est votre numéro de téléphone&nbsp;?
+              {t('signup.step1Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              Vous recevrez un code de vérification<br />pour confirmer votre numéro
+              {t('signup.step1Subtitle')}
             </p>
 
             <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
-              Numéro de téléphone
+              {t('signup.step1PhoneLabel')}
             </label>
             <div className="mb-8">
               <PhoneInputField
@@ -484,7 +486,7 @@ export function Signup({ onBack }: SignupProps) {
             </div>
 
             <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-3 block">
-              Recevoir le code par
+              {t('signup.step1ChannelLabel')}
             </label>
             <div className="flex gap-3">
               {/* TODO: réactiver le bouton WhatsApp quand prêt 
@@ -526,14 +528,10 @@ export function Signup({ onBack }: SignupProps) {
         {!isGoogleMode && step === 2 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Quel est le code reçu&nbsp;?
+              {t('signup.step2Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              Code à {OTP_LENGTH} chiffres envoyé par{' '}
-              <strong className="text-gray-900 dark:text-white">
-                {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}
-              </strong>{' '}au
-              <br />
+              {t('signup.step2Subtitle', { length: OTP_LENGTH, channel: currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS' })}{' '}
               <strong className="text-gray-900 dark:text-white">
                 {formatPhone(country.code, phone)}
               </strong>
@@ -579,11 +577,11 @@ export function Signup({ onBack }: SignupProps) {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                Renvoyer le code
+                {t('signup.resend')}
               </button>
               {countdown > 0 && (
                 <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
-                  dans{' '}
+                  {t('signup.resendIn')}{' '}
                   {String(Math.floor(countdown / 60)).padStart(2, '0')}:
                   {String(countdown % 60).padStart(2, '0')}
                 </span>
@@ -596,23 +594,23 @@ export function Signup({ onBack }: SignupProps) {
         {step === 3 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Quel est votre nom&nbsp;?
+              {t('signup.step3Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              Ces informations aideront vos amis à vous reconnaître et ne seront visibles que sur Let's Out.
+              {t('signup.step3Subtitle')}
             </p>
             <div className="flex flex-col gap-4">
               <Input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Nom complet"
+                placeholder={t('signup.step3NamePlaceholder')}
               />
               <Input
                 type="text"
                 value={pseudo}
                 onChange={(e) => setPseudo(e.target.value)}
-                placeholder="Pseudo"
+                placeholder={t('signup.step3PseudoPlaceholder')}
               />
             </div>
           </div>
@@ -622,10 +620,10 @@ export function Signup({ onBack }: SignupProps) {
         {step === 4 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Et votre date d'anniversaire&nbsp;?
+              {t('signup.step4Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              Cette information restera privée et nous aidera à vous faire les meilleures suggestions d'événements possibles.
+              {t('signup.step4Subtitle')}
             </p>
 
             <div className="relative">
@@ -642,7 +640,7 @@ export function Signup({ onBack }: SignupProps) {
                     setBirthday('')
                   }
                 }}
-                placeholder="Sélectionnez une date"
+                placeholder={t('signup.step4DatePlaceholder')}
                 icon={
                   <button
                     type="button"
@@ -676,10 +674,10 @@ export function Signup({ onBack }: SignupProps) {
         {step === 5 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Dans quelle ville habitez-vous&nbsp;?
+              {t('signup.step5Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              Indiquez votre ville pour trouver des événements et rencontrer des amis près de vous.
+              {t('signup.step5Subtitle')}
             </p>
 
             <div className="relative">
@@ -694,7 +692,7 @@ export function Signup({ onBack }: SignupProps) {
                   }
                 }}
                 onFocus={() => citySuggestions.length > 0 && setShowCitySuggestions(true)}
-                placeholder="Sélectionnez une ville"
+                placeholder={t('signup.step5CityPlaceholder')}
                 leftIcon={
                   <Location01Icon size={18} strokeWidth={1.5} className="text-[var(--color-icon-secondary)]" />
                 }
@@ -716,7 +714,7 @@ export function Signup({ onBack }: SignupProps) {
                 <div className="absolute top-full left-0 right-0 mt-1 rounded-[16px] border border-gray-200 dark:border-white/10 shadow-lg z-50 overflow-hidden bg-white dark:bg-[#1A1A1A]">
                   {citySearching && (
                     <div className="px-4 py-3 font-poppins text-[13px] text-gray-500 dark:text-gray-400">
-                      Recherche...
+                      {t('signup.step5Searching')}
                     </div>
                   )}
                   {citySuggestions.map((s, idx) => (
@@ -754,10 +752,10 @@ export function Signup({ onBack }: SignupProps) {
         {step === 6 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Quels sont vos centres d'intérêts&nbsp;?
+              {t('signup.step6Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              Indiquez au moins un centre d'intérêt afin d'obtenir les meilleures recommandations d'activités pour vous.
+              {t('signup.step6Subtitle')}
             </p>
             <div className="flex flex-wrap gap-2.5">
               {INTERESTS_LIST.map((interest) => (
@@ -777,17 +775,17 @@ export function Signup({ onBack }: SignupProps) {
         {step === 7 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Créez votre mot de passe
+              {t('signup.step7Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-7">
-              Définissez un mot de passe robuste et sécurisé de connexion à votre compte
+              {t('signup.step7Subtitle')}
             </p>
 
             <div className="flex flex-col gap-5 mb-5">
               {/* Mot de passe */}
               <div>
                 <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
-                  Mot de passe
+                  {t('signup.step7PasswordLabel')}
                 </label>
                 <Input
                   type={showPassword ? 'text' : 'password'}
@@ -811,7 +809,7 @@ export function Signup({ onBack }: SignupProps) {
               {/* Confirmer mot de passe */}
               <div>
                 <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
-                  Confirmer mot de passe
+                  {t('signup.step7ConfirmLabel')}
                 </label>
                 <Input
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -836,9 +834,9 @@ export function Signup({ onBack }: SignupProps) {
             {/* Critères de validation */}
             <div className="space-y-2 mb-2">
               {[
-                { ok: pwdLength, label: 'Au moins 6 caractères numériques' },
-                { ok: hasLower && hasUpper, label: 'Au moins 1 majuscule et 1 minuscule' },
-                { ok: pwdNumber, label: 'Au moins 1 chiffre' },
+                { ok: pwdLength, label: t('signup.step7Rule1') },
+                { ok: hasLower && hasUpper, label: t('signup.step7Rule2') },
+                { ok: pwdNumber, label: t('signup.step7Rule3') },
               ].map(({ ok, label }) => (
                 <div key={label} className="flex items-center gap-2">
                   <div
@@ -885,11 +883,11 @@ export function Signup({ onBack }: SignupProps) {
               )}
             </div>
             <span className="font-poppins text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">
-              Je certifie avoir plus de 18 ans. J'ai lu et j'accepte les{' '}
+              {t('signup.step7TermsCheck')}{' '}
               <span className="text-[var(--brand-orange-500)] font-semibold">
-                Conditions d'Utilisation
+                {t('signup.step7TermsLink')}
               </span>{' '}
-              de Let's Out.
+              {t('signup.step7TermsOf')}
             </span>
           </div>
         )}

@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { SocialButton } from '@/components/ui/social-button'
 import { Divider } from '@/components/ui/divider'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
+import { useTranslation } from 'react-i18next'
 
 interface LoginProps {
   onSignup: () => void
@@ -32,6 +33,7 @@ function validatePhone(code: string, phone: string) {
 }
 
 export function Login({ onSignup, onForgotPassword }: LoginProps) {
+  const { t } = useTranslation()
   const nav = useNavigate()
   const [country, setCountry] = useState<Country>(COUNTRIES.find(c => c.code === '+229') || COUNTRIES[0])
   const { displayValue, rawValue: phone, handleChange: handlePhoneChange, reset: resetPhone } = usePhoneFormatter()
@@ -48,8 +50,8 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
     if (!phone.trim() || !password) return
     if (!validatePhone(country.code, phone)) {
       return toast.error(country.code === '+229'
-        ? 'Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.'
-        : 'Le format de votre numéro de téléphone est incorrect.')
+        ? t('login.errorBenin')
+        : t('login.errorPhone'))
     }
     directLogin({ target: fullPhone, password })
   }
@@ -63,12 +65,12 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
       if (Capacitor.isNativePlatform()) {
         const result = await FirebaseAuthentication.signInWithGoogle()
         if (!result.user?.email) {
-          toast.error('Connexion Google échouée. Veuillez réessayer.')
+          toast.error(t('login.errorGoogle'))
           return
         }
         const tokenResult = await FirebaseAuthentication.getIdToken()
         if (!tokenResult.token) {
-          toast.error("Impossible de récupérer le token d'authentification.")
+          toast.error(t('login.errorToken'))
           return
         }
         idToken = tokenResult.token
@@ -89,7 +91,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
     } catch (err: any) {
       console.error("Google Auth Error:", err)
       if (err?.code !== 'auth/popup-closed-by-user' && err?.message?.indexOf('canceled') === -1) {
-        toast.error('Connexion Google échouée. Veuillez réessayer.')
+        toast.error(t('login.errorGoogle'))
       }
     } finally {
       setGoogleLoading(false)
@@ -114,10 +116,10 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           {/* Titres */}
           <div className="flex flex-col items-center gap-[4px] w-full">
             <h1 className="text-center text-[#1B1818] dark:text-white font-poppins text-[22px] sm:text-[24px] font-medium leading-tight sm:leading-[32px]">
-              Connectez-vous
+              {t('login.title')}
             </h1>
             <p className="text-center text-[#56514F] dark:text-gray-300 font-inter text-[16px] font-normal leading-[24px]">
-              Rejoignez des événements près de vous et vivez des expériences inoubliables.
+              {t('login.subtitle')}
             </p>
           </div>
         </div>
@@ -126,7 +128,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         <div className="flex flex-col gap-3 w-full">
           {/* Téléphone */}
           <div className="flex flex-col gap-1">
-            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">Numéro de téléphone</label>
+            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">{t('login.phone')}</label>
             <PhoneInputField
               country={country}
               onCountryChange={c => { setCountry(c); resetPhone() }}
@@ -138,7 +140,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
           {/* Mot de passe */}
           <div className="flex flex-col gap-1">
-            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">Mot de passe</label>
+            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">{t('login.password')}</label>
             <Input
               type={showPassword ? 'text' : 'password'}
               value={password}
@@ -166,7 +168,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
                 onClick={onForgotPassword}
                 className="text-[#FF991C] font-inter text-[14px] font-medium leading-[20px] underline hover:opacity-75 transition-opacity focus:outline-none"
               >
-                Mot de passe oublié?
+                {t('login.forgotPassword')}
               </button>
             </div>
           </div>
@@ -179,13 +181,13 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             disabled={!phone.trim() || !password}
             loading={logging}
           >
-            {logging ? 'Connexion...' : 'Se connecter'}
+            {logging ? t('login.submitting') : t('login.submit')}
           </PrimaryButton>
         </div>
 
         {/* Séparateur Ou */}
         <div className="my-3 w-full">
-          <Divider label="Ou" className="text-[#404040] dark:text-gray-400 font-inter text-[12px] font-normal leading-[16px]" />
+          <Divider label={t('login.or')} className="text-[#404040] dark:text-gray-400 font-inter text-[12px] font-normal leading-[16px]" />
         </div>
 
         {/* Bouton Google */}
@@ -196,7 +198,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
             disabled={googleLoading}
             className="w-full h-[40px] rounded-full font-inter text-[14px]"
           >
-            {googleLoading ? 'Connexion avec Google...' : 'Se connecter avec Google'}
+            {googleLoading ? t('login.googleLoading') : t('login.google')}
           </SocialButton>
         </div>
         
@@ -210,13 +212,13 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           {/* "Vous êtes nouveau ?" */}
           <div className="flex items-center justify-center gap-[4px] sm:gap-[8px] w-full mt-2 text-center whitespace-nowrap overflow-hidden text-ellipsis">
             <span className="font-inter text-[13px] font-normal text-[#56514F] dark:text-gray-300 leading-[20px]">
-              Vous êtes nouveau sur Let's Out ?
+              {t('login.newUser')}
             </span>
             <button
               onClick={onSignup}
               className="font-inter text-[13px] font-medium leading-[20px] text-[#FF991C] underline focus:outline-none hover:opacity-75"
             >
-              Inscrivez-vous
+              {t('login.signUp')}
             </button>
           </div>
 
@@ -225,22 +227,22 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           {/* Mentions légales */}
           <div className="w-full text-center flex flex-wrap justify-center gap-x-[3px]">
             <span className="font-inter text-[11px] font-normal leading-[16px] text-[#766F6E] dark:text-gray-400">
-              En continuant, vous acceptez nos
+              {t('login.terms')}
             </span>
             <span
               onClick={() => nav('/terms')}
               className="font-inter text-[11px] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
             >
-              Conditions d'Utilisation
+              {t('login.termsLink')}
             </span>
             <span className="font-inter text-[11px] font-normal leading-[16px] text-[#766F6E] dark:text-gray-400">
-              et notre
+              {t('login.and')}
             </span>
             <span
               onClick={() => nav('/privacy')}
               className="font-inter text-[11px] font-normal leading-[16px] text-[#FF991C] cursor-pointer hover:opacity-75"
             >
-              Politique de Confidentialité
+              {t('login.privacyLink')}
             </span>
           </div>
         </div>
@@ -249,4 +251,3 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
     </div>
   )
 }
-
