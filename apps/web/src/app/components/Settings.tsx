@@ -18,6 +18,7 @@ import { SecurityModal } from '@/features/users/components/SecurityModal';
 import { PrivacyModal } from '@/features/users/components/PrivacyModal';
 import { EditPhoneModal } from '@/features/users/components/EditPhoneModal';
 import { EditEmailModal } from '@/features/users/components/EditEmailModal';
+import { useTranslation, Trans } from 'react-i18next';
 import { useLogout, useDeleteAccount } from '@/features/auth/hooks/useAuth';
 import { useSettingsStore } from '@/stores/settings.store';
 import { toast } from 'sonner';
@@ -106,6 +107,7 @@ function computeSecurityScore(user: any, kycStatus: string | null, notifEnabled:
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export function Settings({ onBack }: SettingsProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const profile = user?.profile;
@@ -195,7 +197,9 @@ export function Settings({ onBack }: SettingsProps) {
               <ChevronLeft className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
             </button>
             <div>
-              <h1 className="text-[20px] font-bold text-gray-900 dark:text-white leading-tight">Paramètres</h1>
+              <h1 className="text-[28px] font-black text-gray-900 dark:text-white leading-tight">
+                {t('settings.title')}
+              </h1>
               <p className="text-[11px] text-gray-400 leading-snug">
                 Gérez votre compte, votre sécurité<br />et vos préférences
               </p>
@@ -313,8 +317,8 @@ export function Settings({ onBack }: SettingsProps) {
                 <Shield className="w-4 h-4 text-green-500" />
               </div>
             </div>
-            <p className="text-[10px] font-bold text-gray-800 dark:text-white leading-tight">Sécurité</p>
-            <p className="text-[9px] text-gray-400 leading-tight">Votre compte est sécurisé</p>
+            <p className="text-[10px] font-bold text-gray-800 dark:text-white leading-tight">{t('settings.cards.securityTitle')}</p>
+            <p className="text-[9px] text-gray-400 leading-tight">{t('settings.cards.securityDesc')}</p>
             <div className="flex items-center gap-1.5 mt-1.5">
               <div className="relative flex-shrink-0">
                 <CircularProgress value={securityScore} size={36} />
@@ -322,7 +326,7 @@ export function Settings({ onBack }: SettingsProps) {
                   {securityScore}
                 </span>
               </div>
-              <p className="text-[9px] text-green-500 font-semibold leading-tight">Score {securityScore}%</p>
+              <p className="text-[9px] text-green-500 font-semibold leading-tight">{t('settings.cards.securityScore', { score: securityScore })}</p>
             </div>
           </button>
 
@@ -334,11 +338,11 @@ export function Settings({ onBack }: SettingsProps) {
             <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center mb-0.5">
               <WalletIcon className="w-4 h-4 text-[#FF7A00]" />
             </div>
-            <p className="text-[10px] font-bold text-gray-800 dark:text-white leading-tight">Portefeuille</p>
-            <p className="text-[9px] text-gray-400 leading-tight">Solde disponible</p>
+            <p className="text-[10px] font-bold text-gray-800 dark:text-white leading-tight">{t('settings.cards.walletTitle')}</p>
+            <p className="text-[9px] text-gray-400 leading-tight">{t('settings.cards.walletDesc')}</p>
             <div className="mt-auto pt-2">
               <span className="text-[9px] font-semibold text-[#FF7A00] flex items-center gap-0.5">
-                Gérer <ChevronRight className="w-2.5 h-2.5" />
+                {t('settings.cards.walletManage')} <ChevronRight className="w-2.5 h-2.5" />
               </span>
             </div>
           </button>
@@ -348,15 +352,15 @@ export function Settings({ onBack }: SettingsProps) {
             <div className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center mb-0.5">
               <Bell className="w-4 h-4 text-violet-500" />
             </div>
-            <p className="text-[10px] font-bold text-gray-800 dark:text-white leading-tight">Notifications</p>
-            <p className="text-[9px] text-gray-400 leading-tight">Personnalisées selon vos choix</p>
+            <p className="text-[10px] font-bold text-gray-800 dark:text-white leading-tight">{t('settings.cards.notifTitle')}</p>
+            <p className="text-[9px] text-gray-400 leading-tight">{t('settings.cards.notifDesc')}</p>
             <div className="mt-auto pt-2">
               <span className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-bold ${
                 notifEnabled
                   ? 'bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-400'
                   : 'bg-gray-100 dark:bg-[#2A2A2A] text-gray-400'
               }`}>
-                {notifEnabled ? 'Actives' : 'Inactives'}
+                {notifEnabled ? t('settings.cards.notifActive') : t('settings.cards.notifInactive')}
               </span>
             </div>
           </div>
@@ -364,38 +368,38 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── COMPTE ────────────────────────────────────────────────────────── */}
         <div>
-          <SectionLabel>Compte</SectionLabel>
+          <SectionLabel>{t('settings.sections.account')}</SectionLabel>
           <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
             <SettingsRow
               icon={<User className="w-4 h-4" />}
               iconBg="bg-orange-50 dark:bg-orange-500/10"
               iconColor="text-[#FF7A00]"
-              title="Profil"
-              subtitle="Informations personnelles"
+              title={t('settings.rows.profile')}
+              subtitle={t('settings.rows.profileDesc')}
               onClick={() => setShowEditModal(true)}
             />
             <SettingsRow
               icon={<Shield className="w-4 h-4" />}
               iconBg="bg-green-50 dark:bg-green-500/10"
               iconColor="text-green-500"
-              title="Sécurité"
-              subtitle="Mot de passe, vérification, sessions"
+              title={t('settings.rows.security')}
+              subtitle={t('settings.rows.securityDesc')}
               onClick={() => setShowSecurityModal(true)}
             />
             <SettingsRow
               icon={<Globe className="w-4 h-4" />}
               iconBg="bg-blue-50 dark:bg-blue-500/10"
               iconColor="text-blue-500"
-              title="Préférences"
-              subtitle="Langue, thème, notifications"
+              title={t('settings.rows.preferences')}
+              subtitle={t('settings.rows.preferencesDesc')}
               onClick={() => setShowPreferencesModal(true)}
             />
             <SettingsRow
               icon={<WalletIcon className="w-4 h-4" />}
               iconBg="bg-orange-50 dark:bg-orange-500/10"
               iconColor="text-[#FF7A00]"
-              title="Paiements & Wallet"
-              subtitle="Moyens de paiement, retraits, historique"
+              title={t('settings.rows.payments')}
+              subtitle={t('settings.rows.paymentsDesc')}
               onClick={() => navigate('/wallet')}
               isLast
             />
@@ -404,30 +408,30 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── ÉVÉNEMENTS ────────────────────────────────────────────────────── */}
         <div>
-          <SectionLabel>Événements</SectionLabel>
+          <SectionLabel>{t('settings.sections.events')}</SectionLabel>
           <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
             <SettingsRow
               icon={<Calendar className="w-4 h-4" />}
               iconBg="bg-orange-50 dark:bg-orange-500/10"
               iconColor="text-[#FF7A00]"
-              title="Mes événements"
-              subtitle="Créez vos événements et invitations"
+              title={t('settings.rows.myEvents')}
+              subtitle={t('settings.rows.myEventsDesc')}
               onClick={() => navigate('/my-events')}
             />
             <SettingsRow
               icon={<Heart className="w-4 h-4" />}
               iconBg="bg-red-50 dark:bg-red-500/10"
               iconColor="text-red-500"
-              title="Mes favoris"
-              subtitle="Événements et organisateurs favoris"
+              title={t('settings.rows.myFavorites')}
+              subtitle={t('settings.rows.myFavoritesDesc')}
               onClick={() => navigate('/my-events', { state: { tab: 'favorites' } })}
             />
             <SettingsRow
               icon={<Award className="w-4 h-4" />}
               iconBg="bg-yellow-50 dark:bg-yellow-500/10"
               iconColor="text-yellow-500"
-              title="Mes badges"
-              subtitle="Vos badges et récompenses"
+              title={t('settings.rows.myBadges')}
+              subtitle={t('settings.rows.myBadgesDesc')}
               onClick={() => navigate('/badges')}
               isLast
             />
@@ -436,38 +440,38 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── ASSISTANCE ────────────────────────────────────────────────────── */}
         <div>
-          <SectionLabel>Assistance</SectionLabel>
+          <SectionLabel>{t('settings.sections.support')}</SectionLabel>
           <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
             <SettingsRow
               icon={<Bot className="w-4 h-4" />}
               iconBg="bg-violet-50 dark:bg-violet-500/10"
               iconColor="text-violet-500"
-              title="Support IA"
-              subtitle="Discutez avec notre IA"
+              title={t('settings.rows.aiSupport')}
+              subtitle={t('settings.rows.aiSupportDesc')}
               onClick={() => navigate('/support')}
             />
             <SettingsRow
               icon={<MessageCircle className="w-4 h-4" />}
               iconBg="bg-blue-50 dark:bg-blue-500/10"
               iconColor="text-blue-500"
-              title="Contacter un agent"
-              subtitle="Par chat ou email"
+              title={t('settings.rows.contactAgent')}
+              subtitle={t('settings.rows.contactAgentDesc')}
               onClick={() => window.open('mailto:support@letsout.app', '_blank')}
             />
             <SettingsRow
               icon={<HelpCircle className="w-4 h-4" />}
               iconBg="bg-cyan-50 dark:bg-cyan-500/10"
               iconColor="text-cyan-500"
-              title="Centre d'aide"
-              subtitle="Guides et FAQ"
+              title={t('settings.rows.helpCenter')}
+              subtitle={t('settings.rows.helpCenterDesc')}
               onClick={() => navigate('/support')}
             />
             <SettingsRow
               icon={<AlertCircle className="w-4 h-4" />}
               iconBg="bg-amber-50 dark:bg-amber-500/10"
               iconColor="text-amber-500"
-              title="Signaler un problème"
-              subtitle="Aidez-nous à nous améliorer"
+              title={t('settings.rows.reportBug')}
+              subtitle={t('settings.rows.reportBugDesc')}
               onClick={() => window.open('mailto:bugs@letsout.app?subject=Signalement%20d%27un%20probl%C3%A8me', '_blank')}
               isLast
             />
@@ -476,43 +480,43 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── À PROPOS ──────────────────────────────────────────────────────── */}
         <div>
-          <SectionLabel>À propos</SectionLabel>
+          <SectionLabel>{t('settings.sections.about')}</SectionLabel>
           <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
             <SettingsRow
               icon={<Info className="w-4 h-4" />}
               iconBg="bg-gray-100 dark:bg-[#2A2A2A]"
               iconColor="text-gray-500"
-              title="Version de l'app"
+              title={t('settings.rows.appVersion')}
               rightEl={<span className="text-[13px] text-gray-400 font-medium">1.0.0</span>}
             />
             <SettingsRow
               icon={<FileText className="w-4 h-4" />}
               iconBg="bg-gray-100 dark:bg-[#2A2A2A]"
               iconColor="text-gray-500"
-              title="Conditions d'utilisation"
+              title={t('settings.rows.terms')}
               onClick={() => navigate('/terms')}
             />
             <SettingsRow
               icon={<Lock className="w-4 h-4" />}
               iconBg="bg-gray-100 dark:bg-[#2A2A2A]"
               iconColor="text-gray-500"
-              title="Politique de confidentialité"
+              title={t('settings.rows.privacy')}
               onClick={() => navigate('/privacy')}
             />
             <SettingsRow
               icon={<Star className="w-4 h-4" />}
               iconBg="bg-yellow-50 dark:bg-yellow-500/10"
               iconColor="text-yellow-500"
-              title="Noter Let's Out"
-              subtitle="Donnez votre avis"
+              title={t('settings.rows.rateApp')}
+              subtitle={t('settings.rows.rateAppDesc')}
               onClick={() => setShowRatingModal(true)}
             />
             <SettingsRow
               icon={<Share2 className="w-4 h-4" />}
               iconBg="bg-green-50 dark:bg-green-500/10"
               iconColor="text-green-500"
-              title="Partager l'application"
-              subtitle="Invitez vos amis"
+              title={t('settings.rows.shareApp')}
+              subtitle={t('settings.rows.shareAppDesc')}
               onClick={handleShare}
               isLast
             />
@@ -522,14 +526,14 @@ export function Settings({ onBack }: SettingsProps) {
         {/* ── Admin (si applicable) ─────────────────────────────────────────── */}
         {user?.role === 'ADMIN' && (
           <div>
-            <SectionLabel>Administration</SectionLabel>
+            <SectionLabel>{t('settings.sections.admin')}</SectionLabel>
             <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
               <SettingsRow
                 icon={<Shield className="w-4 h-4" />}
                 iconBg="bg-red-50 dark:bg-red-500/10"
                 iconColor="text-red-500"
-                title="Dashboard Admin"
-                subtitle="Gérer les KYC, événements, etc."
+                title={t('settings.rows.adminDashboard')}
+                subtitle={t('settings.rows.adminDashboardDesc')}
                 onClick={() => navigate('/admin')}
                 isLast
               />
@@ -547,7 +551,7 @@ export function Settings({ onBack }: SettingsProps) {
             ? <Loader2 className="w-5 h-5 animate-spin" />
             : <LogOut className="w-5 h-5" />
           }
-          Se déconnecter
+          {t('settings.buttons.logout')}
         </button>
 
         {/* ── Supprimer mon compte ──────────────────────────────────────────── */}
@@ -556,7 +560,7 @@ export function Settings({ onBack }: SettingsProps) {
           className="w-full flex items-center justify-center gap-2 py-3 text-red-500 font-semibold text-[15px] active:scale-[0.98] transition-all"
         >
           <Trash2 className="w-5 h-5" />
-          Supprimer mon compte
+          {t('settings.buttons.deleteAccount')}
         </button>
 
       </div>
@@ -583,9 +587,9 @@ export function Settings({ onBack }: SettingsProps) {
               <div className="w-16 h-16 rounded-full bg-yellow-50 dark:bg-yellow-500/10 flex items-center justify-center">
                 <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" />
               </div>
-              <h2 className="text-[20px] font-bold text-gray-900 dark:text-white">Noter Let's Out</h2>
+              <h2 className="text-[20px] font-bold text-gray-900 dark:text-white">{t('settings.modals.rateTitle')}</h2>
               <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                Où souhaitez-vous laisser votre avis ?
+                {t('settings.modals.rateSubtitle')}
               </p>
             </div>
             <div className="space-y-3">
@@ -629,26 +633,25 @@ export function Settings({ onBack }: SettingsProps) {
                   <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
                     <AlertTriangle className="w-8 h-8 text-red-500" />
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Supprimer mon compte</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('settings.modals.deleteTitle1')}</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                    Cette action est <strong>irréversible</strong>. Votre profil sera anonymisé
-                    et vous ne pourrez plus vous connecter avec ce compte.
+                    <Trans i18nKey="settings.modals.deleteDesc1" components={{ strong: <strong /> }} />
                   </p>
                 </div>
                 <div className="space-y-3">
                   <div className="bg-red-50 dark:bg-red-500/10 rounded-2xl p-4 space-y-2">
-                    <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">Ce qui sera supprimé</p>
+                    <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">{t('settings.modals.deleteDeletedLabel')}</p>
                     <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
-                      <li>• Votre profil et vos données personnelles</li>
-                      <li>• Votre accès au compte</li>
-                      <li>• Vos photos et informations</li>
+                      <li>• {t('settings.modals.deleteDeleted1')}</li>
+                      <li>• {t('settings.modals.deleteDeleted2')}</li>
+                      <li>• {t('settings.modals.deleteDeleted3')}</li>
                     </ul>
                   </div>
                   <div className="bg-gray-50 dark:bg-[#222] rounded-2xl p-4 space-y-2">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Ce qui est conservé</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('settings.modals.deleteKeptLabel')}</p>
                     <ul className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-                      <li>• Vos transactions et paiements (traçabilité légale)</li>
-                      <li>• Les événements que vous avez créés</li>
+                      <li>• {t('settings.modals.deleteKept1')}</li>
+                      <li>• {t('settings.modals.deleteKept2')}</li>
                     </ul>
                   </div>
                 </div>
@@ -657,13 +660,13 @@ export function Settings({ onBack }: SettingsProps) {
                     onClick={() => setShowDeleteModal(false)}
                     className="flex-1 py-3 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#2A2A2A] active:scale-[0.98] transition-all"
                   >
-                    Annuler
+                    {t('settings.modals.deleteCancel')}
                   </button>
                   <button
                     onClick={() => setDeleteStep(2)}
                     className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 active:scale-[0.98] transition-all"
                   >
-                    Continuer
+                    {t('settings.modals.deleteContinue')}
                   </button>
                 </div>
               </>
@@ -673,21 +676,21 @@ export function Settings({ onBack }: SettingsProps) {
                   <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
                     <Trash2 className="w-7 h-7 text-red-500" />
                   </div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Dernière étape</h2>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('settings.modals.deleteTitle2')}</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Aidez-nous à nous améliorer en indiquant la raison (optionnel).
+                    {t('settings.modals.deleteDesc2')}
                   </p>
                 </div>
                 <div className="mb-5">
                   <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">
-                    Motif de suppression
+                    {t('settings.modals.deleteReasonLabel')}
                   </label>
                   <div className="grid grid-cols-1 gap-2 mb-3">
                     {[
-                      "Je ne trouve pas d'événements intéressants",
-                      "Problème technique",
-                      "Je crée un nouveau compte",
-                      "Confidentialité et données personnelles",
+                      t('settings.modals.deleteReason1'),
+                      t('settings.modals.deleteReason2'),
+                      t('settings.modals.deleteReason3'),
+                      t('settings.modals.deleteReason4'),
                     ].map((r) => (
                       <button
                         key={r}
@@ -704,11 +707,16 @@ export function Settings({ onBack }: SettingsProps) {
                   </div>
                   <textarea
                     value={
-                      !["Je ne trouve pas d'événements intéressants", "Problème technique", "Je crée un nouveau compte", "Confidentialité et données personnelles"].includes(deleteReason)
+                      ![
+                        t('settings.modals.deleteReason1'),
+                        t('settings.modals.deleteReason2'),
+                        t('settings.modals.deleteReason3'),
+                        t('settings.modals.deleteReason4')
+                      ].includes(deleteReason)
                         ? deleteReason : ''
                     }
                     onChange={(e) => setDeleteReason(e.target.value)}
-                    placeholder="Autre raison (optionnel)..."
+                    placeholder={t('settings.modals.deleteReasonOther')}
                     rows={2}
                     className="w-full px-4 py-3 rounded-xl text-sm border border-gray-200 dark:border-[#2A2A2A] bg-transparent text-gray-700 dark:text-gray-300 placeholder-gray-300 focus:outline-none focus:border-red-400 resize-none"
                   />
@@ -719,7 +727,7 @@ export function Settings({ onBack }: SettingsProps) {
                     disabled={deletingAccount}
                     className="flex-1 py-3 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#2A2A2A] active:scale-[0.98] transition-all disabled:opacity-50"
                   >
-                    Retour
+                    {t('settings.modals.deleteBack')}
                   </button>
                   <button
                     onClick={() => doDeleteAccount(deleteReason || undefined)}
@@ -727,8 +735,8 @@ export function Settings({ onBack }: SettingsProps) {
                     className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                   >
                     {deletingAccount
-                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Suppression...</>
-                      : <><Trash2 className="w-4 h-4" /> Supprimer définitivement</>
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('settings.modals.deleteConfirming')}</>
+                      : <><Trash2 className="w-4 h-4" /> {t('settings.modals.deleteConfirm')}</>
                     }
                   </button>
                 </div>

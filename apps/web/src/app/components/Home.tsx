@@ -14,6 +14,7 @@ import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2'
 import { sortFeaturedEvents, sortPopularEvents } from '@/utils/event-ranking';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 interface HomeProps {
   userData: any;
@@ -21,13 +22,7 @@ interface HomeProps {
 }
 
 // Filter chips matching the design exactly
-const TIME_FILTERS = [
-  { key: 'discover', label: 'Découvrir', icon: '✦' },
-  { key: 'ongoing',  label: 'En cours',  icon: '●' },
-  { key: 'tonight',  label: 'Ce soir',   icon: '🌙' },
-  { key: 'tomorrow', label: 'Demain',    icon: '📅' },
-  { key: 'weekend',  label: 'Weekend',   icon: '🎉' },
-];
+// Will be translated dynamically inside component using the keys
 
 function getTimeFilter(key: string): { upcoming?: boolean; status?: string; date?: string; time?: string; ongoing?: string } {
   switch (key) {
@@ -66,6 +61,7 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
   joinedCount: number;
   rating: number;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="mx-4 mb-3 bg-[#FF7A00] rounded-[18px] px-4 py-2.5 flex items-center justify-between shadow-md">
       {/* Events this week */}
@@ -77,7 +73,7 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
           </svg>
         </div>
         <span className="text-white font-bold text-[16px] leading-none">{eventsThisWeek}</span>
-        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Événements<br/>cette semaine</span>
+        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight whitespace-pre-line">{t('home.stats.eventsThisWeek')}</span>
       </div>
 
       <div className="w-px h-8 bg-white/25" />
@@ -92,7 +88,7 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
           </svg>
         </div>
         <span className="text-white font-bold text-[16px] leading-none">{friendsCount}</span>
-        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Participants<br/>avec vous</span>
+        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight whitespace-pre-line">{t('home.stats.participants')}</span>
       </div>
 
       <div className="w-px h-8 bg-white/25" />
@@ -105,7 +101,7 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
           </svg>
         </div>
         <span className="text-white font-bold text-[16px] leading-none">{joinedCount}</span>
-        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Événements<br/>rejoints</span>
+        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight whitespace-pre-line">{t('home.stats.joinedEvents')}</span>
       </div>
 
       <div className="w-px h-8 bg-white/25" />
@@ -118,7 +114,7 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
           </svg>
         </div>
         <span className="text-white font-bold text-[16px] leading-none">{rating > 0 ? rating.toFixed(1) : '-'}</span>
-        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight">Note moyenne<br/>reçue</span>
+        <span className="text-white/90 text-[8.5px] text-center font-medium leading-tight whitespace-pre-line">{t('home.stats.averageRating')}</span>
       </div>
     </div>
   );
@@ -126,6 +122,7 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
 
 // ── Main Home component ─────────────────────────────────────────────────────────
 export function Home({ userData, onNavigate }: HomeProps) {
+  const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState('discover');
   const [showPermissions, setShowPermissions] = useState(false);
   const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
@@ -288,11 +285,11 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
   const emptyStateLabel = (() => {
     switch (activeFilter) {
-      case 'ongoing':  return 'Aucun événement en cours pour le moment.';
-      case 'tonight':  return 'Aucun événement ce soir.';
-      case 'tomorrow': return 'Aucun événement demain.';
-      case 'weekend':  return 'Aucun événement ce week-end.';
-      default:         return 'Aucun événement disponible.';
+      case 'ongoing':  return t('home.emptyStates.ongoing');
+      case 'tonight':  return t('home.emptyStates.tonight');
+      case 'tomorrow': return t('home.emptyStates.tomorrow');
+      case 'weekend':  return t('home.emptyStates.weekend');
+      default:         return t('home.emptyStates.default');
     }
   })();
 
@@ -320,7 +317,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
   if (viewAll) {
     const listEvents = viewAll === 'featured' ? featuredEvents : popularEvents;
-    const title = viewAll === 'featured' ? 'À ne pas manquer' : 'Événements populaires';
+    const title = viewAll === 'featured' ? t('home.sections.featured') : t('home.sections.popular');
     
     return (
       <div className="w-full h-full flex flex-col bg-white dark:bg-black">
@@ -342,7 +339,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
             />
           ))}
           {listEvents.length === 0 && (
-            <p className="text-center text-gray-500 py-10">Aucun événement disponible.</p>
+            <p className="text-center text-gray-500 py-10">{t('home.emptyStates.default')}</p>
           )}
         </div>
       </div>
@@ -367,10 +364,10 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
           <div className="flex-1 min-w-0">
             <h1 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight truncate">
-              Bienvenue, {displayName} 👋
+              {t('home.header.welcome', { name: displayName })}
             </h1>
             <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate">
-              Prêt pour de <span className="text-[#FF7A00] font-semibold">nouvelles expériences</span> ?
+              {t('home.header.readyFor')} <span className="text-[#FF7A00] font-semibold">{t('home.header.newExperiences')}</span>{t('home.header.readyForEnd')}
             </p>
           </div>
 
@@ -404,7 +401,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
             <Search01Icon className="w-4 h-4 text-gray-400 flex-shrink-0" strokeWidth={1.5} />
             <input
               type="text"
-              placeholder="Concerts, artistes, lieux, événements..."
+              placeholder={t('home.search.placeholder')}
               className="flex-1 text-[13px] text-gray-900 dark:text-white bg-transparent outline-none truncate placeholder:text-gray-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -417,7 +414,13 @@ export function Home({ userData, onNavigate }: HomeProps) {
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-            {TIME_FILTERS.map((f) => {
+            {[
+              { key: 'discover', icon: '✦' },
+              { key: 'ongoing',  icon: '●' },
+              { key: 'tonight',  icon: '🌙' },
+              { key: 'tomorrow', icon: '📅' },
+              { key: 'weekend',  icon: '🎉' },
+            ].map((f) => {
               const isActive = activeFilter === f.key;
               return (
                 <button
@@ -430,7 +433,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   }`}
                 >
                   <span className="text-[12px]">{f.icon}</span>
-                  {f.label}
+                  {t(`home.timeFilters.${f.key}`)}
                 </button>
               );
             })}
@@ -440,7 +443,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
       {/* ── Scrollable content ── */}
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        <PullToRefresh onRefresh={handleRefresh} isPullable={!isOffline} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">Actualisation...</div>}>
+        <PullToRefresh onRefresh={handleRefresh} isPullable={!isOffline} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">{t('home.refreshing')}</div>}>
           <div className="pb-28">
 
             {showSpinner && (
@@ -456,15 +459,15 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   <WifiOff className="w-8 h-8 text-[#FF7A00]" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800 dark:text-gray-200 text-base mb-1">Vous êtes hors ligne</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Connectez-vous à internet pour voir les événements.</p>
+                  <p className="font-bold text-gray-800 dark:text-gray-200 text-base mb-1">{t('home.offline.title')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('home.offline.subtitle')}</p>
                 </div>
                 <button
                   onClick={() => qc.refetchQueries({ queryKey: ['events'] })}
                   className="mt-2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#FF7A00] text-white text-sm font-semibold active:scale-95 transition-transform"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Réessayer
+                  {t('home.offline.retry')}
                 </button>
               </div>
             )}
@@ -484,8 +487,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
                 {/* ── À ne pas manquer ── */}
                 <div className="mb-3">
                   <div className="flex items-center justify-between px-4 mb-3">
-                    <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">À ne pas manquer</h2>
-                    <button onClick={() => setViewAll('featured')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
+                    <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">{t('home.sections.featured')}</h2>
+                    <button onClick={() => setViewAll('featured')} className="text-[13px] font-semibold text-[#FF7A00]">{t('home.sections.seeAll')}</button>
                   </div>
 
                   {isLoading ? (
@@ -532,8 +535,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
                 {/* ── Événements populaires ── */}
                 <div className="pt-1 pb-1">
                   <div className="flex items-center justify-between px-4 mb-3">
-                    <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Événements populaires</h2>
-                    <button onClick={() => setViewAll('popular')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
+                    <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">{t('home.sections.popular')}</h2>
+                    <button onClick={() => setViewAll('popular')} className="text-[13px] font-semibold text-[#FF7A00]">{t('home.sections.seeAll')}</button>
                   </div>
 
                   {isLoading && popularEvents.length === 0 ? (
@@ -544,7 +547,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     <div className="flex flex-col items-center py-14 gap-3 text-center px-8">
                       <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-2xl">📭</div>
                       <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{emptyStateLabel}</p>
-                      <p className="text-xs text-gray-400">Essayez un autre créneau ou revenez plus tard.</p>
+                      <p className="text-xs text-gray-400">{t('home.emptyStates.tryAnother')}</p>
                     </div>
                   ) : (
                     <div className="px-4 space-y-3">

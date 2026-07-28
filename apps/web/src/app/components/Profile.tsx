@@ -15,6 +15,7 @@ import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { ToggleButton } from '@/components/ui/toggle-button';
 import { getEventParticipationMode } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 
 interface ProfileProps {
@@ -24,6 +25,7 @@ interface ProfileProps {
 type Tab = 'events' | 'drafts' | 'followers' | 'following' | 'friends';
 
 export function Profile({ onNavigate }: ProfileProps) {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const profile = user?.profile;
   const navigate = useNavigate();
@@ -61,8 +63,8 @@ export function Profile({ onNavigate }: ProfileProps) {
   })
 
   const displayName = isOwnProfile
-    ? (profile?.displayName || 'Mon Profil')
-    : (displayProfile?.displayName || displayProfile?.username || username || 'Utilisateur');
+    ? (profile?.displayName || t('profile.myProfile'))
+    : (displayProfile?.displayName || displayProfile?.username || username || t('profile.unknownUser'));
   const city = displayProfile?.city || '';
   const bio = displayProfile?.bio || '';
 
@@ -154,11 +156,11 @@ export function Profile({ onNavigate }: ProfileProps) {
 
   // TABS Generation
   const TABS = [
-    { key: 'events', label: 'Événements', count: createdEvents.length } as const,
-    ...(isOwnProfile ? [{ key: 'drafts', label: 'Brouillons', count: draftEvents.length } as const] : []),
-    { key: 'followers', label: 'Abonnés', count: followers.length } as const,
-    { key: 'following', label: 'Abonnements', count: following.length } as const,
-    ...(isOwnProfile ? [{ key: 'friends', label: 'Amis', count: friends.length } as const] : []),
+    { key: 'events', label: t('profile.tabs.events'), count: createdEvents.length } as const,
+    ...(isOwnProfile ? [{ key: 'drafts', label: t('profile.tabs.drafts'), count: draftEvents.length } as const] : []),
+    { key: 'followers', label: t('profile.tabs.followers'), count: followers.length } as const,
+    { key: 'following', label: t('profile.tabs.following'), count: following.length } as const,
+    ...(isOwnProfile ? [{ key: 'friends', label: t('profile.tabs.friends'), count: friends.length } as const] : []),
   ];
 
   const rating = viewedProfile?.detailedStats?.rating?.toFixed(1) || 'N/A';
@@ -245,7 +247,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 disabled={followMutation.isPending}
                 onClick={() => followMutation.mutate()}
               >
-                {isFollowing ? '✓ Abonné(e)' : '+ Suivre'}
+                {isFollowing ? t('profile.actions.following') : t('profile.actions.follow')}
               </Button>
               <Button
                 variant="outline"
@@ -253,7 +255,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 disabled={dmMutation.isPending}
                 onClick={() => dmMutation.mutate()}
               >
-                {dmMutation.isPending ? '...' : 'Écrire'}
+                {dmMutation.isPending ? t('profile.actions.sendingMessage') : t('profile.actions.message')}
               </Button>
             </div>
           )}
@@ -261,10 +263,10 @@ export function Profile({ onNavigate }: ProfileProps) {
           {/* Stats Cards (Left-aligned) */}
           <div className="w-full flex gap-2">
             {[
-              { value: createdEvents.length, label: 'Créés' },
-              { value: pastEvents.length, label: 'Rejoints' },
-              { value: isOwnProfile ? friends.length : viewedFriendsCount, label: 'Amis' },
-              { value: rating, label: 'Note' },
+              { value: createdEvents.length, label: t('profile.stats.created') },
+              { value: pastEvents.length, label: t('profile.stats.joined') },
+              { value: isOwnProfile ? friends.length : viewedFriendsCount, label: t('profile.stats.friends') },
+              { value: rating, label: t('profile.stats.rating') },
             ].map((stat, i) => (
               <div key={i} className="bg-white dark:bg-[#1A1A1A] px-3 py-2 rounded-[14px] shadow-sm border border-gray-100 dark:border-white/10 flex flex-col items-start min-w-[70px]">
                 <p className="text-[16px] font-black text-gray-900 dark:text-white leading-none mb-1">{stat.value}</p>
@@ -296,11 +298,11 @@ export function Profile({ onNavigate }: ProfileProps) {
                 {createdEvents.length > 0 && (
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Événements proches</span>
+                    <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('profile.upcomingEvents')}</span>
                   </div>
                 )}
                 {createdEvents.length === 0 ? (
-                  <EmptyState icon="📅" title="Aucun événement créé" subtitle="Les événements apparaîtront ici" action={isOwnProfile ? <Button onClick={() => onNavigate('create-event')}>Créer un événement</Button> : null} />
+                  <EmptyState icon="📅" title={t('profile.empty.events')} subtitle={t('profile.empty.eventsSubtitle')} action={isOwnProfile ? <Button onClick={() => onNavigate('create-event')}>{t('profile.empty.createEvent')}</Button> : null} />
                 ) : (
                   <div className="flex flex-col gap-3">
                     {createdEvents.map((event: any) => (
@@ -312,7 +314,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                   <>
                     <div className="flex items-center gap-2 mt-8 mb-2">
                       <Activity className="w-4 h-4 text-gray-400" />
-                      <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Participations passées</span>
+                      <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('profile.pastParticipations')}</span>
                     </div>
                     <div className="flex flex-col gap-3">
                       {pastEvents.slice(0, 3).map((event: any) => (
@@ -328,7 +330,7 @@ export function Profile({ onNavigate }: ProfileProps) {
             {activeTab === 'drafts' && isOwnProfile && (
               <div className="space-y-4">
                 {draftEvents.length === 0 ? (
-                  <EmptyState icon="📝" title="Aucun brouillon" subtitle="Vos événements en attente apparaîtront ici" />
+                  <EmptyState icon="📝" title={t('profile.empty.drafts')} subtitle={t('profile.empty.draftsSubtitle')} />
                 ) : (
                   <div className="flex flex-col gap-3">
                     {draftEvents.map((event: any) => (
@@ -340,7 +342,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                             onClick={() => navigate('/events/create', { state: { editEventId: event.id, step: 7, eventData: event } })}
                             className="w-full text-xs h-9 border-orange-500 text-orange-500 hover:bg-orange-50 rounded-xl font-bold"
                           >
-                            Reprendre le brouillon
+                            {t('profile.resumeDraft')}
                           </Button>
                         </div>
                       </div>
@@ -354,7 +356,7 @@ export function Profile({ onNavigate }: ProfileProps) {
             {activeTab === 'followers' && (
               <div className="space-y-3">
                 {followers.length === 0 ? (
-                  <EmptyState icon="👥" title="Aucun abonné" subtitle="Personne ne vous suit encore" />
+                  <EmptyState icon="👥" title={t('profile.empty.followers')} subtitle={t('profile.empty.followersSubtitle')} />
                 ) : (
                   followers.map((f: any) => (
                     <UserCard key={f?.userId} user={f} type="follower" />
@@ -367,7 +369,7 @@ export function Profile({ onNavigate }: ProfileProps) {
             {activeTab === 'following' && (
               <div className="space-y-3">
                 {following.length === 0 ? (
-                  <EmptyState icon="🔍" title="Vous ne suivez personne" subtitle="Explorez des profils pour les suivre" />
+                  <EmptyState icon="🔍" title={t('profile.empty.following')} subtitle={t('profile.empty.followingSubtitle')} />
                 ) : (
                   following.map((f: any) => (
                     <UserCard key={f?.userId} user={f} type="following" />
@@ -387,7 +389,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                     <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-2">
                       <Users className="w-5 h-5 text-orange-500" />
                     </div>
-                    <p className="font-bold text-[13px] text-gray-900 dark:text-white">Demandes</p>
+                    <p className="font-bold text-[13px] text-gray-900 dark:text-white">{t('profile.friendActions.requests')}</p>
                   </button>
                   <button
                     onClick={() => setShowAddFriendsModal(true)}
@@ -396,12 +398,12 @@ export function Profile({ onNavigate }: ProfileProps) {
                     <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center mb-2">
                       <UserPlus className="w-5 h-5 text-orange-500" />
                     </div>
-                    <p className="font-bold text-[13px] text-gray-900 dark:text-white">Ajouter</p>
+                    <p className="font-bold text-[13px] text-gray-900 dark:text-white">{t('profile.friendActions.add')}</p>
                   </button>
                 </div>
 
                 {friends.length === 0 ? (
-                  <EmptyState icon="🤝" title="Aucun ami" subtitle="Envoyez des demandes d'amis pour commencer" />
+                  <EmptyState icon="🤝" title={t('profile.empty.friends')} subtitle={t('profile.empty.friendsSubtitle')} />
                 ) : (
                   friends.map((f: any) => (
                     <UserCard key={f?.userId} user={f} type="friend" />
@@ -423,8 +425,9 @@ export function Profile({ onNavigate }: ProfileProps) {
 // ── Compact EventCard ─────────────────────────────────────────────────────────
 
 function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNavigate?: any; isDraft?: boolean }) {
+  const { t } = useTranslation();
   // Format date correctly (e.g. "Vendredi 20h")
-  let dateStr = 'Date non définie';
+  let dateStr = t('profile.noDate');
   if (event?.startAt) {
     const d = new Date(event.startAt);
     const day = d.toLocaleDateString('fr-FR', { weekday: 'long' });
@@ -434,30 +437,30 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
 
   // Format price correctly
   const mode = getEventParticipationMode(event);
-  let priceStr = 'Gratuit';
-  let priceType = 'entrée';
+  let priceStr = t('profile.free');
+  let priceType = t('profile.entry');
 
   const cur = event?.currency || 'XOF';
   const curSymbol = (cur === 'XOF' || cur === 'CFA' || cur === 'FCFA') ? 'F' : (cur === 'EUR' ? '€' : cur);
 
   if (mode === 'Cagnotte') {
-    priceType = 'cagnotte';
+    priceType = t('profile.pool');
     if (event?.price > 0) {
       priceStr = `${event.price.toLocaleString('fr-FR')} ${curSymbol}`;
     } else if (event?.poolTarget > 0) {
       priceStr = `${event.poolTarget.toLocaleString('fr-FR')} ${curSymbol}`;
     } else {
-      priceStr = 'Libre';
+      priceStr = t('profile.flexible');
     }
   } else if (mode === 'Tickets') {
-    priceType = 'ticket';
+    priceType = t('profile.ticket');
     if (event?.price > 0) {
       priceStr = `${event.price.toLocaleString('fr-FR')} ${curSymbol}`;
     }
   } else {
     // Gratuit
-    priceType = 'entrée';
-    priceStr = 'Gratuit';
+    priceType = t('profile.entry');
+    priceStr = t('profile.free');
   }
 
   const attendeesCount = event?.currentAttendees || 0;
@@ -480,16 +483,16 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
         )}
         {isDraft && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
-            <span className="text-[9px] font-bold text-white uppercase tracking-wider px-1.5 py-0.5 bg-black/60 rounded-md">Brouillon</span>
+            <span className="text-[9px] font-bold text-white uppercase tracking-wider px-1.5 py-0.5 bg-black/60 rounded-md">{t('profile.draft')}</span>
           </div>
         )}
       </div>
 
       {/* Content */}
       <div className="flex flex-col flex-1 min-w-0">
-        <h4 className="font-black text-[16px] text-gray-900 dark:text-white truncate leading-tight mb-1">{event?.title || 'Sans titre'}</h4>
+        <h4 className="font-black text-[16px] text-gray-900 dark:text-white truncate leading-tight mb-1">{event?.title || t('profile.noTitle')}</h4>
         <p className="text-[13px] text-gray-400 truncate mb-3 font-medium">
-          {dateStr} • {event?.city || 'Lieu non défini'}
+          {dateStr} • {event?.city || t('profile.noCity')}
         </p>
         
         <div className="flex items-center justify-between mt-auto">
@@ -506,7 +509,7 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
                  </div>
                ))}
              </div>
-             <span className="text-[12px] font-bold text-gray-400">+{attendeesCount > 3 ? attendeesCount - 3 : attendeesCount} participants</span>
+             <span className="text-[12px] font-bold text-gray-400">+{attendeesCount > 3 ? attendeesCount - 3 : attendeesCount} {t('profile.participants')}</span>
           </div>
           
           {/* Price */}

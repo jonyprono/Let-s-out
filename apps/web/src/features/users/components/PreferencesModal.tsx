@@ -96,7 +96,7 @@ export function PreferencesModal({ onClose }: Props) {
                 }`}
               >
                 <span className={`font-semibold text-[14px] ${selectedLang === 'fr' ? 'text-[#FF7A00]' : 'text-gray-700 dark:text-gray-300'}`}>
-                  Français
+                  🇫🇷 Français
                 </span>
                 {selectedLang === 'fr' && <Check size={20} className="text-[#FF7A00]" />}
               </button>
@@ -107,7 +107,7 @@ export function PreferencesModal({ onClose }: Props) {
                 }`}
               >
                 <span className={`font-semibold text-[14px] ${selectedLang === 'en' ? 'text-[#FF7A00]' : 'text-gray-700 dark:text-gray-300'}`}>
-                  English
+                  🇬🇧 English
                 </span>
                 {selectedLang === 'en' && <Check size={20} className="text-[#FF7A00]" />}
               </button>
