@@ -17,6 +17,7 @@ import { COUNTRIES, Country } from '@/lib/countries'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { useTranslation } from 'react-i18next'
 
 const OPERATORS = [
   { id: 'mtn', label: 'MTN Momo', logo: '/logos/mtn.png', prefix: '97' },
@@ -57,6 +58,7 @@ interface WalletTransaction {
 }
 
 export function Wallet() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
@@ -134,7 +136,7 @@ export function Wallet() {
       return res.data
     },
     onSuccess: () => {
-      toast.success('Demande de retrait initiée avec succès')
+      toast.success(t('wallet.withdrawInitiated'))
       setWithdrawMode(false)
       setWithdrawStep('form')
       setWithdrawData({ amount: '' })
@@ -149,9 +151,9 @@ export function Wallet() {
         setPinToken(null)
         setWithdrawMode(false)
         setWithdrawStep('form')
-        toast.error('Session expirée. Veuillez ressaisir votre code PIN.')
+        toast.error(t('wallet.sessionExpired'))
       } else {
-        toast.error(err.response?.data?.error || 'Erreur lors du retrait')
+        toast.error(err.response?.data?.error || t('wallet.withdrawError'))
       }
     },
   })
@@ -163,18 +165,18 @@ export function Wallet() {
           <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
-          <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Mon Portefeuille</h1>
+          <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">{t('wallet.title')}</h1>
         </div>
         <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-6 text-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <Lock className="w-8 h-8 text-gray-400" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Accès restreint</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('wallet.accessRestricted')}</h2>
           <p className="text-gray-500">
-            Votre profil n'est pas encore vérifié. Vous devez vérifier votre identité pour accéder au portefeuille.
+            {t('wallet.kycRequired')}
           </p>
           <Button onClick={() => navigate('/verify-profile')} className="mt-4 bg-[#FF7A00] hover:bg-[#e66a00] text-white rounded-[16px] h-12 px-6 font-bold">
-            Vérifier mon profil
+            {t('wallet.verifyProfileBtn')}
           </Button>
         </div>
       </div>
@@ -192,17 +194,17 @@ export function Wallet() {
           <button onClick={() => setWithdrawMode(false)} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
-          <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Initier un retrait</h1>
+          <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">{t('wallet.withdrawTitle')}</h1>
         </div>
         
         <div className="flex-1 overflow-y-auto flex flex-col p-4 sm:p-6 gap-6 font-poppins pb-24">
           <div className="bg-white dark:bg-[#1A1A1A] rounded-[20px] p-4 flex flex-col gap-2 shadow-sm border border-gray-100 dark:border-gray-800">
             <h2 className="text-[16px] font-bold text-gray-900 dark:text-white">
-              {selectedWithdrawEvent ? `Retrait - ${selectedWithdrawEvent.title}` : 'Mon Portefeuille'}
+              {selectedWithdrawEvent ? t('wallet.withdrawTitleShort', { eventTitle: selectedWithdrawEvent.title }) : t('wallet.title')}
             </h2>
             <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-1" />
             <div className="flex justify-between items-center">
-              <span className="text-[14px] text-gray-500">Solde disponible</span>
+              <span className="text-[14px] text-gray-500">{t('wallet.availableBalance')}</span>
               <span className="text-[16px] font-bold text-[#FF7A00]">
                 {selectedWithdrawEvent ? selectedWithdrawEvent.amount.toLocaleString('fr-FR') : (wallet?.balance?.toLocaleString('fr-FR') || 0)} F CFA
               </span>
@@ -212,22 +214,22 @@ export function Wallet() {
           <form onSubmit={(e) => {
             e.preventDefault()
             const amount = Number(withdrawData.amount)
-            if (!amount || amount < 500) return toast.error('Le montant minimum est de 500 F CFA')
-            if (!phoneNumber.trim()) return toast.error('Numéro de téléphone invalide')
+            if (!amount || amount < 500) return toast.error(t('wallet.minAmountError'))
+            if (!phoneNumber.trim()) return toast.error(t('wallet.invalidPhoneError'))
             
             const cleanPhone = phoneNumber.replace(/\s+/g, '')
             if (country.code === '+229') {
               if (cleanPhone.length !== 10 || !cleanPhone.startsWith('01')) {
-                return toast.error('Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.')
+                return toast.error(t('wallet.beninPhoneError'))
               }
             }
 
             const maxAmount = selectedWithdrawEvent ? selectedWithdrawEvent.amount : (wallet?.balance || 0)
-            if (amount > maxAmount) return toast.error('Solde insuffisant')
+            if (amount > maxAmount) return toast.error(t('wallet.insufficientBalance'))
             setWithdrawStep('summary')
           }} className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">Montant du retrait</label>
+              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">{t('wallet.withdrawAmount')}</label>
               <div className="flex items-center border border-[#E5E7EB] dark:border-gray-800 rounded-[14px] bg-white dark:bg-[#1A1A1A] overflow-hidden h-[56px] focus-within:border-2 focus-within:border-[#FF7A00] transition-all duration-150 shadow-sm">
                 <input 
                   type="number"
@@ -241,11 +243,11 @@ export function Wallet() {
                 />
                 <span className="pr-4 text-[14px] font-bold text-[#8D8D8D]">F CFA</span>
               </div>
-              <span className="text-[12px] text-gray-400 mt-1 font-medium">Minimum 500 F</span>
+              <span className="text-[12px] text-gray-400 mt-1 font-medium">{t('wallet.minAmount')}</span>
             </div>
 
             <div className="flex flex-col gap-2" ref={operatorRef}>
-              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">Opérateur</label>
+              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">{t('wallet.operator')}</label>
               <div className="relative">
                 <button
                   type="button"
@@ -285,7 +287,7 @@ export function Wallet() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">Numéro de téléphone</label>
+              <label className="text-[14px] font-semibold text-gray-900 dark:text-white">{t('wallet.phoneNumber')}</label>
               <div className="w-full">
                 <PhoneInputField
                   country={country}
@@ -300,39 +302,39 @@ export function Wallet() {
               type="submit" 
               className="w-full h-[56px] rounded-[16px] bg-gradient-to-r from-[#FF7A00] to-[#FF991C] hover:opacity-90 text-white font-bold text-[16px] mt-4 shadow-[0_4px_14px_rgba(255,122,0,0.3)] transition-transform active:scale-[0.98]"
             >
-              Continuer
+              {t('wallet.continue')}
             </Button>
           </form>
         </div>
 
         <BottomSheet open={withdrawStep === 'summary'} onClose={() => setWithdrawStep('form')}>
           <div className="px-6 pt-2 pb-8 flex flex-col gap-5 font-poppins">
-            <h3 className="text-center text-[18px] font-bold text-gray-900 dark:text-white mb-2">Détails du retrait</h3>
+            <h3 className="text-center text-[18px] font-bold text-gray-900 dark:text-white mb-2">{t('wallet.withdrawDetails')}</h3>
             
             <div className="flex flex-col gap-1 items-center mb-2">
-              <span className="text-[14px] text-gray-500 font-medium">Montant</span>
+              <span className="text-[14px] text-gray-500 font-medium">{t('wallet.amount')}</span>
               <span className="text-[32px] font-bold text-gray-900 dark:text-white leading-none">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
             </div>
 
             <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-col gap-3">
               <div className="flex justify-between items-center">
-                <span className="text-[14px] text-gray-500">Depuis</span>
-                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">Portefeuille principal</span>
+                <span className="text-[14px] text-gray-500">{t('wallet.from')}</span>
+                <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{t('wallet.mainWallet')}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[14px] text-gray-500">Vers</span>
+                <span className="text-[14px] text-gray-500">{t('wallet.to')}</span>
                 <div className="flex items-center gap-2">
                   <img src={selectedOperator.logo} className="w-4 h-4" alt="" />
                   <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{selectedOperator.label}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[14px] text-gray-500">Numéro</span>
+                <span className="text-[14px] text-gray-500">{t('wallet.number')}</span>
                 <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{country.code} {phoneNumber}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[14px] text-gray-500">Frais</span>
-                <span className="text-[14px] font-semibold text-green-600 dark:text-green-400">0 F (Gratuit)</span>
+                <span className="text-[14px] text-gray-500">{t('wallet.fees')}</span>
+                <span className="text-[14px] font-semibold text-green-600 dark:text-green-400">{t('wallet.free')}</span>
               </div>
             </div>
 
@@ -346,7 +348,7 @@ export function Wallet() {
               disabled={withdrawMutation.isPending}
               className="w-full h-[56px] rounded-[16px] bg-gradient-to-r from-[#FF7A00] to-[#FF991C] hover:opacity-90 text-white font-bold text-[16px] mt-2 shadow-[0_4px_14px_rgba(255,122,0,0.3)] transition-transform active:scale-[0.98]"
             >
-              {withdrawMutation.isPending ? 'Traitement en cours...' : 'Confirmer le retrait'}
+              {withdrawMutation.isPending ? t('wallet.processing') : t('wallet.confirmWithdraw')}
             </Button>
           </div>
         </BottomSheet>
@@ -362,8 +364,8 @@ export function Wallet() {
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
           </button>
           <div className="flex flex-col items-center">
-            <h1 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">Mon Portefeuille</h1>
-            <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">Gérez vos fonds en toute simplicité</span>
+            <h1 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">{t('wallet.title')}</h1>
+            <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{t('wallet.manageFunds')}</span>
           </div>
           <button onClick={() => setShowWalletPinModal(true)} className="p-2 -mr-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
             <Lock className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
@@ -386,7 +388,7 @@ export function Wallet() {
           {/* Left: text content */}
           <div className="relative z-10 flex flex-col gap-0.5 flex-1 pr-4">
             <div className="flex items-center gap-1.5 text-white/90">
-              <span className="text-[13px] font-semibold">Solde disponible</span>
+              <span className="text-[13px] font-semibold">{t('wallet.availableBalance')}</span>
               <AlertCircle size={13} className="opacity-80" />
             </div>
 
@@ -405,7 +407,7 @@ export function Wallet() {
 
             <div className="inline-flex items-center gap-1.5 bg-[#2E7D32]/80 px-3 py-1 rounded-full w-max mt-2.5">
               <Check className="w-3 h-3 text-white" strokeWidth={3} />
-              <span className="text-[11px] font-bold text-white">Disponible pour retrait</span>
+              <span className="text-[11px] font-bold text-white">{t('wallet.availableForWithdrawal')}</span>
             </div>
           </div>
 
@@ -442,21 +444,21 @@ export function Wallet() {
             <div className="w-10 h-10 rounded-full bg-[#FF7A00] flex items-center justify-center shadow-md shadow-orange-500/20">
               <ArrowUpRight className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-[11px] font-bold text-gray-900 dark:text-white text-center leading-tight">Retirer</span>
+            <span className="text-[11px] font-bold text-gray-900 dark:text-white text-center leading-tight">{t('wallet.withdrawBtn')}</span>
           </button>
 
           <button onClick={() => { setActiveTab('overview'); setTimeout(() => document.getElementById('tx-list')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="flex-1 flex flex-col items-center gap-2 px-1 py-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center border border-gray-200 dark:border-gray-700">
               <History className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2} />
             </div>
-            <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Historique</span>
+            <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">{t('wallet.historyBtn')}</span>
           </button>
 
           <button onClick={() => setShowSettingsModal(true)} className="flex-1 flex flex-col items-center gap-2 px-1 py-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 shadow-sm active:scale-95 transition-transform">
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center border border-gray-200 dark:border-gray-700">
               <Settings className="w-5 h-5 text-gray-800 dark:text-gray-200" strokeWidth={2} />
             </div>
-            <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">Paramètres</span>
+            <span className="text-[11px] font-bold text-gray-600 dark:text-gray-400 text-center leading-tight">{t('wallet.settingsBtn')}</span>
           </button>
         </div>
 
@@ -469,7 +471,7 @@ export function Wallet() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            Vue d'ensemble
+            {t('wallet.tabs.overview')}
           </button>
           <button
             onClick={() => setActiveTab('events')}
@@ -479,7 +481,7 @@ export function Wallet() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            Par événement
+            {t('wallet.tabs.byEvent')}
           </button>
         </div>
 
@@ -494,7 +496,7 @@ export function Wallet() {
                 <div className="w-8 h-8 rounded-full flex items-center justify-center">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                 </div>
-                <span className="text-[11px] font-semibold text-gray-500">Total gagné</span>
+                <span className="text-[11px] font-semibold text-gray-500">{t('wallet.stats.totalEarned')}</span>
                 <span className="text-[13px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">
                   {isLoadingStats ? '...' : (stats?.totalEarned?.toLocaleString('fr-FR') || 0)} F CFA
                 </span>
@@ -505,7 +507,7 @@ export function Wallet() {
                 <div className="w-8 h-8 rounded-full flex items-center justify-center">
                   <ArrowUpRight className="w-6 h-6 text-[#4CAF50]" strokeWidth={2.5} />
                 </div>
-                <span className="text-[11px] font-semibold text-gray-500">Total retiré</span>
+                <span className="text-[11px] font-semibold text-gray-500">{t('wallet.stats.totalWithdrawn')}</span>
                 <span className="text-[13px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">
                   {isLoadingStats ? '...' : (stats?.totalWithdrawn?.toLocaleString('fr-FR') || 0)} F CFA
                 </span>
@@ -516,7 +518,7 @@ export function Wallet() {
                 <div className="w-8 h-8 rounded-full flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-[#9C27B0]" strokeWidth={2} />
                 </div>
-                <span className="text-[11px] font-semibold text-gray-500 text-center leading-tight px-1">Événements actifs</span>
+                <span className="text-[11px] font-semibold text-gray-500 text-center leading-tight px-1">{t('wallet.stats.activeEvents')}</span>
                 <span className="text-[14px] font-extrabold text-gray-900 dark:text-white">
                   {isLoadingStats ? '...' : (stats?.activeEventsCount || 0)}
                 </span>
@@ -525,15 +527,15 @@ export function Wallet() {
 
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Fonds par événement</h3>
-                <button onClick={() => setActiveTab('events')} className="text-[13px] font-bold text-[#FF7A00]">Voir tout &gt;</button>
+                <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">{t('wallet.fundsByEvent')}</h3>
+                <button onClick={() => setActiveTab('events')} className="text-[13px] font-bold text-[#FF7A00]">{t('wallet.seeAll')}</button>
               </div>
 
               {isLoadingStats ? (
                 Array(2).fill(0).map((_, i) => <div key={i} className="w-full h-[110px] bg-white dark:bg-[#1A1A1A] rounded-[20px] animate-pulse border border-gray-100 dark:border-gray-800" />)
               ) : !stats?.poolEvents || stats.poolEvents.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-6 text-center gap-2">
-                  <p className="text-gray-500 text-[13px] font-medium">Aucun événement avec cagnotte débloquée.</p>
+                  <p className="text-gray-500 text-[13px] font-medium">{t('wallet.noUnlockedPools')}</p>
                 </div>
               ) : (
                 stats.poolEvents.slice(0, 3).map((evt) => (
@@ -543,7 +545,7 @@ export function Wallet() {
                       <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1.5">
                         <div className={`w-1.5 h-1.5 rounded-full ${new Date(evt.startAt) > new Date() ? 'bg-[#4CAF50]' : 'bg-gray-400'}`} />
                         <span className="text-[10px] font-bold text-white leading-none">
-                          {new Date(evt.startAt) > new Date() ? 'En cours' : 'Terminé'}
+                          {new Date(evt.startAt) > new Date() ? t('wallet.status.ongoing') : t('wallet.status.ended')}
                         </span>
                       </div>
                     </div>
@@ -565,7 +567,7 @@ export function Wallet() {
                     <div className="flex flex-col items-end gap-2 shrink-0 h-full justify-between py-1 border-l border-gray-100 dark:border-gray-800 pl-2">
                       <div className="flex items-start justify-between w-full">
                         <div className="flex flex-col items-end w-full">
-                          <span className="text-[10px] font-semibold text-gray-500">Solde disponible</span>
+                          <span className="text-[10px] font-semibold text-gray-500">{t('wallet.availableBalance')}</span>
                           <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
                         </div>
                       </div>
@@ -578,7 +580,7 @@ export function Wallet() {
                         className="bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition-transform"
                       >
                         <ArrowUpRight size={14} strokeWidth={3} />
-                        Retirer
+                        {t('wallet.withdrawBtn')}
                       </button>
                     </div>
                   </div>
@@ -588,8 +590,8 @@ export function Wallet() {
 
             <div className="flex flex-col gap-3" id="tx-list">
               <div className="flex items-center justify-between mb-1">
-                <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Transactions récentes</h3>
-                <button onClick={() => { setActiveTab('events'); setTimeout(() => document.getElementById('tx-list')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="text-[13px] font-bold text-[#FF7A00]">Voir tout &gt;</button>
+                <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">{t('wallet.recentTransactions')}</h3>
+                <button onClick={() => { setActiveTab('events'); setTimeout(() => document.getElementById('tx-list')?.scrollIntoView({ behavior: 'smooth' }), 100); }} className="text-[13px] font-bold text-[#FF7A00]">{t('wallet.seeAll')}</button>
               </div>
 
               {isLoadingTx ? (
@@ -601,7 +603,7 @@ export function Wallet() {
                   <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                     <Clock className="w-6 h-6 text-gray-400" />
                   </div>
-                  <p className="text-gray-500 text-[14px] font-medium">Aucune transaction pour le moment.</p>
+                  <p className="text-gray-500 text-[14px] font-medium">{t('wallet.noTransactions')}</p>
                 </div>
               ) : (
                 transactions.slice(0, 10).map((tx) => (
@@ -638,7 +640,7 @@ export function Wallet() {
                         tx.status === 'PENDING' ? 'bg-[#FFF3E6] text-[#FF7A00] dark:bg-orange-900/30 dark:text-orange-400' :
                         'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
                       }`}>
-                        {(tx.status || 'COMPLETED') === 'COMPLETED' ? 'Réussi' : tx.status === 'PENDING' ? 'En cours' : 'Échec'}
+                        {(tx.status || 'COMPLETED') === 'COMPLETED' ? t('wallet.txStatus.completed') : tx.status === 'PENDING' ? t('wallet.txStatus.pending') : t('wallet.txStatus.failed')}
                       </span>
                     </div>
                   </motion.div>
@@ -655,7 +657,7 @@ export function Wallet() {
             className="flex flex-col gap-4"
           >
             <div className="flex items-center justify-between mb-1">
-              <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Tous les événements débloqués</h3>
+              <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">{t('wallet.fundsByEvent')}</h3>
             </div>
 
             {isLoadingStats ? (
@@ -667,7 +669,7 @@ export function Wallet() {
                 <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-gray-400" />
                 </div>
-                <p className="text-gray-500 text-[14px] font-medium">Aucun événement avec cagnotte débloquée.</p>
+                <p className="text-gray-500 text-[14px] font-medium">{t('wallet.noUnlockedPools')}</p>
               </div>
             ) : (
               stats.poolEvents.map((evt) => (
@@ -677,7 +679,7 @@ export function Wallet() {
                     <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1.5">
                       <div className={`w-1.5 h-1.5 rounded-full ${new Date(evt.startAt) > new Date() ? 'bg-[#4CAF50]' : 'bg-gray-400'}`} />
                       <span className="text-[10px] font-bold text-white leading-none">
-                        {new Date(evt.startAt) > new Date() ? 'En cours' : 'Terminé'}
+                        {new Date(evt.startAt) > new Date() ? t('wallet.status.ongoing') : t('wallet.status.ended')}
                       </span>
                     </div>
                   </div>
@@ -699,7 +701,7 @@ export function Wallet() {
                   <div className="flex flex-col items-end gap-2 shrink-0 h-full justify-between py-1 border-l border-gray-100 dark:border-gray-800 pl-2">
                     <div className="flex items-start justify-between w-full">
                       <div className="flex flex-col items-end w-full">
-                        <span className="text-[10px] font-semibold text-gray-500">Solde disponible</span>
+                        <span className="text-[10px] font-semibold text-gray-500">{t('wallet.availableBalance')}</span>
                         <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
                       </div>
                     </div>
@@ -712,7 +714,7 @@ export function Wallet() {
                       className="bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition-transform"
                     >
                       <ArrowUpRight size={14} strokeWidth={3} />
-                      Retirer
+                      {t('wallet.withdrawBtn')}
                     </button>
                   </div>
                 </div>
@@ -741,27 +743,27 @@ export function Wallet() {
                 selectedTx.status === 'PENDING' ? 'bg-[#FFF3E6] dark:bg-orange-900/30 text-[#FF7A00]' :
                 'bg-red-50 dark:bg-red-900/30 text-red-500'
               }`}>
-                {(selectedTx.status || 'COMPLETED') === 'COMPLETED' ? 'Terminé' : selectedTx.status === 'PENDING' ? 'En cours' : 'Échoué'}
+                {(selectedTx.status || 'COMPLETED') === 'COMPLETED' ? t('wallet.txStatus.completed') : selectedTx.status === 'PENDING' ? t('wallet.txStatus.pending') : t('wallet.txStatus.failed')}
               </span>
             </div>
 
             <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] rounded-2xl p-4 flex flex-col gap-4 border border-gray-100 dark:border-gray-800">
               <div className="flex justify-between items-center">
-                <span className="text-[14px] font-medium text-gray-500">Type</span>
+                <span className="text-[14px] font-medium text-gray-500">{t('wallet.txDetails.type')}</span>
                 <span className="text-[14px] font-bold text-gray-900 dark:text-white">
-                  {selectedTx.type === 'DEPOSIT' ? 'Dépôt' : selectedTx.type === 'REFUND' ? 'Remboursement' : 'Retrait'}
+                  {selectedTx.type === 'DEPOSIT' ? t('wallet.txTypes.deposit') : selectedTx.type === 'REFUND' ? t('wallet.txTypes.refund') : t('wallet.txTypes.withdrawal')}
                 </span>
               </div>
               <div className="h-[1px] bg-gray-200 dark:bg-gray-800 w-full" />
               <div className="flex justify-between items-center">
-                <span className="text-[14px] font-medium text-gray-500">Date</span>
+                <span className="text-[14px] font-medium text-gray-500">{t('wallet.txDetails.date')}</span>
                 <span className="text-[14px] font-bold text-gray-900 dark:text-white">
                   {new Date(selectedTx.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               <div className="h-[1px] bg-gray-200 dark:bg-gray-800 w-full" />
               <div className="flex justify-between items-center">
-                <span className="text-[14px] font-medium text-gray-500">ID Transaction</span>
+                <span className="text-[14px] font-medium text-gray-500">{t('wallet.txDetails.id')}</span>
                 <span className="text-[14px] font-bold font-mono text-gray-900 dark:text-white text-right max-w-[180px] truncate">
                   {selectedTx.id}
                 </span>
@@ -769,14 +771,14 @@ export function Wallet() {
             </div>
 
             <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] rounded-2xl p-4 border border-gray-100 dark:border-gray-800">
-              <h3 className="text-[14px] font-medium text-gray-500 mb-2">Description</h3>
+              <h3 className="text-[14px] font-medium text-gray-500 mb-2">{t('wallet.txDetails.description')}</h3>
               <p className="text-[14px] font-semibold text-gray-900 dark:text-white leading-relaxed">
                 {selectedTx.description}
               </p>
             </div>
 
             <Button onClick={() => setSelectedTx(null)} className="w-full mt-4 h-[56px] rounded-[16px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 font-bold text-[16px]">
-              Fermer
+              {t('wallet.close')}
             </Button>
           </div>
         )}
@@ -784,8 +786,8 @@ export function Wallet() {
 
       <BottomSheet open={showEventSelector} onClose={() => setShowEventSelector(false)}>
         <div className="px-4 pt-5 pb-8 flex flex-col gap-3 font-poppins max-h-[85vh]">
-          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">Choisir l'origine des fonds</h3>
-          <p className="text-[13px] text-gray-500 text-center mb-1">Sélectionnez la cagnotte depuis laquelle vous souhaitez retirer de l'argent.</p>
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">{t('wallet.originFunds.title')}</h3>
+          <p className="text-[13px] text-gray-500 text-center mb-1">{t('wallet.originFunds.subtitle')}</p>
           
           <div className="flex flex-col gap-3 overflow-y-auto pb-4 flex-1">
             {stats?.poolEvents?.map(evt => (
@@ -798,7 +800,7 @@ export function Wallet() {
                   <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${new Date(evt.startAt) > new Date() ? 'bg-[#4CAF50]' : 'bg-gray-400'}`} />
                     <span className="text-[10px] font-bold text-white leading-none">
-                      {new Date(evt.startAt) > new Date() ? 'En cours' : 'Terminé'}
+                      {new Date(evt.startAt) > new Date() ? t('wallet.status.ongoing') : t('wallet.status.ended')}
                     </span>
                   </div>
                 </div>
@@ -820,7 +822,7 @@ export function Wallet() {
                 <div className="flex flex-col items-end gap-2 shrink-0 h-full justify-between py-1 border-l border-gray-100 dark:border-gray-800 pl-2">
                   <div className="flex items-start justify-between w-full">
                     <div className="flex flex-col items-end w-full">
-                      <span className="text-[10px] font-semibold text-gray-500">Solde disponible</span>
+                      <span className="text-[10px] font-semibold text-gray-500">{t('wallet.availableBalance')}</span>
                       <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
                     </div>
                   </div>
@@ -834,14 +836,14 @@ export function Wallet() {
                     className="bg-[#FFF3E6] dark:bg-[#FF7A00]/10 text-[#FF7A00] text-[11px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition-transform"
                   >
                     <ArrowUpRight size={14} strokeWidth={3} />
-                    Retirer
+                    {t('wallet.withdrawBtn')}
                   </button>
                 </div>
               </div>
             ))}
             
             {stats?.poolEvents?.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">Aucune cagnotte débloquée disponible.</p>
+              <p className="text-gray-500 text-sm text-center py-4">{t('wallet.noPoolsAvailable')}</p>
             )}
             
             <button 
@@ -854,8 +856,8 @@ export function Wallet() {
               className="flex flex-row items-center justify-between p-3 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 active:scale-[0.98] transition-transform text-left shadow-sm mt-2"
             >
               <div className="flex flex-col items-start flex-1 pr-3">
-                <span className="font-bold text-[14px] text-gray-900 dark:text-white">Portefeuille global</span>
-                <span className="text-[12px] text-gray-500 font-medium mt-0.5">Solde total: {wallet?.balance?.toLocaleString('fr-FR') || 0} F CFA</span>
+                <span className="font-bold text-[14px] text-gray-900 dark:text-white">{t('wallet.globalWallet')}</span>
+                <span className="text-[12px] text-gray-500 font-medium mt-0.5">{t('wallet.totalBalance', { amount: wallet?.balance?.toLocaleString('fr-FR') || 0 })}</span>
               </div>
               <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 shrink-0">
                 <Landmark size={16} strokeWidth={2.5} />
@@ -877,7 +879,7 @@ export function Wallet() {
 
       <BottomSheet open={showSettingsModal} onClose={() => setShowSettingsModal(false)}>
         <div className="p-6 flex flex-col gap-6 font-poppins pb-8">
-          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">Paramètres du portefeuille</h3>
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white text-center">{t('wallet.settings.title')}</h3>
           
           <div className="flex flex-col gap-3">
             <button 
@@ -888,27 +890,27 @@ export function Wallet() {
                 <Lock size={20} />
               </div>
               <div className="flex flex-col items-start">
-                <span className="font-bold text-[15px] text-gray-900 dark:text-white">Gérer mon code PIN</span>
-                <span className="text-[12px] text-gray-500">Modifier votre code de sécurité</span>
+                <span className="font-bold text-[15px] text-gray-900 dark:text-white">{t('wallet.settings.managePin')}</span>
+                <span className="text-[12px] text-gray-500">{t('wallet.settings.managePinDesc')}</span>
               </div>
             </button>
 
             <button 
-              onClick={() => { setShowSettingsModal(false); toast.info('Bientôt disponible') }}
+              onClick={() => { setShowSettingsModal(false); toast.info(t('wallet.soon')) }}
               className="flex items-center gap-4 p-4 bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 active:scale-[0.98] transition-transform text-left"
             >
               <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
               </div>
               <div className="flex flex-col items-start">
-                <span className="font-bold text-[15px] text-gray-900 dark:text-white">Mes comptes bancaires</span>
-                <span className="text-[12px] text-gray-500">Gérer vos moyens de retrait</span>
+                <span className="font-bold text-[15px] text-gray-900 dark:text-white">{t('wallet.settings.bankAccounts')}</span>
+                <span className="text-[12px] text-gray-500">{t('wallet.settings.bankAccountsDesc')}</span>
               </div>
             </button>
           </div>
           
           <Button onClick={() => setShowSettingsModal(false)} className="w-full h-[56px] rounded-[16px] bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 font-bold text-[16px]">
-            Fermer
+            {t('wallet.close')}
           </Button>
         </div>
       </BottomSheet>
