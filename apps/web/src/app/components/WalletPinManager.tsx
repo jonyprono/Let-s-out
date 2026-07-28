@@ -11,6 +11,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'fi
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 import { Capacitor } from '@capacitor/core'
 import { useAuthStore } from '@/stores/auth.store'
+import { useTranslation } from 'react-i18next'
 
 interface WalletPinManagerProps {
   onVerified?: (token: string) => void
@@ -19,6 +20,7 @@ interface WalletPinManagerProps {
 }
 
 export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPinManagerProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [step, setStep] = useState<'LOADING' | 'VERIFY' | 'SETUP_1' | 'SETUP_2' | 'RESET_AUTH' | 'RESET_OTP'>('LOADING')
   const [pin, setPin] = useState('')
@@ -80,7 +82,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
       }
     },
     onError: (err: any) => {
-      setError(err.response?.data?.error || 'Code PIN incorrect')
+      setError(err.response?.data?.error || t('wallet.pin.pinIncorrect'))
       setPin('')
     }
   })
@@ -98,15 +100,15 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['wallet-pin-status'] })
       if (isChangeMode) {
-        toast.success('Code PIN modifié avec succès')
+        toast.success(t('wallet.pin.pinChangedSuccess'))
         onClose?.()
       } else {
         onVerified?.(data.token)
       }
     },
     onError: (err: any) => {
-      const msg = err.response?.data?.error || 'Erreur lors de la création du code PIN'
-      if (msg === 'Un code PIN existe déjà') {
+      const msg = err.response?.data?.error || t('wallet.pin.pinCreateError')
+      if (msg === 'Un code PIN existe déjà' || msg === t('wallet.pin.pinAlreadyExists')) {
         queryClient.invalidateQueries({ queryKey: ['wallet-pin-status'] })
         setStep('VERIFY')
         setError(null)
@@ -125,7 +127,6 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
 
   const requestOtpMutation = useMutation({
     mutationFn: async ({ pwd, channel }: { pwd: string; channel: 'sms' | 'whatsapp' }) => {
-      // Pour Firebase (SMS), on vérifie d'abord le mot de passe via l'endpoint request-otp
       const res = await apiClient.post<{ success: boolean; message: string }>('/wallet/pin/reset/request-otp', { password: pwd, channel })
       return res.data
     },
@@ -135,9 +136,8 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
         setStep('RESET_OTP')
         setError(null)
       } else {
-        // Envoi SMS via Firebase
         if (!user?.phone) {
-          toast.error('Numéro de téléphone introuvable')
+          toast.error(t('wallet.pin.phoneNotFound'))
           return
         }
         try {
@@ -164,7 +164,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
           }
         } catch (err: any) {
           console.error('Firebase sending error:', err)
-          toast.error(err.message || "Erreur d'envoi du SMS")
+          toast.error(err.message || t('wallet.pin.smsSendError'))
           if (window.recaptchaVerifier) {
             try { window.recaptchaVerifier.clear() } catch {}
             window.recaptchaVerifier = undefined
@@ -175,7 +175,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
       }
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Erreur')
+      setError(err.response?.data?.message || err.response?.data?.error || t('common.error'))
     }
   })
 
@@ -186,14 +186,14 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet-pin-status'] })
-      toast.success('Code PIN réinitialisé, veuillez en créer un nouveau')
+      toast.success(t('wallet.pin.pinResetSuccess'))
       setPin('')
       setTempPin('')
       setStep('SETUP_1')
       setError(null)
     },
     onError: (err: any) => {
-      setError(err.response?.data?.error || 'Code incorrect')
+      setError(err.response?.data?.error || t('wallet.pin.incorrectCode'))
     }
   })
 
@@ -218,7 +218,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
           verifyOtpMutation.mutate({ idToken: token })
         }
       } catch (err: any) {
-        toast.error('Code incorrect ou expiré')
+        toast.error(t('wallet.pin.incorrectCode'))
       } finally {
         setIsFirebaseVerifying(false)
       }
@@ -247,7 +247,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
       if (completedPin === pinToCompare) {
         setupMutation.mutate(completedPin)
       } else {
-        setError('Les codes PIN ne correspondent pas')
+        setError(t('wallet.pin.pinsMismatch'))
         setPin('')
         if (isChangeMode) setNewPinTemp('')
         else setTempPin('')
@@ -272,7 +272,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
           <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
         </button>
         <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">
-          Sécurité du portefeuille
+          {t('wallet.pin.securityTitle')}
         </h1>
       </div>
 
@@ -292,8 +292,8 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                 onComplete={handlePinComplete}
                 error={error}
                 isLoading={verifyMutation.isPending}
-                title="Saisir votre code PIN"
-                subtitle="Accès sécurisé à votre portefeuille"
+                title={t('wallet.pin.enterPinTitle')}
+                subtitle={t('wallet.pin.enterPinSub')}
                 footer={
                   <button 
                     onClick={() => {
@@ -302,39 +302,27 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                     }} 
                     className="text-sm font-semibold text-[#FF991C] hover:underline"
                   >
-                    Code PIN oublié ?
+                    {t('wallet.pin.forgotPin')}
                   </button>
                 }
               />
             )}
             {step === 'RESET_AUTH' && (
               <div className="flex flex-col items-center justify-center w-full h-full pb-8 pt-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Réinitialisation</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('wallet.pin.resetTitle')}</h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 text-center px-4">
-                  Pour des raisons de sécurité, veuillez saisir le mot de passe de votre compte.
+                  {t('wallet.pin.resetSub')}
                 </p>
                 <input 
                   type="password" 
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="Mot de passe"
+                  placeholder={t('wallet.pin.passwordPlaceholder')}
                   className="w-[80%] px-4 py-3 bg-white dark:bg-[#18181b] border border-gray-200 dark:border-gray-800 rounded-[16px] outline-none focus:border-[#FF991C]"
                 />
                 {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
                 
                 <div className="flex gap-3 w-[80%] mt-4">
-                  {/* TODO: réactiver le bouton WhatsApp quand prêt 
-                  <button
-                    onClick={() => setCurrentChannel('whatsapp')}
-                    className={`flex-1 py-3 rounded-[12px] border transition-colors flex items-center justify-center font-medium ${
-                      currentChannel === 'whatsapp'
-                        ? 'border-[#FF991C] bg-[#FFF8F1] text-[#FF991C]'
-                        : 'border-gray-200 dark:border-gray-800 text-gray-500'
-                    }`}
-                  >
-                    WhatsApp
-                  </button>
-                  */}
                   <button
                     onClick={() => setCurrentChannel('sms')}
                     className={`flex-1 py-3 rounded-[12px] border transition-colors flex items-center justify-center font-medium ${
@@ -352,16 +340,16 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                   disabled={!password || requestOtpMutation.isPending || isFirebaseSending}
                   className="w-[80%] mt-8 h-12 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] font-semibold disabled:opacity-50 flex items-center justify-center"
                 >
-                  {(requestOtpMutation.isPending || isFirebaseSending) ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Continuer'}
+                  {(requestOtpMutation.isPending || isFirebaseSending) ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : t('wallet.continue')}
                 </button>
-                <button onClick={() => { setStep('VERIFY'); setError(null) }} className="mt-4 text-sm text-gray-500 hover:underline">Annuler</button>
+                <button onClick={() => { setStep('VERIFY'); setError(null) }} className="mt-4 text-sm text-gray-500 hover:underline">{t('wallet.pin.cancel')}</button>
               </div>
             )}
             {step === 'RESET_OTP' && (
               <div className="flex flex-col items-center justify-center w-full h-full pb-8 pt-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Code de validation</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{t('wallet.pin.validationCodeTitle')}</h2>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 text-center px-4">
-                  Saisissez le code à 6 chiffres envoyé par {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}.
+                  {t('wallet.pin.validationCodeSub', { channel: currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS' })}
                 </p>
                 <input 
                   type="text"
@@ -380,9 +368,9 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                   disabled={otp.length < 6 || verifyOtpMutation.isPending || isFirebaseVerifying}
                   className="w-[80%] mt-8 h-12 bg-[#FF991C] hover:bg-[#e68a19] text-white rounded-[16px] font-semibold disabled:opacity-50 flex items-center justify-center"
                 >
-                  {(verifyOtpMutation.isPending || isFirebaseVerifying) ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Vérifier'}
+                  {(verifyOtpMutation.isPending || isFirebaseVerifying) ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : t('wallet.pin.verify')}
                 </button>
-                <button onClick={() => { setStep('VERIFY'); setError(null) }} className="mt-4 text-sm text-gray-500 hover:underline">Annuler</button>
+                <button onClick={() => { setStep('VERIFY'); setError(null) }} className="mt-4 text-sm text-gray-500 hover:underline">{t('wallet.pin.cancel')}</button>
               </div>
             )}
             {step === 'SETUP_1' && (
@@ -392,8 +380,8 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                 onComplete={handlePinComplete}
                 error={error}
                 isLoading={setupMutation.isPending}
-                title="Créer un code PIN"
-                subtitle="Ce code protégera votre portefeuille et vos retraits"
+                title={t('wallet.pin.createPinTitle')}
+                subtitle={t('wallet.pin.createPinSub')}
               />
             )}
             {step === 'SETUP_2' && (
@@ -403,8 +391,8 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                 onComplete={handlePinComplete}
                 error={error}
                 isLoading={setupMutation.isPending}
-                title="Confirmer le code PIN"
-                subtitle="Saisissez à nouveau votre code PIN"
+                title={t('wallet.pin.confirmPinTitle')}
+                subtitle={t('wallet.pin.confirmPinSub')}
               />
             )}
           </motion.div>
