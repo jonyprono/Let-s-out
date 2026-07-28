@@ -205,6 +205,93 @@ export default async function usersRoutes(app: FastifyInstance) {
     return reply.send(profile)
   })
 
+  // ─── Sessions (Refresh Tokens) ──────────────────────────────────────────
+  
+  // Get active sessions
+  app.get('/me/sessions', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const currentToken = req.cookies['refresh_token'] || (req.body as any)?.refreshToken
+
+    const tokens = await app.prisma.refreshToken.findMany({
+      where: { 
+        userId: sub,
+        revokedAt: null,
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        userAgent: true,
+        ipAddress: true,
+        createdAt: true,
+        expiresAt: true,
+        token: true,
+      }
+    })
+
+    const sessions = tokens.map(t => {
+      const isCurrent = t.token === currentToken
+      return {
+        id: t.id,
+        userAgent: t.userAgent,
+        ipAddress: t.ipAddress,
+        createdAt: t.createdAt,
+        expiresAt: t.expiresAt,
+        isCurrent
+      }
+    })
+
+    return reply.send(sessions)
+  })
+
+  // Revoke a specific session
+  app.delete('/me/sessions/:id', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+
+    const record = await app.prisma.refreshToken.findUnique({ where: { id } })
+    if (!record || record.userId !== sub) {
+      return reply.code(404).send({ error: 'Session not found' })
+    }
+
+    await app.prisma.refreshToken.update({
+      where: { id },
+      data: { revokedAt: new Date() }
+    })
+    
+    await app.redis.del(`refresh:${record.token}`)
+
+    return reply.send({ success: true, message: 'Session revoked' })
+  })
+
+  // Revoke all other sessions
+  app.delete('/me/sessions', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const currentToken = req.cookies['refresh_token'] || (req.body as any)?.refreshToken
+
+    const otherSessions = await app.prisma.refreshToken.findMany({
+      where: {
+        userId: sub,
+        token: { not: currentToken },
+        revokedAt: null
+      }
+    })
+
+    await app.prisma.refreshToken.updateMany({
+      where: {
+        userId: sub,
+        token: { not: currentToken },
+        revokedAt: null
+      },
+      data: { revokedAt: new Date() }
+    })
+
+    for (const session of otherSessions) {
+      await app.redis.del(`refresh:${session.token}`)
+    }
+
+    return reply.send({ success: true, message: 'All other sessions revoked' })
+  })
+
   // Submit KYC documents (multipart)
   app.post('/me/kyc', async (req, reply) => {
     const { sub } = req.user as { sub: string }

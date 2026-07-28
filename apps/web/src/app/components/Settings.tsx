@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { PreferencesModal } from '@/features/users/components/PreferencesModal';
-import { ChangePasswordModal } from '@/features/users/components/ChangePasswordModal';
+import { SecurityModal } from '@/features/users/components/SecurityModal';
 import { PrivacyModal } from '@/features/users/components/PrivacyModal';
 import { EditPhoneModal } from '@/features/users/components/EditPhoneModal';
 import { EditEmailModal } from '@/features/users/components/EditEmailModal';
@@ -113,7 +113,7 @@ export function Settings({ onBack }: SettingsProps) {
   // Modal states — all preserved
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
-  const [showPassModal, setShowPassModal] = useState(false);
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -380,7 +380,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconColor="text-green-500"
               title="Sécurité"
               subtitle="Mot de passe, vérification, sessions"
-              onClick={() => setShowPassModal(true)}
+              onClick={() => setShowSecurityModal(true)}
             />
             <SettingsRow
               icon={<Globe className="w-4 h-4" />}
@@ -564,7 +564,7 @@ export function Settings({ onBack }: SettingsProps) {
       {/* ── Modales (toutes préservées) ─────────────────────────────────────── */}
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
       {showPreferencesModal && <PreferencesModal onClose={() => setShowPreferencesModal(false)} />}
-      {showPassModal && <ChangePasswordModal onClose={() => setShowPassModal(false)} />}
+      {showSecurityModal && <SecurityModal onClose={() => setShowSecurityModal(false)} kycStatus={kycStatus} />}
       {showPrivacyModal && <PrivacyModal onClose={() => setShowPrivacyModal(false)} />}
       {showPhoneModal && <EditPhoneModal onClose={() => setShowPhoneModal(false)} />}
       {showEmailModal && <EditEmailModal onClose={() => setShowEmailModal(false)} />}
