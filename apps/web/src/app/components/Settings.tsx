@@ -305,7 +305,7 @@ export function Settings({ onBack }: SettingsProps) {
 
           {/* Sécurité */}
           <button
-            onClick={() => setShowPassModal(true)}
+            onClick={() => setShowSecurityModal(true)}
             className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-3 shadow-sm flex flex-col gap-1 active:scale-[0.97] transition-transform text-left"
           >
             <div className="flex items-start justify-between mb-0.5">
