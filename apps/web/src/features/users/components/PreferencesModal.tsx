@@ -1,11 +1,25 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { X, Check, Moon, Sun, Monitor, Bell } from 'lucide-react';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useTheme } from 'next-themes';
+import i18n from '@/lib/i18n';
 
 interface Props {
   onClose: () => void;
 }
+
+/**
+ * AVAILABLE_LANGUAGES — the single place to add a new language.
+ * After running `node scripts/translate.mjs --lang es` and adding
+ * the import in i18n.ts, just uncomment the line below.
+ */
+const AVAILABLE_LANGUAGES = [
+  { code: 'fr', label: 'Français', flag: '🇫🇷', region: 'France' },
+  { code: 'en', label: 'English',  flag: '🇬🇧', region: 'United Kingdom' },
+  // { code: 'es', label: 'Español',  flag: '🇪🇸', region: 'España' },
+  // { code: 'pt', label: 'Português',flag: '🇵🇹', region: 'Portugal' },
+  // { code: 'de', label: 'Deutsch',  flag: '🇩🇪', region: 'Deutschland' },
+];
 
 export function PreferencesModal({ onClose }: Props) {
   const { language, setLanguage, notifEnabled, setNotifEnabled } = useSettingsStore();
@@ -18,10 +32,8 @@ export function PreferencesModal({ onClose }: Props) {
   const handleSave = () => {
     // Save Language
     if (selectedLang !== language) {
-      setLanguage(selectedLang as 'fr' | 'en');
-      import('@/lib/i18n').then(({ default: i18n }) => {
-        i18n.changeLanguage(selectedLang);
-      });
+      setLanguage(selectedLang);
+      i18n.changeLanguage(selectedLang);
     }
 
     // Save Theme
@@ -32,7 +44,6 @@ export function PreferencesModal({ onClose }: Props) {
     // Save Notifications
     if (notifications !== notifEnabled) {
       setNotifEnabled(notifications);
-      // Here you could trigger push notification permission request if enabled
     }
 
     onClose();
@@ -85,32 +96,32 @@ export function PreferencesModal({ onClose }: Props) {
             </div>
           </div>
 
-          {/* Language Section */}
+          {/* Language Section — dynamic from AVAILABLE_LANGUAGES */}
           <div>
             <h3 className="text-[13px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Langue</h3>
             <div className="space-y-2">
-              <button
-                onClick={() => setSelectedLang('fr')}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
-                  selectedLang === 'fr' ? 'border-[#FF7A00] bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333]'
-                }`}
-              >
-                <span className={`font-semibold text-[14px] ${selectedLang === 'fr' ? 'text-[#FF7A00]' : 'text-gray-700 dark:text-gray-300'}`}>
-                  🇫🇷 Français
-                </span>
-                {selectedLang === 'fr' && <Check size={20} className="text-[#FF7A00]" />}
-              </button>
-              <button
-                onClick={() => setSelectedLang('en')}
-                className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
-                  selectedLang === 'en' ? 'border-[#FF7A00] bg-orange-50/50 dark:bg-orange-900/20' : 'border-gray-100 dark:border-[#333]'
-                }`}
-              >
-                <span className={`font-semibold text-[14px] ${selectedLang === 'en' ? 'text-[#FF7A00]' : 'text-gray-700 dark:text-gray-300'}`}>
-                  🇬🇧 English
-                </span>
-                {selectedLang === 'en' && <Check size={20} className="text-[#FF7A00]" />}
-              </button>
+              {AVAILABLE_LANGUAGES.map(lang => (
+                <button
+                  key={lang.code}
+                  onClick={() => setSelectedLang(lang.code)}
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${
+                    selectedLang === lang.code
+                      ? 'border-[#FF7A00] bg-orange-50/50 dark:bg-orange-900/20'
+                      : 'border-gray-100 dark:border-[#333]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-[22px] leading-none">{lang.flag}</span>
+                    <div className="text-left">
+                      <span className={`font-semibold text-[14px] block ${selectedLang === lang.code ? 'text-[#FF7A00]' : 'text-gray-700 dark:text-gray-300'}`}>
+                        {lang.label}
+                      </span>
+                      <span className="text-[11px] text-gray-400 dark:text-gray-500">{lang.region}</span>
+                    </div>
+                  </div>
+                  {selectedLang === lang.code && <Check size={20} className="text-[#FF7A00]" />}
+                </button>
+              ))}
             </div>
           </div>
 
