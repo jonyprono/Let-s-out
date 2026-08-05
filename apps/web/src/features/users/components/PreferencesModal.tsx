@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { X, Check, Moon, Sun, Monitor, Bell } from 'lucide-react';
 import { useSettingsStore } from '@/stores/settings.store';
 import { useTheme } from 'next-themes';
@@ -16,7 +16,7 @@ interface Props {
 const AVAILABLE_LANGUAGES = [
   { code: 'fr', label: 'Français', flag: '🇫🇷', region: 'France' },
   { code: 'en', label: 'English',  flag: '🇬🇧', region: 'United Kingdom' },
-  // { code: 'es', label: 'Español',  flag: '🇪🇸', region: 'España' },
+  { code: 'es', label: 'Español',  flag: '🇪🇸', region: 'España' },
   // { code: 'pt', label: 'Português',flag: '🇵🇹', region: 'Portugal' },
   // { code: 'de', label: 'Deutsch',  flag: '🇩🇪', region: 'Deutschland' },
 ];

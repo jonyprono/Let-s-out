@@ -1,4 +1,4 @@
-﻿import i18n from 'i18next';
+import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 /**
@@ -18,7 +18,7 @@ import { initReactI18next } from 'react-i18next';
 
 import fr from '../locales/fr.json';
 import en from '../locales/en.json';
-// import es from '../locales/es.json';
+import es from '../locales/es.json';
 // import pt from '../locales/pt.json';
 
 const getBrowserLanguage = () => {
@@ -34,7 +34,7 @@ i18n
     resources: {
       fr: { translation: fr },
       en: { translation: en },
-      // es: { translation: es },
+      es: { translation: es },
       // pt: { translation: pt },
     },
     lng: getBrowserLanguage(),
