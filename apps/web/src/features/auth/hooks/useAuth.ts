@@ -194,7 +194,10 @@ export function useDeleteAccount() {
     onSuccess: () => {
       qc.clear()
       logout()
-      window.location.href = '/welcome'
+      // Delay to allow React to unmount portals (modals) cleanly before navigating
+      setTimeout(() => {
+        window.location.href = '/welcome'
+      }, 300)
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Erreur lors de la suppression du compte')
