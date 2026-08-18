@@ -7,6 +7,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:259737951981:android:697bbb5eb29707dedeb6e4",
+        "android_client_info": {
+          "package_name": "com.fihodecorp.letsout"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "259737951981-qrbvi6caic644v3i10kvf08p349pl0em.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAGQcTSBDJ2X3ixqjaM7l6DOsN_9yQHx8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "259737951981-qrbvi6caic644v3i10kvf08p349pl0em.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "259737951981-egc736gs4p0r2oi1t86utjnic648agoj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.letsout.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:259737951981:android:4b82f457f478ee26deb6e4",
         "android_client_info": {
           "package_name": "com.letsout.app"

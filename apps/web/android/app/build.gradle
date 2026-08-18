@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.letsout.app"
+    namespace = "com.fihodecorp.letsout"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.letsout.app"
+        applicationId "com.fihodecorp.letsout"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -16,8 +16,17 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            storeFile file('upload-key.jks')
+            storePassword 'letsoutpass123'
+            keyAlias 'upload'
+            keyPassword 'letsoutpass123'
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }

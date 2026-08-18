@@ -1,4 +1,4 @@
-package com.letsout.app;
+package com.fihodecorp.letsout;
 
 import android.os.Bundle;
 import androidx.core.view.WindowCompat;

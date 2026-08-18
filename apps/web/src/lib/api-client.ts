@@ -46,8 +46,8 @@ export const apiClient = axios.create({
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
   // On mobile (Capacitor), allow more time for Render free-tier cold starts (~50s)
-  // On web browser, keep a snappy 15s timeout (uploads have their own extended timeout)
-  timeout: isCapacitor() ? 90000 : 15000,
+  // On web browser, allow 45s for Render free-tier cold starts
+  timeout: isCapacitor() ? 90000 : 45000,
 })
 
 // ── Request interceptor ───────────────────────────────────────────────────────

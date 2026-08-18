@@ -18,8 +18,13 @@ function getCorsOriginValidator(allowedOrigins: string[]) {
       return
     }
 
-    // Allow explicit origins from env var (e.g. Vercel production URL)
-    if (allowedOrigins.some((o) => origin === o || origin.endsWith(o.replace(/^https?:\/\//, '')))) {
+    // Allow Vercel preview/production URLs, Render, letsout.app and explicit origins from env var
+    if (
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.onrender.com') ||
+      origin.includes('letsout.app') ||
+      allowedOrigins.some((o) => origin === o || origin.endsWith(o.replace(/^https?:\/\//, '')))
+    ) {
       cb(null, true)
       return
     }

@@ -31,7 +31,7 @@ const isProduction = process.env.CAPACITOR_DEV !== 'true' && process.env.CAPACIT
 const LOCAL_IP = getLocalIP()
 
 const config: CapacitorConfig = {
-  appId: 'com.letsout.app',
+  appId: 'com.fihodecorp.letsout',
   appName: "Let's Out",
   webDir: 'dist',
   server: isProduction

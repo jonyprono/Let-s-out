@@ -730,7 +730,10 @@ export function Settings({ onBack }: SettingsProps) {
                     {t('settings.modals.deleteBack')}
                   </button>
                   <button
-                    onClick={() => doDeleteAccount(deleteReason || undefined)}
+                    onClick={() => {
+                      setShowDeleteModal(false);
+                      doDeleteAccount(deleteReason || undefined);
+                    }}
                     disabled={deletingAccount}
                     className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                   >

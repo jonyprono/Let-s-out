@@ -184,7 +184,6 @@ export function useResetPassword() {
 
 export function useDeleteAccount() {
   const { logout } = useAuthStore()
-  const navigate = useNavigate()
   const qc = useQueryClient()
 
   return useMutation({
@@ -195,7 +194,7 @@ export function useDeleteAccount() {
     onSuccess: () => {
       qc.clear()
       logout()
-      navigate('/welcome', { replace: true })
+      window.location.href = '/welcome'
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || 'Erreur lors de la suppression du compte')
