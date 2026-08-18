@@ -633,25 +633,25 @@ export function Settings({ onBack }: SettingsProps) {
                   <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
                     <AlertTriangle className="w-8 h-8 text-red-500" />
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('settings.modals.deleteTitle1')}</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white"><span>{t('settings.modals.deleteTitle1')}</span></h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
                     <Trans i18nKey="settings.modals.deleteDesc1" components={{ strong: <strong /> }} />
                   </p>
                 </div>
                 <div className="space-y-3">
                   <div className="bg-red-50 dark:bg-red-500/10 rounded-2xl p-4 space-y-2">
-                    <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide">{t('settings.modals.deleteDeletedLabel')}</p>
+                    <p className="text-xs font-semibold text-red-600 dark:text-red-400 uppercase tracking-wide"><span>{t('settings.modals.deleteDeletedLabel')}</span></p>
                     <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
-                      <li>• {t('settings.modals.deleteDeleted1')}</li>
-                      <li>• {t('settings.modals.deleteDeleted2')}</li>
-                      <li>• {t('settings.modals.deleteDeleted3')}</li>
+                      <li><span>• {t('settings.modals.deleteDeleted1')}</span></li>
+                      <li><span>• {t('settings.modals.deleteDeleted2')}</span></li>
+                      <li><span>• {t('settings.modals.deleteDeleted3')}</span></li>
                     </ul>
                   </div>
                   <div className="bg-gray-50 dark:bg-[#222] rounded-2xl p-4 space-y-2">
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{t('settings.modals.deleteKeptLabel')}</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"><span>{t('settings.modals.deleteKeptLabel')}</span></p>
                     <ul className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-                      <li>• {t('settings.modals.deleteKept1')}</li>
-                      <li>• {t('settings.modals.deleteKept2')}</li>
+                      <li><span>• {t('settings.modals.deleteKept1')}</span></li>
+                      <li><span>• {t('settings.modals.deleteKept2')}</span></li>
                     </ul>
                   </div>
                 </div>
@@ -660,13 +660,13 @@ export function Settings({ onBack }: SettingsProps) {
                     onClick={() => setShowDeleteModal(false)}
                     className="flex-1 py-3 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#2A2A2A] active:scale-[0.98] transition-all"
                   >
-                    {t('settings.modals.deleteCancel')}
+                    <span>{t('settings.modals.deleteCancel')}</span>
                   </button>
                   <button
                     onClick={() => setDeleteStep(2)}
                     className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 active:scale-[0.98] transition-all"
                   >
-                    {t('settings.modals.deleteContinue')}
+                    <span>{t('settings.modals.deleteContinue')}</span>
                   </button>
                 </div>
               </>
@@ -676,14 +676,14 @@ export function Settings({ onBack }: SettingsProps) {
                   <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center">
                     <Trash2 className="w-7 h-7 text-red-500" />
                   </div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('settings.modals.deleteTitle2')}</h2>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white"><span>{t('settings.modals.deleteTitle2')}</span></h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {t('settings.modals.deleteDesc2')}
+                    <span>{t('settings.modals.deleteDesc2')}</span>
                   </p>
                 </div>
                 <div className="mb-5">
                   <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide block mb-2">
-                    {t('settings.modals.deleteReasonLabel')}
+                    <span>{t('settings.modals.deleteReasonLabel')}</span>
                   </label>
                   <div className="grid grid-cols-1 gap-2 mb-3">
                     {[
@@ -701,7 +701,7 @@ export function Settings({ onBack }: SettingsProps) {
                             : 'border-gray-200 dark:border-[#2A2A2A] text-gray-600 dark:text-gray-400'
                         }`}
                       >
-                        {r}
+                        <span>{r}</span>
                       </button>
                     ))}
                   </div>
@@ -727,7 +727,7 @@ export function Settings({ onBack }: SettingsProps) {
                     disabled={deletingAccount}
                     className="flex-1 py-3 rounded-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-[#2A2A2A] active:scale-[0.98] transition-all disabled:opacity-50"
                   >
-                    {t('settings.modals.deleteBack')}
+                    <span>{t('settings.modals.deleteBack')}</span>
                   </button>
                   <button
                     onClick={() => {
@@ -738,8 +738,8 @@ export function Settings({ onBack }: SettingsProps) {
                     className="flex-1 py-3 rounded-2xl font-semibold text-white bg-red-500 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2"
                   >
                     {deletingAccount
-                      ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('settings.modals.deleteConfirming')}</>
-                      : <><Trash2 className="w-4 h-4" /> {t('settings.modals.deleteConfirm')}</>
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /><span>{t('settings.modals.deleteConfirming')}</span></>
+                      : <><Trash2 className="w-4 h-4" /><span>{t('settings.modals.deleteConfirm')}</span></>
                     }
                   </button>
                 </div>
