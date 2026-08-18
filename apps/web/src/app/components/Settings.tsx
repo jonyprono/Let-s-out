@@ -574,7 +574,7 @@ export function Settings({ onBack }: SettingsProps) {
       {showEmailModal && <EditEmailModal onClose={() => setShowEmailModal(false)} />}
 
       {/* ── Modale de note (Rating) ────────────────────────────────────────── */}
-      {showRatingModal && createPortal(
+      {showRatingModal && (
         <div 
           className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm sm:items-center px-4 pb-6 sm:p-4"
           onClick={() => setShowRatingModal(false)}
@@ -587,9 +587,9 @@ export function Settings({ onBack }: SettingsProps) {
               <div className="w-16 h-16 rounded-full bg-yellow-50 dark:bg-yellow-500/10 flex items-center justify-center">
                 <Star className="w-8 h-8 text-yellow-500 fill-yellow-500" />
               </div>
-              <h2 className="text-[20px] font-bold text-gray-900 dark:text-white">{t('settings.modals.rateTitle')}</h2>
+              <h2 className="text-[20px] font-bold text-gray-900 dark:text-white"><span>{t('settings.modals.rateTitle')}</span></h2>
               <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                {t('settings.modals.rateSubtitle')}
+                <span>{t('settings.modals.rateSubtitle')}</span>
               </p>
             </div>
             <div className="space-y-3">
@@ -613,12 +613,11 @@ export function Settings({ onBack }: SettingsProps) {
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
 
       {/* ── Modale suppression de compte ─────────────────────────────────────── */}
-      {showDeleteModal && createPortal(
+      {showDeleteModal && (
         <div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-end sm:justify-center px-4 pb-6 sm:p-4 bg-black/40 backdrop-blur-sm"
           onClick={() => setShowDeleteModal(false)}
@@ -746,8 +745,7 @@ export function Settings({ onBack }: SettingsProps) {
               </>
             )}
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   );
