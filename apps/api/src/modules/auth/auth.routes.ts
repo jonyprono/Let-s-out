@@ -96,4 +96,23 @@ export default async function authRoutes(app: FastifyInstance) {
     preHandler: [app.authenticate, app.requireAdmin],
     handler: ctrl.createAdmin.bind(ctrl),
   })
+
+  // ── CLIENT AUTH DIAGNOSTIC LOG (no auth required) ──────────────
+  // Mobile app sends auth step logs here → visible in Render dashboard logs
+  app.post('/client-log', {
+    config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
+    handler: async (req, reply) => {
+      const { level, flow, step, data, error, timestamp } = req.body as any
+      const tag = `[MobileAuthLog][${level}][${flow}]`
+      const msg = `${tag} ${step}`
+      if (level === 'ERROR') {
+        req.log.error({ data, error }, msg)
+      } else if (level === 'WARN') {
+        req.log.warn({ data }, msg)
+      } else {
+        req.log.info({ data }, msg)
+      }
+      return reply.status(200).send({ ok: true })
+    },
+  })
 }

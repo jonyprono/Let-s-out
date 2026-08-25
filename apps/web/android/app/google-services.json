@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "259737951981-7urf8ebnn5sqqqvckokl1t2f1phndcjg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fihodecorp.letsout",
+            "certificate_hash": "df54a5d90844c9e32b2b9df82f28a8153c843d5a"
+          }
+        },
+        {
           "client_id": "259737951981-qrbvi6caic644v3i10kvf08p349pl0em.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -49,14 +57,6 @@
         }
       },
       "oauth_client": [
-        {
-          "client_id": "259737951981-sgo7ffp31c2g7ppls7j7ihh4jvv93cag.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.letsout.app",
-            "certificate_hash": "9463b647a8e509137a6c9e12fdd86fe21fe7899f"
-          }
-        },
         {
           "client_id": "259737951981-qrbvi6caic644v3i10kvf08p349pl0em.apps.googleusercontent.com",
           "client_type": 3

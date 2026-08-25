@@ -18,6 +18,7 @@ import { SocialButton } from '@/components/ui/social-button'
 import { Divider } from '@/components/ui/divider'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { useTranslation } from 'react-i18next'
+import { googleAuthLogger } from '@/lib/auth-logger'
 
 interface LoginProps {
   onSignup: () => void
@@ -62,13 +63,27 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
       let idToken = ''
       let email = ''
 
+      const platform = Capacitor.isNativePlatform() ? 'native' : 'web'
+      googleAuthLogger.start(platform)
+
       if (Capacitor.isNativePlatform()) {
+        // ── Étape 2 : Appel Firebase natif ─────────────────────────────
+        googleAuthLogger.nativeSignInAttempt()
         const result = await FirebaseAuthentication.signInWithGoogle()
+
+        // ── Étape 3 : Vérification résultat ────────────────────────────
+        googleAuthLogger.nativeSignInResult(result.user?.email ?? undefined)
         if (!result.user?.email) {
           toast.error(t('login.errorGoogle'))
           return
         }
+
+        // ── Étape 4 : Récupération ID Token ────────────────────────────
+        googleAuthLogger.nativeGetIdToken()
         const tokenResult = await FirebaseAuthentication.getIdToken()
+
+        // ── Étape 5 : Vérification token ───────────────────────────────
+        googleAuthLogger.nativeIdTokenResult(!!tokenResult.token)
         if (!tokenResult.token) {
           toast.error(t('login.errorToken'))
           return
@@ -76,6 +91,8 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         idToken = tokenResult.token
         email = result.user.email
       } else {
+        // ── Web : Google Popup ────────────────────────────────────────
+        googleAuthLogger.webSignInAttempt()
         const provider = new GoogleAuthProvider()
         provider.setCustomParameters({
           prompt: 'select_account consent'
@@ -83,13 +100,19 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         const result = await signInWithPopup(auth, provider)
         idToken = await result.user.getIdToken()
         email = result.user.email || ''
+        googleAuthLogger.webSignInResult(email)
       }
 
+      // ── Étape 6 & 7 : Appel backend ──────────────────────────────────
       if (idToken && email) {
-        googleSignIn({ idToken, email })
+        googleAuthLogger.backendCallStart(email)
+        googleSignIn({ idToken, email }, {
+          onSuccess: (data: any) => googleAuthLogger.backendCallSuccess(data?.user?.id),
+          onError: (err: unknown) => googleAuthLogger.backendCallError(err),
+        })
       }
     } catch (err: any) {
-      console.error("Google Auth Error:", err)
+      googleAuthLogger.error('handleGoogleLogin', err)
       if (err?.code !== 'auth/popup-closed-by-user' && err?.message?.indexOf('canceled') === -1) {
         toast.error(t('login.errorGoogle'))
       }

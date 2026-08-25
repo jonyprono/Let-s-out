@@ -45,6 +45,7 @@ import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { Input } from '@/components/ui/input'
 import { isFieldValid } from '@/lib/validation'
 import { ProgressBar } from '@/components/ui/progress-bar'
+import { otpLogger } from '@/lib/auth-logger'
 import { useTranslation } from 'react-i18next'
 
 const INTERESTS_LIST = [
@@ -197,7 +198,9 @@ export function Signup({ onBack }: SignupProps) {
         toast.error(t('signup.errorSelectChannel'))
         return
       }
-      if (!validatePhone(country.code, phone)) {
+      const phoneValid = validatePhone(country.code, phone)
+      otpLogger.phoneValidation(phoneValid, country.code)
+      if (!phoneValid) {
         return toast.error(
           country.code === '+229'
             ? t('signup.errorBenin')
@@ -208,8 +211,11 @@ export function Signup({ onBack }: SignupProps) {
         if (currentChannel === 'sms') {
           try {
             setIsFirebaseSending(true)
+            otpLogger.sendStart(fullPhone, 'sms')
             if (Capacitor.isNativePlatform()) {
+              otpLogger.sendRequest('sms')
               const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
+                otpLogger.sendSuccess('sms', `verificationId reçu: ${event.verificationId?.slice(0, 20)}...`)
                 setNativeVerificationId(event.verificationId)
               })
               await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
@@ -220,23 +226,44 @@ export function Signup({ onBack }: SignupProps) {
               if (!window.recaptchaVerifier) {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
               }
+              otpLogger.sendRequest('sms')
               const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
+              otpLogger.sendSuccess('sms', 'Confirmation Firebase Web reçue')
               setConfirmationResult(confirmation); setStep(2); setCountdown(59)
               setTimeout(() => otpRefs.current[0]?.focus(), 100)
             }
           } catch (err: any) {
-            console.error('Firebase sending error:', err)
+            otpLogger.sendError(err)
             toast.error(`[Firebase Error] ${err?.message || err}`)
             setConfirmationResult(null)
+            // Fallback: envoyer via backend
+            otpLogger.sendRequest('sms')
             sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
-              onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-              onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || t('signup.errorResend')) },
+              onSuccess: () => {
+                otpLogger.sendSuccess('sms', 'Fallback backend SMS envoyé avec succès')
+                setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100)
+              },
+              onError: (e: any) => {
+                otpLogger.sendError(e)
+                if (e?.response?.status === 429) toast.error('Trop de tentatives.')
+                else toast.error(e?.response?.data?.message || t('signup.errorResend'))
+              },
             })
           } finally { setIsFirebaseSending(false) }
         } else {
+          // WhatsApp OTP
+          otpLogger.sendStart(fullPhone, 'whatsapp')
+          otpLogger.sendRequest('whatsapp')
           sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
-            onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-            onError: (e: any) => { if (e?.response?.status === 429) toast.error('Trop de tentatives.'); else toast.error(e?.response?.data?.message || "Erreur d'envoi") },
+            onSuccess: () => {
+              otpLogger.sendSuccess('whatsapp', 'OTP WhatsApp envoyé avec succès')
+              setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100)
+            },
+            onError: (e: any) => {
+              otpLogger.sendError(e)
+              if (e?.response?.status === 429) toast.error('Trop de tentatives.')
+              else toast.error(e?.response?.data?.message || "Erreur d'envoi")
+            },
           })
         }
       }
@@ -257,9 +284,11 @@ export function Signup({ onBack }: SignupProps) {
     } else if (step === 2) {
       const codeStr = otp.join('')
       if (codeStr.length < OTP_LENGTH) return
+      otpLogger.verifyStart(fullPhone)
       if (currentChannel === 'sms' && (confirmationResult || nativeVerificationId)) {
         setIsFirebaseVerifying(true)
         try {
+          otpLogger.verifyRequest()
           if (Capacitor.isNativePlatform() && nativeVerificationId) {
             await FirebaseAuthentication.confirmVerificationCode({
               verificationId: nativeVerificationId,
@@ -267,18 +296,25 @@ export function Signup({ onBack }: SignupProps) {
             })
             const tokenResult = await FirebaseAuthentication.getIdToken()
             if (tokenResult.token) setIdToken(tokenResult.token)
+            otpLogger.verifySuccess()
             setStep(3)
           } else if (confirmationResult) {
             const result = await confirmationResult.confirm(codeStr)
             const token = await result.user.getIdToken()
+            otpLogger.verifySuccess()
             setIdToken(token); setStep(3)
           }
-        } catch { toast.error(t('signup.errorSmsOtp')) }
+        } catch (err: unknown) {
+          otpLogger.verifyError(err)
+          toast.error(t('signup.errorSmsOtp'))
+        }
         finally { setIsFirebaseVerifying(false) }
       } else {
+        // Vérification via backend (WhatsApp ou fallback SMS)
+        otpLogger.verifyRequest()
         checkOtp({ target: fullPhone, code: codeStr }, {
-          onSuccess: () => setStep(3),
-          onError: () => toast.error(t('signup.errorOtp')),
+          onSuccess: () => { otpLogger.verifySuccess(); setStep(3) },
+          onError: (err: unknown) => { otpLogger.verifyError(err); toast.error(t('signup.errorOtp')) },
         })
       }
     } else if (step === 4) {
@@ -368,8 +404,11 @@ export function Signup({ onBack }: SignupProps) {
     setOtp(Array(OTP_LENGTH).fill(''))
     try {
       setIsFirebaseSending(true)
+      otpLogger.sendStart(fullPhone, 'sms')
       if (Capacitor.isNativePlatform()) {
+        otpLogger.sendRequest('sms')
         const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
+          otpLogger.sendSuccess('sms', `[Resend] verificationId: ${event.verificationId?.slice(0, 20)}...`)
           setNativeVerificationId(event.verificationId)
         })
         await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
@@ -381,20 +420,24 @@ export function Signup({ onBack }: SignupProps) {
         if (!window.recaptchaVerifier) {
           window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' })
         }
+        otpLogger.sendRequest('sms')
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
+        otpLogger.sendSuccess('sms', '[Resend] Confirmation Firebase Web')
         setConfirmationResult(confirmation); setCountdown(59)
         toast.success(t('signup.successResend'))
         setTimeout(() => otpRefs.current[0]?.focus(), 100)
       }
-    } catch {
+    } catch (err: unknown) {
+      otpLogger.sendError(err)
       if (!Capacitor.isNativePlatform() && window.recaptchaVerifier) {
         try { window.recaptchaVerifier.clear() } catch {}
         window.recaptchaVerifier = undefined
       }
       setConfirmationResult(null)
+      otpLogger.sendRequest('sms')
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
-        onSuccess: () => { setCountdown(59); toast.success(t('signup.successResendAlt')); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-        onError: () => toast.error(t('signup.errorResend')),
+        onSuccess: () => { otpLogger.sendSuccess('sms', '[Resend fallback] Backend SMS'); setCountdown(59); toast.success(t('signup.successResendAlt')); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
+        onError: (e: unknown) => { otpLogger.sendError(e); toast.error(t('signup.errorResend')) },
       })
     } finally { setIsFirebaseSending(false) }
   }
