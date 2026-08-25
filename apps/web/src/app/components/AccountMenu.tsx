@@ -126,7 +126,7 @@ export function AccountMenu() {
         <div className="flex items-start justify-between mb-4">
           {/* Left: avatar + name */}
           <div
-            className="flex items-center gap-3 active:opacity-70 transition-opacity cursor-pointer"
+            className="flex items-center gap-3 active:opacity-70 transition-opacity cursor-pointer flex-1 min-w-0"
             onClick={() => navigate('/profile')}
           >
             {/* Avatar */}
@@ -143,9 +143,9 @@ export function AccountMenu() {
             </div>
 
             {/* Name + badge */}
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[19px] font-bold text-gray-900 dark:text-white leading-tight">
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-[19px] font-bold text-gray-900 dark:text-white leading-tight truncate">
                   {displayName}
                 </span>
                 {isVerified && (
@@ -155,15 +155,15 @@ export function AccountMenu() {
                   </svg>
                 )}
               </div>
-              <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">{username}</span>
-              <span className="mt-1 inline-block bg-[#FF7A00] text-white text-[10px] font-bold px-2 py-0.5 rounded-md self-start">
+              <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium truncate w-full">{username}</span>
+              <span className="mt-1 inline-block bg-[#FF7A00] text-white text-[10px] font-bold px-2 py-0.5 rounded-md self-start shrink-0">
                 Membre actif
               </span>
             </div>
           </div>
 
           {/* Right: notif + settings */}
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-2 mt-1 shrink-0 ml-2">
             <button
               onClick={() => navigate('/notifications')}
               className="w-10 h-10 flex items-center justify-center active:opacity-70 transition-opacity"

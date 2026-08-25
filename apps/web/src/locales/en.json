@@ -156,7 +156,7 @@
                    "step1PhoneLabel":  "Telephone number",
                    "step1ChannelLabel":  "Receive the code via",
                    "step2Title":  "What is the code you received?",
-                   "step2Subtitle":  "A {length}-digit code sent via {channel} to the",
+                   "step2Subtitle":  "A {{length}}-digit code sent via {{channel}} to the",
                    "resend":  "Resend the code",
                    "resendIn":  "in",
                    "step3Title":  "What is your name?",

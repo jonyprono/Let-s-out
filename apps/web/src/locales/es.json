@@ -156,7 +156,7 @@
                    "step1PhoneLabel":  "NÃºmero de telÃ©fono",
                    "step1ChannelLabel":  "Recibir el cÃ³digo por",
                    "step2Title":  "Â¿CuÃ¡l es el cÃ³digo que has recibido?",
-                   "step2Subtitle":  "CÃ³digo de {length} dÃ­gitos enviado por {channel} al",
+                   "step2Subtitle":  "CÃ³digo de {{length}} dÃ­gitos enviado por {{channel}} al",
                    "resend":  "Reenviar el cÃ³digo",
                    "resendIn":  "en",
                    "step3Title":  "Â¿CÃ³mo te llamas?",

@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "259737951981-9ck736bvj8hoaf4tvr1op5bd36l3asvr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fihodecorp.letsout",
+            "certificate_hash": "5aadd76e61ae06ce15497362a370fc82cf4a369f"
+          }
+        },
+        {
           "client_id": "259737951981-ajvdjlcotanfkstl90hcr9p8peiofhqq.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

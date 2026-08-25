@@ -742,7 +742,7 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1.5 bg-[var(--color-background-primary)]" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="flex-1 flex flex-col-reverse overflow-y-auto p-4 space-y-1.5 space-y-reverse bg-[var(--color-background-primary)]" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
         {isLoading ? (
           <div className="flex flex-col gap-4 py-4">
             {[1, 2, 3, 4, 5].map(i => {
@@ -770,12 +770,12 @@ export function ChatDetails() {
               const senderAvatar = msg.sender?.profile?.avatarUrl ?? null
               const showSenderInfo = isGroup && !isMe
 
-              const prevMsg = index > 0 ? filteredMessages[index - 1] : null
-              const showDateSep = !prevMsg ||
-                new Date(msg.createdAt).toDateString() !== new Date(prevMsg.createdAt).toDateString()
+              const nextMsg = index < filteredMessages.length - 1 ? filteredMessages[index + 1] : null
+              const showDateSep = !nextMsg ||
+                new Date(msg.createdAt).toDateString() !== new Date(nextMsg.createdAt).toDateString()
 
               // Group consecutive messages from same sender, breaking on system messages or date boundaries
-              const isFirstInGroup = !prevMsg || prevMsg.type === 'SYSTEM' || prevMsg.senderId !== msg.senderId || showDateSep
+              const isFirstInGroup = !nextMsg || nextMsg.type === 'SYSTEM' || nextMsg.senderId !== msg.senderId || showDateSep
 
             const isImage = msg.type === 'IMAGE'
             const isVideo = msg.type === 'VIDEO'

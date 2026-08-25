@@ -952,7 +952,10 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
       qc.invalidateQueries({ queryKey: ['events', event.id] });
       setStep('success');
     },
-    onError: () => toast.error('Erreur lors de la création'),
+    onError: (err: any) => {
+      const msg = err?.response?.data?.error || err?.message || 'Erreur lors de la création';
+      toast.error(msg);
+    },
   });
 
   const fmtDate = (d: string) =>
