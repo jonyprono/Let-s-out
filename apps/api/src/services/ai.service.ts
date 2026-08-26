@@ -118,7 +118,9 @@ export class AiService {
           max_tokens: 512,
           temperature: 0.7,
         });
-        const text = completion.choices[0]?.message?.content || '';
+        let text = completion.choices[0]?.message?.content || '';
+        // Remove <think>...</think> block if present
+        text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
         console.log(`[AI] ✅ Succès avec ${model} (${text.length} chars)`);
         return text;
       } catch (err: any) {
