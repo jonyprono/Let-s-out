@@ -16,6 +16,7 @@ import { ContributeModal } from '@/components/shared/ContributeModal'
 import { toast } from 'sonner'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { Capacitor } from '@capacitor/core'
+import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { resolveContributionAmount, computePoolStats, hasActivePool } from '@/lib/pool-contribution'
 import { MessageBubble } from '@/components/ui/message-bubble'
 import { ChatInput } from '@/components/ui/chat-input'
@@ -356,7 +357,6 @@ export function ChatDetails() {
     const currentReply = replyToMsg
 
     qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
-      ...old,
       {
         id: tempId,
         content: localUrl,
@@ -369,7 +369,8 @@ export function ChatDetails() {
         sender: { id: user?.id, profile: user?.profile },
         _optimistic: true,
         ...(currentReply ? { replyToId: currentReply.id } : {})
-      }
+      },
+      ...old
     ])
 
     setReplyToMsg(null)
@@ -402,7 +403,6 @@ export function ChatDetails() {
     setReplyToMsg(null)
 
     qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
-      ...old,
       {
         id: tempId,
         content: caption || null,       // caption goes in content
@@ -416,7 +416,8 @@ export function ChatDetails() {
         sender: { id: user?.id, profile: user?.profile },
         _optimistic: true,
         ...(currentReply ? { replyToId: currentReply.id } : {})
-      }
+      },
+      ...old
     ])
 
     try {
@@ -556,7 +557,12 @@ export function ChatDetails() {
   const handlePressStart = (msgId: string) => {
     touchMovedRef.current = false
     longPressTimerRef.current = setTimeout(() => {
-      if (!touchMovedRef.current) setPickerMsgId(msgId)
+      if (!touchMovedRef.current) {
+        if (Capacitor.isNativePlatform()) {
+          Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {})
+        }
+        setPickerMsgId(msgId)
+      }
     }, 500)
   }
   const handlePressEnd = () => {
@@ -837,8 +843,9 @@ export function ChatDetails() {
 
                   {/* Context menu (moved to bottom sheet) */}
 
-                  <MessageBubble
-                    isSender={isMe}
+                  <div className={`transition-all duration-200 ${pickerMsgId === msg.id ? 'scale-[1.05] z-50 shadow-lg relative' : ''}`}>
+                    <MessageBubble
+                      isSender={isMe}
                     time={format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
                     status={getMessageStatus(msg)}
                     showAvatar={showSenderInfo && isFirstInGroup}
@@ -900,7 +907,8 @@ export function ChatDetails() {
                         </div>
                       </div>
                     ) : null}
-                  </MessageBubble>
+                    </MessageBubble>
+                  </div>
 
                     {/* Reactions display */}
                     {grouped.length > 0 && (
