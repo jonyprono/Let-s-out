@@ -249,6 +249,7 @@ export function ChatDetails() {
   const [showContributeModal, setShowContributeModal] = useState(false)
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null)
   const [pickerMsgId, setPickerMsgId] = useState<string | null>(null)
+  const [selectedMsgId, setSelectedMsgId] = useState<string | null>(null)
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null)
   // Reply-to state: message quoted when sending a file
   const [replyToMsg, setReplyToMsg] = useState<{ id: string; content: string; senderName: string; type: string } | null>(null)
@@ -272,13 +273,14 @@ export function ChatDetails() {
     })
   }
   const [typingUser, setTypingUser] = useState<string | null>(null)
+  // Scroll container ref (flex-col-reverse: scrollTop=0 = visual bottom)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   // Use ref for long-press timer to avoid re-renders
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchMovedRef = useRef(false)
 
   const { openUserProfile } = useUserProfile()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const qc = useQueryClient()
 
@@ -290,10 +292,26 @@ export function ChatDetails() {
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isCancelledRef = useRef(false)
 
-  // Scroll to bottom on new messages
+  // Scroll to bottom (flex-col-reverse: scrollTop = 0 is the visual bottom)
+  const scrollToBottom = useCallback((smooth = true) => {
+    const container = messagesContainerRef.current
+    if (!container) return
+    if (smooth) {
+      container.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      container.scrollTop = 0
+    }
+  }, [])
+
+  // Scroll immediately on initial load, smoothly on new messages
+  const prevMsgCountRef = useRef(0)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    const count = messages?.length ?? 0
+    if (count === 0) return
+    const isInitialLoad = prevMsgCountRef.current === 0
+    scrollToBottom(!isInitialLoad)
+    prevMsgCountRef.current = count
+  }, [messages?.length, scrollToBottom])
 
   // Mark as read on open + send WS read event
   useEffect(() => {
@@ -463,7 +481,6 @@ export function ChatDetails() {
           const localUrl = URL.createObjectURL(audioBlob)
 
           qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
-            ...old,
             {
               id: tempId,
               content: localUrl,
@@ -475,7 +492,8 @@ export function ChatDetails() {
               reactions: [],
               sender: { id: user?.id, profile: user?.profile },
               _optimistic: true,
-            }
+            },
+            ...old,
           ])
 
           try {
@@ -553,70 +571,73 @@ export function ChatDetails() {
     } catch { /* ignore */ }
   }, [id, qc])
 
-  // Long press to open reaction picker (500ms, cancel on move)
-  const handlePressStart = (msgId: string) => {
+  // Long press to open context menu (500ms, cancel on move)
+  const handlePressStart = useCallback((msgId: string) => {
     touchMovedRef.current = false
     longPressTimerRef.current = setTimeout(() => {
       if (!touchMovedRef.current) {
         if (Capacitor.isNativePlatform()) {
           Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {})
+        } else {
+          // Web vibration fallback
+          try { navigator.vibrate?.(40) } catch {}
         }
+        setSelectedMsgId(msgId)
         setPickerMsgId(msgId)
       }
     }, 500)
-  }
-  const handlePressEnd = () => {
+  }, [])
+
+  const handlePressEnd = useCallback(() => {
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
-  }
-  const handlePressMove = () => {
+  }, [])
+
+  const handlePressMove = useCallback(() => {
     touchMovedRef.current = true
     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
-  }
+  }, [])
+
+  const closeContextMenu = useCallback(() => {
+    setPickerMsgId(null)
+    // Keep selectedMsgId a brief moment so the scale animation reverses smoothly
+    setTimeout(() => setSelectedMsgId(null), 250)
+  }, [])
 
   // Message actions
-  const handleCopy = async (text: string) => {
+  const handleCopy = useCallback(async (text: string) => {
     if (!text) return
+    closeContextMenu()
     try {
       await navigator.clipboard.writeText(text)
       toast.success('Message copié')
     } catch {
       toast.error('Erreur lors de la copie')
     }
-    setPickerMsgId(null)
-  }
+  }, [closeContextMenu])
 
-  const handleDeleteLocal = (msgId: string) => {
+  const handleDeleteLocal = useCallback((msgId: string) => {
     setLocalDeletedMessages(prev => [...prev, msgId])
-    setPickerMsgId(null)
-  }
+    closeContextMenu()
+  }, [closeContextMenu])
 
-  const handleDeleteGlobal = async (msgId: string) => {
-    // Hide the context menu immediately
-    setPickerMsgId(null)
-    
-    // Optimistic UI update: mark message as deleted instantly
+  const handleDeleteGlobal = useCallback(async (msgId: string) => {
+    closeContextMenu()
     qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => 
       old.map(m => m.id === msgId ? { ...m, isDeleted: true } : m)
     )
-    
-    try {
-      chatApi.deleteMessage(msgId).catch(() => {
-        // Revert on failure
-        qc.invalidateQueries({ queryKey: ['chat', 'messages', id] })
-        toast.error('Erreur lors de la suppression')
-      })
-    } catch (e) {
-      // Ignored
-    }
-  }
+    chatApi.deleteMessage(msgId).catch(() => {
+      qc.invalidateQueries({ queryKey: ['chat', 'messages', id] })
+      toast.error('Erreur lors de la suppression')
+    })
+  }, [closeContextMenu, qc, id])
 
-  const openForwardModal = (msg: any) => {
+  const openForwardModal = useCallback((msg: any) => {
     setForwardMsg({ content: msg.content, type: msg.type })
-    setPickerMsgId(null)
-  }
+    closeContextMenu()
+  }, [closeContextMenu])
 
   return (
-    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }} onClick={() => pickerMsgId && setPickerMsgId(null)}>
+    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col" style={{ fontFamily: "'Poppins', sans-serif" }}>
       
       {forwardMsg && (
         <ForwardMessageModal 
@@ -748,7 +769,11 @@ export function ChatDetails() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 flex flex-col-reverse overflow-y-auto p-4 space-y-1.5 space-y-reverse bg-[var(--color-background-primary)]" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 flex flex-col-reverse overflow-y-auto p-4 space-y-1.5 space-y-reverse bg-[var(--color-background-primary)]"
+        style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
+      >
         {isLoading ? (
           <div className="flex flex-col gap-4 py-4">
             {[1, 2, 3, 4, 5].map(i => {
@@ -822,13 +847,14 @@ export function ChatDetails() {
                 )}
 
                 <div
-                  className={`relative ${pickerMsgId === msg.id ? 'z-50' : ''}`}
+                  className={`relative transition-all duration-200 ${selectedMsgId === msg.id ? 'z-40' : ''}`}
                   onMouseDown={() => handlePressStart(msg.id)}
                   onMouseUp={handlePressEnd}
                   onMouseMove={handlePressMove}
                   onTouchStart={() => handlePressStart(msg.id)}
                   onTouchEnd={handlePressEnd}
                   onTouchMove={handlePressMove}
+                  onContextMenu={(e) => { e.preventDefault(); handlePressStart(msg.id); setTimeout(handlePressEnd, 10) }}
                 >
                   {showSenderInfo && isFirstInGroup && (
                     <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-1 pl-10 pr-10`}>
@@ -841,9 +867,7 @@ export function ChatDetails() {
                     </div>
                   )}
 
-                  {/* Context menu (moved to bottom sheet) */}
-
-                  <div className={`transition-all duration-200 ${pickerMsgId === msg.id ? 'scale-[1.05] z-50 shadow-lg relative' : ''}`}>
+                  <div className={`transition-all duration-300 ease-out ${selectedMsgId === msg.id ? 'scale-[1.03] origin-bottom' : 'scale-100'}`}>
                     <MessageBubble
                       isSender={isMe}
                     time={format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
@@ -931,8 +955,6 @@ export function ChatDetails() {
           })
           })()
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area — fixed at the bottom (nav is hidden for /chat/ routes) */}
@@ -1117,74 +1139,109 @@ export function ChatDetails() {
         </div>
       )}
 
-      {/* Message Context Menu Bottom Sheet */}
-      <BottomSheet open={!!pickerMsgId} onClose={() => setPickerMsgId(null)}>
+      {/* Message Context Menu — Messenger-style Bottom Sheet */}
+      <BottomSheet open={!!pickerMsgId} onClose={closeContextMenu} noPadding>
         {pickerMsgId && (() => {
           const msg = messages?.find(m => m.id === pickerMsgId)
           if (!msg) return null
           const isMe = msg.senderId === user?.id
+          const msgPreview = msg.isDeleted
+            ? 'Ce message a été supprimé'
+            : msg.type === 'IMAGE' ? '📷 Photo'
+            : msg.type === 'VIDEO' ? '🎥 Vidéo'
+            : msg.type === 'AUDIO' ? '🎤 Message vocal'
+            : msg.content ?? ''
+
           return (
-            <div className="flex flex-col pb-4">
-              {/* Reactions */}
-              <div className="flex justify-around items-center px-4 py-5 border-b border-gray-100 dark:border-white/10">
+            <div className="flex flex-col" onClick={e => e.stopPropagation()}>
+              {/* Drag handle */}
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-[#444] mx-auto mt-3 mb-1 flex-none" />
+
+              {/* Message preview */}
+              <div className={`mx-4 mt-3 mb-1 px-4 py-3 rounded-2xl text-[13px] leading-snug text-gray-600 dark:text-gray-300 max-h-[80px] overflow-hidden line-clamp-3 ${
+                isMe
+                  ? 'bg-[var(--brand-orange-100)] dark:bg-[var(--brand-orange-500)]/20 text-right self-end'
+                  : 'bg-gray-100 dark:bg-[#2A2A2A] text-left'
+              }`}>
+                {msgPreview}
+              </div>
+
+              {/* Emoji reactions row */}
+              <div className="flex items-center gap-1 px-4 py-4 border-b border-gray-100 dark:border-white/8 overflow-x-auto no-scrollbar">
                 {REACTION_EMOJIS.map(emoji => (
                   <button
                     key={emoji}
                     onClick={() => handleReact(msg.id, emoji)}
-                    className="text-[32px] active:scale-110 transition-transform"
+                    className="flex-none w-12 h-12 flex items-center justify-center text-[26px] rounded-full hover:bg-gray-100 dark:hover:bg-white/8 active:scale-125 transition-all duration-150"
                   >
                     {emoji}
                   </button>
                 ))}
               </div>
-              
-              {/* Actions */}
-              <div className="flex flex-col py-2 px-2">
-                {!msg.isDeleted && msg.content && msg.type !== 'POLL' && (
-                  <button
-                    onClick={() => handleCopy(msg.content!)}
-                    className="flex items-center gap-4 px-4 py-4 text-[16px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 rounded-2xl transition-colors text-left"
-                  >
-                    <span className="w-[22px] h-[22px]" style={{ display: 'inline-block', background: 'currentColor', maskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%229%22 y=%229%22 width=%2213%22 height=%2213%22 rx=%222%22 ry=%222%22%3E%3C/rect%3E%3Cpath d=%22M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1%22%3E%3C/path%3E%3C/svg%3E")', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} />
-                    Copier
-                  </button>
-                )}
-                {!msg.isDeleted && msg.type !== 'POLL' && (
-                  <button
-                    onClick={() => openForwardModal(msg)}
-                    className="flex items-center gap-4 px-4 py-4 text-[16px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 rounded-2xl transition-colors text-left"
-                  >
-                    <span className="w-[22px] h-[22px]" style={{ display: 'inline-block', background: 'currentColor', maskImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22currentColor%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%2215 14 20 9 15 4%22%3E%3C/polyline%3E%3Cpath d=%22M4 20v-7a4 4 0 0 1 4-4h12%22%3E%3C/path%3E%3C/svg%3E")', maskSize: 'contain', WebkitMaskSize: 'contain', maskRepeat: 'no-repeat', WebkitMaskRepeat: 'no-repeat' }} />
-                    Transférer
-                  </button>
-                )}
+
+              {/* Actions list */}
+              <div className="flex flex-col py-2 px-3 pb-safe-6 pb-6">
+
                 {!msg.isDeleted && (
                   <button
                     onClick={() => {
                       const senderName = msg.sender?.profile?.displayName?.split(' ')[0] ?? 'Utilisateur'
                       setReplyToMsg({ id: msg.id, content: msg.content ?? '', senderName, type: msg.type ?? 'TEXT' })
-                      setPickerMsgId(null)
+                      closeContextMenu()
                     }}
-                    className="flex items-center gap-4 px-4 py-4 text-[16px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 rounded-2xl transition-colors text-left"
+                    className="flex items-center gap-4 px-4 py-[14px] rounded-2xl text-[15px] font-medium text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors text-left"
                   >
-                    {/* Reply icon */}
-                    <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+                    <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center flex-shrink-0">
+                      <svg className="w-[18px] h-[18px] text-gray-600 dark:text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+                    </div>
                     Répondre
                   </button>
                 )}
+
+                {!msg.isDeleted && msg.content && msg.type !== 'POLL' && msg.type !== 'IMAGE' && msg.type !== 'VIDEO' && msg.type !== 'AUDIO' && (
+                  <button
+                    onClick={() => handleCopy(msg.content!)}
+                    className="flex items-center gap-4 px-4 py-[14px] rounded-2xl text-[15px] font-medium text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors text-left"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center flex-shrink-0">
+                      <svg className="w-[18px] h-[18px] text-gray-600 dark:text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    </div>
+                    Copier
+                  </button>
+                )}
+
+                {!msg.isDeleted && msg.type !== 'POLL' && (
+                  <button
+                    onClick={() => openForwardModal(msg)}
+                    className="flex items-center gap-4 px-4 py-[14px] rounded-2xl text-[15px] font-medium text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors text-left"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center flex-shrink-0">
+                      <svg className="w-[18px] h-[18px] text-gray-600 dark:text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+                    </div>
+                    Transférer
+                  </button>
+                )}
+
+                <div className="h-px bg-gray-100 dark:bg-white/8 mx-4 my-1" />
+
                 <button
                   onClick={() => handleDeleteLocal(msg.id)}
-                  className="flex items-center gap-4 px-4 py-4 text-[16px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 active:bg-red-100 dark:active:bg-red-500/20 rounded-2xl transition-colors text-left"
+                  className="flex items-center gap-4 px-4 py-[14px] rounded-2xl text-[15px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 active:bg-red-100 dark:active:bg-red-500/20 transition-colors text-left"
                 >
-                  <Trash2 className="w-[22px] h-[22px]" />
+                  <div className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                    <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                  </div>
                   Supprimer pour moi
                 </button>
+
                 {isMe && !msg.isDeleted && (
                   <button
                     onClick={() => handleDeleteGlobal(msg.id)}
-                    className="flex items-center gap-4 px-4 py-4 text-[16px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 active:bg-red-100 dark:active:bg-red-500/20 rounded-2xl transition-colors text-left"
+                    className="flex items-center gap-4 px-4 py-[14px] rounded-2xl text-[15px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 active:bg-red-100 dark:active:bg-red-500/20 transition-colors text-left"
                   >
-                    <Trash2 className="w-[22px] h-[22px]" />
+                    <div className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                      <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                    </div>
                     Supprimer pour tous
                   </button>
                 )}
