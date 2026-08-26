@@ -48,8 +48,8 @@ export class AiService {
     }
 
     try {
-      console.log(`[AI] Essai de Gemini (gemini-1.5-flash) pour l'analyse d'image...`);
-      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      console.log(`[AI] Essai de Gemini (gemini-3.5-flash) pour l'analyse d'image...`);
+      const model = this.genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
       
       const imagePart = await this.fetchImageAsGeminiPart(imageUrl);
       if (!imagePart) {
