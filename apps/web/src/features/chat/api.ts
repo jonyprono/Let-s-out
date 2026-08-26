@@ -198,17 +198,24 @@ export function useDiscoverGroups(limit = 10, search?: string) {
 export function useSendMessage(conversationId: string) {
   const qc = useQueryClient()
   const { user } = useAuthStore()
+
+  // Track the last optimistic ID so we can swap it on success
+  let optimisticId = ''
+
   return useMutation({
-    mutationFn: (payload: { content: string; type?: string; mediaUrl?: string; replyToId?: string; caption?: string }) =>
-      chatApi.sendMessage(conversationId, payload),
+    mutationFn: (payload: { content: string; type?: string; mediaUrl?: string; replyToId?: string; caption?: string; _replyTo?: Message | null }) => {
+      const { _replyTo: _ignored, ...rest } = payload as any
+      return chatApi.sendMessage(conversationId, rest)
+    },
     onMutate: async (payload) => {
       // Cancel in-flight queries
       await qc.cancelQueries({ queryKey: ['chat', 'messages', conversationId] })
       // Snapshot previous value
       const prev = qc.getQueryData<Message[]>(['chat', 'messages', conversationId])
-      // Optimistically insert message
+      // Build optimistic message
+      optimisticId = `optimistic-${Date.now()}`
       const optimisticMsg: Message = {
-        id: `optimistic-${Date.now()}`,
+        id: optimisticId,
         content: payload.content,
         type: (payload.type as any) || 'TEXT',
         senderId: user?.id || '',
@@ -217,12 +224,14 @@ export function useSendMessage(conversationId: string) {
         isDeleted: false,
         reactions: [],
         mediaUrl: payload.mediaUrl || null,
+        replyToId: payload.replyToId || null,
+        replyTo: (payload as any)._replyTo || null,
         sender: {
           id: user?.id,
           profile: {
-            username: '',
-            displayName: '',
-            avatarUrl: null,
+            username: user?.profile?.username || '',
+            displayName: user?.profile?.displayName || '',
+            avatarUrl: user?.profile?.avatarUrl || null,
           },
         },
         _optimistic: true,
@@ -231,16 +240,21 @@ export function useSendMessage(conversationId: string) {
         optimisticMsg,
         ...old,
       ])
-      return { prev }
+      return { prev, optimisticId }
     },
     onError: (_err, _vars, context) => {
       if (context?.prev) {
         qc.setQueryData(['chat', 'messages', conversationId], context.prev)
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['chat', 'messages', conversationId] })
+    onSuccess: (serverMsg, _vars, context) => {
+      // Swap optimistic entry with real server message — no refetch, no flash
+      qc.setQueryData<Message[]>(['chat', 'messages', conversationId], (old = []) =>
+        old.map((m) => ((m as any)._optimistic && m.id === (context?.optimisticId ?? optimisticId) ? { ...serverMsg, _optimistic: false } : m))
+      )
+      // Silently refresh conversation list in background (badge, last message preview)
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
     },
   })
 }
+

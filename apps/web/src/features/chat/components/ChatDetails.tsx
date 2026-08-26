@@ -392,9 +392,17 @@ export function ChatDetails() {
     if (!inputText.trim() || !id) return
     const text = inputText
     setInputText('')
+    const currentReply = replyToMsg
     const payload: any = { content: text, type: 'TEXT' }
-    if (replyToMsg) {
-      payload.replyToId = replyToMsg.id
+    if (currentReply) {
+      payload.replyToId = currentReply.id
+      // Pass full replyTo object so optimistic message shows the quote immediately
+      payload._replyTo = {
+        id: currentReply.id,
+        content: currentReply.content,
+        type: currentReply.type,
+        sender: { profile: { displayName: currentReply.senderName } }
+      }
       setReplyToMsg(null)
     }
     sendMsg(payload)
@@ -416,27 +424,7 @@ export function ChatDetails() {
     }
     
     const msgType = isVideo ? 'VIDEO' : 'FILE'
-    const tempId = `optimistic-${Date.now()}`
-    const localUrl = URL.createObjectURL(file)
     const currentReply = replyToMsg
-
-    qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
-      {
-        id: tempId,
-        content: localUrl,
-        type: msgType,
-        senderId: user?.id || '',
-        conversationId: id,
-        createdAt: new Date().toISOString(),
-        isDeleted: false,
-        reactions: [],
-        sender: { id: user?.id, profile: user?.profile },
-        _optimistic: true,
-        ...(currentReply ? { replyToId: currentReply.id } : {})
-      },
-      ...old
-    ])
-
     setReplyToMsg(null)
 
     try {
@@ -444,13 +432,18 @@ export function ChatDetails() {
         await saveFileLocally(file, file.name)
       }
       const url = await chatApi.uploadMedia(file)
-      const payload: any = { content: url, type: msgType }
-      if (currentReply) payload.replyToId = currentReply.id
+      const payload: any = {
+        content: url,
+        type: msgType,
+        ...(currentReply ? {
+          replyToId: currentReply.id,
+          _replyTo: { id: currentReply.id, content: currentReply.content, type: currentReply.type, sender: { profile: { displayName: currentReply.senderName } } }
+        } : {})
+      }
       sendMsg(payload)
     } catch {
       toast.error("Erreur lors de l'envoi du fichier.")
     } finally {
-      qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => old.filter(m => m.id !== tempId))
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
@@ -458,45 +451,32 @@ export function ChatDetails() {
   // Send pending image with optional caption
   const handleSendPendingFile = async (caption?: string) => {
     if (!pendingFile || !id) return
-    const { file, localUrl } = pendingFile
+    const { file } = pendingFile
     const msgType = 'IMAGE'
-    const tempId = `optimistic-${Date.now()}`
     const currentReply = replyToMsg
 
     setPendingFile(null)
     setReplyToMsg(null)
 
-    qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
-      {
-        id: tempId,
-        content: caption || null,       // caption goes in content
-        mediaUrl: localUrl,             // blob URL for instant preview
-        type: msgType,
-        senderId: user?.id || '',
-        conversationId: id,
-        createdAt: new Date().toISOString(),
-        isDeleted: false,
-        reactions: [],
-        sender: { id: user?.id, profile: user?.profile },
-        _optimistic: true,
-        ...(currentReply ? { replyToId: currentReply.id } : {})
-      },
-      ...old
-    ])
-
+    // Show local blob preview immediately via the optimistic message in useSendMessage
     try {
       if (Capacitor.isNativePlatform()) {
         await saveFileLocally(file, file.name)
       }
       const url = await chatApi.uploadMedia(file)
-      const payload: any = { content: url, type: msgType }
-      if (caption?.trim()) payload.caption = caption.trim()
-      if (currentReply) payload.replyToId = currentReply.id
+      const payload: any = {
+        content: caption?.trim() || url,
+        mediaUrl: url,
+        type: msgType,
+        ...(caption?.trim() ? { caption: caption.trim() } : {}),
+        ...(currentReply ? {
+          replyToId: currentReply.id,
+          _replyTo: { id: currentReply.id, content: currentReply.content, type: currentReply.type, sender: { profile: { displayName: currentReply.senderName } } }
+        } : {})
+      }
       sendMsg(payload)
     } catch {
       toast.error("Erreur lors de l'envoi de l'image.")
-    } finally {
-      qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => old.filter(m => m.id !== tempId))
     }
   }
 
