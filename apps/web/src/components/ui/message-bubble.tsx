@@ -13,6 +13,11 @@ export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement>
   onAvatarClick?: () => void;
   onImageClick?: () => void;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
+  replyTo?: {
+    senderName: string;
+    content: string;
+    type?: string;
+  };
   children?: React.ReactNode;
 }
 
@@ -117,7 +122,17 @@ export function MessageBubble({
       
       <div className={cn("flex max-w-[85%] sm:max-w-[75%] flex-col gap-1", isSender ? "items-end" : "items-start")}>
         {imageUrl ? (
-          <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--border-secondary)] relative group flex flex-col">
+          <div className="overflow-hidden rounded-[var(--radius-large)] border border-[var(--border-secondary)] relative group flex flex-col bg-white dark:bg-[#1A1A1A]">
+            {props.replyTo && (
+              <div className="flex flex-col bg-black/5 dark:bg-white/10 rounded-md border-l-4 border-[#FF7A00] p-2 m-1 cursor-pointer overflow-hidden max-w-full">
+                <span className="text-[11px] font-semibold text-[#FF7A00] truncate">
+                  {props.replyTo.senderName}
+                </span>
+                <span className="text-[12px] opacity-75 truncate max-w-[200px]">
+                  {props.replyTo.type === 'IMAGE' ? '📷 Photo' : props.replyTo.type === 'VIDEO' ? '🎥 Vidéo' : props.replyTo.type === 'AUDIO' ? '🎵 Audio' : props.replyTo.content}
+                </span>
+              </div>
+            )}
             <img 
               src={imageUrl} 
               alt="attachment" 
@@ -165,14 +180,26 @@ export function MessageBubble({
             {children ? (
               children
             ) : (
-              <div className="flex flex-wrap items-end gap-2">
-                <span className="selectable-text whitespace-pre-wrap break-words w-full" style={{ wordBreak: 'break-word' }}>
-                  {content ? renderContent(content) : null}
-                </span>
-                <span className="inline-flex items-center text-[10px] text-[var(--color-text-secondary)] opacity-70 leading-none ml-auto shrink-0 mt-1">
-                  {time}
-                  {renderStatusIcon()}
-                </span>
+              <div className="flex flex-col gap-1 w-full">
+                {props.replyTo && (
+                  <div className="flex flex-col bg-black/5 dark:bg-white/10 rounded-md border-l-4 border-[#FF7A00] p-2 mb-1 cursor-pointer overflow-hidden max-w-full">
+                    <span className="text-[11px] font-semibold text-[#FF7A00] truncate">
+                      {props.replyTo.senderName}
+                    </span>
+                    <span className="text-[12px] opacity-75 truncate max-w-[200px]">
+                      {props.replyTo.type === 'IMAGE' ? '📷 Photo' : props.replyTo.type === 'VIDEO' ? '🎥 Vidéo' : props.replyTo.type === 'AUDIO' ? '🎵 Audio' : props.replyTo.content}
+                    </span>
+                  </div>
+                )}
+                <div className="flex flex-wrap items-end gap-2">
+                  <span className="selectable-text whitespace-pre-wrap break-words w-full" style={{ wordBreak: 'break-word' }}>
+                    {content ? renderContent(content) : null}
+                  </span>
+                  <span className="inline-flex items-center text-[10px] text-[var(--color-text-secondary)] opacity-70 leading-none ml-auto shrink-0 mt-1">
+                    {time}
+                    {renderStatusIcon()}
+                  </span>
+                </div>
               </div>
             )}
           </div>

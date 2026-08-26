@@ -58,6 +58,18 @@ export interface Message {
       avatarUrl: string | null
     }
   }
+  replyToId?: string | null
+  replyTo?: {
+    id: string
+    content: string | null
+    type: string
+    sender?: {
+      profile?: {
+        displayName: string
+        avatarUrl: string | null
+      }
+    }
+  } | null
 }
 
 export const chatApi = {

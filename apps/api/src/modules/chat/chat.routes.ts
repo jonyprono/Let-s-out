@@ -778,7 +778,7 @@ export default async function chatRoutes(app: FastifyInstance) {
       },
       include: {
         sender: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
-        replyTo: { select: { id: true, content: true, sender: { select: { profile: { select: { displayName: true } } } } } },
+        replyTo: { select: { id: true, content: true, type: true, sender: { select: { profile: { select: { displayName: true } } } } } },
         reactions: {
           include: { user: { select: { id: true, profile: { select: { displayName: true } } } } },
         },

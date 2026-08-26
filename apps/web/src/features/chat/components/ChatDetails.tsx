@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion, useMotionValue, useTransform, animate } from 'motion/react'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, Send, Play, MapPin, Calendar, Users, Share2, X, MoreVertical, Trash2 } from 'lucide-react'
@@ -23,6 +24,54 @@ import { ChatInput } from '@/components/ui/chat-input'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { GroupChatInfoSheet } from './GroupChatInfoSheet'
 import { ForwardMessageModal } from './ForwardMessageModal'
+
+// Swipe to reply row component — must be top-level for React hooks
+interface SwipeReplyRowProps {
+  msgId: string
+  msgType: string
+  msgContent: string
+  senderName?: string
+  onSwipeReply: (id: string, content: string, senderName: string, type: string) => void
+  children: React.ReactNode
+}
+function SwipeReplyRow({ msgId, msgType, msgContent, senderName, onSwipeReply, children }: SwipeReplyRowProps) {
+  const x = useMotionValue(0)
+  const iconOpacity = useTransform(x, [0, 50], [0, 1])
+  const handleDragEnd = (_: unknown, info: { offset: { x: number } }) => {
+    if (info.offset.x > 50) {
+      if (Capacitor.isNativePlatform()) {
+        Haptics.impact({ style: ImpactStyle.Medium }).catch(() => {})
+      } else {
+        try { navigator.vibrate?.(30) } catch {}
+      }
+      onSwipeReply(msgId, msgContent, senderName ?? 'Moi', msgType)
+    }
+    animate(x, 0, { type: 'spring', stiffness: 400, damping: 30 })
+  }
+  return (
+    <div className="relative">
+      {/* Reply icon revealed on swipe */}
+      <motion.div
+        className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-[#333] pointer-events-none z-10"
+        style={{ opacity: iconOpacity }}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF7A00" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+        </svg>
+      </motion.div>
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: 0, right: 80 }}
+        dragElastic={{ left: 0, right: 0.3 }}
+        dragMomentum={false}
+        style={{ x }}
+        onDragEnd={handleDragEnd}
+      >
+        {children}
+      </motion.div>
+    </div>
+  )
+}
 
 async function saveFileLocally(file: File | Blob, name: string) {
   if (!Capacitor.isNativePlatform()) return null
@@ -829,6 +878,15 @@ export function ChatDetails() {
                   </div>
                 )}
 
+                <SwipeReplyRow
+                  msgId={msg.id}
+                  msgType={msg.type}
+                  msgContent={msg.content ?? ''}
+                  senderName={isMe ? undefined : senderName}
+                  onSwipeReply={(id, content, name, type) => {
+                    setReplyToMsg({ id, content, senderName: name, type })
+                  }}
+                >
                 <div
                   className={`relative transition-all duration-200 ${selectedMsgId === msg.id ? 'z-40' : ''}`}
                   onContextMenu={(e) => { 
@@ -860,6 +918,11 @@ export function ChatDetails() {
                     imageUrl={isImage && (msg.mediaUrl || msg.content) ? (msg.mediaUrl || msg.content || undefined) : undefined}
                     onImageClick={() => setFullscreenImage((msg.mediaUrl || msg.content) ?? null)}
                     content={!isMedia && !msg.isDeleted && msg.type !== 'POLL' ? (msg.content ?? undefined) : (msg.mediaUrl ? (msg.content ?? undefined) : undefined)}
+                    replyTo={msg.replyTo ? {
+                      senderName: msg.replyTo.sender?.profile?.displayName ?? 'Inconnu',
+                      content: msg.replyTo.content ?? '',
+                      type: msg.replyTo.type,
+                    } : undefined}
                   >
                     {msg.isDeleted ? (
                       <div className="flex items-center gap-2 italic text-[#FF7A00]">
@@ -930,7 +993,8 @@ export function ChatDetails() {
                       </div>
                     )}
                   </div>
-                </div>
+                </SwipeReplyRow>
+              </div>
             )
           })
           })()
