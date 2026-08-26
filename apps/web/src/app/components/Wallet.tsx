@@ -635,13 +635,27 @@ export function Wallet() {
                       }`}>
                         {['DEPOSIT', 'POOL_PAYOUT', 'REFUND'].includes(tx.type) ? '+' : '- '} {tx.amount.toLocaleString('fr-FR')} F
                       </span>
-                      <span className={`text-[11px] font-bold px-2 py-0.5 mt-1 rounded-full ${
-                        (tx.status || 'COMPLETED') === 'COMPLETED' ? 'bg-[#E8F5E9] text-[#4CAF50] dark:bg-green-900/30 dark:text-green-400' :
-                        tx.status === 'PENDING' ? 'bg-[#FFF3E6] text-[#FF7A00] dark:bg-orange-900/30 dark:text-orange-400' :
-                        'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
-                      }`}>
-                        {(tx.status || 'COMPLETED') === 'COMPLETED' ? t('wallet.txStatus.completed') : tx.status === 'PENDING' ? t('wallet.txStatus.pending') : t('wallet.txStatus.failed')}
-                      </span>
+                      {/* Badge statut: la WalletTransaction n'a pas de champ status en BDD,
+                          on déduit l'état depuis la description qui est mise à jour par le backend */}
+                      {(() => {
+                        const isFailed = tx.description?.includes('(Échoué)')
+                        const isPending = tx.description?.includes('(En cours)')
+                        const statusClass = isFailed
+                          ? 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-400'
+                          : isPending
+                          ? 'bg-[#FFF3E6] text-[#FF7A00] dark:bg-orange-900/30 dark:text-orange-400'
+                          : 'bg-[#E8F5E9] text-[#4CAF50] dark:bg-green-900/30 dark:text-green-400'
+                        const statusLabel = isFailed
+                          ? t('wallet.txStatus.failed')
+                          : isPending
+                          ? t('wallet.txStatus.pending')
+                          : t('wallet.txStatus.completed')
+                        return (
+                          <span className={`text-[11px] font-bold px-2 py-0.5 mt-1 rounded-full ${statusClass}`}>
+                            {statusLabel}
+                          </span>
+                        )
+                      })()}
                     </div>
                   </motion.div>
                 ))

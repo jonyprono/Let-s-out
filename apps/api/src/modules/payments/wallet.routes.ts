@@ -206,8 +206,16 @@ export default async function walletRoutes(app: FastifyInstance) {
           })
         ])
         
-        const totalEarned = agg.find(a => a.type === 'DEPOSIT')?._sum?.amount ?? 0
-        const totalWithdrawn = agg.find(a => a.type === 'WITHDRAWAL')?._sum?.amount ?? 0
+        // FIX: totalEarned = DEPOSIT + POOL_PAYOUT (déblocages de cagnotte)
+        const totalEarned =
+          (agg.find(a => a.type === 'DEPOSIT')?._sum?.amount ?? 0) +
+          (agg.find(a => a.type === 'POOL_PAYOUT')?._sum?.amount ?? 0)
+        // FIX: totalWithdrawn = WITHDRAWAL - REFUND (ne pas comptabiliser les retraits échoués remboursés)
+        const totalWithdrawn = Math.max(
+          0,
+          (agg.find(a => a.type === 'WITHDRAWAL')?._sum?.amount ?? 0) -
+          (agg.find(a => a.type === 'REFUND')?._sum?.amount ?? 0)
+        )
 
         const poolEvents = await Promise.all(
           poolEventsRaw.map(async (evt) => {
@@ -230,7 +238,13 @@ export default async function walletRoutes(app: FastifyInstance) {
               where: { walletId: w.id, type: 'WITHDRAWAL', refId: evt.id },
               _sum: { amount: true },
             })
-            const alreadyWithdrawn = withdrawnAgg._sum.amount || 0
+            // FIX: Soustraire les remboursements liés à cet événement (retraits échoués recréditées)
+            const refundedAgg = await app.prisma.walletTransaction.aggregate({
+              where: { walletId: w.id, type: 'REFUND', refId: evt.id },
+              _sum: { amount: true },
+            })
+            const netWithdrawn = Math.max(0, (withdrawnAgg._sum.amount || 0) - (refundedAgg._sum.amount || 0))
+            const alreadyWithdrawn = netWithdrawn
             
             const available = Math.max(0, netCredited - alreadyWithdrawn)
             return { ...evt, netCredited, alreadyWithdrawn, available }
@@ -307,10 +321,17 @@ export default async function walletRoutes(app: FastifyInstance) {
       })
       
       const depositAgg = agg.find(a => a.type === 'DEPOSIT')
-      if (depositAgg?._sum?.amount) totalEarned = depositAgg._sum.amount
+      const poolPayoutAgg = agg.find(a => a.type === 'POOL_PAYOUT')
+      const refundAgg = agg.find(a => a.type === 'REFUND')
+      // FIX: totalEarned = DEPOSIT + POOL_PAYOUT
+      if (depositAgg?._sum?.amount) totalEarned += depositAgg._sum.amount
+      if (poolPayoutAgg?._sum?.amount) totalEarned += poolPayoutAgg._sum.amount
       
       const withdrawAgg = agg.find(a => a.type === 'WITHDRAWAL')
-      if (withdrawAgg?._sum?.amount) totalWithdrawn = withdrawAgg._sum.amount
+      // FIX: totalWithdrawn = WITHDRAWAL - REFUND
+      const grossWithdrawn = withdrawAgg?._sum?.amount ?? 0
+      const totalRefunded = refundAgg?._sum?.amount ?? 0
+      totalWithdrawn = Math.max(0, grossWithdrawn - totalRefunded)
     }
 
     const now = new Date()
@@ -372,7 +393,12 @@ export default async function walletRoutes(app: FastifyInstance) {
           where: { walletId: wallet.id, type: 'WITHDRAWAL', refId: evt.id },
           _sum: { amount: true },
         })
-        const alreadyWithdrawn = withdrawnAgg._sum.amount || 0
+        // FIX: Soustraire les REFUND liés à cet événement pour ne compter que les retraits réellement complétés
+        const refundedForEvtAgg = await app.prisma.walletTransaction.aggregate({
+          where: { walletId: wallet.id, type: 'REFUND', refId: evt.id },
+          _sum: { amount: true },
+        })
+        const alreadyWithdrawn = Math.max(0, (withdrawnAgg._sum.amount || 0) - (refundedForEvtAgg._sum.amount || 0))
         
         // Solde restant disponible pour cet événement
         const available = Math.max(0, netCredited - alreadyWithdrawn)
@@ -595,6 +621,11 @@ export default async function walletRoutes(app: FastifyInstance) {
          await app.prisma.$transaction(async (tx) => {
            const freshWallet = await tx.wallet.findUnique({ where: { userId: sub } })
            if (!freshWallet) return;
+           // Mark the WITHDRAWAL as failed in its description
+           await tx.walletTransaction.update({
+             where: { id: transactionRecord.id },
+             data: { description: eventTitle ? `Retrait (Échoué) - ${eventTitle}` : `Retrait Mobile Money (Échoué)` }
+           })
            await tx.wallet.update({
              where: { id: freshWallet.id },
              data: { balance: { increment: amount } },
