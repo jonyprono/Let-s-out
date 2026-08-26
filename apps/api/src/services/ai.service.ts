@@ -202,6 +202,34 @@ export class AiService {
                 contextString += `- Date limite d'inscription : ${latestEvent.registrationDeadline.toISOString()}\n`;
               }
             }
+
+            // --- LONG-TERM MEMORY (LTM) ---
+            // Récupère les derniers messages échangés entre ce bot et cet utilisateur dans TOUTES les autres conversations
+            const pastMemory = await prisma.message.findMany({
+              where: {
+                conversationId: { not: _conversationId },
+                conversation: {
+                  members: { some: { userId: u.id } }
+                },
+                senderId: { in: [u.id, botId] }
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 12,
+              select: { content: true, senderId: true, createdAt: true }
+            });
+
+            if (pastMemory.length > 0) {
+              const reversedMemory = pastMemory.reverse();
+              contextString += `\n<MEMORY>\nVoici un extrait de tes interactions PASSÉES avec cet utilisateur (dans d'autres conversations). Utilise cette mémoire pour personnaliser tes réponses si nécessaire :\n`;
+              for (const m of reversedMemory) {
+                const role = m.senderId === botId ? 'Toi (Agent)' : 'Utilisateur';
+                if (m.content) {
+                  contextString += `[${m.createdAt.toISOString().substring(0,10)}] ${role} : ${m.content.substring(0, 100)}\n`;
+                }
+              }
+              contextString += `</MEMORY>\n`;
+            }
+            // ------------------------------
           }
           
           contextString += `</SYSTEM_CONTEXT>`;

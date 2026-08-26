@@ -275,10 +275,7 @@ export function ChatDetails() {
   const [typingUser, setTypingUser] = useState<string | null>(null)
   // Scroll container ref (flex-col-reverse: scrollTop=0 = visual bottom)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
-  // Use ref for long-press timer to avoid re-renders
-  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const touchMovedRef = useRef(false)
-
+  
   const { openUserProfile } = useUserProfile()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
@@ -571,30 +568,16 @@ export function ChatDetails() {
     } catch { /* ignore */ }
   }, [id, qc])
 
-  // Long press to open context menu (500ms, cancel on move)
-  const handlePressStart = useCallback((msgId: string) => {
-    touchMovedRef.current = false
-    longPressTimerRef.current = setTimeout(() => {
-      if (!touchMovedRef.current) {
-        if (Capacitor.isNativePlatform()) {
-          Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {})
-        } else {
-          // Web vibration fallback
-          try { navigator.vibrate?.(40) } catch {}
-        }
-        setSelectedMsgId(msgId)
-        setPickerMsgId(msgId)
-      }
-    }, 500)
-  }, [])
-
-  const handlePressEnd = useCallback(() => {
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
-  }, [])
-
-  const handlePressMove = useCallback(() => {
-    touchMovedRef.current = true
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current)
+  // Native context menu handler (triggered by long press on mobile)
+  const openContextMenu = useCallback((msgId: string) => {
+    if (Capacitor.isNativePlatform()) {
+      Haptics.impact({ style: ImpactStyle.Heavy }).catch(() => {})
+    } else {
+      // Web vibration fallback
+      try { navigator.vibrate?.(40) } catch {}
+    }
+    setSelectedMsgId(msgId)
+    setPickerMsgId(msgId)
   }, [])
 
   const closeContextMenu = useCallback(() => {
@@ -848,13 +831,10 @@ export function ChatDetails() {
 
                 <div
                   className={`relative transition-all duration-200 ${selectedMsgId === msg.id ? 'z-40' : ''}`}
-                  onMouseDown={() => handlePressStart(msg.id)}
-                  onMouseUp={handlePressEnd}
-                  onMouseMove={handlePressMove}
-                  onTouchStart={() => handlePressStart(msg.id)}
-                  onTouchEnd={handlePressEnd}
-                  onTouchMove={handlePressMove}
-                  onContextMenu={(e) => { e.preventDefault(); handlePressStart(msg.id); setTimeout(handlePressEnd, 10) }}
+                  onContextMenu={(e) => { 
+                    e.preventDefault(); 
+                    openContextMenu(msg.id);
+                  }}
                 >
                   {showSenderInfo && isFirstInGroup && (
                     <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-1 pl-10 pr-10`}>
