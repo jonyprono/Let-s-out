@@ -94,8 +94,10 @@ export class AiService {
     }
 
     // 2. Try models that contain 'llama', 'mixtral' or 'gemma' (prioritize chat models)
+    // Exclude 'guard' models (which are prompt classifiers, not chat models)
     const modelsToTry = availableModels
       .filter(m => m.includes('llama') || m.includes('mixtral') || m.includes('gemma'))
+      .filter(m => !m.includes('guard') && !m.includes('whisper'))
       .sort((a, b) => {
         // Prefer newer/faster ones if possible
         if (a.includes('8b') && !b.includes('8b')) return -1;
