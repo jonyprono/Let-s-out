@@ -8,13 +8,13 @@ import { Loader2, Tag, User, Calendar, Banknote, ShieldCheck, ShieldX } from 'lu
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuthStore } from '@/stores/auth.store';
 
 export function PayoutApprovalScreen() {
   const { id, payoutId } = useParams<{ id: string, payoutId: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user } = useAuthStore();
 
   const [step, setStep] = useState<'view' | 'approve-sheet' | 'reject-sheet' | 'success-approve' | 'success-reject'>('view');
   const [note, setNote] = useState('');
