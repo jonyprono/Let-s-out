@@ -79,13 +79,16 @@ export class AuthService {
    * Use this during multi-step flows where the OTP is verified at the end.
    */
   async checkOtp(target: string, code: string): Promise<boolean> {
+    const cleanTarget = target.trim()
+    const cleanCode = code.trim()
+
     // Fast path: Redis (still present = not yet consumed)
-    const cached = await this.redis.get(`otp:${target}`)
-    if (cached === code) return true
+    const cached = await this.redis.get(`otp:${cleanTarget}`)
+    if (cached === cleanCode) return true
 
     // Fallback: DB
     const otp = await this.prisma.otpCode.findFirst({
-      where: { target, code, used: false },
+      where: { target: cleanTarget, code: cleanCode, used: false },
       orderBy: { createdAt: 'desc' },
     })
     if (!otp) return false
@@ -95,12 +98,15 @@ export class AuthService {
   }
 
   async verifyOtp(target: string, code: string): Promise<boolean> {
+    const cleanTarget = target.trim()
+    const cleanCode = code.trim()
+
     // Fast path: check Redis first
-    const cached = await this.redis.get(`otp:${target}`)
-    if (cached === code) {
-      await this.redis.del(`otp:${target}`)
+    const cached = await this.redis.get(`otp:${cleanTarget}`)
+    if (cached === cleanCode) {
+      await this.redis.del(`otp:${cleanTarget}`)
       await this.prisma.otpCode.updateMany({
-        where: { target, code, used: false },
+        where: { target: cleanTarget, code: cleanCode, used: false },
         data: { used: true },
       })
       return true
@@ -108,7 +114,7 @@ export class AuthService {
 
     // Fallback: check DB
     const otp = await this.prisma.otpCode.findFirst({
-      where: { target, code, used: false },
+      where: { target: cleanTarget, code: cleanCode, used: false },
       orderBy: { createdAt: 'desc' },
     })
 

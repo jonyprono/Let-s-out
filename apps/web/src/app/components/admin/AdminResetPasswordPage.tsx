@@ -39,8 +39,7 @@ export function AdminResetPasswordPage() {
         target: target.trim(),
         channel: 'whatsapp', // Juste pour déclencher l'API
       })
-      // S'il existe, l'API envoie l'OTP, mais on va l'ignorer et utiliser Firebase pour le SMS.
-      setStep(2)
+      setStep(3)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Identifiant introuvable.')
     } finally {
@@ -48,7 +47,7 @@ export function AdminResetPasswordPage() {
     }
   }
 
-  // ─── Étape 2 : Envoi OTP via Firebase ───────────────────────────────────
+  // ─── Étape 2 : Envoi OTP via Firebase (Fallback SMS) ───────────────────────────────────
   const handleSendOtp = async () => {
     setChannel('sms')
     setError('')
@@ -64,7 +63,18 @@ export function AdminResetPasswordPage() {
       setStep(3)
     } catch (err: any) {
       console.error(err)
-      setError("Erreur Firebase. Vérifiez que votre numéro commence par +229...")
+      
+      // Fallback au backend SMS si Firebase échoue
+      try {
+        await apiClient.post('/auth/admin-reset-password-otp', {
+          target: target.trim(),
+          channel: 'sms',
+        })
+        setStep(3)
+      } catch (fallbackErr: any) {
+        setError(fallbackErr.response?.data?.error || "Erreur d'envoi. Vérifiez votre numéro.")
+      }
+      
       if (window.recaptchaVerifier) {
         try { window.recaptchaVerifier.clear(); } catch {}
         window.recaptchaVerifier = undefined;
@@ -214,6 +224,14 @@ export function AdminResetPasswordPage() {
         {/* ── Étape 3 : Code OTP + nouveau mot de passe ── */}
         {step === 3 && (
           <form onSubmit={handleResetPassword} className="space-y-4 mt-8">
+            <div className="flex justify-between text-white/60 text-xs mb-2 px-2">
+              <span>Code envoyé sur {channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}</span>
+              {channel === 'whatsapp' && (
+                <button type="button" onClick={handleSendOtp} className="text-blue-400 hover:underline">
+                  Essayer par SMS
+                </button>
+              )}
+            </div>
             <input
               type="text"
               value={otp}
