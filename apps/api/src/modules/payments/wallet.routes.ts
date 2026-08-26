@@ -563,6 +563,13 @@ export default async function walletRoutes(app: FastifyInstance) {
         const payoutData = (await payoutRes.json()) as any
 
         if (!payoutRes.ok || payoutData.error) {
+          // Log full FedaPay response for diagnostic purposes
+          app.log.error({ 
+            fedapayStatus: payoutRes.status, 
+            fedapayResponse: payoutData,
+            baseUrl,
+            keyPrefix: process.env.FEDAPAY_SECRET_KEY?.substring(0, 15) + '...'
+          }, '[FedaPay Debug] Full error response')
           const errMsg = payoutData?.message 
             || payoutData?.error?.message 
             || (payoutData?.errors ? Object.values(payoutData.errors).flat().join(', ') : null)
