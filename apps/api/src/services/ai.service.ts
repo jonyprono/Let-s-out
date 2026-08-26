@@ -82,7 +82,32 @@ export class AiService {
       return "Désolé, l'agent ne peut pas vous répondre (Clé Groq manquante).";
     }
 
-    for (const model of GROQ_MODELS) {
+    // 1. Fetch available models directly from the user's API key
+    let availableModels: string[] = [];
+    try {
+      const modelsList = await this.groq.models.list();
+      availableModels = modelsList.data.map(m => m.id);
+      console.log(`[AI] Modèles Groq disponibles pour cette clé : ${availableModels.join(', ')}`);
+    } catch (err) {
+      console.error('[AI] Impossible de récupérer la liste des modèles Groq:', err);
+      availableModels = GROQ_MODELS; // Fallback to hardcoded if fetch fails
+    }
+
+    // 2. Try models that contain 'llama', 'mixtral' or 'gemma' (prioritize chat models)
+    const modelsToTry = availableModels
+      .filter(m => m.includes('llama') || m.includes('mixtral') || m.includes('gemma'))
+      .sort((a, b) => {
+        // Prefer newer/faster ones if possible
+        if (a.includes('8b') && !b.includes('8b')) return -1;
+        if (a.includes('versatile') && !b.includes('versatile')) return -1;
+        return 0;
+      });
+
+    if (modelsToTry.length === 0) {
+      modelsToTry.push(...GROQ_MODELS); // Fallback if no known names found
+    }
+
+    for (const model of modelsToTry) {
       try {
         console.log(`[AI] Essai modèle: ${model}`);
         const completion = await this.groq.chat.completions.create({
