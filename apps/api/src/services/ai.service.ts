@@ -93,15 +93,15 @@ export class AiService {
       availableModels = GROQ_MODELS; // Fallback to hardcoded if fetch fails
     }
 
-    // 2. Try models that contain 'llama', 'mixtral' or 'gemma' (prioritize chat models)
-    // Exclude 'guard' models (which are prompt classifiers, not chat models)
+    // 2. Try models that contain 'llama', 'mixtral', 'gemma', 'qwen', or 'gpt' (prioritize chat models)
+    // Exclude 'guard' and 'whisper' models
     const modelsToTry = availableModels
-      .filter(m => m.includes('llama') || m.includes('mixtral') || m.includes('gemma'))
-      .filter(m => !m.includes('guard') && !m.includes('whisper'))
+      .filter(m => m.includes('llama') || m.includes('mixtral') || m.includes('gemma') || m.includes('qwen') || m.includes('gpt'))
+      .filter(m => !m.includes('guard') && !m.includes('whisper') && !m.includes('safeguard'))
       .sort((a, b) => {
-        // Prefer newer/faster ones if possible
+        // Prefer qwen or newer ones
+        if (a.includes('qwen') && !b.includes('qwen')) return -1;
         if (a.includes('8b') && !b.includes('8b')) return -1;
-        if (a.includes('versatile') && !b.includes('versatile')) return -1;
         return 0;
       });
 
