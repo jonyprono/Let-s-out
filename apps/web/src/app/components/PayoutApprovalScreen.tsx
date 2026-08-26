@@ -8,11 +8,13 @@ import { Loader2, Tag, User, Calendar, Banknote, ShieldCheck, ShieldX } from 'lu
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function PayoutApprovalScreen() {
   const { id, payoutId } = useParams<{ id: string, payoutId: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
 
   const [step, setStep] = useState<'view' | 'approve-sheet' | 'reject-sheet' | 'success-approve' | 'success-reject'>('view');
   const [note, setNote] = useState('');
@@ -205,21 +207,43 @@ export function PayoutApprovalScreen() {
       </div>
 
       {/* Actions */}
-      <div className="p-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800 fixed bottom-0 left-0 right-0 max-w-[768px] mx-auto z-10 pb-safe flex gap-3">
-        <button
-          onClick={() => setStep('reject-sheet')}
-          className="flex-1 h-[48px] bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-[15px] font-semibold active:scale-95 transition-transform flex items-center justify-center gap-2"
-        >
-          <ShieldX className="w-4 h-4" />
-          Refuser
-        </button>
-        <button
-          onClick={() => setStep('approve-sheet')}
-          className="flex-1 h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-semibold active:scale-95 transition-transform flex items-center justify-center gap-2"
-        >
-          <ShieldCheck className="w-4 h-4" />
-          Approuver
-        </button>
+      <div className="p-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-gray-800 fixed bottom-0 left-0 right-0 max-w-[768px] mx-auto z-10 pb-safe">
+        {(() => {
+          const myApproval = approvals.find((a: any) => a.userId === user?.id);
+          const hasVoted = myApproval && myApproval.status !== 'PENDING';
+          
+          if (hasVoted) {
+            const isApproved = myApproval.status === 'APPROVED';
+            return (
+              <div className={`w-full h-[48px] rounded-xl flex items-center justify-center gap-2 font-semibold text-[15px] ${
+                isApproved ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50' 
+                           : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50'
+              }`}>
+                {isApproved ? <ShieldCheck className="w-5 h-5" /> : <ShieldX className="w-5 h-5" />}
+                Vous avez {isApproved ? 'approuvé' : 'refusé'} cette demande
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex gap-3">
+              <button
+                onClick={() => setStep('reject-sheet')}
+                className="flex-1 h-[48px] bg-white dark:bg-[#1A1A1A] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-xl text-[15px] font-semibold active:scale-95 transition-transform flex items-center justify-center gap-2"
+              >
+                <ShieldX className="w-4 h-4" />
+                Refuser
+              </button>
+              <button
+                onClick={() => setStep('approve-sheet')}
+                className="flex-1 h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-semibold active:scale-95 transition-transform flex items-center justify-center gap-2"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                Approuver
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* Approve Bottom Sheet */}
