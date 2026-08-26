@@ -110,7 +110,7 @@ function triggerAiBotLogic(
               .slice(0, reversed.length - 1)
               .map(m => ({ role: m.senderId === bot.userId ? 'bot' : 'user', content: m.content || '...' }))
             app.log.info(`[BOT] History length: ${formattedHistory.length}`)
-            return aiService.generateSupportResponse(bot.userId, conversation.id, formattedHistory, message.content || '[Fichier/Image joint]')
+            return aiService.generateSupportResponse(bot.userId, conversation.id, formattedHistory, message.content || '[Fichier/Image joint]', message.mediaUrl)
           })
           .then(replyContent => {
             app.log.info(`[BOT] Got reply: "${replyContent?.substring(0, 80)}..."`)

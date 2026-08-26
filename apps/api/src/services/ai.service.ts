@@ -1,5 +1,7 @@
 import Groq from 'groq-sdk';
 import { PrismaClient } from '@prisma/client';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
 const prisma = new PrismaClient();
 
 // Modèle principal + fallbacks si le modèle est indisponible
@@ -12,17 +14,73 @@ const GROQ_MODELS = [
 
 export class AiService {
   private groq: Groq;
+  private genAI: GoogleGenerativeAI;
 
   constructor() {
     this.groq = new Groq({
       apiKey: process.env.GROQ_API_KEY || '',
     });
+    this.genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+  }
+
+  private async fetchImageAsGeminiPart(url: string) {
+    try {
+      const response = await fetch(url);
+      const buffer = await response.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      const mimeType = response.headers.get('content-type') || 'image/jpeg';
+      return {
+        inlineData: {
+          data: base64,
+          mimeType
+        }
+      };
+    } catch (err) {
+      console.error('[AI] Erreur lors du téléchargement de l\'image pour Gemini:', err);
+      return null;
+    }
+  }
+
+  private async callGeminiWithImage(systemPrompt: string, history: any[], newMessage: string, imageUrl: string): Promise<string | null> {
+    if (!process.env.GEMINI_API_KEY) {
+      console.log('[AI] GEMINI_API_KEY manquante, fallback vers Groq.');
+      return null;
+    }
+
+    try {
+      console.log(`[AI] Essai de Gemini (gemini-1.5-flash) pour l'analyse d'image...`);
+      const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const imagePart = await this.fetchImageAsGeminiPart(imageUrl);
+      if (!imagePart) {
+        return null; // Fallback to Groq if image download fails
+      }
+
+      // Convert history to Gemini format (optional, we could just pass it in the prompt)
+      let prompt = `${systemPrompt}\n\nHistorique de conversation :\n`;
+      for (const msg of history) {
+        prompt += `${msg.role === 'bot' ? 'Agent' : 'Utilisateur'} : ${msg.content}\n`;
+      }
+      prompt += `\nNouveau message (avec image) : ${newMessage}\n`;
+
+      const result = await model.generateContent([prompt, imagePart]);
+      const text = result.response.text();
+      console.log(`[AI] ✅ Succès avec Gemini (${text.length} chars)`);
+      return text;
+    } catch (error: any) {
+      console.error('[AI] ❌ Erreur Gemini:', error?.message || error);
+      return null; // Fallback to Groq
+    }
   }
 
   private async callGroqWithFallback(
     messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
   ): Promise<string> {
     let lastError: any = null;
+
+    if (!process.env.GROQ_API_KEY) {
+      return "Désolé, l'agent ne peut pas vous répondre (Clé Groq manquante).";
+    }
 
     for (const model of GROQ_MODELS) {
       try {
@@ -43,16 +101,13 @@ export class AiService {
         const errType = err?.error?.type ?? err?.code ?? 'unknown';
         console.error(`[AI] ❌ Échec avec ${model} — status: ${status}, type: ${errType}, message: ${msg}`);
 
-        // Ne pas essayer les autres modèles si c'est une erreur d'auth (clé invalide)
         if (status === 401 || status === 403) {
           console.error('[AI] Clé API invalide ou révoquée — arrêt des tentatives.');
           break;
         }
-        // Continuer sur le prochain modèle pour les erreurs 404 (modèle introuvable) ou 429 (quota)
       }
     }
 
-    // Tous les modèles ont échoué
     const status = lastError?.status ?? lastError?.statusCode;
     if (status === 401 || status === 403) {
       return "Je suis désolé, je rencontre un problème d'authentification. Un agent humain vous contactera bientôt.";
@@ -67,15 +122,11 @@ export class AiService {
     botId: string,
     _conversationId: string,
     history: { role: string; content: string }[],
-    newMessage: string
+    newMessage: string,
+    mediaUrl?: string | null
   ): Promise<string> {
     try {
-      if (!process.env.GROQ_API_KEY) {
-        console.error('[AI] ❌ GROQ_API_KEY manquante dans les variables d\'environnement.');
-        return 'Désolé, je ne peux pas vous répondre pour le moment (configuration manquante).';
-      }
-
-      console.log(`[AI] generateSupportResponse — bot: ${botId}, conv: ${_conversationId}, history: ${history.length} msgs`);
+      console.log(`[AI] generateSupportResponse — bot: ${botId}, conv: ${_conversationId}, history: ${history.length} msgs, mediaUrl: ${mediaUrl}`);
 
       // Fetch the bot's system prompt from DB
       const bot = await prisma.user.findUnique({
@@ -86,7 +137,7 @@ export class AiService {
       let systemPrompt = bot?.botPrompt ||
         `Tu es ${bot?.profile?.displayName || 'un agent'}, un assistant du support client pour l'application Let's Out. Sois bref, concis et très utile. Tu parles en français. Ne dis jamais que tu es une IA ou un robot. Réponds directement aux questions de l'utilisateur.`;
 
-      // --- RAG ARCHITECTURE: INJECT SYSTEM CONTEXT ---
+      // RAG ARCHITECTURE: INJECT SYSTEM CONTEXT
       try {
         const conversation = await prisma.conversation.findUnique({
           where: { id: _conversationId },
@@ -128,12 +179,19 @@ export class AiService {
           systemPrompt += contextString;
         }
       } catch (ctxErr: any) {
-        console.error('[AI] Erreur lors de la récupération du contexte RAG:', ctxErr?.message ?? ctxErr);
-        // On continue sans le contexte RAG
+        console.error('[AI] Erreur RAG:', ctxErr?.message ?? ctxErr);
       }
-      // -----------------------------------------------
 
-      // Build messages array for Groq (OpenAI-compatible format)
+      // If there's an image, try Gemini first
+      if (mediaUrl) {
+        const geminiResponse = await this.callGeminiWithImage(systemPrompt, history, newMessage, mediaUrl);
+        if (geminiResponse) {
+          return geminiResponse;
+        }
+        console.log(`[AI] Fallback vers Groq après échec ou bypass de Gemini.`);
+      }
+
+      // Build messages array for Groq
       const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
         { role: 'system', content: systemPrompt }
       ];
@@ -151,9 +209,7 @@ export class AiService {
       return await this.callGroqWithFallback(messages);
 
     } catch (error: any) {
-      console.error('[AI] Erreur inattendue dans generateSupportResponse:');
-      console.error('  message :', error?.message ?? String(error));
-      console.error('  stack   :', error?.stack);
+      console.error('[AI] Erreur inattendue dans generateSupportResponse:', error?.message ?? String(error));
       return "Je suis désolé, je rencontre des difficultés techniques. Un agent humain vous contactera bientôt.";
     }
   }
