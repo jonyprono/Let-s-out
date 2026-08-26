@@ -250,7 +250,17 @@ export function useSendMessage(conversationId: string) {
     onSuccess: (serverMsg, _vars, context) => {
       // Swap optimistic entry with real server message — no refetch, no flash
       qc.setQueryData<Message[]>(['chat', 'messages', conversationId], (old = []) =>
-        old.map((m) => ((m as any)._optimistic && m.id === (context?.optimisticId ?? optimisticId) ? { ...serverMsg, _optimistic: false } : m))
+        old.map((m) => {
+          if ((m as any)._optimistic && m.id === (context?.optimisticId ?? optimisticId)) {
+            return {
+              ...serverMsg,
+              _optimistic: false,
+              // Preserve replyTo from optimistic if server didn't return it
+              replyTo: serverMsg.replyTo ?? m.replyTo ?? null,
+            }
+          }
+          return m
+        })
       )
       // Silently refresh conversation list in background (badge, last message preview)
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
