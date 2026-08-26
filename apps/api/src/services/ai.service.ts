@@ -4,9 +4,10 @@ const prisma = new PrismaClient();
 
 // Modèle principal + fallbacks si le modèle est indisponible
 const GROQ_MODELS = [
-  'llama-3.3-70b-versatile',   // Meilleur modèle Groq disponible actuellement
-  'llama-3.1-8b-instant',      // Fallback rapide
-  'gemma2-9b-it',              // Dernier fallback
+  'llama-3.1-8b-instant',      // Modèle récent
+  'llama3-8b-8192',            // Modèle très stable et toujours dispo
+  'llama3-70b-8192',           // Llama 3 classique
+  'mixtral-8x7b-32768'         // Fallback ultime (Mixtral)
 ];
 
 export class AiService {
