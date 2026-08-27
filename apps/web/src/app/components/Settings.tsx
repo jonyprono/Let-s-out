@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import {
   ChevronLeft, ChevronRight, Globe, Lock, Bell, Shield, HelpCircle,
-  LogOut, User, Loader2,
+  LogOut, User, Loader2, Phone, Mail,
   CheckCircle2, Trash2, AlertTriangle, Wallet as WalletIcon,
   Star, MessageCircle, AlertCircle, Share2, Heart, Award,
   Calendar, Bot, FileText, Info,
@@ -363,6 +363,30 @@ export function Settings({ onBack }: SettingsProps) {
                 {notifEnabled ? t('settings.cards.notifActive') : t('settings.cards.notifInactive')}
               </span>
             </div>
+          </div>
+        </div>
+
+        {/* ── COORDONNÉES ───────────────────────────────────────────────────── */}
+        <div>
+          <SectionLabel>Coordonnées</SectionLabel>
+          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
+            <SettingsRow
+              icon={<Phone className="w-4 h-4" />}
+              iconBg="bg-green-50 dark:bg-green-500/10"
+              iconColor="text-green-500"
+              title={t('settings.rows.phone') || 'Numéro de téléphone'}
+              subtitle={user?.phone ? user.phone : 'Aucun numéro'}
+              onClick={() => setShowPhoneModal(true)}
+            />
+            <SettingsRow
+              icon={<Mail className="w-4 h-4" />}
+              iconBg="bg-blue-50 dark:bg-blue-500/10"
+              iconColor="text-blue-500"
+              title={t('settings.rows.email') || 'Adresse e-mail'}
+              subtitle={user?.email ? user.email : 'Aucun e-mail'}
+              onClick={() => setShowEmailModal(true)}
+              isLast
+            />
           </div>
         </div>
 

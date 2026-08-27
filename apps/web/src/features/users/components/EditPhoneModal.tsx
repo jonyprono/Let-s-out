@@ -41,6 +41,8 @@ export function EditPhoneModal({ onClose }: Props) {
   const [isFirebaseSending, setIsFirebaseSending] = useState(false);
   const [isFirebaseVerifying, setIsFirebaseVerifying] = useState(false);
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp'>('whatsapp');
+  // Tracks exactly which channel sent the LAST code to prevent fallback hijacking
+  const [lastCodeVia, setLastCodeVia] = useState<'firebase' | 'backend' | null>(null);
 
   // Build full phone exactly like Signup.tsx
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`;
@@ -65,6 +67,7 @@ export function EditPhoneModal({ onClose }: Props) {
 
     if (currentChannel === 'whatsapp') {
       setIsFirebaseSending(true);
+      setLastCodeVia('backend');
       sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
         onSuccess: () => {
           setStep(2);
@@ -90,6 +93,7 @@ export function EditPhoneModal({ onClose }: Props) {
       if (Capacitor.isNativePlatform()) {
         const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
           setNativeVerificationId(event.verificationId);
+          setLastCodeVia('firebase');
         });
         await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone });
         setStep(2);
@@ -100,6 +104,7 @@ export function EditPhoneModal({ onClose }: Props) {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-phone-edit', { size: 'invisible' });
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier);
         setConfirmationResult(confirmation);
+        setLastCodeVia('firebase');
         setStep(2);
         setCountdown(59);
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
@@ -111,6 +116,8 @@ export function EditPhoneModal({ onClose }: Props) {
         window.recaptchaVerifier = undefined;
       }
       setConfirmationResult(null);
+      setNativeVerificationId('');
+      setLastCodeVia('backend');
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
         onSuccess: () => {
           setStep(2);
@@ -131,7 +138,8 @@ export function EditPhoneModal({ onClose }: Props) {
     const codeStr = otp.join('');
     if (codeStr.length < 6) return;
 
-    if (confirmationResult || nativeVerificationId) {
+    const useFirebasePath = lastCodeVia === 'firebase' && (confirmationResult || nativeVerificationId);
+    if (useFirebasePath) {
       setIsFirebaseVerifying(true);
       try {
         if (Capacitor.isNativePlatform() && nativeVerificationId) {
@@ -191,6 +199,7 @@ export function EditPhoneModal({ onClose }: Props) {
       if (Capacitor.isNativePlatform()) {
         const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
           setNativeVerificationId(event.verificationId);
+          setLastCodeVia('firebase');
         });
         await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone });
         setTimeout(() => listener.remove(), 60000);
@@ -201,6 +210,7 @@ export function EditPhoneModal({ onClose }: Props) {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-phone-edit', { size: 'invisible' });
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier);
         setConfirmationResult(confirmation);
+        setLastCodeVia('firebase');
         setCountdown(59);
         toast.success('Code renvoyé par SMS');
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
@@ -208,6 +218,8 @@ export function EditPhoneModal({ onClose }: Props) {
     } catch {
       if (window.recaptchaVerifier) { try { window.recaptchaVerifier.clear(); } catch {} window.recaptchaVerifier = undefined; }
       setConfirmationResult(null);
+      setNativeVerificationId('');
+      setLastCodeVia('backend');
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
         onSuccess: () => { setCountdown(59); toast.success('Code renvoyé'); setTimeout(() => otpRefs.current[0]?.focus(), 100); },
         onError: () => toast.error('Impossible de renvoyer le code'),
@@ -237,7 +249,7 @@ export function EditPhoneModal({ onClose }: Props) {
       <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl sm:rounded-3xl p-5 shadow-xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {step === 1 ? t('editPhoneModal.title') || 'Modifier le numéro' : 'Vérification'}
+            {step === 1 ? (user?.phone ? 'Modifier le numéro' : 'Ajouter un numéro') : 'Vérification'}
           </h2>
           <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2A2A2A] rounded-full hover:bg-gray-200 dark:hover:bg-[#333333]">
             <X size={20} />
