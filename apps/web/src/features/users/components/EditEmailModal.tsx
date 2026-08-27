@@ -166,7 +166,10 @@ export function EditEmailModal({ onClose }: Props) {
               </p>
             </div>
 
-            <div className="flex justify-between gap-2 mb-8">
+            <div
+              className="grid gap-3 mb-6"
+              style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}
+            >
               {otp.map((v, i) => (
                 <input
                   key={i}
@@ -177,23 +180,30 @@ export function EditEmailModal({ onClose }: Props) {
                   value={v}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleOtpKey(i, e)}
-                  className="w-12 h-14 text-center text-xl font-bold bg-white dark:bg-[#222222] border-2 border-gray-200 dark:border-[#333333] rounded-xl focus:border-action-primary focus:ring-4 focus:ring-action-primary/10 outline-none transition-all dark:text-white"
+                  className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white ${
+                    v
+                      ? 'border-[var(--brand-orange-500)]'
+                      : 'border-gray-200 dark:border-white/10'
+                  } focus:border-[var(--brand-orange-500)]`}
                 />
               ))}
             </div>
 
-            <div className="flex items-center justify-between mb-8">
-              <button
-                onClick={handleResend}
-                disabled={countdown > 0 || isLoading}
-                className="text-sm font-semibold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50 transition-colors"
-              >
-                Renvoyer le code
-              </button>
+            <button
+              onClick={handleResend}
+              disabled={countdown > 0 || isLoading}
+              className="flex items-center gap-1.5 font-poppins text-[13px] text-gray-500 dark:text-gray-400 disabled:opacity-50 transition-opacity mb-8"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Renvoyer le code
               {countdown > 0 && (
-                <span className="text-sm font-medium text-gray-400">dans 00:{countdown.toString().padStart(2, '0')}</span>
+                <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
+                  {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
+                </span>
               )}
-            </div>
+            </button>
 
             <button
               onClick={handleVerifyOtp}
