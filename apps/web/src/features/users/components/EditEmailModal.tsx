@@ -138,7 +138,7 @@ export function EditEmailModal({ onClose }: Props) {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-12 py-4 text-[15px] outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
+                    className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-12 py-4 text-[15px] outline-none focus:border-2 focus:border-[var(--brand-orange-500)] focus:bg-white dark:bg-[#1A1A1A] transition-all"
                     placeholder="votre@email.com"
                   />
                   <Mail
