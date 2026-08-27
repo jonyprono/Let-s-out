@@ -425,6 +425,7 @@ export function Signup({ onBack }: SignupProps) {
         const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
           otpLogger.sendSuccess('sms', `[Resend] verificationId: ${event.verificationId?.slice(0, 20)}...`)
           setNativeVerificationId(event.verificationId)
+          setLastCodeVia('firebase')
         })
         await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
         setTimeout(() => listener.remove(), 60000)
@@ -438,7 +439,9 @@ export function Signup({ onBack }: SignupProps) {
         otpLogger.sendRequest('sms')
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
         otpLogger.sendSuccess('sms', '[Resend] Confirmation Firebase Web')
-        setConfirmationResult(confirmation); setCountdown(59)
+        setConfirmationResult(confirmation)
+        setLastCodeVia('firebase')
+        setCountdown(59)
         toast.success(t('signup.successResend'))
         setTimeout(() => otpRefs.current[0]?.focus(), 100)
       }
