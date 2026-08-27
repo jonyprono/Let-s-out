@@ -229,6 +229,11 @@ export class AuthService {
       include: { profile: true },
     })
 
+    // Asynchronously send welcome email for new Google signups
+    this.sendWelcomeEmail(email, displayName).catch((err) => {
+      console.error('[Welcome Email Error] Google Signup:', err)
+    })
+
     return { user, isNewUser: true }
   }
 
@@ -297,6 +302,16 @@ export class AuthService {
       },
       include: { profile: true },
     })
+
+    // Consume pre-verified session since account is now created
+    await this.consumeVerifiedSession(input.target)
+
+    // Asynchronously send welcome email if registered via Email
+    if (!isPhone) {
+      this.sendWelcomeEmail(input.target, input.displayName).catch((err) => {
+        console.error('[Welcome Email Error] Email Signup:', err)
+      })
+    }
 
     return user
   }
@@ -479,5 +494,83 @@ export class AuthService {
       subject: `Votre code de connexion : ${code}`,
       html: `<p>Votre code de vérification <strong>Let's Out</strong> : <strong style="font-size:24px">${code}</strong></p><p>Valable ${OTP_TTL_MINUTES} minutes.</p>`,
     })
+  }
+
+  public async sendWelcomeEmail(email: string, displayName: string) {
+    if (!process.env.RESEND_API_KEY) {
+      // DEV MODE fallback
+      console.log(`\n📧 [DEV] WELCOME EMAIL simulated to ${email} (Name: ${displayName})\n`);
+      return;
+    }
+    
+    const { Resend } = await import('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    
+    const htmlContent = `
+      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333333; line-height: 1.6;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <img src="https://letsout.app/logoci.png" alt="Let's Out Logo" style="height: 60px; width: auto;" />
+        </div>
+        
+        <h2 style="font-size: 24px; color: #111111; margin-bottom: 20px;">Bonjour ${displayName},</h2>
+        
+        <p style="font-size: 16px; margin-bottom: 20px;">
+          Bienvenue dans la communauté Let's Out ! Nous sommes ravis de vous compter parmi nous. 🧡
+        </p>
+        
+        <p style="font-size: 16px; margin-bottom: 30px;">
+          Let's Out, c'est l'application qui vous permet de créer, partager et vivre des moments inoubliables avec vos amis ou avec de nouvelles personnes.
+        </p>
+        
+        <h3 style="font-size: 18px; color: #111111; margin-bottom: 15px;">Que pouvez-vous faire dès maintenant ?</h3>
+        
+        <ul style="list-style: none; padding-left: 0; margin-bottom: 30px;">
+          <li style="margin-bottom: 12px; font-size: 16px;">
+            🌍 <strong>Explorer les événements</strong> : Découvrez ce qui se passe autour de vous et rejoignez des sorties qui vous correspondent.
+          </li>
+          <li style="margin-bottom: 12px; font-size: 16px;">
+            🗓️ <strong>Créer vos propres événements</strong> : Un anniversaire, un voyage, une soirée ? Organisez tout en quelques clics.
+          </li>
+          <li style="margin-bottom: 12px; font-size: 16px;">
+            💰 <strong>Gérer des cagnottes</strong> : Fini les galères de remboursement, collectez les participations directement sur l'app.
+          </li>
+        </ul>
+        
+        <p style="font-size: 16px; margin-bottom: 30px;">
+          Pour profiter pleinement de l'expérience, n'hésitez pas à compléter votre profil en ajoutant une photo !
+        </p>
+        
+        <div style="text-align: center; margin-bottom: 40px;">
+          <a href="https://letsout.app" style="display: inline-block; background-color: #FF7A00; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: bold; padding: 15px 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(255, 122, 0, 0.3);">
+            👉 Découvrir les événements
+          </a>
+        </div>
+        
+        <p style="font-size: 16px; margin-bottom: 20px;">
+          Si vous avez la moindre question, répondez simplement à cet email, notre équipe est là pour vous aider.
+        </p>
+        
+        <p style="font-size: 16px; margin-bottom: 10px;">
+          À très vite,<br />
+          <strong>L'équipe Let's Out</strong>
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #eeeeee; margin: 30px 0;" />
+        
+        <div style="text-align: center; font-size: 12px; color: #888888;">
+          <p>
+            Vous recevez cet email car vous vous êtes inscrit(e) sur Let's Out.<br />
+            <a href="https://letsout.app" style="color: #FF7A00; text-decoration: none;">letsout.app</a>
+          </p>
+        </div>
+      </div>
+    `;
+
+    await resend.emails.send({
+      from: "Let's Out <bonjour@letsout.app>",
+      to: email,
+      subject: "Bienvenue sur Let's Out ! 🎉",
+      html: htmlContent,
+    });
   }
 }
