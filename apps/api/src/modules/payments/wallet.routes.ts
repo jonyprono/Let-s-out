@@ -540,7 +540,8 @@ export default async function walletRoutes(app: FastifyInstance) {
       }
 
       // MODE PROD / SANDBOX: Appeler l'API FedaPay Payouts
-      const baseUrl = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') 
+      const isSandbox = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') || false;
+      const baseUrl = isSandbox
         ? 'https://sandbox-api.fedapay.com/v1' 
         : 'https://api.fedapay.com/v1';
 
@@ -554,7 +555,7 @@ export default async function walletRoutes(app: FastifyInstance) {
           body: JSON.stringify({
             amount: amount,
             currency: { iso: 'XOF' },
-            mode: network,
+            mode: isSandbox ? 'momo_test' : network,
             customer: { phone_number: { number: phone.replace(/^\+229/, '').replace(/^229/, ''), country: 'BJ' } },
             send_now: true,
           }),
