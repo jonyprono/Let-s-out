@@ -135,6 +135,9 @@ export function Signup({ onBack }: SignupProps) {
   const [idToken, setIdToken] = useState<string>('')
   const [isFirebaseSending, setIsFirebaseSending] = useState(false)
   const [isFirebaseVerifying, setIsFirebaseVerifying] = useState(false)
+  // Tracks exactly which channel sent the LAST code — prevents stale Firebase session from
+  // intercepting a verification that should go through the backend (the root cause of OTP bugs)
+  const [lastCodeVia, setLastCodeVia] = useState<'firebase' | 'backend' | null>(null)
 
   const { mutate: checkTarget, isPending: checkingTarget } = useCheckTarget()
   const { mutate: sendOtp, isPending: sendingOtp } = useSendOtp()
@@ -217,6 +220,7 @@ export function Signup({ onBack }: SignupProps) {
               const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
                 otpLogger.sendSuccess('sms', `verificationId reçu: ${event.verificationId?.slice(0, 20)}...`)
                 setNativeVerificationId(event.verificationId)
+                setLastCodeVia('firebase')
               })
               await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
               setStep(2); setCountdown(59)
@@ -229,13 +233,20 @@ export function Signup({ onBack }: SignupProps) {
               otpLogger.sendRequest('sms')
               const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
               otpLogger.sendSuccess('sms', 'Confirmation Firebase Web reçue')
-              setConfirmationResult(confirmation); setStep(2); setCountdown(59)
+              setConfirmationResult(confirmation)
+              setLastCodeVia('firebase')
+              setStep(2); setCountdown(59)
               setTimeout(() => otpRefs.current[0]?.focus(), 100)
             }
           } catch (err: any) {
             otpLogger.sendError(err)
             toast.error(`[Firebase Error] ${err?.message || err}`)
+            // CRITICAL: Clear ALL Firebase state before falling back to backend
+            // Leaving stale nativeVerificationId or confirmationResult would cause
+            // the verification step to use Firebase even though code came from backend
             setConfirmationResult(null)
+            setNativeVerificationId('')
+            setLastCodeVia('backend')
             // Fallback: envoyer via backend
             otpLogger.sendRequest('sms')
             sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
@@ -251,9 +262,10 @@ export function Signup({ onBack }: SignupProps) {
             })
           } finally { setIsFirebaseSending(false) }
         } else {
-          // WhatsApp OTP
+          // WhatsApp OTP — always backend
           otpLogger.sendStart(fullPhone, 'whatsapp')
           otpLogger.sendRequest('whatsapp')
+          setLastCodeVia('backend')
           sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
             onSuccess: () => {
               otpLogger.sendSuccess('whatsapp', 'OTP WhatsApp envoyé avec succès')
@@ -285,7 +297,10 @@ export function Signup({ onBack }: SignupProps) {
       const codeStr = otp.join('')
       if (codeStr.length < OTP_LENGTH) return
       otpLogger.verifyStart(fullPhone)
-      if (currentChannel === 'sms' && (confirmationResult || nativeVerificationId)) {
+      // Use lastCodeVia to determine the EXACT path — prevents stale Firebase session
+      // from hijacking a verification that should go to backend (the OTP bug root cause)
+      const useFirebasePath = lastCodeVia === 'firebase' && (confirmationResult || nativeVerificationId)
+      if (useFirebasePath) {
         setIsFirebaseVerifying(true)
         try {
           otpLogger.verifyRequest()
@@ -310,7 +325,7 @@ export function Signup({ onBack }: SignupProps) {
         }
         finally { setIsFirebaseVerifying(false) }
       } else {
-        // Vérification via backend (WhatsApp ou fallback SMS)
+        // Vérification via backend (WhatsApp, fallback SMS, ou lastCodeVia=backend)
         otpLogger.verifyRequest()
         checkOtp({ target: fullPhone, code: codeStr }, {
           onSuccess: () => { otpLogger.verifySuccess(); setStep(3) },
@@ -433,7 +448,10 @@ export function Signup({ onBack }: SignupProps) {
         try { window.recaptchaVerifier.clear() } catch {}
         window.recaptchaVerifier = undefined
       }
+      // CRITICAL: Clear ALL Firebase state — same fix as triggerOtpSend fallback
       setConfirmationResult(null)
+      setNativeVerificationId('')
+      setLastCodeVia('backend')
       otpLogger.sendRequest('sms')
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
         onSuccess: () => { otpLogger.sendSuccess('sms', '[Resend fallback] Backend SMS'); setCountdown(59); toast.success(t('signup.successResendAlt')); setTimeout(() => otpRefs.current[0]?.focus(), 100) },

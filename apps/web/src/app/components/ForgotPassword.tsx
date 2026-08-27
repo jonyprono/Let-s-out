@@ -55,6 +55,9 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const [idToken, setIdToken] = useState<string>('')
   const [isFirebaseSending, setIsFirebaseSending] = useState(false)
   const [isFirebaseVerifying, setIsFirebaseVerifying] = useState(false)
+  // Tracks exactly which channel sent the LAST code — prevents stale Firebase session
+  // from hijacking backend OTP verification (root cause of the OTP rejection bug)
+  const [lastCodeVia, setLastCodeVia] = useState<'firebase' | 'backend' | null>(null)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const { mutate: checkTarget, isPending: checkingTarget } = useCheckTarget()
@@ -92,6 +95,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                 if (Capacitor.isNativePlatform()) {
                   const listener = await FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
                     setNativeVerificationId(event.verificationId)
+                    setLastCodeVia('firebase')
                   })
                   await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
                   setStep(2); setCountdown(59)
@@ -100,18 +104,24 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                 } else {
                   if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
                   const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
-                  setConfirmationResult(confirmation); setStep(2); setCountdown(59)
+                  setConfirmationResult(confirmation)
+                  setLastCodeVia('firebase')
+                  setStep(2); setCountdown(59)
                   setTimeout(() => otpRefs.current[0]?.focus(), 100)
                 }
               } catch {
                 if (!Capacitor.isNativePlatform() && window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
+                // CRITICAL: Clear ALL Firebase state before backend fallback
                 setConfirmationResult(null)
+                setNativeVerificationId('')
+                setLastCodeVia('backend')
                 sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
                   onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
                   onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi du code"),
                 })
               } finally { setIsFirebaseSending(false) }
             } else {
+              setLastCodeVia('backend')
               sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
                 onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
                 onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi"),
@@ -124,7 +134,10 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
     } else if (step === 2) {
       const codeStr = otp.join('')
       if (codeStr.length < OTP_LENGTH) return
-      if (currentChannel === 'sms' && (confirmationResult || nativeVerificationId)) {
+      // Use lastCodeVia to determine the EXACT path — prevents stale Firebase session
+      // from hijacking a verification that should go to backend
+      const useFirebasePath = lastCodeVia === 'firebase' && (confirmationResult || nativeVerificationId)
+      if (useFirebasePath) {
         setIsFirebaseVerifying(true)
         try {
           if (Capacitor.isNativePlatform() && nativeVerificationId) {
@@ -205,7 +218,10 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       }
     } catch {
       if (!Capacitor.isNativePlatform() && window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
+      // CRITICAL: Clear ALL Firebase state when falling back to backend resend
       setConfirmationResult(null)
+      setNativeVerificationId('')
+      setLastCodeVia('backend')
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
         onSuccess: () => { setCountdown(59); toast.success('Code renvoyé'); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
         onError: () => toast.error('Impossible de renvoyer le code'),
