@@ -60,7 +60,11 @@
                                   "shareApp":  "Compartir la aplicaciÃ³n",
                                   "shareAppDesc":  "Invita a tus amigos",
                                   "adminDashboard":  "Panel de control de administraciÃ³n",
-                                  "adminDashboardDesc":  "Gestionar los procesos de KYC, eventos, etc."
+                                  "adminDashboardDesc":  "Gestionar los procesos de KYC, eventos, etc.",
+                                  "phone": "Número de teléfono",
+                                  "phoneDesc": "Editar o añadir tu número",
+                                  "email": "Dirección de correo",
+                                  "emailDesc": "Editar o añadir tu correo"
                               },
                      "buttons":  {
                                      "logout":  "Cerrar sesiÃ³n",

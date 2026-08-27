@@ -60,7 +60,11 @@
                                   "shareApp":  "Share the app",
                                   "shareAppDesc":  "Invite your friends",
                                   "adminDashboard":  "Admin Dashboard",
-                                  "adminDashboardDesc":  "Manage KYC, events, etc."
+                                  "adminDashboardDesc":  "Manage KYC, events, etc.",
+                                  "phone": "Phone number",
+                                  "phoneDesc": "Edit or add your phone number",
+                                  "email": "Email address",
+                                  "emailDesc": "Edit or add your email address"
                               },
                      "buttons":  {
                                      "logout":  "Log out",

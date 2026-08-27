@@ -375,7 +375,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconBg="bg-green-50 dark:bg-green-500/10"
               iconColor="text-green-500"
               title={t('settings.rows.phone') || 'Numéro de téléphone'}
-              subtitle={user?.phone ? user.phone : 'Aucun numéro'}
+              subtitle={user?.phone ?? (t('settings.rows.phoneDesc') || 'Aucun numéro')}
               onClick={() => setShowPhoneModal(true)}
             />
             <SettingsRow
@@ -383,7 +383,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconBg="bg-blue-50 dark:bg-blue-500/10"
               iconColor="text-blue-500"
               title={t('settings.rows.email') || 'Adresse e-mail'}
-              subtitle={user?.email ? user.email : 'Aucun e-mail'}
+              subtitle={user?.email ?? (t('settings.rows.emailDesc') || 'Aucun e-mail')}
               onClick={() => setShowEmailModal(true)}
               isLast
             />

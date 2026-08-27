@@ -10,7 +10,7 @@ import { auth } from '@/lib/firebase';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { COUNTRIES, Country } from '@/lib/countries';
-import { CountryPicker } from '@/components/shared/CountryPicker';
+import { PhoneInputField } from '@/components/shared/PhoneInputField';
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter';
 
 declare global {
@@ -258,57 +258,57 @@ export function EditPhoneModal({ onClose }: Props) {
 
         {step === 1 ? (
           <>
-            <div className="space-y-4 mb-8">
+            <div className="space-y-5 mb-8">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 ml-1">
+                <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
                   {t('editPhoneModal.number') || 'Nouveau numéro'}
                 </label>
-                <div className="w-full flex gap-2">
-                  <CountryPicker value={country} onChange={(c) => { setCountry(c); resetPhone(); }} />
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    value={phoneDisplay}
-                    onChange={handlePhoneChange}
-                    className="auth-phone-input flex-1 w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] outline-none focus:border-action-primary transition-all"
-                    placeholder="01 00 00 00 00"
-                  />
-                </div>
-                <p className="text-[12px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-2 ml-1">
-                  Numéro complet : <span className="font-medium text-gray-600 dark:text-gray-300">{fullPhone || '—'}</span>
-                </p>
+                <PhoneInputField
+                  country={country}
+                  onCountryChange={(c) => { setCountry(c); resetPhone(); }}
+                  phoneDisplay={phoneDisplay}
+                  onPhoneChange={handlePhoneChange}
+                  onEnter={handleSendCode}
+                />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 ml-1">
+                <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-3 block">
                   Moyen de réception
                 </label>
                 <div className="flex gap-3">
-                  {/* TODO: réactiver le bouton WhatsApp quand prêt 
-                  <button
-                    onClick={() => setCurrentChannel('whatsapp')}
-                    className={`flex-1 py-3 rounded-xl border transition-colors flex items-center justify-center font-medium ${
-                      currentChannel === 'whatsapp'
-                        ? 'border-[#FF991C] bg-[#FFF8F1] text-[#FF991C]'
-                        : 'border-gray-200 dark:border-[#333333] text-gray-500'
-                    }`}
-                  >
-                    WhatsApp
-                  </button>
-                  */}
-                  <button
-                    onClick={() => setCurrentChannel('sms')}
-                    className={`flex-1 py-3 rounded-xl border transition-colors flex items-center justify-center font-medium ${
-                      currentChannel === 'sms'
-                        ? 'border-[#FF991C] bg-[#FFF8F1] text-[#FF991C]'
-                        : 'border-gray-200 dark:border-[#333333] text-gray-500'
-                    }`}
-                  >
-                    SMS
-                  </button>
+                  {/* TODO: réactiver le bouton WhatsApp quand prêt */}
+                  {(['SMS'] as const).map((ch) => {
+                    const val = ch.toLowerCase() as 'sms' | 'whatsapp';
+                    const isActive = currentChannel === val;
+                    return (
+                      <button
+                        key={ch}
+                        type="button"
+                        onClick={() => setCurrentChannel(val)}
+                        className="flex-1 flex items-center justify-between px-4 h-[52px] rounded-[12px] border border-gray-200 dark:border-white/10 transition-colors gap-2 bg-white dark:bg-[#1A1A1A]"
+                      >
+                        <span className="flex-1 text-left font-poppins text-[15px] font-medium text-gray-900 dark:text-white">
+                          {ch}
+                        </span>
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                            isActive
+                              ? 'border-[var(--brand-orange-500)]'
+                              : 'border-gray-200 dark:border-white/10'
+                          }`}
+                        >
+                          {isActive && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-[var(--brand-orange-500)]" />
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
+
             <button
               onClick={handleSendCode}
               disabled={isLoading || !phone || phone.replace(/\s+/g, '').length < 6}
@@ -325,16 +325,26 @@ export function EditPhoneModal({ onClose }: Props) {
                 Code à 6 chiffres envoyé par SMS au <strong className="text-gray-900 dark:text-white">{fullPhone}</strong>
               </p>
 
-              <div className="grid grid-cols-6 gap-2 w-full mb-4">
+              <div
+                className="grid gap-3 mb-6"
+                style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}
+              >
                 {otp.map((d, i) => (
                   <input
-                    key={i} ref={el => { otpRefs.current[i] = el; }}
-                    type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={1} value={d}
+                    key={i}
+                    ref={el => { otpRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={1}
+                    value={d}
                     onChange={e => handleOtpChange(i, e.target.value)}
                     onKeyDown={e => handleOtpKey(i, e)}
-                    className={`aspect-square w-full text-center text-xl font-bold border-2 rounded-xl focus:outline-none transition-colors bg-white dark:bg-[#222222] text-gray-900 dark:text-white
-                      ${d ? 'border-action-primary' : 'border-gray-200 dark:border-[#333333]'}
-                      focus:border-action-primary`}
+                    className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white ${
+                      d
+                        ? 'border-[var(--brand-orange-500)]'
+                        : 'border-gray-200 dark:border-white/10'
+                    } focus:border-[var(--brand-orange-500)]`}
                   />
                 ))}
               </div>
@@ -342,9 +352,17 @@ export function EditPhoneModal({ onClose }: Props) {
               <button
                 onClick={handleResend}
                 disabled={countdown > 0 || isLoading}
-                className="text-[13px] text-gray-400 dark:text-gray-500 dark:text-gray-400 disabled:opacity-50 flex items-center gap-1.5"
+                className="flex items-center gap-1.5 font-poppins text-[13px] text-gray-500 dark:text-gray-400 disabled:opacity-50 transition-opacity mb-2"
               >
-                Renvoyer le code{countdown > 0 && ` (${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')})`}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Renvoyer le code
+                {countdown > 0 && (
+                  <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
+                    {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
+                  </span>
+                )}
               </button>
             </div>
 
