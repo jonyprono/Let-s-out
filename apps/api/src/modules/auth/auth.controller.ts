@@ -417,13 +417,21 @@ export class AuthController {
 
     let otpValid = false
     if (body.idToken) {
+      // Firebase SMS flow (web reCAPTCHA or native)
       otpValid = await this.service.verifyFirebaseToken(body.idToken, body.target)
     } else if (body.code) {
-      otpValid = await this.service.verifyOtp(body.target, body.code)
+      // Backend OTP flow (WhatsApp or SMS fallback)
+      // 1. Check pre-verified session first (set by checkOtp at step 2, valid 30 min)
+      otpValid = await this.service.checkVerifiedSession(body.target)
+      // 2. If no session (user went straight to step 3 without step 2, or session expired),
+      //    fallback to consuming the OTP directly
+      if (!otpValid) {
+        otpValid = await this.service.verifyOtp(body.target, body.code)
+      }
     }
 
     if (!otpValid) {
-      return reply.code(400).send({ error: 'Code invalide ou expiré' })
+      return reply.code(400).send({ error: 'Code invalide ou expiré. Veuillez recommencer.' })
     }
 
     const user = await this.service.findUserByTarget(body.target)
@@ -436,6 +444,9 @@ export class AuthController {
       where: { id: user.id },
       data: { passwordHash }
     })
+
+    // Clean up the pre-verified session after successful reset
+    await this.service.consumeVerifiedSession(body.target)
 
     return reply.send({ success: true, message: 'Mot de passe mis à jour avec succès' })
   }
