@@ -774,7 +774,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     ) {
       return reply.code(400).send({
         error: 'Montant minimum invalide',
-        message: 'Le montant minimum de participation doit être inférieur à l'objectif de la cagnotte.',
+        message: "Le montant minimum de participation doit être inférieur à l'objectif de la cagnotte.",
       })
     }
 
