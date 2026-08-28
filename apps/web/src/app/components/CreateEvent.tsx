@@ -404,9 +404,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     try {
       let coverUrl: string | undefined
       if (coverFile) {
-        const { data } = await eventsApi.uploadCover(coverFile)
-        coverUrl = data.url
-      } else if (coverPreview) {
+        try {
+          const { data } = await eventsApi.uploadCover(coverFile)
+          coverUrl = data.url
+        } catch (uploadErr) {
+          console.warn('Cover upload failed, proceeding without cover:', uploadErr)
+          toast.warning("L'image de couverture n'a pas pu être téléchargée, mais l'événement sera sauvegardé.")
+        }
+      } else if (coverPreview && !coverPreview.startsWith('blob:')) {
+        // Only use coverPreview if it's already a hosted URL (not a local blob from file selection)
         coverUrl = coverPreview
       }
 
@@ -416,6 +422,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         : new Date(`${startDate}T${startTime}`).toISOString()
 
       const isEdit = !!(location.state?.editEventId || createdEventId)
+
+      // Bug-1 guard: poolMinAmount must be < poolTarget
+      if (enablePool && poolTarget && poolMinAmount) {
+        const target = parseFloat(poolTarget)
+        const minAmt = parseFloat(poolMinAmount)
+        if (!isNaN(target) && !isNaN(minAmt) && minAmt >= target) {
+          toast.error('Le montant minimum doit être inférieur à l’objectif de la cagnotte.')
+          setLoading(false)
+          return
+        }
+      }
 
       const payload = {
         title: title.trim(),
@@ -507,8 +524,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       console.error('CreateEvent Error:', err)
       const apiMsg = err?.response?.data?.message || err?.response?.data?.error
       const msg = Array.isArray(apiMsg) ? apiMsg[0] : apiMsg
-      const errorStr = typeof msg === 'string' ? msg : (err.message || 'Erreur lors de la création')
-      toast.error(errorStr === '[object ProgressEvent]' ? 'Erreur de connexion au serveur' : errorStr)
+      let errorStr = typeof msg === 'string' ? msg : (err?.message || 'Erreur lors de la création')
+      if (String(errorStr).includes('ProgressEvent')) errorStr = 'Erreur de connexion au serveur'
+      toast.error(errorStr)
     } finally { setLoading(false) }
   }
 
@@ -578,12 +596,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         qc.invalidateQueries({ queryKey: ['events'] })
         qc.invalidateQueries({ queryKey: ['my-events'] })
       }, 1500)
-      setStep('published')
+      navigate(`/events/${eventId}/manage`, { replace: true })
     } catch (err: any) {
       console.error('Publish Error:', err)
       const apiMsg = err?.response?.data?.error || err?.response?.data?.message
-      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err.message || 'Erreur lors de la publication')
-      toast.error(errorStr === '[object ProgressEvent]' ? 'Erreur de connexion au serveur' : errorStr)
+      let errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || 'Erreur lors de la publication')
+      if (String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')) errorStr = 'Erreur de connexion au serveur'
+      toast.error(String(errorStr))
     } finally { setPublishing(false) }
   }
 

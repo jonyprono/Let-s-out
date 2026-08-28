@@ -1260,6 +1260,12 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
   const serverFollowing = orgProfile?.isFollowing || false;
   const isFollowing = optimisticFollowing !== null ? optimisticFollowing : serverFollowing;
 
+  // Detect deleted accounts: backend sets displayName to 'Utilisateur Supprimé' and isActive:false
+  const isDeletedAccount =
+    orgName === 'Utilisateur Supprimé' ||
+    orgProfile?.isActive === false ||
+    (org as any).isActive === false;
+
   const handleMessage = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (dmPending) return;
@@ -1323,8 +1329,8 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
         </div>
       </div>
 
-      {/* Row 2: action buttons (only if not the current user) */}
-      {currentUserId !== org.id && (
+      {/* Row 2: action buttons (only if not the current user AND account not deleted) */}
+      {currentUserId !== org.id && !isDeletedAccount && (
         <div className="flex items-center gap-[8px]">
           <button
             onClick={handleMessage}

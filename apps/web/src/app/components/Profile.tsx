@@ -235,7 +235,7 @@ export function Profile({ onNavigate }: ProfileProps) {
           )}
 
           {/* Actions */}
-          {!isOwnProfile && (
+          {!isOwnProfile && displayName !== 'Utilisateur Supprimé' && (
             <div className="flex gap-2 w-full mb-4 max-w-sm">
               <Button
                 className="flex-1 rounded-full h-10 text-[13px] font-bold shadow-sm transition-all"

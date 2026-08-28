@@ -766,6 +766,18 @@ export default async function eventsRoutes(app: FastifyInstance) {
       })
     }
 
+    // Bug-1 guard: poolMinAmount must be strictly less than poolTarget
+    if (
+      body.poolTarget != null &&
+      body.poolMinAmount != null &&
+      body.poolMinAmount >= body.poolTarget
+    ) {
+      return reply.code(400).send({
+        error: 'Montant minimum invalide',
+        message: 'Le montant minimum de participation doit être inférieur à l'objectif de la cagnotte.',
+      })
+    }
+
     const event = await app.prisma.event.create({
       data: {
         ...body,
