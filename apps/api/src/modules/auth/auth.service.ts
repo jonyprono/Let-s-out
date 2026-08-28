@@ -29,9 +29,16 @@ export class AuthService {
 
   // ── OTP ────────────────────────────────────────────────────────────────────
 
+  // Normalise phone/email so that keys are always consistent (strips leading/trailing whitespace)
+  private normaliseTarget(target: string): string {
+    return target.trim()
+  }
+
   async generateAndSendOtp(target: string, type: 'phone' | 'email', channel: 'sms' | 'whatsapp' = 'whatsapp'): Promise<void> {
+    const cleanTarget = this.normaliseTarget(target)
+
     // Per-target rate limiting: max 5 OTP requests per 10 minutes
-    const rateLimitKey = `otp_rate:${target}`
+    const rateLimitKey = `otp_rate:${cleanTarget}`
     const current = await this.redis.incr(rateLimitKey)
     if (current === 1) {
       // First request — set TTL for the window
@@ -43,9 +50,9 @@ export class AuthService {
       throw Object.assign(new Error('OTP_RATE_LIMIT'), { retryAfterMinutes: minutes })
     }
 
-    // Look for an existing valid OTP
+    // Look for an existing valid OTP (search with normalised target)
     const existingOtp = await this.prisma.otpCode.findFirst({
-      where: { target, used: false, expiresAt: { gt: new Date() } },
+      where: { target: cleanTarget, used: false, expiresAt: { gt: new Date() } },
       orderBy: { createdAt: 'desc' }
     })
 
@@ -53,24 +60,26 @@ export class AuthService {
     if (existingOtp) {
       code = existingOtp.code;
       // Re-cache in Redis to be safe
-      await this.redis.setex(`otp:${target}`, OTP_TTL_MINUTES * 60, code)
+      await this.redis.setex(`otp:${cleanTarget}`, OTP_TTL_MINUTES * 60, code)
+      console.log(`[OTP] Resending existing code to ${cleanTarget} via ${channel}`)
     } else {
       code = randomInt(100000, 999999).toString()
       const expiresAt = addMinutes(new Date(), OTP_TTL_MINUTES)
       await this.prisma.otpCode.create({
-        data: { target, code, expiresAt },
+        data: { target: cleanTarget, code, expiresAt },
       })
-      await this.redis.setex(`otp:${target}`, OTP_TTL_MINUTES * 60, code)
+      await this.redis.setex(`otp:${cleanTarget}`, OTP_TTL_MINUTES * 60, code)
+      console.log(`[OTP] Generated new code for ${cleanTarget} via ${channel}`)
     }
 
     if (type === 'phone') {
       if (channel === 'whatsapp') {
-        await this.sendWhatsappOtp(target, code)
+        await this.sendWhatsappOtp(cleanTarget, code)
       } else {
-        await this.sendSmsOtp(target, code)
+        await this.sendSmsOtp(cleanTarget, code)
       }
     } else {
-      await this.sendEmailOtp(target, code)
+      await this.sendEmailOtp(cleanTarget, code)
     }
   }
 
@@ -79,7 +88,7 @@ export class AuthService {
    * Use this during multi-step flows where the OTP is verified at the end.
    */
   async checkOtp(target: string, code: string): Promise<boolean> {
-    const cleanTarget = target.trim()
+    const cleanTarget = this.normaliseTarget(target)
     const cleanCode = code.trim()
 
     // Fast path: Redis (still present = not yet consumed)
@@ -91,14 +100,23 @@ export class AuthService {
       where: { target: cleanTarget, code: cleanCode, used: false },
       orderBy: { createdAt: 'desc' },
     })
-    if (!otp) return false
-    if (otp.attempts >= OTP_MAX_ATTEMPTS) return false
-    if (isAfter(new Date(), otp.expiresAt)) return false
+    if (!otp) {
+      console.warn(`[OTP] checkOtp failed — no matching code in DB for target=${cleanTarget}`)
+      return false
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      console.warn(`[OTP] checkOtp failed — max attempts reached for target=${cleanTarget}`)
+      return false
+    }
+    if (isAfter(new Date(), otp.expiresAt)) {
+      console.warn(`[OTP] checkOtp failed — code expired for target=${cleanTarget}, expiredAt=${otp.expiresAt}`)
+      return false
+    }
     return true
   }
 
   async verifyOtp(target: string, code: string): Promise<boolean> {
-    const cleanTarget = target.trim()
+    const cleanTarget = this.normaliseTarget(target)
     const cleanCode = code.trim()
 
     // Fast path: check Redis first
@@ -109,24 +127,44 @@ export class AuthService {
         where: { target: cleanTarget, code: cleanCode, used: false },
         data: { used: true },
       })
+      console.log(`[OTP] verifyOtp success (Redis) for target=${cleanTarget}`)
       return true
     }
 
     // Fallback: check DB
     const otp = await this.prisma.otpCode.findFirst({
-      where: { target: cleanTarget, code: cleanCode, used: false },
+      where: { target: cleanTarget, used: false },
       orderBy: { createdAt: 'desc' },
     })
 
-    if (!otp) return false
-    if (otp.attempts >= OTP_MAX_ATTEMPTS) return false
-    if (isAfter(new Date(), otp.expiresAt)) return false
+    if (!otp) {
+      console.warn(`[OTP] verifyOtp failed — no active OTP in DB for target=${cleanTarget}`)
+      return false
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      console.warn(`[OTP] verifyOtp failed — max attempts for target=${cleanTarget}`)
+      return false
+    }
+    if (isAfter(new Date(), otp.expiresAt)) {
+      console.warn(`[OTP] verifyOtp failed — expired for target=${cleanTarget}, expiredAt=${otp.expiresAt}`)
+      return false
+    }
+
+    if (otp.code !== cleanCode) {
+      // Wrong code — increment attempts counter
+      await this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { attempts: { increment: 1 } },
+      })
+      console.warn(`[OTP] verifyOtp failed — wrong code for target=${cleanTarget}, attempts=${otp.attempts + 1}`)
+      return false
+    }
 
     await this.prisma.otpCode.update({
       where: { id: otp.id },
       data: { used: true },
     })
-
+    console.log(`[OTP] verifyOtp success (DB) for target=${cleanTarget}`)
     return true
   }
 
@@ -417,7 +455,7 @@ export class AuthService {
     // 5-second timeout — if Meta API doesn't respond, we log and move on.
     // The OTP is already saved in DB/Redis so the user can still enter it.
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout (was 5s — too short for some regions)
     try {
       const response = await fetch(
         `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
