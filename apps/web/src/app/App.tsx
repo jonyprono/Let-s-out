@@ -65,6 +65,7 @@ import { PrivacyPolicy } from '@/app/components/PrivacyPolicy'
 import { TermsOfService } from '@/app/components/TermsOfService'
 import { LandingPage } from '@/app/components/LandingPage'
 import HelpSupport from './components/HelpSupport'
+import { SmartAppBanner } from '@/components/shared/SmartAppBanner'
 
 // All screens via adapter bridge (prop-based → React Router)
 import {
@@ -220,13 +221,43 @@ function CapacitorBackButton() {
   return null
 }
 
+function DeepLinkHandler() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+
+    const handleDeepLink = (data: any) => {
+      // data.url will look like "https://letsout.app/event/join/XYZ"
+      const url = data.url
+      if (url && url.includes('letsout.app')) {
+        const slug = url.split('letsout.app').pop()
+        if (slug) {
+          // navigate into the react router
+          navigate(slug)
+        }
+      }
+    }
+
+    CapacitorApp.addListener('appUrlOpen', handleDeepLink)
+
+    return () => {
+      CapacitorApp.removeAllListeners()
+    }
+  }, [navigate])
+
+  return null
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <BrowserRouter>
+        <DeepLinkHandler />
         <CapacitorThemeSync />
         <AppBootstrap />
+        <SmartAppBanner />
         <CapacitorBackButton />
         <UserProfileProvider>
         <Routes>
