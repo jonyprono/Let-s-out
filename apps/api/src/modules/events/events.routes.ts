@@ -1043,10 +1043,15 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Event is full' })
     }
 
+    // Block creator and co-hosts from joining their own event
+    if (event.creatorId === sub || (event.coHostIds && event.coHostIds.includes(sub))) {
+      return reply.code(409).send({ error: 'Vous êtes déjà organisateur de cet événement', alreadyJoined: true, isOrganizer: true })
+    }
+
     const existing = await app.prisma.booking.findUnique({
       where: { userId_eventId: { userId: sub, eventId: id } },
     })
-    if (existing) return reply.code(409).send({ error: 'Already joined' })
+    if (existing) return reply.code(409).send({ error: 'Already joined', alreadyJoined: true })
 
     const [booking] = await app.prisma.$transaction([
       app.prisma.booking.create({
@@ -1226,6 +1231,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
     })
     if (!event) return reply.code(404).send({ error: 'Code invalide ou événement introuvable' })
     if (event.status !== 'PUBLISHED') return reply.code(400).send({ error: 'Événement non disponible' })
+
+    // Block the creator and co-hosts from joining their own event
+    if (event.creatorId === sub || (event.coHostIds && event.coHostIds.includes(sub))) {
+      return reply.send({ event, alreadyJoined: true, isOrganizer: true })
+    }
 
     if (event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
       return reply.code(400).send({ error: 'Événement complet' })

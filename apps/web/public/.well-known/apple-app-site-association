@@ -1,0 +1,22 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_TEAM_ID.com.fihodecorp.letsout"],
+        "components": [
+          {
+            "/": "/event/join/*",
+            "comment": "Matches any event join deep link"
+          },
+          {
+            "/": "/events/*",
+            "comment": "Matches any event detail page"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["REPLACE_WITH_TEAM_ID.com.fihodecorp.letsout"]
+  }
+}

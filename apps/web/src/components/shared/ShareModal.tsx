@@ -24,7 +24,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
   });
   
   const joinCode = eventData?.joinCode || eventId.slice(0, 5).toUpperCase();
-  const eventLink = `https://lets-out.app/event/join/${joinCode}`;
+  const eventLink = `https://letsout.app/event/join/${joinCode}`;
 
   const copyText = async (text: string, setCopied: (v: boolean) => void, successMsg: string) => {
     try {

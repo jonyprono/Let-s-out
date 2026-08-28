@@ -112,7 +112,11 @@ export function JoinPrivateEvent() {
         toast.info('Cet événement est payant.');
         navigate(`/events/${data.event.id}/pay`);
       } else if (data.alreadyJoined) {
-        toast.success('Vous participez déjà à cet événement.');
+        if (data.isOrganizer) {
+          toast.info('Vous êtes l\'organisateur de cet événement.');
+        } else {
+          toast.success('Vous participez déjà à cet événement.');
+        }
         navigate(`/events/${data.event.id}`);
       } else {
         toast.success('Vous avez rejoint l\'événement privé ! 🎉');

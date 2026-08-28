@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.fihodecorp.letsout",
+      "sha256_cert_fingerprints": [
+        "0E:5A:5D:9A:61:9C:14:A5:BB:61:AC:04:2F:3E:1A:F9:F4:EA:93:51:E9:DC:3D:D2:CA:9A:5D:B5:AA:65:2C:E9",
+        "4A:EC:85:18:02:86:54:24:85:AA:AF:0E:7A:30:EC:B9:BA:AC:19:F0:76:C1:79:BD:5B:A7:17:17:E2:4D:E8:F4"
+      ]
+    }
+  }
+]
