@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Loader2, WifiOff, RefreshCw } from 'lucide-react';
+import { EventMediaFeed } from '@/features/events/components/EventMediaFeed';
 import { Search01Icon } from 'hugeicons-react';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -474,6 +475,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
             {!showSpinner && !isOffline && (
               <>
+                <EventMediaFeed />
                 {/* ── Orange Stats Banner ── */}
                 <div className="pt-1">
                   <StatsBanner

@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
+import { EventReactions } from '../../events/components/EventReactions'
+import { EventComments } from '../../events/components/EventComments'
 import {
   MapPin,
   Calendar,
@@ -545,6 +547,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             </div>
           </div>
 
+          <div className="px-4">
+            <EventReactions eventId={event.id} />
+          </div>
+
           <div className="px-4 pb-6 space-y-[20px] mt-4">
 
             {/* S'y rendre — Navigation (masquable via feature flag) */}
@@ -669,6 +675,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   Voir la liste
                 </button>
               </div>
+            </div>
+
+            {/* Commentaires */}
+            <div className="border border-[var(--border-default)] rounded-[12px] bg-[var(--color-background-primary)] overflow-hidden h-[400px]">
+              <EventComments eventId={event.id} />
             </div>
 
             {/* Section Participation */}

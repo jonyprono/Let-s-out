@@ -1503,4 +1503,137 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     return reply.send({ data: reviews, meta: { total: reviews.length, averageRating } })
   })
+
+  // ── Reactions ──────────────────────────────────────────────────────────────
+  app.post('/:id/reactions', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id: eventId } = req.params as { id: string }
+    const { emoji } = req.body as { emoji: string }
+
+    const allowedEmojis = ['❤️', '🔥', '😍', '👀', '🎉']
+    if (!allowedEmojis.includes(emoji)) {
+      return reply.code(400).send({ error: 'Emoji non autorisé' })
+    }
+
+    // Check if already reacted with this emoji
+    const existing = await app.prisma.eventReaction.findUnique({
+      where: { userId_eventId_emoji: { userId, eventId, emoji } }
+    })
+
+    if (existing) {
+      await app.prisma.eventReaction.delete({ where: { id: existing.id } })
+      return reply.send({ success: true, action: 'removed' })
+    } else {
+      const reaction = await app.prisma.eventReaction.create({
+        data: { userId, eventId, emoji }
+      })
+      return reply.send({ success: true, action: 'added', data: reaction })
+    }
+  })
+
+  app.get('/:id/reactions', async (req, reply) => {
+    const { id: eventId } = req.params as { id: string }
+
+    const reactions = await app.prisma.eventReaction.findMany({
+      where: { eventId },
+      include: { user: { include: { profile: true } } }
+    })
+
+    // Group by emoji
+    const grouped = reactions.reduce((acc: any, r) => {
+      if (!acc[r.emoji]) acc[r.emoji] = { count: 0, users: [] }
+      acc[r.emoji].count++
+      acc[r.emoji].users.push(r.user)
+      return acc
+    }, {})
+
+    return reply.send({ data: grouped })
+  })
+
+  // ── Comments ───────────────────────────────────────────────────────────────
+  app.post('/:id/comments', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id: eventId } = req.params as { id: string }
+    const { content } = req.body as { content: string }
+
+    if (!content?.trim()) {
+      return reply.code(400).send({ error: 'Commentaire vide' })
+    }
+
+    const comment = await app.prisma.eventComment.create({
+      data: { userId, eventId, content: content.trim() },
+      include: { user: { include: { profile: true } } }
+    })
+    return reply.send({ data: comment })
+  })
+
+  app.get('/:id/comments', async (req, reply) => {
+    const { id: eventId } = req.params as { id: string }
+    const comments = await app.prisma.eventComment.findMany({
+      where: { eventId },
+      orderBy: { createdAt: 'desc' },
+      include: { user: { include: { profile: true } } }
+    })
+    return reply.send({ data: comments })
+  })
+
+  app.delete('/:id/comments/:commentId', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { commentId } = req.params as { commentId: string }
+
+    const comment = await app.prisma.eventComment.findUnique({ where: { id: commentId } })
+    if (!comment) return reply.code(404).send({ error: 'Commentaire introuvable' })
+    if (comment.userId !== userId) return reply.code(403).send({ error: 'Non autorisé' })
+
+    await app.prisma.eventComment.delete({ where: { id: commentId } })
+    return reply.send({ success: true })
+  })
+
+  // ── Media (Feed) ───────────────────────────────────────────────────────────
+  app.get('/feed/media', async (req, reply) => {
+    const medias = await app.prisma.eventMedia.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: {
+        user: { include: { profile: true } },
+        event: { select: { id: true, title: true, coverUrl: true } }
+      }
+    })
+    return reply.send({ data: medias })
+  })
+
+  app.post('/:id/media', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id: eventId } = req.params as { id: string }
+
+    let url: string | null = null
+    let type = 'image'
+
+    try {
+      for await (const part of req.parts()) {
+        const filename = `${eventId}-${Date.now()}-${part.filename}`
+        const folder = `events/medias/${eventId}`
+        
+        if (part.mimetype.startsWith('video/')) type = 'video'
+        else if (part.mimetype.startsWith('image/')) type = 'image'
+        else return reply.code(400).send({ error: 'Format non supporté' })
+
+        const buffer = await part.toBuffer()
+        url = await uploadBufferToCloudinary(buffer, folder, filename)
+        break
+      }
+
+      if (!url) return reply.code(400).send({ error: 'Aucun fichier' })
+
+      const media = await app.prisma.eventMedia.create({
+        data: { eventId, uploadedBy: userId, type, url },
+        include: { user: { include: { profile: true } } }
+      })
+
+      return reply.send({ data: media })
+    } catch (err) {
+      console.error('Media upload error', err)
+      return reply.code(500).send({ error: 'Upload failed' })
+    }
+  })
 }

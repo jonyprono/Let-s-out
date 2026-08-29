@@ -52,6 +52,9 @@ model User {
   validatorVotes   ValidatorVote[]      @relation("UserValidatorVotes")
   refundRequests   ParticipantRefundRequest[]
   payoutApprovals  PayoutApproval[]
+  eventReactions   EventReaction[]
+  eventComments    EventComment[]
+  eventMedias      EventMedia[]
 
   @@map("users")
 }
@@ -198,6 +201,9 @@ model Event {
   payoutRequests   EventPayoutRequest[]
   validatorVotes   ValidatorVote[]
   refundRequests   ParticipantRefundRequest[]
+  reactions        EventReaction[]
+  comments         EventComment[]
+  medias           EventMedia[]
 
   @@index([creatorId])
   @@index([status])
@@ -757,4 +763,58 @@ model FeatureFlag {
   updatedAt   DateTime @updatedAt
 
   @@map("feature_flags")
+}
+
+// ── Réactions sur événements ───────────────────────────────────────────────
+model EventReaction {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  emoji     String   // "❤️" | "🔥" | "😍" | "👀" | "🎉"
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId, emoji])
+  @@index([eventId])
+  @@index([userId])
+  @@map("event_reactions")
+}
+
+// ── Commentaires sur événements ────────────────────────────────────────────
+model EventComment {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([userId])
+  @@map("event_comments")
+}
+
+// ── Médias (vidéos / images) liés aux événements ──────────────────────────
+model EventMedia {
+  id          String   @id @default(cuid())
+  eventId     String
+  uploadedBy  String
+  type        String   // "video" | "image"
+  url         String
+  thumbnail   String?  // URL de la miniature pour les vidéos
+  caption     String?
+  createdAt   DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([uploadedBy])
+  @@index([createdAt])
+  @@map("event_medias")
 }

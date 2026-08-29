@@ -272,6 +272,11 @@ export class AuthService {
       console.error('[Welcome Email Error] Google Signup:', err)
     })
 
+    // Check and assign Early Adopter badge
+    this.checkAndAssignEarlyAdopterBadge(user.id).catch((err) => {
+      console.error('[Badge Error] Early Adopter badge assignment failed:', err)
+    })
+
     return { user, isNewUser: true }
   }
 
@@ -350,6 +355,11 @@ export class AuthService {
         console.error('[Welcome Email Error] Email Signup:', err)
       })
     }
+
+    // Check and assign Early Adopter badge
+    this.checkAndAssignEarlyAdopterBadge(user.id).catch((err) => {
+      console.error('[Badge Error] Early Adopter badge assignment failed:', err)
+    })
 
     return user
   }
@@ -610,5 +620,45 @@ export class AuthService {
       subject: "Bienvenue sur Let's Out ! 🎉",
       html: htmlContent,
     });
+  }
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  private async checkAndAssignEarlyAdopterBadge(userId: string): Promise<void> {
+    try {
+      const userCount = await this.prisma.user.count();
+      if (userCount <= 500) {
+        let badge = await this.prisma.badge.findFirst({
+          where: { name: 'Early Adopter' }
+        });
+        
+        if (!badge) {
+          badge = await this.prisma.badge.create({
+            data: {
+              name: 'Early Adopter',
+              description: 'A rejoint Lets Out parmi les 500 premiers utilisateurs !',
+              icon: '🚀',
+              category: 'rare',
+              xpReward: 500,
+              conditionsLogic: { type: 'early_adopter', limit: 500 },
+              isActive: true
+            }
+          });
+        }
+        
+        // Check if user already has it (just in case)
+        const existing = await this.prisma.userBadge.findUnique({
+          where: { userId_badgeId: { userId, badgeId: badge.id } }
+        });
+
+        if (!existing) {
+          await this.prisma.userBadge.create({
+            data: { userId, badgeId: badge.id }
+          });
+          console.log(`[Badge] Assigned 'Early Adopter' to user ${userId} (User #${userCount})`);
+        }
+      }
+    } catch (error) {
+      console.error('[Badge Error] Failed to assign Early Adopter badge:', error);
+    }
   }
 }
