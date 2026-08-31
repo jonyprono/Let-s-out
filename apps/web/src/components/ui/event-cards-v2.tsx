@@ -1,8 +1,11 @@
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { useState } from 'react'
+import { Share2, MessageCircle } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { Event } from '@/features/events/api'
 import { useFavoritesStore } from '@/stores/favorites.store'
+import { ShareModal } from '@/components/shared/ShareModal'
 
 // ─── Shared: Attendee Avatars Row ────────────────────────────────────────────
 function AttendeesRow({ attendees, count, size = 24 }: {
@@ -76,6 +79,7 @@ export function FeaturedEventCard({
 }) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const isSaved = isFavorite(event.id)
+  const [showShareModal, setShowShareModal] = useState(false)
   
   const onSaveToggle = () => {
     if (isSaved) removeFavorite(event.id)
@@ -110,19 +114,27 @@ export function FeaturedEventCard({
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
       {/* Top row: badge + heart */}
-      <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
-        <div className="flex items-center gap-1 bg-[#B45309] px-2 py-1 rounded-lg">
+      <div className="absolute top-3 left-3 right-3 flex items-start justify-between pointer-events-none">
+        <div className="flex items-center gap-1 bg-[#B45309] px-2 py-1 rounded-lg pointer-events-auto">
           <span className="text-[10px]">⭐</span>
           <span className="text-white text-[10px] font-bold tracking-wider">{badge}</span>
         </div>
-        <button
-          onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
-          className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} strokeWidth="2">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <button
+            onClick={e => { e.stopPropagation(); setShowShareModal(true); }}
+            className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
+          >
+            <Share2 className="w-4 h-4 text-white" />
+          </button>
+          <button
+            onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
+            className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} strokeWidth="2">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Bottom content */}
@@ -142,13 +154,25 @@ export function FeaturedEventCard({
           </div>
         </div>
 
-        {/* Attendees row */}
-        <AttendeesRow
-          attendees={attendeesList}
-          count={event.currentAttendees}
-          size={24}
-        />
+        {/* Attendees row + Comments */}
+        <div className="flex items-center justify-between">
+          <AttendeesRow
+            attendees={attendeesList}
+            count={event.currentAttendees}
+            size={24}
+          />
+          {((event as any)._count?.comments ?? 0) > 0 && (
+            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-white/90 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+              <MessageCircle className="w-3.5 h-3.5 text-white/90" />
+              <span>{(event as any)._count?.comments}</span>
+            </div>
+          )}
+        </div>
       </div>
+      
+      {showShareModal && (
+        <ShareModal eventId={event.id} eventTitle={event.title} onClose={() => setShowShareModal(false)} />
+      )}
     </div>
   )
 }
@@ -167,6 +191,7 @@ export function SquareEventCard({
 }) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const isSaved = isFavorite(event.id)
+  const [showShareModal, setShowShareModal] = useState(false)
   
   const onSaveToggle = () => {
     if (isSaved) removeFavorite(event.id)
@@ -198,18 +223,26 @@ export function SquareEventCard({
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
       {/* Badge + Heart */}
-      <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between">
-        <div className="bg-[#FF7A00] px-2 py-0.5 rounded-md">
+      <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between pointer-events-none">
+        <div className="bg-[#FF7A00] px-2 py-0.5 rounded-md pointer-events-auto">
           <span className="text-white text-[9px] font-bold tracking-wider uppercase">{badge}</span>
         </div>
-        <button
-          onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
-          className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} strokeWidth="2">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-1.5 pointer-events-auto">
+          <button
+            onClick={e => { e.stopPropagation(); setShowShareModal(true); }}
+            className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95"
+          >
+            <Share2 className="w-3.5 h-3.5 text-white" />
+          </button>
+          <button
+            onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
+            className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} strokeWidth="2">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Bottom */}
@@ -226,15 +259,23 @@ export function SquareEventCard({
           </div>
         </div>
 
-        {/* Attendees + Rating */}
-        <div className="flex items-center justify-between">
+        {/* Attendees + Rating + Comments */}
+        <div className="flex items-center justify-between mt-1">
           <AttendeesRow attendees={attendeesList} count={event.currentAttendees} size={20} />
-          {isPast && (
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-[#FFB340]">
-              <span>⭐</span>
-              <span>{(event as any).averageRating ?? 4.8}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {((event as any)._count?.comments ?? 0) > 0 && (
+              <div className="flex items-center gap-1 text-[10px] font-semibold text-white/90 bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                <MessageCircle className="w-3 h-3 text-white/90" />
+                <span>{(event as any)._count?.comments}</span>
+              </div>
+            )}
+            {isPast && (
+              <div className="flex items-center gap-1 text-[10px] font-semibold text-[#FFB340]">
+                <span>⭐</span>
+                <span>{(event as any).averageRating ?? 4.8}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -251,6 +292,7 @@ export function RowEventCard({
 }) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const isSaved = isFavorite(event.id)
+  const [showShareModal, setShowShareModal] = useState(false)
   
   const onSaveToggle = () => {
     if (isSaved) removeFavorite(event.id)
@@ -296,14 +338,22 @@ export function RowEventCard({
           <h4 className="font-bold text-[15px] text-gray-900 dark:text-white leading-snug flex-1 line-clamp-1">
             {event.title}
           </h4>
-          <button
-            onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
-            className="shrink-0 w-7 h-7 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center -mr-0.5 active:scale-95 transition-transform"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : '#9CA3AF'} strokeWidth="2">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={e => { e.stopPropagation(); setShowShareModal(true); }}
+              className="w-7 h-7 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <Share2 className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
+              className="w-7 h-7 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center -mr-0.5 active:scale-95 transition-transform"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : '#9CA3AF'} strokeWidth="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Date */}
@@ -327,11 +377,16 @@ export function RowEventCard({
               {event.maxAttendees ? `/${event.maxAttendees}` : ''} participants
             </span>
           </div>
-          {hasCagnotte && (
+          {hasCagnotte ? (
             <div className="bg-[#FFF2D3] dark:bg-[#FF7A00]/10 text-[#FF7A00] px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-[#FF7A00]/20">
               Cagnotte
             </div>
-          )}
+          ) : (((event as any)._count?.comments ?? 0) > 0 && (
+            <div className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>{(event as any)._count?.comments}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

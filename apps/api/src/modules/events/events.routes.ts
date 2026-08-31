@@ -100,7 +100,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
           take: 3,
           select: { user: { select: { profile: { select: { avatarUrl: true } } } } },
         },
-        _count: { select: { bookings: true } },
+        _count: { select: { bookings: true, comments: true } },
         payoutRequests: true,
       },
       orderBy: { startAt: 'asc' },
@@ -295,7 +295,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
           take: 3, 
           select: { user: { select: { profile: { select: { avatarUrl: true } } } } } 
         },
-        _count: { select: { bookings: true } },
+        _count: { select: { bookings: true, comments: true } },
       },
       orderBy: { startAt: 'asc' },
       take: Number(limit),
@@ -641,7 +641,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       where: { id },
       include: {
         creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true, followersCount: true, eventsCount: true } } } },
-        _count: { select: { bookings: true } },
+        _count: { select: { bookings: true, comments: true } },
         payoutRequests: true
       },
     })

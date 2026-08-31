@@ -18,7 +18,7 @@ interface Comment {
   };
 }
 
-export function EventComments({ eventId }: { eventId: string }) {
+export function EventComments({ eventId, organizerId }: { eventId: string, organizerId?: string }) {
   const [content, setContent] = useState('');
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(s => s.user);
@@ -97,14 +97,23 @@ export function EventComments({ eventId }: { eventId: string }) {
                 <p className="text-[14px] text-gray-700 dark:text-gray-300 mt-0.5 leading-relaxed">
                   {comment.content}
                 </p>
-                {currentUser?.id === comment.userId && (
-                  <button 
-                    onClick={() => deleteMutation.mutate(comment.id)}
-                    className="text-[11px] text-red-500 mt-1 font-medium hover:underline"
-                  >
-                    Supprimer
-                  </button>
-                )}
+                <div className="flex gap-3 mt-1">
+                  {(currentUser?.id === comment.userId || currentUser?.id === organizerId) ? (
+                    <button 
+                      onClick={() => deleteMutation.mutate(comment.id)}
+                      className="text-[11px] text-red-500 font-medium hover:underline"
+                    >
+                      Supprimer
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => alert("Signalement envoyé (fonctionnalité à connecter à l'API)")}
+                      className="text-[11px] text-gray-500 font-medium hover:underline"
+                    >
+                      Signaler
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))

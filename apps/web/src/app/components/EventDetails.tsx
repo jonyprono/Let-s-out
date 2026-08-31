@@ -679,7 +679,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
             {/* Commentaires */}
             <div className="border border-[var(--border-default)] rounded-[12px] bg-[var(--color-background-primary)] overflow-hidden h-[400px]">
-              <EventComments eventId={event.id} />
+              <EventComments eventId={event.id} organizerId={event.creatorId} />
             </div>
 
             {/* Section Participation */}
@@ -1022,15 +1022,22 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     const avatar = booking?.user?.profile?.avatarUrl
                     const name = booking?.user?.profile?.displayName || '?'
                     const isVerified = booking?.user?.profile?.isVerified
+                    const isDeleted = name === 'Utilisateur Supprimé' || booking?.user?.profile?.isActive === false || booking?.user?.isActive === false;
+                    
                     return (
-                      <div key={booking.id} className="flex flex-col border-b border-gray-100 dark:border-gray-800 last:border-0">
+                      <div key={booking.id} className={`flex flex-col border-b border-gray-100 dark:border-gray-800 last:border-0 ${isDeleted ? 'opacity-50 grayscale' : ''}`}>
                         <button
-                          className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 dark:bg-[#222222] transition-colors text-left"
-                          onClick={() => openUserProfile(
-                            booking.user.id, 
-                            { displayName: name, avatarUrl: avatar },
-                            { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
-                          )}
+                          className="w-full flex items-center gap-3 px-5 py-3 transition-colors text-left"
+                          onClick={() => {
+                            if (!isDeleted) {
+                              openUserProfile(
+                                booking.user.id, 
+                                { displayName: name, avatarUrl: avatar },
+                                { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                              )
+                            }
+                          }}
+                          disabled={isDeleted}
                         >
                           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
                             <SafeImage
@@ -1046,7 +1053,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           </div>
                           <div className="flex flex-col flex-1 items-start">
                             <div className="flex items-center gap-1">
-                              <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
+                              <p className={`text-[14px] font-semibold ${isDeleted ? 'text-gray-500 line-through' : 'text-gray-900 dark:text-white'}`}>{name}</p>
                               {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
                             </div>
                             {delegationsMap[booking.user.id] && delegationsMap[booking.user.id].length > 0 && (
