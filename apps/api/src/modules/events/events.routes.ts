@@ -1579,11 +1579,16 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
   app.delete('/:id/comments/:commentId', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub: userId } = req.user as { sub: string }
-    const { commentId } = req.params as { commentId: string }
+    const { id: eventId, commentId } = req.params as { id: string; commentId: string }
 
     const comment = await app.prisma.eventComment.findUnique({ where: { id: commentId } })
-    if (!comment) return reply.code(404).send({ error: 'Commentaire introuvable' })
-    if (comment.userId !== userId) return reply.code(403).send({ error: 'Non autorisé' })
+    if (!comment || comment.eventId !== eventId) return reply.code(404).send({ error: 'Commentaire introuvable' })
+
+    const event = await app.prisma.event.findUnique({ where: { id: eventId }, select: { creatorId: true, coHostIds: true } })
+    const isOwner = comment.userId === userId
+    const isOrganizer = event?.creatorId === userId || (event?.coHostIds || []).includes(userId)
+
+    if (!isOwner && !isOrganizer) return reply.code(403).send({ error: 'Non autorisé' })
 
     await app.prisma.eventComment.delete({ where: { id: commentId } })
     return reply.send({ success: true })
@@ -1635,84 +1640,5 @@ export default async function eventsRoutes(app: FastifyInstance) {
       console.error('Media upload error', err)
       return reply.code(500).send({ error: 'Upload failed' })
     }
-  })
-
-  // ─── COMMENTS ────────────────────────────────────────────────────────────────
-
-  // GET /events/:id/comments
-  app.get('/:id/comments', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const { id: eventId } = req.params as { id: string }
-
-    const comments = await app.prisma.eventComment.findMany({
-      where: { eventId },
-      orderBy: { createdAt: 'asc' },
-      include: {
-        user: {
-          select: {
-            id: true,
-            profile: {
-              select: { displayName: true, avatarUrl: true }
-            }
-          }
-        }
-      }
-    })
-
-    return reply.send({ data: comments })
-  })
-
-  // POST /events/:id/comments
-  app.post('/:id/comments', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const { id: eventId } = req.params as { id: string }
-    const userId = (req.user as any).id
-    const { content } = req.body as { content: string }
-
-    if (!content || !content.trim()) {
-      return reply.code(400).send({ error: 'Le commentaire ne peut pas être vide.' })
-    }
-
-    // Check event exists
-    const event = await app.prisma.event.findUnique({ where: { id: eventId } })
-    if (!event) return reply.code(404).send({ error: 'Événement introuvable.' })
-
-    const comment = await app.prisma.eventComment.create({
-      data: { eventId, userId, content: content.trim() },
-      include: {
-        user: {
-          select: {
-            id: true,
-            profile: {
-              select: { displayName: true, avatarUrl: true }
-            }
-          }
-        }
-      }
-    })
-
-    return reply.code(201).send({ data: comment })
-  })
-
-  // DELETE /events/:id/comments/:commentId
-  app.delete('/:id/comments/:commentId', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const { id: eventId, commentId } = req.params as { id: string; commentId: string }
-    const userId = (req.user as any).id
-
-    const comment = await app.prisma.eventComment.findUnique({ where: { id: commentId } })
-    if (!comment || comment.eventId !== eventId) {
-      return reply.code(404).send({ error: 'Commentaire introuvable.' })
-    }
-
-    const event = await app.prisma.event.findUnique({ where: { id: eventId }, select: { creatorId: true, coHostIds: true } })
-
-    const isOwner = comment.userId === userId
-    const isOrganizer = event?.creatorId === userId || (event?.coHostIds || []).includes(userId)
-
-    if (!isOwner && !isOrganizer) {
-      return reply.code(403).send({ error: 'Non autorisé à supprimer ce commentaire.' })
-    }
-
-    await app.prisma.eventComment.delete({ where: { id: commentId } })
-
-    return reply.send({ success: true })
   })
 }
