@@ -1515,39 +1515,55 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Emoji non autorisé' })
     }
 
-    // Check if already reacted with this emoji
-    const existing = await app.prisma.eventReaction.findUnique({
-      where: { userId_eventId_emoji: { userId, eventId, emoji } }
-    })
-
-    if (existing) {
-      await app.prisma.eventReaction.delete({ where: { id: existing.id } })
-      return reply.send({ success: true, action: 'removed' })
-    } else {
-      const reaction = await app.prisma.eventReaction.create({
-        data: { userId, eventId, emoji }
+    try {
+      const existing = await app.prisma.eventReaction.findUnique({
+        where: { userId_eventId: { userId, eventId } }
       })
-      return reply.send({ success: true, action: 'added', data: reaction })
+
+      if (existing) {
+        if (existing.emoji === emoji || emoji === '❤️') { // Default click toggles off
+          await app.prisma.eventReaction.delete({ where: { id: existing.id } })
+          return reply.send({ success: true, action: 'removed' })
+        } else {
+          const updated = await app.prisma.eventReaction.update({
+            where: { id: existing.id },
+            data: { emoji }
+          })
+          return reply.send({ success: true, action: 'updated', data: updated })
+        }
+      } else {
+        const reaction = await app.prisma.eventReaction.create({
+          data: { userId, eventId, emoji }
+        })
+        return reply.send({ success: true, action: 'added', data: reaction })
+      }
+    } catch (err) {
+      req.log.error(err, 'Failed to process reaction')
+      return reply.send({ success: false, action: 'error', data: null })
     }
   })
 
   app.get('/:id/reactions', async (req, reply) => {
     const { id: eventId } = req.params as { id: string }
 
-    const reactions = await app.prisma.eventReaction.findMany({
-      where: { eventId },
-      include: { user: { include: { profile: true } } }
-    })
+    try {
+      const reactions = await app.prisma.eventReaction.findMany({
+        where: { eventId },
+        include: { user: { include: { profile: true } } }
+      })
 
-    // Group by emoji
-    const grouped = reactions.reduce((acc: any, r) => {
-      if (!acc[r.emoji]) acc[r.emoji] = { count: 0, users: [] }
-      acc[r.emoji].count++
-      acc[r.emoji].users.push(r.user)
-      return acc
-    }, {})
+      const grouped = reactions.reduce((acc: any, r: any) => {
+        if (!acc[r.emoji]) acc[r.emoji] = { count: 0, users: [] }
+        acc[r.emoji].count++
+        acc[r.emoji].users.push(r.user)
+        return acc
+      }, {})
 
-    return reply.send({ data: grouped })
+      return reply.send({ data: grouped })
+    } catch (err) {
+      req.log.error(err, 'Failed to fetch reactions')
+      return reply.send({ data: {} })
+    }
   })
 
   // ── Comments ───────────────────────────────────────────────────────────────
