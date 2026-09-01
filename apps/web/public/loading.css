@@ -1,16 +1,59 @@
-        html, body { min-height: 100%; margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        #root { min-height: 100%; background: #f5f5f5; }
-        .loading-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .loading { text-align: center; color: #666; }
-        .loading h1 { font-size: 24px; margin: 20px 0; }
-        .loading p { font-size: 14px; color: #999; }
-        .loading .spinner { 
-          border: 3px solid #f3f3f3; 
-          border-top: 3px solid #3498db; 
-          border-radius: 50%; 
-          width: 40px; 
-          height: 40px; 
-          animation: spin 1s linear infinite;
-          margin: 20px auto;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+          min-height: 100%;
+          font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          background: #ffffff;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #root { min-height: 100vh; background: #ffffff; }
+        .loading-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          background: #f5f5f5;
+        }
+        .loading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          text-align: center;
+          animation: fadeIn 0.4s ease-out;
+        }
+        .loading img {
+          width: 88px;
+          height: 88px;
+          object-fit: contain;
+          margin-bottom: 16px;
+        }
+        .loading h1 {
+          font-size: 26px;
+          font-weight: 700;
+          color: #1a1a1a;
+          margin-bottom: 24px;
+          letter-spacing: -0.5px;
+        }
+        .loading .spinner {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          border: 3px solid #f0f0f0;
+          border-top-color: #FF7A00;
+          animation: spin 0.85s linear infinite;
+          margin-bottom: 12px;
+        }
+        .loading p {
+          font-size: 13px;
+          color: #a0a0a0;
+          font-weight: 400;
+          letter-spacing: 0.2px;
+        }
+        @keyframes spin {
+          0%   { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }

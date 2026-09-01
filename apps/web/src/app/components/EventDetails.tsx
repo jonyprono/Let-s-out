@@ -78,6 +78,70 @@ interface EventDetailsProps {
   onBack?: () => void
 }
 
+// ─── Skeleton: shown while event data is loading ──────────────────────────────
+function EventDetailsSkeleton() {
+  return (
+    <div className="w-full h-full flex flex-col bg-[#f5f5f5] dark:bg-[#0a0a0b] overflow-hidden">
+      {/* Cover image skeleton */}
+      <div className="relative w-full" style={{ paddingTop: '56%' }}>
+        <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800 animate-pulse" />
+        {/* Back button placeholder */}
+        <div className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/30 dark:bg-black/30 animate-pulse" />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 bg-white dark:bg-[#111112] rounded-t-2xl -mt-4 px-4 pt-4 pb-6 space-y-4">
+        {/* Badge / category */}
+        <div className="flex gap-2">
+          <div className="h-5 w-20 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-5 w-16 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+        </div>
+
+        {/* Title */}
+        <div className="space-y-2">
+          <div className="h-6 w-3/4 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-6 w-1/2 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
+        </div>
+
+        {/* Date & location */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-4 w-40 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="h-4 w-52 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          </div>
+        </div>
+
+        {/* Participants avatars row */}
+        <div className="flex items-center gap-2">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          ))}
+          <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700 animate-pulse ml-1" />
+        </div>
+
+        {/* Description lines */}
+        <div className="space-y-2 pt-1">
+          <div className="h-3.5 w-full rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-3.5 w-5/6 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="h-3.5 w-4/6 rounded bg-gray-200 dark:bg-gray-700 animate-pulse" />
+        </div>
+
+        {/* Map placeholder */}
+        <div className="w-full h-36 rounded-xl bg-gray-200 dark:bg-gray-700 animate-pulse" />
+      </div>
+
+      {/* Bottom action bar */}
+      <div className="bg-white dark:bg-[#111112] px-4 pt-2 pb-6 border-t border-gray-100 dark:border-gray-800">
+        <div className="h-12 w-full rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse" />
+      </div>
+    </div>
+  )
+}
+
 export function EventDetails({ onBack }: EventDetailsProps) {
   const navigate = useNavigate();
   const handleBack = () => {
@@ -357,18 +421,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   // causing user to flip null→defined mid-render which can crash hooks order (#310)
   if (!hasHydrated) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-background-white">
-        <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
-      </div>
+      <EventDetailsSkeleton />
     )
   }
 
   if (isLoading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-background-white">
-        <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
-      </div>
-    )
+    return <EventDetailsSkeleton />
   }
 
   if (error || !event) {

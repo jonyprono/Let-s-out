@@ -3,11 +3,24 @@ import { useNavigate } from 'react-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { apiClient } from '@/lib/api-client'
 
-// ── Page loader (lightweight spinner shown between route transitions) ──────────
+// ── Page loader (shown between route transitions while lazy chunks download) ──
 function PageLoader() {
   return (
-    <div className="w-full h-full flex items-center justify-center bg-[var(--color-background-primary)]">
-      <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF7A00] animate-spin" />
+    <div
+      className="w-full h-full flex flex-col items-center justify-center gap-3"
+      style={{ background: 'var(--color-background-primary, #f5f5f5)', minHeight: '100dvh' }}
+    >
+      <div
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: '50%',
+          border: '3px solid #f0f0f0',
+          borderTopColor: '#FF7A00',
+          animation: 'spin 0.85s linear infinite',
+        }}
+      />
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
