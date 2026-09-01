@@ -1,11 +1,14 @@
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { useState } from 'react'
-import { Share2, MessageCircle } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Share2, MessageCircle, Star } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { Event } from '@/features/events/api'
 import { useFavoritesStore } from '@/stores/favorites.store'
 import { ShareModal } from '@/components/shared/ShareModal'
+import { FeedCommentsModal } from '@/features/events/components/FeedCommentsModal'
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/lib/api-client'
 
 // ─── Shared: Attendee Avatars Row ────────────────────────────────────────────
 function AttendeesRow({ attendees, count, size = 24 }: {
@@ -63,6 +66,166 @@ function AttendeesRow({ attendees, count, size = 24 }: {
         )}
       </div>
     </div>
+  )
+}
+
+// ─── Shared: Feed Interaction Bar (Like / Comment / Share) ────────────────────
+const EMOJIS = ['❤️', '🔥', '😍', '👀', '🎉'] as const
+
+function FeedInteractionBar({
+  event,
+  organizerId,
+  dark = false,
+}: {
+  event: Event
+  organizerId?: string
+  dark?: boolean
+}) {
+  const qc = useQueryClient()
+  const [showComments, setShowComments] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Fetch live reaction counts for this event card
+  const { data: reactionsData } = useQuery({
+    queryKey: ['events', event.id, 'reactions'],
+    queryFn: async () => {
+      const res = await apiClient.get<{ data: Record<string, { count: number; users: any[] }> }>(
+        `/events/${event.id}/reactions`
+      )
+      return res.data.data
+    },
+    initialData: () => {
+      const init = (event.reactions ?? []).reduce(
+        (acc: Record<string, { count: number; users: any[] }>, r: { emoji: string }) => {
+          if (!acc[r.emoji]) acc[r.emoji] = { count: 0, users: [] }
+          acc[r.emoji].count++
+          return acc
+        },
+        {}
+      )
+      return Object.keys(init).length > 0 ? init : undefined
+    },
+    staleTime: 15_000,
+  })
+
+  const totalReactions =
+    reactionsData
+      ? Object.values(reactionsData).reduce((s, v) => s + v.count, 0)
+      : (event._count?.reactions ?? 0)
+
+  const myEmoji = event.reactions?.[0]?.emoji ?? null
+
+  const reactionMutation = useMutation({
+    mutationFn: async (emoji: string) => {
+      const res = await apiClient.post<{ data: { success: boolean; action: string } }>(
+        `/events/${event.id}/reactions`,
+        { emoji }
+      )
+      return { emoji, action: res.data.data.action }
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['events', event.id, 'reactions'] })
+    },
+  })
+
+  // Long press → show emoji picker  |  Short tap → toggle ❤️
+  const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    e.stopPropagation()
+    longPressTimer.current = setTimeout(() => setShowEmojiPicker(true), 450)
+  }
+  const handleTouchEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    e.stopPropagation()
+    if (longPressTimer.current) clearTimeout(longPressTimer.current)
+    if (!showEmojiPicker) reactionMutation.mutate('❤️')
+  }
+  const handleEmojiSelect = (emoji: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowEmojiPicker(false)
+    reactionMutation.mutate(emoji)
+  }
+
+  const tc = dark ? 'text-white/75' : 'text-gray-500 dark:text-gray-400'
+  const ac = 'text-[#FF7A00]'
+
+  return (
+    <>
+      <div
+        className={`flex items-center ${dark ? 'border-t border-white/10' : 'border-t border-gray-100 dark:border-[#2A2A2A]'} pt-2.5 mt-2`}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* ── Like ── */}
+        <div className="relative flex-1 flex">
+          <button
+            onMouseDown={handleTouchStart}
+            onMouseUp={handleTouchEnd}
+            onMouseLeave={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current) }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            className={`flex items-center justify-center gap-1.5 w-full py-0.5 text-[13px] font-medium transition-colors ${myEmoji ? ac : tc}`}
+          >
+            <span className="text-[15px] leading-none">{myEmoji || '❤️'}</span>
+            {totalReactions > 0 && <span>{totalReactions}</span>}
+          </button>
+
+          {showEmojiPicker && (
+            <div
+              className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 flex items-center gap-1 bg-white dark:bg-[#222] rounded-full shadow-2xl px-3 py-2 z-50 border border-gray-100 dark:border-white/10"
+              onMouseLeave={() => setShowEmojiPicker(false)}
+            >
+              {EMOJIS.map(emoji => (
+                <button
+                  key={emoji}
+                  onClick={e => handleEmojiSelect(emoji, e)}
+                  className="text-2xl hover:scale-125 active:scale-110 transition-transform leading-none"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={`w-px h-4 ${dark ? 'bg-white/15' : 'bg-gray-200 dark:bg-white/10'}`} />
+
+        {/* ── Comment ── */}
+        <button
+          onClick={() => setShowComments(true)}
+          className={`flex items-center justify-center gap-1.5 flex-1 py-0.5 text-[13px] font-medium ${tc}`}
+        >
+          <MessageCircle className="w-[15px] h-[15px]" />
+          {(event._count?.comments ?? 0) > 0 && <span>{event._count!.comments}</span>}
+        </button>
+
+        <div className={`w-px h-4 ${dark ? 'bg-white/15' : 'bg-gray-200 dark:bg-white/10'}`} />
+
+        {/* ── Share ── */}
+        <button
+          onClick={() => setShowShareModal(true)}
+          className={`flex items-center justify-center gap-1.5 flex-1 py-0.5 text-[13px] font-medium ${tc}`}
+        >
+          <Share2 className="w-[15px] h-[15px]" />
+          <span>Partager</span>
+        </button>
+      </div>
+
+      {showComments && (
+        <FeedCommentsModal
+          eventId={event.id}
+          organizerId={organizerId}
+          open={showComments}
+          onClose={() => setShowComments(false)}
+        />
+      )}
+      {showShareModal && (
+        <ShareModal
+          eventId={event.id}
+          eventTitle={event.title}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
+    </>
   )
 }
 
@@ -130,9 +293,7 @@ export function FeaturedEventCard({
             onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
             className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} strokeWidth="2">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
+            <Star className="w-4 h-4" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} />
           </button>
         </div>
       </div>
@@ -238,9 +399,7 @@ export function SquareEventCard({
             onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
             className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95"
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} strokeWidth="2">
-              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-            </svg>
+            <Star className="w-4 h-4" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} />
           </button>
         </div>
       </div>
@@ -296,8 +455,7 @@ export function RowEventCard({
 }) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const isSaved = isFavorite(event.id)
-  const [showShareModal, setShowShareModal] = useState(false)
-  
+
   const onSaveToggle = () => {
     if (isSaved) removeFavorite(event.id)
     else addFavorite(event)
@@ -312,91 +470,76 @@ export function RowEventCard({
 
   return (
     <div
-      onClick={onClick}
-      className="flex w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-[#2A2A2A] active:scale-[0.98] transition-transform cursor-pointer"
-      style={{ height: 110 }}
+      className="flex flex-col w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-visible shadow-sm border border-gray-100 dark:border-[#2A2A2A] active:scale-[0.98] transition-transform cursor-pointer"
     >
-      {/* Left: image with date overlay */}
-      <div className="relative shrink-0" style={{ width: 110, height: 110 }}>
-        <SafeImage
-          src={event.coverUrl ?? undefined}
-          alt={event.title}
-          className="w-full h-full object-cover"
-          fallback={<div className="w-full h-full bg-gray-200 dark:bg-gray-800" />}
-        />
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/20" />
-        {/* Date box - centered on image */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-white dark:bg-[#1A1A1A] rounded-xl flex flex-col items-center justify-center shadow-md" style={{ width: 48, height: 52 }}>
-            <span className="text-[#FF7A00] font-bold text-[18px] leading-none">{day}</span>
-            <span className="text-gray-900 dark:text-white font-bold text-[10px] leading-none mt-0.5">{month}</span>
+      {/* Top row: image + info */}
+      <div className="flex overflow-hidden rounded-2xl" onClick={onClick} style={{ height: 110 }}>
+        {/* Left: image with date overlay */}
+        <div className="relative shrink-0" style={{ width: 110, height: 110 }}>
+          <SafeImage
+            src={event.coverUrl ?? undefined}
+            alt={event.title}
+            className="w-full h-full object-cover"
+            fallback={<div className="w-full h-full bg-gray-200 dark:bg-gray-800" />}
+          />
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-xl flex flex-col items-center justify-center shadow-md" style={{ width: 48, height: 52 }}>
+              <span className="text-[#FF7A00] font-bold text-[18px] leading-none">{day}</span>
+              <span className="text-gray-900 dark:text-white font-bold text-[10px] leading-none mt-0.5">{month}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: content */}
+        <div className="flex-1 px-3 py-2.5 flex flex-col justify-between overflow-hidden">
+          {/* Title + star */}
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-bold text-[15px] text-gray-900 dark:text-white leading-snug flex-1 line-clamp-1">
+              {event.title}
+            </h4>
+            <button
+              onClick={e => { e.stopPropagation(); onSaveToggle(); }}
+              className="w-7 h-7 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center -mr-0.5 active:scale-95 transition-transform shrink-0"
+            >
+              <Star className="w-4 h-4" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : '#888'} />
+            </button>
+          </div>
+
+          {/* Date */}
+          <div className="flex items-center gap-1.5 text-[11px] text-[#FF7A00] font-medium">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18" strokeLinecap="round"/></svg>
+            <span className="capitalize truncate">{fullDate}</span>
+          </div>
+
+          {/* Location */}
+          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            <span className="truncate">{location}</span>
+          </div>
+
+          {/* Participants + Cagnotte */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="7" r="4"/><path d="M3 20c0-3.866 2.686-7 6-7s6 3.134 6 7" strokeLinecap="round"/><path d="M16 3.5a4 4 0 0 1 0 7M21 20c0-3.866-2.686-7-6-7" strokeLinecap="round"/></svg>
+              <span>
+                <span className="text-[#FF7A00] font-semibold">{event.currentAttendees}</span>
+                {event.maxAttendees ? `/${event.maxAttendees}` : ''} participants
+              </span>
+            </div>
+            {hasCagnotte && (
+              <div className="bg-[#FFF2D3] dark:bg-[#FF7A00]/10 text-[#FF7A00] px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-[#FF7A00]/20">
+                Cagnotte
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Right: content */}
-      <div className="flex-1 px-3 py-2.5 flex flex-col justify-between overflow-hidden">
-        {/* Title + heart */}
-        <div className="flex items-start justify-between gap-2">
-          <h4 className="font-bold text-[15px] text-gray-900 dark:text-white leading-snug flex-1 line-clamp-1">
-            {event.title}
-          </h4>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={e => { e.stopPropagation(); setShowShareModal(true); }}
-              className="w-7 h-7 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center active:scale-95 transition-transform"
-            >
-              <Share2 className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-            </button>
-            <button
-              onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
-              className="w-7 h-7 rounded-full bg-gray-50 dark:bg-[#2A2A2A] flex items-center justify-center -mr-0.5 active:scale-95 transition-transform"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : '#9CA3AF'} strokeWidth="2">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Date */}
-        <div className="flex items-center gap-1.5 text-[11px] text-[#FF7A00] font-medium">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18" strokeLinecap="round"/></svg>
-          <span className="capitalize truncate">{fullDate}</span>
-        </div>
-
-        {/* Location */}
-        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
-          <span className="truncate">{location}</span>
-        </div>
-
-        {/* Participants + Cagnotte */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="7" r="4"/><path d="M3 20c0-3.866 2.686-7 6-7s6 3.134 6 7" strokeLinecap="round"/><path d="M16 3.5a4 4 0 0 1 0 7M21 20c0-3.866-2.686-7-6-7" strokeLinecap="round"/></svg>
-            <span>
-              <span className="text-[#FF7A00] font-semibold">{event.currentAttendees}</span>
-              {event.maxAttendees ? `/${event.maxAttendees}` : ''} participants
-            </span>
-          </div>
-          {hasCagnotte ? (
-            <div className="bg-[#FFF2D3] dark:bg-[#FF7A00]/10 text-[#FF7A00] px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-[#FF7A00]/20">
-              Cagnotte
-            </div>
-          ) : (((event as any)._count?.comments ?? 0) > 0 && (
-            <div className="flex items-center gap-1 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-              <MessageCircle className="w-3.5 h-3.5" />
-              <span>{(event as any)._count?.comments}</span>
-            </div>
-          ))}
-        </div>
+      {/* Interaction bar – below the card, not blocking the click-to-navigate */}
+      <div className="px-3 pb-2">
+        <FeedInteractionBar event={event} />
       </div>
-
-      {showShareModal && (
-        <ShareModal eventId={event.id} eventTitle={event.title} onClose={() => setShowShareModal(false)} />
-      )}
     </div>
   )
 }

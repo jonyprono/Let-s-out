@@ -58,7 +58,8 @@ export interface Event {
   }
   poolCollected?: number
   poolReleased?: boolean
-  _count?: { bookings: number }
+  _count?: { bookings: number; comments?: number; reactions?: number }
+  reactions?: { emoji: string }[]
   validatorIds?: string[]
   validatorCandidates?: string[]
   validatorVoteStatus?: 'OPEN' | 'CLOSED' | 'NONE'
