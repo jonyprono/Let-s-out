@@ -21,6 +21,21 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 // This ensures offline users see their last-known data immediately
 restoreQueryCache()
 
+// ── Warmup Render server on app start ─────────────────────────────────────────
+// Render free/paid plans may still have a cold start after inactivity.
+// We fire a silent ping as early as possible (during the splashscreen) so the
+// server is warm before the user reaches the home feed.
+;(function warmupServer() {
+  try {
+    const apiBase = 'https://let-s-out.onrender.com'
+    fetch(apiBase + '/health', { method: 'GET', signal: AbortSignal.timeout(10000) }).catch(() => {
+      // Silently ignore — this is best-effort only
+    })
+  } catch {
+    // noop
+  }
+})()
+
 // Automatically reload the page when Vite fails to fetch a dynamic chunk
 // (e.g. after a Vercel deployment where old chunks are deleted)
 window.addEventListener('vite:preloadError', (event) => {
