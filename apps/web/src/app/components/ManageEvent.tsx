@@ -620,23 +620,32 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
             <path opacity="0.2" d="M77.1153 116.51L116.457 114.084" stroke="black" strokeWidth="0.903465" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-        <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center">Aucune cagnotte ajoutée</h2>
-        <p className="text-[14px] text-[#737373] text-center mb-8 max-w-[280px] leading-relaxed">
-          Ajoutez une cagnotte à l'événement pour mutualiser les frais.
-        </p>
-        {(isCreator || isCoHost) && (
-          <button
-            onClick={() => setCagnotteStep('setup')}
-            className="w-full py-3.5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
-          >
-            <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M19.833 19.3359C19.833 20.7166 18.7137 21.8359 17.333 21.8359C15.9522 21.8359 14.833 20.7166 14.833 19.3359C14.833 17.9552 15.9522 16.8359 17.333 16.8359C18.7137 16.8359 19.833 17.9552 19.833 19.3359Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M13.3333 13.2247C12.2139 13.2194 10.893 13.0933 9.21123 12.7596C8.25404 12.5696 7.33325 13.2813 7.33325 14.2571V24.2742C7.33325 24.9625 7.8059 25.567 8.47805 25.7152C15.4429 27.2511 16.5824 25.4454 21.3333 25.4454C22.844 25.4454 24.0694 25.588 25.0095 25.7655C26.1052 25.9725 27.3333 25.1334 27.3333 24.0183V14.2435C27.3333 13.6753 27.0089 13.161 26.4662 12.9928C25.6561 12.7417 24.2785 12.4226 22.3333 12.3379" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M7.33325 16.336C9.28458 16.336 11.0381 14.741 11.2623 13.0901M23.8338 12.8359C23.8338 14.8756 25.5988 16.805 27.3333 16.805M27.3333 22.336C25.4342 22.336 23.5934 23.6462 23.4353 25.4343M11.3337 25.8321C11.3337 23.6229 9.54288 21.8321 7.33374 21.8321" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M14.8333 10.8359C14.8333 10.8359 16.6331 8.33594 17.3333 8.33594M17.3333 8.33594C18.0335 8.33594 19.8333 10.8359 19.8333 10.8359M17.3333 8.33594V13.8359" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Ajouter une cagnotte
-          </button>
+        {isCreator || isCoHost ? (
+          <>
+            <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center">Aucune cagnotte ajoutée</h2>
+            <p className="text-[14px] text-[#737373] text-center mb-8 max-w-[280px] leading-relaxed">
+              Ajoutez une cagnotte à l'événement pour mutualiser les frais.
+            </p>
+            <button
+              onClick={() => setCagnotteStep('setup')}
+              className="w-full py-3.5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+            >
+              <svg width="20" height="20" viewBox="0 0 35 35" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19.833 19.3359C19.833 20.7166 18.7137 21.8359 17.333 21.8359C15.9522 21.8359 14.833 20.7166 14.833 19.3359C14.833 17.9552 15.9522 16.8359 17.333 16.8359C18.7137 16.8359 19.833 17.9552 19.833 19.3359Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.3333 13.2247C12.2139 13.2194 10.893 13.0933 9.21123 12.7596C8.25404 12.5696 7.33325 13.2813 7.33325 14.2571V24.2742C7.33325 24.9625 7.8059 25.567 8.47805 25.7152C15.4429 27.2511 16.5824 25.4454 21.3333 25.4454C22.844 25.4454 24.0694 25.588 25.0095 25.7655C26.1052 25.9725 27.3333 25.1334 27.3333 24.0183V14.2435C27.3333 13.6753 27.0089 13.161 26.4662 12.9928C25.6561 12.7417 24.2785 12.4226 22.3333 12.3379" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.33325 16.336C9.28458 16.336 11.0381 14.741 11.2623 13.0901M23.8338 12.8359C23.8338 14.8756 25.5988 16.805 27.3333 16.805M27.3333 22.336C25.4342 22.336 23.5934 23.6462 23.4353 25.4343M11.3337 25.8321C11.3337 23.6229 9.54288 21.8321 7.33374 21.8321" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M14.8333 10.8359C14.8333 10.8359 16.6331 8.33594 17.3333 8.33594M17.3333 8.33594C18.0335 8.33594 19.8333 10.8359 19.8333 10.8359M17.3333 8.33594V13.8359" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Ajouter une cagnotte
+            </button>
+          </>
+        ) : (
+          <>
+            <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center">Aucune cagnotte</h2>
+            <p className="text-[14px] text-[#737373] text-center mb-8 max-w-[280px] leading-relaxed">
+              L'organisateur n'a pas encore activé de cagnotte pour cet événement.
+            </p>
+          </>
         )}
       </div>
     );

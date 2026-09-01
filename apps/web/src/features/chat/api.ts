@@ -175,7 +175,7 @@ export function useConversationPresence(conversationId: string) {
 
 function sortMessagesChronological(messages: Message[]): Message[] {
   return [...messages].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   )
 }
 
