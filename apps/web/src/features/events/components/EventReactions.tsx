@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
@@ -15,14 +15,14 @@ export function EventReactions({ eventId }: { eventId: string }) {
     queryKey: ['events', eventId, 'reactions'],
     queryFn: async () => {
       const res = await apiClient.get<{ data: Record<string, ReactionData> }>(`/events/${eventId}/reactions`);
-      return res.data;
+      return res.data.data;
     }
   });
 
   const mutation = useMutation({
     mutationFn: async (emoji: string) => {
-      const res = await apiClient.post<{ success: boolean; action: string }>(`/events/${eventId}/reactions`, { emoji });
-      return { emoji, action: res.action };
+      const res = await apiClient.post<{ data: { success: boolean; action: string } }>(`/events/${eventId}/reactions`, { emoji });
+      return { emoji, action: res.data.data.action || 'added' }; // Assuming response might have it wrapped in data
     },
     onMutate: async (emoji) => {
       setAnimatingEmoji(emoji);

@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Play } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 interface Media {
   id: string;
@@ -21,7 +21,7 @@ export function EventMediaFeed() {
     queryKey: ['feed', 'media'],
     queryFn: async () => {
       const res = await apiClient.get<{ data: Media[] }>('/feed/media');
-      return res.data;
+      return res.data.data;
     }
   });
 

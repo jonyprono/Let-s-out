@@ -278,6 +278,10 @@ export function SquareEventCard({
           </div>
         </div>
       </div>
+
+      {showShareModal && (
+        <ShareModal eventId={event.id} eventTitle={event.title} onClose={() => setShowShareModal(false)} />
+      )}
     </div>
   )
 }
@@ -389,6 +393,10 @@ export function RowEventCard({
           ))}
         </div>
       </div>
+
+      {showShareModal && (
+        <ShareModal eventId={event.id} eventTitle={event.title} onClose={() => setShowShareModal(false)} />
+      )}
     </div>
   )
 }

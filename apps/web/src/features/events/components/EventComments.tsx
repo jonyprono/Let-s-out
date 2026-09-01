@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Send, Trash2, Loader2, MessageCircle } from 'lucide-react';
+import { Send, Loader2, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 
 interface Comment {
@@ -27,7 +27,7 @@ export function EventComments({ eventId, organizerId }: { eventId: string, organ
     queryKey: ['events', eventId, 'comments'],
     queryFn: async () => {
       const res = await apiClient.get<{ data: Comment[] }>(`/events/${eventId}/comments`);
-      return res.data;
+      return res.data.data;
     }
   });
 

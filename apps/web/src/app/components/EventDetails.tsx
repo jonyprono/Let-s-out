@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { EventReactions } from '../../events/components/EventReactions'
-import { EventComments } from '../../events/components/EventComments'
+import { EventReactions } from '@/features/events/components/EventReactions'
+import { EventComments } from '@/features/events/components/EventComments'
 import {
   MapPin,
   Calendar,
