@@ -16,6 +16,7 @@ import { useUserProfile } from '@/features/users/UserProfileContext';
 import { ShareModal } from '@/components/shared/ShareModal';
 import { useFriends } from '@/features/users/api';
 import { eventsApi } from '@/features/events/api';
+import { chatApi } from '@/features/chat/api';
 import { ValidatorVoteForm } from './ValidatorVoteForm';
 
 export function ManageEvent() {
@@ -222,16 +223,23 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
       </div>
 
       {/* Organisateurs */}
-      <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 mb-6">
+      <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 mb-3">
         <h3 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3">Organisateur(s)</h3>
         
-        <div className="flex items-center gap-3 mb-3">
+        <div
+          className="flex items-center gap-3 mb-3 cursor-pointer active:opacity-70"
+          onClick={() => navigate(`/users/${event.creatorId}`)}
+        >
           <SafeImage src={event.creator?.profile?.avatarUrl} alt="Creator" className="w-10 h-10 rounded-full bg-gray-200" />
           <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{event.creator?.profile?.displayName || event.creator?.profile?.username}</span>
         </div>
 
         {event.coHosts?.map((coHost: any) => (
-          <div key={coHost.id} className="flex items-center gap-3 mb-3">
+          <div
+            key={coHost.id}
+            className="flex items-center gap-3 mb-3 cursor-pointer active:opacity-70"
+            onClick={() => navigate(`/users/${coHost.id}`)}
+          >
             <SafeImage src={coHost.profile?.avatarUrl} alt="Co-organisateur" className="w-10 h-10 rounded-full bg-gray-200" />
             <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{coHost.profile?.displayName || coHost.profile?.username || coHost.username || 'Co-organisateur'}</span>
           </div>
@@ -242,10 +250,28 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
             onClick={() => setShowSearchModal(true)}
             className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-[13px] font-semibold text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
           >
-            Ajouter
+            Ajouter un co-organisateur
           </button>
         )}
       </div>
+
+      {/* Bouton rejoindre le chat de l'événement */}
+      <button
+        onClick={async () => {
+          try {
+            const conv = await chatApi.getEventConversation(event.id);
+            navigate(`/chat/${conv.id}`);
+          } catch {
+            toast.error('Impossible d\'accéder au chat de cet événement.');
+          }
+        }}
+        className="w-full py-3.5 mb-6 flex items-center justify-center gap-2 rounded-xl bg-[#FFF9EC] border border-[#FF7A00]/20 text-[14px] font-semibold text-[#FF7A00] active:scale-95 transition-transform"
+      >
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5.208 5.625h7.5M5.208 8.958h4.584M0.625 7.292c0-.643.011-1.27.032-1.875.07-1.978.105-2.967.91-3.777.804-.811 1.82-.854 3.854-.941C6.538.65 7.726.625 8.958.625c1.233 0 2.421.025 3.537.073 2.033.087 3.05.13 3.854.941.805.81.84 1.8.91 3.777.021.605.032 1.232.032 1.875 0 .642-.011 1.27-.032 1.875-.07 1.977-.105 2.967-.91 3.777-.804.81-1.82.854-3.854.941-.612.027-1.246.046-1.896.058-.618.012-.927.018-1.198.121-.272.103-.5.299-.956.69l-1.817 1.558a.458.458 0 01-.765-.308V13.893c-.068-.003-.136-.005-.203-.008-2.034-.087-3.05-.13-3.854-.941-.805-.81-.84-1.8-.91-3.777A34.67 34.67 0 01.625 7.292z" stroke="#FF7A00" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        Rejoindre le chat de l'événement
+      </button>
 
       {showSearchModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
@@ -342,7 +368,11 @@ function TabParticipants({ event, attendees, isCreator }: { event: any, attendee
   });
 
   // Attendees endpoint already returns confirmed participants
-  const participants = attendees.map(b => b.user || b);
+  // Add the organizer at the top of the list if not already present
+  const rawParticipants = attendees.map(b => b.user || b);
+  const creatorAlreadyInList = rawParticipants.some((p: any) => p.id === event.creatorId);
+  const creatorEntry = !creatorAlreadyInList && event.creator ? { ...event.creator, _isOrganizer: true } : null;
+  const participants = creatorEntry ? [creatorEntry, ...rawParticipants] : rawParticipants;
 
   const isPastDeadline = event.registrationDeadline 
     ? new Date() > new Date(event.registrationDeadline) 
@@ -396,6 +426,9 @@ function TabParticipants({ event, attendees, isCreator }: { event: any, attendee
                     { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
                   )}
                 >
+                  {(user as any)._isOrganizer && (
+                    <span className="text-[10px] font-bold text-[#FF7A00] uppercase tracking-wide">Organisateur</span>
+                  )}
                   <span className="text-[14px] font-medium text-gray-900 dark:text-white truncate block">
                     {user.profile?.displayName || user.profile?.username || 'Utilisateur'}
                   </span>
