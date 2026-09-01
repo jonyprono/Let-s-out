@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsup src/server.ts --format cjs --dts",
+    "build": "prisma generate && tsup src/server.ts --format cjs --dts",
     "start": "prisma migrate deploy && node dist/server.js",
     "lint": "eslint src --ext ts",
     "typecheck": "tsc --noEmit",

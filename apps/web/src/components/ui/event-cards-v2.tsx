@@ -1,7 +1,7 @@
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useState, useRef } from 'react'
-import { Share2, MessageCircle, Star } from 'lucide-react'
+import { Share2, MessageCircle, Star, Heart } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { Event } from '@/features/events/api'
 import { useFavoritesStore } from '@/stores/favorites.store'
@@ -108,6 +108,8 @@ function FeedInteractionBar({
       return Object.keys(init).length > 0 ? init : undefined
     },
     staleTime: 15_000,
+    retry: 1,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
 
   const totalReactions =
@@ -165,7 +167,9 @@ function FeedInteractionBar({
             onTouchEnd={handleTouchEnd}
             className={`flex items-center justify-center gap-1.5 w-full py-0.5 text-[13px] font-medium transition-colors ${myEmoji ? ac : tc}`}
           >
-            <span className="text-[15px] leading-none">{myEmoji || '❤️'}</span>
+            <span className="text-[15px] leading-none flex items-center justify-center">
+              {myEmoji ? myEmoji : <Heart className="w-[15px] h-[15px]" strokeWidth={2.5} />}
+            </span>
             {totalReactions > 0 && <span>{totalReactions}</span>}
           </button>
 
