@@ -1544,9 +1544,13 @@ export default async function eventsRoutes(app: FastifyInstance) {
         })
         return reply.send({ success: true, action: 'added', data: reaction })
       }
-    } catch (err) {
+    } catch (err: any) {
       req.log.error(err, 'Failed to process reaction')
-      return reply.send({ success: false, action: 'error', data: null })
+      // P2021 = table does not exist (missing migration)
+      if (err?.code === 'P2021') {
+        return reply.code(503).send({ success: false, action: 'error', error: 'La table des réactions est manquante en base — migration non appliquée.' })
+      }
+      return reply.code(500).send({ success: false, action: 'error', data: null })
     }
   })
 
@@ -1571,9 +1575,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }, {})
 
       return reply.send({ data: grouped })
-    } catch (err) {
+    } catch (err: any) {
       req.log.error(err, 'Failed to fetch reactions')
-      return reply.send({ data: {} })
+      // Return empty data gracefully so the UI doesn't crash, but log the real error
+      return reply.send({ data: {}, _error: err?.code ?? 'UNKNOWN' })
     }
   })
 
