@@ -85,6 +85,7 @@ function FeedInteractionBar({
   const [showComments, setShowComments] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [optimisticAction, setOptimisticAction] = useState<{ emoji: string | null, diff: number } | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Fetch live reaction counts for this event card
@@ -127,8 +128,16 @@ function FeedInteractionBar({
       )
       return { emoji, action: res.data.data.action }
     },
+    onMutate: (emoji) => {
+      const isRemoving = myEmoji === emoji
+      setOptimisticAction({
+        emoji: isRemoving ? null : emoji,
+        diff: isRemoving ? -1 : (myEmoji ? 0 : 1)
+      })
+    },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['events', event.id, 'reactions'] })
+      setTimeout(() => setOptimisticAction(null), 2000)
     },
   })
 
@@ -151,6 +160,9 @@ function FeedInteractionBar({
   const tc = dark ? 'text-white/75' : 'text-gray-500 dark:text-gray-400'
   const ac = 'text-[#FF7A00]'
 
+  const currentEmoji = optimisticAction !== null ? optimisticAction.emoji : myEmoji
+  const computedReactions = Math.max(0, totalReactions + (optimisticAction?.diff || 0))
+
   return (
     <>
       <div
@@ -165,12 +177,12 @@ function FeedInteractionBar({
             onMouseLeave={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current) }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
-            className={`flex items-center justify-center gap-1.5 w-full py-0.5 text-[13px] font-medium transition-colors ${myEmoji ? ac : tc}`}
+            className={`flex items-center justify-center gap-1.5 w-full py-0.5 text-[13px] font-medium transition-colors ${currentEmoji ? ac : tc}`}
           >
             <span className="text-[15px] leading-none flex items-center justify-center">
-              {myEmoji ? myEmoji : <Heart className="w-[15px] h-[15px]" strokeWidth={2.5} />}
+              {currentEmoji ? currentEmoji : <Heart className="w-[15px] h-[15px]" strokeWidth={2.5} />}
             </span>
-            {totalReactions > 0 && <span>{totalReactions}</span>}
+            {computedReactions > 0 && <span>{computedReactions}</span>}
           </button>
 
           {showEmojiPicker && (
@@ -210,7 +222,6 @@ function FeedInteractionBar({
           className={`flex items-center justify-center gap-1.5 flex-1 py-0.5 text-[13px] font-medium ${tc}`}
         >
           <Share2 className="w-[15px] h-[15px]" />
-          <span>Partager</span>
         </button>
       </div>
 

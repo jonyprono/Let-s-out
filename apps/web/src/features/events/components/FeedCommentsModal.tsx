@@ -153,43 +153,57 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
 
         {/* ── Input ── */}
         <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 dark:border-white/5 bg-white dark:bg-[#111]">
-          <form
-            onSubmit={e => {
-              e.preventDefault()
-              if (!content.trim()) return
-              postMutation.mutate(content)
-            }}
-            className="flex items-center gap-2"
-          >
-            <div className="w-8 h-8 rounded-full bg-orange-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
-              {currentUser?.profile?.avatarUrl ? (
-                <img src={currentUser.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-xs font-bold text-[#FF7A00]">
-                  {currentUser?.profile?.displayName?.[0]?.toUpperCase() ?? 'M'}
-                </span>
-              )}
-            </div>
-            <div className="flex-1 flex items-center bg-gray-100 dark:bg-white/5 rounded-full px-4 py-2 gap-2">
-              <input
-                type="text"
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                placeholder="Ajouter un commentaire..."
-                className="flex-1 bg-transparent text-[14px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-400"
-              />
+          {currentUser ? (
+            <form
+              onSubmit={e => {
+                e.preventDefault()
+                if (!content.trim()) return
+                postMutation.mutate(content)
+              }}
+              className="flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-[#2A2A2A] flex-shrink-0 flex items-center justify-center overflow-hidden">
+                {currentUser?.profile?.avatarUrl ? (
+                  <img src={currentUser.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm font-bold text-[#FF7A00]">
+                    {currentUser?.profile?.displayName?.[0]?.toUpperCase() ?? 'M'}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full px-4 py-2.5 flex items-center">
+                <input
+                  type="text"
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
+                  placeholder="Ajouter un commentaire..."
+                  className="w-full bg-transparent text-[14px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-400"
+                />
+              </div>
               <button
                 type="submit"
                 disabled={!content.trim() || postMutation.isPending}
-                className="text-[#FF7A00] disabled:opacity-30 flex-shrink-0"
+                className="w-10 h-10 rounded-full bg-[#FF7A00] flex items-center justify-center text-white flex-shrink-0 disabled:opacity-50 transition-opacity"
               >
                 {postMutation.isPending
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <Send className="w-4 h-4" />
+                  ? <Loader2 className="w-5 h-5 animate-spin" />
+                  : <Send className="w-5 h-5 ml-0.5" />
                 }
               </button>
+            </form>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex-shrink-0 flex items-center justify-center text-[#FF7A00]">
+                <span className="font-bold">?</span>
+              </div>
+              <div className="flex-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full px-4 py-2.5 flex items-center justify-center">
+                <span className="text-[13px] text-gray-500 dark:text-gray-400">Connectez-vous pour commenter</span>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-[#FF7A00] flex items-center justify-center text-white flex-shrink-0 opacity-90">
+                <Send className="w-5 h-5 ml-0.5" />
+              </div>
             </div>
-          </form>
+          )}
         </div>
       </div>
 
