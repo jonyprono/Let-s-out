@@ -50,9 +50,11 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     const profile = await app.prisma.profile.findUnique({
       where: { userId },
-      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: { include: { badge: true } } } } },
+      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, deletedAt: true, isActive: true, badges: { include: { badge: true } } } } },
     })
     if (!profile) return reply.code(404).send({ error: 'User not found' })
+    // Hide deleted accounts
+    if (profile.user?.deletedAt || profile.user?.isActive === false) return reply.code(404).send({ error: 'User not found' })
 
     const friendship = await app.prisma.friendship.findFirst({
       where: {
@@ -115,18 +117,20 @@ export default async function usersRoutes(app: FastifyInstance) {
 
     let profile = await app.prisma.profile.findUnique({
       where: { username },
-      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: { include: { badge: true } } } } },
+      include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, deletedAt: true, isActive: true, badges: { include: { badge: true } } } } },
     })
     
     // Fallback: If username wasn't found, try treating the parameter as a userId
     if (!profile) {
       profile = await app.prisma.profile.findUnique({
         where: { userId: username },
-        include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, badges: { include: { badge: true } } } } },
+        include: { user: { select: { id: true, role: true, createdAt: true, lastSeenAt: true, deletedAt: true, isActive: true, badges: { include: { badge: true } } } } },
       })
     }
     
     if (!profile) return reply.code(404).send({ error: 'User not found' })
+    // Hide deleted accounts
+    if (profile.user?.deletedAt || profile.user?.isActive === false) return reply.code(404).send({ error: 'User not found' })
 
     const userId = profile.userId
     const friendship = await app.prisma.friendship.findFirst({
@@ -579,6 +583,8 @@ export default async function usersRoutes(app: FastifyInstance) {
           { displayName: { contains: q, mode: 'insensitive' } },
         ],
         isPublic: true,
+        // Exclude deleted accounts from search results
+        user: { deletedAt: null, isActive: true },
       },
       take: Number(limit) * 2, // Take more to account for filtered out users
       skip: Number(offset),

@@ -287,7 +287,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
     }
 
     const events = await app.prisma.event.findMany({
-      where: whereClause,
+      where: {
+        ...whereClause,
+        // Exclude events from deleted accounts
+        creator: { deletedAt: null, isActive: true },
+      },
       include: {
         creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
         bookings: { 
@@ -303,7 +307,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
     })
 
     const total = await app.prisma.event.count({
-      where: whereClause,
+      where: {
+        ...whereClause,
+        creator: { deletedAt: null, isActive: true },
+      },
     })
 
     return reply.send({ data: events, total })
@@ -1548,7 +1555,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     try {
       const reactions = await app.prisma.eventReaction.findMany({
-        where: { eventId },
+        where: {
+          eventId,
+          // Exclude reactions from deleted accounts
+          user: { deletedAt: null, isActive: true },
+        },
         include: { user: { include: { profile: true } } }
       })
 
@@ -1586,7 +1597,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
   app.get('/:id/comments', async (req, reply) => {
     const { id: eventId } = req.params as { id: string }
     const comments = await app.prisma.eventComment.findMany({
-      where: { eventId },
+      where: {
+        eventId,
+        // Exclude comments from deleted accounts
+        user: { deletedAt: null, isActive: true },
+      },
       orderBy: { createdAt: 'desc' },
       include: { user: { include: { profile: true } } }
     })

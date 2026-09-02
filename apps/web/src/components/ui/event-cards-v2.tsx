@@ -137,7 +137,8 @@ function FeedInteractionBar({
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['events', event.id, 'reactions'] })
-      setTimeout(() => setOptimisticAction(null), 2000)
+      // Clear optimistic state after query refetch (no timeout — the server data takes over)
+      setOptimisticAction(null)
     },
   })
 
