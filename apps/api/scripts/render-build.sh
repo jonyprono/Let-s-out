@@ -18,6 +18,7 @@ MIGRATIONS=(
   "20260613000001_add_admin_email_passwordhash"
   "20260714130000_add_last_delivered_at"
   "20260720_add_feature_flags"
+  "20260901000000_add_reactions_comments"
 )
 
 for migration in "${MIGRATIONS[@]}"; do
