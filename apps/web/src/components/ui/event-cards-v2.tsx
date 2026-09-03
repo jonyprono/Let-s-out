@@ -151,11 +151,13 @@ function FeedInteractionBar({
   const handleTouchEnd = (e: React.TouchEvent | React.MouseEvent) => {
     e.stopPropagation()
     if (longPressTimer.current) clearTimeout(longPressTimer.current)
+    if (reactionMutation.isPending) return
     if (!showEmojiPicker) reactionMutation.mutate('❤️')
   }
   const handleEmojiSelect = (emoji: string, e: React.MouseEvent) => {
     e.stopPropagation()
     setShowEmojiPicker(false)
+    if (reactionMutation.isPending) return
     reactionMutation.mutate(emoji)
   }
 
@@ -179,7 +181,8 @@ function FeedInteractionBar({
             onMouseLeave={() => { if (longPressTimer.current) clearTimeout(longPressTimer.current) }}
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
-            className={`flex items-center justify-center gap-1.5 w-full py-0.5 text-[13px] font-medium transition-colors ${currentEmoji ? ac : tc}`}
+            disabled={reactionMutation.isPending}
+            className={`flex items-center justify-center gap-1.5 w-full py-0.5 text-[13px] font-medium transition-colors ${reactionMutation.isPending ? 'opacity-50' : ''} ${currentEmoji ? ac : tc}`}
           >
             <span className="text-[15px] leading-none flex items-center justify-center">
               {currentEmoji ? currentEmoji : <Heart className="w-[15px] h-[15px]" strokeWidth={2.5} />}

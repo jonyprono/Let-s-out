@@ -1549,6 +1549,15 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     } catch (err: any) {
       req.log.error(err, 'Failed to process reaction')
+      // Filet de sécurité pour les race conditions (double tap)
+      if (err?.code === 'P2002') {
+        req.log.info('Idempotent success: reaction already exists (P2002)')
+        return reply.send({ success: true, action: 'added' })
+      }
+      if (err?.code === 'P2025') {
+        req.log.info('Idempotent success: reaction already deleted (P2025)')
+        return reply.send({ success: true, action: 'removed' })
+      }
       // P2021 = table does not exist (missing migration)
       if (err?.code === 'P2021') {
         return reply.code(503).send({ success: false, action: 'error', error: 'La table des réactions est manquante en base — migration non appliquée.' })
