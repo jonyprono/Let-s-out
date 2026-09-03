@@ -21,7 +21,7 @@ export function EventReactions({ eventId }: { eventId: string }) {
 
   const mutation = useMutation({
     mutationFn: async (emoji: string) => {
-      const res = await apiClient.post<{ data: { success: boolean; action: string } }>(`/events/${eventId}/reactions`, { emoji });
+      const res = await apiClient.post<{ success: boolean; action: string; data?: unknown }>(`/events/${eventId}/reactions`, { emoji });
       return { emoji, action: res.data.action || 'added' };
     },
     onMutate: async (emoji) => {
