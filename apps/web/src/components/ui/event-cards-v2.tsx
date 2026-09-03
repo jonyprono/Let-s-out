@@ -135,10 +135,12 @@ function FeedInteractionBar({
         diff: isRemoving ? -1 : (myEmoji ? 0 : 1)
       })
     },
-    onSettled: () => {
-      qc.invalidateQueries({ queryKey: ['events', event.id, 'reactions'] })
-      qc.invalidateQueries({ queryKey: ['events'] })
-      // Clear optimistic state after query refetch (no timeout — the server data takes over)
+    onSettled: async () => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['events', event.id, 'reactions'] }),
+        qc.invalidateQueries({ queryKey: ['events'] })
+      ])
+      // Clear optimistic state ONLY AFTER the fresh data has been fetched and applied
       setOptimisticAction(null)
     },
   })
