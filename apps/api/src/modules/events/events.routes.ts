@@ -1530,18 +1530,21 @@ export default async function eventsRoutes(app: FastifyInstance) {
       if (existing) {
         if (existing.emoji === emoji || emoji === '❤️') { // Default click toggles off
           await app.prisma.eventReaction.delete({ where: { id: existing.id } })
+          req.log.info({ reactionId: existing.id, eventId, userId, emoji, action: 'removed' }, '[REACTION] Reaction removed')
           return reply.send({ success: true, action: 'removed' })
         } else {
           const updated = await app.prisma.eventReaction.update({
             where: { id: existing.id },
             data: { emoji }
           })
+          req.log.info({ reactionId: updated.id, eventId, userId, emoji, action: 'updated' }, '[REACTION] Reaction updated')
           return reply.send({ success: true, action: 'updated', data: updated })
         }
       } else {
         const reaction = await app.prisma.eventReaction.create({
           data: { userId, eventId, emoji }
         })
+        req.log.info({ reactionId: reaction.id, eventId, userId, emoji, action: 'added' }, '[REACTION] Reaction created')
         return reply.send({ success: true, action: 'added', data: reaction })
       }
     } catch (err: any) {
@@ -1607,7 +1610,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
         // Exclude comments from deleted accounts
         user: { deletedAt: null, isActive: true },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       include: { user: { include: { profile: true } } }
     })
     return reply.send({ data: comments })

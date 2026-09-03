@@ -122,11 +122,11 @@ function FeedInteractionBar({
 
   const reactionMutation = useMutation({
     mutationFn: async (emoji: string) => {
-      const res = await apiClient.post<{ data: { success: boolean; action: string } }>(
+      const res = await apiClient.post<{ success: boolean; action: string; data?: unknown }>(
         `/events/${event.id}/reactions`,
         { emoji }
       )
-      return { emoji, action: res.data.data.action }
+      return { emoji, action: res.data.action }
     },
     onMutate: (emoji) => {
       const isRemoving = myEmoji === emoji

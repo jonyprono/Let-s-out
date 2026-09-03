@@ -22,7 +22,7 @@ export function EventReactions({ eventId }: { eventId: string }) {
   const mutation = useMutation({
     mutationFn: async (emoji: string) => {
       const res = await apiClient.post<{ data: { success: boolean; action: string } }>(`/events/${eventId}/reactions`, { emoji });
-      return { emoji, action: res.data.data.action || 'added' }; // Assuming response might have it wrapped in data
+      return { emoji, action: res.data.action || 'added' };
     },
     onMutate: async (emoji) => {
       setAnimatingEmoji(emoji);
