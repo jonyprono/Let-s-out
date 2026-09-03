@@ -1619,7 +1619,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
         // Exclude comments from deleted accounts
         user: { deletedAt: null, isActive: true },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: 'asc' },
       include: { user: { include: { profile: true } } }
     })
     return reply.send({ data: comments })
@@ -1638,8 +1638,17 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     if (!isOwner && !isOrganizer) return reply.code(403).send({ error: 'Non autorisé' })
 
-    await app.prisma.eventComment.delete({ where: { id: commentId } })
-    return reply.send({ success: true })
+    try {
+      await app.prisma.eventComment.delete({ where: { id: commentId } })
+      return reply.send({ success: true, action: 'deleted' })
+    } catch (err: any) {
+      if (err?.code === 'P2025') {
+        // Déjà supprimé : succès idempotent
+        return reply.send({ success: true, action: 'deleted' })
+      }
+      req.log.error(err, 'Failed to delete comment')
+      return reply.code(500).send({ error: 'Erreur lors de la suppression du commentaire' })
+    }
   })
 
   // ── Media (Feed) ───────────────────────────────────────────────────────────
