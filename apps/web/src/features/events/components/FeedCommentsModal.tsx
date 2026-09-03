@@ -130,7 +130,7 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
                   </div>
                   <div className="flex items-center gap-3 mt-1 px-1">
                     <span className="text-[11px] text-gray-400">
-                      {new Date(comment.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      {new Date(comment.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </span>
                     {(currentUser?.id === comment.userId || currentUser?.id === organizerId) ? (
                       <button
