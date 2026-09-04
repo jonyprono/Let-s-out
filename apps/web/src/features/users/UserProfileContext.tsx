@@ -32,8 +32,8 @@ export function UserProfileProvider({ children }: { children: React.ReactNode })
 
   const openUserProfile = useCallback((
     userId: string, 
-    preview?: { displayName?: string; avatarUrl?: string | null },
-    commonGroup?: { title: string, coverUrl?: string | null }
+    _preview?: { displayName?: string; avatarUrl?: string | null },
+    _commonGroup?: { title: string, coverUrl?: string | null }
   ) => {
     navigate(`/profile/${userId}`)
   }, [navigate])
