@@ -1619,7 +1619,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
         // Exclude comments from deleted accounts
         user: { deletedAt: null, isActive: true },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { createdAt: 'desc' },
       include: { user: { include: { profile: true } } }
     })
     return reply.send({ data: comments })

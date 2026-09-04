@@ -9,6 +9,7 @@ import { ShareModal } from '@/components/shared/ShareModal'
 import { FeedCommentsModal } from '@/features/events/components/FeedCommentsModal'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
+import { useAuthStore } from '@/stores/auth.store'
 
 // ─── Shared: Attendee Avatars Row ────────────────────────────────────────────
 function AttendeesRow({ attendees, count, size = 24 }: {
@@ -85,6 +86,7 @@ function FeedInteractionBar({
   const [showComments, setShowComments] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const currentUser = useAuthStore(s => s.user)
   const [optimisticAction, setOptimisticAction] = useState<{ emoji: string | null, diff: number } | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -118,7 +120,10 @@ function FeedInteractionBar({
       ? Object.values(reactionsData).reduce((s, v) => s + v.count, 0)
       : (event._count?.reactions ?? 0)
 
-  const myEmoji = event.reactions?.[0]?.emoji ?? null
+  // Compute myEmoji securely from fresh reactionsData instead of relying on the feed's event object
+  const myEmoji = currentUser && reactionsData
+    ? Object.entries(reactionsData).find(([_, data]) => data.users.some(u => u.id === currentUser.id))?.[0] ?? null
+    : event.reactions?.[0]?.emoji ?? null
 
   const reactionMutation = useMutation({
     mutationFn: async (emoji: string) => {
@@ -136,11 +141,8 @@ function FeedInteractionBar({
       })
     },
     onSettled: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ['events', event.id, 'reactions'] }),
-        qc.invalidateQueries({ queryKey: ['events'] })
-      ])
-      // Clear optimistic state ONLY AFTER the fresh data has been fetched and applied
+      await qc.invalidateQueries({ queryKey: ['events', event.id, 'reactions'] })
+      // Clear optimistic state ONLY AFTER the fresh reactions data has been fetched
       setOptimisticAction(null)
     },
   })
