@@ -1528,7 +1528,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
       })
 
       if (existing) {
-        if (existing.emoji === emoji || emoji === '❤️') { // Default click toggles off
+        if (existing.emoji === emoji) {
+          // Même emoji → on retire (toggle off)
           await app.prisma.eventReaction.delete({ where: { id: existing.id } })
           req.log.info({ reactionId: existing.id, eventId, userId, emoji, action: 'removed' }, '[REACTION] Reaction removed')
           return reply.send({ success: true, action: 'removed' })
