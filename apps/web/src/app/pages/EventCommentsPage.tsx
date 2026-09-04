@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
-import { ArrowLeft, Send, Loader2, MoreHorizontal, Heart, ChevronDown } from 'lucide-react'
+import { ArrowLeft, Send, Loader2, MoreHorizontal, Heart, ChevronDown, MessageCircle } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 
 interface Comment {
@@ -56,6 +56,19 @@ export function EventCommentsPage() {
     enabled: !!eventId,
   })
 
+  // Fetch event data for the cover image
+  const { data: eventData } = useQuery({
+    queryKey: ['events', eventId],
+    queryFn: async () => {
+      const res = await apiClient.get<{ data: any }>(`/events/${eventId}`)
+      return res.data.data
+    },
+    enabled: !!eventId,
+  })
+
+  const coverUrl = eventData?.coverUrl ?? eventData?.mediaUrls?.[0] ?? null
+  const resolvedTitle = eventData?.title ?? eventTitle
+
   const postMutation = useMutation({
     mutationFn: async (text: string) => {
       const res = await apiClient.post<{ data: Comment }>(`/events/${eventId}/comments`, { content: text })
@@ -97,25 +110,81 @@ export function EventCommentsPage() {
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-white dark:bg-[#111]" id="event-comments-page">
-      {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-4 pt-safe pt-4 pb-3 border-b border-gray-100 dark:border-white/5 flex-shrink-0">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center"
+
+      {/* ── Hero image header ── */}
+      <div className="relative flex-shrink-0">
+        {/* Cover image */}
+        <div
+          className="w-full bg-gray-200 dark:bg-gray-800"
+          style={{ height: coverUrl ? 180 : 0 }}
         >
-          <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-white" />
-        </button>
-        <div className="flex-1">
-          <h1 className="font-bold text-[17px] text-gray-900 dark:text-white leading-tight">
-            Commentaires {comments.length > 0 && <span className="text-gray-400 font-normal text-[15px]">({comments.length})</span>}
-          </h1>
-          {eventTitle && (
-            <p className="text-[12px] text-gray-400 truncate">{eventTitle}</p>
+          {coverUrl && (
+            <img
+              src={coverUrl}
+              alt={resolvedTitle}
+              className="w-full h-full object-cover"
+            />
+          )}
+          {/* Gradient overlay for readability */}
+          {coverUrl && (
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent" />
           )}
         </div>
-        <button className="flex items-center gap-1 text-[13px] font-medium text-gray-500 dark:text-gray-400">
-          Les plus récents <ChevronDown className="w-4 h-4" />
-        </button>
+
+        {/* Back button + title — always on top of image or plain bg */}
+        <div
+          className={`absolute top-0 left-0 right-0 flex items-center gap-3 px-4 pb-3 pt-safe-6 ${
+            !coverUrl ? 'relative bg-white dark:bg-[#111] border-b border-gray-100 dark:border-white/5' : ''
+          }`}
+        >
+          <button
+            onClick={() => navigate(-1)}
+            className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+              coverUrl
+                ? 'bg-black/30 backdrop-blur-sm'
+                : 'bg-gray-100 dark:bg-white/10'
+            }`}
+          >
+            <ArrowLeft className={`w-5 h-5 ${coverUrl ? 'text-white' : 'text-gray-700 dark:text-white'}`} />
+          </button>
+          <div className="flex-1 min-w-0">
+            <p className={`text-[11px] font-medium uppercase tracking-wide ${
+              coverUrl ? 'text-white/70' : 'text-gray-400'
+            }`}>Commentaires</p>
+            {resolvedTitle && (
+              <h1 className={`font-bold text-[15px] leading-tight truncate ${
+                coverUrl ? 'text-white' : 'text-gray-900 dark:text-white'
+              }`}>
+                {resolvedTitle}
+              </h1>
+            )}
+          </div>
+          <button className={`flex items-center gap-1 text-[12px] font-medium flex-shrink-0 ${
+            coverUrl ? 'text-white/80' : 'text-gray-500'
+          }`}>
+            Les plus récents <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Bottom strip with comment count — only shown when no cover */}
+        {!coverUrl && (
+          <div className="px-4 py-2 border-b border-gray-100 dark:border-white/5 flex items-center gap-2">
+            <MessageCircle className="w-4 h-4 text-[#FF7A00]" />
+            <span className="text-[14px] font-semibold text-gray-900 dark:text-white">
+              {comments.length} commentaire{comments.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
+
+        {/* When cover image is present, show count below */}
+        {coverUrl && (
+          <div className="px-4 py-2.5 border-b border-gray-100 dark:border-white/5 flex items-center gap-2 bg-white dark:bg-[#111]">
+            <MessageCircle className="w-4 h-4 text-[#FF7A00]" />
+            <span className="text-[14px] font-semibold text-gray-900 dark:text-white">
+              {comments.length} commentaire{comments.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Comment list ── */}
