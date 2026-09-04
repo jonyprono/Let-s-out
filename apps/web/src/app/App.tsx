@@ -122,6 +122,7 @@ import { AdminBadgesPage } from './components/admin/AdminBadgesPage'
 import AdminSettingsPage from './components/admin/AdminSettingsPage'
 import AdminUsersPage from './components/admin/AdminUsersPage'
 import AdminEventsPage from './components/admin/AdminEventsPage'
+import { EventCommentsPage } from '@/app/pages/EventCommentsPage'
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
@@ -316,6 +317,7 @@ export default function App() {
             <Route path="/events/:id/validators-vote" element={<EventValidatorsVote />} />
             <Route path="/events/:id/pool-validation" element={<EventPoolValidation />} />
             <Route path="/events/:id/success" element={<EventSuccessScreen />} />
+            <Route path="/events/:id/comments" element={<EventCommentsPage />} />
             <Route path="/scan-qr" element={<JoinPrivateEvent />} />
             <Route path="/events/:id/pay" element={<PaymentPage />} />
             <Route path="/payments/:bookingId" element={<PaymentReceipt />} />

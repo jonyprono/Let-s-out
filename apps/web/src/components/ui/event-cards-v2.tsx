@@ -6,10 +6,10 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { Event } from '@/features/events/api'
 import { useFavoritesStore } from '@/stores/favorites.store'
 import { ShareModal } from '@/components/shared/ShareModal'
-import { FeedCommentsModal } from '@/features/events/components/FeedCommentsModal'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { useNavigate } from 'react-router'
 
 // ─── Shared: Attendee Avatars Row ────────────────────────────────────────────
 function AttendeesRow({ attendees, count, size = 24 }: {
@@ -83,7 +83,7 @@ function FeedInteractionBar({
   dark?: boolean
 }) {
   const qc = useQueryClient()
-  const [showComments, setShowComments] = useState(false)
+  const navigate = useNavigate()
   const [showShareModal, setShowShareModal] = useState(false)
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const currentUser = useAuthStore(s => s.user)
@@ -216,7 +216,9 @@ function FeedInteractionBar({
 
         {/* ── Comment ── */}
         <button
-          onClick={() => setShowComments(true)}
+          onClick={() => navigate(`/events/${event.id}/comments`, {
+            state: { organizerId, eventTitle: event.title }
+          })}
           className={`flex items-center justify-center gap-1.5 flex-1 py-0.5 text-[13px] font-medium ${tc}`}
         >
           <MessageCircle className="w-[15px] h-[15px]" />
@@ -234,14 +236,6 @@ function FeedInteractionBar({
         </button>
       </div>
 
-      {showComments && (
-        <FeedCommentsModal
-          eventId={event.id}
-          organizerId={organizerId}
-          open={showComments}
-          onClose={() => setShowComments(false)}
-        />
-      )}
       {showShareModal && (
         <ShareModal
           eventId={event.id}
