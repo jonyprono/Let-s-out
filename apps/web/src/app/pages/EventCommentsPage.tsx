@@ -37,9 +37,9 @@ export function EventCommentsPage() {
   const qc = useQueryClient()
   const currentUser = useAuthStore(s => s.user)
 
-  // organizerId peut être passé via state de navigation
   const organizerId: string | undefined = (location.state as any)?.organizerId
   const eventTitle: string | undefined = (location.state as any)?.eventTitle
+  const stateCoverUrl: string | undefined = (location.state as any)?.coverUrl
 
   const [content, setContent] = useState('')
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null)
@@ -66,7 +66,7 @@ export function EventCommentsPage() {
     enabled: !!eventId,
   })
 
-  const coverUrl = eventData?.coverUrl ?? eventData?.mediaUrls?.[0] ?? null
+  const coverUrl = stateCoverUrl ?? eventData?.coverUrl ?? eventData?.mediaUrls?.[0] ?? null
   const resolvedTitle = eventData?.title ?? eventTitle
 
   const postMutation = useMutation({
@@ -210,7 +210,10 @@ export function EventCommentsPage() {
             return (
               <div key={comment.id} className="flex gap-3">
                 {/* Avatar */}
-                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex-shrink-0 overflow-hidden border border-gray-200 dark:border-white/10">
+                <div 
+                  onClick={() => navigate(`/profile/${comment.userId}`)}
+                  className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex-shrink-0 overflow-hidden border border-gray-200 dark:border-white/10 cursor-pointer"
+                >
                   {comment.user.profile?.avatarUrl ? (
                     <img src={comment.user.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
                   ) : (

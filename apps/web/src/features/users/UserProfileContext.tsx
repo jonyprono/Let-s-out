@@ -6,8 +6,8 @@
  *   const { openUserProfile } = useUserProfile()
  *   openUserProfile(someUserId)
  */
-import { createContext, useContext, useState, useCallback } from 'react'
-import { UserProfileSheet } from '@/features/users/components/UserProfileSheet'
+import { createContext, useContext, useCallback } from 'react'
+import { useNavigate } from 'react-router'
 
 interface UserProfileContextValue {
   openUserProfile: (
@@ -28,35 +28,23 @@ export function useUserProfile() {
 }
 
 export function UserProfileProvider({ children }: { children: React.ReactNode }) {
-  const [target, setTarget] = useState<{ 
-    userId: string; 
-    preview?: { displayName?: string; avatarUrl?: string | null },
-    commonGroup?: { title: string, coverUrl?: string | null }
-  } | null>(null)
+  const navigate = useNavigate()
 
   const openUserProfile = useCallback((
     userId: string, 
     preview?: { displayName?: string; avatarUrl?: string | null },
     commonGroup?: { title: string, coverUrl?: string | null }
   ) => {
-    setTarget({ userId, preview, commonGroup })
-  }, [])
+    navigate(`/profile/${userId}`)
+  }, [navigate])
 
   const closeUserProfile = useCallback(() => {
-    setTarget(null)
+    // No-op since we navigate now
   }, [])
 
   return (
     <UserProfileContext.Provider value={{ openUserProfile, closeUserProfile }}>
       {children}
-      {target && (
-        <UserProfileSheet
-          userId={target.userId}
-          preview={target.preview}
-          commonGroup={target.commonGroup}
-          onClose={closeUserProfile}
-        />
-      )}
     </UserProfileContext.Provider>
   )
 }

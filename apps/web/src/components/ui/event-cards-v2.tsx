@@ -217,7 +217,7 @@ function FeedInteractionBar({
         {/* ── Comment ── */}
         <button
           onClick={() => navigate(`/events/${event.id}/comments`, {
-            state: { organizerId, eventTitle: event.title }
+            state: { organizerId, eventTitle: event.title, coverUrl: event.coverUrl ?? event.mediaUrls?.[0] }
           })}
           className={`flex items-center justify-center gap-1.5 flex-1 py-0.5 text-[13px] font-medium ${tc}`}
         >
