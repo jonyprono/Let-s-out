@@ -4,7 +4,6 @@ import { X, Upload, Loader2, CheckCircle2, AlertCircle, Film, ChevronDown } from
 import { apiClient } from '@/lib/api-client'
 import { videosApi } from '@/features/videos/api'
 import { toast } from 'sonner'
-import { useAuthStore } from '@/stores/auth.store'
 
 const CATEGORY_LABELS: Record<string, string> = {
   MUSIC: '🎵 Musique',
@@ -33,7 +32,6 @@ interface UploadVideoModalProps {
 }
 
 export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCategory, onClose, onSuccess }: UploadVideoModalProps) {
-  const currentUser = useAuthStore(s => s.user)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Form state — jamais effacé en cas d'erreur d'upload

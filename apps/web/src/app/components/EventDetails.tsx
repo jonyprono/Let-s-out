@@ -171,7 +171,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const [showPoolManagementModal, setShowPoolManagementModal] = useState(false)
   const [showRefundModal, setShowRefundModal] = useState(false)
   const [refundReason, setRefundReason] = useState('')
-  const [showReportModal, setShowReportModal] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [reportDescription, setReportDescription] = useState('')
 
@@ -288,18 +287,6 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     },
   })
 
-  const reportMutation = useMutation({
-    mutationFn: () => eventsApi.report(id!, { reason: reportReason, description: reportDescription }),
-    onSuccess: () => {
-      setShowReportModal(false)
-      setReportReason('')
-      setReportDescription('')
-      toast.success('Événement signalé avec succès.')
-    },
-    onError: (err: any) => {
-      toast.error(err?.response?.data?.error || "Erreur lors du signalement.")
-    }
-  })
 
   const refundMutation = useMutation({
     mutationFn: (reason: string) => eventsApi.requestRefund(id!, reason),

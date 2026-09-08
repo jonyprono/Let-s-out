@@ -619,8 +619,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
       {showUploadModal && (
         <UploadVideoModal
-          isOpen={showUploadModal}
           onClose={() => setShowUploadModal(false)}
+          onSuccess={() => setShowUploadModal(false)}
         />
       )}
 
