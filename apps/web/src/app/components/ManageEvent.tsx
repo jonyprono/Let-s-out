@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Film } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
@@ -18,6 +18,7 @@ import { useFriends } from '@/features/users/api';
 import { eventsApi } from '@/features/events/api';
 import { chatApi } from '@/features/chat/api';
 import { ValidatorVoteForm } from './ValidatorVoteForm';
+import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
 
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
@@ -149,8 +150,10 @@ export function ManageEvent() {
 function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
   const navigate = useNavigate();
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const qc = useQueryClient();
+  const isEventEnded = event.endAt ? new Date(event.endAt) < new Date() : false;
   const { data: usersData, isLoading: isLoadingFriends } = useQuery({
     queryKey: ['users-search', searchQuery],
     queryFn: async () => {
@@ -255,6 +258,17 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
         )}
       </div>
 
+      {/* Bouton Moments Forts — visible uniquement si l'événement est terminé */}
+      {isEventEnded && (
+        <button
+          onClick={() => setShowUploadModal(true)}
+          className="w-full py-3.5 mb-3 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FFA755] text-[14px] font-semibold text-white active:scale-95 transition-transform shadow-sm"
+        >
+          <Film className="w-4 h-4" />
+          Ajouter des moments forts
+        </button>
+      )}
+
       {/* Bouton rejoindre le chat de l'événement */}
       <button
         onClick={async () => {
@@ -272,6 +286,16 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
         </svg>
         Rejoindre le chat de l'événement
       </button>
+
+      {showUploadModal && (
+        <UploadVideoModal
+          eventId={event.id}
+          eventTitle={event.title}
+          eventCategory={event.category}
+          onClose={() => setShowUploadModal(false)}
+          onSuccess={() => setShowUploadModal(false)}
+        />
+      )}
 
       {showSearchModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">

@@ -1699,4 +1699,25 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(500).send({ error: 'Upload failed' })
     }
   })
+
+  // ── Report an event ────────────────────────────────────────────────────────
+  app.post('/:id/report', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id: eventId } = req.params as { id: string }
+    const { reason, description } = req.body as { reason: string, description?: string }
+
+    const event = await app.prisma.event.findUnique({ where: { id: eventId } })
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+
+    const report = await app.prisma.report.create({
+      data: {
+        reporterId: userId,
+        eventId: eventId,
+        reason: reason as any,
+        description,
+      }
+    })
+
+    return reply.send({ success: true, data: report })
+  })
 }

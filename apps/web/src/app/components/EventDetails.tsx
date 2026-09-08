@@ -14,7 +14,8 @@ import {
   Briefcase,
   Users,
   Navigation,
-  Shield
+  Shield,
+  Flag
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -170,6 +171,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const [showPoolManagementModal, setShowPoolManagementModal] = useState(false)
   const [showRefundModal, setShowRefundModal] = useState(false)
   const [refundReason, setRefundReason] = useState('')
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDescription, setReportDescription] = useState('')
 
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const favorite = isFavorite(id || '')
@@ -282,6 +286,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         toast.error(err?.response?.data?.message || "Impossible de rejoindre l'événement.")
       }
     },
+  })
+
+  const reportMutation = useMutation({
+    mutationFn: () => eventsApi.report(id!, { reason: reportReason, description: reportDescription }),
+    onSuccess: () => {
+      setShowReportModal(false)
+      setReportReason('')
+      setReportDescription('')
+      toast.success('Événement signalé avec succès.')
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.error || "Erreur lors du signalement.")
+    }
   })
 
   const refundMutation = useMutation({
@@ -539,6 +556,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   <PencilEdit01Icon className="w-5 h-5" strokeWidth={2} />
                 </button>
               )}
+              <button onClick={() => setShowReportModal(true)} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
+                <Flag className="w-5 h-5" strokeWidth={1.8} />
+              </button>
               <button onClick={handleShare} className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[var(--color-icon-secondary)]">
                 <Share08Icon className="w-5 h-5" strokeWidth={1.8} />
               </button>

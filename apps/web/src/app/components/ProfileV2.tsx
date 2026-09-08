@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2 } from 'lucide-react';
+import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, Shield } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -11,13 +11,16 @@ import { chatApi } from '@/features/chat/api';
 import { useNavigate, useParams, useLocation } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
 import { toast } from 'sonner';
+import { videosApi } from '@/features/videos/api';
+import { VideoCard } from '@/features/videos/components/VideoCard';
+import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
 
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
 }
 
-type Tab = 'profil' | 'events' | 'friends' | 'following';
+type Tab = 'profil' | 'events' | 'friends' | 'following' | 'videos';
 
 export function ProfileV2({ onNavigate }: ProfileProps) {
   const user = useAuthStore((s) => s.user);
@@ -27,9 +30,11 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const { username } = useParams<{ username?: string }>();
   const location = useLocation();
   const preloadedProfile = location.state?.profile;
+  const [showBlockModal, setShowBlockModal] = useState(false);
 
   // Scroll to top whenever the profile page mounts
   useEffect(() => {
@@ -58,6 +63,14 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     queryFn: () => usersApi.getActivity(targetUserId!),
     enabled: !!targetUserId,
   });
+
+  // Videos of this user
+  const { data: videosData } = useQuery({
+    queryKey: ['videos', 'user', targetUserId],
+    queryFn: () => videosApi.list({ userId: targetUserId }),
+    enabled: !!targetUserId,
+  })
+  const userVideos = videosData?.data ?? []
 
   // My own friends list (for stats + badge progress)
   const { data: friendsData } = useQuery({
@@ -133,6 +146,23 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     },
   });
 
+  // Block/Unblock mutation
+  const blockMut = useMutation({
+    mutationFn: async () => {
+      if (effectiveFriendStatus === 'blocked') {
+        await usersApi.unblockUser(targetUserId!);
+      } else {
+        await usersApi.blockUser(targetUserId!);
+      }
+    },
+    onMutate: () => setShowBlockModal(false),
+    onSuccess: () => {
+      toast.success(effectiveFriendStatus === 'blocked' ? 'Utilisateur débloqué.' : 'Utilisateur bloqué.');
+      qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] });
+    },
+    onError: () => toast.error('Erreur lors de l\'action.')
+  });
+
   // Navigate to chat
   const handleMessage = async () => {
     try {
@@ -202,6 +232,14 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border border-gray-200"
             >
               <Settings className="w-5 h-5 text-gray-700 dark:text-white" />
+            </button>
+          )}
+          {!isOwnProfile && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowBlockModal(true); }}
+              className={`w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border ${effectiveFriendStatus === 'blocked' ? 'border-red-500 text-red-500' : 'border-gray-200 text-gray-700 dark:text-white'}`}
+            >
+              <Shield className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -282,29 +320,39 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </button>
 
             {/* Add Friend Button */}
-            <button
-              onClick={() => {
-                if (effectiveFriendStatus === 'none') friendMut.mutate();
-              }}
-              disabled={friendMut.isPending || effectiveFriendStatus !== 'none'}
-              className={`flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-1.5 border transition-all active:scale-95 ${
-                effectiveFriendStatus === 'friend'
-                  ? 'bg-[#FF7A00] text-white border-[#FF7A00]'
-                  : effectiveFriendStatus === 'pending_sent'
-                  ? 'bg-[#FF7A00]/50 text-white border-[#FF7A00]/50'
-                  : 'bg-white text-gray-700 border-gray-200'
-              }`}
-            >
-              {friendMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : effectiveFriendStatus === 'friend' ? <UserCheck className="w-3.5 h-3.5" />
-                : effectiveFriendStatus === 'pending_sent' ? <Check className="w-3.5 h-3.5" />
-                : <UserPlus className="w-3.5 h-3.5" />
-              }
-              {effectiveFriendStatus === 'friend' ? 'Amis'
-                : effectiveFriendStatus === 'pending_sent' ? 'Ajouté'
-                : 'Ajouter'
-              }
-            </button>
+            {effectiveFriendStatus !== 'blocked' && (
+              <button
+                onClick={() => {
+                  if (effectiveFriendStatus === 'none') friendMut.mutate();
+                }}
+                disabled={friendMut.isPending || effectiveFriendStatus !== 'none'}
+                className={`flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-1.5 border transition-all active:scale-95 ${
+                  effectiveFriendStatus === 'friend'
+                    ? 'bg-[#FF7A00] text-white border-[#FF7A00]'
+                    : effectiveFriendStatus === 'pending_sent'
+                    ? 'bg-[#FF7A00]/50 text-white border-[#FF7A00]/50'
+                    : 'bg-white text-gray-700 border-gray-200'
+                }`}
+              >
+                {friendMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : effectiveFriendStatus === 'friend' ? <UserCheck className="w-3.5 h-3.5" />
+                  : effectiveFriendStatus === 'pending_sent' ? <Check className="w-3.5 h-3.5" />
+                  : <UserPlus className="w-3.5 h-3.5" />
+                }
+                {effectiveFriendStatus === 'friend' ? 'Amis'
+                  : effectiveFriendStatus === 'pending_sent' ? 'Ajouté'
+                  : 'Ajouter'
+                }
+              </button>
+            )}
+            {effectiveFriendStatus === 'blocked' && (
+              <button
+                disabled
+                className="flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-1.5 border border-red-200 bg-red-50 text-red-500"
+              >
+                Utilisateur bloqué
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -392,6 +440,16 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'following' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span className="font-poppins font-medium text-[12px] leading-[16px]">Abonnements</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('videos')}
+            className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
+              activeTab === 'videos' ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/10' : 'bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400'
+            }`}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'videos' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Vidéos</span>
           </button>
         </div>
       </div>
@@ -531,9 +589,63 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
           </div>
         )}
+        {activeTab === 'videos' && (
+          <div>
+            {isOwnProfile && (
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="w-full py-3 mb-4 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF7A00] to-[#FFA755] text-white font-semibold text-[14px]"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                Publier des moments forts
+              </button>
+            )}
+            {userVideos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <p className="text-[14px] font-medium text-gray-500">Aucune vidéo publiée</p>
+                {isOwnProfile && <p className="text-[12px] text-gray-400 mt-1">Partagez vos moments forts d'événements passés</p>}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {userVideos.map((v: any) => (
+                  <VideoCard key={v.id} video={v} onClick={() => {}} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
+      {showUploadModal && (
+        <UploadVideoModal
+          isOpen={showUploadModal}
+          onClose={() => setShowUploadModal(false)}
+        />
+      )}
+
+      {showBlockModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 pb-safe animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-6 shadow-xl animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
+            <h3 className="text-xl font-bold text-center mb-2">{effectiveFriendStatus === 'blocked' ? 'Débloquer' : 'Bloquer'} cet utilisateur ?</h3>
+            <p className="text-sm text-center text-gray-500 mb-6">
+              {effectiveFriendStatus === 'blocked' 
+                ? 'L\'utilisateur pourra de nouveau interagir avec vous et voir votre profil.' 
+                : 'L\'utilisateur ne pourra plus vous envoyer de messages, voir votre profil complet ni interagir avec vous.'}
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowBlockModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl font-semibold">Annuler</button>
+              <button 
+                onClick={() => blockMut.mutate()} 
+                disabled={blockMut.isPending}
+                className="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold flex items-center justify-center"
+              >
+                {blockMut.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

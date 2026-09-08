@@ -1078,4 +1078,53 @@ export default async function usersRoutes(app: FastifyInstance) {
       }
     })
   })
+
+  // ── Block / Unblock User ──────────────────────────────────────────────────
+  app.post('/:userId/block', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { userId } = req.params as { userId: string }
+
+    if (sub === userId) return reply.code(400).send({ error: 'Cannot block yourself' })
+
+    const userToBlock = await app.prisma.user.findUnique({ where: { id: userId } })
+    if (!userToBlock) return reply.code(404).send({ error: 'User not found' })
+
+    await app.prisma.userBlock.upsert({
+      where: { blockerId_blockedId: { blockerId: sub, blockedId: userId } },
+      create: { blockerId: sub, blockedId: userId },
+      update: {}
+    })
+
+    // Remove any existing accepted/pending friendship between the two
+    await app.prisma.friendship.deleteMany({
+      where: {
+        OR: [
+          { initiatorId: sub, receiverId: userId },
+          { initiatorId: userId, receiverId: sub }
+        ]
+      }
+    })
+
+    // Create a BLOCKED friendship record to ensure backward compatibility with existing getBlockedIds logic
+    await app.prisma.friendship.create({
+      data: { initiatorId: sub, receiverId: userId, status: 'BLOCKED' },
+    })
+
+    return reply.send({ success: true, message: 'User blocked' })
+  })
+
+  app.post('/:userId/unblock', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { userId } = req.params as { userId: string }
+
+    await app.prisma.userBlock.deleteMany({
+      where: { blockerId: sub, blockedId: userId }
+    })
+
+    await app.prisma.friendship.deleteMany({
+      where: { initiatorId: sub, receiverId: userId, status: 'BLOCKED' }
+    })
+
+    return reply.send({ success: true, message: 'User unblocked' })
+  })
 }

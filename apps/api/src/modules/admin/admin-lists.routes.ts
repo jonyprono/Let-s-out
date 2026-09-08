@@ -133,6 +133,7 @@ export default async function adminListsRoutes(app: FastifyInstance) {
       include: {
         reporter: { include: { profile: { select: { displayName: true, avatarUrl: true } } } },
         reported: { include: { profile: { select: { displayName: true, avatarUrl: true } } } },
+        event: { select: { title: true, id: true } },
       }
     });
     return reply.send({ data: reports });

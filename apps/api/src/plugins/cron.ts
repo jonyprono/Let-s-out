@@ -106,6 +106,63 @@ export default fp(async (fastify: FastifyInstance) => {
           }
         })
       }
+
+      // ── Event Reminders ──────────────────────────────────────────────────
+      const setting1 = await (fastify as any).prisma.systemSetting.findUnique({ where: { key: 'EVENT_REMINDER_1_HOURS' } })
+      const hours1 = setting1 && !isNaN(Number(setting1.value)) ? Number(setting1.value) : 24
+      
+      const setting2 = await (fastify as any).prisma.systemSetting.findUnique({ where: { key: 'EVENT_REMINDER_2_HOURS' } })
+      const hours2 = setting2 && !isNaN(Number(setting2.value)) ? Number(setting2.value) : 2
+
+      // Check for Reminder 1
+      const targetTime1 = new Date(now.getTime() + hours1 * 60 * 60 * 1000)
+      const events1 = await (fastify as any).prisma.event.findMany({
+        where: {
+          status: 'PUBLISHED',
+          reminder24hSent: false,
+          startAt: { gte: now, lte: targetTime1 }
+        },
+        include: { bookings: { where: { status: 'CONFIRMED' } } }
+      })
+
+      for (const ev of events1) {
+        if (ev.bookings.length > 0) {
+          const notifications = ev.bookings.map((b: any) => ({
+            userId: b.userId,
+            type: 'EVENT_REMINDER',
+            title: '⏰ Rappel d\'événement',
+            body: `L'événement "${ev.title}" commence dans moins de ${hours1} heures !`,
+            data: { eventId: ev.id, screen: 'event-details' }
+          }))
+          await createAndSendNotificationMany(fastify, notifications).catch(() => {})
+        }
+        await (fastify as any).prisma.event.update({ where: { id: ev.id }, data: { reminder24hSent: true } })
+      }
+
+      // Check for Reminder 2
+      const targetTime2 = new Date(now.getTime() + hours2 * 60 * 60 * 1000)
+      const events2 = await (fastify as any).prisma.event.findMany({
+        where: {
+          status: 'PUBLISHED',
+          reminder2hSent: false,
+          startAt: { gte: now, lte: targetTime2 }
+        },
+        include: { bookings: { where: { status: 'CONFIRMED' } } }
+      })
+
+      for (const ev of events2) {
+        if (ev.bookings.length > 0) {
+          const notifications = ev.bookings.map((b: any) => ({
+            userId: b.userId,
+            type: 'EVENT_REMINDER',
+            title: '⏳ Événement imminent',
+            body: `L'événement "${ev.title}" commence dans moins de ${hours2} heures ! Tenez-vous prêt.`,
+            data: { eventId: ev.id, screen: 'event-details' }
+          }))
+          await createAndSendNotificationMany(fastify, notifications).catch(() => {})
+        }
+        await (fastify as any).prisma.event.update({ where: { id: ev.id }, data: { reminder2hSent: true } })
+      }
     } catch (err: any) {
       fastify.log.error({ err }, 'Error running payout expiration cron:')
     }

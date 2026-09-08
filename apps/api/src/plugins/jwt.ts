@@ -12,6 +12,17 @@ export default fp(async (app) => {
   app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       await request.jwtVerify()
+      
+      const tokenUser = request.user as { sub: string }
+      if (tokenUser && tokenUser.sub) {
+        const user = await (app as any).prisma.user.findUnique({
+          where: { id: tokenUser.sub },
+          select: { isBanned: true }
+        })
+        if (user?.isBanned) {
+          return reply.code(403).send({ statusCode: 403, error: 'Forbidden', message: 'Votre compte a été suspendu.' })
+        }
+      }
     } catch {
       reply.code(401).send({ statusCode: 401, error: 'Unauthorized', message: 'Invalid or expired token' })
     }

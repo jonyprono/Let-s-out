@@ -181,6 +181,15 @@ apiClient.interceptors.response.use(
       }
     }
 
+    // ── 403: Forbidden (e.g. Account Banned) ──────────────────────────────
+    if (error.response?.status === 403 && error.response.data?.message?.includes('suspendu')) {
+      const wasAdmin = useAuthStore.getState().user?.role === 'ADMIN'
+      useAuthStore.getState().logout()
+      toast.error('Votre compte a été suspendu par un administrateur.')
+      window.location.href = wasAdmin ? '/admin/login' : '/login'
+      return Promise.reject(error)
+    }
+
     // ── 5xx server errors ──────────────────────────────────────────────────
     if (error.response?.status >= 500 && !isSilent(original.url)) {
       toast.error('Erreur serveur. Veuillez réessayer plus tard.')

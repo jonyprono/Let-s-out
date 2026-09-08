@@ -55,8 +55,27 @@ model User {
   eventReactions   EventReaction[]
   eventComments    EventComment[]
   eventMedias      EventMedia[]
+  eventVideos      EventVideo[]
+  blocksCreated    UserBlock[]          @relation("UserBlocker")
+  blocksReceived   UserBlock[]          @relation("UserBlocked")
+  isBanned         Boolean              @default(false)
+  banReason        String?
 
   @@map("users")
+}
+
+model UserBlock {
+  id         String   @id @default(cuid())
+  blockerId  String
+  blockedId  String
+  createdAt  DateTime @default(now())
+  
+  blocker    User     @relation("UserBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked    User     @relation("UserBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("user_blocks")
 }
 
 model Profile {
@@ -204,6 +223,10 @@ model Event {
   reactions        EventReaction[]
   comments         EventComment[]
   medias           EventMedia[]
+  videos           EventVideo[]
+  reports          Report[]
+  reminder24hSent  Boolean       @default(false)
+  reminder2hSent   Boolean       @default(false)
 
   @@index([creatorId])
   @@index([status])
@@ -445,16 +468,19 @@ model Friendship {
 model Report {
   id          String       @id @default(cuid())
   reporterId  String
-  reportedId  String
+  reportedId  String?
+  eventId     String?
   reason      ReportReason
   description String?
   status      ReportStatus @default(PENDING)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  reported    User         @relation("Reported", fields: [reportedId], references: [id])
+  reported    User?        @relation("Reported", fields: [reportedId], references: [id])
   reporter    User         @relation("Reporter", fields: [reporterId], references: [id])
+  event       Event?       @relation(fields: [eventId], references: [id])
 
   @@index([reportedId])
+  @@index([eventId])
   @@map("reports")
 }
 
@@ -616,6 +642,7 @@ enum NotifType {
   POOL_UNLOCK_APPROVED
   POOL_VOTE_STARTED
   POOL_PAYOUT
+  EVENT_REMINDER
 }
 
 enum PaymentStatus {
@@ -642,6 +669,9 @@ enum ReportReason {
   SCAM
   HATE_SPEECH
   OTHER
+  ILLEGAL
+  PORNOGRAPHIC
+  IDENTITY_THEFT
 }
 
 enum ReportStatus {
@@ -817,4 +847,30 @@ model EventMedia {
   @@index([uploadedBy])
   @@index([createdAt])
   @@map("event_medias")
+}
+// ── Vidéos de moments forts liés aux événements ────────────────────────────
+model EventVideo {
+  id           String        @id @default(cuid())
+  userId       String        // Participant-uploadeur
+  eventId      String        // Événement associé (doit être terminé)
+
+  url          String        // URL Cloudinary de la vidéo
+  thumbnailUrl String?       // Miniature générée automatiquement par Cloudinary
+  title        String        // Ex: "Aftermovie", "Meilleurs moments"
+  category     EventCategory // Réutilise l'enum EventCategory existant
+  duration     Int           // Durée en secondes
+
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?     // Soft Delete
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event        Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([userId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("event_videos")
 }

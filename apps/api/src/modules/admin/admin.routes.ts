@@ -548,6 +548,42 @@ export default async function adminRoutes(app: FastifyInstance) {
     return reply.send({ success: true })
   })
 
+  // ── Bannissement d'utilisateur ────────────────────────────────────
+  app.post('/users/:id/ban', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const { reason } = req.body as { reason?: string }
+
+    const user = await app.prisma.user.findUnique({ where: { id } })
+    if (!user) return reply.code(404).send({ error: 'Utilisateur introuvable' })
+
+    const updatedUser = await app.prisma.user.update({
+      where: { id },
+      data: { isBanned: true, banReason: reason || 'Banni par un administrateur' }
+    })
+
+    // Revoke all active sessions
+    await app.prisma.refreshToken.updateMany({
+      where: { userId: id, revokedAt: null },
+      data: { revokedAt: new Date() }
+    })
+
+    return reply.send({ success: true, data: updatedUser })
+  })
+
+  app.post('/users/:id/unban', async (req, reply) => {
+    const { id } = req.params as { id: string }
+
+    const user = await app.prisma.user.findUnique({ where: { id } })
+    if (!user) return reply.code(404).send({ error: 'Utilisateur introuvable' })
+
+    const updatedUser = await app.prisma.user.update({
+      where: { id },
+      data: { isBanned: false, banReason: null }
+    })
+
+    return reply.send({ success: true, data: updatedUser })
+  })
+
   // Register stats routes
   app.register(adminStatsRoutes)
   app.register(adminListsRoutes)
