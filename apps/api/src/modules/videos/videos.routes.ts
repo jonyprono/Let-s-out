@@ -1,4 +1,4 @@
-﻿import { FastifyInstance } from 'fastify'
+import { FastifyInstance } from 'fastify'
 
 // Génère la miniature Cloudinary automatiquement depuis l'URL vidéo
 // Ex: .../upload/v123/xyz.mp4 → .../upload/w_480,h_270,c_fill,so_auto/v123/xyz.jpg
@@ -157,3 +157,5 @@ export async function videoRoutes(app: FastifyInstance) {
     return reply.code(204).send()
   })
 }
+
+export default videoRoutes
