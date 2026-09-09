@@ -805,7 +805,7 @@ export function ChatDetails() {
           </div>
         ) : (
           (() => {
-            const filteredMessages = messages.filter(msg => !localDeletedMessages.includes(msg.id));
+            const filteredMessages = [...messages].reverse().filter(msg => !localDeletedMessages.includes(msg.id));
             return filteredMessages.map((msg, index) => {
               const isSystem = msg.type === 'SYSTEM'
               const isMe = !isSystem && msg.senderId === user?.id
