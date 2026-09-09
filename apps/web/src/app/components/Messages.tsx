@@ -47,11 +47,8 @@ export function Messages(_props: MessagesProps) {
       queryFn: () => chatApi.getConversation(convId),
       staleTime: 5 * 60 * 1000,
     })
-    queryClient.prefetchQuery({
-      queryKey: ['chat', 'messages', convId],
-      queryFn: () => chatApi.getMessages(convId),
-      staleTime: 5 * 60 * 1000,
-    })
+    // Note: messages are NOT prefetched here to avoid storing unsorted data in the cache.
+    // sortMessagesNewestFirst is only applied in useConversationMessages (chat/api.ts).
   }, [conversations, user?.id, queryClient])
 
   const [pinnedConvs, setPinnedConvs] = useState<string[]>(() => {

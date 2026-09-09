@@ -158,15 +158,29 @@ export function useChatSocket() {
     const handler: MessageHandler = (data) => {
       if (data.type === 'new_message') {
         const userId = useAuthStore.getState().user?.id
-        if (data.message && data.message.senderId !== userId) {
-          sendGlobal({ type: 'delivered', conversationId: data.message.conversationId, messageId: data.message.id })
+        const msg = data.message
+        if (!msg) return
+
+        if (msg.senderId !== userId) {
+          // Incoming message from someone else:
+          // 1. Send delivered receipt
+          sendGlobal({ type: 'delivered', conversationId: msg.conversationId, messageId: msg.id })
+          // 2. Prepend the new message directly into cache (no refetch = no scroll jump)
+          qc.setQueryData<any[]>(['chat', 'messages', msg.conversationId], (old = []) => {
+            // Avoid duplicates
+            if (old.some((m) => m.id === msg.id)) return old
+            return [msg, ...old]
+          })
         }
-        qc.invalidateQueries({ queryKey: ['chat', 'messages', data.message.conversationId] })
+        // Always refresh the conversation list (last message preview, unread count)
         qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
       }
-      
+
       if (data.type === 'delivered' || data.type === 'read') {
-        qc.invalidateQueries({ queryKey: ['chat', 'messages', data.conversationId] })
+        // Message status (sent → delivered → read) is derived from conversation.members
+        // (lastDeliveredAt / lastReadAt), NOT from the messages themselves.
+        // So we only need to refetch the conversation, not the full message list.
+        // Refetching messages here was the cause of the scroll-to-top bug.
         qc.invalidateQueries({ queryKey: ['chat', 'conversation', data.conversationId] })
         qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
       }

@@ -542,7 +542,7 @@ export default async function chatRoutes(app: FastifyInstance) {
               take: 1,
               include: { sender: { select: { profile: { select: { displayName: true } } } } },
             },
-            event: { select: { coverUrl: true } },
+            event: { select: { coverUrl: true, title: true } },
           },
         },
       },
@@ -571,6 +571,9 @@ export default async function chatRoutes(app: FastifyInstance) {
 
         return {
           ...c.conversation,
+          // Always use the live event title if available — avoids showing stale Conversation.name
+          // when the organizer renames the event after the conversation was created.
+          name: c.conversation.event?.title ?? c.conversation.name,
           avatarUrl: c.conversation.avatarUrl || c.conversation.event?.coverUrl || null,
           eventId: c.conversation.eventId,
           unread: unreadCount,
