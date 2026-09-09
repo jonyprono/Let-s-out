@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, CheckCircle2, XCircle, Loader2, Phone, Mail, Calendar, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, XCircle, Loader2, Phone, Mail, Calendar, ShieldAlert, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 import { kycAdminApi } from '@/features/admin/api/kyc-admin.api'
 import { KycStatusBadge } from '@/features/admin/components/KycStatusBadge'
@@ -91,6 +91,7 @@ export function AdminKycDetailPage() {
       {/* Info Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
+          { icon: FileText, label: "Document", value: data.kycDocumentType || 'Non spécifié', color: "text-orange-400", bg: "bg-orange-400/10" },
           { icon: Phone, label: "Téléphone", value: data.phone || '—', color: "text-blue-400", bg: "bg-blue-400/10" },
           { icon: Mail, label: "Email", value: data.email || '—', color: "text-purple-400", bg: "bg-purple-400/10" },
           { icon: Calendar, label: "Soumis le", value: data.kycSubmittedAt ? new Date(data.kycSubmittedAt).toLocaleString('fr-FR') : '—', color: "text-emerald-400", bg: "bg-emerald-400/10" },
@@ -133,7 +134,7 @@ export function AdminKycDetailPage() {
             { src: docs.selfie, label: "Selfie Portrait" },
             { src: docs.selfieWithId, label: "Selfie + Pièce d'identité" },
             { src: docs.idFront, label: "Pièce d'identité — Recto" },
-            { src: docs.idBack, label: "Pièce d'identité — Verso" }
+            ...(data.documents.idBack ? [{ src: docs.idBack, label: "Pièce d'identité — Verso" }] : [])
           ].map((doc, idx) => (
             <div key={idx} className="group flex flex-col gap-3">
               <div className="relative aspect-[3/4] rounded-3xl overflow-hidden border border-white/10 bg-black/40 shadow-xl transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-2xl group-hover:shadow-action-primary/20">

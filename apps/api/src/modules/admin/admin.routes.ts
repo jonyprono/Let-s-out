@@ -19,6 +19,7 @@ function mapKycRow(profile: any) {
     phone: u?.phone ?? null,
     email: u?.email ?? null,
     kycStatus: profile.kycStatus ?? 'pending',
+    kycDocumentType: profile.kycDocumentType ?? null,
     kycSubmittedAt: profile.kycSubmittedAt,
     kycReviewedAt: profile.kycReviewedAt,
     kycRejectedReason: profile.kycRejectedReason,

@@ -100,6 +100,7 @@ model Profile {
   updatedAt      DateTime  @updatedAt
   gender         String?
   kycStatus         String?   @default("pending") // pending | verified | rejected
+  kycDocumentType   KycDocumentType?
   kycIdNumber       String?
   kycFirstName      String?
   kycLastName       String?
@@ -116,6 +117,14 @@ model Profile {
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
+}
+
+enum KycDocumentType {
+  CIP
+  CARTE_BIOMETRIQUE
+  CARTE_IDENTITE_NATIONALE
+  PASSEPORT
+  PERMIS_CONDUIRE
 }
 
 model DeletedAccountTracker {

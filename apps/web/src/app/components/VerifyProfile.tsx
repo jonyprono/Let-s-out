@@ -9,9 +9,10 @@ import { Button } from '@/components/ui/button'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-type KycStep = 0 | 1 | 2 | 3 | 4
+type KycStep = 0 | 1 | 2 | 3 | 4 | 5
 type UploadStatus = 'idle' | 'uploading' | 'done' | 'error'
 type KycStatus = 'pending' | 'verified' | 'rejected' | null
+type DocumentType = 'CIP' | 'CARTE_BIOMETRIQUE' | 'CARTE_IDENTITE_NATIONALE' | 'PASSEPORT' | 'PERMIS_CONDUIRE'
 
 interface StepConfig {
   id: KycStep
@@ -20,6 +21,14 @@ interface StepConfig {
   instruction: string
   capture: 'environment' | 'user'
 }
+
+const DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
+  { value: 'CIP', label: 'CIP' },
+  { value: 'CARTE_BIOMETRIQUE', label: 'Carte biométrique' },
+  { value: 'CARTE_IDENTITE_NATIONALE', label: 'Carte d\'identité nationale' },
+  { value: 'PASSEPORT', label: 'Passeport' },
+  { value: 'PERMIS_CONDUIRE', label: 'Permis de conduire' },
+]
 
 // ── KYC Status Screen ──────────────────────────────────────────────────────────
 
@@ -186,28 +195,28 @@ function SelfieWithIdIllustration({ captured }: { captured: boolean }) {
 
 const STEPS: StepConfig[] = [
   {
-    id: 1,
+    id: 2,
     title: 'Pièce d\'identité — Recto',
-    subtitle: 'Photographiez le recto de votre CNI, passeport ou permis de conduire.',
+    subtitle: 'Photographiez le recto de votre document.',
     instruction: 'Assurez-vous que tous les coins sont visibles et que le texte est lisible.',
     capture: 'environment',
   },
   {
-    id: 2,
+    id: 3,
     title: 'Pièce d\'identité — Verso',
     subtitle: 'Photographiez maintenant le verso du même document.',
     instruction: 'Le document doit être posé sur une surface plane, sans reflet.',
     capture: 'environment',
   },
   {
-    id: 3,
+    id: 4,
     title: 'Votre selfie',
     subtitle: 'Prenez une photo de votre visage face à la caméra avant.',
     instruction: 'Retirez lunettes et chapeau, et assurez-vous d\'être bien éclairé.',
     capture: 'user',
   },
   {
-    id: 4,
+    id: 5,
     title: 'Selfie + Pièce d\'identité',
     subtitle: 'Tenez votre pièce d\'identité à côté de votre visage.',
     instruction: 'La pièce doit être lisible et votre visage clairement visible.',
@@ -224,14 +233,15 @@ export function VerifyProfile() {
 
   const [step, setStep] = useState<KycStep>(0)
   const [formData, setFormData] = useState({
+    kycDocumentType: '' as DocumentType | '',
     idNumber: '',
     firstName: '',
     lastName: '',
     birthDate: '',
     city: ''
   })
-  const [previews, setPreviews] = useState<Record<KycStep, string | null>>({ 0: null, 1: null, 2: null, 3: null, 4: null })
-  const [files, setFiles] = useState<Record<KycStep, File | null>>({ 0: null, 1: null, 2: null, 3: null, 4: null })
+  const [previews, setPreviews] = useState<Record<KycStep, string | null>>({ 0: null, 1: null, 2: null, 3: null, 4: null, 5: null })
+  const [files, setFiles] = useState<Record<KycStep, File | null>>({ 0: null, 1: null, 2: null, 3: null, 4: null, 5: null })
   const [submitStatus, setSubmitStatus] = useState<UploadStatus>('idle')
   const [isComplete, setIsComplete] = useState(false)
   const [kycStatusChecked, setKycStatusChecked] = useState(false)
@@ -255,8 +265,9 @@ export function VerifyProfile() {
     checkStatus()
   }, [user])
 
-  const currentStep = STEPS[step - 1]
-  const totalSteps = STEPS.length
+  const isRectoOnly = formData.kycDocumentType === 'PASSEPORT' || formData.kycDocumentType === 'CIP'
+  const currentStep = STEPS.find(s => s.id === step)
+  const totalSteps = isRectoOnly ? 4 : 5 // Steps conceptually for UI progress: selection + info + (1 or 2 docs) + selfie + selfieId
 
   const handleCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -297,36 +308,65 @@ export function VerifyProfile() {
 
   const handleNext = () => {
     if (step === 0) {
-      if (!validateForm()) return
+      if (!formData.kycDocumentType) {
+        toast.error('Veuillez sélectionner un type de document')
+        return
+      }
       setStep(1)
       return
     }
 
-    if (!previews[step as 1|2|3|4]) {
+    if (step === 1) {
+      if (!validateForm()) return
+      setStep(2)
+      return
+    }
+
+    if (!previews[step as KycStep]) {
       toast.error('Veuillez d\'abord prendre ou importer une photo.')
       return
     }
-    if (step < totalSteps) {
+
+    if (step === 2 && isRectoOnly) {
+      setStep(4) // Skip verso
+      return
+    }
+
+    if (step < 5) {
       setStep(s => (s + 1) as KycStep)
     } else {
       handleSubmit()
     }
   }
 
+  const handleBack = () => {
+    if (step === 0) {
+      if (window.history.state && window.history.state.idx > 0) navigate(-1)
+      else navigate('/profile')
+      return
+    }
+    if (step === 4 && isRectoOnly) {
+      setStep(2) // Skip verso when going back
+      return
+    }
+    setStep(s => (s - 1) as KycStep)
+  }
+
   const handleSubmit = async () => {
     setSubmitStatus('uploading')
     try {
       const fd = new FormData()
+      fd.append('kycDocumentType', formData.kycDocumentType)
       fd.append('idNumber', formData.idNumber)
       fd.append('firstName', formData.firstName)
       fd.append('lastName', formData.lastName)
       fd.append('birthDate', formData.birthDate)
       fd.append('city', formData.city)
 
-      if (files[1]) fd.append('idFront', files[1])
-      if (files[2]) fd.append('idBack', files[2])
-      if (files[3]) fd.append('selfie', files[3])
-      if (files[4]) fd.append('selfieWithId', files[4])
+      if (files[2]) fd.append('idFront', files[2])
+      if (files[3] && !isRectoOnly) fd.append('idBack', files[3])
+      if (files[4]) fd.append('selfie', files[4])
+      if (files[5]) fd.append('selfieWithId', files[5])
 
       await apiClient.post('/users/me/kyc', fd)
       await refreshUser().catch(() => {})
@@ -414,7 +454,7 @@ export function VerifyProfile() {
       <div className="px-5 pt-safe-4 pb-3 flex-shrink-0">
         <div className="flex items-center justify-center relative mb-4">
           <button
-            onClick={() => step === 0 ? (window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')) : setStep(s => (s - 1) as KycStep)}
+            onClick={handleBack}
             className="absolute left-0 w-8 h-8 flex items-center justify-center"
           >
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-white" />
@@ -436,15 +476,59 @@ export function VerifyProfile() {
         <div className="h-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full overflow-hidden">
           <div
             className="h-full bg-action-primary rounded-full transition-all duration-500"
-            style={{ width: step === 0 ? '10%' : `${(step / totalSteps) * 100}%` }}
+            // calculate visual progress based on the dynamic total steps
+            style={{ width: `${(Math.max(1, isRectoOnly && step > 2 ? step - 1 : step) / totalSteps) * 100}%` }}
           />
         </div>
-        {step > 0 && (
-          <p className="text-[11px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-1.5 text-right">Étape {step}/{totalSteps}</p>
-        )}
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 dark:text-gray-400 mt-1.5 text-right">
+          Étape {Math.max(1, isRectoOnly && step > 2 ? step - 1 : step)}/{totalSteps}
+        </p>
       </div>
 
       {step === 0 ? (
+        <div className="flex-1 overflow-y-auto px-5 pb-32">
+          <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2">Type de document</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Sélectionnez le type de document que vous souhaitez fournir.</p>
+          
+          <div className="space-y-3">
+            {DOCUMENT_TYPES.map((type) => (
+              <label
+                key={type.value}
+                className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                  formData.kycDocumentType === type.value
+                    ? 'border-action-primary bg-orange-50 dark:bg-orange-500/10'
+                    : 'border-gray-200 dark:border-[#333333] hover:border-action-primary/50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="kycDocumentType"
+                  value={type.value}
+                  checked={formData.kycDocumentType === type.value}
+                  onChange={(e) => setFormData(prev => ({ ...prev, kycDocumentType: e.target.value as DocumentType }))}
+                  className="hidden"
+                />
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0 ${
+                  formData.kycDocumentType === type.value
+                    ? 'border-action-primary'
+                    : 'border-gray-300 dark:border-[#555555]'
+                }`}>
+                  {formData.kycDocumentType === type.value && (
+                    <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />
+                  )}
+                </div>
+                <span className={`font-medium text-[15px] ${
+                  formData.kycDocumentType === type.value
+                    ? 'text-action-primary'
+                    : 'text-gray-900 dark:text-gray-100'
+                }`}>
+                  {type.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ) : step === 1 ? (
         <div className="flex-1 overflow-y-auto px-5 pb-32">
           <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2">Vos informations</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Veuillez entrer les informations exactes figurant sur votre pièce d'identité.</p>
@@ -498,10 +582,10 @@ export function VerifyProfile() {
           </div>
         ) : (
           <div className="mb-4">
-            {step === 1 && <IdFrontIllustration captured={false} />}
-            {step === 2 && <IdBackIllustration captured={false} />}
-            {step === 3 && <SelfieIllustration captured={false} />}
-            {step === 4 && <SelfieWithIdIllustration captured={false} />}
+            {step === 2 && <IdFrontIllustration captured={!!previews[step]} />}
+            {step === 3 && <IdBackIllustration captured={!!previews[step]} />}
+            {step === 4 && <SelfieIllustration captured={!!previews[step]} />}
+            {step === 5 && <SelfieWithIdIllustration captured={!!previews[step]} />}
           </div>
         )}
 

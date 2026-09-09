@@ -325,6 +325,28 @@ export default async function usersRoutes(app: FastifyInstance) {
         return reply.code(400).send({ error: 'Aucun document fourni' })
       }
 
+      const docTypeStr = fields.kycDocumentType?.trim().toUpperCase()
+      const validDocTypes = ['CIP', 'CARTE_BIOMETRIQUE', 'CARTE_IDENTITE_NATIONALE', 'PASSEPORT', 'PERMIS_CONDUIRE']
+      
+      if (!docTypeStr || !validDocTypes.includes(docTypeStr)) {
+        return reply.code(400).send({ error: 'Type de document invalide ou manquant' })
+      }
+
+      const isRectoOnly = docTypeStr === 'PASSEPORT' || docTypeStr === 'CIP'
+      
+      if (!saved.idFront) {
+        return reply.code(400).send({ error: 'La photo recto du document est obligatoire' })
+      }
+      if (!isRectoOnly && !saved.idBack) {
+        return reply.code(400).send({ error: 'La photo verso du document est obligatoire pour ce type de document' })
+      }
+      if (!saved.selfie) {
+        return reply.code(400).send({ error: 'Le selfie est obligatoire' })
+      }
+      if (!saved.selfieWithId) {
+        return reply.code(400).send({ error: 'Le selfie avec la pièce d\'identité est obligatoire' })
+      }
+
       // -- Validation automatique (nom et date de naissance) --
       let isRejected = false
       let rejectReason = ''
@@ -359,6 +381,7 @@ export default async function usersRoutes(app: FastifyInstance) {
         where: { userId: sub },
         data: {
           kycStatus: finalStatus,
+          kycDocumentType: docTypeStr as any,
           kycSubmittedAt: new Date(),
           kycReviewedAt: isRejected ? new Date() : null,
           kycRejectedReason: isRejected ? rejectReason : null,
