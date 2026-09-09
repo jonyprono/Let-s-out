@@ -507,6 +507,7 @@ export function ChatDetails() {
           const localUrl = URL.createObjectURL(audioBlob)
 
           qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
+            ...old,
             {
               id: tempId,
               content: localUrl,
@@ -519,7 +520,6 @@ export function ChatDetails() {
               sender: { id: user?.id, profile: user?.profile },
               _optimistic: true,
             },
-            ...old,
           ])
 
           try {

@@ -237,8 +237,8 @@ export function useSendMessage(conversationId: string) {
         _optimistic: true,
       } as any
       qc.setQueryData<Message[]>(['chat', 'messages', conversationId], (old = []) => [
-        optimisticMsg,
         ...old,
+        optimisticMsg,
       ])
       return { prev, optimisticId }
     },
