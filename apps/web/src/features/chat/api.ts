@@ -173,16 +173,16 @@ export function useConversationPresence(conversationId: string) {
   })
 }
 
-function sortMessagesChronological(messages: Message[]): Message[] {
+function sortMessagesNewestFirst(messages: Message[]): Message[] {
   return [...messages].sort(
-    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   )
 }
 
 export function useConversationMessages(conversationId: string) {
   return useQuery({
     queryKey: ['chat', 'messages', conversationId],
-    queryFn: () => chatApi.getMessages(conversationId).then(sortMessagesChronological),
+    queryFn: () => chatApi.getMessages(conversationId).then(sortMessagesNewestFirst),
     enabled: !!conversationId,
     staleTime: 5 * 60 * 1000, // 5 minutes cache for faster loading
   })
@@ -236,9 +236,10 @@ export function useSendMessage(conversationId: string) {
         },
         _optimistic: true,
       } as any
+      // Prepend so the newest message is at index 0 (bottom of flex-col-reverse)
       qc.setQueryData<Message[]>(['chat', 'messages', conversationId], (old = []) => [
-        ...old,
         optimisticMsg,
+        ...old,
       ])
       return { prev, optimisticId }
     },

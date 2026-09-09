@@ -368,7 +368,7 @@ export function ChatDetails() {
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
     }).catch(() => {})
 
-    const lastMsg = messages?.[(messages?.length || 1) - 1]
+    const lastMsg = messages?.[0]
     if (lastMsg) sendRead(id, lastMsg.id)
   }, [id, messages?.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -408,8 +408,6 @@ export function ChatDetails() {
       setReplyToMsg(null)
     }
     sendMsg(payload)
-    // Scroll immediately so the new message always appears at the bottom
-    setTimeout(() => scrollToBottom(false), 0)
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -510,8 +508,8 @@ export function ChatDetails() {
           const tempId = `optimistic-${Date.now()}`
           const localUrl = URL.createObjectURL(audioBlob)
 
+          // Prepend so the newest message is at index 0 (bottom of flex-col-reverse)
           qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
-            ...old,
             {
               id: tempId,
               content: localUrl,
@@ -524,6 +522,7 @@ export function ChatDetails() {
               sender: { id: user?.id, profile: user?.profile },
               _optimistic: true,
             },
+            ...old,
           ])
 
           try {
