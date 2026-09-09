@@ -349,13 +349,15 @@ export function ChatDetails() {
     }
   }, [])
 
-  // Scroll immediately on initial load, smoothly on new messages
+  // Scroll immediately on initial load; on new messages only scroll if already near bottom
   const prevMsgCountRef = useRef(0)
   useEffect(() => {
     const count = messages?.length ?? 0
     if (count === 0) return
     const isInitialLoad = prevMsgCountRef.current === 0
-    scrollToBottom(!isInitialLoad)
+    if (isInitialLoad) {
+      scrollToBottom(false)
+    }
     prevMsgCountRef.current = count
   }, [messages?.length, scrollToBottom])
 
@@ -406,6 +408,8 @@ export function ChatDetails() {
       setReplyToMsg(null)
     }
     sendMsg(payload)
+    // Scroll immediately so the new message always appears at the bottom
+    setTimeout(() => scrollToBottom(false), 0)
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -805,7 +809,7 @@ export function ChatDetails() {
           </div>
         ) : (
           (() => {
-            const filteredMessages = [...messages].reverse().filter(msg => !localDeletedMessages.includes(msg.id));
+            const filteredMessages = [...messages].filter(msg => !localDeletedMessages.includes(msg.id));
             return filteredMessages.map((msg, index) => {
               const isSystem = msg.type === 'SYSTEM'
               const isMe = !isSystem && msg.senderId === user?.id
