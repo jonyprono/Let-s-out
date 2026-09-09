@@ -10,6 +10,7 @@ export interface KycListItem {
   phone: string | null
   email: string | null
   kycStatus: KycStatus
+  kycDocumentType: string | null
   kycSubmittedAt: string | null
   kycReviewedAt: string | null
   kycRejectedReason: string | null
