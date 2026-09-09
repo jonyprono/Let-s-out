@@ -120,13 +120,22 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             setUploadProgress(100)
             resolve()
           } else {
-            reject(new Error('Échec de l\'envoi vers Cloudinary'))
+            console.error('Cloudinary error response:', xhr.responseText)
+            let errorMessage = 'Échec de l\'envoi vers Cloudinary'
+            try {
+              const result = JSON.parse(xhr.responseText)
+              if (result.error && result.error.message) {
+                errorMessage = result.error.message
+              }
+            } catch (e) {}
+            reject(new Error(errorMessage))
           }
         }
         xhr.onerror = () => reject(new Error('Erreur réseau lors de l\'upload'))
         xhr.send(formData)
       })
     } catch (err: any) {
+      console.error('Upload Error:', err)
       setUploadProgress(null)
       setUploadError(err.message ?? 'Échec de l\'upload. Réessayez sans quitter ce formulaire.')
     }
