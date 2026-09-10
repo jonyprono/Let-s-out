@@ -19,6 +19,8 @@ import { eventsApi } from '@/features/events/api';
 import { chatApi } from '@/features/chat/api';
 import { ValidatorVoteForm } from './ValidatorVoteForm';
 import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
+import { InviteFriendsModal } from '@/features/events/components/InviteFriendsModal';
+import { ShareViaChatModal } from '@/features/events/components/ShareViaChatModal';
 
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
@@ -369,6 +371,7 @@ function TabParticipants({ event, attendees, isCreator }: { event: any, attendee
   const [showInviteOptions, setShowInviteOptions] = useState(false);
   const [showInviteFriends, setShowInviteFriends] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareViaChat, setShowShareViaChat] = useState(false);
 
   const { data: friendsData } = useFriends();
   const qc = useQueryClient();
@@ -509,47 +512,91 @@ function TabParticipants({ event, attendees, isCreator }: { event: any, attendee
       <BottomSheet open={showInviteOptions} onClose={() => setShowInviteOptions(false)}>
         <div className="w-full flex flex-col pt-2 pb-8 px-5 gap-3">
           <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4 text-center">Inviter des participants</h3>
-          <button 
+          {/* Inviter des amis Let's Out */}
+          <button
             onClick={() => { setShowInviteOptions(false); setShowInviteFriends(true); }}
-            className="w-full p-4 flex items-center justify-center gap-3 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-800 rounded-xl text-[15px] font-semibold text-gray-900 dark:text-white"
+            className="w-full p-4 flex items-center gap-3 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-800 rounded-xl active:scale-[0.98] transition-transform"
           >
-            Inviter des amis Let's Out
+            <div className="w-10 h-10 rounded-full bg-[#FF7A00]/10 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                <circle cx="13" cy="10.7" r="5.3" fill="#FF7A00" opacity="0.7"/>
+                <circle cx="13" cy="32.7" r="14.7" fill="#FF7A00" opacity="0.7"/>
+                <line x1="24" y1="10" x2="24" y2="18" stroke="#FF7A00" strokeWidth="2.5" strokeLinecap="round"/>
+                <line x1="20" y1="14" x2="28" y2="14" stroke="#FF7A00" strokeWidth="2.5" strokeLinecap="round"/>
+              </svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-[15px] font-bold text-gray-900 dark:text-white">Inviter des amis Let's Out</p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500">Ils reçoivent une notification</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M9 18l6-6-6-6"/></svg>
           </button>
-          <button 
-            onClick={() => { setShowInviteOptions(false); setShowShareModal(true); }}
-            className="w-full p-4 flex items-center justify-center gap-3 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-800 rounded-xl text-[15px] font-semibold text-gray-900 dark:text-white"
+
+          {/* Envoyer via le chat */}
+          <button
+            onClick={() => { setShowInviteOptions(false); setShowShareViaChat(true); }}
+            className="w-full p-4 flex items-center gap-3 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-800 rounded-xl active:scale-[0.98] transition-transform"
           >
-            Partager via lien ou QR
+            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-[15px] font-bold text-gray-900 dark:text-white">Envoyer via le chat</p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500">Partager une carte dans une conversation</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+
+          {/* Partager via lien ou QR */}
+          <button
+            onClick={() => { setShowInviteOptions(false); setShowShareModal(true); }}
+            className="w-full p-4 flex items-center gap-3 bg-white dark:bg-[#222222] border border-gray-200 dark:border-gray-800 rounded-xl active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#333] flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-[15px] font-bold text-gray-900 dark:text-white">Partager via lien ou QR</p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500">Copier le lien ou générer un QR code</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M9 18l6-6-6-6"/></svg>
           </button>
         </div>
       </BottomSheet>
 
-      {/* Invite Friends BottomSheet */}
-      <BottomSheet open={showInviteFriends} onClose={() => setShowInviteFriends(false)}>
-        <div className="w-full flex flex-col pt-2 pb-8 px-5">
-          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4 text-center">Vos amis</h3>
-          <div className="flex flex-col gap-3 max-h-[50vh] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-            {!friendsData || friendsData.length === 0 ? (
-              <p className="text-center text-[13px] text-gray-500 py-6">Vous n'avez pas encore d'amis à inviter.</p>
-            ) : (
-              friendsData.map(friend => (
-                <div key={friend.userId} className="flex items-center justify-between p-2 border-b border-gray-100 dark:border-gray-800">
-                  <div className="flex items-center gap-3">
-                    <SafeImage src={friend.avatarUrl} alt={friend.displayName} className="w-10 h-10 rounded-full bg-gray-200" />
-                    <span className="font-semibold text-[14px] text-gray-900 dark:text-white">{friend.displayName}</span>
-                  </div>
-                  <button 
-                    onClick={() => inviteMut.mutate(friend.userId)}
-                    className="px-4 py-1.5 bg-[#FFF9EC] text-[#FF7A00] rounded-full text-[12px] font-semibold active:scale-95"
-                  >
-                    Inviter
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </BottomSheet>
+      {/* Invite Friends — Full Screen Modal */}
+      {showInviteFriends && event && (
+        <InviteFriendsModal
+          event={{
+            id: event.id,
+            title: event.title,
+            coverUrl: event.coverUrl,
+            startAt: event.startAt,
+            city: event.city,
+            currentAttendees: event.currentAttendees,
+          }}
+          onClose={() => setShowInviteFriends(false)}
+        />
+      )}
+
+      {/* Share Via Chat — Full Screen Modal */}
+      {showShareViaChat && event && (
+        <ShareViaChatModal
+          event={{
+            id: event.id,
+            title: event.title,
+            coverUrl: event.coverUrl,
+            startAt: event.startAt,
+            city: event.city,
+            description: event.description,
+            price: event.price,
+            currency: event.currency,
+            currentAttendees: event.currentAttendees,
+            maxAttendees: event.maxAttendees,
+          }}
+          onClose={() => setShowShareViaChat(false)}
+        />
+      )}
 
       {/* Share Modal */}
       {showShareModal && (

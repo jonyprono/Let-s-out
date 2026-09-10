@@ -831,6 +831,63 @@ export function ChatDetails() {
             const grouped = groupReactions(msg.reactions ?? [])
 
             if (isSystem) {
+              // Detect EVENT_SHARE payloads — render a rich event card
+              let eventShare: any = null
+              try {
+                const parsed = msg.content ? JSON.parse(msg.content) : null
+                if (parsed?._type === 'EVENT_SHARE') eventShare = parsed
+              } catch {}
+
+              if (eventShare) {
+                return (
+                  <div key={msg.id}>
+                    {showDateSep && (
+                      <div className="flex items-center gap-3 my-4">
+                        <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
+                        <span className="text-xs text-gray-400 font-medium capitalize px-2">
+                          {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
+                        </span>
+                        <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
+                      </div>
+                    )}
+                    <div className="flex justify-center my-3 px-4">
+                      <button
+                        onClick={() => navigate(`/events/${eventShare.eventId}`)}
+                        className="w-full max-w-[280px] rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1E1E1E] shadow-sm active:scale-[0.98] transition-transform text-left"
+                      >
+                        {eventShare.coverUrl ? (
+                          <div className="relative w-full h-32">
+                            <img src={eventShare.coverUrl} alt={eventShare.title} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                            <div className="absolute bottom-2 left-3 right-3">
+                              <p className="text-white font-bold text-[14px] drop-shadow truncate">{eventShare.title}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-full h-20 bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center">
+                            <p className="text-white font-bold text-[15px] px-4 text-center">{eventShare.title}</p>
+                          </div>
+                        )}
+                        <div className="p-3 flex flex-col gap-1">
+                          {eventShare.coverUrl && (
+                            <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">{eventShare.title}</p>
+                          )}
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                            📅 {format(new Date(eventShare.startAt), "EEE d MMM · HH'h'mm", { locale: fr })}
+                          </p>
+                          {eventShare.city && (
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400">📍 {eventShare.city}</p>
+                          )}
+                          <div className="mt-2 py-1.5 rounded-lg bg-[#FF7A00]/10 text-[#FF7A00] text-[12px] font-semibold text-center">
+                            Voir l'événement →
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                )
+              }
+
               return (
                 <div key={msg.id}>
                   {showDateSep && (
