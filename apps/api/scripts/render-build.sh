@@ -19,6 +19,7 @@ MIGRATIONS=(
   "20260714130000_add_last_delivered_at"
   "20260720_add_feature_flags"
   "20260901000000_add_reactions_comments"
+  "20260909000000_add_kyc_document_type"
 )
 
 for migration in "${MIGRATIONS[@]}"; do
