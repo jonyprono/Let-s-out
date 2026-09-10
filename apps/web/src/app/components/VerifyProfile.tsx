@@ -496,8 +496,8 @@ export function VerifyProfile() {
                 key={type.value}
                 className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
                   formData.kycDocumentType === type.value
-                    ? 'border-action-primary bg-orange-50 dark:bg-orange-500/10'
-                    : 'border-gray-200 dark:border-[#333333] hover:border-action-primary/50'
+                    ? 'border-[#FF7A00] bg-[#FF7A00]/5 dark:bg-[#FF7A00]/10'
+                    : 'border-gray-200 dark:border-[#333333] hover:border-[#FF7A00]/50'
                 }`}
               >
                 <input
@@ -510,16 +510,16 @@ export function VerifyProfile() {
                 />
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mr-3 flex-shrink-0 ${
                   formData.kycDocumentType === type.value
-                    ? 'border-action-primary'
+                    ? 'border-[#FF7A00]'
                     : 'border-gray-300 dark:border-[#555555]'
                 }`}>
                   {formData.kycDocumentType === type.value && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-action-primary" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />
                   )}
                 </div>
                 <span className={`font-medium text-[15px] ${
                   formData.kycDocumentType === type.value
-                    ? 'text-action-primary'
+                    ? 'text-[#FF7A00]'
                     : 'text-gray-900 dark:text-gray-100'
                 }`}>
                   {type.label}
@@ -653,7 +653,12 @@ export function VerifyProfile() {
       >
         <Button
           onClick={handleNext}
-          disabled={(step > 0 && !previews[step as 1|2|3|4]) || submitStatus === 'uploading'}
+          disabled={
+            submitStatus === 'uploading' ||
+            (step === 0 && !formData.kycDocumentType) ||
+            (step === 1 && (!formData.idNumber || !formData.firstName || !formData.lastName || !formData.birthDate || !formData.city)) ||
+            (step > 1 && !previews[step as 1|2|3|4])
+          }
           className="w-full"
         >
           {submitStatus === 'uploading' ? (
