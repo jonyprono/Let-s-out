@@ -14,6 +14,7 @@ import { UserAvatarIcon } from '@/components/shared/UserAvatarIcon';
 import { toast } from 'sonner';
 import { useUserProfile } from '@/features/users/UserProfileContext';
 import { ShareModal } from '@/components/shared/ShareModal';
+import { chatApi } from '@/features/chat/api';
 import { ValidatorVoteForm } from './ValidatorVoteForm';
 import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
 import { InviteFriendsModal } from '@/features/events/components/InviteFriendsModal';
