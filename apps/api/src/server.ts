@@ -146,10 +146,11 @@ async function bootstrap() {
   // Each patch below fixes a migration that may not have been applied via
   // prisma migrate deploy. Using IF NOT EXISTS / DO NOTHING makes them safe
   // to run multiple times without side effects.
-  const schemaPatches: Array<{ name: string; sql: string }> = [
+  const schemaPatches: Array<{ name: string; sqls: string[] }> = [
     {
       name: 'KycDocumentType enum + profiles.kycDocumentType column',
-      sql: `
+      sqls: [
+        `
         DO $$ BEGIN
           IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'KycDocumentType') THEN
             CREATE TYPE "KycDocumentType" AS ENUM (
@@ -157,22 +158,25 @@ async function bootstrap() {
             );
           END IF;
         END $$;
-        ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "kycDocumentType" "KycDocumentType";
-      `,
+        `,
+        `ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "kycDocumentType" "KycDocumentType";`
+      ],
     },
     {
       name: 'event_payout_requests.idempotencyKey column',
-      sql: `
-        ALTER TABLE "event_payout_requests" ADD COLUMN IF NOT EXISTS "idempotencyKey" TEXT;
-        CREATE UNIQUE INDEX IF NOT EXISTS "event_payout_requests_eventId_idempotencyKey_key"
-          ON "event_payout_requests"("eventId", "idempotencyKey");
-      `,
+      sqls: [
+        `ALTER TABLE "event_payout_requests" ADD COLUMN IF NOT EXISTS "idempotencyKey" TEXT;`,
+        `CREATE UNIQUE INDEX IF NOT EXISTS "event_payout_requests_eventId_idempotencyKey_key"
+          ON "event_payout_requests"("eventId", "idempotencyKey");`
+      ],
     },
   ]
 
   for (const patch of schemaPatches) {
     try {
-      await app.prisma.$executeRawUnsafe(patch.sql)
+      for (const sql of patch.sqls) {
+        await app.prisma.$executeRawUnsafe(sql)
+      }
       app.log.info(`✅ Schema patch applied: ${patch.name}`)
     } catch (err) {
       // Log but do NOT crash — patch may already be applied or table may not exist yet
