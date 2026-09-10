@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { X, Search, Check, Send, Calendar, MapPin, Users, ChevronRight } from 'lucide-react'
+import { X, Search, Check, Send, Calendar, MapPin, Users } from 'lucide-react'
 import { useFriends } from '@/features/users/api'
 import { useMutation } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'

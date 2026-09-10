@@ -373,15 +373,7 @@ function TabParticipants({ event, attendees, isCreator }: { event: any, attendee
   const [showShareModal, setShowShareModal] = useState(false);
   const [showShareViaChat, setShowShareViaChat] = useState(false);
 
-  const { data: friendsData } = useFriends();
   const qc = useQueryClient();
-  const inviteMut = useMutation({
-    mutationFn: async (userId: string) => {
-      await eventsApi.inviteFriends(event.id, [userId]);
-    },
-    onSuccess: () => toast.success('Invitation envoyée !'),
-    onError: () => toast.error('Erreur lors de l\'invitation')
-  });
 
   const toggleCandidateMut = useMutation({
     mutationFn: async ({ action, candidateId }: { action: 'ADD' | 'REMOVE', candidateId: string }) => {
