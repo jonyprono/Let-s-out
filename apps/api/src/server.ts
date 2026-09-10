@@ -142,6 +142,125 @@ async function bootstrap() {
     app.log.warn({ err }, '⚠️ Admin table migration warning (non-fatal)')
   }
 
+  // ── Schema Patches (idempotent — safe to run on every startup) ─────────────
+  // Each patch below fixes a migration that may not have been applied via
+  // prisma migrate deploy. Using IF NOT EXISTS / DO NOTHING makes them safe
+  // to run multiple times without side effects.
+  const schemaPatches: Array<{ name: string; sql: string }> = [
+    {
+      name: 'KycDocumentType enum + profiles.kycDocumentType column',
+      sql: `
+        DO $$ BEGIN
+          IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'KycDocumentType') THEN
+            CREATE TYPE "KycDocumentType" AS ENUM (
+              'CIP', 'CARTE_BIOMETRIQUE', 'CARTE_IDENTITE_NATIONALE', 'PASSEPORT', 'PERMIS_CONDUIRE'
+            );
+          END IF;
+        END $$;
+        ALTER TABLE "profiles" ADD COLUMN IF NOT EXISTS "kycDocumentType" "KycDocumentType";
+      `,
+    },
+    {
+      name: 'event_payout_requests.idempotencyKey column',
+      sql: `
+        ALTER TABLE "event_payout_requests" ADD COLUMN IF NOT EXISTS "idempotencyKey" TEXT;
+        CREATE UNIQUE INDEX IF NOT EXISTS "event_payout_requests_eventId_idempotencyKey_key"
+          ON "event_payout_requests"("eventId", "idempotencyKey");
+      `,
+    },
+  ]
+
+  for (const patch of schemaPatches) {
+    try {
+      await app.prisma.$executeRawUnsafe(patch.sql)
+      app.log.info(`✅ Schema patch applied: ${patch.name}`)
+    } catch (err) {
+      // Log but do NOT crash — patch may already be applied or table may not exist yet
+      app.log.warn({ err }, `⚠️ Schema patch warning (non-fatal): ${patch.name}`)
+    }
+  }
+
+  // ── Schema Health Check (fail-fast if DB is out of sync) ───────────────────
+  // Checks that critical columns/tables exist before accepting traffic.
+  // If any column is missing, the server exits immediately so Render shows a
+  // clear crash instead of a misleading "wrong password" error for users.
+  //
+  // MAINTENANCE: When you add a new migration, add a corresponding entry here.
+  // One entry per migration, covering the most representative column/table it adds.
+  try {
+    // Column-level checks: { table, column, migration } — column must exist on table
+    const columnChecks: Array<{ table: string; column: string; migration: string }> = [
+      // 20260613000001_add_admin_email_passwordhash
+      { table: 'admins', column: 'passwordHash', migration: 'add_admin_email_passwordhash' },
+      // 20260714130000_add_last_delivered_at
+      { table: 'conversation_members', column: 'lastDeliveredAt', migration: 'add_last_delivered_at' },
+      // 20260724120000_add_payout_idempotency_key
+      { table: 'event_payout_requests', column: 'idempotencyKey', migration: 'add_payout_idempotency_key' },
+      // 20260909000000_add_kyc_document_type
+      { table: 'profiles', column: 'kycDocumentType', migration: 'add_kyc_document_type' },
+    ]
+
+    // Table-level checks: { table, migration } — table must exist
+    const tableChecks: Array<{ table: string; migration: string }> = [
+      // 20260720_add_feature_flags
+      { table: 'feature_flags', migration: 'add_feature_flags' },
+      // 20260901000000_add_reactions_comments
+      { table: 'event_reactions', migration: 'add_reactions_comments' },
+      { table: 'event_comments', migration: 'add_reactions_comments' },
+    ]
+
+    let schemaOk = true
+
+    for (const { table, column, migration } of columnChecks) {
+      const result = await app.prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
+        `SELECT EXISTS (
+           SELECT 1 FROM information_schema.columns
+           WHERE table_name = $1 AND column_name = $2
+         ) AS "exists"`,
+        table,
+        column,
+      )
+      if (!result[0]?.exists) {
+        app.log.error(
+          `🚨 SCHEMA HEALTH CHECK FAILED [migration: ${migration}]: ` +
+          `column "${column}" missing on table "${table}". ` +
+          `Run: prisma migrate deploy`
+        )
+        schemaOk = false
+      }
+    }
+
+    for (const { table, migration } of tableChecks) {
+      const result = await app.prisma.$queryRawUnsafe<Array<{ exists: boolean }>>(
+        `SELECT EXISTS (
+           SELECT 1 FROM information_schema.tables
+           WHERE table_name = $1
+         ) AS "exists"`,
+        table,
+      )
+      if (!result[0]?.exists) {
+        app.log.error(
+          `🚨 SCHEMA HEALTH CHECK FAILED [migration: ${migration}]: ` +
+          `table "${table}" does not exist. ` +
+          `Run: prisma migrate deploy`
+        )
+        schemaOk = false
+      }
+    }
+
+    if (!schemaOk) {
+      app.log.error(
+        '🚨 One or more schema checks failed. ' +
+        'Shutting down to prevent misleading errors in production.'
+      )
+      process.exit(1)
+    }
+
+    app.log.info('✅ Schema health check passed — all critical columns and tables present')
+  } catch (err) {
+    app.log.warn({ err }, '⚠️ Schema health check error (non-fatal — skipping)')
+  }
+
   // ── Seed Admin ─────────────────────────────────────────────────
   try {
     const adminPhone = '+2290156363337'
