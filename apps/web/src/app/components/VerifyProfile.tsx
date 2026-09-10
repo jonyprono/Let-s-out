@@ -246,7 +246,9 @@ export function VerifyProfile() {
   const [isComplete, setIsComplete] = useState(false)
   const [kycStatusChecked, setKycStatusChecked] = useState(false)
   const [kycStatus, setKycStatus] = useState<KycStatus>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   // ── Vérifier le statut KYC actuel via API ───────────────────────────────
   useEffect(() => {
@@ -275,7 +277,8 @@ export function VerifyProfile() {
     const url = URL.createObjectURL(file)
     setPreviews(prev => ({ ...prev, [step]: url }))
     setFiles(prev => ({ ...prev, [step]: file }))
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
+    if (galleryInputRef.current) galleryInputRef.current.value = ''
   }
 
   const validateForm = () => {
@@ -391,7 +394,7 @@ export function VerifyProfile() {
   if (!kycStatusChecked) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-white dark:bg-[#1A1A1A]">
-        <Loader2 className="w-8 h-8 animate-spin text-action-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF7A00]" />
       </div>
     )
   }
@@ -427,7 +430,7 @@ export function VerifyProfile() {
           </button>
           <button
             onClick={() => navigate('/home')}
-            className="flex-[1.2] py-4 rounded-full font-bold text-[15px] text-white bg-action-primary"
+            className="flex-[1.2] py-4 rounded-full font-bold text-[15px] text-white bg-[#FF7A00]"
           >
             Accueil
           </button>
@@ -440,12 +443,20 @@ export function VerifyProfile() {
   return (
     <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col">
 
-      {/* Hidden file input */}
+      {/* Hidden file input - Camera */}
       <input
-        ref={fileInputRef}
+        ref={cameraInputRef}
         type="file"
         accept="image/*"
-        capture={currentStep?.capture}
+        capture={currentStep?.capture || 'environment'}
+        className="hidden"
+        onChange={handleCapture}
+      />
+      {/* Hidden file input - Gallery */}
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
         className="hidden"
         onChange={handleCapture}
       />
@@ -475,7 +486,7 @@ export function VerifyProfile() {
         {/* Progress bar */}
         <div className="h-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full overflow-hidden">
           <div
-            className="h-full bg-action-primary rounded-full transition-all duration-500"
+            className="h-full bg-[#FF7A00] rounded-full transition-all duration-500"
             // calculate visual progress based on the dynamic total steps
             style={{ width: `${(Math.max(1, isRectoOnly && step > 2 ? step - 1 : step) / totalSteps) * 100}%` }}
           />
@@ -599,16 +610,12 @@ export function VerifyProfile() {
         <div className="flex gap-3">
           <button
             onClick={() => {
-              if (fileInputRef.current) {
-                fileInputRef.current.removeAttribute('capture')
-                if (currentStep?.capture) fileInputRef.current.setAttribute('capture', currentStep.capture)
-                fileInputRef.current.click()
-              }
+              if (cameraInputRef.current) cameraInputRef.current.click()
             }}
             className="flex-1 flex flex-col items-center gap-2 px-4 py-4 border border-gray-200 dark:border-[#333333] rounded-2xl bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
           >
-            <div className="w-10 h-10 rounded-full bg-[#FFF8F1] dark:bg-action-primary/10 flex items-center justify-center">
-              <Camera className="w-5 h-5 text-action-primary" />
+            <div className="w-10 h-10 rounded-full bg-[#FF7A00]/10 flex items-center justify-center">
+              <Camera className="w-5 h-5 text-[#FF7A00]" />
             </div>
             <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">
               {step === 3 || step === 4 ? 'Caméra avant' : 'Photographier'}
@@ -617,10 +624,7 @@ export function VerifyProfile() {
 
           <button
             onClick={() => {
-              if (fileInputRef.current) {
-                fileInputRef.current.removeAttribute('capture')
-                fileInputRef.current.click()
-              }
+              if (galleryInputRef.current) galleryInputRef.current.click()
             }}
             className="flex-1 flex flex-col items-center gap-2 px-4 py-4 border border-gray-200 dark:border-[#333333] rounded-2xl bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
           >
@@ -677,7 +681,7 @@ export function VerifyProfile() {
               key={s.id}
               className={`rounded-full transition-all ${
                 s.id === step
-                  ? 'w-6 h-2 bg-action-primary'
+                  ? 'w-6 h-2 bg-[#FF7A00]'
                   : previews[s.id as 1|2|3|4]
                   ? 'w-2 h-2 bg-[#10B981]'
                   : 'w-2 h-2 bg-gray-200 dark:bg-[#2A2A2A]'

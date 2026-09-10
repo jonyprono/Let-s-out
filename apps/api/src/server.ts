@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const app = Fastify({
+  bodyLimit: 50 * 1024 * 1024, // 50MB for KYC photos
   logger: {
     level: process.env.LOG_LEVEL || 'info',
     transport:
