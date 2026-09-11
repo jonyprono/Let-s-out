@@ -119,7 +119,7 @@ export function AdminLoginPage() {
             disabled={loading || !isFieldValid(target) || password.length < 4}
             className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center disabled:opacity-50 active:scale-[0.98]"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Se connecter'}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Se connecter</span>}
           </button>
           
           <button

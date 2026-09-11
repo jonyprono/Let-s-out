@@ -107,17 +107,17 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-4">
                     {user.profile?.kycStatus === 'verified' && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-bold border border-green-500/20">
-                        <ShieldCheck className="w-3.5 h-3.5" /> Vérifié
+                        <ShieldCheck className="w-3.5 h-3.5" /> <span>Vérifié</span>
                       </span>
                     )}
                     {user.profile?.kycStatus === 'pending' && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 text-xs font-bold border border-amber-500/20">
-                        <Calendar className="w-3.5 h-3.5" /> En attente
+                        <Calendar className="w-3.5 h-3.5" /> <span>En attente</span>
                       </span>
                     )}
                     {user.profile?.kycStatus === 'rejected' && (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 text-red-500 text-xs font-bold border border-red-500/20">
-                        <ShieldAlert className="w-3.5 h-3.5" /> Rejeté
+                        <ShieldAlert className="w-3.5 h-3.5" /> <span>Rejeté</span>
                       </span>
                     )}
                   </td>
@@ -136,7 +136,7 @@ export default function AdminUsersPage() {
         {/* Pagination */}
         {data?.pages > 1 && (
           <div className="p-4 border-t border-white/5 flex items-center justify-between">
-            <span className="text-sm text-white/50">Page {data.page} sur {data.pages}</span>
+            <span className="text-sm text-white/50"><span>Page </span><span>{data.page}</span><span> sur </span><span>{data.pages}</span></span>
             <div className="flex items-center gap-2">
               <button
                 disabled={data.page === 1}

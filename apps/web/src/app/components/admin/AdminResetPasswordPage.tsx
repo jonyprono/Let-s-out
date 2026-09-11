@@ -168,7 +168,7 @@ export function AdminResetPasswordPage() {
               disabled={loading || !isFieldValid(target)}
               className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center disabled:opacity-50 active:scale-[0.98]"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Continuer'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Continuer</span>}
             </button>
 
             <button
@@ -177,7 +177,7 @@ export function AdminResetPasswordPage() {
               className="w-full flex items-center justify-center gap-2 text-white/40 text-sm font-medium py-3 hover:text-white/80 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Retour à la connexion
+              <span>Retour à la connexion</span>
             </button>
           </form>
         )}
@@ -216,7 +216,7 @@ export function AdminResetPasswordPage() {
               className="w-full flex items-center justify-center gap-2 text-white/40 text-sm font-medium py-3 hover:text-white/80 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Modifier l'identifiant
+              <span>Modifier l'identifiant</span>
             </button>
           </div>
         )}
@@ -290,7 +290,7 @@ export function AdminResetPasswordPage() {
               disabled={loading || otp.length < 4 || newPassword.length < 6 || newPassword !== confirmPassword}
               className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center disabled:opacity-50 active:scale-[0.98]"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Réinitialiser le mot de passe'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <span>Réinitialiser le mot de passe</span>}
             </button>
 
             <button
@@ -299,7 +299,7 @@ export function AdminResetPasswordPage() {
               className="w-full flex items-center justify-center gap-2 text-white/40 text-sm font-medium py-3 hover:text-white/80 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Renvoyer le code
+              <span>Renvoyer le code</span>
             </button>
           </form>
         )}

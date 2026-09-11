@@ -69,7 +69,7 @@ export function AdminBotPrompts() {
           className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-semibold text-white/60 hover:bg-white/10 transition-colors flex items-center gap-2"
         >
           <RefreshCw className="w-4 h-4" />
-          Réessayer
+          <span>Réessayer</span>
         </button>
       </div>
     );
@@ -145,7 +145,7 @@ export function AdminBotPrompts() {
                         className="flex items-center gap-2 px-5 py-2 bg-action-primary text-white rounded-xl text-sm font-bold hover:bg-action-primary/90 transition-colors disabled:opacity-50"
                       >
                         {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                        Enregistrer
+                        <span>Enregistrer</span>
                       </button>
                     </div>
                   </div>

@@ -69,7 +69,7 @@ export function AdminPayoutsPage() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
             <Wallet className="w-8 h-8 text-action-primary" />
-            Déblocages FinTech
+            <span>Déblocages FinTech</span>
           </h1>
           <p className="text-white/50 text-sm mt-1">Gérer les demandes de retrait de cagnottes</p>
         </div>
@@ -110,19 +110,19 @@ export function AdminPayoutsPage() {
                   <div className="text-sm text-white/70">
                     <span className="font-medium text-white">{req.event?.title || 'Événement inconnu'}</span>
                     {' • '}
-                    Demandé par: <span className="font-mono text-xs">{req.requestedBy.slice(0, 8)}...</span>
+                    <span>Demandé par :</span> <span className="font-mono text-xs">{req.requestedBy.slice(0, 8)}...</span>
                   </div>
                   <div className="text-xs text-white/40 flex items-center gap-3">
                     <span>Le {format(new Date(req.createdAt), 'dd/MM/yyyy à HH:mm')}</span>
                     {votesTotal > 0 && (
                       <span className="px-2 py-0.5 bg-white/5 rounded text-white/60">
-                        Votes: {votesOui} Oui / {votesNon} Non (sur {votesTotal})
+                        <span>Votes : </span><span>{votesOui} Oui / {votesNon} Non (sur {votesTotal})</span>
                       </span>
                     )}
                   </div>
                   {req.rejectionReason && (
                     <div className="text-xs text-red-400 mt-2">
-                      Raison du refus: {req.rejectionReason}
+                      <span>Raison du refus : </span><span>{req.rejectionReason}</span>
                     </div>
                   )}
                 </div>
@@ -136,7 +136,7 @@ export function AdminPayoutsPage() {
                       className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-sm font-medium transition-colors border border-emerald-500/20"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      Forcer Déblocage
+                      <span>Forcer Déblocage</span>
                     </button>
                     <button
                       onClick={() => handleReject(req)}
@@ -144,7 +144,7 @@ export function AdminPayoutsPage() {
                       className="flex items-center gap-2 px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors border border-red-500/20"
                     >
                       <XCircle className="w-4 h-4" />
-                      Rejeter
+                      <span>Rejeter</span>
                     </button>
                   </div>
                 )}
@@ -157,10 +157,10 @@ export function AdminPayoutsPage() {
       {/* Pagination */}
       {data && data.pages > 1 && (
         <div className="flex items-center justify-between pt-4">
-          <span className="text-xs text-white/50">Page {data.page} sur {data.pages}</span>
+          <span className="text-xs text-white/50"><span>Page </span><span>{data.page}</span><span> sur </span><span>{data.pages}</span></span>
           <div className="flex gap-2">
-            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 bg-[#1A1A1A] border border-white/10 rounded text-xs hover:bg-white/5 disabled:opacity-50">Précédent</button>
-            <button disabled={page === data.pages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 bg-[#1A1A1A] border border-white/10 rounded text-xs hover:bg-white/5 disabled:opacity-50">Suivant</button>
+            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-3 py-1 bg-[#1A1A1A] border border-white/10 rounded text-xs hover:bg-white/5 disabled:opacity-50"><span>Précédent</span></button>
+            <button disabled={page === data.pages} onClick={() => setPage(p => p + 1)} className="px-3 py-1 bg-[#1A1A1A] border border-white/10 rounded text-xs hover:bg-white/5 disabled:opacity-50"><span>Suivant</span></button>
           </div>
         </div>
       )}

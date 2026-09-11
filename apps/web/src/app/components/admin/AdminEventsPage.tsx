@@ -95,17 +95,17 @@ export default function AdminEventsPage() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-1 text-white">
                       <Calendar className="w-3.5 h-3.5 text-white/40" />
-                      {format(new Date(event.startAt), 'dd/MM/yy HH:mm')}
+                      <span>{format(new Date(event.startAt), 'dd/MM/yy HH:mm')}</span>
                     </div>
                     {event.city && (
                       <div className="flex items-center gap-1 text-xs text-white/40 mt-1">
                         <MapPin className="w-3 h-3" />
-                        {event.city}
+                        <span>{event.city}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-1 text-xs text-white/40 mt-1">
                       <Users className="w-3 h-3" />
-                      {event.currentAttendees} / {event.maxAttendees || '∞'}
+                      <span>{event.currentAttendees} / {event.maxAttendees || '∞'}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -133,7 +133,7 @@ export default function AdminEventsPage() {
         {/* Pagination */}
         {data?.pages > 1 && (
           <div className="p-4 border-t border-white/5 flex items-center justify-between">
-            <span className="text-sm text-white/50">Page {data.page} sur {data.pages}</span>
+            <span className="text-sm text-white/50"><span>Page </span><span>{data.page}</span><span> sur </span><span>{data.pages}</span></span>
             <div className="flex items-center gap-2">
               <button
                 disabled={data.page === 1}

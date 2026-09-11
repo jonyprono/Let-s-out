@@ -409,7 +409,7 @@ export function AdminBadgesPage() {
                     )}
                     
                     <button onClick={addRule} className="flex items-center gap-2 text-action-primary text-sm font-semibold hover:bg-action-primary/10 px-4 py-2 rounded-lg transition-colors w-full justify-center border border-dashed border-action-primary/30">
-                      <Plus className="w-4 h-4" /> Ajouter une condition
+                      <Plus className="w-4 h-4" /> <span>Ajouter une condition</span>
                     </button>
                   </div>
                 </section>
@@ -447,7 +447,7 @@ export function AdminBadgesPage() {
                   disabled={saveMutation.isPending || !editingBadge.name || !editingBadge.icon} 
                   className="w-full bg-action-primary text-black font-bold h-12 rounded-xl text-base hover:bg-action-primary/90"
                 >
-                  {saveMutation.isPending ? 'Enregistrement...' : (editingBadge.id ? 'Mettre à jour' : 'Créer le badge')}
+                  {saveMutation.isPending ? <span>Enregistrement...</span> : <span>{editingBadge.id ? 'Mettre à jour' : 'Créer le badge'}</span>}
                 </Button>
                 <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="w-full text-white/60 hover:text-white h-12 rounded-xl">
                   Annuler

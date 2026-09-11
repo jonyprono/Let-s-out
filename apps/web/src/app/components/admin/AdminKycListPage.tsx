@@ -133,7 +133,7 @@ export function AdminKycListPage() {
                     to={`/admin/kyc/${row.userId}`} 
                     className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1A1A1A]/5 hover:bg-action-primary text-white text-xs font-bold transition-all hover:shadow-lg hover:shadow-action-primary/20 active:scale-95"
                   >
-                    Examiner <ChevronRight className="w-3.5 h-3.5" />
+                    <span>Examiner</span> <ChevronRight className="w-3.5 h-3.5" />
                   </Link>
                 </td>
               </tr>
@@ -191,7 +191,7 @@ export function AdminKycListPage() {
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="px-4 py-2 rounded-xl bg-black/30 border border-white/5">
-            <span className="text-sm font-bold text-white/80">Page {page} <span className="text-white/30 mx-1">/</span> {data?.pages}</span>
+            <span className="text-sm font-bold text-white/80"><span>Page </span>{page} <span className="text-white/30 mx-1">/</span> <span>{data?.pages}</span></span>
           </div>
           <button
             type="button"

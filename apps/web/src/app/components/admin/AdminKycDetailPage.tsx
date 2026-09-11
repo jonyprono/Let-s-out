@@ -180,7 +180,7 @@ export function AdminKycDetailPage() {
                   className="flex-[2] py-4 rounded-xl bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-600 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 shadow-lg shadow-red-500/20"
                 >
                   {rejectMut.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <XCircle className="w-5 h-5" />}
-                  Confirmer le rejet
+                  <span>Confirmer le rejet</span>
                 </button>
               </div>
             </div>
@@ -192,7 +192,7 @@ export function AdminKycDetailPage() {
                 className="flex-1 py-4.5 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-400 font-bold flex items-center justify-center gap-2 hover:bg-red-500/10 hover:border-red-500/40 transition-all active:scale-[0.98]"
               >
                 <XCircle className="w-5 h-5" />
-                Rejeter le dossier
+                <span>Rejeter le dossier</span>
               </button>
               <button
                 type="button"
@@ -201,7 +201,7 @@ export function AdminKycDetailPage() {
                 className="flex-[1.5] py-4.5 rounded-2xl bg-gradient-to-r from-[#10B981] to-[#059669] text-white font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-[#10B981]/25 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
               >
                 {approveMut.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
-                Approuver & Vérifier le profil
+                <span>Approuver & Vérifier le profil</span>
               </button>
             </div>
           )}
