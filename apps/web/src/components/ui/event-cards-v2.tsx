@@ -492,7 +492,7 @@ export function RowEventCard({
   const isCompact = layout === 'compact'
   
   // Status check for "Événement à venir"
-  const isUpcoming = event.startAt > new Date()
+  const isUpcoming = new Date(event.startAt) > new Date()
   
   return (
     <div
