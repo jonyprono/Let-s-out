@@ -499,12 +499,12 @@ export function RowEventCard({
       className="flex flex-col w-full bg-white dark:bg-[#1A1A1A] rounded-[24px] overflow-visible shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-white/5 active:scale-[0.98] transition-transform cursor-pointer"
     >
       <div 
-        className={`flex overflow-hidden rounded-[24px] ${isCompact ? 'flex-row h-[120px]' : 'flex-col sm:flex-row sm:h-[180px]'}`} 
+        className={`flex flex-row overflow-hidden rounded-[24px] ${isCompact ? 'h-[130px]' : 'h-[170px]'}`} 
         onClick={onClick}
       >
-        {/* Left/Top: Image area */}
+        {/* Left: Image area — fixed width, full height */}
         <div 
-          className={`relative shrink-0 ${isCompact ? 'w-[120px] h-full' : 'w-full h-[220px] sm:w-[180px] sm:h-full'}`}
+          className={`relative shrink-0 ${isCompact ? 'w-[120px]' : 'w-[140px]'}`}
         >
           <SafeImage
             src={event.coverUrl ?? undefined}
@@ -523,9 +523,9 @@ export function RowEventCard({
 
           {/* Bottom-left: Status Badge (only if upcoming and not compact) */}
           {isUpcoming && !isCompact && (
-            <div className="absolute bottom-3 left-3 bg-black/40 backdrop-blur-md rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/10">
-              <div className="w-2 h-2 rounded-full bg-[#FF7A00]" />
-              <span className="text-white text-[10px] font-semibold tracking-wide">Événement à venir</span>
+            <div className="absolute bottom-3 left-2 right-2 bg-black/40 backdrop-blur-md rounded-full px-2 py-1 flex items-center gap-1.5 border border-white/10">
+              <div className="w-2 h-2 rounded-full bg-[#FF7A00] shrink-0" />
+              <span className="text-white text-[9px] font-semibold tracking-wide truncate">Événement à venir</span>
             </div>
           )}
         </div>
