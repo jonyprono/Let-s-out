@@ -353,6 +353,7 @@ export default function ExplorerMap({
           <RowEventCard
             event={selectedEvent}
             onClick={() => onNavigate('event-details', selectedEvent.id)}
+            layout="compact"
           />
         </div>
       )}
