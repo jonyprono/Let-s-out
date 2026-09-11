@@ -839,6 +839,9 @@ export function ChatDetails() {
               } catch {}
 
               if (eventShare) {
+                const eventSenderName = msg.sender?.profile?.displayName ?? null
+                const eventSenderAvatar = msg.sender?.profile?.avatarUrl ?? null
+
                 return (
                   <div key={msg.id}>
                     {showDateSep && (
@@ -850,39 +853,73 @@ export function ChatDetails() {
                         <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
                       </div>
                     )}
-                    <div className="flex justify-center my-3 px-4">
-                      <button
-                        onClick={() => navigate(`/events/${eventShare.eventId}`)}
-                        className="w-full max-w-[280px] rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1E1E1E] shadow-sm active:scale-[0.98] transition-transform text-left"
-                      >
-                        {eventShare.coverUrl ? (
-                          <div className="relative w-full h-32">
-                            <img src={eventShare.coverUrl} alt={eventShare.title} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                            <div className="absolute bottom-2 left-3 right-3">
-                              <p className="text-white font-bold text-[14px] drop-shadow truncate">{eventShare.title}</p>
+                    {/* Sender row — mirrors regular message bubble layout */}
+                    <div className="flex items-end gap-2 pl-3 pr-3 mb-3">
+                      {/* Avatar */}
+                      {eventSenderAvatar ? (
+                        <img
+                          src={eventSenderAvatar}
+                          alt={eventSenderName ?? ''}
+                          className="w-7 h-7 rounded-full object-cover flex-shrink-0 self-end"
+                          onClick={() => eventSenderName && openProfile(msg.senderId, eventSenderName, eventSenderAvatar)}
+                        />
+                      ) : (
+                        <div
+                          className="w-7 h-7 rounded-full bg-gray-200 dark:bg-[#333] flex-shrink-0 self-end flex items-center justify-center text-[11px] font-bold text-gray-500 dark:text-gray-300"
+                          onClick={() => eventSenderName && openProfile(msg.senderId, eventSenderName, null)}
+                        >
+                          {eventSenderName?.charAt(0) ?? '?'}
+                        </div>
+                      )}
+
+                      <div className="flex flex-col gap-1 max-w-[300px]">
+                        {/* Sender name above card */}
+                        {eventSenderName && (
+                          <button
+                            className="text-[11px] font-semibold text-[#FF7A00] text-left self-start ml-1"
+                            onClick={() => openProfile(msg.senderId, eventSenderName, eventSenderAvatar)}
+                          >
+                            {eventSenderName}
+                          </button>
+                        )}
+                        {/* Event card */}
+                        <button
+                          onClick={() => navigate(`/events/${eventShare.eventId}`)}
+                          className="w-[270px] rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1E1E1E] shadow-sm active:scale-[0.98] transition-transform text-left"
+                        >
+                          {eventShare.coverUrl ? (
+                            <div className="relative w-full h-32">
+                              <img src={eventShare.coverUrl} alt={eventShare.title} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                              <div className="absolute bottom-2 left-3 right-3">
+                                <p className="text-white font-bold text-[14px] drop-shadow truncate">{eventShare.title}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="w-full h-20 bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center">
+                              <p className="text-white font-bold text-[15px] px-4 text-center">{eventShare.title}</p>
+                            </div>
+                          )}
+                          <div className="p-3 flex flex-col gap-1">
+                            {eventShare.coverUrl && (
+                              <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">{eventShare.title}</p>
+                            )}
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                              📅 {format(new Date(eventShare.startAt), "EEE d MMM · HH'h'mm", { locale: fr })}
+                            </p>
+                            {eventShare.city && (
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400">📍 {eventShare.city}</p>
+                            )}
+                            <div className="mt-2 py-1.5 rounded-lg bg-[#FF7A00]/10 text-[#FF7A00] text-[12px] font-semibold text-center">
+                              <span>Voir l'événement →</span>
                             </div>
                           </div>
-                        ) : (
-                          <div className="w-full h-20 bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center">
-                            <p className="text-white font-bold text-[15px] px-4 text-center">{eventShare.title}</p>
-                          </div>
-                        )}
-                        <div className="p-3 flex flex-col gap-1">
-                          {eventShare.coverUrl && (
-                            <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">{eventShare.title}</p>
-                          )}
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                            📅 {format(new Date(eventShare.startAt), "EEE d MMM · HH'h'mm", { locale: fr })}
-                          </p>
-                          {eventShare.city && (
-                            <p className="text-[11px] text-gray-500 dark:text-gray-400">📍 {eventShare.city}</p>
-                          )}
-                          <div className="mt-2 py-1.5 rounded-lg bg-[#FF7A00]/10 text-[#FF7A00] text-[12px] font-semibold text-center">
-                            Voir l'événement →
-                          </div>
-                        </div>
-                      </button>
+                        </button>
+                        {/* Timestamp */}
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 ml-1">
+                          {format(new Date(msg.createdAt), 'HH:mm')}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )
