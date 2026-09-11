@@ -64,7 +64,9 @@ export class AiService {
       prompt += `\nNouveau message (avec image) : ${newMessage}\n`;
 
       const result = await model.generateContent([prompt, imagePart]);
-      const text = result.response.text();
+      const rawText = result.response.text();
+      // Strip any <think>...</think> reasoning blocks before returning
+      const text = rawText.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*/gi, '').trim();
       console.log(`[AI] ✅ Succès avec Gemini (${text.length} chars)`);
       return text;
     } catch (error: any) {
@@ -119,8 +121,9 @@ export class AiService {
           temperature: 0.7,
         });
         let text = completion.choices[0]?.message?.content || '';
-        // Remove <think>...</think> block if present
-        text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        // Remove <think>...</think> blocks (reasoning models) — both closed and unclosed variants
+        text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<think>[\s\S]*/gi, '').trim();
+        if (!text) continue; // If stripping think block left nothing, try next model
         console.log(`[AI] ✅ Succès avec ${model} (${text.length} chars)`);
         return text;
       } catch (err: any) {

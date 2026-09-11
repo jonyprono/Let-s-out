@@ -138,7 +138,15 @@ export function Messages(_props: MessagesProps) {
           if (lastMessage?.type === 'IMAGE') lastMsg = t('messages.types.photo');
           else if (lastMessage?.type === 'AUDIO') lastMsg = t('messages.types.audio');
           else if (lastMessage?.type === 'VIDEO') lastMsg = t('messages.types.video');
-          else if (conv.isGroup && lastMessage?.sender?.profile?.displayName) {
+          else if (lastMessage?.type === 'SYSTEM') {
+            // Detect EVENT_SHARE and show a friendly preview instead of raw JSON
+            try {
+              const parsed = lastMessage.content ? JSON.parse(lastMessage.content) : null;
+              if (parsed?._type === 'EVENT_SHARE') {
+                lastMsg = `📅 ${parsed.title || 'Un événement'}`;
+              }
+            } catch {}
+          } else if (conv.isGroup && lastMessage?.sender?.profile?.displayName) {
             lastMsgPrefix = lastMessage.sender.profile.displayName.split(' ')[0] + ': ';
           }
 
