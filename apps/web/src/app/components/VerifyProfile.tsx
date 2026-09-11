@@ -445,19 +445,21 @@ export function VerifyProfile() {
 
       {/* Hidden file input - Camera */}
       <input
+        id="camera-input"
         ref={cameraInputRef}
         type="file"
         accept="image/*"
         capture={currentStep?.capture || 'environment'}
-        className="hidden"
+        className="opacity-0 absolute w-0 h-0 -z-10"
         onChange={handleCapture}
       />
       {/* Hidden file input - Gallery */}
       <input
+        id="gallery-input"
         ref={galleryInputRef}
         type="file"
         accept="image/*"
-        className="hidden"
+        className="opacity-0 absolute w-0 h-0 -z-10"
         onChange={handleCapture}
       />
 
@@ -608,31 +610,27 @@ export function VerifyProfile() {
 
         {/* Capture buttons */}
         <div className="flex gap-3">
-          <button
-            onClick={() => {
-              if (cameraInputRef.current) cameraInputRef.current.click()
-            }}
-            className="flex-1 flex flex-col items-center gap-2 px-4 py-4 border border-gray-200 dark:border-[#333333] rounded-2xl bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+          <label
+            htmlFor="camera-input"
+            className="flex-1 flex flex-col items-center gap-2 px-4 py-4 border border-gray-200 dark:border-[#333333] rounded-2xl bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-full bg-[#FF7A00]/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-[#FF7A00]/10 flex items-center justify-center pointer-events-none">
               <Camera className="w-5 h-5 text-[#FF7A00]" />
             </div>
-            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 pointer-events-none">
               {step === 3 || step === 4 ? 'Caméra avant' : 'Photographier'}
             </span>
-          </button>
+          </label>
 
-          <button
-            onClick={() => {
-              if (galleryInputRef.current) galleryInputRef.current.click()
-            }}
-            className="flex-1 flex flex-col items-center gap-2 px-4 py-4 border border-gray-200 dark:border-[#333333] rounded-2xl bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+          <label
+            htmlFor="gallery-input"
+            className="flex-1 flex flex-col items-center gap-2 px-4 py-4 border border-gray-200 dark:border-[#333333] rounded-2xl bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform cursor-pointer"
           >
-            <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#222222] flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-[#222222] flex items-center justify-center pointer-events-none">
               <Upload className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </div>
-            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">Galerie</span>
-          </button>
+            <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 pointer-events-none">Galerie</span>
+          </label>
         </div>
 
         {/* Retake */}
