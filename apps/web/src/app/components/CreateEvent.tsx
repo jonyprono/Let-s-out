@@ -203,6 +203,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [lat, setLat] = useState<number | null>(sessionDraft?.lat ?? null)
   const [lon, setLon] = useState<number | null>(sessionDraft?.lon ?? null)
   const [privacy, setPrivacy] = useState<'PUBLIC' | 'PRIVATE' | null>(sessionDraft?.privacy ?? null)
+  const [requiresApproval, setRequiresApproval] = useState<boolean>(sessionDraft?.requiresApproval ?? false)
   const [allowGuestInvites, setAllowGuestInvites] = useState(sessionDraft?.allowGuestInvites ?? false)
   const [description, setDescription] = useState(sessionDraft?.description ?? '')
   const [participationMode, setParticipationMode] = useState<string | null>(sessionDraft?.participationMode ?? null)
@@ -218,6 +219,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [showEndDateSheet, setShowEndDateSheet] = useState(false)
   const [showRegEndDateSheet, setShowRegEndDateSheet] = useState(false)
   const [showPrivacySheet, setShowPrivacySheet] = useState(false)
+  const [showJoinModeSheet, setShowJoinModeSheet] = useState(false)
   const [showParticipationSheet, setShowParticipationSheet] = useState(false)
   const [showOrganizerSearch, setShowOrganizerSearch] = useState(false)
   const [showLocationSearch, setShowLocationSearch] = useState(false)
@@ -260,14 +262,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     sessionDraft = {
       title, category, startDate, startTime, hasEndDate, endDate, endTime,
       regEndDate, regEndTime,
-      address, city, lat, lon, privacy, allowGuestInvites, description,
+      address, city, lat, lon, privacy, requiresApproval, allowGuestInvites, description,
       participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
       enablePool, poolDescription, poolTarget, poolMinAmount
     }
   }, [
     title, category, startDate, startTime, hasEndDate, endDate, endTime,
     regEndDate, regEndTime,
-    address, city, lat, lon, privacy, allowGuestInvites, description,
+    address, city, lat, lon, privacy, requiresApproval, allowGuestInvites, description,
     participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
     enablePool, poolDescription, poolTarget, poolMinAmount
   ])
@@ -451,6 +453,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         maxAttendees: maxPlaces ? parseInt(maxPlaces) : undefined,
         price: amount ? parseFloat(amount) : undefined,
         isPrivate: privacy === 'PRIVATE',
+        requiresApproval,
         coverUrl,
         // Cagnotte fields: send explicit null on edit to erase from DB when switching to free
         poolTarget: enablePool && poolTarget
@@ -573,6 +576,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         coverUrl: coverPreview || undefined,
         status: 'PUBLISHED',
         isPrivate: privacy === 'PRIVATE',
+        requiresApproval,
         maxAttendees: maxPlaces ? parseInt(maxPlaces) : undefined,
         price: amount ? parseFloat(amount) : undefined,
         poolTarget: enablePool && poolTarget ? parseFloat(poolTarget) : undefined,
@@ -1055,6 +1059,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 onClick={() => setShowPrivacySheet(true)}
               />
 
+              {/* Mode d'adhésion */}
+              <InputField
+                label="Mode d'adhésion"
+                value={requiresApproval ? "Demande d'approbation requise" : "Rejoindre directement"}
+                placeholder="Comment les gens rejoignent ?"
+                readOnly
+                onClick={() => setShowJoinModeSheet(true)}
+              />
+
               {/* Dynamic fields */}
               {privacy && (
                 <div className="animate-in slide-in-from-top-2">
@@ -1453,6 +1466,40 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <SettingsToggle checked={allowGuestInvites} onChange={setAllowGuestInvites} />
                 </div>
               )}
+            </div>
+          ))}
+        </div>
+      </BottomSheet>
+
+      {/* ── Join Mode Sheet ──────────────────────────────────────────────── */}
+      <BottomSheet title="Mode d'adhésion" open={showJoinModeSheet} onClose={() => setShowJoinModeSheet(false)}>
+        <p className="text-[14px] text-[var(--color-text-secondary)] mb-6 leading-[1.6]">
+          Comment souhaitez-vous que les utilisateurs rejoignent cet événement ?
+        </p>
+        <div className="flex flex-col">
+          {[
+            { value: false, label: 'Rejoindre directement', desc: "Accès immédiat après clic", Icon: SquareUnlock01Icon },
+            { value: true, label: "Demande d'approbation requise", desc: "Vous devez valider chaque demande", Icon: SquareLock01Icon },
+          ].map(opt => (
+            <div key={opt.value ? 'true' : 'false'} className="flex flex-col w-full py-4 border-b border-[var(--border-tertiary)] last:border-0">
+              <button
+                onClick={() => { setRequiresApproval(opt.value); setShowJoinModeSheet(false) }}
+                className="w-full flex items-center gap-4 text-left"
+              >
+                {/* Frame icon */}
+                <div className="w-[32px] h-[32px] rounded-[16px] bg-[#F5F5F5] flex items-center justify-center shrink-0">
+                  <opt.Icon className="w-[20px] h-[20px] text-[#737373]" strokeWidth={1.25} />
+                </div>
+                {/* Text */}
+                <div className="flex-1">
+                  <p className="text-[length:var(--font-size-body-medium)] font-bold text-[var(--color-text-primary)]">{opt.label}</p>
+                  <p className="text-[12px] text-[var(--color-text-secondary)] mt-0.5">{opt.desc}</p>
+                </div>
+                {/* Radio */}
+                <div className={`w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors ${requiresApproval === opt.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'}`}>
+                  {requiresApproval === opt.value && <div className="w-[10px] h-[10px] rounded-full bg-[var(--brand-orange-500)]" />}
+                </div>
+              </button>
             </div>
           ))}
         </div>

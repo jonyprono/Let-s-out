@@ -254,7 +254,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const { isEnabled } = useFeatureFlags()
 
-  const hasJoined = (!!myBookingData && myBookingData.status !== 'CANCELLED') || isCreator
+  const isPendingParticipant = !!myBookingData && myBookingData.status === 'PENDING'
+  const hasJoined = (!!myBookingData && myBookingData.status === 'CONFIRMED') || isCreator
 
   useEffect(() => {
     if (user && event && event.status !== 'DRAFT') {
@@ -269,7 +270,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['events', id] })
       qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
-      navigate(`/events/${id}/success`)
+      if (event?.requiresApproval) {
+        setShowJoinModal(false)
+        toast.success('Votre demande a bien été envoyée.')
+      } else {
+        navigate(`/events/${id}/success`)
+      }
     },
     onError: (err: any) => {
       const errCode = err?.response?.data?.error
@@ -384,6 +390,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const handleShare = async () => {
     if (!event) return;
     hapticFeedback.impact();
+    if (!hasJoined && !isOrganizer) {
+      toast.info("Vous devez rejoindre l'événement pour pouvoir le partager.");
+      return;
+    }
     setShowInviteModal(true);
   };
 
@@ -912,11 +922,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
                   handleJoin();
                 }}
-                disabled={joinMutation.isPending || isFull || isPastDeadline || bookingLoading}
+                disabled={joinMutation.isPending || isFull || isPastDeadline || bookingLoading || isPendingParticipant}
                 className="flex-1 rounded-full font-medium text-[14px] font-poppins"
               >
-                {joinMutation.isPending || bookingLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : "Rejoindre l'événement"}
+                {joinMutation.isPending || bookingLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isPendingParticipant ? 'Demande en attente...' : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : event?.requiresApproval ? 'Demander à rejoindre' : "Rejoindre l'événement"}
               </Button>
+
             )
           )}
         </div>

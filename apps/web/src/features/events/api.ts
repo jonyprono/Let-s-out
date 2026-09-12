@@ -137,7 +137,7 @@ export const eventsApi = {
 
   /** Get pending bookings for an event (organizer only) */
   getPendingBookings: (id: string) =>
-    apiClient.get<{ data: any[] }>(`/events/${id}/bookings/pending`),
+    apiClient.get<{ data: any[] }>(`/events/${id}/pending-requests`),
 
   /** Approve a pending booking */
   approveBooking: async (eventId: string, bookingId: string) => {

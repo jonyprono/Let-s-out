@@ -63,6 +63,12 @@ export function ManageEvent() {
     enabled: !!id,
   });
 
+  const { data: pendingRequests } = useQuery({
+    queryKey: ['events', id, 'pending-requests'],
+    queryFn: () => eventsApi.getPendingBookings(id!).then(res => res.data.data),
+    enabled: !!id && !!event?.requiresApproval && (user?.id === event?.creatorId || (event?.coHostIds || []).includes(user?.id)),
+  });
+
   if (isLoading) {
     return <div className="w-full h-full flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]"><div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF7A00] animate-spin" /></div>;
   }
@@ -137,7 +143,7 @@ export function ManageEvent() {
       {/* Tab Content */}
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
         {activeTab === 'details' && <TabDetails event={event} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
-        {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
+        {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} pendingRequests={pendingRequests || []} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
         {activeTab === 'cagnotte' && <TabCagnotteInline event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} setCagnotteStep={setCagnotteStep} />}
       </div>
     </div>
@@ -364,7 +370,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
 // ----------------------------------------------------------------------
 // TAB: PARTICIPANTS
 // ----------------------------------------------------------------------
-function TabParticipants({ event, attendees, isCreator }: { event: any, attendees: any[], isCreator?: boolean }) {
+function TabParticipants({ event, attendees, pendingRequests, isCreator }: { event: any, attendees: any[], pendingRequests?: any[], isCreator?: boolean }) {
   const { openUserProfile } = useUserProfile();
   const [showInviteOptions, setShowInviteOptions] = useState(false);
   const [showInviteFriends, setShowInviteFriends] = useState(false);
@@ -399,16 +405,84 @@ function TabParticipants({ event, attendees, isCreator }: { event: any, attendee
 
   return (
     <div className="flex flex-col h-full relative">
+      {/* Pending requests */}
+      {pendingRequests && pendingRequests.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-[16px] font-bold text-gray-900 dark:text-white mb-3">Demandes en attente ({pendingRequests.length})</h2>
+          <div className="flex flex-col gap-3">
+            {pendingRequests.map(req => (
+              <div key={req.id} className="flex items-center justify-between p-3 bg-white dark:bg-[#1A1A1A] rounded-[12px] border border-[var(--border-default)]">
+                <div className="flex items-center gap-3">
+                  <div onClick={() => openUserProfile(
+                      req.user.id,
+                      { displayName: req.user.profile?.displayName || req.user.profile?.username || 'Utilisateur', avatarUrl: req.user.profile?.avatarUrl },
+                      { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                    )}
+                    className="cursor-pointer shrink-0"
+                  >
+                    {req.user.profile?.avatarUrl ? (
+                      <SafeImage src={req.user.profile.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                    ) : (
+                      <UserAvatarIcon size={40} />
+                    )}
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <span className="text-[14px] font-semibold text-gray-900 dark:text-white leading-none mb-1">
+                      {req.user.profile?.displayName || req.user.profile?.username || 'Utilisateur'}
+                    </span>
+                    <span className="text-[12px] text-gray-500 leading-none">Demande envoyée</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await eventsApi.rejectBooking(event.id, req.id)
+                        toast.success('Demande refusée')
+                        qc.invalidateQueries({ queryKey: ['events', event.id] })
+                        qc.invalidateQueries({ queryKey: ['events', event.id, 'pending-requests'] })
+                      } catch (e: any) {
+                        toast.error(e?.response?.data?.message || 'Erreur lors du refus')
+                      }
+                    }}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 active:scale-95 transition-transform"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await eventsApi.approveBooking(event.id, req.id)
+                        toast.success('Demande acceptée')
+                        qc.invalidateQueries({ queryKey: ['events', event.id] })
+                        qc.invalidateQueries({ queryKey: ['events', event.id, 'attendees'] })
+                        qc.invalidateQueries({ queryKey: ['events', event.id, 'pending-requests'] })
+                      } catch (e: any) {
+                        toast.error(e?.response?.data?.message || 'Erreur lors de l\'approbation')
+                      }
+                    }}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-green-50 text-green-500 active:scale-95 transition-transform"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Count header */}
       <div className="bg-[#FFF9EC] rounded-xl p-3 flex items-center gap-3 mb-2">
         <UserAvatarIcon size={22} />
-        <span className="text-[14px] font-semibold text-gray-700">{participants.length} Participants</span>
+        <span className="text-[14px] font-semibold text-gray-700">{participants.length} Participants validés</span>
       </div>
 
       {/* List */}
       <div className="flex flex-col pb-24">
         {participants.length === 0 ? (
           <p className="text-[13px] text-gray-400 text-center py-10">Aucun participant pour le moment.</p>
+
         ) : (
           participants.map((user: any) => {
             const isCandidate = validatorCandidates.includes(user.id);

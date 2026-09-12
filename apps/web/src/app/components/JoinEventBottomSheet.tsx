@@ -59,7 +59,11 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
       qc.invalidateQueries({ queryKey: ['events', event.id] })
       qc.invalidateQueries({ queryKey: ['events', event.id, 'my-booking'] })
       onClose()
-      navigate(`/events/${event.id}/success`, { state: { amountPaid: finalAmount } })
+      if (event?.requiresApproval) {
+        toast.success('Votre demande a bien été envoyée.')
+      } else {
+        navigate(`/events/${event.id}/success`, { state: { amountPaid: finalAmount } })
+      }
     },
     onError: (err: any) => {
       const errCode = err?.response?.data?.error

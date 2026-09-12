@@ -1047,8 +1047,14 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(402).send({ error: 'PAYMENT_REQUIRED', message: 'Ce événement est payant. Veuillez procéder au paiement.' })
     }
 
-    if (event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
-      return reply.code(400).send({ error: 'Event is full' })
+    // maxAttendees check: count only CONFIRMED bookings to avoid PENDING requests consuming slots
+    if (event.maxAttendees) {
+      const confirmedCount = await app.prisma.booking.count({
+        where: { eventId: id, status: 'CONFIRMED' }
+      })
+      if (confirmedCount >= event.maxAttendees) {
+        return reply.code(400).send({ error: 'Event is full' })
+      }
     }
 
     // Block creator and co-hosts from joining their own event
@@ -1061,19 +1067,22 @@ export default async function eventsRoutes(app: FastifyInstance) {
     })
     if (existing) return reply.code(409).send({ error: 'Already joined', alreadyJoined: true })
 
-    const [booking] = await app.prisma.$transaction([
-      app.prisma.booking.create({
-        data: {
-          userId: sub,
-          eventId: id,
-          status: event.requiresApproval ? 'PENDING' : 'CONFIRMED',
-        },
-      }),
-      app.prisma.event.update({
+    // In REQUEST_APPROVAL mode: create PENDING booking without incrementing currentAttendees.
+    // currentAttendees is only incremented when the request is approved.
+    const booking = await app.prisma.booking.create({
+      data: {
+        userId: sub,
+        eventId: id,
+        status: event.requiresApproval ? 'PENDING' : 'CONFIRMED',
+      },
+    })
+
+    if (!event.requiresApproval) {
+      await app.prisma.event.update({
         where: { id },
         data: { currentAttendees: { increment: 1 } },
-      }),
-    ])
+      })
+    }
 
     // Add to event conversation
     try {
@@ -1162,7 +1171,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const operations: any[] = []
 
-    if (booking && booking.status !== 'CANCELLED') {
+    if (booking && booking.status === 'CONFIRMED') {
+      // Only decrement if booking was CONFIRMED (not a pending request being cancelled)
       operations.push(
         app.prisma.booking.update({
           where: { id: booking.id },
@@ -1173,6 +1183,14 @@ export default async function eventsRoutes(app: FastifyInstance) {
         app.prisma.event.update({
           where: { id },
           data: { currentAttendees: { decrement: 1 } },
+        })
+      )
+    } else if (booking && booking.status === 'PENDING') {
+      // Pending request: cancel without touching currentAttendees
+      operations.push(
+        app.prisma.booking.update({
+          where: { id: booking.id },
+          data: { status: 'CANCELLED' },
         })
       )
     }
@@ -1222,6 +1240,113 @@ export default async function eventsRoutes(app: FastifyInstance) {
     });
 
     return reply.send({ data })
+  })
+
+  // List pending join requests (organizer/cohost only)
+  app.get('/:id/pending-requests', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+
+    const event = await app.prisma.event.findUnique({ where: { id }, select: { creatorId: true, coHostIds: true } })
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+    const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
+
+    const pending = await app.prisma.booking.findMany({
+      where: { eventId: id, status: 'PENDING' },
+      include: {
+        user: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } }
+      },
+      orderBy: { createdAt: 'asc' },
+    })
+    return reply.send({ data: pending })
+  })
+
+  // Approve a join request (organizer/cohost only)
+  app.patch('/:id/bookings/:bookingId/approve', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id, bookingId } = req.params as { id: string; bookingId: string }
+
+    const event = await app.prisma.event.findUnique({ where: { id } })
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+    const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
+
+    const booking = await app.prisma.booking.findUnique({ where: { id: bookingId } })
+    if (!booking || booking.eventId !== id) return reply.code(404).send({ error: 'Booking not found' })
+    if (booking.status !== 'PENDING') return reply.code(400).send({ error: 'Request is not pending' })
+
+    // Check capacity with confirmed count — PENDING slots don't count toward maxAttendees
+    if (event.maxAttendees) {
+      const confirmedCount = await app.prisma.booking.count({
+        where: { eventId: id, status: 'CONFIRMED' }
+      })
+      if (confirmedCount >= event.maxAttendees) {
+        return reply.code(400).send({ error: "L'événement est complet — impossible d'approuver cette demande." })
+      }
+    }
+
+    // Approve: set CONFIRMED + increment currentAttendees atomically
+    await app.prisma.$transaction([
+      app.prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } }),
+      app.prisma.event.update({ where: { id }, data: { currentAttendees: { increment: 1 } } }),
+    ])
+
+    // Add to event conversation (only now — not during the request)
+    try {
+      const conversation = await app.prisma.conversation.findUnique({ where: { eventId: id } })
+      if (conversation) {
+        await app.prisma.conversationMember.upsert({
+          where: { conversationId_userId: { conversationId: conversation.id, userId: booking.userId } },
+          create: { conversationId: conversation.id, userId: booking.userId },
+          update: {},
+        })
+      }
+    } catch (e) { app.log.warn(`Failed to add approved user to conversation: ${e}`) }
+
+    // Notify the requester
+    try {
+      await createAndSendNotification(app, {
+        userId: booking.userId,
+        type: 'JOIN_APPROVED',
+        title: '✅ Demande approuvée !',
+        body: `Votre demande pour rejoindre "${event.title}" a été approuvée. Bienvenue !`,
+        data: { eventId: id, screen: 'event-details' }
+      })
+    } catch (e) { app.log.warn(`Failed to send approval notification: ${e}`) }
+
+    return reply.send({ message: 'Request approved' })
+  })
+
+  // Reject a join request (organizer/cohost only)
+  app.patch('/:id/bookings/:bookingId/reject', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id, bookingId } = req.params as { id: string; bookingId: string }
+
+    const event = await app.prisma.event.findUnique({ where: { id }, select: { creatorId: true, coHostIds: true, title: true } })
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+    const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
+
+    const booking = await app.prisma.booking.findUnique({ where: { id: bookingId } })
+    if (!booking || booking.eventId !== id) return reply.code(404).send({ error: 'Booking not found' })
+    if (booking.status !== 'PENDING') return reply.code(400).send({ error: 'Request is not pending' })
+
+    // Reject: set CANCELLED — currentAttendees was never incremented for PENDING, so no decrement needed
+    await app.prisma.booking.update({ where: { id: bookingId }, data: { status: 'CANCELLED' } })
+
+    // Notify the requester
+    try {
+      await createAndSendNotification(app, {
+        userId: booking.userId,
+        type: 'JOIN_REJECTED',
+        title: '❌ Demande refusée',
+        body: `Votre demande pour rejoindre "${event.title}" n'a pas été approuvée.`,
+        data: { eventId: id, screen: 'event-details' }
+      })
+    } catch (e) { app.log.warn(`Failed to send rejection notification: ${e}`) }
+
+    return reply.send({ message: 'Request rejected' })
   })
 
   // Join private event via code (QR scan)
