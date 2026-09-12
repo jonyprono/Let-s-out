@@ -496,16 +496,15 @@ export function RowEventCard({
   
   return (
     <div
-      className="flex flex-col w-full bg-white dark:bg-[#1A1A1A] rounded-[24px] overflow-visible shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.2)] border border-gray-100 dark:border-white/5 active:scale-[0.98] transition-transform cursor-pointer"
+      className="flex flex-col w-full bg-white dark:bg-[#1A1A1A] rounded-[24px] overflow-visible shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-white/5 active:scale-[0.98] transition-transform cursor-pointer"
     >
-      <div 
-        className={`flex flex-row overflow-hidden rounded-[24px] ${isCompact ? 'h-[130px]' : 'h-[170px]'}`} 
+      {/* ── Main row: image left / content right ── */}
+      <div
+        className={`flex flex-row overflow-hidden rounded-[24px] ${isCompact ? 'min-h-[130px]' : 'min-h-[190px]'}`}
         onClick={onClick}
       >
-        {/* Left: Image area — fixed width, full height */}
-        <div 
-          className={`relative shrink-0 ${isCompact ? 'w-[120px]' : 'w-[140px]'}`}
-        >
+        {/* Left: Image — 43% width, stretches to full card height */}
+        <div className={`relative shrink-0 self-stretch ${isCompact ? 'w-[120px]' : 'w-[43%]'}`}>
           <SafeImage
             src={event.coverUrl ?? undefined}
             alt={event.title}
@@ -513,96 +512,94 @@ export function RowEventCard({
             fallback={<div className="w-full h-full bg-gray-200 dark:bg-gray-800" />}
           />
           <div className="absolute inset-0 bg-black/10" />
-          
+
           {/* Top-left: Date Badge */}
-          <div className="absolute top-3 left-3 bg-[#111] dark:bg-black rounded-[14px] flex flex-col items-center justify-center shadow-lg border border-white/10" style={{ width: 46, height: 50 }}>
+          <div
+            className="absolute top-3 left-3 bg-[#111] dark:bg-black rounded-[14px] flex flex-col items-center justify-center shadow-lg border border-white/10"
+            style={{ width: 46, height: 50 }}
+          >
             <span className="text-white font-bold text-[18px] leading-none mt-1">{day}</span>
             <span className="text-gray-300 font-bold text-[9px] leading-none mt-0.5 tracking-wide">{month}</span>
             <div className="w-4 h-0.5 bg-[#FF7A00] rounded-full mt-1.5" />
           </div>
 
-          {/* Bottom-left: Status Badge (only if upcoming and not compact) */}
+          {/* Bottom-left: Status Badge */}
           {isUpcoming && !isCompact && (
-            <div className="absolute bottom-3 left-2 right-2 bg-black/40 backdrop-blur-md rounded-full px-2 py-1 flex items-center gap-1.5 border border-white/10">
+            <div className="absolute bottom-3 left-2 right-2 bg-black/45 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
               <div className="w-2 h-2 rounded-full bg-[#FF7A00] shrink-0" />
               <span className="text-white text-[9px] font-semibold tracking-wide truncate">Événement à venir</span>
             </div>
           )}
         </div>
 
-        {/* Right/Bottom: Content area */}
-        <div className="flex-1 px-4 py-3 flex flex-col justify-between overflow-hidden bg-white dark:bg-[#1A1A1A]">
+        {/* Right: Content */}
+        <div className="flex-1 min-w-0 px-3 py-3 flex flex-col justify-between bg-white dark:bg-[#1A1A1A]">
+          {/* Top: Title + Favorite */}
           <div>
-            {/* Title & Favorite */}
-            <div className="flex items-start justify-between gap-3 mb-1">
-              <h4 className="font-extrabold text-[16px] sm:text-[18px] text-[#0B1526] dark:text-white leading-tight line-clamp-1">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h4 className="font-extrabold text-[15px] text-[#0B1526] dark:text-white leading-tight line-clamp-2 flex-1">
                 {event.title}
               </h4>
               <button
                 onClick={e => { e.stopPropagation(); onSaveToggle(); }}
-                className="w-8 h-8 rounded-full border border-gray-100 dark:border-white/10 flex items-center justify-center -mt-1 active:scale-95 transition-transform shrink-0 bg-white dark:bg-[#222]"
+                className="w-7 h-7 rounded-full border border-gray-100 dark:border-white/10 flex items-center justify-center shrink-0 active:scale-95 transition-transform bg-white dark:bg-[#222]"
               >
-                <Star className="w-4 h-4" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : '#888'} />
+                <Star className="w-3.5 h-3.5" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : '#bbb'} />
               </button>
             </div>
-            
-            {/* Description (only if not compact) */}
+
+            {/* Description */}
             {!isCompact && event.description && (
-              <p className="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed mb-3 pr-2">
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed mb-2">
                 {event.description}
               </p>
             )}
 
-            <div className={`flex flex-col gap-1.5 ${isCompact ? 'mt-1' : ''}`}>
+            {/* Meta info */}
+            <div className="flex flex-col gap-1 mt-1">
               {/* Date */}
-              <div className="flex items-center gap-2 text-[12px] text-[#FF7A00] font-bold">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18" strokeLinecap="round"/></svg>
+              <div className="flex items-center gap-1.5 text-[11px] text-[#FF7A00] font-bold">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18" strokeLinecap="round"/></svg>
                 <span className="capitalize truncate">{fullDate}</span>
               </div>
-
               {/* Location */}
-              <div className="flex items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400 font-medium">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
                 <span className="truncate">{location}</span>
               </div>
-            </div>
-          </div>
-
-          <div className="mt-3 flex items-end justify-between">
-            {/* Participants & Tags */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400 font-medium">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="7" r="4"/><path d="M3 20c0-3.866 2.686-7 6-7s6 3.134 6 7" strokeLinecap="round"/><path d="M16 3.5a4 4 0 0 1 0 7M21 20c0-3.866-2.686-7-6-7" strokeLinecap="round"/></svg>
-                <span>
-                  <span className="text-[#FF7A00] font-bold">{event.currentAttendees}</span>
-                  {event.maxAttendees ? `/${event.maxAttendees}` : ''} participants
-                </span>
-              </div>
-              
-              {/* Tags (only if not compact) */}
-              {!isCompact && tags.length > 0 && (
-                <div className="flex items-center gap-1.5 overflow-hidden">
-                  {tags.slice(0, 3).map((tag: any, idx: number) => (
-                    <span key={idx} className="bg-[#F4F1FF] dark:bg-[#6C5DD3]/10 text-[#6C5DD3] dark:text-[#8D82E0] px-2.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap">
-                      {tag.name ?? tag}
-                    </span>
-                  ))}
+              {/* Participants + Cagnotte on same row */}
+              <div className="flex items-center justify-between gap-1 mt-0.5">
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="9" cy="7" r="4"/><path d="M3 20c0-3.866 2.686-7 6-7s6 3.134 6 7" strokeLinecap="round"/><path d="M16 3.5a4 4 0 0 1 0 7M21 20c0-3.866-2.686-7-6-7" strokeLinecap="round"/></svg>
+                  <span>
+                    <span className="text-[#FF7A00] font-bold">{event.currentAttendees}</span>
+                    {event.maxAttendees ? `/${event.maxAttendees}` : ''} participants
+                  </span>
                 </div>
-              )}
-            </div>
-
-            {/* Cagnotte Button */}
-            {hasCagnotte && (
-              <div className="bg-[#FFF8F3] dark:bg-[#FF7A00]/10 text-[#FF7A00] px-3 py-1.5 rounded-[10px] text-[11px] font-bold border border-[#FF7A00]/20 flex items-center gap-1">
-                <div className="w-3.5 h-3.5 bg-[#FF7A00] text-white rounded-full flex items-center justify-center text-[9px]">$</div>
-                Cagnotte
+                {hasCagnotte && (
+                  <div className="bg-[#FFF8F3] dark:bg-[#FF7A00]/10 text-[#FF7A00] px-2.5 py-1 rounded-[10px] text-[10px] font-bold border border-[#FF7A00]/20 flex items-center gap-1 shrink-0">
+                    <div className="w-3 h-3 bg-[#FF7A00] text-white rounded-full flex items-center justify-center text-[8px] shrink-0">$</div>
+                    Cagnotte
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
+
+          {/* Tags */}
+          {!isCompact && tags.length > 0 && (
+            <div className="flex items-center gap-1 mt-2 flex-wrap">
+              {tags.slice(0, 4).map((tag: any, idx: number) => (
+                <span key={idx} className="bg-[#F4F1FF] dark:bg-[#6C5DD3]/10 text-[#6C5DD3] dark:text-[#8D82E0] px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap">
+                  {tag.name ?? tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Separator & Interaction bar */}
+      {/* ── Separator + Interaction bar ── */}
       <div className="mx-4 h-px bg-gray-100 dark:bg-white/5" />
       <div className="px-4 py-2">
         <FeedInteractionBar event={event} />
