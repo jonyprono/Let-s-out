@@ -105,6 +105,15 @@ apiClient.interceptors.response.use(
   async (error) => {
     const original = error.config
 
+    // ── Guard: raw browser event (e.g. ProgressEvent from XHR onerror on Capacitor) ──
+    // These are NOT proper Axios/Error objects — they have no .response, no .config,
+    // and stringify to "[object ProgressEvent]" which leaks to the UI if unhandled.
+    if (error && !(error instanceof Error) && !error?.response && !error?.config) {
+      const wrapped = new Error('Network Error')
+      ;(wrapped as any).code = 'ERR_NETWORK'
+      return Promise.reject(wrapped)
+    }
+
     // ── 401: try to refresh token ──────────────────────────────────────────
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint(original.url)) {
       const authState = useAuthStore.getState()

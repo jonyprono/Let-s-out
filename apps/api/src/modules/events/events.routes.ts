@@ -952,9 +952,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: "Impossible de supprimer la cagnotte : des contributions ont déjà été reçues. Vous devez rembourser les participants d'abord." })
     }
 
-    if (body.registrationDeadline && new Date(body.registrationDeadline).getTime() !== event.registrationDeadline?.getTime()) {
-      if (event.poolCollected > 0) {
-        return reply.code(403).send({ error: "La date limite ne peut plus être modifiée car des contributions ont déjà été reçues." })
+    if (body.registrationDeadline) {
+      const newDeadline = new Date(body.registrationDeadline)
+      if (newDeadline < new Date()) {
+        return reply.code(400).send({ error: "La date limite d'inscription ne peut pas être fixée dans le passé." })
       }
     }
 

@@ -401,12 +401,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     if (!canSubmit) { toast.error('Remplissez le mode de participation.'); return }
     setLoading(true)
     const editEventId = location.state?.editEventId || createdEventId
+    let imageUploadedBeforePatch = false
     try {
       let coverUrl: string | undefined
       if (coverFile) {
         try {
           const { data } = await eventsApi.uploadCover(coverFile)
           coverUrl = data.url
+          imageUploadedBeforePatch = true
         } catch (uploadErr) {
           console.warn('Cover upload failed, proceeding without cover:', uploadErr)
           toast.warning("L'image de couverture n'a pas pu être téléchargée, mais l'événement sera sauvegardé.")
@@ -522,10 +524,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       setStep('done')
     } catch (err: any) {
       console.error('CreateEvent Error:', err)
+      // Guard: raw ProgressEvent or non-Error object (XHR onerror on Capacitor)
+      const isRawEvent = err && !(err instanceof Error) && !err.response
       const apiMsg = err?.response?.data?.message || err?.response?.data?.error
       const msg = Array.isArray(apiMsg) ? apiMsg[0] : apiMsg
-      let errorStr = typeof msg === 'string' ? msg : (err?.message || 'Erreur lors de la création')
-      if (String(errorStr).includes('ProgressEvent')) errorStr = 'Erreur de connexion au serveur'
+      let errorStr: string
+      if (isRawEvent || String(err).includes('ProgressEvent') || String(err?.message).includes('ProgressEvent')) {
+        errorStr = imageUploadedBeforePatch
+          ? "L'image a bien été mise à jour, mais les autres modifications n'ont pas pu être enregistrées. Vérifiez votre connexion et réessayez."
+          : 'Erreur de connexion au serveur. Vérifiez votre connexion et réessayez.'
+      } else {
+        errorStr = typeof msg === 'string' ? msg : (err?.message || 'Erreur lors de la création')
+        if (String(errorStr).includes('ProgressEvent')) errorStr = 'Erreur de connexion au serveur'
+      }
       toast.error(errorStr)
     } finally { setLoading(false) }
   }
