@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, Shield } from 'lucide-react';
+import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { videosApi } from '@/features/videos/api';
 import { VideoCard } from '@/features/videos/components/VideoCard';
 import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
+import { ReportModal } from '@/components/shared/ReportModal';
 
 
 interface ProfileProps {
@@ -35,6 +36,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const location = useLocation();
   const preloadedProfile = location.state?.profile;
   const [showBlockModal, setShowBlockModal] = useState(false);
+  const [showActionsSheet, setShowActionsSheet] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // Scroll to top whenever the profile page mounts
   useEffect(() => {
@@ -163,6 +166,29 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     onError: () => toast.error('Erreur lors de l\'action.')
   });
 
+  // Mute mutation (mirrors UserProfileSheet)
+  const muteMut = useMutation({
+    mutationFn: async () => {
+      const dm = await chatApi.createDM(targetUserId!);
+      await chatApi.muteConversation(dm.id, new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString());
+    },
+    onSuccess: () => toast.success('Utilisateur mis en sourdine'),
+    onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur')
+  });
+
+  // Report mutation (mirrors UserProfileSheet)
+  const reportMut = useMutation({
+    mutationFn: async (reason: string) => {
+      if (!targetUserId) throw new Error('No user id');
+      await usersApi.reportUser(targetUserId, reason);
+    },
+    onSuccess: () => {
+      toast.success('Utilisateur signalé');
+      setShowReportModal(false);
+    },
+    onError: () => toast.error('Erreur lors du signalement')
+  });
+
   // Navigate to chat
   const handleMessage = async () => {
     try {
@@ -236,10 +262,11 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           )}
           {!isOwnProfile && (
             <button
-              onClick={(e) => { e.stopPropagation(); setShowBlockModal(true); }}
-              className={`w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border ${effectiveFriendStatus === 'blocked' ? 'border-red-500 text-red-500' : 'border-gray-200 text-gray-700 dark:text-white'}`}
+              onClick={(e) => { e.stopPropagation(); setShowActionsSheet(true); }}
+              className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border border-gray-200 text-gray-700 dark:text-white"
+              aria-label="Plus d'actions"
             >
-              <Shield className="w-5 h-5" />
+              <MoreVertical className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -624,28 +651,129 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         />
       )}
 
+      {/* ── Actions bottom sheet (⋮ menu) ──────────────────────────────── */}
+      {showActionsSheet && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowActionsSheet(false)}
+        >
+          <div
+            className="w-full max-w-lg bg-white dark:bg-[#1A1A1A] rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 pb-safe"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+            </div>
+            {/* Header */}
+            <div className="px-5 pt-2 pb-4 border-b border-gray-100 dark:border-white/10">
+              <p className="text-[16px] font-bold text-gray-900 dark:text-white text-center">{displayName}</p>
+            </div>
+            {/* Actions */}
+            <div className="px-4 py-3 flex flex-col gap-1">
+              {/* Mute */}
+              <button
+                onClick={() => { setShowActionsSheet(false); muteMut.mutate(); }}
+                disabled={muteMut.isPending}
+                className="flex items-center gap-4 w-full px-3 py-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center shrink-0">
+                  {muteMut.isPending ? <Loader2 className="w-5 h-5 animate-spin text-gray-500" /> : <BellOff className="w-5 h-5 text-gray-600 dark:text-gray-300" strokeWidth={1.5} />}
+                </div>
+                <div>
+                  <p className="text-[15px] font-semibold text-gray-900 dark:text-white">Mettre en sourdine</p>
+                  <p className="text-[12px] text-gray-400">Ne plus recevoir ses notifications</p>
+                </div>
+              </button>
+              {/* Report */}
+              <button
+                onClick={() => { setShowActionsSheet(false); setShowReportModal(true); }}
+                className="flex items-center gap-4 w-full px-3 py-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-[15px] font-semibold text-gray-900 dark:text-white">Signaler cet utilisateur</p>
+                  <p className="text-[12px] text-gray-400">Contenu abusif, spam, faux profil…</p>
+                </div>
+              </button>
+              {/* Block / Unblock */}
+              <button
+                onClick={() => { setShowActionsSheet(false); setShowBlockModal(true); }}
+                className="flex items-center gap-4 w-full px-3 py-4 rounded-2xl hover:bg-red-50 dark:hover:bg-red-500/5 active:bg-red-100 dark:active:bg-red-500/10 transition-colors text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center shrink-0">
+                  <Ban className="w-5 h-5 text-red-500" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-[15px] font-semibold text-red-500">
+                    {effectiveFriendStatus === 'blocked' ? 'Débloquer cet utilisateur' : 'Bloquer cet utilisateur'}
+                  </p>
+                  <p className="text-[12px] text-gray-400">
+                    {effectiveFriendStatus === 'blocked' ? 'Rétablir le contact' : 'Empêcher toute interaction'}
+                  </p>
+                </div>
+              </button>
+            </div>
+            <div className="h-4" />
+          </div>
+        </div>
+      )}
+
+      {/* ── Block confirmation modal (responsive) ───────────────────────── */}
       {showBlockModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4 pb-safe animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl p-6 shadow-xl animate-in slide-in-from-bottom-8 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
-            <h3 className="text-xl font-bold text-center mb-2">{effectiveFriendStatus === 'blocked' ? 'Débloquer' : 'Bloquer'} cet utilisateur ?</h3>
-            <p className="text-sm text-center text-gray-500 mb-6">
-              {effectiveFriendStatus === 'blocked' 
-                ? 'L\'utilisateur pourra de nouveau interagir avec vous et voir votre profil.' 
-                : 'L\'utilisateur ne pourra plus vous envoyer de messages, voir votre profil complet ni interagir avec vous.'}
+        <div
+          className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowBlockModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-[#1A1A1A] w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 shadow-xl animate-in slide-in-from-bottom duration-300"
+            style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle on mobile */}
+            <div className="flex justify-center mb-4 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+            </div>
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-3">
+              <Ban className="w-6 h-6 text-red-500" />
+            </div>
+            <h3 className="text-[18px] font-bold text-center text-gray-900 dark:text-white mb-2">
+              {effectiveFriendStatus === 'blocked' ? 'Débloquer' : 'Bloquer'} cet utilisateur ?
+            </h3>
+            <p className="text-[14px] text-center text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+              {effectiveFriendStatus === 'blocked'
+                ? "L'utilisateur pourra de nouveau interagir avec vous et voir votre profil."
+                : "L'utilisateur ne pourra plus vous envoyer de messages, voir votre profil complet ni interagir avec vous."}
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowBlockModal(false)} className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl font-semibold">Annuler</button>
-              <button 
-                onClick={() => blockMut.mutate()} 
-                disabled={blockMut.isPending}
-                className="flex-1 py-3 bg-red-500 text-white rounded-xl font-semibold flex items-center justify-center"
+              <button
+                onClick={() => setShowBlockModal(false)}
+                className="flex-1 py-3.5 bg-gray-100 dark:bg-gray-800 rounded-2xl font-semibold text-gray-800 dark:text-gray-200 text-[15px]"
               >
-                {blockMut.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmer'}
+                Annuler
+              </button>
+              <button
+                onClick={() => blockMut.mutate()}
+                disabled={blockMut.isPending}
+                className="flex-1 py-3.5 bg-red-500 text-white rounded-2xl font-semibold text-[15px] flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {blockMut.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : effectiveFriendStatus === 'blocked' ? 'Débloquer' : 'Bloquer'}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* ── Report modal ────────────────────────────────────────────────── */}
+      <ReportModal
+        open={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        onConfirm={(reason) => reportMut.mutate(reason)}
+        isPending={reportMut.isPending}
+        type="USER"
+      />
     </div>
   );
 }
