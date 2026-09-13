@@ -19,6 +19,7 @@ import { ValidatorVoteForm } from './ValidatorVoteForm';
 import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
 import { InviteFriendsModal } from '@/features/events/components/InviteFriendsModal';
 import { ShareViaChatModal } from '@/features/events/components/ShareViaChatModal';
+import { eventsApi } from '@/features/events/api';
 
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
@@ -65,7 +66,7 @@ export function ManageEvent() {
 
   const { data: pendingRequests } = useQuery({
     queryKey: ['events', id, 'pending-requests'],
-    queryFn: () => eventsApi.getPendingBookings(id!).then(res => res.data.data),
+    queryFn: () => eventsApi.getPendingBookings(id!).then((res: any) => res.data.data),
     enabled: !!id && !!event?.requiresApproval && (user?.id === event?.creatorId || (event?.coHostIds || []).includes(user?.id)),
   });
 
