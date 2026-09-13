@@ -100,7 +100,7 @@ export function ManageEvent() {
         />
         <div className="absolute top-0 left-0 w-full p-4 pt-12 z-10 flex items-center gap-3">
           <BackButton 
-            onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} 
+            onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')} 
             className="bg-white/80 dark:bg-black/50 backdrop-blur shadow-sm" 
           />
           <span className="font-semibold text-gray-900 dark:text-white drop-shadow-md">

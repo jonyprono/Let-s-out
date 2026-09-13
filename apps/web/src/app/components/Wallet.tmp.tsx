@@ -149,7 +149,7 @@ export function Wallet() {
     return (
       <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col h-[100dvh] w-full overflow-hidden">
         <div className="flex-none bg-[#F8F9FA]/90 dark:bg-[#09090b]/90 backdrop-blur-md px-4 pt-12 pb-2 flex items-center border-b border-gray-100 dark:border-gray-800 z-40">
-          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
+          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
           <h1 className="text-[17px] font-semibold text-gray-900 dark:text-white mx-auto pr-8">Mon Portefeuille</h1>
@@ -337,7 +337,7 @@ export function Wallet() {
     <div className="bg-[#F8F9FA] dark:bg-[#09090b] flex flex-col h-[100dvh] w-full font-poppins overflow-hidden">
       <div className="flex-none bg-[#F8F9FA]/90 dark:bg-[#09090b]/90 backdrop-blur-md px-4 pt-12 pb-2 flex flex-col border-b border-transparent z-40">
         <div className="flex items-center justify-between mb-1">
-          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/account')} className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
+          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')} className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors">
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
           </button>
           <div className="flex flex-col items-center">

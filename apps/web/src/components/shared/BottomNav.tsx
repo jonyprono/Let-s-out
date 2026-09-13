@@ -43,7 +43,7 @@ export function BottomNav() {
   ]
   const rightTabs: NavTab[] = [
     { path: '/messages',  icon: ChatBubbleIcon,    label: t('nav.messages') },
-    { path: '/account',   icon: User,          label: t('nav.account') },
+    { path: '/profile',   icon: User,          label: t('nav.account') },
   ]
 
   const { data: conversations } = useConversations()

@@ -180,7 +180,7 @@ export function Settings({ onBack }: SettingsProps) {
   const handleBack = () => {
     if (onBack) return onBack();
     if (window.history.state && window.history.state.idx > 0) navigate(-1);
-    else navigate('/account');
+    else navigate('/profile');
   };
 
   return (
