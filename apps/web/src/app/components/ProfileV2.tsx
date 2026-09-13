@@ -6,7 +6,7 @@ import { SafeImage } from '@/components/shared/SafeImage';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
-import { chatApi } from '@/features/chat/api';
+import { chatApi, useConversations } from '@/features/chat/api';
 
 import { useNavigate, useParams, useLocation } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
@@ -74,6 +74,12 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     enabled: !!targetUserId,
   })
   const userVideos = videosData?.data ?? []
+
+  // Check if DM is muted
+  const { data: conversations } = useConversations();
+  const dmConversation = conversations?.find((c: any) => !c.isGroup && c.members.some((m: any) => m.userId === targetUserId));
+  const myMember = dmConversation?.members.find((m: any) => m.userId === user?.id);
+  const isMuted = myMember?.mutedUntil ? new Date(myMember.mutedUntil) > new Date() : false;
 
   // My own friends list (for stats + badge progress)
   const { data: friendsData } = useQuery({
@@ -170,9 +176,16 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const muteMut = useMutation({
     mutationFn: async () => {
       const dm = await chatApi.createDM(targetUserId!);
-      await chatApi.muteConversation(dm.id, new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString());
+      await chatApi.muteConversation(dm.id, isMuted ? null : new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString());
+      return !isMuted;
     },
-    onSuccess: () => toast.success('Utilisateur mis en sourdine'),
+    onSuccess: (nowMuted) => {
+      qc.invalidateQueries({ queryKey: ['chat', 'conversations'] });
+      setTimeout(() => {
+        setShowActionsSheet(false);
+        toast.success(nowMuted ? 'Utilisateur mis en sourdine' : 'Notifications réactivées');
+      }, 400); // Short delay for better UX
+    },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur')
   });
 
@@ -658,7 +671,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           onClick={() => setShowActionsSheet(false)}
         >
           <div
-            className="w-full max-w-lg bg-white dark:bg-[#1A1A1A] rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 pb-safe"
+            className="w-full max-w-lg bg-white dark:bg-[#1A1A1A] rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-300 flex flex-col max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Handle */}
@@ -670,24 +683,33 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <p className="text-[16px] font-bold text-gray-900 dark:text-white text-center">{displayName}</p>
             </div>
             {/* Actions */}
-            <div className="px-4 py-3 flex flex-col gap-1">
+            <div className="px-4 py-3 flex flex-col gap-1 overflow-y-auto hide-scrollbar" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
               {/* Mute */}
               <button
-                onClick={() => { setShowActionsSheet(false); muteMut.mutate(); }}
+                onClick={() => muteMut.mutate()}
                 disabled={muteMut.isPending}
                 className="flex items-center gap-4 w-full px-3 py-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center shrink-0">
                   {muteMut.isPending ? <Loader2 className="w-5 h-5 animate-spin text-gray-500" /> : <BellOff className="w-5 h-5 text-gray-600 dark:text-gray-300" strokeWidth={1.5} />}
                 </div>
-                <div>
-                  <p className="text-[15px] font-semibold text-gray-900 dark:text-white">Mettre en sourdine</p>
-                  <p className="text-[12px] text-gray-400">Ne plus recevoir ses notifications</p>
+                <div className={muteMut.isPending ? "opacity-50" : ""}>
+                  <p className="text-[15px] font-semibold text-gray-900 dark:text-white">
+                    {isMuted ? 'Réactiver les notifications' : 'Mettre en sourdine'}
+                  </p>
+                  <p className="text-[12px] text-gray-400">
+                    {isMuted ? 'Recevoir à nouveau ses notifications' : 'Ne plus recevoir ses notifications'}
+                  </p>
                 </div>
               </button>
               {/* Report */}
               <button
-                onClick={() => { setShowActionsSheet(false); setShowReportModal(true); }}
+                onClick={() => {
+                  setTimeout(() => {
+                    setShowActionsSheet(false);
+                    setShowReportModal(true);
+                  }, 150);
+                }}
                 className="flex items-center gap-4 w-full px-3 py-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 active:bg-gray-100 dark:active:bg-white/10 transition-colors text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
@@ -700,7 +722,12 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               </button>
               {/* Block / Unblock */}
               <button
-                onClick={() => { setShowActionsSheet(false); setShowBlockModal(true); }}
+                onClick={() => {
+                  setTimeout(() => {
+                    setShowActionsSheet(false);
+                    setShowBlockModal(true);
+                  }, 150);
+                }}
                 className="flex items-center gap-4 w-full px-3 py-4 rounded-2xl hover:bg-red-50 dark:hover:bg-red-500/5 active:bg-red-100 dark:active:bg-red-500/10 transition-colors text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center shrink-0">
