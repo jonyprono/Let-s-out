@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, QrCode, Loader2, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -14,15 +14,25 @@ export function JoinPrivateEvent() {
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [hasPermission, setHasPermission] = useState(true);
+  // Ref to track scanning state in the cleanup function — avoids stale closure bug
+  // (the cleanup captures variables from mount time; the ref always reflects current value)
+  const isScanningRef = useRef(false);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {
       checkPermissions();
     }
     
+    // Cleanup: stop the camera unconditionally on unmount, regardless of how the
+    // user exits (app back button, system back, programmatic navigation).
+    // stopScan() is a no-op if the camera is already stopped, so this is safe.
     return () => {
-      if (isScanning) {
-        stopScan();
+      if (isScanningRef.current) {
+        // Fire-and-forget: we can't await in a cleanup function,
+        // but BarcodeScanner.stopScan() releases the hardware immediately.
+        BarcodeScanner.removeAllListeners();
+        BarcodeScanner.stopScan().catch(() => {});
+        document.body.classList.remove('barcode-scanner-active');
       }
     };
   }, []);
@@ -57,6 +67,7 @@ export function JoinPrivateEvent() {
 
     try {
       document.body.classList.add('barcode-scanner-active');
+      isScanningRef.current = true;
       setIsScanning(true);
       
       await BarcodeScanner.addListener('barcodesScanned', async (result: any) => {
@@ -82,6 +93,7 @@ export function JoinPrivateEvent() {
 
   const stopScan = async () => {
     document.body.classList.remove('barcode-scanner-active');
+    isScanningRef.current = false;
     setIsScanning(false);
     try {
       await BarcodeScanner.removeAllListeners();
