@@ -302,7 +302,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                   </div>
                 )}
                 {createdEvents.length === 0 ? (
-                  <EmptyState icon="📅" title={t('profile.empty.events')} subtitle={t('profile.empty.eventsSubtitle')} action={isOwnProfile ? <Button onClick={() => onNavigate('create-event')}>{t('profile.empty.createEvent')}</Button> : null} />
+                  <EmptyState icon="📅" title={t('profile.empty.events')} subtitle={t('profile.empty.eventsSubtitle')} action={isOwnProfile ? <Button onClick={() => onNavigate ? onNavigate('create-event') : navigate('/events/create')}>{t('profile.empty.createEvent')}</Button> : null} />
                 ) : (
                   <div className="flex flex-col gap-3">
                     {createdEvents.map((event: any) => (
@@ -426,6 +426,7 @@ export function Profile({ onNavigate }: ProfileProps) {
 
 function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNavigate?: any; isDraft?: boolean }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   // Format date correctly (e.g. "Vendredi 20h")
   let dateStr = t('profile.noDate');
   if (event?.startAt) {
@@ -470,7 +471,10 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
   return (
     <div 
       onClick={() => {
-        if (!isDraft && onNavigate && event?.id) onNavigate('event-details', event.id);
+        if (!isDraft && event?.id) {
+          if (onNavigate) onNavigate('event-details', event.id);
+          else navigate(`/events/${event.id}`);
+        }
       }}
       className="flex gap-4 p-4 bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-white/10 rounded-[24px] shadow-sm hover:shadow-md transition-shadow cursor-pointer w-full items-center"
     >
