@@ -186,11 +186,11 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       });
       return { previousVideos };
     },
-    onError: (err, videoId, context) => {
+    onError: (err, _videoId, context) => {
       if (context?.previousVideos) {
         qc.setQueryData(['videos', 'user', targetUserId, 'infinite'], context.previousVideos);
       }
-      toast.error('Erreur lors de la suppression de la vidéo');
+      toast.error(err.message || 'Erreur lors de la suppression de la vidéo');
     },
     onSuccess: () => {
       toast.success('Vidéo supprimée avec succès');
@@ -872,7 +872,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       )}
 
       {/* Delete Video Confirmation Sheet */}
-      <BottomSheet isOpen={!!videoToDelete} onClose={() => setVideoToDelete(null)}>
+      <BottomSheet open={!!videoToDelete} onClose={() => setVideoToDelete(null)}>
         <div className="flex flex-col items-center p-6 text-center">
           <div className="w-12 h-1 bg-gray-200 rounded-full mb-6 mx-auto" />
           <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-6">

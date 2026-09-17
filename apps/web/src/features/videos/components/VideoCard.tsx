@@ -36,7 +36,7 @@ export function VideoCard({ video, onClick, onLongPress, size = 'md' }: VideoCar
     }
   }, [])
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = () => {
     cancelPress()
     // Si ce n'était pas un long press, on déclenche le onClick normal
     if (!isLongPressRef.current) {
