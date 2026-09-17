@@ -143,6 +143,7 @@ export function VideoPlayerItem({ video, isActive }: Props) {
         src={video.url}
         loop
         playsInline
+        controls
         className="max-w-full max-h-full object-contain"
         onClick={(e) => {
           e.stopPropagation();
