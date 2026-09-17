@@ -44,14 +44,30 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
 
-  // Récupère les événements passés auxquels l'utilisateur a participé
+  // Récupère les événements créés et rejoints par l'utilisateur
   const { data: pastEvents = [], isLoading: isLoadingEvents } = useQuery({
     queryKey: ['my-past-participated-events'],
     queryFn: async () => {
-      const res = await apiClient.get('/events', {
-        params: { status: 'COMPLETED', myBookings: true, limit: 50 }
+      const res = await apiClient.get('/events/me')
+      const { createdEvents = [], joinedEvents = [] } = res.data?.data ?? {}
+      
+      // Combiner sans doublons
+      const allEventsMap = new Map()
+      createdEvents.forEach((e: any) => allEventsMap.set(e.id, e))
+      joinedEvents.forEach((e: any) => allEventsMap.set(e.id, e))
+      
+      const now = new Date()
+      // Filtrer les événements passés (mais pas trop, ex: depuis moins de 60 jours)
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+      
+      const past = Array.from(allEventsMap.values()).filter((e: any) => {
+        if (!e.endAt && !e.startAt) return false;
+        const eventDate = new Date(e.endAt || e.startAt);
+        return eventDate < now && eventDate > sixtyDaysAgo;
       })
-      return res.data?.data ?? []
+      
+      // Trier par date la plus récente
+      return past.sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime())
     },
     enabled: !presetEventId,
   })
@@ -163,7 +179,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="mt-auto bg-white dark:bg-[#111] rounded-t-3xl p-6 pb-safe-6 max-h-[92vh] overflow-y-auto">
+      <div className="mt-auto bg-white dark:bg-[#111] rounded-t-3xl p-6 pb-8 md:pb-6 mb-safe max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">

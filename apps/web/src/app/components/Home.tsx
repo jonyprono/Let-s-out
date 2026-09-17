@@ -475,7 +475,6 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
             {!showSpinner && !isOffline && (
               <>
-                <EventMediaFeed />
                 {/* ── Orange Stats Banner ── */}
                 <div className="pt-1">
                   <StatsBanner
@@ -485,6 +484,9 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     rating={rating}
                   />
                 </div>
+
+                {/* ── En direct & vidéos ── */}
+                <EventMediaFeed />
 
                 {/* ── À ne pas manquer ── */}
                 <div className="mb-3">

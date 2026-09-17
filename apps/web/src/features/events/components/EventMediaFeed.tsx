@@ -40,7 +40,7 @@ export function EventMediaFeed() {
   return (
     <div className="py-2">
       <div className="px-4 mb-2 flex items-center justify-between">
-        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white font-poppins">Moments forts 📹</h2>
+        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white font-poppins">En direct & vidéos</h2>
       </div>
       
       <div 

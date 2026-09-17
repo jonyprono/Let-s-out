@@ -142,6 +142,7 @@ export function VideosPage() {
             src={playingVideo.url}
             autoPlay
             controls
+            playsInline
             className="max-w-full max-h-full"
             onClick={e => e.stopPropagation()}
           />
