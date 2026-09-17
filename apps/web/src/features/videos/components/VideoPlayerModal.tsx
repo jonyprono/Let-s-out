@@ -14,6 +14,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
   const qc = useQueryClient();
   const user = useAuthStore((s) => s.user);
   const [showComments, setShowComments] = useState(false);
+  const [showShareSheet, setShowShareSheet] = useState(false);
   const [commentText, setCommentText] = useState('');
   
   // React query for comments
@@ -73,20 +74,47 @@ export function VideoPlayerModal({ video, onClose }: Props) {
     onError: () => toast.error('Erreur lors de la suppression du commentaire')
   });
 
-  const handleShare = async () => {
+  const videoLink = `https://letsout.app/videos/${video.id}`;
+
+  const handleShareNative = async () => {
     try {
+      const { Share } = await import('@capacitor/share');
+      await Share.share({
+        title: video.title,
+        text: `Découvre "${video.title}" de l'événement "${video.event.title}" sur Let's Out !`,
+        url: videoLink,
+        dialogTitle: 'Partager cette vidéo',
+      });
+    } catch {
       if (navigator.share) {
-        await navigator.share({
-          title: video.title,
-          text: `Découvre cette vidéo de ${video.event.title} sur Let's Out !`,
-          url: window.location.href, // Or a specific deep link
-        });
+        try {
+          await navigator.share({ title: video.title, url: videoLink });
+        } catch {
+          copyLink();
+        }
       } else {
-        await navigator.clipboard.writeText(window.location.href);
-        toast.success('Lien copié dans le presse-papier !');
+        copyLink();
       }
-    } catch (err) {
-      console.error(err);
+    }
+  };
+
+  const copyLink = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(videoLink);
+      } else {
+        const el = document.createElement('textarea');
+        el.value = videoLink;
+        el.style.position = 'fixed';
+        el.style.opacity = '0';
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+      }
+      toast.success('Lien copié !');
+    } catch {
+      toast.error('Impossible de copier');
     }
   };
 
@@ -149,7 +177,7 @@ export function VideoPlayerModal({ video, onClose }: Props) {
             </button>
 
             <button 
-              onClick={handleShare}
+              onClick={() => setShowShareSheet(true)}
               className="flex flex-col items-center gap-1"
             >
               <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center">
@@ -217,13 +245,16 @@ export function VideoPlayerModal({ video, onClose }: Props) {
               )}
             </div>
 
-            <div className="p-4 border-t border-gray-100 dark:border-white/10 flex gap-2 pb-safe-4">
+            <div
+              className="border-t border-gray-100 dark:border-white/10 flex items-center gap-2 px-4 pt-3"
+              style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 16px))' }}
+            >
               <input
                 type="text"
                 placeholder="Ajouter un commentaire..."
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="flex-1 bg-gray-100 dark:bg-white/5 rounded-full px-4 text-[14px] outline-none border border-transparent focus:border-orange-500/50"
+                className="flex-1 h-10 bg-gray-100 dark:bg-white/10 rounded-full px-4 text-[14px] outline-none border border-transparent focus:border-orange-500/50 min-w-0"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && commentText.trim() && !postCommentMut.isPending) {
                     postCommentMut.mutate();
@@ -233,13 +264,60 @@ export function VideoPlayerModal({ video, onClose }: Props) {
               <button
                 onClick={() => postCommentMut.mutate()}
                 disabled={!commentText.trim() || postCommentMut.isPending}
-                className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white disabled:opacity-50"
+                className="w-10 h-10 shrink-0 rounded-full bg-orange-500 flex items-center justify-center text-white disabled:opacity-40"
               >
                 {postCommentMut.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Send className="w-4 h-4" />
                 )}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Share Sheet */}
+      {showShareSheet && (
+        <>
+          <div
+            className="absolute inset-0 bg-black/60 z-40"
+            onClick={() => setShowShareSheet(false)}
+          />
+          <div className="absolute bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#1A1A1A] rounded-t-3xl animate-in slide-in-from-bottom duration-300">
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+            </div>
+            <div className="px-6 pt-3 pb-2">
+              <h3 className="font-bold text-[17px] text-gray-900 dark:text-white mb-1">{video.title}</h3>
+              <p className="text-[13px] text-gray-500">{video.event.title}</p>
+            </div>
+            <div className="px-4 pb-4 space-y-2" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 16px))' }}>
+              {/* Partage externe via Capacitor */}
+              <button
+                onClick={() => { setShowShareSheet(false); handleShareNative(); }}
+                className="w-full flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl"
+              >
+                <div className="w-11 h-11 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shrink-0">
+                  <Share2 className="w-5 h-5 text-orange-500" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-[15px] text-gray-900 dark:text-white">Partager en dehors</p>
+                  <p className="text-[12px] text-gray-500">WhatsApp, Instagram, SMS…</p>
+                </div>
+              </button>
+              {/* Copier le lien */}
+              <button
+                onClick={() => { setShowShareSheet(false); copyLink(); }}
+                className="w-full flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl"
+              >
+                <div className="w-11 h-11 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                  <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-[15px] text-gray-900 dark:text-white">Copier le lien</p>
+                  <p className="text-[12px] text-gray-500">Copiez l'adresse de la vidéo</p>
+                </div>
               </button>
             </div>
           </div>
