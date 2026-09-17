@@ -51,6 +51,7 @@ import { hapticFeedback } from '@/lib/haptics'
 import { useFavoritesStore } from '@/stores/favorites.store'
 
 import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
+import { JoinPendingScreen } from '@/app/components/JoinPendingScreen'
 
 const CustomShareIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -231,6 +232,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     },
     enabled: !!id && !!user,
     retry: false,
+    refetchInterval: (query) => {
+      // Poll every 5 seconds if booking is PENDING
+      return query.state.data?.status === 'PENDING' ? 5000 : false
+    }
   })
 
   // Fetch attendees when modal is open
@@ -255,11 +260,16 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const { isEnabled } = useFeatureFlags()
 
   const isPendingParticipant = !!myBookingData && myBookingData.status === 'PENDING'
+  const isRejectedParticipant = !!myBookingData && (myBookingData.status === 'REJECTED' || myBookingData.status === 'CANCELLED')
   const hasJoined = (!!myBookingData && myBookingData.status === 'CONFIRMED') || isCreator
+  
+  // Si événement payant avec approbation, l'utilisateur est CONFIRMED mais n'a pas encore payé
+  const hasPaidForEvent = isCreator || event?.price === 0 || (myBookingData && myBookingData.totalPaid >= event?.price)
+  const isApprovedButUnpaid = hasJoined && !hasPaidForEvent
 
   useEffect(() => {
     if (user && event && event.status !== 'DRAFT') {
-      if (hasJoined || isOrganizer) {
+      if ((hasJoined && hasPaidForEvent) || isOrganizer) {
         navigate(`/events/${id}/manage`, { replace: true })
       }
     }
@@ -915,19 +925,34 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               )}
             </>
           ) : (
-            /* Non-participant: one wide button */
+            /* Non-participant: pending or wide button */
             !isPastEvent && (
-              <Button
-                onClick={() => {
-                  if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
-                  handleJoin();
-                }}
-                disabled={joinMutation.isPending || isFull || isPastDeadline || bookingLoading || isPendingParticipant}
-                className="flex-1 rounded-full font-medium text-[14px] font-poppins"
-              >
-                {joinMutation.isPending || bookingLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isPendingParticipant ? 'Demande en attente...' : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : event?.requiresApproval ? 'Demander à rejoindre' : "Rejoindre l'événement"}
-              </Button>
-
+              isPendingParticipant || isRejectedParticipant ? (
+                <JoinPendingScreen 
+                  event={event}
+                  status={myBookingData.status as any}
+                  organizer={event.creator}
+                  isCancelling={joinMutation.isPending}
+                  onCancel={() => {
+                    eventsApi.leave(id!).then(() => {
+                      qc.invalidateQueries({ queryKey: ['events', id] })
+                      qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
+                      toast.success("Demande annulée")
+                    })
+                  }}
+                />
+              ) : (
+                <Button
+                  onClick={() => {
+                    if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
+                    handleJoin();
+                  }}
+                  disabled={joinMutation.isPending || isFull || isPastDeadline || bookingLoading}
+                  className="flex-1 rounded-full font-medium text-[14px] font-poppins"
+                >
+                  {joinMutation.isPending || bookingLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isApprovedButUnpaid ? 'Payer ma participation' : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : event?.requiresApproval ? 'Demander à rejoindre' : "Rejoindre l'événement"}
+                </Button>
+              )
             )
           )}
         </div>
@@ -939,6 +964,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           event={event}
           isOpen={showJoinModal}
           onClose={() => setShowJoinModal(false)}
+          isApprovedButUnpaid={isApprovedButUnpaid}
         />
       )}
 

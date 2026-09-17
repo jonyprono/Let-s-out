@@ -26,9 +26,10 @@ export interface JoinEventBottomSheetProps {
   event: any
   isOpen: boolean
   onClose: () => void
+  isApprovedButUnpaid?: boolean
 }
 
-export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottomSheetProps) {
+export function JoinEventBottomSheet({ event, isOpen, onClose, isApprovedButUnpaid = false }: JoinEventBottomSheetProps) {
   const navigate = useNavigate()
   const qc = useQueryClient()
 
@@ -50,8 +51,12 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
   const parsedAmount = Number(amountStr) || 0
   const finalAmount = Math.max(parsedAmount, minAmount)
 
+  // If it's a request for an approval-required paid event, and they haven't been approved yet, they don't pay now.
+  const isRequestingApprovalOnly = !isFree && event.requiresApproval && !isApprovedButUnpaid
+  const hidePaymentForm = isFree || isRequestingApprovalOnly
+
   // Use parsedAmount instead of finalAmount for validation so the form is invalid if the user hasn't typed an amount >= minAmount
-  const isFormValid = isFree || (parsedAmount >= minAmount && rawPhone.trim().length >= 8)
+  const isFormValid = hidePaymentForm || (parsedAmount >= minAmount && rawPhone.trim().length >= 8)
 
   const joinMutation = useMutation({
     mutationFn: () => eventsApi.join(event.id),
@@ -79,7 +84,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
 
   const handlePay = async () => {
     hapticFeedback.impact()
-    if (isFree) {
+    if (hidePaymentForm) {
       joinMutation.mutate()
       return
     }
@@ -237,7 +242,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
           </div>
 
           {/* Payment Form */}
-          {!isFree && (
+          {!hidePaymentForm && (
             <div className="flex flex-col gap-[1rem] w-full">
               <div className="flex flex-col">
                 <label className="font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)] mb-[0.25rem]">Montant de votre participation</label>
@@ -307,7 +312,13 @@ export function JoinEventBottomSheet({ event, isOpen, onClose }: JoinEventBottom
           >
             {(isProcessing || joinMutation.isPending) ? (
               <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-            ) : "Rejoindre"}
+            ) : isRequestingApprovalOnly ? (
+              "Envoyer la demande"
+            ) : isApprovedButUnpaid ? (
+              "Payer ma participation"
+            ) : (
+              "Rejoindre"
+            )}
           </Button>
 
           <div className="flex flex-col items-center justify-center gap-[4px] py-[0.5rem] w-full text-center">

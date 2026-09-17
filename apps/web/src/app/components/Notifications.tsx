@@ -27,6 +27,8 @@ const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string; bg:
   EVENT_CANCELLED:     { icon: Notification01Icon,  label: 'Événement annulé',           color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20' },
   JOIN_REQUEST:        { icon: UserMultiple02Icon,  label: 'Demande de participation',   color: 'text-sky-500',    bg: 'bg-sky-50 dark:bg-sky-900/20' },
   JOIN_ACCEPTED:       { icon: TickDouble01Icon,    label: 'Participation acceptée',     color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  JOIN_APPROVED:       { icon: TickDouble01Icon,    label: 'Demande approuvée',          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  JOIN_REJECTED:       { icon: Notification01Icon,  label: 'Demande refusée',            color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20' },
   JOIN_CONFIRMED:      { icon: TickDouble01Icon,    label: 'Participation confirmée',    color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
   NEW_MESSAGE:         { icon: Notification01Icon,  label: 'Nouveau message',            color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
   FRIEND_REQUEST:      { icon: UserAdd01Icon,       label: "Demande d'ami",              color: 'text-pink-500',   bg: 'bg-pink-50 dark:bg-pink-900/20' },
@@ -52,6 +54,9 @@ function getActionLabel(type: string) {
     case 'POOL_NEW':            return 'Consulter la cagnotte';
     case 'POOL_UNLOCK_APPROVED':return 'Voir mon Wallet';
     case 'EVENT_REVIEW_REQUEST':return 'Laisser un avis';
+    case 'JOIN_APPROVED':       return 'Rejoindre maintenant';
+    case 'JOIN_REJECTED':       return 'Voir l\'événement';
+    case 'JOIN_REQUEST':        return 'Gérer la demande';
     default:                    return 'Voir les détails';
   }
 }
@@ -114,7 +119,9 @@ export function Notifications({ onBack }: NotificationsProps) {
         if (d?.eventId) navigate(`/events/${d.eventId}/manage`);
         break;
       case 'JOIN_ACCEPTED':
+      case 'JOIN_APPROVED':
       case 'JOIN_CONFIRMED':
+      case 'JOIN_REJECTED':
         if (d?.eventId) navigate(`/events/${d.eventId}`);
         break;
       case 'PAYMENT_SUCCESS':

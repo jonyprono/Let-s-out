@@ -1043,8 +1043,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
     if (!event) return reply.code(404).send({ error: 'Event not found' })
     if (event.status !== 'PUBLISHED') return reply.code(400).send({ error: 'Event not available' })
 
-    // Paid events must go through the payment flow
-    if (event.price > 0) {
+    // Paid events must go through the payment flow, unless they require approval and are just submitting a request
+    if (event.price > 0 && !event.requiresApproval) {
       return reply.code(402).send({ error: 'PAYMENT_REQUIRED', message: 'Ce événement est payant. Veuillez procéder au paiement.' })
     }
 
@@ -1692,7 +1692,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
   })
 
   // ── Media (Feed) ───────────────────────────────────────────────────────────
-  app.get('/feed/media', async (req, reply) => {
+  app.get('/feed/media', async (_req, reply) => {
     const medias = await app.prisma.eventMedia.findMany({
       orderBy: { createdAt: 'desc' },
       take: 20,
@@ -1712,7 +1712,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
     let type = 'image'
 
     try {
-      for await (const part of req.parts()) {
+      for await (const partRaw of req.parts()) {
+        const part = partRaw as any
+        if (!part.file) continue
+
         const filename = `${eventId}-${Date.now()}-${part.filename}`
         const folder = `events/medias/${eventId}`
         

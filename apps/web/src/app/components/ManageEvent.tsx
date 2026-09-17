@@ -68,6 +68,7 @@ export function ManageEvent() {
     queryKey: ['events', id, 'pending-requests'],
     queryFn: () => eventsApi.getPendingBookings(id!).then((res: any) => res.data.data),
     enabled: !!id && !!event?.requiresApproval && (user?.id === event?.creatorId || (event?.coHostIds || []).includes(user?.id)),
+    refetchInterval: 10000,
   });
 
   if (isLoading) {
@@ -134,6 +135,12 @@ export function ManageEvent() {
             className={`flex-1 py-3 text-[13px] font-semibold text-center relative ${activeTab === tab ? 'text-[#FF7A00]' : 'text-gray-500'}`}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'participants' && pendingRequests && pendingRequests.length > 0 && (
+              <span className="absolute top-2.5 right-1/4 flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </span>
+            )}
             {activeTab === tab && (
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF7A00]" />
             )}
@@ -442,12 +449,18 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                 <div className="flex items-center gap-2">
                   <button
                     onClick={async () => {
+                      const prevData = qc.getQueryData(['events', event.id, 'pending-requests'])
+                      qc.setQueryData(['events', event.id, 'pending-requests'], (old: any) => {
+                        if (Array.isArray(old)) return old.filter((r: any) => r.id !== req.id)
+                        return old
+                      })
                       try {
                         await eventsApi.rejectBooking(event.id, req.id)
                         toast.success('Demande refusée')
                         qc.invalidateQueries({ queryKey: ['events', event.id] })
                         qc.invalidateQueries({ queryKey: ['events', event.id, 'pending-requests'] })
                       } catch (e: any) {
+                        qc.setQueryData(['events', event.id, 'pending-requests'], prevData)
                         toast.error(e?.response?.data?.message || 'Erreur lors du refus')
                       }
                     }}
@@ -457,6 +470,11 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                   </button>
                   <button
                     onClick={async () => {
+                      const prevData = qc.getQueryData(['events', event.id, 'pending-requests'])
+                      qc.setQueryData(['events', event.id, 'pending-requests'], (old: any) => {
+                        if (Array.isArray(old)) return old.filter((r: any) => r.id !== req.id)
+                        return old
+                      })
                       try {
                         await eventsApi.approveBooking(event.id, req.id)
                         toast.success('Demande acceptée')
@@ -464,6 +482,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                         qc.invalidateQueries({ queryKey: ['events', event.id, 'attendees'] })
                         qc.invalidateQueries({ queryKey: ['events', event.id, 'pending-requests'] })
                       } catch (e: any) {
+                        qc.setQueryData(['events', event.id, 'pending-requests'], prevData)
                         toast.error(e?.response?.data?.message || 'Erreur lors de l\'approbation')
                       }
                     }}

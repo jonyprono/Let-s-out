@@ -102,7 +102,7 @@ export default async function authRoutes(app: FastifyInstance) {
   app.post('/client-log', {
     config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
     handler: async (req, reply) => {
-      const { level, flow, step, data, error, timestamp } = req.body as any
+      const { level, flow, step, data, error } = req.body as any
       const tag = `[MobileAuthLog][${level}][${flow}]`
       const msg = `${tag} ${step}`
       if (level === 'ERROR') {
