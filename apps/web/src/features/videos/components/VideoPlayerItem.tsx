@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2 } from 'lucide-react';
+import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, Play } from 'lucide-react';
 import { EventVideo, videosApi } from '../api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
@@ -23,11 +23,15 @@ export function VideoPlayerItem({ video, isActive }: Props) {
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+
   useEffect(() => {
     if (isActive) {
-      videoRef.current?.play().catch(() => {});
+      videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     } else {
       videoRef.current?.pause();
+      setIsPlaying(false);
       if (videoRef.current) {
         videoRef.current.currentTime = 0; // Reset when not active
       }
@@ -35,6 +39,13 @@ export function VideoPlayerItem({ video, isActive }: Props) {
       setShowShareSheet(false);
     }
   }, [isActive]);
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setProgress(isNaN(p) ? 0 : p);
+    }
+  };
   
   // React query for comments
   const { data: comments = [], isLoading: loadingComments } = useQuery({
@@ -143,22 +154,36 @@ export function VideoPlayerItem({ video, isActive }: Props) {
         src={video.url}
         loop
         playsInline
-        controls
+        onTimeUpdate={handleTimeUpdate}
         className="max-w-full max-h-full object-contain"
         onClick={(e) => {
           e.stopPropagation();
           if (videoRef.current?.paused) {
             videoRef.current.play();
+            setIsPlaying(true);
           } else {
             videoRef.current?.pause();
+            setIsPlaying(false);
           }
         }}
       />
 
+      {/* Center Play Button Overlay */}
+      {!isPlaying && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+        >
+          <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+            <Play className="w-8 h-8 text-white ml-1 fill-white" />
+          </div>
+        </div>
+      )}
+
       {/* Overlay Information & Interactions (TikTok style) */}
       <div className="absolute inset-0 pointer-events-none flex flex-col justify-end">
         {/* Gradient shadow for text readability */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+
 
         <div className="relative z-10 flex items-end justify-between p-4 pb-safe-6 pointer-events-auto">
           {/* Info */}
@@ -235,6 +260,14 @@ export function VideoPlayerItem({ video, isActive }: Props) {
               </button>
             )}
           </div>
+        </div>
+        
+        {/* Custom Progress Bar at the very bottom */}
+        <div className="w-full h-1 bg-white/20">
+          <div 
+            className="h-full bg-white transition-all duration-100 ease-linear" 
+            style={{ width: `${progress}%` }} 
+          />
         </div>
       </div>
 
