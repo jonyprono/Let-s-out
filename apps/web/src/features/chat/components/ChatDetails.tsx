@@ -327,6 +327,7 @@ export function ChatDetails() {
   
   const { openUserProfile } = useUserProfile()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const qc = useQueryClient()
 
@@ -1102,6 +1103,7 @@ export function ChatDetails() {
         )}
         <div className="flex items-center gap-3 px-4 py-3">
         <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleFileUpload} />
+        <input type="file" ref={cameraInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileUpload} />
         {isBlocked ? (
           <div className="flex-1 flex items-center justify-center h-[48px] bg-[#F9F9F9] dark:bg-[#2A2A2A] border border-[#DFDFDF] dark:border-[#333] rounded-full px-[16px] gap-[8px]">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-gray-400">
@@ -1128,7 +1130,7 @@ export function ChatDetails() {
             onChange={handleTyping}
             onSend={handleSendText}
             onAttach={() => fileInputRef.current?.click()}
-            onCamera={() => fileInputRef.current?.click()}
+            onCamera={() => cameraInputRef.current?.click()}
             onMic={startRecording}
             className="p-0 flex-1"
           />

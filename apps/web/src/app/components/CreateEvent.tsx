@@ -21,7 +21,6 @@ import {
   PencilEdit01Icon,
   Delete01Icon,
   Search01Icon,
-  Upload04Icon,
   Image01Icon,
   AlertDiamondIcon
 } from 'hugeicons-react'
@@ -207,8 +206,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [allowGuestInvites, setAllowGuestInvites] = useState(sessionDraft?.allowGuestInvites ?? false)
   const [description, setDescription] = useState(sessionDraft?.description ?? '')
   const [participationMode, setParticipationMode] = useState<string | null>(sessionDraft?.participationMode ?? null)
-  const [coverFile, setCoverFile] = useState<File | null>(sessionDraft?.coverFile ?? null)
-  const [coverPreview, setCoverPreview] = useState<string | null>(sessionDraft?.coverPreview ?? null)
+  const [coverFiles, setCoverFiles] = useState<File[]>(sessionDraft?.coverFiles ?? [])
+  const [coverPreviews, setCoverPreviews] = useState<string[]>(sessionDraft?.coverPreviews ?? [])
   const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>(sessionDraft?.selectedCoOrgs ?? [])
   const [maxPlaces, setMaxPlaces] = useState(sessionDraft?.maxPlaces ?? '')
   const [amount, setAmount] = useState(sessionDraft?.amount ?? '')
@@ -263,14 +262,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       title, category, startDate, startTime, hasEndDate, endDate, endTime,
       regEndDate, regEndTime,
       address, city, lat, lon, privacy, requiresApproval, allowGuestInvites, description,
-      participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
+      participationMode, coverFiles, coverPreviews, selectedCoOrgs, maxPlaces, amount,
       enablePool, poolDescription, poolTarget, poolMinAmount
     }
   }, [
     title, category, startDate, startTime, hasEndDate, endDate, endTime,
     regEndDate, regEndTime,
     address, city, lat, lon, privacy, requiresApproval, allowGuestInvites, description,
-    participationMode, coverFile, coverPreview, selectedCoOrgs, maxPlaces, amount,
+    participationMode, coverFiles, coverPreviews, selectedCoOrgs, maxPlaces, amount,
     enablePool, poolDescription, poolTarget, poolMinAmount
   ])
 
@@ -325,10 +324,23 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     toast.success('Emplacement validé !')
   }
 
-  // ── Cover image ──────────────────────────────────────────────────────────
+  // ── Cover image (up to 4) ────────────────────────────────────────────────
   const handleCover = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if (!f) return
-    setCoverFile(f); setCoverPreview(URL.createObjectURL(f))
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+    const remaining = 4 - coverFiles.length
+    const toAdd = files.slice(0, remaining)
+    const newFiles = [...coverFiles, ...toAdd]
+    const newPreviews = [...coverPreviews, ...toAdd.map(f => URL.createObjectURL(f))]
+    setCoverFiles(newFiles)
+    setCoverPreviews(newPreviews)
+    // reset input so same file can be re-selected
+    e.target.value = ''
+  }
+
+  const removeCoverImage = (idx: number) => {
+    setCoverFiles(prev => prev.filter((_, i) => i !== idx))
+    setCoverPreviews(prev => prev.filter((_, i) => i !== idx))
   }
 
   // ── Pre-fill from editing ─────────────────────────────────────────────
@@ -358,7 +370,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (d.price !== undefined) setAmount(String(d.price))
       if (d.isPrivate !== undefined) setPrivacy(d.isPrivate ? 'PRIVATE' : 'PUBLIC')
       if (d.description) setDescription(d.description)
-      if (d.coverUrl) setCoverPreview(d.coverUrl)
+      if (d.coverUrl || d.mediaUrls?.length) {
+        const urls: string[] = d.mediaUrls?.length ? d.mediaUrls : [d.coverUrl]
+        setCoverPreviews(urls.filter(Boolean))
+        setCoverFiles([]) // clear file objects — URLs are already hosted
+      }
       if (d.poolTarget !== undefined && d.poolTarget !== null) {
         setEnablePool(true)
         setParticipationMode('cagnotte')
@@ -406,18 +422,25 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     let imageUploadedBeforePatch = false
     try {
       let coverUrl: string | undefined
-      if (coverFile) {
+      let mediaUrls: string[] = []
+
+      // Upload all cover images (max 4); first one becomes coverUrl, all go into mediaUrls
+      if (coverFiles.length > 0) {
         try {
-          const { data } = await eventsApi.uploadCover(coverFile)
-          coverUrl = data.url
+          const uploads = await Promise.all(
+            coverFiles.map(f => eventsApi.uploadCover(f).then(r => r.data.url))
+          )
+          coverUrl = uploads[0]
+          mediaUrls = uploads
           imageUploadedBeforePatch = true
         } catch (uploadErr) {
           console.warn('Cover upload failed, proceeding without cover:', uploadErr)
-          toast.warning("L'image de couverture n'a pas pu être téléchargée, mais l'événement sera sauvegardé.")
+          toast.warning("Les images n'ont pas pu être téléchargées, mais l'événement sera sauvegardé.")
         }
-      } else if (coverPreview && !coverPreview.startsWith('blob:')) {
-        // Only use coverPreview if it's already a hosted URL (not a local blob from file selection)
-        coverUrl = coverPreview
+      } else if (coverPreviews.length > 0 && !coverPreviews[0].startsWith('blob:')) {
+        // Hosted URLs from edit mode
+        coverUrl = coverPreviews[0]
+        mediaUrls = coverPreviews.filter(u => !u.startsWith('blob:'))
       }
 
       const startAt = new Date(`${startDate}T${startTime}`).toISOString()
@@ -455,6 +478,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         isPrivate: privacy === 'PRIVATE',
         requiresApproval,
         coverUrl,
+        mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
         // Cagnotte fields: send explicit null on edit to erase from DB when switching to free
         poolTarget: enablePool && poolTarget
           ? parseFloat(poolTarget)
@@ -573,7 +597,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         endAt,
         city: city.trim() || undefined,
         address: address.trim() || undefined,
-        coverUrl: coverPreview || undefined,
+        coverUrl: coverPreviews[0] || undefined,
         status: 'PUBLISHED',
         isPrivate: privacy === 'PRIVATE',
         requiresApproval,
@@ -900,35 +924,59 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       {/* ── Scrollable content ───────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto pb-36">
 
-        {/* ── Cover photo ─────────────────────────────────────────────── */}
-        <div className="px-5 pt-4 pb-4 flex justify-center">
-          <div className="relative w-[358px] h-[192px] bg-black/20 border border-[var(--border-primary)] rounded-[2px] overflow-hidden isolate">
-            {coverPreview ? (
-              <>
-                <SafeImage src={coverPreview} alt="Couverture" className="absolute inset-0 w-full h-full object-cover" />
-                <button
-                  onClick={e => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
-                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white dark:bg-[#1A1A1A]/90 backdrop-blur-sm flex items-center justify-center shadow-sm z-20">
-                  <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-danger)]" />
-                </button>
-              </>
-            ) : null}
-            <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-black/40 hover:bg-black/50 backdrop-blur-md rounded-[6px] active:scale-95 transition-all border border-white/20">
-                <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Gallerie</span>
-                <Image01Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
-              </button>
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="flex flex-row justify-center items-center px-3 py-2 gap-1.5 w-[110px] h-[36px] bg-black/40 hover:bg-black/50 backdrop-blur-md rounded-[6px] active:scale-95 transition-all border border-white/20">
-                <span className="font-[Poppins] font-medium text-[14px] leading-[20px] text-white">Importer</span>
-                <Upload04Icon className="w-4 h-4 text-white" strokeWidth={1.5} />
-              </button>
+        {/* ── Cover photos (carousel, max 4) ──────────────────────────── */}
+        <div className="px-5 pt-4 pb-4">
+          {/* Carousel of selected images */}
+          {coverPreviews.length > 0 && (
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 mb-3">
+              {coverPreviews.map((src, idx) => (
+                <div key={idx} className="relative shrink-0 w-[160px] h-[110px] rounded-[10px] overflow-hidden border border-[var(--border-primary)] bg-black/20">
+                  <SafeImage src={src} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    onClick={e => { e.stopPropagation(); removeCoverImage(idx) }}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center"
+                  >
+                    <Cancel01Icon className="w-3.5 h-3.5 text-white" />
+                  </button>
+                  {idx === 0 && (
+                    <span className="absolute bottom-1.5 left-1.5 text-[10px] font-semibold bg-[var(--brand-orange-500)] text-white px-1.5 py-0.5 rounded-full">
+                      Couverture
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
-            <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleCover} />
-          </div>
+          )}
+
+          {/* Add image buttons — hidden when 4 images selected */}
+          {coverPreviews.length < 4 && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex-1 flex flex-row justify-center items-center px-3 py-2.5 gap-1.5 h-[42px] bg-[var(--color-background-secondary)] hover:bg-[var(--color-background-tertiary)] border border-dashed border-[var(--border-primary)] rounded-[10px] active:scale-95 transition-all"
+              >
+                <Image01Icon className="w-4 h-4 text-[var(--color-text-muted)]" strokeWidth={1.5} />
+                <span className="font-[Poppins] font-medium text-[13px] text-[var(--color-text-muted)]">
+                  {coverPreviews.length === 0 ? 'Ajouter des photos' : `Ajouter (${coverPreviews.length}/4)`}
+                </span>
+              </button>
+              <input
+                type="file"
+                ref={fileRef}
+                className="hidden"
+                accept="image/*"
+                multiple
+                onChange={handleCover}
+              />
+            </div>
+          )}
+
+          {/* Count indicator */}
+          {coverPreviews.length > 0 && (
+            <p className="text-[12px] text-[var(--color-text-muted)] mt-1.5">
+              {coverPreviews.length}/4 photo{coverPreviews.length > 1 ? 's' : ''} · La première est la couverture principale
+            </p>
+          )}
         </div>
 
         {/* ── Organizer ─────────────────────────────────────────────────── */}

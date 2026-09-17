@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { X, Upload, Loader2, CheckCircle2, AlertCircle, Film, ChevronDown } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
@@ -6,21 +6,21 @@ import { videosApi } from '@/features/videos/api'
 import { toast } from 'sonner'
 
 const CATEGORY_LABELS: Record<string, string> = {
-  MUSIC: 'ðŸŽµ Musique',
-  NIGHTLIFE: 'ðŸŽ‰ SoirÃ©es',
-  SPORT: 'âš½ Sport',
-  CULTURE: 'ðŸŽ­ Culture',
-  FOOD: 'ðŸ½ï¸ Gastronomie',
-  ART: 'ðŸŽ¨ Art',
-  TECH: 'ðŸ’» Tech',
-  GAMING: 'ðŸŽ® Gaming',
-  WELLNESS: 'ðŸ§˜ Bien-Ãªtre',
-  TRAVEL: 'âœˆï¸ Voyage',
-  SOCIAL: 'ðŸ‘¥ Social',
-  SCIENCE: 'ðŸ”¬ Science',
-  LIFESTYLE: 'ðŸŒŸ Lifestyle',
-  TOURISM: 'ðŸ—ºï¸ Tourisme',
-  OTHER: 'ðŸ“Œ Autre',
+  MUSIC: '🎵 Musique',
+  NIGHTLIFE: '🎉 Soirées',
+  SPORT: '⚽ Sport',
+  CULTURE: '🎭 Culture',
+  FOOD: '🍽️ Gastronomie',
+  ART: '🎨 Art',
+  TECH: '💻 Tech',
+  GAMING: '🎮 Gaming',
+  WELLNESS: '🧘 Bien-être',
+  TRAVEL: '✈️ Voyage',
+  SOCIAL: '👥 Social',
+  SCIENCE: '🔬 Science',
+  LIFESTYLE: '🌟 Lifestyle',
+  TOURISM: '🗺️ Tourisme',
+  OTHER: '📌 Autre',
 }
 
 interface UploadVideoModalProps {
@@ -75,6 +75,14 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
   const selectedEvent = presetEventId
     ? { id: presetEventId, title: eventTitle ?? '', category: eventCategory ?? '' }
     : pastEvents.find((e: any) => e.id === selectedEventId)
+
+
+  // Auto-sync category when event is selected
+  useEffect(() => {
+    if (selectedEvent?.category && !presetEventId) {
+      setCategory(selectedEvent.category);
+    }
+  }, [selectedEventId]);
 
   // Upload vers Cloudinary (direct depuis le browser)
   const handleFileSelect = async (file: File) => {

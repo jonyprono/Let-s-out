@@ -98,6 +98,8 @@ export interface CreateEventPayload {
   startAt: string
   endAt: string
   tags?: string[]
+  coverUrl?: string
+  mediaUrls?: string[]
 }
 
 export const eventsApi = {

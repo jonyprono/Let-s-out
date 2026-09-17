@@ -25,6 +25,7 @@ const CreateEventSchema = z.object({
   endAt: z.string().datetime(),
   tags: z.array(z.string()).default([]),
   coverUrl: z.string().optional(),
+  mediaUrls: z.array(z.string()).optional(),
   coHostIds: z.array(z.string()).optional(),
   poolTarget: z.number().optional(),
   poolDescription: z.string().optional(),

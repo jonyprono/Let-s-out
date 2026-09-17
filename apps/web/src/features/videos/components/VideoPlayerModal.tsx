@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, UIEvent } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
+import { App } from '@capacitor/app';
 import { EventVideo } from '../api';
 import { VideoPlayerItem } from './VideoPlayerItem';
 
@@ -20,6 +21,17 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
 
   // Initialize scroll position on mount
   const [hasScrolledToInitial, setHasScrolledToInitial] = useState(false);
+
+  useEffect(() => {
+    // Intercept native back button
+    const backListener = App.addListener('backButton', () => {
+      onClose();
+    });
+
+    return () => {
+      backListener.then(listener => listener.remove()).catch(() => {});
+    };
+  }, [onClose]);
 
   useEffect(() => {
     if (containerRef.current && !hasScrolledToInitial && videos.length > 0) {
@@ -61,7 +73,7 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
         onClick={onClose}
         className="absolute top-safe-4 left-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
       >
-        <X className="w-5 h-5 text-white" />
+        <ChevronLeft className="w-7 h-7 text-white" strokeWidth={2.5} />
       </button>
 
       {/* Snap Scroll Container */}
