@@ -1,18 +1,57 @@
 import { Play } from 'lucide-react'
 import { EventVideo, formatDuration } from '@/features/videos/api'
+import { useRef, useCallback } from 'react'
 
 interface VideoCardProps {
   video: EventVideo
   onClick: (video: EventVideo) => void
+  onLongPress?: (video: EventVideo) => void
   size?: 'sm' | 'md'
 }
 
-export function VideoCard({ video, onClick, size = 'md' }: VideoCardProps) {
+export function VideoCard({ video, onClick, onLongPress, size = 'md' }: VideoCardProps) {
   const isSmall = size === 'sm'
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const isLongPressRef = useRef(false)
+
+  const startPress = useCallback(() => {
+    isLongPressRef.current = false
+    timerRef.current = setTimeout(() => {
+      isLongPressRef.current = true
+      if (onLongPress) {
+        onLongPress(video)
+        // trigger haptic feedback if available
+        if (window.navigator && window.navigator.vibrate) {
+          window.navigator.vibrate(50)
+        }
+      }
+    }, 600)
+  }, [onLongPress, video])
+
+  const cancelPress = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }, [])
+
+  const handleClick = (e: React.MouseEvent) => {
+    cancelPress()
+    // Si ce n'était pas un long press, on déclenche le onClick normal
+    if (!isLongPressRef.current) {
+      onClick(video)
+    }
+  }
 
   return (
     <div
-      onClick={() => onClick(video)}
+      onClick={handleClick}
+      onPointerDown={startPress}
+      onPointerUp={cancelPress}
+      onPointerMove={cancelPress}
+      onPointerCancel={cancelPress}
+      onPointerLeave={cancelPress}
       className={`relative flex-shrink-0 cursor-pointer rounded-2xl overflow-hidden bg-gray-900 group ${
         isSmall ? 'w-[140px]' : 'w-full'
       }`}

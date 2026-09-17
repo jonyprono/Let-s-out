@@ -16,6 +16,8 @@ import { VideoCard } from '@/features/videos/components/VideoCard';
 import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal';
 import { ReportModal } from '@/components/shared/ReportModal';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
+import { Trash2 } from 'lucide-react';
 
 
 interface ProfileProps {
@@ -40,6 +42,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const [showActionsSheet, setShowActionsSheet] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [playingVideo, setPlayingVideo] = useState<any>(null);
+  const [videoToDelete, setVideoToDelete] = useState<any>(null);
 
   // Scroll to top whenever the profile page mounts
   useEffect(() => {
@@ -162,6 +165,42 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       toast.success('Demande d\'ami envoyée !');
       qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] });
     },
+  });
+
+  const deleteVideoMut = useMutation({
+    mutationFn: (videoId: string) => videosApi.delete(videoId),
+    onMutate: async (videoId) => {
+      // Optimistic update
+      await qc.cancelQueries({ queryKey: ['videos', 'user', targetUserId, 'infinite'] });
+      const previousVideos = qc.getQueryData<any>(['videos', 'user', targetUserId, 'infinite']);
+      
+      qc.setQueryData(['videos', 'user', targetUserId, 'infinite'], (old: any) => {
+        if (!old || !old.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            data: page.data.filter((v: any) => v.id !== videoId),
+          })),
+        };
+      });
+      return { previousVideos };
+    },
+    onError: (err, videoId, context) => {
+      if (context?.previousVideos) {
+        qc.setQueryData(['videos', 'user', targetUserId, 'infinite'], context.previousVideos);
+      }
+      toast.error('Erreur lors de la suppression de la vidéo');
+    },
+    onSuccess: () => {
+      toast.success('Vidéo supprimée avec succès');
+      qc.invalidateQueries({ queryKey: ['videos', 'user', targetUserId, 'infinite'] });
+      // Invalidate public profile stats if needed
+      qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] });
+    },
+    onSettled: () => {
+      setVideoToDelete(null);
+    }
   });
 
   // Block/Unblock mutation
@@ -657,7 +696,12 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {userVideos.map((v: any) => (
-                  <VideoCard key={v.id} video={v} onClick={setPlayingVideo} />
+                  <VideoCard 
+                    key={v.id} 
+                    video={v} 
+                    onClick={setPlayingVideo} 
+                    onLongPress={isOwnProfile ? setVideoToDelete : undefined}
+                  />
                 ))}
               </div>
             )}
@@ -826,6 +870,56 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           isLoadingMore={isFetchingNextVideos}
         />
       )}
+
+      {/* Delete Video Confirmation Sheet */}
+      <BottomSheet isOpen={!!videoToDelete} onClose={() => setVideoToDelete(null)}>
+        <div className="flex flex-col items-center p-6 text-center">
+          <div className="w-12 h-1 bg-gray-200 rounded-full mb-6 mx-auto" />
+          <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-6">
+            Voulez-vous supprimer ce moment fort ?
+          </h3>
+          
+          {videoToDelete && (
+            <div className="relative w-[160px] aspect-video rounded-xl overflow-hidden bg-gray-900 mb-8 mx-auto shadow-md">
+              {videoToDelete.thumbnailUrl ? (
+                <img 
+                  src={videoToDelete.thumbnailUrl} 
+                  alt="Aperçu" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/40"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="w-full flex flex-col gap-3">
+            <button
+              onClick={() => deleteVideoMut.mutate(videoToDelete?.id)}
+              disabled={deleteVideoMut.isPending}
+              className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white rounded-2xl py-3.5 text-[15px] font-semibold transition-colors disabled:opacity-50"
+            >
+              {deleteVideoMut.isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Trash2 className="w-5 h-5" />
+                  Supprimer
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => setVideoToDelete(null)}
+              disabled={deleteVideoMut.isPending}
+              className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-2xl py-3.5 text-[15px] font-semibold transition-colors disabled:opacity-50"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
