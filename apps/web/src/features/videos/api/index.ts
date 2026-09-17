@@ -9,6 +9,7 @@ export interface EventVideo {
   title: string
   category: string
   duration: number
+  privacy: 'PUBLIC' | 'PARTICIPANTS' | 'PRIVATE'
   isActive: boolean
   createdAt: string
   user: {
@@ -52,6 +53,7 @@ export const videosApi = {
     title: string
     category: string
     duration: number
+    privacy?: 'PUBLIC' | 'PARTICIPANTS' | 'PRIVATE'
   }): Promise<EventVideo> => {
     const res = await apiClient.post('/videos', payload)
     return res.data.data

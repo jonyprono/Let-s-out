@@ -43,34 +43,35 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
+  const [privacy, setPrivacy] = useState<'PUBLIC' | 'PARTICIPANTS' | 'PRIVATE'>('PUBLIC')
 
-  // RÃ©cupÃ¨re les Ã©vÃ©nements crÃ©Ã©s et rejoints par l'utilisateur
+  // Recupere uniquement les evenements ou l'utilisateur est organisateur ou co-organisateur
   const { data: pastEvents = [], isLoading: isLoadingEvents } = useQuery({
-    queryKey: ['my-past-participated-events'],
+    queryKey: ['my-organized-past-events'],
     queryFn: async () => {
       const res = await apiClient.get('/events/me')
       const { createdEvents = [], joinedEvents = [] } = res.data?.data ?? {}
-      
-      // Combiner sans doublons
-      const allEventsMap = new Map()
-      createdEvents.forEach((e: any) => allEventsMap.set(e.id, e))
-      joinedEvents.forEach((e: any) => allEventsMap.set(e.id, e))
-      
+      const currentUserId = res.data?.data?.id
+      // Uniquement les evenements crees ou co-organises
+      const organizedMap = new Map()
+      createdEvents.forEach((e: any) => organizedMap.set(e.id, e))
+      joinedEvents.forEach((e: any) => {
+        if ((e.coHostIds || []).includes(currentUserId)) {
+          organizedMap.set(e.id, e)
+        }
+      })
       const now = new Date()
-      // Filtrer les Ã©vÃ©nements passÃ©s (mais pas trop, ex: depuis moins de 60 jours)
       const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
-      
-      const past = Array.from(allEventsMap.values()).filter((e: any) => {
+      const past = Array.from(organizedMap.values()).filter((e: any) => {
         if (!e.endAt && !e.startAt) return false;
         const eventDate = new Date(e.endAt || e.startAt);
         return eventDate < now && eventDate > sixtyDaysAgo;
       })
-      
-      // Trier par date la plus rÃ©cente
       return past.sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime())
     },
     enabled: !presetEventId,
   })
+
 
   const selectedEvent = presetEventId
     ? { id: presetEventId, title: eventTitle ?? '', category: eventCategory ?? '' }
@@ -172,6 +173,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
       title: title.trim(),
       category: category || selectedEvent?.category || 'OTHER',
       duration,
+      privacy,
     }),
     onSuccess: () => {
       toast.success('Moments forts publiÃ©s avec succÃ¨s ðŸŽ¬')
@@ -285,6 +287,30 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
               </div>
             </div>
 
+            {/* Confidentialité de la vidéo */}
+            <div>
+              <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                Confidentialité
+              </label>
+              <div className="flex gap-2">
+                {[{ v: 'PUBLIC', label: '🌍 Public', desc: 'Tout le monde' }, { v: 'PARTICIPANTS', label: '🎟️ Participants', desc: 'Participants uniquement' }, { v: 'PRIVATE', label: '🔒 Privé', desc: 'Seulement moi' }].map(opt => (
+                  <button
+                    key={opt.v}
+                    type="button"
+                    onClick={() => setPrivacy(opt.v as any)}
+                    className={`flex-1 flex flex-col items-center gap-0.5 rounded-xl py-2 px-1 border-2 text-[11px] transition-all ${
+                      privacy === opt.v
+                        ? 'border-[#FF7A00] bg-orange-50 dark:bg-orange-900/20 text-[#FF7A00] font-semibold'
+                        : 'border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    <span className="text-base">{opt.label.split(' ')[0]}</span>
+                    <span>{opt.label.split(' ').slice(1).join(' ')}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Zone d'upload */}
             <div>
               <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
@@ -317,10 +343,10 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                     <span>Envoi en cours...</span>
                     <span>{uploadProgress}%</span>
                   </div>
-                  <div className="h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-2.5 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[#FF7A00] to-[#FFA755] rounded-full transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
+                      className="h-full bg-gradient-to-r from-[#FF7A00] to-[#FFA755] rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(uploadProgress, 5)}%` }}
                     />
                   </div>
                 </div>

@@ -261,12 +261,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const { isEnabled } = useFeatureFlags()
 
   const isPendingParticipant = !!myBookingData && myBookingData.status === 'PENDING'
+  const isApprovedParticipant = !!myBookingData && myBookingData.status === 'APPROVED' // Approved but payment pending
   const isRejectedParticipant = !!myBookingData && (myBookingData.status === 'REJECTED' || myBookingData.status === 'CANCELLED')
+  // hasJoined = only CONFIRMED bookings (not just APPROVED) OR creator
   const hasJoined = (!!myBookingData && myBookingData.status === 'CONFIRMED') || isCreator
   
   // Si événement payant avec approbation, l'utilisateur est CONFIRMED mais n'a pas encore payé
   const hasPaidForEvent = isCreator || event?.price === 0 || (myBookingData && myBookingData.totalPaid >= event?.price)
-  const isApprovedButUnpaid = hasJoined && !hasPaidForEvent
+  const isApprovedButUnpaid = isApprovedParticipant // APPROVED (not yet CONFIRMED via payment)
 
   useEffect(() => {
     if (user && event && event.status !== 'DRAFT') {
@@ -275,6 +277,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       }
     }
   }, [user, event, hasJoined, isOrganizer, id, navigate])
+
 
   const joinMutation = useMutation({
     mutationFn: () => eventsApi.join(id!),
@@ -936,7 +939,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               )}
             </>
           ) : (
-            /* Non-participant: pending or wide button */
+            /* Non-participant: pending, approved or wide button */
             !isPastEvent && (
               isPendingParticipant || isRejectedParticipant ? (
                 <JoinPendingScreen 
@@ -952,6 +955,23 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     })
                   }}
                 />
+              ) : isApprovedButUnpaid ? (
+                /* APPROVED: demande acceptée mais paiement requis */
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl px-4 py-2">
+                    <span className="text-lg">✅</span>
+                    <div className="flex-1">
+                      <p className="text-[13px] font-semibold text-green-800 dark:text-green-300">Demande approuvée !</p>
+                      <p className="text-[11px] text-green-600 dark:text-green-400">Finalisez votre inscription en effectuant le paiement.</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => navigate(`/events/${id}/pay?amount=${event.price}&type=participation`)}
+                    className="flex-1 rounded-full font-medium text-[14px] font-poppins"
+                  >
+                    💳 Payer ma participation ({event.price} €)
+                  </Button>
+                </div>
               ) : (
                 <Button
                   onClick={() => {
@@ -961,7 +981,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   disabled={joinMutation.isPending || isFull || isPastDeadline || bookingLoading}
                   className="flex-1 rounded-full font-medium text-[14px] font-poppins"
                 >
-                  {joinMutation.isPending || bookingLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isApprovedButUnpaid ? 'Payer ma participation' : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : event?.requiresApproval ? 'Demander à rejoindre' : "Rejoindre l'événement"}
+                  {joinMutation.isPending || bookingLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : event?.requiresApproval ? 'Demander à rejoindre' : "Rejoindre l'événement"}
                 </Button>
               )
             )

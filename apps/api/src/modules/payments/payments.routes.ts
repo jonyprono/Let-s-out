@@ -314,7 +314,8 @@ async function handleConfirmedBooking(
   const existingBooking = await app.prisma.booking.findUnique({
     where: { userId_eventId: { userId, eventId } },
   })
-  const isNewParticipant = !existingBooking
+  // A new participant means either no booking or booking was APPROVED (not yet counted as attendee)
+  const isNewParticipant = !existingBooking || existingBooking.status === 'APPROVED'
 
   const eventForPool = await app.prisma.event.findUnique({
     where: { id: eventId },

@@ -22,7 +22,11 @@ export async function videoRoutes(app: FastifyInstance) {
     }
 
     const now = new Date()
+    const currentUserId = (req.user as any)?.sub ?? null
 
+    // Privacy filter: PUBLIC is always visible.
+    // PARTICIPANTS: only confirmed participants or organizers of that event.
+    // PRIVATE: only the author.
     const videos = await app.prisma.eventVideo.findMany({
       where: {
         isActive: true,
@@ -33,6 +37,16 @@ export async function videoRoutes(app: FastifyInstance) {
         ...(timeline === 'past' && { event: { endAt: { lt: now } } }),
         ...(timeline === 'upcoming' && { event: { endAt: { gte: now } } }),
         ...(cursor && { createdAt: { lt: new Date(cursor) } }),
+        // Privacy: exclude PRIVATE (unless own) and PARTICIPANTS (unless confirmed or organizer)
+        OR: currentUserId ? [
+          { privacy: 'PUBLIC' },
+          { privacy: 'PARTICIPANTS', event: { OR: [
+            { creatorId: currentUserId },
+            { coHostIds: { has: currentUserId } },
+            { bookings: { some: { userId: currentUserId, status: 'CONFIRMED' } } },
+          ]}},
+          { privacy: 'PRIVATE', userId: currentUserId },
+        ] : [{ privacy: 'PUBLIC' }],
       },
       include: {
         user: {
@@ -69,12 +83,13 @@ export async function videoRoutes(app: FastifyInstance) {
   // Permission : participant avec réservation CONFIRMED + événement terminé
   app.post('/', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub: userId } = req.user as { sub: string }
-    const { eventId, url, title, category, duration } = req.body as {
+    const { eventId, url, title, category, duration, privacy } = req.body as {
       eventId: string
       url: string
       title: string
       category: string
       duration: number
+      privacy?: 'PUBLIC' | 'PARTICIPANTS' | 'PRIVATE'
     }
 
     if (!eventId || !url || !title || !category || !duration) {
@@ -118,6 +133,7 @@ export async function videoRoutes(app: FastifyInstance) {
         title: title.trim(),
         category: category as any,
         duration: Math.round(duration),
+        privacy: (privacy ?? 'PUBLIC') as any,
       },
       include: {
         user: {
@@ -144,15 +160,24 @@ export async function videoRoutes(app: FastifyInstance) {
 
     const video = await app.prisma.eventVideo.findUnique({
       where: { id },
-      select: { id: true, userId: true, deletedAt: true },
+      select: { id: true, userId: true, eventId: true, deletedAt: true },
     })
 
     if (!video || video.deletedAt) {
       return reply.code(404).send({ error: 'Vidéo introuvable.' })
     }
 
-    if (video.userId !== userId) {
-      return reply.code(403).send({ error: "Vous n'êtes pas l'auteur de cette vidéo." })
+    // Allow author or event organizer to delete
+    const isAuthor = video.userId === userId
+    if (!isAuthor) {
+      const event = await app.prisma.event.findUnique({
+        where: { id: video.eventId },
+        select: { creatorId: true, coHostIds: true },
+      })
+      const isOrganizer = event && (event.creatorId === userId || (event.coHostIds || []).includes(userId))
+      if (!isOrganizer) {
+        return reply.code(403).send({ error: "Vous n'avez pas le droit de supprimer cette vidéo." })
+      }
     }
 
     await app.prisma.eventVideo.update({

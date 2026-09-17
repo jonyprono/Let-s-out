@@ -76,10 +76,11 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
-      {/* Global Close Button */}
+      {/* Global Close Button — placed high to avoid Android nav bar overlap */}
       <button
         onClick={onClose}
-        className="absolute top-safe-4 left-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
+        className="absolute top-10 left-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
+        style={{ top: 'calc(env(safe-area-inset-top, 0px) + 40px)' }}
       >
         <ChevronLeft className="w-7 h-7 text-white" strokeWidth={2.5} />
       </button>

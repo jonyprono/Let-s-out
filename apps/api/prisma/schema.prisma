@@ -619,9 +619,16 @@ enum EventCategory {
 
 enum BookingStatus {
   PENDING
+  APPROVED
   CONFIRMED
   CANCELLED
   REFUNDED
+}
+
+enum VideoPrivacy {
+  PUBLIC
+  PARTICIPANTS
+  PRIVATE
 }
 
 enum MessageType {
@@ -870,6 +877,7 @@ model EventVideo {
   title        String        // Ex: "Aftermovie", "Meilleurs moments"
   category     EventCategory // Réutilise l'enum EventCategory existant
   duration     Int           // Durée en secondes
+  privacy      VideoPrivacy  @default(PUBLIC) // Visibilité : PUBLIC | PARTICIPANTS | PRIVATE
 
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())

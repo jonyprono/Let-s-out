@@ -1287,37 +1287,58 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     }
 
-    // Approve: set CONFIRMED + increment currentAttendees atomically
-    await app.prisma.$transaction([
-      app.prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } }),
-      app.prisma.event.update({ where: { id }, data: { currentAttendees: { increment: 1 } } }),
-    ])
+    // Approve: if event is paid, set APPROVED (user must pay to be CONFIRMED)
+    // If event is free, set directly to CONFIRMED
+    const isPaidEvent = (event.price ?? 0) > 0;
 
-    // Add to event conversation (only now — not during the request)
-    try {
-      const conversation = await app.prisma.conversation.findUnique({ where: { eventId: id } })
-      if (conversation) {
-        await app.prisma.conversationMember.upsert({
-          where: { conversationId_userId: { conversationId: conversation.id, userId: booking.userId } },
-          create: { conversationId: conversation.id, userId: booking.userId },
-          update: {},
+    if (isPaidEvent) {
+      // Just mark as APPROVED — payment will trigger CONFIRMED
+      await app.prisma.booking.update({ where: { id: bookingId }, data: { status: 'APPROVED' } })
+
+      // Notify the requester to proceed with payment
+      try {
+        await createAndSendNotification(app, {
+          userId: booking.userId,
+          type: 'JOIN_APPROVED',
+          title: '✅ Demande approuvée !',
+          body: `Votre demande pour rejoindre "${event.title}" a été approuvée. Finalisez votre inscription en effectuant le paiement.`,
+          data: { eventId: id, screen: 'event-details', requiresPayment: 'true' }
         })
-      }
-    } catch (e) { app.log.warn(`Failed to add approved user to conversation: ${e}`) }
+      } catch (e) { app.log.warn(`Failed to send approval notification: ${e}`) }
+    } else {
+      // Free event: confirm directly + increment counter + add to conversation
+      await app.prisma.$transaction([
+        app.prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } }),
+        app.prisma.event.update({ where: { id }, data: { currentAttendees: { increment: 1 } } }),
+      ])
 
-    // Notify the requester
-    try {
-      await createAndSendNotification(app, {
-        userId: booking.userId,
-        type: 'JOIN_APPROVED',
-        title: '✅ Demande approuvée !',
-        body: `Votre demande pour rejoindre "${event.title}" a été approuvée. Bienvenue !`,
-        data: { eventId: id, screen: 'event-details' }
-      })
-    } catch (e) { app.log.warn(`Failed to send approval notification: ${e}`) }
+      // Add to event conversation (only now — not during the request)
+      try {
+        const conversation = await app.prisma.conversation.findUnique({ where: { eventId: id } })
+        if (conversation) {
+          await app.prisma.conversationMember.upsert({
+            where: { conversationId_userId: { conversationId: conversation.id, userId: booking.userId } },
+            create: { conversationId: conversation.id, userId: booking.userId },
+            update: {},
+          })
+        }
+      } catch (e) { app.log.warn(`Failed to add approved user to conversation: ${e}`) }
+
+      // Notify the requester
+      try {
+        await createAndSendNotification(app, {
+          userId: booking.userId,
+          type: 'JOIN_APPROVED',
+          title: '✅ Demande approuvée !',
+          body: `Votre demande pour rejoindre "${event.title}" a été approuvée. Bienvenue !`,
+          data: { eventId: id, screen: 'event-details' }
+        })
+      } catch (e) { app.log.warn(`Failed to send approval notification: ${e}`) }
+    } // end else (free event)
 
     return reply.send({ message: 'Request approved' })
   })
+
 
   // Reject a join request (organizer/cohost only)
   app.patch('/:id/bookings/:bookingId/reject', { preHandler: [app.authenticate] }, async (req, reply) => {

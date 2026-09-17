@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
@@ -56,7 +56,7 @@ export function ManageEvent() {
     },
   });
 
-  const { data: attendeesData } = useQuery({
+  const { data: attendeesData, isLoading: isLoadingAttendees } = useQuery({
     queryKey: ['events', id, 'attendees'],
     queryFn: async () => {
       const { data } = await apiClient.get(`/events/${id}/attendees`);
@@ -64,6 +64,21 @@ export function ManageEvent() {
     },
     enabled: !!id,
   });
+
+  // Redirect unauthorized users back to details
+  useEffect(() => {
+    if (!isLoading && !isLoadingAttendees && event && user) {
+      const isOrganizer = event.creatorId === user.id || (event.coHostIds || []).includes(user.id);
+      const participants = Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || [];
+      const isConfirmedParticipant = participants.some((b: any) => b.userId === user.id);
+      
+      if (!isOrganizer && !isConfirmedParticipant) {
+        navigate(`/events/${id}`, { replace: true });
+        toast.error("Vous devez payer et confirmer votre participation pour accéder à cet espace.");
+      }
+    }
+  }, [isLoading, isLoadingAttendees, event, user, attendeesData, navigate, id]);
+
 
   const { data: pendingRequests } = useQuery({
     queryKey: ['events', id, 'pending-requests'],

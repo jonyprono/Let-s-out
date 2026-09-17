@@ -210,6 +210,29 @@ export function VideoPlayerItem({ video, isActive }: Props) {
               </div>
               <span className="text-white text-[12px] font-medium drop-shadow-md">Partager</span>
             </button>
+
+            {/* Delete button — author or event organizer */}
+            {user && (video.userId === user.id || (video.event as any)?.creatorId === user.id || ((video.event as any)?.coHostIds || []).includes(user.id)) && (
+              <button 
+                onClick={async () => {
+                  if (!confirm('Supprimer cette vidéo ?')) return;
+                  try {
+                    await videosApi.delete(video.id);
+                    toast.success('Vidéo supprimée');
+                    qc.invalidateQueries({ queryKey: ['videos'] });
+                    qc.invalidateQueries({ queryKey: ['feed', 'videos'] });
+                  } catch {
+                    toast.error('Erreur lors de la suppression');
+                  }
+                }}
+                className="flex flex-col items-center gap-1"
+              >
+                <div className="w-12 h-12 rounded-full bg-red-500/20 backdrop-blur-md flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                </div>
+                <span className="text-red-400 text-[12px] font-medium drop-shadow-md">Supprimer</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
