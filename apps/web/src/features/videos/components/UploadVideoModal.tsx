@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { X, Upload, Loader2, CheckCircle2, AlertCircle, Film, ChevronDown } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
@@ -178,7 +178,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
   const canSubmit = uploadedUrl && title.trim() && (selectedEventId || presetEventId) && !submitMutation.isPending
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div className="fixed inset-0 z-[100] flex flex-col bg-black/60 backdrop-blur-sm" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="mt-auto bg-white dark:bg-[#111] rounded-t-3xl flex flex-col" style={{ maxHeight: '92vh' }}>
 
         {/* Scrollable content */}
@@ -200,18 +200,18 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
           </div>
 
           <div className="space-y-4">
-            {/* SÃ©lection de l'Ã©vÃ©nement â€” cachÃ© si prÃ©-sÃ©lectionnÃ© */}
+            {/* Sélection de l'événement — caché si pré-sélectionné */}
             {!presetEventId && (
               <div>
                 <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Ã‰vÃ©nement *
+                  Événement *
                 </label>
                 {isLoadingEvents ? (
                   <div className="flex items-center gap-2 text-gray-400 text-[13px]">
                     <Loader2 className="w-4 h-4 animate-spin" /> Chargement...
                   </div>
                 ) : pastEvents.length === 0 ? (
-                  <p className="text-[12px] text-gray-400 italic">Aucun Ã©vÃ©nement passÃ© disponible.</p>
+                  <p className="text-[12px] text-gray-400 italic">Aucun événement passé disponible.</p>
                 ) : (
                   <div className="relative">
                     <select
@@ -223,7 +223,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                       }}
                       className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] text-gray-800 dark:text-white pr-10"
                     >
-                      <option value="">Choisir un Ã©vÃ©nement...</option>
+                      <option value="">Choisir un événement...</option>
                       {pastEvents.map((ev: any) => (
                         <option key={ev.id} value={ev.id}>{ev.title}</option>
                       ))}
@@ -234,10 +234,10 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
               </div>
             )}
 
-            {/* Ã‰vÃ©nement prÃ©-sÃ©lectionnÃ© (depuis EventDetails) */}
+            {/* Événement pré-sélectionné (depuis EventDetails) */}
             {presetEventId && eventTitle && (
               <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-500/20 rounded-xl px-4 py-3">
-                <p className="text-[11px] font-medium text-[#FF7A00] uppercase tracking-wide">Ã‰vÃ©nement</p>
+                <p className="text-[11px] font-medium text-[#FF7A00] uppercase tracking-wide">Événement</p>
                 <p className="text-[14px] font-semibold text-gray-900 dark:text-white mt-0.5">{eventTitle}</p>
               </div>
             )}
@@ -245,7 +245,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             {/* Titre */}
             <div>
               <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                Titre de la vidÃ©o *
+                Titre de la vidéo *
               </label>
               <input
                 type="text"
@@ -257,10 +257,10 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
               />
             </div>
 
-            {/* CatÃ©gorie */}
+            {/* Catégorie */}
             <div>
               <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                CatÃ©gorie *
+                Catégorie *
               </label>
               <div className="relative">
                 <select
@@ -268,7 +268,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                   onChange={e => setCategory(e.target.value)}
                   className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] text-gray-800 dark:text-white pr-10"
                 >
-                  <option value="">Choisir une catÃ©gorie...</option>
+                  <option value="">Choisir une catégorie...</option>
                   {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
                   ))}
@@ -280,15 +280,15 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             {/* Zone d'upload */}
             <div>
               <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                VidÃ©o * <span className="font-normal text-gray-400">(max 200 Mo, formats mp4/mov/webm)</span>
+                Vidéo * <span className="font-normal text-gray-400">(max 200 Mo, formats mp4/mov/webm)</span>
               </label>
 
-              {/* Upload rÃ©ussi */}
+              {/* Upload réussi */}
               {uploadedUrl && (
                 <div className="flex items-center gap-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-500/20 rounded-xl px-4 py-3 mb-2">
                   <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-green-800 dark:text-green-300">Upload rÃ©ussi !</p>
+                    <p className="text-[13px] font-medium text-green-800 dark:text-green-300">Upload réussi !</p>
                     <p className="text-[11px] text-green-600 dark:text-green-400 truncate">{fileName}</p>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 </div>
               )}
 
-              {/* Bouton de sÃ©lection */}
+              {/* Bouton de sélection */}
               <input
                 ref={fileRef}
                 type="file"
@@ -337,14 +337,14 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                   <Upload className="w-7 h-7" />
                 )}
                 <span className="text-[13px] font-medium">
-                  {uploadedUrl ? 'Remplacer la vidÃ©o' : 'Choisir une vidÃ©o'}
+                  {uploadedUrl ? 'Remplacer la vidéo' : 'Choisir une vidéo'}
                 </span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Sticky submit button â€” always visible */}
+        {/* Sticky submit button — always visible */}
         <div
           className="px-6 pt-3 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#111] shrink-0"
           style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 16px))' }}
@@ -357,7 +357,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             {submitMutation.isPending ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Publication...</>
             ) : (
-              'ðŸŽ¬ Publier les moments forts'
+              '🎬 Publier les moments forts'
             )}
           </button>
         </div>
@@ -365,4 +365,3 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
     </div>
   )
 }
-
