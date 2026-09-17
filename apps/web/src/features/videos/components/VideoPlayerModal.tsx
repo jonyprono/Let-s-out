@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, UIEvent } from 'react';
 import { ChevronLeft, Loader2 } from 'lucide-react';
+import { App } from '@capacitor/app';
 import { EventVideo } from '../api';
 import { VideoPlayerItem } from './VideoPlayerItem';
 
@@ -22,20 +23,20 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
   const [hasScrolledToInitial, setHasScrolledToInitial] = useState(false);
 
   useEffect(() => {
-    // Intercept native back button using History API for robustness in both Web and Capacitor
-    window.history.pushState({ videoModalOpen: true }, '');
-
-    const handlePopState = () => {
-      onClose();
+    // Intercept native back button using Capacitor App
+    let backButtonListener: any = null;
+    
+    const setupListener = async () => {
+      backButtonListener = await App.addListener('backButton', () => {
+        onClose();
+      });
     };
-
-    window.addEventListener('popstate', handlePopState);
+    
+    setupListener();
 
     return () => {
-      window.removeEventListener('popstate', handlePopState);
-      // Clean up history state if closed via button instead of native back
-      if (window.history.state?.videoModalOpen) {
-        window.history.back();
+      if (backButtonListener) {
+        backButtonListener.remove();
       }
     };
   }, [onClose]);

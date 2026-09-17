@@ -580,7 +580,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 <Carousel className="w-full h-full absolute inset-0">
                   <CarouselContent className="h-full">
                     {event.mediaUrls.map((url: string, idx: number) => (
-                      <CarouselItem key={idx} className="h-full">
+                      <CarouselItem key={idx} className="h-full pl-0">
                         <SafeImage src={url} alt={`${event.title} - image ${idx + 1}`} className="w-full h-full object-cover" />
                       </CarouselItem>
                     ))}

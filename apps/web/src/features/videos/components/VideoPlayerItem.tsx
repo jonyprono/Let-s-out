@@ -3,6 +3,8 @@ import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2 } from 'lucide-r
 import { EventVideo, videosApi } from '../api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
+import { useUserProfile } from '@/features/users/UserProfileContext';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 interface Props {
@@ -12,7 +14,9 @@ interface Props {
 
 export function VideoPlayerItem({ video, isActive }: Props) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+  const { openUserProfile } = useUserProfile();
   const [showComments, setShowComments] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -159,8 +163,16 @@ export function VideoPlayerItem({ video, isActive }: Props) {
           {/* Info */}
           <div className="flex-1 pr-12 text-white">
             <h2 className="text-[16px] font-bold mb-1 shadow-sm">{video.title}</h2>
-            <p className="text-[14px] text-white/90 mb-2">@{(video.user as any).profile?.displayName}</p>
-            <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[12px] font-medium">
+            <p 
+              className="text-[14px] text-white/90 mb-2 cursor-pointer active:opacity-70"
+              onClick={() => openUserProfile(video.userId, undefined, { title: video.event.title })}
+            >
+              @{(video.user as any).profile?.displayName || (video.user as any).username || 'Utilisateur'}
+            </p>
+            <div 
+              className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[12px] font-medium cursor-pointer active:scale-95 transition-transform"
+              onClick={() => navigate(`/events/${video.eventId}`)}
+            >
               <span>📍 {video.event.title}</span>
             </div>
           </div>
@@ -229,14 +241,20 @@ export function VideoPlayerItem({ video, isActive }: Props) {
               ) : (
                 comments.map((comment: any) => (
                   <div key={comment.id} className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 shrink-0 overflow-hidden">
+                    <div 
+                      className="w-8 h-8 rounded-full bg-gray-200 shrink-0 overflow-hidden cursor-pointer"
+                      onClick={() => openUserProfile(comment.userId)}
+                    >
                       {comment.user.profile?.avatarUrl ? (
                         <img src={comment.user.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
                       ) : null}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-gray-900 dark:text-white">
+                        <span 
+                          className="text-[13px] font-semibold text-gray-900 dark:text-white cursor-pointer hover:underline"
+                          onClick={() => openUserProfile(comment.userId)}
+                        >
                           {comment.user.profile?.displayName || 'Utilisateur'}
                         </span>
                         <span className="text-[11px] text-gray-500">

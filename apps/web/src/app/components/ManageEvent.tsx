@@ -100,7 +100,7 @@ export function ManageEvent() {
           <Carousel className="w-full h-full absolute inset-0">
             <CarouselContent className="h-full">
               {event.mediaUrls.map((url: string, idx: number) => (
-                <CarouselItem key={idx} className="h-full">
+                <CarouselItem key={idx} className="h-full pl-0">
                   <div 
                     className="w-full h-full bg-cover bg-center" 
                     style={{ backgroundImage: `url(${url})` }} 
@@ -179,6 +179,7 @@ export function ManageEvent() {
 // ----------------------------------------------------------------------
 function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
   const navigate = useNavigate();
+  const { openUserProfile } = useUserProfile();
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -261,7 +262,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
         
         <div
           className="flex items-center gap-3 mb-3 cursor-pointer active:opacity-70"
-          onClick={() => navigate(`/users/${event.creatorId}`)}
+          onClick={() => openUserProfile(event.creatorId)}
         >
           <SafeImage src={event.creator?.profile?.avatarUrl} alt="Creator" className="w-10 h-10 rounded-full bg-gray-200" />
           <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{event.creator?.profile?.displayName || event.creator?.profile?.username}</span>
@@ -271,7 +272,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
           <div
             key={coHost.id}
             className="flex items-center gap-3 mb-3 cursor-pointer active:opacity-70"
-            onClick={() => navigate(`/users/${coHost.id}`)}
+            onClick={() => openUserProfile(coHost.id)}
           >
             <SafeImage src={coHost.profile?.avatarUrl} alt="Co-organisateur" className="w-10 h-10 rounded-full bg-gray-200" />
             <span className="text-[14px] font-semibold text-gray-900 dark:text-white">{coHost.profile?.displayName || coHost.profile?.username || coHost.username || 'Co-organisateur'}</span>
