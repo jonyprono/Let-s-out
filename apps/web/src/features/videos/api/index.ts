@@ -24,6 +24,11 @@ export interface EventVideo {
     coverUrl?: string
     city?: string
   }
+  _count?: {
+    reactions: number
+    comments: number
+  }
+  reactions?: { emoji: string }[]
 }
 
 interface ListParams {
@@ -55,6 +60,25 @@ export const videosApi = {
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/videos/${id}`)
   },
+
+  toggleReaction: async (videoId: string, emoji: string = '❤️') => {
+    const res = await apiClient.post(`/videos/${videoId}/reactions`, { emoji })
+    return res.data
+  },
+
+  getComments: async (videoId: string) => {
+    const res = await apiClient.get(`/videos/${videoId}/comments`)
+    return res.data.data
+  },
+
+  postComment: async (videoId: string, content: string) => {
+    const res = await apiClient.post(`/videos/${videoId}/comments`, { content })
+    return res.data.data
+  },
+
+  deleteComment: async (videoId: string, commentId: string) => {
+    await apiClient.delete(`/videos/${videoId}/comments/${commentId}`)
+  }
 }
 
 /** Formate une durée en secondes → "1:23" ou "1:02:34" */

@@ -1,26 +1,18 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Play } from 'lucide-react';
-import { useNavigate } from 'react-router';
-
-interface Media {
-  id: string;
-  type: string;
-  url: string;
-  thumbnail?: string;
-  user: { profile?: { displayName: string; avatarUrl?: string } };
-  event: { id: string; title: string; coverUrl?: string };
-}
+import { EventVideo } from '@/features/videos/api';
+import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal';
 
 export function EventMediaFeed() {
-  const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [playingVideo, setPlayingVideo] = useState<EventVideo | null>(null);
   
   const { data: medias = [], isLoading } = useQuery({
-    queryKey: ['feed', 'media'],
+    queryKey: ['feed', 'videos'],
     queryFn: async () => {
-      const res = await apiClient.get<{ data: Media[] }>('/feed/media');
+      const res = await apiClient.get<{ data: EventVideo[] }>('/videos?limit=10');
       return res.data.data;
     }
   });
@@ -51,27 +43,23 @@ export function EventMediaFeed() {
         {medias.map((media) => (
           <div 
             key={media.id} 
-            onClick={() => navigate(`/events/${media.event.id}`)}
+            onClick={() => setPlayingVideo(media as EventVideo)}
             className="relative w-[110px] h-[180px] rounded-[18px] overflow-hidden shrink-0 snap-start bg-gray-900 cursor-pointer shadow-sm border border-gray-100 dark:border-white/10"
           >
-            {media.type === 'video' ? (
-              <>
-                <video 
-                  src={media.url} 
-                  poster={media.thumbnail || media.event.coverUrl}
-                  className="w-full h-full object-cover opacity-90"
-                  muted
-                  loop
-                  autoPlay
-                  playsInline
-                />
-                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                  <Play className="w-8 h-8 text-white/80 drop-shadow-md" fill="currentColor" />
-                </div>
-              </>
-            ) : (
-              <img src={media.url} alt="" className="w-full h-full object-cover" />
-            )}
+            <>
+              <video 
+                src={media.url} 
+                poster={media.thumbnailUrl || media.event.coverUrl}
+                className="w-full h-full object-cover opacity-90"
+                muted
+                loop
+                autoPlay
+                playsInline
+              />
+              <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                <Play className="w-8 h-8 text-white/80 drop-shadow-md" fill="currentColor" />
+              </div>
+            </>
             
             {/* Overlay gradient */}
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
@@ -94,6 +82,12 @@ export function EventMediaFeed() {
           </div>
         ))}
       </div>
+      {playingVideo && (
+        <VideoPlayerModal 
+          video={playingVideo} 
+          onClose={() => setPlayingVideo(null)} 
+        />
+      )}
     </div>
   );
 }

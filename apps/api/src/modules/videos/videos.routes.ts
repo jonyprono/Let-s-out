@@ -11,7 +11,7 @@ function buildThumbnailUrl(videoUrl: string): string {
 export async function videoRoutes(app: FastifyInstance) {
 
   // ─── GET /api/v1/videos ────────────────────────────────────────────────
-  app.get('/', async (req, reply) => {
+  app.get('/', { preHandler: [(app as any).optionalAuthenticate] }, async (req, reply) => {
     const { category, userId, eventId, timeline, limit = '20', cursor } = req.query as {
       category?: string
       userId?: string
@@ -44,6 +44,13 @@ export async function videoRoutes(app: FastifyInstance) {
         event: {
           select: { id: true, title: true, category: true, startAt: true, endAt: true, coverUrl: true, city: true },
         },
+        _count: {
+          select: { reactions: true, comments: true }
+        },
+        reactions: req.user ? {
+          where: { userId: (req.user as any).sub },
+          select: { emoji: true }
+        } : false,
       },
       orderBy: { createdAt: 'desc' },
       take: Math.min(parseInt(limit), 50),
@@ -155,6 +162,87 @@ export async function videoRoutes(app: FastifyInstance) {
 
     req.log.info({ videoId: id, userId }, '[VIDEO] Vidéo supprimée (soft delete)')
     return reply.code(204).send()
+  })
+
+  // ─── POST /api/v1/videos/:id/reactions ──────────────────────────────────
+  app.post('/:id/reactions', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id: videoId } = req.params as { id: string }
+    const { emoji } = req.body as { emoji: string }
+
+    const video = await app.prisma.eventVideo.findUnique({ where: { id: videoId } })
+    if (!video || video.deletedAt) return reply.code(404).send({ error: 'Vidéo introuvable' })
+
+    const existing = await app.prisma.eventVideoReaction.findUnique({
+      where: { userId_videoId: { userId, videoId } }
+    })
+
+    if (existing) {
+      if (existing.emoji === emoji) {
+        await app.prisma.eventVideoReaction.delete({ where: { id: existing.id } })
+        return reply.send({ action: 'removed' })
+      } else {
+        const updated = await app.prisma.eventVideoReaction.update({
+          where: { id: existing.id },
+          data: { emoji }
+        })
+        return reply.send({ action: 'updated', data: updated })
+      }
+    } else {
+      const reaction = await app.prisma.eventVideoReaction.create({
+        data: { userId, videoId, emoji }
+      })
+      return reply.code(201).send({ action: 'added', data: reaction })
+    }
+  })
+
+  // ─── GET /api/v1/videos/:id/comments ────────────────────────────────────
+  app.get('/:id/comments', async (req, reply) => {
+    const { id: videoId } = req.params as { id: string }
+    
+    const comments = await app.prisma.eventVideoComment.findMany({
+      where: { videoId },
+      include: {
+        user: { select: { id: true, profile: { select: { displayName: true, avatarUrl: true, username: true } } } }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+    
+    return reply.send({ data: comments })
+  })
+
+  // ─── POST /api/v1/videos/:id/comments ───────────────────────────────────
+  app.post('/:id/comments', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id: videoId } = req.params as { id: string }
+    const { content } = req.body as { content: string }
+
+    if (!content?.trim()) return reply.code(400).send({ error: 'Le commentaire ne peut pas être vide' })
+
+    const video = await app.prisma.eventVideo.findUnique({ where: { id: videoId } })
+    if (!video || video.deletedAt) return reply.code(404).send({ error: 'Vidéo introuvable' })
+
+    const comment = await app.prisma.eventVideoComment.create({
+      data: { userId, videoId, content: content.trim() },
+      include: {
+        user: { select: { id: true, profile: { select: { displayName: true, avatarUrl: true, username: true } } } }
+      }
+    })
+
+    return reply.code(201).send({ data: comment })
+  })
+
+  // ─── DELETE /api/v1/videos/:id/comments/:commentId ──────────────────────
+  app.delete('/:id/comments/:commentId', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { commentId } = req.params as { commentId: string }
+
+    const comment = await app.prisma.eventVideoComment.findUnique({ where: { id: commentId } })
+    if (!comment) return reply.code(404).send({ error: 'Commentaire introuvable' })
+    if (comment.userId !== userId) return reply.code(403).send({ error: 'Non autorisé' })
+
+    await app.prisma.eventVideoComment.delete({ where: { id: commentId } })
+    return reply.send({ success: true })
   })
 }
 

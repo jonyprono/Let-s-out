@@ -56,6 +56,8 @@ model User {
   eventComments    EventComment[]
   eventMedias      EventMedia[]
   eventVideos      EventVideo[]
+  eventVideoReactions EventVideoReaction[]
+  eventVideoComments  EventVideoComment[]
   blocksCreated    UserBlock[]          @relation("UserBlocker")
   blocksReceived   UserBlock[]          @relation("UserBlocked")
   isBanned         Boolean              @default(false)
@@ -876,10 +878,46 @@ model EventVideo {
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   event        Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reactions    EventVideoReaction[]
+  comments     EventVideoComment[]
 
   @@index([eventId])
   @@index([userId])
   @@index([category])
   @@index([createdAt])
   @@map("event_videos")
+}
+
+// ── Réactions sur vidéos (Moments forts) ──────────────────────────────────
+model EventVideoReaction {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  emoji     String   // "❤️" | "🔥" | "😍" | "👀" | "🎉"
+  createdAt DateTime @default(now())
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video EventVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoId])
+  @@index([videoId])
+  @@index([userId])
+  @@map("event_video_reactions")
+}
+
+// ── Commentaires sur vidéos (Moments forts) ───────────────────────────────
+model EventVideoComment {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video EventVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@index([videoId])
+  @@index([userId])
+  @@map("event_video_comments")
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban, X } from 'lucide-react';
+import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { videosApi } from '@/features/videos/api';
 import { VideoCard } from '@/features/videos/components/VideoCard';
 import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
+import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal';
 import { ReportModal } from '@/components/shared/ReportModal';
 
 
@@ -804,31 +805,12 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         type="USER"
       />
 
-      {/* Player modal */}
+      {/* Player modal with social features */}
       {playingVideo && (
-        <div
-          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
-          onClick={() => setPlayingVideo(null)}
-        >
-          <button
-            onClick={() => setPlayingVideo(null)}
-            className="absolute top-safe-4 right-4 z-10 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
-          >
-            <X className="w-5 h-5 text-white" />
-          </button>
-          <video
-            src={playingVideo.url}
-            autoPlay
-            controls
-            playsInline
-            className="max-w-full max-h-full"
-            onClick={e => e.stopPropagation()}
-          />
-          <div className="absolute bottom-safe-4 left-4 right-4 text-center">
-            <p className="text-white font-semibold text-[15px] drop-shadow">{playingVideo.title}</p>
-            <p className="text-white/70 text-[12px]">{playingVideo.event.title}</p>
-          </div>
-        </div>
+        <VideoPlayerModal
+          video={playingVideo}
+          onClose={() => setPlayingVideo(null)}
+        />
       )}
     </div>
   );
