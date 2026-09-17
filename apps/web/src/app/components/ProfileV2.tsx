@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban } from 'lucide-react';
+import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -38,6 +38,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState<any>(null);
 
   // Scroll to top whenever the profile page mounts
   useEffect(() => {
@@ -648,7 +649,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             ) : (
               <div className="grid grid-cols-2 gap-3">
                 {userVideos.map((v: any) => (
-                  <VideoCard key={v.id} video={v} onClick={() => {}} />
+                  <VideoCard key={v.id} video={v} onClick={setPlayingVideo} />
                 ))}
               </div>
             )}
@@ -794,6 +795,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       )}
 
       {/* ── Report modal ────────────────────────────────────────────────── */}
+      {/* ── Report modal ────────────────────────────────────────────────── */}
       <ReportModal
         open={showReportModal}
         onClose={() => setShowReportModal(false)}
@@ -801,6 +803,33 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         isPending={reportMut.isPending}
         type="USER"
       />
+
+      {/* Player modal */}
+      {playingVideo && (
+        <div
+          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+          onClick={() => setPlayingVideo(null)}
+        >
+          <button
+            onClick={() => setPlayingVideo(null)}
+            className="absolute top-safe-4 right-4 z-10 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+          <video
+            src={playingVideo.url}
+            autoPlay
+            controls
+            playsInline
+            className="max-w-full max-h-full"
+            onClick={e => e.stopPropagation()}
+          />
+          <div className="absolute bottom-safe-4 left-4 right-4 text-center">
+            <p className="text-white font-semibold text-[15px] drop-shadow">{playingVideo.title}</p>
+            <p className="text-white/70 text-[12px]">{playingVideo.event.title}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
