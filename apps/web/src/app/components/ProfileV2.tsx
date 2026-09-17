@@ -3,7 +3,7 @@ import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCirc
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation, useInfiniteQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
 import { chatApi, useConversations } from '@/features/chat/api';
@@ -70,12 +70,19 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   });
 
   // Videos of this user
-  const { data: videosData } = useQuery({
+  const { 
+    data: videosData, 
+    fetchNextPage: fetchNextVideos,
+    hasNextPage: hasNextVideos,
+    isFetchingNextPage: isFetchingNextVideos 
+  } = useInfiniteQuery({
     queryKey: ['videos', 'user', targetUserId],
-    queryFn: () => videosApi.list({ userId: targetUserId }),
+    queryFn: ({ pageParam }) => videosApi.list({ userId: targetUserId, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
     enabled: !!targetUserId,
   })
-  const userVideos = videosData?.data ?? []
+  const userVideos = videosData?.pages.flatMap(p => p.data) ?? []
 
   // Check if DM is muted
   const { data: conversations } = useConversations();
@@ -808,8 +815,15 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       {/* Player modal with social features */}
       {playingVideo && (
         <VideoPlayerModal
-          video={playingVideo}
+          videos={userVideos}
+          initialVideoId={playingVideo.id}
           onClose={() => setPlayingVideo(null)}
+          onEndReached={() => {
+            if (hasNextVideos && !isFetchingNextVideos) {
+              fetchNextVideos();
+            }
+          }}
+          isLoadingMore={isFetchingNextVideos}
         />
       )}
     </div>

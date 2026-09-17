@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import { ArrowLeft, Film, X, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router'
-import { videosApi, EventVideo } from '@/features/videos/api'
+import { videosApi } from '@/features/videos/api'
 import { VideoCard } from '@/features/videos/components/VideoCard'
 import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal'
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal'
@@ -26,14 +26,20 @@ export function VideosPage() {
   const currentUser = useAuthStore(s => s.user)
   const [activeCategory, setActiveCategory] = useState('')
   const [showUpload, setShowUpload] = useState(false)
-  const [playingVideo, setPlayingVideo] = useState<EventVideo | null>(null)
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['videos', activeCategory],
-    queryFn: () => videosApi.list({ category: activeCategory || undefined, timeline: 'past' }),
+    queryFn: ({ pageParam }) => videosApi.list({ 
+      category: activeCategory || undefined, 
+      timeline: 'past',
+      cursor: pageParam 
+    }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
   })
 
-  const videos = data?.data ?? []
+  const videos = data?.pages.flatMap(p => p.data) || []
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => videosApi.delete(id),
@@ -43,6 +49,15 @@ export function VideosPage() {
     },
     onError: () => toast.error('Erreur lors de la suppression'),
   })
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollTop + target.clientHeight >= target.scrollHeight - 200) {
+      if (hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-white dark:bg-[#111]" id="videos-page">
@@ -85,7 +100,7 @@ export function VideosPage() {
       </div>
 
       {/* Liste */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4" onScroll={handleScroll}>
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-gray-300" />
@@ -110,7 +125,7 @@ export function VideosPage() {
           <div className="grid grid-cols-2 gap-3">
             {videos.map(v => (
               <div key={v.id} className="relative">
-                <VideoCard video={v} onClick={setPlayingVideo} />
+                <VideoCard video={v} onClick={(video) => setPlayingVideoId(video.id)} />
                 {v.userId === currentUser?.id && (
                   <button
                     onClick={() => {
@@ -123,15 +138,27 @@ export function VideosPage() {
                 )}
               </div>
             ))}
+            {isFetchingNextPage && (
+              <div className="col-span-2 flex justify-center py-4">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Player modal with social features */}
-      {playingVideo && (
+      {playingVideoId && (
         <VideoPlayerModal
-          video={playingVideo}
-          onClose={() => setPlayingVideo(null)}
+          videos={videos}
+          initialVideoId={playingVideoId}
+          onClose={() => setPlayingVideoId(null)}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }}
+          isLoadingMore={isFetchingNextPage}
         />
       )}
 

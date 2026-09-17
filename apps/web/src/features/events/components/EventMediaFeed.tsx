@@ -1,21 +1,27 @@
 import { useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Play } from 'lucide-react';
-import { EventVideo } from '@/features/videos/api';
+import { videosApi } from '@/features/videos/api';
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal';
 
 export function EventMediaFeed() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [playingVideo, setPlayingVideo] = useState<EventVideo | null>(null);
+  const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   
-  const { data: medias = [], isLoading } = useQuery({
+  const { 
+    data, 
+    isLoading, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useInfiniteQuery({
     queryKey: ['feed', 'videos'],
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: EventVideo[] }>('/videos?limit=10');
-      return res.data.data;
-    }
+    queryFn: ({ pageParam }) => videosApi.list({ limit: 10, cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
   });
+
+  const medias = data?.pages.flatMap(p => p.data) || [];
 
   if (isLoading) {
     return (
@@ -39,11 +45,19 @@ export function EventMediaFeed() {
         ref={scrollRef}
         className="flex gap-3 overflow-x-auto px-4 pb-4 snap-x snap-mandatory"
         style={{ scrollbarWidth: 'none' }}
+        onScroll={(e) => {
+          const target = e.currentTarget;
+          if (target.scrollLeft + target.clientWidth >= target.scrollWidth - 100) {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }
+        }}
       >
         {medias.map((media) => (
           <div 
             key={media.id} 
-            onClick={() => setPlayingVideo(media as EventVideo)}
+            onClick={() => setPlayingVideoId(media.id)}
             className="relative w-[110px] h-[180px] rounded-[18px] overflow-hidden shrink-0 snap-start bg-gray-900 cursor-pointer shadow-sm border border-gray-100 dark:border-white/10"
           >
             <>
@@ -82,10 +96,17 @@ export function EventMediaFeed() {
           </div>
         ))}
       </div>
-      {playingVideo && (
+      {playingVideoId && (
         <VideoPlayerModal 
-          video={playingVideo} 
-          onClose={() => setPlayingVideo(null)} 
+          videos={medias}
+          initialVideoId={playingVideoId}
+          onClose={() => setPlayingVideoId(null)} 
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              fetchNextPage();
+            }
+          }}
+          isLoadingMore={isFetchingNextPage}
         />
       )}
     </div>
