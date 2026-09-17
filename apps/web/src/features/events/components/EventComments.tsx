@@ -121,18 +121,18 @@ export function EventComments({ eventId, organizerId }: { eventId: string, organ
       </div>
 
       <div className="p-3 border-t border-gray-100 dark:border-white/5 bg-white dark:bg-[#1A1A1A]">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <input
             type="text"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Ajouter un commentaire..."
-            className="flex-1 bg-gray-100 dark:bg-white/5 rounded-full px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+            className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 rounded-full px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
           />
           <button
             type="submit"
             disabled={!content.trim() || postMutation.isPending}
-            className="w-10 h-10 rounded-full bg-[#FF7A00] text-white flex items-center justify-center disabled:opacity-50 flex-shrink-0"
+            className="w-10 h-10 rounded-full bg-[#FF7A00] text-white flex items-center justify-center disabled:opacity-50 flex-shrink-0 active:scale-95 transition-transform"
           >
             {postMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>

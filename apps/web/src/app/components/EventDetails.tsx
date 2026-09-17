@@ -542,7 +542,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           containerClassName="flex-shrink-0 bg-[var(--color-background-primary)] z-10 pt-safe-4 pt-4 shadow-sm"
           rightAction={
             <>
-              {isOrganizer && (
+              {isOrganizer && endDate > new Date() && (
                 <button 
                   onClick={() => navigate('/events/create', { state: { editEventId: event.id, eventData: event } })}
                   className="w-9 h-9 flex items-center justify-center active:scale-95 transition-transform text-[#FF7A00]"
