@@ -15,7 +15,7 @@ export function EventMediaFeed() {
     hasNextPage, 
     isFetchingNextPage 
   } = useInfiniteQuery({
-    queryKey: ['feed', 'videos'],
+    queryKey: ['feed', 'videos', 'infinite'],
     queryFn: ({ pageParam }) => videosApi.list({ limit: 10, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,

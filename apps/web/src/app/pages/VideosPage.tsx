@@ -29,7 +29,7 @@ export function VideosPage() {
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ['videos', activeCategory],
+    queryKey: ['videos', 'infinite', activeCategory],
     queryFn: ({ pageParam }) => videosApi.list({ 
       category: activeCategory || undefined, 
       timeline: 'past',

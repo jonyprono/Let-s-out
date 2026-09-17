@@ -76,7 +76,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     hasNextPage: hasNextVideos,
     isFetchingNextPage: isFetchingNextVideos 
   } = useInfiniteQuery({
-    queryKey: ['videos', 'user', targetUserId],
+    queryKey: ['videos', 'user', targetUserId, 'infinite'],
     queryFn: ({ pageParam }) => videosApi.list({ userId: targetUserId, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
