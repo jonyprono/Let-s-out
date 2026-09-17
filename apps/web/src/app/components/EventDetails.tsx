@@ -49,6 +49,7 @@ import {
 import { ManageEventView } from '@/app/components/ManageEventView'
 import { hapticFeedback } from '@/lib/haptics'
 import { useFavoritesStore } from '@/stores/favorites.store'
+import { Carousel, CarouselContent, CarouselItem } from '@/app/components/ui/carousel'
 
 import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
 import { JoinPendingScreen } from '@/app/components/JoinPendingScreen'
@@ -575,7 +576,17 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           <div className="flex flex-col gap-3">
             {/* Cover Image */}
             <div className="min-h-[200px] w-full bg-[var(--color-background-secondary)] relative mb-4 flex items-center justify-center">
-              {coverUrl ? (
+              {event?.mediaUrls && event.mediaUrls.length > 0 ? (
+                <Carousel className="w-full h-full absolute inset-0">
+                  <CarouselContent className="h-full">
+                    {event.mediaUrls.map((url: string, idx: number) => (
+                      <CarouselItem key={idx} className="h-full">
+                        <SafeImage src={url} alt={`${event.title} - image ${idx + 1}`} className="w-full h-full object-cover" />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              ) : coverUrl ? (
                 <SafeImage src={coverUrl} alt={event.title} className="w-full h-full object-cover absolute inset-0" />
               ) : (
                 <div className="flex flex-col items-center justify-center text-[var(--color-icon-muted)]">

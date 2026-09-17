@@ -20,6 +20,7 @@ import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal'
 import { InviteFriendsModal } from '@/features/events/components/InviteFriendsModal';
 import { ShareViaChatModal } from '@/features/events/components/ShareViaChatModal';
 import { eventsApi } from '@/features/events/api';
+import { Carousel, CarouselContent, CarouselItem } from '@/app/components/ui/carousel';
 
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
@@ -95,10 +96,25 @@ export function ManageEvent() {
       
       {/* Header Cover */}
       <div className="relative w-full h-[200px] shrink-0 bg-gray-200">
-        <div 
-          className="absolute inset-0 bg-cover bg-center" 
-          style={{ backgroundImage: `url(${event.coverUrl || '/Checker.png'})` }} 
-        />
+        {event?.mediaUrls && event.mediaUrls.length > 0 ? (
+          <Carousel className="w-full h-full absolute inset-0">
+            <CarouselContent className="h-full">
+              {event.mediaUrls.map((url: string, idx: number) => (
+                <CarouselItem key={idx} className="h-full">
+                  <div 
+                    className="w-full h-full bg-cover bg-center" 
+                    style={{ backgroundImage: `url(${url})` }} 
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        ) : (
+          <div 
+            className="absolute inset-0 bg-cover bg-center" 
+            style={{ backgroundImage: `url(${event.coverUrl || '/Checker.png'})` }} 
+          />
+        )}
         <div className="absolute top-0 left-0 w-full p-4 pt-12 z-10 flex items-center gap-3">
           <BackButton 
             onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile')} 
