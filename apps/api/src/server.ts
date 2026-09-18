@@ -212,6 +212,8 @@ async function bootstrap() {
       // 20260901000000_add_reactions_comments
       { table: 'event_reactions', migration: 'add_reactions_comments' },
       { table: 'event_comments', migration: 'add_reactions_comments' },
+      { table: 'event_video_comments', migration: 'add_reactions_comments' },
+      { table: 'event_video_reactions', migration: 'add_reactions_comments' },
     ]
 
     let schemaOk = true
