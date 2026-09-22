@@ -172,7 +172,7 @@ export function EventValidatorsVote() {
         ) : (
           <>
             <p className="text-[12px] text-[#404040] dark:text-gray-400 font-inter leading-relaxed">
-              Choisissez le participant à qui vous souhaitez déléguer la validation du déblocage des fonds de la cagnotte. Vous pouvez modifier votre choix à tout moment.
+              Choisissez l'OUTSTER à qui vous souhaitez déléguer la validation du déblocage des fonds de la cagnotte. Vous pouvez modifier votre choix à tout moment.
             </p>
 
             <div className="flex flex-col gap-1">

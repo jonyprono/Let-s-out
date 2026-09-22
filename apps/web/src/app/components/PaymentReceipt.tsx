@@ -141,7 +141,7 @@ export function PaymentReceipt() {
         )}
         {/* Green Participant badge — wide pill */}
         <div className="bg-[#16A34A] text-white text-[13px] font-bold rounded-[8px] px-6 py-2 mt-2">
-          Participant
+          OUTSTER
         </div>
       </div>
 

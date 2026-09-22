@@ -86,7 +86,7 @@ export function PoolManagementModal({
               </p>
             ) : null}
             {mode === 'libre' ? (
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">Chaque participant choisit le montant de sa contribution.</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">Chaque OUTSTER choisit le montant de sa contribution.</p>
             ) : null}
           </div>
 

@@ -27,7 +27,7 @@ const DEFAULT_FLAGS = [
   {
     key: FLAG_KEYS.ENABLE_NON_VOTER_PENALTIES,
     label: 'Pénalités pour abstentionnistes',
-    description: 'Active les pénalités globales si un participant ne valide ni ne délègue à la fin du délai (sa part est débloquée automatiquement).',
+    description: 'Active les pénalités globales si un OUTSTER ne valide ni ne délègue à la fin du délai (sa part est débloquée automatiquement).',
     icon: '⚖️',
     section: 'Cagnotte',
   },

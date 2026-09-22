@@ -31,7 +31,7 @@ export default function AdminSettingsPage() {
     {
       key: 'PAYOUT_APPROVAL_DEADLINE_HOURS',
       label: 'Délai d\'approbation des déblocages (heures)',
-      description: 'Délai en heures avant qu\'une demande de déblocage de fonds ne soit automatiquement approuvée ou rejetée par le système selon les votes des participants.',
+      description: 'Délai en heures avant qu\'une demande de déblocage de fonds ne soit automatiquement approuvée ou rejetée par le système selon les votes des OUTSTERS.',
       type: 'number',
       defaultValue: '48'
     },

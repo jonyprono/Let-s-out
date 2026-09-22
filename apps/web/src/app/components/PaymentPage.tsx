@@ -259,7 +259,7 @@ export function PaymentPage() {
 
           <h1 className="text-[20px] font-bold text-[#22C55E] mb-3 text-center">Participation validée !</h1>
           <p className="text-[13px] text-gray-600 dark:text-gray-400 text-center mb-8 px-2 max-w-[300px] leading-relaxed font-inter">
-            Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres participants.
+            Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres OUTSTERS.
           </p>
 
           <div className="w-full rounded-[12px] border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] shadow-sm p-4 space-y-4 max-w-[340px]">

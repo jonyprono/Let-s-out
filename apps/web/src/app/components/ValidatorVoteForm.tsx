@@ -53,7 +53,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
         </div>
         <h2 className="text-[24px] font-bold text-[#14C93F] mb-4">Vote lancé !</h2>
         <p className="text-center text-gray-500 text-[14px] leading-relaxed mb-8 max-w-[280px]">
-          Les participants ont été notifiés et pourront choisir leur validateur depuis le chat.
+          Les OUTSTERS ont été notifiés et pourront choisir leur validateur depuis le chat.
         </p>
         <button
           onClick={onBack}
@@ -108,7 +108,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
           </div>
           
           <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-8 leading-relaxed text-center">
-            Les participants recevront une notification et pourront voter directement dans le chat de l'événement.
+            Les OUTSTERS recevront une notification et pourront voter directement dans le chat de l'événement.
           </p>
 
           <button
@@ -207,13 +207,13 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
 
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6 pb-24">
         <div className="bg-white dark:bg-[#1A1A1A] p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-          <p className="text-gray-500 text-[13px] mb-4">Choisissez les candidats éligibles à la validation du déblocage des fonds. Un vote sera soumis à tous les participants.</p>
+          <p className="text-gray-500 text-[13px] mb-4">Choisissez les candidats éligibles à la validation du déblocage des fonds. Un vote sera soumis à tous les OUTSTERS.</p>
           
           <div className="relative mb-4">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text"
-              placeholder="Rechercher un participant..."
+              placeholder="Rechercher un OUTSTER..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full h-10 pl-9 pr-4 rounded-lg bg-gray-50 dark:bg-[#2A2A2A] text-sm border-none focus:ring-1 focus:ring-[#FF7A00] outline-none dark:text-white placeholder-gray-400"
@@ -221,7 +221,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
           </div>
 
           <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto">
-            {filteredAttendees.length === 0 && <p className="text-center text-sm text-gray-500 py-4">Aucun participant trouvé.</p>}
+            {filteredAttendees.length === 0 && <p className="text-center text-sm text-gray-500 py-4">Aucun OUTSTER trouvé.</p>}
             {filteredAttendees.map((att: any) => {
               const isSelected = selectedCandidates.includes(att.userId);
               return (
