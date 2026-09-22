@@ -27,7 +27,7 @@ export function EventMediaFeed() {
     return (
       <div className="flex gap-3 overflow-hidden px-4 py-2">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="w-[100px] h-[160px] bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse shrink-0" />
+          <div key={i} className="w-[140px] aspect-square bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse shrink-0" />
         ))}
       </div>
     );
@@ -58,7 +58,7 @@ export function EventMediaFeed() {
           <div 
             key={media.id} 
             onClick={() => setPlayingVideoId(media.id)}
-            className="relative w-[110px] h-[180px] rounded-[18px] overflow-hidden shrink-0 snap-start bg-gray-900 cursor-pointer shadow-sm border border-gray-100 dark:border-white/10"
+            className="relative w-[140px] aspect-square rounded-[18px] overflow-hidden shrink-0 snap-start bg-gray-900 cursor-pointer shadow-sm border border-gray-100 dark:border-white/10"
           >
             <>
               <video 
