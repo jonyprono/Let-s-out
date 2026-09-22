@@ -75,32 +75,32 @@ function clusterEvents(events: Event[], zoom: number): Array<{
 /** Format label sub-line based on event status & date */
 function getEventSubLabel(ev: Event): string {
   const now = new Date()
-  if (!ev.startAt) return `${ev.currentAttendees || 0} participants`
+  if (!ev.startAt) return `${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
 
   const start = new Date(ev.startAt)
   const end = (ev as any).endAt ? new Date((ev as any).endAt) : null
 
   // En cours
   if (start <= now && (!end || end >= now)) {
-    return `En cours • ${ev.currentAttendees || 0} participants`
+    return `En cours • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
   }
 
   // Today
   if (start.toDateString() === now.toDateString()) {
     const time = format(start, "HH'h'mm", { locale: fr })
-    return `Aujourd'hui à ${time} • ${ev.currentAttendees || 0} participants`
+    return `Aujourd'hui à ${time} • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
   }
 
   // Tomorrow
   const tomorrow = new Date(now)
   tomorrow.setDate(now.getDate() + 1)
   if (start.toDateString() === tomorrow.toDateString()) {
-    return `Demain • ${ev.currentAttendees || 0} participants`
+    return `Demain • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
   }
 
   // Next monday or specific day
   const dayStr = format(start, 'dd MMM', { locale: fr })
-  return `${dayStr} • ${ev.currentAttendees || 0} participants`
+  return `${dayStr} • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
 }
 
 /** Custom orange pin icon with label bubble */

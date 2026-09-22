@@ -1148,7 +1148,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {formStep === 2 && (
             <div className="animate-in slide-in-from-right-2">
               <div className="mb-4">
-                <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Participants attendus</p>
+                <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Nombre maximum d'OUTSTERS</p>
                 <input
                   value={maxPlaces}
                   onChange={e => setMaxPlaces(e.target.value)}
@@ -1510,7 +1510,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               {/* Toggle switch for PRIVATE */}
               {opt.value === 'PRIVATE' && privacy === 'PRIVATE' && (
                 <div className="flex items-center justify-between mt-3 pt-1 ml-[48px]">
-                  <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les participants à inviter d'autres participants</span>
+                  <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les OUTSTERS à inviter d'autres OUTSTERS</span>
                   <SettingsToggle checked={allowGuestInvites} onChange={setAllowGuestInvites} />
                 </div>
               )}

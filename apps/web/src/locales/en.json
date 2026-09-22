@@ -214,7 +214,7 @@
                                  },
                  "stats":  {
                                "eventsThisWeek":  "Events\nthis week",
-                               "participants":  "Participants\nalongside you",
+                               "participants":  "OUTSTERS\nalongside you",
                                "joinedEvents":  "Events\njoined",
                                "averageRating":  "Average mark\nreceived"
                            },
@@ -273,7 +273,7 @@
                                 },
                     "upcomingEvents":  "Upcoming events",
                     "pastParticipations":  "Previous appearances",
-                    "participants":  "participants",
+                    "participants":  "OUTSTERS",
                     "draft":  "Draft",
                     "resumeDraft":  "Resume the draft",
                     "noTitle":  "Untitled",

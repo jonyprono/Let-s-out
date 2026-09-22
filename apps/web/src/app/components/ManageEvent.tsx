@@ -532,13 +532,13 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
       {/* Count header */}
       <div className="bg-[#FFF9EC] rounded-xl p-3 flex items-center gap-3 mb-2">
         <UserAvatarIcon size={22} />
-        <span className="text-[14px] font-semibold text-gray-700">{participants.length} Participants validés</span>
+        <span className="text-[14px] font-semibold text-gray-700">{participants.length} OUTSTER{participants.length > 1 || participants.length === 0 ? 'S' : ''} validé{participants.length > 1 ? 's' : ''}</span>
       </div>
 
       {/* List */}
       <div className="flex flex-col pb-24">
         {participants.length === 0 ? (
-          <p className="text-[13px] text-gray-400 text-center py-10">Aucun participant pour le moment.</p>
+          <p className="text-[13px] text-gray-400 text-center py-10">Aucun OUTSTER pour le moment.</p>
 
         ) : (
           participants.map((user: any) => {
@@ -624,7 +624,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
               <line x1="20" y1="14" x2="28" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <defs><clipPath id="uai-clip-invite"><rect width="26" height="32" rx="13" fill="white" /></clipPath></defs>
             </svg>
-            Inviter des participants
+            Inviter des OUTSTERS
           </button>
         </div>
       )}
@@ -632,7 +632,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
       {/* Invite Options BottomSheet */}
       <BottomSheet open={showInviteOptions} onClose={() => setShowInviteOptions(false)}>
         <div className="w-full flex flex-col pt-2 pb-8 px-5 gap-3">
-          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4 text-center">Inviter des participants</h3>
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4 text-center">Inviter des OUTSTERS</h3>
           {/* Inviter des amis Let's Out */}
           <button
             onClick={() => { setShowInviteOptions(false); setShowInviteFriends(true); }}
@@ -1212,7 +1212,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
           </div>
           <div className="text-center">
             <h2 className="text-[24px] font-bold text-gray-900 dark:text-white mb-2">Votre cagnotte est créée !</h2>
-            <p className="text-[15px] text-gray-500 leading-relaxed max-w-[280px]">Les participants ont été notifiés. Vous pouvez maintenant suivre les contributions.</p>
+            <p className="text-[15px] text-gray-500 leading-relaxed max-w-[280px]">Les OUTSTERS ont été notifiés. Vous pouvez maintenant suivre les contributions.</p>
           </div>
           <div className="w-full mt-6">
             <PrimaryButton onClick={() => { setStep('empty'); qc.invalidateQueries({ queryKey: ['events', event.id] }); }}>

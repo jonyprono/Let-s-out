@@ -211,10 +211,10 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
           </div>
         )}
 
-        {/* Participants */}
+        {/* OUTSTERS */}
         <div className="flex flex-col gap-1 w-full">
           <h3 className="font-poppins font-medium text-[12px] leading-[20px] text-[#737373] mb-1">
-            Participants ({conversation?.members?.length ?? 0})
+            OUTSTERS ({conversation?.members?.length ?? 0})
           </h3>
           <div className="flex flex-col gap-1 w-full">
             {conversation.members.map((member) => {

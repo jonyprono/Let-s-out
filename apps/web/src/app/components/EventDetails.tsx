@@ -740,7 +740,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
             {/* Participants */}
             <div>
-              <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">Participants</h2>
+              <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">OUTSTERS</h2>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-[8px]">
                   {/* Stacked avatars */}
@@ -758,7 +758,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   {/* Count text */}
                   <p className="text-[14px] text-[var(--brand-orange-500)] font-semibold font-poppins">
                     {hasJoined ? 'Vous' : ''}
-                    {extraCount > 0 ? `${hasJoined ? ' +' : '+'}${extraCount} participants` : attendeeCount > 0 ? ` ${attendeeCount} participants` : ''}
+                    {extraCount > 0 ? `${hasJoined ? ' +' : '+'}${extraCount} OUTSTERS` : attendeeCount > 0 ? ` ${attendeeCount} OUTSTER${attendeeCount > 1 ? 'S' : ''}` : ''}
                   </p>
                 </div>
                 <button
@@ -1137,7 +1137,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
             <div className="px-5 pt-2 pb-4 flex-shrink-0 text-center">
-              <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">Participants</h3>
+              <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">OUTSTERS</h3>
             </div>
 
             <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
@@ -1220,7 +1220,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     <Users className="w-8 h-8 text-gray-400" />
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 text-[15px] font-medium text-center">
-                    Aucun participant pour le moment.
+                    Aucun OUTSTER pour le moment.
                   </p>
                 </div>
               )}

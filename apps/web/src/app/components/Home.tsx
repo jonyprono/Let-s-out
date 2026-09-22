@@ -485,7 +485,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   />
                 </div>
 
-                {/* ── En direct & vidéos ── */}
+                {/* ── OUT VLOGS ── */}
                 <EventMediaFeed />
 
                 {/* ── À ne pas manquer ── */}

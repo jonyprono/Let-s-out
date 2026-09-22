@@ -702,7 +702,7 @@ export function ChatDetails() {
                 <p className="text-[13px] text-action-primary font-medium animate-pulse mt-0.5">{typingUser} écrit...</p>
               ) : isGroup ? (
                 <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">
-                  {memberCount} participant{memberCount !== 1 ? 's' : ''}
+                  {memberCount} OUTSTER{memberCount !== 1 ? 'S' : ''}
                   {presence?.onlineCount ? `, ${presence.onlineCount} en ligne` : ''}
                 </p>
               ) : presence?.isOtherOnline ? (
@@ -1206,7 +1206,7 @@ export function ChatDetails() {
                   <div className="flex items-center gap-3">
                     <Users className="w-4 h-4 text-orange-500 flex-shrink-0" />
                     <span className="text-[14px] text-gray-600 dark:text-gray-300">
-                      {event.currentAttendees ?? 0} participant{(event.currentAttendees ?? 0) > 1 ? 's' : ''}
+                      {event.currentAttendees ?? 0} OUTSTER{(event.currentAttendees ?? 0) > 1 ? 'S' : ''}
                     </span>
                   </div>
                 </div>

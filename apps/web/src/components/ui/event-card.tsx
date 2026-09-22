@@ -69,7 +69,7 @@ export function EventCard({
               <div className="h-6 w-6 rounded-full border border-white bg-[var(--color-background-secondary)]"></div>
             </div>
             <span className="font-poppins text-[var(--font-size-body-xsmall)] text-[var(--color-text-secondary)]">
-              {participantsCount} Participants
+              {participantsCount} OUTSTERS
             </span>
           </div>
           {customBadge ? customBadge : <PriceBadge type={priceType} amount={priceAmount} />}

@@ -214,7 +214,7 @@
                                  },
                  "stats":  {
                                "eventsThisWeek":  "Eventos\nde esta semana",
-                               "participants":  "Participantes\njunto a vosotros",
+                               "participants":  "OUTSTERS\njunto a vosotros",
                                "joinedEvents":  "Eventos\na los que se ha asistido",
                                "averageRating":  "Nota media\nobtenida"
                            },
@@ -273,7 +273,7 @@
                                 },
                     "upcomingEvents":  "PrÃ³ximos eventos",
                     "pastParticipations":  "Participaciones anteriores",
-                    "participants":  "participantes",
+                    "participants":  "OUTSTERS",
                     "draft":  "Borrador",
                     "resumeDraft":  "Retomar el borrador",
                     "noTitle":  "Sin tÃ­tulo",

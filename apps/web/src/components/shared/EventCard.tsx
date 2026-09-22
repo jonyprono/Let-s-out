@@ -91,7 +91,7 @@ export const EventCard = memo(function EventCard({
   const attendees: any[] = event ? (event as any).bookings || [] : [];
   const count = event?.currentAttendees ?? 0;
   const max = event?.maxAttendees;
-  const displayAttendeesCount = attendeesCount || (max ? `${count}/${max} Participants` : `${count} Participants`);
+  const displayAttendeesCount = attendeesCount || (max ? `${count}/${max} OUTSTER${count > 1 || count === 0 ? 'S' : ''}` : `${count} OUTSTER${count > 1 || count === 0 ? 'S' : ''}`);
 
   const colors = ['#9747FF', 'var(--action-primary)', '#B070FF', 'var(--color-brand-orange-400)'];
 

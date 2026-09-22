@@ -46,7 +46,7 @@ export function ParticipantAvatars({ count, max, attendees = [] }: ParticipantAv
         )}
       </div>
       <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-        {max ? `${count}/${max} Participants` : `${count} participants`}
+        {max ? `${count}/${max} OUTSTER${count > 1 || count === 0 ? 'S' : ''}` : `${count} OUTSTER${count > 1 || count === 0 ? 'S' : ''}`}
       </span>
     </div>
   )

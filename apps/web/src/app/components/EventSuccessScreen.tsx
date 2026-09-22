@@ -87,7 +87,7 @@ export function EventSuccessScreen() {
         {/* Title */}
         <h1 className="text-[20px] font-semibold text-[#22C55E] mb-[12px] text-center">Participation validée !</h1>
         <p className="text-[12px] font-normal font-inter text-[#6B6B6B] dark:text-[#A0A0A0] text-center mb-[32px] leading-relaxed max-w-[300px]">
-          Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres participants.
+          Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres OUTSTERS.
         </p>
 
         {/* Summary card */}

@@ -85,7 +85,7 @@ function RemoteVideoPlayer({ stream, mediaType, userName }: { stream: MediaStrea
            <div className="w-20 h-20 rounded-full bg-white dark:bg-[#1A1A1A]/10 flex items-center justify-center mb-3">
              <span className="text-3xl font-bold text-white">{userName?.[0]?.toUpperCase() || '?'}</span>
            </div>
-           <span className="text-white/80 font-medium px-4 py-1 bg-black/30 rounded-full backdrop-blur-sm">{userName || 'Participant'}</span>
+           <span className="text-white/80 font-medium px-4 py-1 bg-black/30 rounded-full backdrop-blur-sm">{userName || 'OUTSTER'}</span>
         </div>
       )}
     </div>

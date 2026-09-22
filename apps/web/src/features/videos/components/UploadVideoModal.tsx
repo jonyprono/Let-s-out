@@ -293,7 +293,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 Confidentialité
               </label>
               <div className="flex gap-2">
-                {[{ v: 'PUBLIC', label: '🌍 Public', desc: 'Tout le monde' }, { v: 'PARTICIPANTS', label: '🎟️ Participants', desc: 'Participants uniquement' }, { v: 'PRIVATE', label: '🔒 Privé', desc: 'Seulement moi' }].map(opt => (
+                {[{ v: 'PUBLIC', label: '🌍 Public', desc: 'Tout le monde' }, { v: 'PARTICIPANTS', label: '🎟️ OUTSTERS', desc: 'OUTSTERS uniquement' }, { v: 'PRIVATE', label: '🔒 Privé', desc: 'Seulement moi' }].map(opt => (
                   <button
                     key={opt.v}
                     type="button"

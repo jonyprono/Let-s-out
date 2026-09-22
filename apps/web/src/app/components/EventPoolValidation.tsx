@@ -141,7 +141,7 @@ export function EventPoolValidation() {
             </div>
             <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">Vous avez délégué votre voix</h3>
             <p className="text-[14px] text-gray-500">
-              Votre pouvoir de validation a été confié à un autre participant. 
+              Votre pouvoir de validation a été confié à un autre OUTSTER. 
               Vous pouvez révoquer cette délégation pour reprendre la main sur la validation de votre part.
             </p>
             
@@ -164,7 +164,7 @@ export function EventPoolValidation() {
             <span className="text-[15px] font-bold text-[#FF7A00]">{collected.toLocaleString('fr-FR')} F</span>
           </div>
           <p className="text-[12px] text-gray-700 mt-2">
-            L'organisateur souhaite débloquer le budget. En tant que participant, vous devez valider l'utilisation des fonds.
+            L'organisateur souhaite débloquer le budget. En tant qu'OUTSTER, vous devez valider l'utilisation des fonds.
           </p>
         </div>
 
@@ -201,7 +201,7 @@ export function EventPoolValidation() {
             </div>
             <div>
               <p className="font-semibold text-gray-900 dark:text-white text-[14px]">Je délègue ma validation</p>
-              <p className="text-[12px] text-gray-500 mt-1">Vous confiez le droit de valider à un autre participant.</p>
+              <p className="text-[12px] text-gray-500 mt-1">Vous confiez le droit de valider à un autre OUTSTER.</p>
             </div>
           </div>
         </div>
@@ -214,13 +214,13 @@ export function EventPoolValidation() {
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl flex gap-3 animate-in fade-in">
                 <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
                 <p className="text-[13px] text-yellow-800 leading-snug">
-                  <strong>Attention à la concentration :</strong> Ce participant représentera plus de 50% de la cagnotte si vous lui confiez votre voix.
+                  <strong>Attention à la concentration :</strong> Cet OUTSTER représentera plus de 50% de la cagnotte si vous lui confiez votre voix.
                 </p>
               </div>
             )}
             <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
               {sortedAttendees.length === 0 ? (
-                <p className="text-[13px] text-gray-500 italic">Aucun autre participant disponible.</p>
+                <p className="text-[13px] text-gray-500 italic">Aucun autre OUTSTER disponible.</p>
               ) : (
                 sortedAttendees.map(user => (
                   <div 
