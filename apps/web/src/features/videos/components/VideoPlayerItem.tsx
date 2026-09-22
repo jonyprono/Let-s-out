@@ -266,7 +266,7 @@ export function VideoPlayerItem({ video, isActive }: Props) {
         <div className="relative z-10 w-full px-4 mb-3 pointer-events-auto">
           <button 
             onClick={() => {
-              const tagsQuery = video.event.tags?.length ? `&tags=${video.event.tags.join(',')}` : '';
+              const tagsQuery = (video.event as any).tags?.length ? `&tags=${(video.event as any).tags.join(',')}` : '';
               navigate(`/create-event?category=${video.event.category}${tagsQuery}`);
             }}
             className="w-full py-2.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-white font-medium text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg"
