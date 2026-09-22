@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, Play } from 'lucide-react';
+import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, Play, CalendarPlus } from 'lucide-react';
 import { EventVideo, videosApi } from '../api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
@@ -260,6 +260,20 @@ export function VideoPlayerItem({ video, isActive }: Props) {
               </button>
             )}
           </div>
+        </div>
+        
+        {/* Persistent "Create Similar Event" Button */}
+        <div className="relative z-10 w-full px-4 mb-3 pointer-events-auto">
+          <button 
+            onClick={() => {
+              const tagsQuery = video.event.tags?.length ? `&tags=${video.event.tags.join(',')}` : '';
+              navigate(`/create-event?category=${video.event.category}${tagsQuery}`);
+            }}
+            className="w-full py-2.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-white font-medium text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg"
+          >
+            <CalendarPlus className="w-5 h-5" />
+            Créer un événement similaire
+          </button>
         </div>
         
         {/* Custom Progress Bar at the very bottom */}

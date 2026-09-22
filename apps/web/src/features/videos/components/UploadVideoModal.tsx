@@ -102,16 +102,24 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
     setUploadProgress(0)
     setFileName(file.name)
 
-    // RÃ©cupÃ©rer la durÃ©e
+    // Récupérer la durée
     const videoEl = document.createElement('video')
     videoEl.src = URL.createObjectURL(file)
-    await new Promise<void>(resolve => {
+    const isValid = await new Promise<boolean>(resolve => {
       videoEl.onloadedmetadata = () => {
-        setDuration(Math.round(videoEl.duration))
-        resolve()
+        const d = Math.round(videoEl.duration)
+        if (d > 30) {
+          toast.error('La vidéo ne doit pas dépasser 30 secondes.')
+          resolve(false)
+        } else {
+          setDuration(d)
+          resolve(true)
+        }
       }
     })
     URL.revokeObjectURL(videoEl.src)
+    if (!isValid) return
+
 
     // PrÃ©-remplir le titre avec le nom du fichier sans extension
     if (!title) {
