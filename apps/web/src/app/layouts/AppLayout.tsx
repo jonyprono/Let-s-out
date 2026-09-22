@@ -20,7 +20,8 @@ export function AppLayout() {
     isSearchScreen ||
     location.pathname === '/verify-profile' ||
     location.pathname === '/notifications' ||
-    location.pathname.endsWith('/pay')
+    location.pathname.endsWith('/pay') ||
+    location.pathname.startsWith('/pages/')
 
   const [pendingEvent, setPendingEvent] = useState<any>(null)
   

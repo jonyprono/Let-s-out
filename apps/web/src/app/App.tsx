@@ -124,6 +124,8 @@ import AdminUsersPage from './components/admin/AdminUsersPage'
 import AdminEventsPage from './components/admin/AdminEventsPage'
 import { EventCommentsPage } from '@/app/pages/EventCommentsPage'
 import { VideosPage } from '@/app/pages/VideosPage'
+import { CreatePage } from '@/features/pages/components/CreatePage'
+import { PageView } from '@/features/pages/components/PageView'
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
@@ -341,6 +343,8 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/support" element={<HelpSupport />} />
+            <Route path="/pages/create" element={<CreatePage />} />
+            <Route path="/pages/:id" element={<PageView />} />
           </Route>
 
           {/* Fallback */}

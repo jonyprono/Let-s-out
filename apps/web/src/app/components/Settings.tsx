@@ -5,7 +5,7 @@ import {
   LogOut, User, Loader2, Phone, Mail,
   CheckCircle2, Trash2, AlertTriangle, Wallet as WalletIcon,
   Star, MessageCircle, AlertCircle, Share2, Heart, Award,
-  Calendar, Bot, FileText, Info,
+  Calendar, Bot, FileText, Info, LayoutDashboard,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -425,6 +425,14 @@ export function Settings({ onBack }: SettingsProps) {
               title={t('settings.rows.payments')}
               subtitle={t('settings.rows.paymentsDesc')}
               onClick={() => navigate('/wallet')}
+            />
+            <SettingsRow
+              icon={<LayoutDashboard className="w-4 h-4" />}
+              iconBg="bg-violet-50 dark:bg-violet-500/10"
+              iconColor="text-violet-500"
+              title="Créer une page"
+              subtitle="Publiez du contenu sous une identité dédiée"
+              onClick={() => navigate('/pages/create')}
               isLast
             />
           </div>

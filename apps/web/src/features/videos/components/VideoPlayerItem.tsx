@@ -173,8 +173,8 @@ export function VideoPlayerItem({ video, isActive }: Props) {
         <div 
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
         >
-          <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-            <Play className="w-8 h-8 text-white ml-1 fill-white" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center opacity-70 drop-shadow-2xl">
+            <Play className="w-12 h-12 text-white ml-1 fill-white" />
           </div>
         </div>
       )}

@@ -618,9 +618,26 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             
             <div className="px-4">
 
-            {/* Title */}
+            {/* Title & Badges */}
             <div>
-              <h1 className="text-[20px] font-semibold font-poppins text-[#1B1818] leading-tight mb-4">{event.title}</h1>
+              <h1 className="text-[20px] font-semibold font-poppins text-[#1B1818] leading-tight mb-2">{event.title}</h1>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {event.genderRestriction === 'FEMALE' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-pink-100 text-pink-700">
+                    ♀️ Réservé aux femmes
+                  </span>
+                )}
+                {event.genderRestriction === 'MALE' && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700">
+                    ♂️ Réservé aux hommes
+                  </span>
+                )}
+                {event.isPrivate && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-700">
+                    🔒 Privé
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Location & Date */}

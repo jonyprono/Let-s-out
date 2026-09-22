@@ -62,6 +62,8 @@ model User {
   blocksReceived   UserBlock[]          @relation("UserBlocked")
   isBanned         Boolean              @default(false)
   banReason        String?
+  pages            Page[]               @relation("PageCreator")
+  pageFollows      PageFollower[]       @relation("UserPageFollows")
 
   @@map("users")
 }
@@ -238,6 +240,7 @@ model Event {
   reports          Report[]
   reminder24hSent  Boolean       @default(false)
   reminder2hSent   Boolean       @default(false)
+  genderRestriction GenderRestriction @default(ANY)
 
   @@index([creatorId])
   @@index([status])
@@ -599,6 +602,12 @@ enum EventStatus {
   COMPLETED
 }
 
+enum GenderRestriction {
+  ANY
+  MALE
+  FEMALE
+}
+
 enum EventCategory {
   SPORT
   CULTURE
@@ -928,4 +937,49 @@ model EventVideoComment {
   @@index([videoId])
   @@index([userId])
   @@map("event_video_comments")
+}
+
+// ── Pages (Outsters) ──────────────────────────────────────────────────────────
+model Page {
+  id          String   @id @default(cuid())
+  creatorId   String
+  name        String
+  description String?
+  category    String
+  avatarUrl   String?
+  coverUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator     User     @relation("PageCreator", fields: [creatorId], references: [id])
+  followers   PageFollower[]
+  posts       PagePost[]
+
+  @@map("pages")
+}
+
+model PageFollower {
+  id        String   @id @default(cuid())
+  pageId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  user      User     @relation("UserPageFollows", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, userId])
+  @@map("page_followers")
+}
+
+model PagePost {
+  id          String   @id @default(cuid())
+  pageId      String
+  content     String?
+  mediaUrls   String[] // Photos ou vidéos
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("page_posts")
 }

@@ -1048,6 +1048,21 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(402).send({ error: 'PAYMENT_REQUIRED', message: 'Ce événement est payant. Veuillez procéder au paiement.' })
     }
 
+    // Gender check
+    if (event.genderRestriction !== 'ANY') {
+      const userProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
+      if (!userProfile?.gender) {
+        return reply.code(403).send({ error: 'GENDER_REQUIRED', message: "Cet événement a une restriction de genre. Veuillez d'abord renseigner votre genre dans votre profil." })
+      }
+      const isMale = userProfile.gender.toLowerCase() === 'homme' || userProfile.gender.toLowerCase() === 'male' || userProfile.gender.toLowerCase() === 'm'
+      if (event.genderRestriction === 'MALE' && !isMale) {
+        return reply.code(403).send({ error: 'GENDER_RESTRICTED', message: 'Cet événement est réservé aux hommes.' })
+      }
+      if (event.genderRestriction === 'FEMALE' && isMale) {
+        return reply.code(403).send({ error: 'GENDER_RESTRICTED', message: 'Cet événement est réservé aux femmes.' })
+      }
+    }
+
     // maxAttendees check: count only CONFIRMED bookings to avoid PENDING requests consuming slots
     if (event.maxAttendees) {
       const confirmedCount = await app.prisma.booking.count({

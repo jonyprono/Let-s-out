@@ -24,6 +24,7 @@ export interface Event {
   startAt: string
   endAt: string
   tags: string[]
+  genderRestriction?: 'ANY' | 'MALE' | 'FEMALE'
   viewCount: number
   createdAt: string
   poolDescription?: string
@@ -98,6 +99,7 @@ export interface CreateEventPayload {
   startAt: string
   endAt: string
   tags?: string[]
+  genderRestriction?: 'ANY' | 'MALE' | 'FEMALE'
   coverUrl?: string
   mediaUrls?: string[]
 }

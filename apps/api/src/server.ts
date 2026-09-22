@@ -52,6 +52,7 @@ async function bootstrap() {
   await app.register(import('./modules/payments/wallet.routes'), { prefix: '/api/v1/wallet' })
   await app.register(import('./modules/admin/admin.routes'), { prefix: '/api/v1/admin' })
   await app.register(import('./modules/videos/videos.routes'), { prefix: '/api/v1/videos' })
+  await app.register(import('./modules/pages/pages.routes'), { prefix: '/api/v1/pages' })
 
   // ── PUBLIC: Feature flags (lecture seule, pas d'auth requise) ─────
   app.get('/api/v1/feature-flags', async (_req, reply) => {

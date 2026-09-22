@@ -37,6 +37,7 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { SquareUnlock01Icon, SquareLock01Icon, EarthIcon, Coins01Icon } from 'hugeicons-react'
 import { toast } from 'sonner'
+import { CheckCircle2 } from 'lucide-react'
 import { searchPlaces, reverseGeocode } from '@/lib/geo'
 import { isFieldValid } from '@/lib/validation'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -205,6 +206,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [requiresApproval, setRequiresApproval] = useState<boolean>(sessionDraft?.requiresApproval ?? false)
   const [allowGuestInvites, setAllowGuestInvites] = useState(sessionDraft?.allowGuestInvites ?? false)
   const [description, setDescription] = useState(sessionDraft?.description ?? '')
+  const [genderRestriction, setGenderRestriction] = useState<'ANY' | 'MALE' | 'FEMALE'>(sessionDraft?.genderRestriction ?? 'ANY')
   const [participationMode, setParticipationMode] = useState<string | null>(sessionDraft?.participationMode ?? null)
   const [coverFiles, setCoverFiles] = useState<File[]>(sessionDraft?.coverFiles ?? [])
   const [coverPreviews, setCoverPreviews] = useState<string[]>(sessionDraft?.coverPreviews ?? [])
@@ -218,6 +220,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [showEndDateSheet, setShowEndDateSheet] = useState(false)
   const [showRegEndDateSheet, setShowRegEndDateSheet] = useState(false)
   const [showPrivacySheet, setShowPrivacySheet] = useState(false)
+  const [showGenderSheet, setShowGenderSheet] = useState(false)
   const [showJoinModeSheet, setShowJoinModeSheet] = useState(false)
   const [showParticipationSheet, setShowParticipationSheet] = useState(false)
   const [showOrganizerSearch, setShowOrganizerSearch] = useState(false)
@@ -477,6 +480,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         price: amount ? parseFloat(amount) : undefined,
         isPrivate: privacy === 'PRIVATE',
         requiresApproval,
+        genderRestriction,
         coverUrl,
         mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
         // Cagnotte fields: send explicit null on edit to erase from DB when switching to free
@@ -1107,6 +1111,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 onClick={() => setShowPrivacySheet(true)}
               />
 
+              {/* Restriction de genre */}
+              <InputField
+                label="Restriction de genre"
+                value={genderRestriction === 'MALE' ? 'Réservé aux hommes' : genderRestriction === 'FEMALE' ? 'Réservé aux femmes' : 'Tout le monde (Mixte)'}
+                placeholder="Qui peut participer ?"
+                readOnly
+                onClick={() => setShowGenderSheet(true)}
+              />
+
               {/* Mode d'adhésion */}
               <InputField
                 label="Mode d'adhésion"
@@ -1351,6 +1364,26 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
             Terminé
           </button>
+        </div>
+      </BottomSheet>
+
+      {/* ── Gender Restriction Sheet ─────────────────────────────────────── */}
+      <BottomSheet title="Restriction de genre" open={showGenderSheet} onClose={() => setShowGenderSheet(false)}>
+        <div className="space-y-2 pb-4">
+          {[
+            { id: 'ANY', label: 'Tout le monde (Mixte)' },
+            { id: 'FEMALE', label: 'Réservé aux femmes' },
+            { id: 'MALE', label: 'Réservé aux hommes' },
+          ].map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => { setGenderRestriction(opt.id as any); setShowGenderSheet(false) }}
+              className="w-full flex items-center justify-between p-4 bg-[var(--color-background-secondary)] rounded-[12px] active:scale-[0.98] transition-all"
+            >
+              <span className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)]">{opt.label}</span>
+              {genderRestriction === opt.id && <CheckCircle2 className="w-5 h-5 text-[var(--color-action-primary)]" />}
+            </button>
+          ))}
         </div>
       </BottomSheet>
 
