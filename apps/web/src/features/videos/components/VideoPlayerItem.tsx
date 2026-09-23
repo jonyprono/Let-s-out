@@ -153,7 +153,12 @@ export function VideoPlayerItem({ video, isActive }: Props) {
         loop
         playsInline
         onTimeUpdate={handleTimeUpdate}
-        className="max-w-full max-h-full object-contain"
+        className="max-w-full max-h-full object-contain pointer-events-none"
+      />
+
+      {/* Transparent overlay to capture clicks without triggering native video controls */}
+      <div 
+        className="absolute inset-0 z-0" 
         onClick={(e) => {
           e.stopPropagation();
           if (videoRef.current?.paused) {
