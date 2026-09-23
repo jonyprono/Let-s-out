@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, Play, CalendarPlus } from 'lucide-react';
+import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, CalendarPlus } from 'lucide-react';
 import { EventVideo, videosApi } from '../api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
@@ -23,17 +23,15 @@ export function VideoPlayerItem({ video, isActive }: Props) {
   
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (isActive) {
-      videoRef.current?.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      videoRef.current?.play().catch(() => {});
     } else {
       videoRef.current?.pause();
-      setIsPlaying(false);
       if (videoRef.current) {
-        videoRef.current.currentTime = 0; // Reset when not active
+        videoRef.current.currentTime = 0;
       }
       setShowComments(false);
       setShowShareSheet(false);
@@ -160,24 +158,13 @@ export function VideoPlayerItem({ video, isActive }: Props) {
           e.stopPropagation();
           if (videoRef.current?.paused) {
             videoRef.current.play();
-            setIsPlaying(true);
           } else {
             videoRef.current?.pause();
-            setIsPlaying(false);
           }
         }}
       />
 
-      {/* Center Play Button Overlay */}
-      {!isPlaying && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-        >
-          <div className="w-16 h-16 rounded-full flex items-center justify-center opacity-70 drop-shadow-2xl">
-            <Play className="w-12 h-12 text-white ml-1 fill-white" />
-          </div>
-        </div>
-      )}
+      {/* Center Play Button Overlay — supprimé : Android affiche son propre overlay natif */}
 
       {/* Overlay Information & Interactions (TikTok style) */}
       <div className="absolute inset-0 pointer-events-none flex flex-col justify-end">
@@ -267,7 +254,7 @@ export function VideoPlayerItem({ video, isActive }: Props) {
           <button 
             onClick={() => {
               const tagsQuery = (video.event as any).tags?.length ? `&tags=${(video.event as any).tags.join(',')}` : '';
-              navigate(`/create-event?category=${video.event.category}${tagsQuery}`);
+              navigate(`/events/create?category=${video.event.category}${tagsQuery}`);
             }}
             className="w-full py-2.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-white font-medium text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg"
           >
