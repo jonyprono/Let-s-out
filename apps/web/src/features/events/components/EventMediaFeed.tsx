@@ -65,10 +65,14 @@ export function EventMediaFeed() {
                 src={media.url} 
                 poster={media.thumbnailUrl || media.event.coverUrl}
                 className="w-full h-full object-cover opacity-90"
+                controls={false}
                 muted
                 loop
                 autoPlay
                 playsInline
+                disablePictureInPicture
+                webkit-playsinline="true"
+                x5-playsinline="true"
               />
               <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                 <Play className="w-8 h-8 text-white/80 drop-shadow-md" fill="currentColor" />

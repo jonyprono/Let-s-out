@@ -189,6 +189,11 @@ function VideoMessage({ src }: { src: string, isMe: boolean }) {
           className="w-full object-cover opacity-90 transition-opacity group-hover:opacity-100" 
           style={{ maxHeight: '250px' }} 
           preload="metadata" 
+          controls={false}
+          playsInline
+          disablePictureInPicture
+          webkit-playsinline="true"
+          x5-playsinline="true"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
           <div className="w-12 h-12 rounded-full bg-white dark:bg-[#1A1A1A]/90 backdrop-blur-sm flex items-center justify-center shadow-xl">
@@ -209,7 +214,16 @@ function VideoMessage({ src }: { src: string, isMe: boolean }) {
              </button>
            </div>
            <div className="flex-1 flex items-center justify-center pt-safe-top pb-safe-bottom">
-             <video src={src} controls autoPlay playsInline className="w-full h-full object-contain max-h-[100dvh]" />
+             <video 
+               src={src} 
+               controls={false} 
+               autoPlay 
+               playsInline 
+               disablePictureInPicture 
+               webkit-playsinline="true" 
+               x5-playsinline="true" 
+               className="w-full h-full object-contain max-h-[100dvh]" 
+             />
            </div>
         </div>
       )}

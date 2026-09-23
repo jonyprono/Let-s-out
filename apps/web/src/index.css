@@ -10,13 +10,19 @@
 }
 
 
-/* Masquer le gros bouton de lecture natif (Chrome/Android) sur les vidéos */
-video::-webkit-media-controls {
-    display: none !important;
+/* Masquer définitivement tous les contrôles natifs sur les vidéos */
+video::-webkit-media-controls,
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-play-button,
+video::-webkit-media-controls-overlay-play-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
-video::-webkit-media-controls-enclosure {
-    display: none !important;
+video::-internal-media-controls-overlay-cast-button {
+  display: none !important;
 }
-video::-webkit-media-controls-start-playback-button {
-    display: none !important;
+video {
+  -webkit-tap-highlight-color: transparent;
 }

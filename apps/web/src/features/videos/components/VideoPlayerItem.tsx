@@ -151,7 +151,11 @@ export function VideoPlayerItem({ video, isActive }: Props) {
         ref={videoRef}
         src={video.url}
         loop
+        controls={false}
         playsInline
+        disablePictureInPicture
+        webkit-playsinline="true"
+        x5-playsinline="true"
         onTimeUpdate={handleTimeUpdate}
         className="max-w-full max-h-full object-contain pointer-events-none"
       />
