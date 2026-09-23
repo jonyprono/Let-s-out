@@ -39,6 +39,7 @@ function RemoteVideoPlayer({ stream, mediaType, userName }: { stream: MediaStrea
         const video = document.createElement('video')
         video.autoplay = true
         video.controls = false
+        video.poster = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         video.playsInline = true
         video.disablePictureInPicture = true
         video.setAttribute('webkit-playsinline', 'true')
@@ -232,6 +233,7 @@ export function CallOverlay() {
                    ref={localVideoRef}
                    autoPlay
                    controls={false}
+                   poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                    playsInline
                    disablePictureInPicture
                    webkit-playsinline="true"
@@ -254,6 +256,7 @@ export function CallOverlay() {
                ref={localVideoRef}
                autoPlay
                controls={false}
+               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                playsInline
                disablePictureInPicture
                webkit-playsinline="true"

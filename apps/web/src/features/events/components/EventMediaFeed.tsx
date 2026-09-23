@@ -63,7 +63,7 @@ export function EventMediaFeed() {
             <>
               <video 
                 src={media.url} 
-                poster={media.thumbnailUrl || media.event.coverUrl}
+                poster={media.thumbnailUrl || media.event.coverUrl || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"}
                 className="w-full h-full object-cover opacity-90"
                 controls={false}
                 muted

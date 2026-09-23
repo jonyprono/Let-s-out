@@ -189,6 +189,7 @@ function VideoMessage({ src }: { src: string, isMe: boolean }) {
           className="w-full object-cover opacity-90 transition-opacity group-hover:opacity-100" 
           style={{ maxHeight: '250px' }} 
           preload="metadata" 
+          poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
           controls={false}
           playsInline
           disablePictureInPicture
@@ -216,6 +217,7 @@ function VideoMessage({ src }: { src: string, isMe: boolean }) {
            <div className="flex-1 flex items-center justify-center pt-safe-top pb-safe-bottom">
              <video 
                src={src} 
+               poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                controls={false} 
                autoPlay 
                playsInline 

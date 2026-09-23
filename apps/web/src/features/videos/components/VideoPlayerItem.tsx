@@ -150,6 +150,7 @@ export function VideoPlayerItem({ video, isActive }: Props) {
       <video
         ref={videoRef}
         src={video.url}
+        poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         loop
         controls={false}
         playsInline
