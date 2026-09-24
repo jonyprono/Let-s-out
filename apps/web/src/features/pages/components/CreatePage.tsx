@@ -4,7 +4,7 @@ import { TopBar } from '@/components/ui/TopBar'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { pagesApi } from '../api'
 import { toast } from 'sonner'
-import { Store } from 'lucide-react'
+import { LayoutDashboard } from 'lucide-react'
 
 export function CreatePage() {
   const navigate = useNavigate()
@@ -37,35 +37,39 @@ export function CreatePage() {
     <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
       <TopBar title="Créer une page" onBack={() => navigate(-1)} />
 
-      <div className="flex-1 overflow-y-auto px-5 py-6">
-        <div className="mb-6 flex flex-col items-center justify-center text-center">
-          <div className="w-16 h-16 rounded-full bg-violet-100 flex items-center justify-center mb-4">
-            <Store className="w-8 h-8 text-violet-500" />
+      <div className="flex-1 overflow-y-auto px-5 py-6" style={{ scrollbarWidth: 'none' }}>
+        <div className="mb-8 flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center mb-4">
+            <LayoutDashboard className="w-8 h-8 text-orange-500" />
           </div>
           <h2 className="text-xl font-bold text-[var(--color-text-primary)] mb-2">Créez votre Page</h2>
-          <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed">
+          <p className="text-[13px] text-[var(--color-text-secondary)] leading-relaxed max-w-[280px]">
             Une page vous permet de représenter votre marque, votre association ou votre entreprise, et d'interagir avec les Outsters.
           </p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Nom de la page</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
+              Nom de la page <span className="text-red-400">*</span>
+            </label>
             <input
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Ex: Mon Restaurant, Association XYZ..."
-              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors"
             />
           </div>
 
           <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Catégorie</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">
+              Catégorie <span className="text-red-400">*</span>
+            </label>
             <input
               value={category}
               onChange={e => setCategory(e.target.value)}
               placeholder="Ex: Restaurant, Artiste, Sport..."
-              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
+              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors"
             />
           </div>
 
@@ -76,7 +80,7 @@ export function CreatePage() {
               onChange={e => setDescription(e.target.value)}
               placeholder="Que proposez-vous ?"
               rows={4}
-              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] resize-none"
+              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors resize-none"
             />
           </div>
         </div>

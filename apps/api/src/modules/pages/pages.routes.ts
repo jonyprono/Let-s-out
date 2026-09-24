@@ -1,4 +1,7 @@
 import { FastifyInstance } from 'fastify'
+import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
+import { v4 as uuidv4 } from 'uuid'
+import path from 'path'
 
 export default async function pagesRoutes(app: FastifyInstance) {
   // CREATE A PAGE
@@ -150,5 +153,34 @@ export default async function pagesRoutes(app: FastifyInstance) {
       orderBy: { createdAt: 'desc' }
     })
     return reply.send({ data: posts })
+  })
+  // UPLOAD IMAGE (avatar or cover)
+  app.post('/:id/upload-image', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+
+    const page = await app.prisma.page.findUnique({ where: { id } })
+    if (!page) return reply.code(404).send({ error: 'Page not found' })
+    if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+
+    let imageUrl: string | null = null
+    let imageType: 'avatar' | 'cover' | 'post' = 'post'
+
+    for await (const part of req.parts()) {
+      if (part.type === 'field') {
+        if (part.fieldname === 'type' && ['avatar', 'cover', 'post'].includes(part.value as string)) {
+          imageType = part.value as 'avatar' | 'cover' | 'post'
+        }
+        continue
+      }
+      if (part.type !== 'file') continue
+      const ext = path.extname(part.filename) || '.jpg'
+      const filename = `page-${imageType}-${uuidv4()}${ext}`
+      const buffer = await part.toBuffer()
+      imageUrl = await uploadBufferToCloudinary(buffer, `pages/${id}`, filename)
+    }
+
+    if (!imageUrl) return reply.code(400).send({ error: 'No file provided' })
+    return reply.send({ url: imageUrl, type: imageType })
   })
 }
