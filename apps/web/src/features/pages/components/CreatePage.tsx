@@ -5,7 +5,6 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { pagesApi } from '../api'
 import { toast } from 'sonner'
-import { LayoutDashboard, CheckCircle2 } from 'lucide-react'
 
 const PAGE_CATEGORIES = [
   { label: 'Restaurant / Bar', value: 'Restaurant' },
