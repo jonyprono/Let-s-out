@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
+import { createAndSendNotificationMany } from '../notifications/notifications.routes'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 
@@ -142,6 +143,27 @@ export default async function pagesRoutes(app: FastifyInstance) {
         mediaUrls: mediaUrls || []
       }
     })
+
+    // Notify all followers about the new post
+    try {
+      const followers = await app.prisma.pageFollower.findMany({
+        where: { pageId: id, NOT: { userId: sub } },
+        select: { userId: true }
+      })
+
+      if (followers.length > 0) {
+        await createAndSendNotificationMany(app, followers.map(f => ({
+          userId: f.userId,
+          type: 'PAGE_POST',
+          title: `${page.name} a publié`,
+          body: content ? content.slice(0, 100) : 'Nouvelle publication sur la page',
+          data: { pageId: id, postId: post.id }
+        })))
+      }
+    } catch (e) {
+      app.log.warn(`[PAGE_POST] Failed to send notifications: ${e}`)
+    }
+
     return reply.code(201).send(post)
   })
 

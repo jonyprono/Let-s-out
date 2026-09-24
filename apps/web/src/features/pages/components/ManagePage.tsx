@@ -3,10 +3,23 @@ import { useParams, useNavigate } from 'react-router'
 import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Loader2, Camera, Trash2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
+
+const PAGE_CATEGORIES = [
+  { label: 'Restaurant / Bar', value: 'Restaurant' },
+  { label: 'Artiste / Groupe', value: 'Artiste' },
+  { label: 'Sport et Fitness', value: 'Sport' },
+  { label: 'Association / Club', value: 'Association' },
+  { label: 'Entreprise Locale', value: 'Entreprise' },
+  { label: 'Marque / Produit', value: 'Marque' },
+  { label: 'Communauté', value: 'Communauté' },
+  { label: 'Créateur de contenu', value: 'Créateur' },
+  { label: 'Autre', value: 'Autre' },
+]
 
 export function ManagePage() {
   const { id } = useParams<{ id: string }>()
@@ -22,6 +35,7 @@ export function ManagePage() {
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
+  const [showCategorySheet, setShowCategorySheet] = useState(false)
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
@@ -114,7 +128,7 @@ export function ManagePage() {
   if (!page) return null
 
   return (
-    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
+    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins pt-safe-top">
       <TopBar title="Gérer la page" onBack={() => navigate(-1)} />
 
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
@@ -199,11 +213,12 @@ export function ManagePage() {
           </div>
           <div>
             <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Catégorie</label>
-            <input
-              value={category}
-              onChange={e => setCategory(e.target.value)}
-              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors"
-            />
+            <div
+              onClick={() => setShowCategorySheet(true)}
+              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] cursor-pointer"
+            >
+              {category || <span className="text-[var(--color-text-muted)]">Sélectionnez une catégorie...</span>}
+            </div>
           </div>
           <div>
             <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Description</label>
@@ -258,6 +273,25 @@ export function ManagePage() {
           </div>
         </div>
       </div>
+
+      <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
+        <div className="divide-y divide-[var(--border-tertiary)]">
+          {PAGE_CATEGORIES.map(cat => (
+            <button
+              key={cat.value}
+              onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
+              className="w-full flex items-center justify-between py-[15px] text-left active:bg-[var(--color-background-secondary)] transition-colors"
+            >
+              <span className="text-[14px] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
+              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                category === cat.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
+              }`}>
+                {category === cat.value && <div className="w-[11px] h-[11px] rounded-full bg-[var(--brand-orange-500)]" />}
+              </div>
+            </button>
+          ))}
+        </div>
+      </BottomSheet>
     </div>
   )
 }

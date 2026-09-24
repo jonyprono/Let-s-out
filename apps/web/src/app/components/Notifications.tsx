@@ -41,6 +41,7 @@ const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string; bg:
   POOL_VOTE_STARTED:   { icon: Settings03Icon,      label: 'Vote en cours',              color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
   SYSTEM:              { icon: Notification01Icon,  label: 'Système',                    color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
   EVENT_REVIEW_REQUEST:{ icon: Notification01Icon,  label: 'Avis demandé',               color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
+  PAGE_POST:           { icon: Notification01Icon,  label: 'Nouvelle publication',       color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
   default:             { icon: Notification01Icon,  label: 'Notification',               color: 'text-gray-400',   bg: 'bg-gray-50 dark:bg-gray-800' },
 };
 
@@ -57,6 +58,7 @@ function getActionLabel(type: string) {
     case 'JOIN_APPROVED':       return 'Rejoindre maintenant';
     case 'JOIN_REJECTED':       return 'Voir l\'événement';
     case 'JOIN_REQUEST':        return 'Gérer la demande';
+    case 'PAGE_POST':           return 'Voir la publication';
     default:                    return 'Voir les détails';
   }
 }
@@ -146,6 +148,9 @@ export function Notifications({ onBack }: NotificationsProps) {
         break;
       case 'EVENT_REVIEW_REQUEST':
         if (d?.eventId) navigate(`/events/${d.eventId}`);
+        break;
+      case 'PAGE_POST':
+        if (d?.pageId) navigate(`/pages/${d.pageId}`);
         break;
       case 'NEW_MESSAGE':
         if (d?.conversationId) navigate(`/chat/${d.conversationId}`);
