@@ -283,13 +283,25 @@ export function ManagePage() {
             <button
               key={cat.value}
               onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
-              className="w-full flex items-center justify-between py-[15px] text-left active:bg-[var(--color-background-secondary)] transition-colors"
+              className={`w-full flex items-center justify-between px-1 py-[15px] text-left transition-colors active:bg-[var(--color-background-secondary)] ${
+                category === cat.value ? 'bg-[var(--brand-orange-500)]/5' : ''
+              }`}
             >
-              <span className="text-[14px] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
-              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                category === cat.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
+              <span className={`flex-1 text-[14px] font-medium text-left ${
+                category === cat.value
+                  ? 'text-[var(--brand-orange-500)] font-semibold'
+                  : 'text-[var(--color-text-primary)]'
+              }`}>{cat.label}</span>
+              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                category === cat.value
+                  ? 'border-[var(--brand-orange-500)] bg-[var(--brand-orange-500)]'
+                  : 'border-[var(--border-default)]'
               }`}>
-                {category === cat.value && <div className="w-[11px] h-[11px] rounded-full bg-[var(--brand-orange-500)]" />}
+                {category === cat.value && (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
               </div>
             </button>
           ))}

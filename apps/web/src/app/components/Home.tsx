@@ -4,14 +4,16 @@ import { EventMediaFeed } from '@/features/events/components/EventMediaFeed';
 import { Search01Icon } from 'hugeicons-react';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { eventsApi } from '@/features/events/api';
+import { eventsApi, Event as AppEvent } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
 import { usersApi } from '@/features/users/api';
 import { hapticFeedback } from '@/lib/haptics';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { PermissionsRequest } from './PermissionsRequest';
+import { pagesApi, PagePost } from '@/features/pages/api';
 import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
+import { SafeImage } from '@/components/shared/SafeImage';
 import { sortFeaturedEvents, sortPopularEvents } from '@/utils/event-ranking';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
@@ -52,6 +54,46 @@ function EventCardSkeleton() {
 function FeaturedSkeleton() {
   return (
     <div className="flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded-3xl overflow-hidden animate-pulse" style={{ width: 'min(82vw, 290px)', height: 'clamp(140px, 20vh, 180px)' }} />
+  );
+}
+
+function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string, id?: string) => void }) {
+  const me = useAuthStore(s => (s as any).user);
+  const isCreator = me?.id === post.page.creatorId;
+  const avatarFallback = isCreator ? me?.profile?.avatarUrl : null;
+  const pageAvatarUrl = post.page.avatarUrl || avatarFallback;
+
+  return (
+    <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 mb-4 cursor-pointer" onClick={() => onNavigate('page-view', post.page.id)}>
+      <div className="p-3">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-500 text-xs overflow-hidden shrink-0">
+            {pageAvatarUrl
+              ? <img src={pageAvatarUrl} alt={post.page.name} className="w-full h-full object-cover" />
+              : post.page.name[0]?.toUpperCase()
+            }
+          </div>
+          <div>
+            <p className="font-semibold text-[13px] text-gray-900 dark:text-white leading-tight">{post.page.name}</p>
+            <p className="text-[10px] text-gray-500">{new Date(post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
+          </div>
+        </div>
+        {post.content && (
+          <p className="text-[13px] text-gray-800 dark:text-gray-200 mb-3 whitespace-pre-wrap leading-relaxed line-clamp-3">
+            {post.content}
+          </p>
+        )}
+      </div>
+      {post.mediaUrls?.length > 0 && (
+        <div className="w-full bg-black/5 dark:bg-black overflow-hidden relative" style={{ maxHeight: '280px' }}>
+          {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) ? (
+            <video src={post.mediaUrls[0]} controls className="w-full h-full object-cover max-h-[280px]" />
+          ) : (
+            <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full h-full object-cover max-h-[280px]" />
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -164,6 +206,12 @@ export function Home({ userData, onNavigate }: HomeProps) {
     initialPageParam: 0,
   });
 
+  const { data: pagePostsData } = useQuery({
+    queryKey: ['feed', 'pages'],
+    queryFn: () => pagesApi.getFeed(),
+    enabled: !!user?.id,
+  });
+
   // Real user activity data
   const { data: activity } = useQuery({
     queryKey: ['users', 'activity', user?.id],
@@ -257,6 +305,30 @@ export function Home({ userData, onNavigate }: HomeProps) {
   }, [featuredEvents.length]);
   // "Populaires" = sorted by attendee count (independent list, no deduplication)
   const popularEvents = sortPopularEvents(events);
+
+  // Mix feed items: popular events + page posts
+  const mixedFeed: Array<{ type: 'event', data: AppEvent } | { type: 'post', data: PagePost & { page: any } }> = useMemo(() => {
+    const mixed = [...popularEvents];
+    if (pagePostsData && activeFilter === 'discover' && !query) {
+      // Interleave page posts logic: every 3 events, insert a post
+      const posts = [...pagePostsData];
+      let eventIdx = 0;
+      let postIdx = 0;
+      const result: Array<{ type: 'event', data: AppEvent } | { type: 'post', data: PagePost & { page: any } }> = [];
+      while (eventIdx < mixed.length || postIdx < posts.length) {
+        // Add up to 3 events
+        for (let i = 0; i < 3 && eventIdx < mixed.length; i++) {
+          result.push({ type: 'event', data: mixed[eventIdx++] });
+        }
+        // Add 1 post
+        if (postIdx < posts.length) {
+          result.push({ type: 'post', data: posts[postIdx++] });
+        }
+      }
+      return result;
+    }
+    return mixed.map(e => ({ type: 'event', data: e }));
+  }, [popularEvents, pagePostsData, activeFilter, query]);
 
   // Real stats
   const now = new Date();
@@ -543,11 +615,11 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     <button onClick={() => setViewAll('popular')} className="text-[13px] font-semibold text-[#FF7A00]">{t('home.sections.seeAll')}</button>
                   </div>
 
-                  {isLoading && popularEvents.length === 0 ? (
+                  {isLoading && mixedFeed.length === 0 ? (
                     <div className="px-4 space-y-3">
                       {[1, 2, 3].map(i => <EventCardSkeleton key={i} />)}
                     </div>
-                  ) : popularEvents.length === 0 ? (
+                  ) : mixedFeed.length === 0 ? (
                     <div className="flex flex-col items-center py-14 gap-3 text-center px-8">
                       <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-2xl">📭</div>
                       <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{emptyStateLabel}</p>
@@ -555,12 +627,20 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     </div>
                   ) : (
                     <div className="px-4 space-y-3">
-                      {popularEvents.map(event => (
-                        <RowEventCard
-                          key={event.id}
-                          event={event}
-                          onClick={() => onNavigate('event-details', event.id)}
-                        />
+                      {mixedFeed.map((item, idx) => (
+                        item.type === 'event' ? (
+                          <RowEventCard
+                            key={`evt-${item.data.id}-${idx}`}
+                            event={item.data as any}
+                            onClick={() => onNavigate('event-details', item.data.id)}
+                          />
+                        ) : (
+                          <PagePostCard 
+                            key={`post-${item.data.id}-${idx}`} 
+                            post={item.data} 
+                            onNavigate={onNavigate} 
+                          />
+                        )
                       ))}
                     </div>
                   )}

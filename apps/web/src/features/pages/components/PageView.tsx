@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router'
 import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page, PagePost } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
-import { Loader2, Users, FileText, Image as ImageIcon, Send, X } from 'lucide-react'
+import { Loader2, Users, FileText, Image as ImageIcon, Send, X, Film } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 
@@ -21,8 +21,14 @@ export function PageView() {
   const [postText, setPostText] = useState('')
   const [postImage, setPostImage] = useState<File | null>(null)
   const [postImagePreview, setPostImagePreview] = useState<string | null>(null)
+  
+  const [postVideo, setPostVideo] = useState<File | null>(null)
+  const [postVideoPreview, setPostVideoPreview] = useState<string | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
+
   const [publishing, setPublishing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!id) return
@@ -55,9 +61,35 @@ export function PageView() {
   }
 
   const handlePickImage = (file: File) => {
+    clearVideo() // only one media
     setPostImage(file)
     const url = URL.createObjectURL(file)
     setPostImagePreview(url)
+  }
+
+  const handlePickVideo = async (file: File) => {
+    if (file.size > 200 * 1024 * 1024) {
+      toast.error('La vidéo est trop volumineuse (max 200 Mo).')
+      return
+    }
+    const videoEl = document.createElement('video')
+    videoEl.src = URL.createObjectURL(file)
+    const isValid = await new Promise<boolean>(resolve => {
+      videoEl.onloadedmetadata = () => {
+        if (Math.round(videoEl.duration) > 30) {
+          toast.error('La vidéo ne doit pas dépasser 30 secondes.')
+          resolve(false)
+        } else {
+          resolve(true)
+        }
+      }
+    })
+    URL.revokeObjectURL(videoEl.src)
+    if (!isValid) return
+
+    clearImage() // only one media
+    setPostVideo(file)
+    setPostVideoPreview(URL.createObjectURL(file))
   }
 
   const clearImage = () => {
@@ -67,15 +99,53 @@ export function PageView() {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
+  const clearVideo = () => {
+    setPostVideo(null)
+    if (postVideoPreview) URL.revokeObjectURL(postVideoPreview)
+    setPostVideoPreview(null)
+    if (videoInputRef.current) videoInputRef.current.value = ''
+    setUploadProgress(null)
+  }
+
   const handlePublish = async () => {
-    if (!id || (!postText.trim() && !postImage)) return
+    if (!id || (!postText.trim() && !postImage && !postVideo)) return
     setPublishing(true)
     try {
       let mediaUrls: string[] = []
+      
       if (postImage) {
         const uploaded = await pagesApi.uploadImage(id, postImage, 'post')
         mediaUrls = [uploaded.url]
+      } else if (postVideo) {
+        setUploadProgress(0)
+        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+        const uploadPreset = import.meta.env.VITE_CLOUDINARY_VIDEO_UPLOAD_PRESET
+        const formData = new FormData()
+        formData.append('file', postVideo)
+        formData.append('upload_preset', uploadPreset)
+        formData.append('folder', 'event_videos')
+        formData.append('resource_type', 'video')
+
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`)
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
+        }
+        
+        const uploadedUrl = await new Promise<string>((resolve, reject) => {
+          xhr.onload = () => {
+            if (xhr.status === 200) {
+              resolve(JSON.parse(xhr.responseText).secure_url)
+            } else {
+              reject(new Error('Erreur upload video'))
+            }
+          }
+          xhr.onerror = () => reject(new Error('Erreur réseau'))
+          xhr.send(formData)
+        })
+        mediaUrls = [uploadedUrl]
       }
+      
       const newPost = await pagesApi.createPost(id, {
         content: postText.trim() || undefined,
         mediaUrls
@@ -83,11 +153,14 @@ export function PageView() {
       setPosts(prev => [newPost, ...prev])
       setPostText('')
       clearImage()
+      clearVideo()
       toast.success('Publication réussie !')
     } catch {
       toast.error('Erreur lors de la publication')
+      setUploadProgress(null)
     } finally {
       setPublishing(false)
+      setUploadProgress(null)
     }
   }
 
@@ -102,7 +175,7 @@ export function PageView() {
   if (!page) return null
 
   const isCreator = me?.id === page.creatorId
-  const canPublish = postText.trim().length > 0 || postImage !== null
+  const canPublish = postText.trim().length > 0 || postImage !== null || postVideo !== null
 
   return (
     <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins relative">
@@ -217,28 +290,81 @@ export function PageView() {
                 </div>
               )}
 
+              {/* Video preview */}
+              {postVideoPreview && (
+                <div className="relative mx-3 mb-3 rounded-xl overflow-hidden bg-black flex justify-center">
+                  <video src={postVideoPreview} controls className="max-h-48 object-contain" />
+                  <button
+                    onClick={clearVideo}
+                    className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center z-10"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              )}
+
+              {/* Upload Progress */}
+              {uploadProgress !== null && (
+                <div className="mx-3 mb-3">
+                  <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+                    <span className="font-medium">{uploadProgress < 100 ? 'Envoi de la vidéo...' : 'Envoi terminé ✓'}</span>
+                    <span className="font-bold text-[#FF7A00]">{uploadProgress}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-300"
+                      style={{
+                        width: `${Math.max(uploadProgress, 3)}%`,
+                        background: uploadProgress === 100
+                          ? 'linear-gradient(90deg, #22C55E, #16A34A)'
+                          : 'linear-gradient(90deg, #FF7A00, #FFA755)',
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Compose actions */}
               <div className="flex items-center justify-between px-3 pb-3 border-t border-[var(--border-tertiary)] pt-2">
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 text-[13px] text-green-600 font-medium active:scale-95 transition-transform"
-                >
-                  <ImageIcon className="w-5 h-5" />
-                  Photo
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={e => {
-                    const f = e.target.files?.[0]
-                    if (f) handlePickImage(f)
-                  }}
-                />
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 text-[13px] text-green-600 font-medium active:scale-95 transition-transform"
+                  >
+                    <ImageIcon className="w-5 h-5" />
+                    Photo
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) handlePickImage(f)
+                    }}
+                  />
+                  <button
+                    onClick={() => videoInputRef.current?.click()}
+                    className="flex items-center gap-1.5 text-[13px] text-blue-500 font-medium active:scale-95 transition-transform"
+                  >
+                    <Film className="w-5 h-5" />
+                    Vidéo
+                  </button>
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/avi"
+                    className="hidden"
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) handlePickVideo(f)
+                    }}
+                  />
+                </div>
                 <button
                   onClick={handlePublish}
-                  disabled={!canPublish || publishing}
+                  disabled={!canPublish || publishing || uploadProgress !== null}
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[13px] font-bold transition-all ${
                     canPublish && !publishing
                       ? 'bg-[#FF7A00] text-white active:scale-95'
@@ -287,7 +413,11 @@ export function PageView() {
                   )}
                   {post.mediaUrls.length > 0 && (
                     <div className="rounded-2xl overflow-hidden bg-[var(--color-background-secondary)]">
-                      <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full object-cover max-h-[300px]" />
+                      {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) ? (
+                        <video src={post.mediaUrls[0]} controls className="w-full max-h-[300px] object-cover bg-black" />
+                      ) : (
+                        <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full object-cover max-h-[300px]" />
+                      )}
                     </div>
                   )}
                 </div>

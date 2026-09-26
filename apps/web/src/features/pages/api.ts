@@ -28,6 +28,9 @@ export const pagesApi = {
   getMyPages: () =>
     apiClient.get<{ data: Page[] }>('/pages/me').then(res => res.data.data),
 
+  getFeed: () =>
+    apiClient.get<{ data: (PagePost & { page: { id: string; name: string; avatarUrl?: string; creatorId: string } })[] }>('/pages/feed').then(res => res.data.data),
+
   getById: (id: string) =>
     apiClient.get<Page>(`/pages/${id}`).then(res => res.data),
 

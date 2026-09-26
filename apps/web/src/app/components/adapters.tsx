@@ -157,6 +157,7 @@ export function Home() {
             'scan-qr': '/scan-qr'
           }
           if (screen === 'event-details' && id) nav(`/events/${id}`)
+          else if (screen === 'page-view' && id) nav(`/pages/${id}`)
           else if (map[screen]) nav(map[screen])
         }}
       />

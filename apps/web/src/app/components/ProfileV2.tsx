@@ -13,7 +13,6 @@ import { EventCard } from '@/components/shared/EventCard';
 import { toast } from 'sonner';
 import { videosApi } from '@/features/videos/api';
 import { VideoCard } from '@/features/videos/components/VideoCard';
-import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal';
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal';
 import { ReportModal } from '@/components/shared/ReportModal';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
@@ -34,7 +33,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
-  const [showUploadModal, setShowUploadModal] = useState(false);
   const { username } = useParams<{ username?: string }>();
   const location = useLocation();
   const preloadedProfile = location.state?.profile;
@@ -680,13 +678,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         {activeTab === 'videos' && (
           <div>
             {isOwnProfile && (
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="w-full py-3 mb-4 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF7A00] to-[#FFA755] text-white font-semibold text-[14px]"
-              >
+              <div className="w-full py-3 mb-4 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF7A00]/10 to-[#FFA755]/10 border border-[#FF7A00]/20 text-[#FF7A00] font-semibold text-[13px] px-4 text-center">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-                Publier des moments forts
-              </button>
+                Publiez vos vidéos depuis vos Pages
+              </div>
             )}
             {userVideos.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -710,12 +705,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       </div>
 
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
-      {showUploadModal && (
-        <UploadVideoModal
-          onClose={() => setShowUploadModal(false)}
-          onSuccess={() => setShowUploadModal(false)}
-        />
-      )}
 
       {/* ── Actions bottom sheet (⋮ menu) ──────────────────────────────── */}
       {showActionsSheet && (

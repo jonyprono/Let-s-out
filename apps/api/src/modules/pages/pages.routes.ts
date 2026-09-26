@@ -38,6 +38,38 @@ export default async function pagesRoutes(app: FastifyInstance) {
     return reply.send({ data: pages })
   })
 
+  // GET FEED OF FOLLOWED PAGES POSTS
+  app.get('/feed', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    
+    // get pages the user follows
+    const follows = await app.prisma.pageFollower.findMany({
+      where: { userId: sub },
+      select: { pageId: true }
+    })
+    const pageIds = follows.map((f: any) => f.pageId)
+
+    // also include pages the user created
+    const myPages = await app.prisma.page.findMany({
+      where: { creatorId: sub },
+      select: { id: true }
+    })
+    const myPageIds = myPages.map((p: any) => p.id)
+
+    const allPageIds = Array.from(new Set([...pageIds, ...myPageIds]))
+
+    const posts = await app.prisma.pagePost.findMany({
+      where: { pageId: { in: allPageIds } },
+      include: {
+        page: { select: { id: true, name: true, avatarUrl: true, creatorId: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    })
+
+    return reply.send({ data: posts })
+  })
+
   // GET PAGE BY ID
   app.get('/:id', async (req, reply) => {
     const { id } = req.params as { id: string }
