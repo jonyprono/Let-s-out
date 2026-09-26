@@ -3,27 +3,21 @@ import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCirc
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
-import { useQuery, useQueryClient, useMutation, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { usersApi } from '@/features/users/api';
 import { chatApi, useConversations } from '@/features/chat/api';
-
 import { useNavigate, useParams, useLocation } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
 import { toast } from 'sonner';
-import { videosApi } from '@/features/videos/api';
-import { VideoCard } from '@/features/videos/components/VideoCard';
-import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal';
 import { ReportModal } from '@/components/shared/ReportModal';
-import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { Trash2 } from 'lucide-react';
 
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
 }
 
-type Tab = 'profil' | 'events' | 'friends' | 'following' | 'videos';
+type Tab = 'profil' | 'events' | 'friends' | 'following';
 
 export function ProfileV2({ onNavigate }: ProfileProps) {
   const user = useAuthStore((s) => s.user);
@@ -39,8 +33,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [playingVideo, setPlayingVideo] = useState<any>(null);
-  const [videoToDelete, setVideoToDelete] = useState<any>(null);
 
   // Scroll to top whenever the profile page mounts
   useEffect(() => {
@@ -69,21 +61,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     queryFn: () => usersApi.getActivity(targetUserId!),
     enabled: !!targetUserId,
   });
-
-  // Videos of this user
-  const { 
-    data: videosData, 
-    fetchNextPage: fetchNextVideos,
-    hasNextPage: hasNextVideos,
-    isFetchingNextPage: isFetchingNextVideos 
-  } = useInfiniteQuery({
-    queryKey: ['videos', 'user', targetUserId, 'infinite'],
-    queryFn: ({ pageParam }) => videosApi.list({ userId: targetUserId, cursor: pageParam }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.meta.nextCursor || undefined,
-    enabled: !!targetUserId,
-  })
-  const userVideos = videosData?.pages.flatMap(p => p.data) ?? []
 
   // Check if DM is muted
   const { data: conversations } = useConversations();
@@ -165,41 +142,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     },
   });
 
-  const deleteVideoMut = useMutation({
-    mutationFn: (videoId: string) => videosApi.delete(videoId),
-    onMutate: async (videoId) => {
-      // Optimistic update
-      await qc.cancelQueries({ queryKey: ['videos', 'user', targetUserId, 'infinite'] });
-      const previousVideos = qc.getQueryData<any>(['videos', 'user', targetUserId, 'infinite']);
-      
-      qc.setQueryData(['videos', 'user', targetUserId, 'infinite'], (old: any) => {
-        if (!old || !old.pages) return old;
-        return {
-          ...old,
-          pages: old.pages.map((page: any) => ({
-            ...page,
-            data: page.data.filter((v: any) => v.id !== videoId),
-          })),
-        };
-      });
-      return { previousVideos };
-    },
-    onError: (err, _videoId, context) => {
-      if (context?.previousVideos) {
-        qc.setQueryData(['videos', 'user', targetUserId, 'infinite'], context.previousVideos);
-      }
-      toast.error(err.message || 'Erreur lors de la suppression de la vidéo');
-    },
-    onSuccess: () => {
-      toast.success('Vidéo supprimée avec succès');
-      qc.invalidateQueries({ queryKey: ['videos', 'user', targetUserId, 'infinite'] });
-      // Invalidate public profile stats if needed
-      qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] });
-    },
-    onSettled: () => {
-      setVideoToDelete(null);
-    }
-  });
+
 
   // Block/Unblock mutation
   const blockMut = useMutation({
@@ -528,15 +471,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             <span className="font-poppins font-medium text-[12px] leading-[16px]">Abonnements</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('videos')}
-            className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors ${
-              activeTab === 'videos' ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/10' : 'bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400'
-            }`}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'videos' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-            <span className="font-poppins font-medium text-[12px] leading-[16px]">Vidéos</span>
-          </button>
         </div>
       </div>
 
@@ -675,35 +609,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
           </div>
         )}
-        {activeTab === 'videos' && (
-          <div>
-            {isOwnProfile && (
-              <div className="w-full py-3 mb-4 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#FF7A00]/10 to-[#FFA755]/10 border border-[#FF7A00]/20 text-[#FF7A00] font-semibold text-[13px] px-4 text-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-                Publiez vos vidéos depuis vos Pages
-              </div>
-            )}
-            {userVideos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <p className="text-[14px] font-medium text-gray-500">Aucune vidéo publiée</p>
-                {isOwnProfile && <p className="text-[12px] text-gray-400 mt-1">Partagez vos moments forts d'événements passés</p>}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {userVideos.map((v: any) => (
-                  <VideoCard 
-                    key={v.id} 
-                    video={v} 
-                    onClick={setPlayingVideo} 
-                    onLongPress={isOwnProfile ? setVideoToDelete : undefined}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
-
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
 
       {/* ── Actions bottom sheet (⋮ menu) ──────────────────────────────── */}
@@ -845,70 +751,6 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         type="USER"
       />
 
-      {/* Player modal with social features */}
-      {playingVideo && (
-        <VideoPlayerModal
-          videos={userVideos}
-          initialVideoId={playingVideo.id}
-          onClose={() => setPlayingVideo(null)}
-          onEndReached={() => {
-            if (hasNextVideos && !isFetchingNextVideos) {
-              fetchNextVideos();
-            }
-          }}
-          isLoadingMore={isFetchingNextVideos}
-        />
-      )}
-
-      {/* Delete Video Confirmation Sheet */}
-      <BottomSheet open={!!videoToDelete} onClose={() => setVideoToDelete(null)}>
-        <div className="flex flex-col items-center p-6 text-center">
-          <div className="w-12 h-1 bg-gray-200 rounded-full mb-6 mx-auto" />
-          <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-6">
-            Voulez-vous supprimer ce moment fort ?
-          </h3>
-          
-          {videoToDelete && (
-            <div className="relative w-[160px] aspect-video rounded-xl overflow-hidden bg-gray-900 mb-8 mx-auto shadow-md">
-              {videoToDelete.thumbnailUrl ? (
-                <img 
-                  src={videoToDelete.thumbnailUrl} 
-                  alt="Aperçu" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/40"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                </div>
-              )}
-            </div>
-          )}
-          
-          <div className="w-full flex flex-col gap-3">
-            <button
-              onClick={() => deleteVideoMut.mutate(videoToDelete?.id)}
-              disabled={deleteVideoMut.isPending}
-              className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white rounded-2xl py-3.5 text-[15px] font-semibold transition-colors disabled:opacity-50"
-            >
-              {deleteVideoMut.isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <Trash2 className="w-5 h-5" />
-                  Supprimer
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => setVideoToDelete(null)}
-              disabled={deleteVideoMut.isPending}
-              className="w-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-2xl py-3.5 text-[15px] font-semibold transition-colors disabled:opacity-50"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      </BottomSheet>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
-import { Loader2, Camera, Trash2 } from 'lucide-react'
+import { Loader2, Camera, Trash2, Settings, BarChart3, Users, FileText, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
@@ -34,6 +34,8 @@ export function ManagePage() {
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  
+  const [currentSection, setCurrentSection] = useState<'menu' | 'settings' | 'stats' | 'posts' | 'followers'>('menu')
 
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
@@ -132,7 +134,10 @@ export function ManagePage() {
 
   return (
     <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins pt-safe-top">
-      <TopBar title="Gérer la page" onBack={() => navigate(-1)} />
+      <TopBar 
+        title={currentSection === 'menu' ? 'Gérer la page' : currentSection === 'settings' ? 'Paramètres' : currentSection === 'stats' ? 'Statistiques' : currentSection === 'posts' ? 'Publications' : 'Abonnés'} 
+        onBack={() => currentSection === 'menu' ? navigate(-1) : setCurrentSection('menu')} 
+      />
 
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         {/* Cover Photo */}
@@ -204,8 +209,69 @@ export function ManagePage() {
           </div>
         </div>
 
+        {currentSection === 'menu' && (
+          <div className="px-4 mt-6 space-y-3">
+            <button
+              onClick={() => setCurrentSection('stats')}
+              className="w-full bg-[var(--color-background-secondary)] rounded-2xl p-4 flex items-center gap-4 active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center shrink-0">
+                <BarChart3 className="w-5 h-5 text-blue-500" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">Statistiques</p>
+                <p className="text-[12px] text-[var(--color-text-muted)]">Vues, interactions, audience</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
+            </button>
+
+            <button
+              onClick={() => setCurrentSection('posts')}
+              className="w-full bg-[var(--color-background-secondary)] rounded-2xl p-4 flex items-center gap-4 active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5 text-orange-500" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">Publications</p>
+                <p className="text-[12px] text-[var(--color-text-muted)]">Gérer vos posts et vidéos</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
+            </button>
+
+            <button
+              onClick={() => setCurrentSection('followers')}
+              className="w-full bg-[var(--color-background-secondary)] rounded-2xl p-4 flex items-center gap-4 active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5 text-green-500" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">Abonnés</p>
+                <p className="text-[12px] text-[var(--color-text-muted)]">Liste de votre communauté</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
+            </button>
+
+            <button
+              onClick={() => setCurrentSection('settings')}
+              className="w-full bg-[var(--color-background-secondary)] rounded-2xl p-4 flex items-center gap-4 active:scale-95 transition-transform"
+            >
+              <div className="w-10 h-10 rounded-full bg-gray-500/10 flex items-center justify-center shrink-0">
+                <Settings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">Paramètres de la page</p>
+                <p className="text-[12px] text-[var(--color-text-muted)]">Modifier les infos, supprimer la page</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
+            </button>
+          </div>
+        )}
+
         {/* Edit form */}
-        <div className="px-5 space-y-4 pb-6">
+        {currentSection === 'settings' && (
+        <div className="px-5 space-y-4 pb-6 mt-4">
           <div>
             <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Nom de la page</label>
             <input
@@ -275,6 +341,40 @@ export function ManagePage() {
             )}
           </div>
         </div>
+        )}
+
+        {/* Stats view */}
+        {currentSection === 'stats' && (
+          <div className="flex flex-col items-center justify-center pt-20 px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4">
+              <BarChart3 className="w-8 h-8 text-blue-500" />
+            </div>
+            <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Statistiques</h3>
+            <p className="text-[14px] text-[var(--color-text-muted)]">Les statistiques détaillées de votre page seront bientôt disponibles.</p>
+          </div>
+        )}
+
+        {/* Posts view */}
+        {currentSection === 'posts' && (
+          <div className="flex flex-col items-center justify-center pt-20 px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 text-orange-500" />
+            </div>
+            <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Vos publications</h3>
+            <p className="text-[14px] text-[var(--color-text-muted)]">La gestion de vos publications sera bientôt disponible.</p>
+          </div>
+        )}
+
+        {/* Followers view */}
+        {currentSection === 'followers' && (
+          <div className="flex flex-col items-center justify-center pt-20 px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
+              <Users className="w-8 h-8 text-green-500" />
+            </div>
+            <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Vos abonnés</h3>
+            <p className="text-[14px] text-[var(--color-text-muted)]">La liste de vos abonnés sera bientôt disponible.</p>
+          </div>
+        )}
       </div>
 
       <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
