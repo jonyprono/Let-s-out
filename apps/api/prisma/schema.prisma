@@ -58,6 +58,7 @@ model User {
   eventVideos      EventVideo[]
   eventVideoReactions EventVideoReaction[]
   eventVideoComments  EventVideoComment[]
+  pagePostComments    PagePostComment[]
   blocksCreated    UserBlock[]          @relation("UserBlocker")
   blocksReceived   UserBlock[]          @relation("UserBlocked")
   isBanned         Boolean              @default(false)
@@ -979,7 +980,21 @@ model PagePost {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page        Page              @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  comments    PagePostComment[]
 
   @@map("page_posts")
+}
+
+model PagePostComment {
+  id        String   @id @default(cuid())
+  text      String
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  post      PagePost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("page_post_comments")
 }

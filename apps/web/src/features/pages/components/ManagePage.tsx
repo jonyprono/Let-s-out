@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { TopBar } from '@/components/ui/TopBar'
-import { pagesApi, Page } from '../api'
+import { pagesApi, Page, PagePost } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Loader2, Camera, Trash2, Settings, BarChart3, Users, FileText, ChevronRight } from 'lucide-react'
@@ -48,6 +48,11 @@ export function ManagePage() {
   const [uploadingCover, setUploadingCover] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
+
+  // Posts state for the posts section
+  const [posts, setPosts] = useState<PagePost[]>([])
+  const [loadingPosts, setLoadingPosts] = useState(false)
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -132,12 +137,246 @@ export function ManagePage() {
 
   if (!page) return null
 
+  const sectionTitle: Record<string, string> = {
+    menu: 'Gérer la page',
+    settings: 'Paramètres',
+    stats: 'Statistiques',
+    posts: 'Publications',
+    followers: 'Abonnés',
+  }
+
+  // --- Sub-section views (no page header) ---
+  if (currentSection !== 'menu') {
+    const loadPostsIfNeeded = async () => {
+      if (currentSection === 'posts' && posts.length === 0 && !loadingPosts) {
+        setLoadingPosts(true)
+        try {
+          const data = await pagesApi.getPosts(id!)
+          setPosts(data)
+        } catch {
+          toast.error('Erreur lors du chargement des publications')
+        } finally {
+          setLoadingPosts(false)
+        }
+      }
+    }
+    loadPostsIfNeeded()
+
+    const handleDeletePost = async (postId: string) => {
+      if (!id || !window.confirm('Supprimer cette publication définitivement ?')) return
+      setDeletingPostId(postId)
+      try {
+        await pagesApi.deletePost(id, postId)
+        setPosts(prev => prev.filter(p => p.id !== postId))
+        setPage(prev => prev ? { ...prev, _count: { ...prev._count!, posts: (prev._count?.posts || 1) - 1 } } : null)
+        toast.success('Publication supprimée')
+      } catch {
+        toast.error('Erreur lors de la suppression')
+      } finally {
+        setDeletingPostId(null)
+      }
+    }
+
+    return (
+      <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
+        <div className="pt-safe-6">
+          <TopBar
+            title={sectionTitle[currentSection]}
+            onBack={() => setCurrentSection('menu')}
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'none' }}>
+          {/* Settings section */}
+          {currentSection === 'settings' && (
+            <div className="space-y-4 pb-6">
+              <div>
+                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Nom de la page</label>
+                <input
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Catégorie</label>
+                <div
+                  onClick={() => setShowCategorySheet(true)}
+                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] cursor-pointer"
+                >
+                  {category || <span className="text-[var(--color-text-muted)]">Sélectionnez une catégorie...</span>}
+                </div>
+              </div>
+              <div>
+                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Description</label>
+                <textarea
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors resize-none"
+                />
+              </div>
+              <PrimaryButton
+                onClick={handleSave}
+                disabled={!name.trim() || !category.trim()}
+                loading={saving}
+                className="w-full"
+              >
+                Enregistrer les modifications
+              </PrimaryButton>
+              <div className="pt-4 border-t border-[var(--border-tertiary)]">
+                {!showDeleteConfirm ? (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-red-200 dark:border-red-900/50 text-red-500 text-[14px] font-semibold active:scale-95 transition-transform"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Supprimer la page
+                  </button>
+                ) : (
+                  <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/50">
+                    <p className="text-[14px] font-semibold text-red-600 mb-1">Confirmer la suppression ?</p>
+                    <p className="text-[12px] text-red-400 mb-4">Cette action est irréversible. Toutes les publications seront supprimées.</p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setShowDeleteConfirm(false)}
+                        className="flex-1 py-2 rounded-xl border border-[var(--border-default)] text-[13px] font-semibold text-[var(--color-text-primary)]"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        onClick={handleDelete}
+                        disabled={deleting}
+                        className="flex-1 py-2 rounded-xl bg-red-500 text-white text-[13px] font-bold flex items-center justify-center gap-1.5"
+                      >
+                        {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> Supprimer</>}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Stats section */}
+          {currentSection === 'stats' && (
+            <div className="flex flex-col items-center justify-center pt-20 text-center">
+              <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4">
+                <BarChart3 className="w-8 h-8 text-blue-500" />
+              </div>
+              <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Statistiques</h3>
+              <p className="text-[14px] text-[var(--color-text-muted)]">Les statistiques détaillées de votre page seront bientôt disponibles.</p>
+            </div>
+          )}
+
+          {/* Posts section */}
+          {currentSection === 'posts' && (
+            <div>
+              {loadingPosts ? (
+                <div className="flex justify-center py-16">
+                  <Loader2 className="w-7 h-7 animate-spin text-[#FF7A00]" />
+                </div>
+              ) : posts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center pt-20 text-center">
+                  <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
+                    <FileText className="w-8 h-8 text-orange-500" />
+                  </div>
+                  <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Aucune publication</h3>
+                  <p className="text-[14px] text-[var(--color-text-muted)]">Publiez votre premier contenu depuis la page.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {posts.map(post => (
+                    <div key={post.id} className="bg-[var(--color-background-secondary)] rounded-2xl p-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <p className="text-[13px] text-[var(--color-text-muted)]">
+                          {new Date(post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          disabled={deletingPostId === post.id}
+                          className="p-1.5 rounded-full text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0"
+                        >
+                          {deletingPostId === post.id
+                            ? <Loader2 className="w-4 h-4 animate-spin" />
+                            : <Trash2 className="w-4 h-4" />
+                          }
+                        </button>
+                      </div>
+                      {post.content && (
+                        <p className="text-[14px] text-[var(--color-text-primary)] leading-relaxed mb-2 whitespace-pre-wrap">{post.content}</p>
+                      )}
+                      {post.mediaUrls.length > 0 && (
+                        <div className="rounded-xl overflow-hidden">
+                          {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
+                            <video src={post.mediaUrls[0]} controls className="w-full max-h-48 bg-black" />
+                          ) : (
+                            <SafeImage src={post.mediaUrls[0]} alt="" className="w-full max-h-48 object-cover" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Followers section */}
+          {currentSection === 'followers' && (
+            <div className="flex flex-col items-center justify-center pt-20 text-center">
+              <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
+                <Users className="w-8 h-8 text-green-500" />
+              </div>
+              <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Vos abonnés</h3>
+              <p className="text-[14px] text-[var(--color-text-muted)]">La liste de vos abonnés sera bientôt disponible.</p>
+            </div>
+          )}
+        </div>
+
+        <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
+          <div className="divide-y divide-[var(--border-tertiary)]">
+            {PAGE_CATEGORIES.map(cat => (
+              <button
+                key={cat.value}
+                onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
+                className={`w-full flex items-center justify-between px-1 py-[15px] text-left transition-colors active:bg-[var(--color-background-secondary)] ${
+                  category === cat.value ? 'bg-[var(--brand-orange-500)]/5' : ''
+                }`}
+              >
+                <span className={`flex-1 text-[14px] font-medium text-left ${
+                  category === cat.value
+                    ? 'text-[var(--brand-orange-500)] font-semibold'
+                    : 'text-[var(--color-text-primary)]'
+                }`}>{cat.label}</span>
+                <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                  category === cat.value
+                    ? 'border-[var(--brand-orange-500)] bg-[var(--brand-orange-500)]'
+                    : 'border-[var(--border-default)]'
+                }`}>
+                  {category === cat.value && (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </BottomSheet>
+      </div>
+    )
+  }
+
+  // --- Main menu view (with page header) ---
   return (
-    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins pt-safe-top">
-      <TopBar 
-        title={currentSection === 'menu' ? 'Gérer la page' : currentSection === 'settings' ? 'Paramètres' : currentSection === 'stats' ? 'Statistiques' : currentSection === 'posts' ? 'Publications' : 'Abonnés'} 
-        onBack={() => currentSection === 'menu' ? navigate(-1) : setCurrentSection('menu')} 
-      />
+    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
+      <div className="pt-safe-6">
+        <TopBar
+          title="Gérer la page"
+          onBack={() => navigate(-1)}
+        />
+      </div>
 
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         {/* Cover Photo */}
@@ -269,112 +508,6 @@ export function ManagePage() {
           </div>
         )}
 
-        {/* Edit form */}
-        {currentSection === 'settings' && (
-        <div className="px-5 space-y-4 pb-6 mt-4">
-          <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Nom de la page</label>
-            <input
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors"
-            />
-          </div>
-          <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Catégorie</label>
-            <div
-              onClick={() => setShowCategorySheet(true)}
-              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] cursor-pointer"
-            >
-              {category || <span className="text-[var(--color-text-muted)]">Sélectionnez une catégorie...</span>}
-            </div>
-          </div>
-          <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Description</label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              rows={3}
-              className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors resize-none"
-            />
-          </div>
-
-          <PrimaryButton
-            onClick={handleSave}
-            disabled={!name.trim() || !category.trim()}
-            loading={saving}
-            className="w-full"
-          >
-            Enregistrer les modifications
-          </PrimaryButton>
-
-          {/* Danger zone */}
-          <div className="pt-4 border-t border-[var(--border-tertiary)]">
-            {!showDeleteConfirm ? (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-red-200 dark:border-red-900/50 text-red-500 text-[14px] font-semibold active:scale-95 transition-transform"
-              >
-                <Trash2 className="w-4 h-4" />
-                Supprimer la page
-              </button>
-            ) : (
-              <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/50">
-                <p className="text-[14px] font-semibold text-red-600 mb-1">Confirmer la suppression ?</p>
-                <p className="text-[12px] text-red-400 mb-4">Cette action est irréversible. Toutes les publications seront supprimées.</p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1 py-2 rounded-xl border border-[var(--border-default)] text-[13px] font-semibold text-[var(--color-text-primary)]"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="flex-1 py-2 rounded-xl bg-red-500 text-white text-[13px] font-bold flex items-center justify-center gap-1.5"
-                  >
-                    {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> Supprimer</>}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        )}
-
-        {/* Stats view */}
-        {currentSection === 'stats' && (
-          <div className="flex flex-col items-center justify-center pt-20 px-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4">
-              <BarChart3 className="w-8 h-8 text-blue-500" />
-            </div>
-            <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Statistiques</h3>
-            <p className="text-[14px] text-[var(--color-text-muted)]">Les statistiques détaillées de votre page seront bientôt disponibles.</p>
-          </div>
-        )}
-
-        {/* Posts view */}
-        {currentSection === 'posts' && (
-          <div className="flex flex-col items-center justify-center pt-20 px-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
-              <FileText className="w-8 h-8 text-orange-500" />
-            </div>
-            <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Vos publications</h3>
-            <p className="text-[14px] text-[var(--color-text-muted)]">La gestion de vos publications sera bientôt disponible.</p>
-          </div>
-        )}
-
-        {/* Followers view */}
-        {currentSection === 'followers' && (
-          <div className="flex flex-col items-center justify-center pt-20 px-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
-              <Users className="w-8 h-8 text-green-500" />
-            </div>
-            <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Vos abonnés</h3>
-            <p className="text-[14px] text-[var(--color-text-muted)]">La liste de vos abonnés sera bientôt disponible.</p>
-          </div>
-        )}
       </div>
 
       <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>

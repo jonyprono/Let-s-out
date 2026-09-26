@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { TopBar } from '@/components/ui/TopBar'
-import { pagesApi, Page, PagePost } from '../api'
+import { pagesApi, Page, PagePost, PagePostComment } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
-import { Loader2, Users, FileText, Image as ImageIcon, Send, X, Film } from 'lucide-react'
+import { Loader2, Users, FileText, Image as ImageIcon, Send, X, Film, Trash2, MessageCircle, ChevronDown } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 
@@ -29,6 +29,14 @@ export function PageView() {
   const [publishing, setPublishing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+
+  // Comments state
+  const [commentTexts, setCommentTexts] = useState<Record<string, string>>({})
+  const [commentingPostId, setCommentingPostId] = useState<string | null>(null)
+  const [loadingComments, setLoadingComments] = useState<string | null>(null)
+  const [allComments, setAllComments] = useState<Record<string, PagePostComment[]>>({})
+  const [sendingComment, setSendingComment] = useState(false)
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -161,6 +169,55 @@ export function PageView() {
     } finally {
       setPublishing(false)
       setUploadProgress(null)
+    }
+  }
+
+  const handleDeletePost = async (postId: string) => {
+    if (!id || !page) return
+    if (!window.confirm('Supprimer cette publication définitivement ?')) return
+    setDeletingPostId(postId)
+    try {
+      await pagesApi.deletePost(id, postId)
+      setPosts(prev => prev.filter(p => p.id !== postId))
+      toast.success('Publication supprimée')
+    } catch {
+      toast.error('Erreur lors de la suppression')
+    } finally {
+      setDeletingPostId(null)
+    }
+  }
+
+  const handleLoadComments = async (postId: string) => {
+    if (commentingPostId === postId) {
+      setCommentingPostId(null)
+      return
+    }
+    setCommentingPostId(postId)
+    if (allComments[postId]) return
+    setLoadingComments(postId)
+    try {
+      const comments = await pagesApi.getComments(id!, postId)
+      setAllComments(prev => ({ ...prev, [postId]: comments }))
+    } catch {
+      toast.error('Erreur lors du chargement des commentaires')
+    } finally {
+      setLoadingComments(null)
+    }
+  }
+
+  const handleSendComment = async (postId: string) => {
+    const text = (commentTexts[postId] || '').trim()
+    if (!text || !id) return
+    setSendingComment(true)
+    try {
+      const newComment = await pagesApi.addComment(id, postId, text)
+      setAllComments(prev => ({ ...prev, [postId]: [...(prev[postId] || []), newComment] }))
+      setCommentTexts(prev => ({ ...prev, [postId]: '' }))
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, _count: { comments: (p._count?.comments || 0) + 1 } } : p))
+    } catch {
+      toast.error('Erreur lors de l\'envoi')
+    } finally {
+      setSendingComment(false)
     }
   }
 
@@ -392,19 +449,33 @@ export function PageView() {
             <div className="space-y-5">
               {posts.map(post => (
                 <div key={post.id} className="pb-5 border-b border-[var(--border-tertiary)] last:border-0">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center font-bold text-[var(--color-text-secondary)] text-[14px] shrink-0">
-                      {page.avatarUrl || (isCreator && me?.profile?.avatarUrl)
-                        ? <SafeImage src={page.avatarUrl || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
-                        : page.name[0]?.toUpperCase()
-                      }
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center font-bold text-[var(--color-text-secondary)] text-[14px] shrink-0">
+                        {page.avatarUrl || (isCreator && me?.profile?.avatarUrl)
+                          ? <SafeImage src={page.avatarUrl || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
+                          : page.name[0]?.toUpperCase()
+                        }
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[14px] text-[var(--color-text-primary)]">{page.name}</p>
+                        <p className="text-[11px] text-[var(--color-text-muted)]">
+                          {new Date(post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-[14px] text-[var(--color-text-primary)]">{page.name}</p>
-                      <p className="text-[11px] text-[var(--color-text-muted)]">
-                        {new Date(post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
-                    </div>
+                    {isCreator && (
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        disabled={deletingPostId === post.id}
+                        className="p-2 rounded-full text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-90 transition-all"
+                      >
+                        {deletingPostId === post.id
+                          ? <Loader2 className="w-4 h-4 animate-spin" />
+                          : <Trash2 className="w-4 h-4" />
+                        }
+                      </button>
+                    )}
                   </div>
                   {post.content && (
                     <p className="text-[14px] text-[var(--color-text-primary)] mb-3 leading-relaxed whitespace-pre-wrap">
@@ -412,12 +483,77 @@ export function PageView() {
                     </p>
                   )}
                   {post.mediaUrls.length > 0 && (
-                    <div className="rounded-2xl overflow-hidden bg-[var(--color-background-secondary)]">
-                      {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) ? (
+                    <div className="rounded-2xl overflow-hidden bg-[var(--color-background-secondary)] mb-3">
+                      {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
                         <video src={post.mediaUrls[0]} controls className="w-full max-h-[300px] object-cover bg-black" />
                       ) : (
                         <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full object-cover max-h-[300px]" />
                       )}
+                    </div>
+                  )}
+
+                  {/* Comment toggle button */}
+                  <button
+                    onClick={() => handleLoadComments(post.id)}
+                    className="flex items-center gap-1.5 text-[13px] text-[var(--color-text-secondary)] font-medium active:scale-95 transition-transform mt-1"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    {post._count?.comments || 0} commentaire{(post._count?.comments || 0) !== 1 ? 's' : ''}
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${commentingPostId === post.id ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Comments section */}
+                  {commentingPostId === post.id && (
+                    <div className="mt-3 space-y-3">
+                      {loadingComments === post.id ? (
+                        <div className="flex justify-center py-3">
+                          <Loader2 className="w-5 h-5 animate-spin text-[#FF7A00]" />
+                        </div>
+                      ) : (
+                        (allComments[post.id] || []).map(c => (
+                          <div key={c.id} className="flex gap-2.5">
+                            <div className="w-7 h-7 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center text-[11px] font-bold text-[var(--color-text-secondary)] shrink-0">
+                              {c.user?.profile?.avatarUrl
+                                ? <SafeImage src={c.user.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
+                                : (c.user?.profile?.firstName?.[0] || c.user?.profile?.username?.[0] || '?').toUpperCase()
+                              }
+                            </div>
+                            <div className="flex-1 bg-[var(--color-background-secondary)] rounded-2xl px-3 py-2">
+                              <p className="text-[12px] font-semibold text-[var(--color-text-primary)] mb-0.5">
+                                {c.user?.profile?.firstName ? `${c.user.profile.firstName} ${c.user.profile.lastName || ''}`.trim() : c.user?.profile?.username || 'Utilisateur'}
+                              </p>
+                              <p className="text-[13px] text-[var(--color-text-primary)]">{c.text}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+
+                      {/* Comment input */}
+                      <div className="flex gap-2 mt-2">
+                        <div className="w-7 h-7 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center text-[11px] font-bold text-[var(--color-text-secondary)] shrink-0">
+                          {me?.profile?.avatarUrl
+                            ? <SafeImage src={me.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
+                            : (me?.profile?.firstName?.[0] || '?').toUpperCase()
+                          }
+                        </div>
+                        <div className="flex-1 flex gap-2 bg-[var(--color-background-secondary)] rounded-2xl px-3 py-2">
+                          <input
+                            type="text"
+                            value={commentTexts[post.id] || ''}
+                            onChange={e => setCommentTexts(prev => ({ ...prev, [post.id]: e.target.value }))}
+                            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendComment(post.id)}
+                            placeholder="Écrire un commentaire..."
+                            className="flex-1 bg-transparent text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
+                          />
+                          <button
+                            onClick={() => handleSendComment(post.id)}
+                            disabled={sendingComment || !(commentTexts[post.id] || '').trim()}
+                            className="text-[#FF7A00] disabled:opacity-40 active:scale-90 transition-transform"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

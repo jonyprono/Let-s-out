@@ -13,12 +13,26 @@ export interface Page {
   isFollowing?: boolean
 }
 
+export interface PagePostComment {
+  id: string
+  postId: string
+  userId: string
+  text: string
+  createdAt: string
+  user: {
+    id: string
+    profile: { username: string; avatarUrl?: string; firstName?: string; lastName?: string } | null
+  }
+}
+
 export interface PagePost {
   id: string
   pageId: string
   content?: string
   mediaUrls: string[]
   createdAt: string
+  _count?: { comments: number }
+  comments?: PagePostComment[]
 }
 
 export const pagesApi = {
@@ -48,6 +62,15 @@ export const pagesApi = {
 
   getPosts: (id: string) =>
     apiClient.get<{ data: PagePost[] }>(`/pages/${id}/posts`).then(res => res.data.data),
+
+  deletePost: (pageId: string, postId: string) =>
+    apiClient.delete(`/pages/${pageId}/posts/${postId}`),
+
+  getComments: (pageId: string, postId: string) =>
+    apiClient.get<{ data: PagePostComment[] }>(`/pages/${pageId}/posts/${postId}/comments`).then(res => res.data.data),
+
+  addComment: (pageId: string, postId: string, text: string) =>
+    apiClient.post<PagePostComment>(`/pages/${pageId}/posts/${postId}/comments`, { text }).then(res => res.data),
 
   uploadImage: async (pageId: string, file: File, type: 'avatar' | 'cover' | 'post') => {
     const formData = new FormData()

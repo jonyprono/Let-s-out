@@ -199,15 +199,77 @@ export default async function pagesRoutes(app: FastifyInstance) {
     return reply.code(201).send(post)
   })
 
-  // LIST POSTS
+  // LIST POSTS (include comment count + comments)
   app.get('/:id/posts', async (req, reply) => {
     const { id } = req.params as { id: string }
+
+    let sub: string | null = null
+    try {
+      await app.authenticate(req, reply)
+      sub = (req.user as { sub: string }).sub
+    } catch (_) {}
+
     const posts = await app.prisma.pagePost.findMany({
       where: { pageId: id },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      include: {
+        _count: { select: { comments: true } },
+        comments: {
+          orderBy: { createdAt: 'asc' },
+          take: 5,
+          include: {
+            user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, firstName: true, lastName: true } } } }
+          }
+        }
+      }
     })
     return reply.send({ data: posts })
   })
+
+  // GET COMMENTS FOR A POST
+  app.get('/:id/posts/:postId/comments', async (req, reply) => {
+    const { postId } = req.params as { id: string; postId: string }
+    const comments = await app.prisma.pagePostComment.findMany({
+      where: { postId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, firstName: true, lastName: true } } } }
+      }
+    })
+    return reply.send({ data: comments })
+  })
+
+  // ADD COMMENT TO A POST
+  app.post('/:id/posts/:postId/comments', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { postId } = req.params as { id: string; postId: string }
+    const { text } = req.body as { text: string }
+
+    if (!text?.trim()) return reply.code(400).send({ error: 'Text required' })
+
+    const comment = await app.prisma.pagePostComment.create({
+      data: { postId, userId: sub, text: text.trim() },
+      include: {
+        user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, firstName: true, lastName: true } } } }
+      }
+    })
+
+    return reply.code(201).send(comment)
+  })
+
+  // DELETE A POST (creator of the page only)
+  app.delete('/:id/posts/:postId', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id, postId } = req.params as { id: string; postId: string }
+
+    const page = await app.prisma.page.findUnique({ where: { id } })
+    if (!page) return reply.code(404).send({ error: 'Page not found' })
+    if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+
+    await app.prisma.pagePost.delete({ where: { id: postId } })
+    return reply.send({ success: true })
+  })
+
   // UPLOAD IMAGE (avatar or cover)
   app.post('/:id/upload-image', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
