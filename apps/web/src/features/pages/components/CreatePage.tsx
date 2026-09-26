@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { TopBar } from '@/components/ui/TopBar'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
@@ -30,6 +31,12 @@ export function CreatePage() {
   const [loading, setLoading] = useState(false)
   const [showCategorySheet, setShowCategorySheet] = useState(false)
 
+  const [step, setStep] = useState<'form' | 'done' | 'published'>('form')
+  const [createdPageId, setCreatedPageId] = useState<string | null>(null)
+  const [publishing, setPublishing] = useState(false)
+  const [firstPostText, setFirstPostText] = useState('')
+  const qc = useQueryClient()
+
   const canSubmit = name.trim().length >= 3 && category.trim().length >= 3
 
   const handleSubmit = async () => {
@@ -42,12 +49,123 @@ export function CreatePage() {
         description: description.trim() || undefined
       })
       toast.success('Page créée avec succès !')
-      navigate(`/pages/${res.data.id}`, { replace: true })
+      setCreatedPageId(res.data.id)
+      setFirstPostText(`🎉 Bonjour à tous ! Bienvenue sur la nouvelle page de ${name.trim()}. N'hésitez pas à interagir et commenter, on a hâte d'échanger avec vous ! 👇`)
+      setStep('done')
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Erreur lors de la création de la page')
     } finally {
       setLoading(false)
     }
+  }
+
+  const handlePublish = async () => {
+    if (!createdPageId || !firstPostText.trim()) return
+    setPublishing(true)
+    try {
+      await pagesApi.createPost(createdPageId, {
+        content: firstPostText.trim(),
+        mediaUrls: []
+      })
+      qc.invalidateQueries({ queryKey: ['feed'] })
+      qc.invalidateQueries({ queryKey: ['pages', 'feed'] })
+      setStep('published')
+      toast.success('Votre page est maintenant visible dans le fil d\'actualité !')
+    } catch (err: any) {
+      toast.error('Erreur lors de la publication')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  if (step === 'done' || step === 'published') {
+    const isPublished = step === 'published'
+    return (
+      <div 
+        className={`w-full h-full flex flex-col relative overflow-hidden ${isPublished ? 'bg-[var(--color-background-primary)]' : ''}`}
+        style={!isPublished ? { background: 'var(--color-bg-warm)' } : {}}
+      >
+        <div className={`px-4 pt-safe-6 pb-2 shrink-0 ${isPublished ? 'bg-[var(--color-background-primary)]' : ''}`} />
+
+        <div className="flex-1 overflow-y-auto px-4 pb-40">
+          <div className="flex flex-col items-center pt-3 gap-5">
+            <div className="flex flex-col items-center gap-3 w-full">
+              <div 
+                className={`flex items-center justify-center mb-1 ${isPublished ? 'w-[72px] h-[72px] rounded-full bg-gradient-to-tr from-[var(--brand-yellow-500)] to-[var(--functional-green-500)]' : 'w-[80px] h-[80px] rounded-[40px]'}`}
+                style={!isPublished ? { background: 'var(--gradient-success-orange)' } : {}}
+              >
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </div>
+
+              <h1 
+                className={`text-center font-semibold ${isPublished ? 'text-[var(--functional-green-500)] text-[24px]' : 'text-[20px] leading-[24px]'}`} 
+                style={
+                  isPublished 
+                    ? { fontFamily: 'Poppins, sans-serif' }
+                    : { 
+                        fontFamily: 'Poppins, sans-serif',
+                        background: 'var(--gradient-success-orange)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text'
+                      }
+                }
+              >
+                {isPublished ? 'Publié !' : 'Créée !'}
+              </h1>
+              <p className="text-[14px] text-[var(--color-text-secondary)] text-center max-w-[300px] leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                {isPublished
+                  ? "Votre page a été publiée avec succès. Vous pouvez maintenant la gérer ou voir les détails."
+                  : "Votre page a été bien créée. Publiez ce premier message pour le rendre visible à la communauté dans le fil d'actualité !"}
+              </p>
+            </div>
+
+            <div className="w-full bg-[var(--color-background-primary)] rounded-[8px] p-4 shadow-sm border border-[var(--border-tertiary)]">
+              <h3 className="font-bold text-[15px] text-[var(--color-text-primary)] mb-2 truncate">Votre premier message</h3>
+              {!isPublished ? (
+                <textarea
+                  value={firstPostText}
+                  onChange={(e) => setFirstPostText(e.target.value)}
+                  className="w-full px-3 py-2 border border-[var(--border-default)] rounded-xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-secondary)] focus:outline-none focus:border-[#FF7A00] transition-colors resize-none"
+                  rows={4}
+                />
+              ) : (
+                <p className="text-[14px] text-[var(--color-text-secondary)]">{firstPostText}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className={`absolute bottom-0 left-0 right-0 px-5 py-6 space-y-3 bg-gradient-to-t ${isPublished ? 'from-[var(--color-background-primary)] via-[var(--color-background-primary)]' : 'from-[var(--color-background-alt)] via-[var(--color-background-alt)]'} to-transparent`}>
+          {!isPublished ? (
+            <button
+              onClick={handlePublish}
+              disabled={publishing || !firstPostText.trim()}
+              className="w-full py-[15px] rounded-[100px] bg-[var(--color-action-primary)] font-semibold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] transition-transform disabled:opacity-50"
+            >
+              {publishing ? 'Publication en cours...' : 'Publier dans le fil d\'actualité'}
+            </button>
+          ) : (
+            <button
+              onClick={() => navigate(`/pages/${createdPageId}`, { replace: true })}
+              className="w-full py-[15px] rounded-[100px] bg-[var(--color-action-primary)] font-semibold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] transition-transform"
+            >
+              Gérer la page
+            </button>
+          )}
+          {!isPublished && (
+            <button
+              onClick={() => navigate(`/pages/${createdPageId}`, { replace: true })}
+              className="w-full py-[15px] rounded-[100px] bg-transparent font-medium text-[14px] text-[var(--color-text-secondary)] active:scale-[0.98] transition-transform"
+            >
+              Plus tard
+            </button>
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
