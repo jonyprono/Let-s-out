@@ -106,11 +106,12 @@ export function PageView() {
 
   return (
     <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins relative">
-      <TopBar
-        title={page.name}
-        onBack={() => navigate(-1)}
-        containerClassName="absolute top-0 left-0 right-0 z-20"
-      />
+      <div className="pt-safe-6 relative z-20">
+        <TopBar
+          title={page.name}
+          onBack={() => navigate(-1)}
+        />
+      </div>
 
       <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
         {/* Cover */}
@@ -128,8 +129,8 @@ export function PageView() {
           {/* Avatar + Action Button row */}
           <div className="flex items-end justify-between -mt-12 mb-3">
             <div className="w-24 h-24 rounded-full border-4 border-[var(--color-background-primary)] bg-[var(--color-background-secondary)] overflow-hidden shrink-0 z-10 shadow-sm flex items-center justify-center text-2xl font-bold text-[var(--color-text-secondary)]">
-              {page.avatarUrl ? (
-                <SafeImage src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
+              {page.avatarUrl || (isCreator && me?.profile?.avatarUrl) ? (
+                <SafeImage src={page.avatarUrl || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
               ) : (
                 page.name[0]?.toUpperCase()
               )}
@@ -189,8 +190,8 @@ export function PageView() {
             <div className="mb-5 rounded-2xl border border-[var(--border-default)] bg-[var(--color-background-primary)] overflow-hidden shadow-sm">
               <div className="flex items-start gap-3 p-3">
                 <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center font-bold text-[var(--color-text-secondary)] shrink-0 text-[15px] overflow-hidden">
-                  {page.avatarUrl
-                    ? <SafeImage src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
+                  {page.avatarUrl || (isCreator && me?.profile?.avatarUrl)
+                    ? <SafeImage src={page.avatarUrl || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
                     : page.name[0]?.toUpperCase()
                   }
                 </div>
@@ -267,9 +268,9 @@ export function PageView() {
                 <div key={post.id} className="pb-5 border-b border-[var(--border-tertiary)] last:border-0">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center font-bold text-[var(--color-text-secondary)] text-[14px] shrink-0">
-                      {page.avatarUrl
-                        ? <SafeImage src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
-                        : page.name[0]
+                      {page.avatarUrl || (isCreator && me?.profile?.avatarUrl)
+                        ? <SafeImage src={page.avatarUrl || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
+                        : page.name[0]?.toUpperCase()
                       }
                     </div>
                     <div>

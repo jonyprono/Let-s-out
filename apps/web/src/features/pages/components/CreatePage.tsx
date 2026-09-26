@@ -8,15 +8,18 @@ import { toast } from 'sonner'
 import { LayoutDashboard } from 'lucide-react'
 
 const PAGE_CATEGORIES = [
-  { label: 'Restaurant / Bar', value: 'Restaurant' },
-  { label: 'Artiste / Groupe', value: 'Artiste' },
-  { label: 'Sport et Fitness', value: 'Sport' },
-  { label: 'Association / Club', value: 'Association' },
-  { label: 'Entreprise Locale', value: 'Entreprise' },
-  { label: 'Marque / Produit', value: 'Marque' },
-  { label: 'Communauté', value: 'Communauté' },
-  { label: 'Créateur de contenu', value: 'Créateur' },
-  { label: 'Autre', value: 'Autre' },
+  { label: 'Art et culture',            value: 'CULTURE' },
+  { label: 'Comédie',                   value: 'GAMING' },
+  { label: 'Sport',                     value: 'SPORT' },
+  { label: 'Santé et bien-être',        value: 'WELLNESS' },
+  { label: 'Cuisine et gastronomie',    value: 'FOOD' },
+  { label: 'Boissons',                  value: 'LIFESTYLE' },
+  { label: 'Réseautage professionnel',  value: 'SOCIAL' },
+  { label: 'Fêtes',                     value: 'NIGHTLIFE' },
+  { label: 'Religion',                  value: 'OTHER' },
+  { label: 'Shopping',                  value: 'TECH' },
+  { label: 'Musique et son',            value: 'MUSIC' },
+  { label: 'Télévision et cinéma',      value: 'ART' },
 ]
 
 export function CreatePage() {
@@ -48,8 +51,10 @@ export function CreatePage() {
   }
 
   return (
-    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins pt-safe-top">
-      <TopBar title="Créer une page" onBack={() => navigate(-1)} />
+    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins pt-safe-6">
+      <div className="pt-2">
+        <TopBar title="Créer une page" onBack={() => navigate(-1)} />
+      </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-6" style={{ scrollbarWidth: 'none' }}>
         <div className="mb-8 flex flex-col items-center justify-center text-center">

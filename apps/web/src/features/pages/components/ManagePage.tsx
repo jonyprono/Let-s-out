@@ -10,15 +10,18 @@ import { toast } from 'sonner'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 
 const PAGE_CATEGORIES = [
-  { label: 'Restaurant / Bar', value: 'Restaurant' },
-  { label: 'Artiste / Groupe', value: 'Artiste' },
-  { label: 'Sport et Fitness', value: 'Sport' },
-  { label: 'Association / Club', value: 'Association' },
-  { label: 'Entreprise Locale', value: 'Entreprise' },
-  { label: 'Marque / Produit', value: 'Marque' },
-  { label: 'Communauté', value: 'Communauté' },
-  { label: 'Créateur de contenu', value: 'Créateur' },
-  { label: 'Autre', value: 'Autre' },
+  { label: 'Art et culture',            value: 'CULTURE' },
+  { label: 'Comédie',                   value: 'GAMING' },
+  { label: 'Sport',                     value: 'SPORT' },
+  { label: 'Santé et bien-être',        value: 'WELLNESS' },
+  { label: 'Cuisine et gastronomie',    value: 'FOOD' },
+  { label: 'Boissons',                  value: 'LIFESTYLE' },
+  { label: 'Réseautage professionnel',  value: 'SOCIAL' },
+  { label: 'Fêtes',                     value: 'NIGHTLIFE' },
+  { label: 'Religion',                  value: 'OTHER' },
+  { label: 'Shopping',                  value: 'TECH' },
+  { label: 'Musique et son',            value: 'MUSIC' },
+  { label: 'Télévision et cinéma',      value: 'ART' },
 ]
 
 export function ManagePage() {
@@ -162,8 +165,8 @@ export function ManagePage() {
         <div className="px-5 -mt-10 mb-5 relative z-10">
           <div className="relative w-20 h-20">
             <div className="w-20 h-20 rounded-full border-4 border-[var(--color-background-primary)] bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center text-xl font-bold text-[var(--color-text-secondary)] shadow-md">
-              {avatarPreview
-                ? <SafeImage src={avatarPreview} alt={page.name} className="w-full h-full object-cover" />
+              {avatarPreview || me?.profile?.avatarUrl
+                ? <SafeImage src={avatarPreview || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
                 : page.name[0]?.toUpperCase()
               }
             </div>
