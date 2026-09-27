@@ -70,8 +70,8 @@ export default async function pagesRoutes(app: FastifyInstance) {
     return reply.send({ data: posts })
   })
 
-  // GET PAGE BY ID
-  app.get('/:id', async (req, reply) => {
+  // GET PAGE BY ID (works with or without authentication)
+  app.get('/:id', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
     const { id } = req.params as { id: string }
     const page = await app.prisma.page.findUnique({
       where: { id },
@@ -81,11 +81,9 @@ export default async function pagesRoutes(app: FastifyInstance) {
     })
     if (!page) return reply.code(404).send({ error: 'Page not found' })
 
-    // Optional auth check to see if current user follows
+    // Check if current user follows (user is available if token was provided)
     let isFollowing = false
     try {
-      // Use jwtVerify instead of authenticate — jwtVerify only throws (does NOT write to reply)
-      await req.jwtVerify()
       const { sub } = req.user as { sub: string }
       if (sub) {
         const follow = await app.prisma.pageFollower.findUnique({
@@ -93,8 +91,8 @@ export default async function pagesRoutes(app: FastifyInstance) {
         })
         isFollowing = !!follow
       }
-    } catch (e) {
-      // Not authenticated or token invalid — ignore, just return isFollowing: false
+    } catch {
+      // No authenticated user — ignore
     }
 
     return reply.send({ ...page, isFollowing })
@@ -201,14 +199,8 @@ export default async function pagesRoutes(app: FastifyInstance) {
   })
 
   // LIST POSTS (include comment count + comments)
-  app.get('/:id/posts', async (req, reply) => {
+  app.get('/:id/posts', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
     const { id } = req.params as { id: string }
-
-    let sub: string | null = null
-    try {
-      await req.jwtVerify()
-      sub = (req.user as { sub: string }).sub
-    } catch (_) {}
 
     const posts = await app.prisma.pagePost.findMany({
       where: { pageId: id },
