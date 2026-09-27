@@ -47,9 +47,10 @@ export function PageView() {
         setIsFollowing(pageData.isFollowing || false)
         setPosts(postsData)
       })
-      .catch((error) => {
-        console.error("Erreur de chargement de la page (PageView):", error)
-        toast.error(`Erreur du serveur: ${error?.message || 'Inconnue'}`)
+      .catch((error: any) => {
+        console.error("Erreur de chargement de la page (PageView):", error, error?.response?.data)
+        const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Inconnue'
+        toast.error(`Erreur: ${msg}`)
         navigate('/explorer')
       })
       .finally(() => setLoading(false))

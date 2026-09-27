@@ -40,6 +40,18 @@ async function bootstrap() {
     prefix: '/uploads/',
   })
 
+  // Global Error Handler to ensure 500 errors are logged in Render and sent to frontend
+  app.setErrorHandler(function (error, request, reply) {
+    this.log.error(error)
+    console.error(`🔴 [GLOBAL ERROR HANDLER] ${request.method} ${request.url}:`, error)
+    
+    // Return the actual error message instead of generic 500
+    reply.status(error.statusCode || 500).send({ 
+      error: 'Internal Server Error', 
+      message: error.message || String(error)
+    })
+  })
+
   // ── Routes ─────────────────────────────────────────────────────
   await app.register(import('./modules/auth/auth.routes'), { prefix: '/api/v1/auth' })
   await app.register(import('./modules/users/users.routes'), { prefix: '/api/v1/users' })
