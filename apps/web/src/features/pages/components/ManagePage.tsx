@@ -70,7 +70,11 @@ export function ManagePage() {
         setAvatarPreview(p.avatarUrl || null)
         setCoverPreview(p.coverUrl || null)
       })
-      .catch(() => navigate('/explorer'))
+      .catch((error) => {
+        console.error("Erreur de chargement de la page (ManagePage):", error)
+        toast.error(`Erreur du serveur: ${error?.message || 'Inconnue'}`)
+        navigate('/explorer')
+      })
       .finally(() => setLoading(false))
   }, [id, me?.id, navigate])
 

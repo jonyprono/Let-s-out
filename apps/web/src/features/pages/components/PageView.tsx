@@ -47,7 +47,11 @@ export function PageView() {
         setIsFollowing(pageData.isFollowing || false)
         setPosts(postsData)
       })
-      .catch(() => navigate('/explorer'))
+      .catch((error) => {
+        console.error("Erreur de chargement de la page (PageView):", error)
+        toast.error(`Erreur du serveur: ${error?.message || 'Inconnue'}`)
+        navigate('/explorer')
+      })
       .finally(() => setLoading(false))
   }, [id, navigate])
 
