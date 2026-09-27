@@ -84,7 +84,8 @@ export default async function pagesRoutes(app: FastifyInstance) {
     // Optional auth check to see if current user follows
     let isFollowing = false
     try {
-      await app.authenticate(req, reply)
+      // Use jwtVerify instead of authenticate — jwtVerify only throws (does NOT write to reply)
+      await req.jwtVerify()
       const { sub } = req.user as { sub: string }
       if (sub) {
         const follow = await app.prisma.pageFollower.findUnique({
@@ -93,7 +94,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
         isFollowing = !!follow
       }
     } catch (e) {
-      // Not authenticated, ignore
+      // Not authenticated or token invalid — ignore, just return isFollowing: false
     }
 
     return reply.send({ ...page, isFollowing })
@@ -205,7 +206,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
 
     let sub: string | null = null
     try {
-      await app.authenticate(req, reply)
+      await req.jwtVerify()
       sub = (req.user as { sub: string }).sub
     } catch (_) {}
 
