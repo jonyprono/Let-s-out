@@ -71,9 +71,8 @@ export function ManagePage() {
         setCoverPreview(p.coverUrl || null)
       })
       .catch((error: any) => {
-        console.error("Erreur de chargement de la page (ManagePage):", error, error?.response?.data)
-        const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Inconnue'
-        toast.error(`Erreur: ${msg}`)
+        console.error("Erreur de chargement de la page (ManagePage):", error)
+        toast.error('Erreur de chargement de la page. Veuillez réessayer.')
         navigate('/explorer')
       })
       .finally(() => setLoading(false))

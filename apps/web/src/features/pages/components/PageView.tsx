@@ -48,9 +48,8 @@ export function PageView() {
         setPosts(postsData)
       })
       .catch((error: any) => {
-        console.error("Erreur de chargement de la page (PageView):", error, error?.response?.data)
-        const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Inconnue'
-        toast.error(`Erreur: ${msg}`)
+        console.error("Erreur de chargement de la page (PageView):", error)
+        toast.error('Erreur de chargement de la page. Veuillez réessayer.')
         navigate('/explorer')
       })
       .finally(() => setLoading(false))
@@ -520,12 +519,12 @@ export function PageView() {
                             <div className="w-7 h-7 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center text-[11px] font-bold text-[var(--color-text-secondary)] shrink-0">
                               {c.user?.profile?.avatarUrl
                                 ? <SafeImage src={c.user.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-                                : (c.user?.profile?.firstName?.[0] || c.user?.profile?.username?.[0] || '?').toUpperCase()
+                                : (c.user?.profile?.displayName?.[0] || c.user?.profile?.username?.[0] || '?').toUpperCase()
                               }
                             </div>
                             <div className="flex-1 bg-[var(--color-background-secondary)] rounded-2xl px-3 py-2">
                               <p className="text-[12px] font-semibold text-[var(--color-text-primary)] mb-0.5">
-                                {c.user?.profile?.firstName ? `${c.user.profile.firstName} ${c.user.profile.lastName || ''}`.trim() : c.user?.profile?.username || 'Utilisateur'}
+                                {c.user?.profile?.displayName ? c.user.profile.displayName : c.user?.profile?.username || 'Utilisateur'}
                               </p>
                               <p className="text-[13px] text-[var(--color-text-primary)]">{c.text}</p>
                             </div>
@@ -538,7 +537,7 @@ export function PageView() {
                         <div className="w-7 h-7 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center text-[11px] font-bold text-[var(--color-text-secondary)] shrink-0">
                           {me?.profile?.avatarUrl
                             ? <SafeImage src={me.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-                            : (me?.profile?.firstName?.[0] || '?').toUpperCase()
+                            : (me?.profile?.displayName?.[0] || '?').toUpperCase()
                           }
                         </div>
                         <div className="flex-1 flex gap-2 bg-[var(--color-background-secondary)] rounded-2xl px-3 py-2">

@@ -21,7 +21,7 @@ export interface PagePostComment {
   createdAt: string
   user: {
     id: string
-    profile: { username: string; avatarUrl?: string; firstName?: string; lastName?: string } | null
+    profile: { username: string; avatarUrl?: string; displayName?: string } | null
   }
 }
 

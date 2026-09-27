@@ -218,7 +218,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
           orderBy: { createdAt: 'asc' },
           take: 5,
           include: {
-            user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, firstName: true, lastName: true } } } }
+            user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, displayName: true } } } }
           }
         }
       }
@@ -233,7 +233,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
       where: { postId },
       orderBy: { createdAt: 'asc' },
       include: {
-        user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, firstName: true, lastName: true } } } }
+        user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, displayName: true } } } }
       }
     })
     return reply.send({ data: comments })
@@ -250,7 +250,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
     const comment = await app.prisma.pagePostComment.create({
       data: { postId, userId: sub, text: text.trim() },
       include: {
-        user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, firstName: true, lastName: true } } } }
+        user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, displayName: true } } } }
       }
     })
 
