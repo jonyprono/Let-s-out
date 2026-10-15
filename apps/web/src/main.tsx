@@ -27,7 +27,7 @@ restoreQueryCache()
 // server is warm before the user reaches the home feed.
 ;(function warmupServer() {
   try {
-    const apiBase = 'https://let-s-out.onrender.com'
+    const apiBase = import.meta.env.VITE_API_URL?.replace(/\/api\/v1$/, '') || 'https://let-s-out-production.up.railway.app'
     fetch(apiBase + '/health', { method: 'GET', signal: AbortSignal.timeout(10000) }).catch(() => {
       // Silently ignore — this is best-effort only
     })

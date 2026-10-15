@@ -21,19 +21,19 @@ const resolveApiUrl = (): string => {
 
   if (typeof window !== 'undefined' && window.location && window.location.origin) {
     const origin = window.location.origin
-    // If running on any production domain, point to the live Render backend
+    // If running on any production domain, point to the live Railway backend
     if (!origin.includes('localhost') && !origin.includes('127.0.0.1') && !origin.includes('192.168.')) {
-      return 'https://let-s-out.onrender.com/api/v1'
+      return 'https://let-s-out-production.up.railway.app/api/v1'
     }
     if (origin.includes(':3000')) {
       return origin.replace(':3000', ':3001') + '/api/v1'
     }
-    // If running in Capacitor native platform in production build, point to Render
+    // If running in Capacitor native platform in production build, point to Railway
     const isCap = () => {
       try { return !!(window as any).Capacitor?.isNativePlatform?.() } catch { return false }
     }
     if (isCap() && process.env.NODE_ENV === 'production') {
-      return 'https://let-s-out.onrender.com/api/v1'
+      return 'https://let-s-out-production.up.railway.app/api/v1'
     }
     return `${origin}/api/v1`
   }

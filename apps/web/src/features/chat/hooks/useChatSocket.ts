@@ -32,7 +32,7 @@ function getWsUrl(token: string): string {
     if (typeof window !== 'undefined' && window.location?.origin) {
       const origin = window.location.origin
       if (!origin.includes('localhost') && !origin.includes('127.0.0.1') && !origin.includes('192.168.')) {
-        wsUrl = 'wss://let-s-out.onrender.com'
+        wsUrl = 'wss://let-s-out-production.up.railway.app'
       } else if (origin.includes(':3000')) {
         wsUrl = origin.replace('http://', 'ws://').replace(':3000', ':3001')
       } else {

@@ -39,7 +39,7 @@ const config: CapacitorConfig = {
         // Production: load /app directly — bypasses LandingPage entirely for native apps
         url: 'https://letsout.app/app',
         cleartext: false,
-        allowNavigation: ['letsout.app', 'let-s-out.onrender.com', 'let-s-out-web.vercel.app', 'localhost'],
+        allowNavigation: ['letsout.app', 'let-s-out-production.up.railway.app', '*.up.railway.app', 'let-s-out.onrender.com', 'let-s-out-web.vercel.app', 'localhost'],
         errorPath: 'error.html',
       }
     : {

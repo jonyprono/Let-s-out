@@ -8,7 +8,7 @@ const API_BASE = (() => {
   if (typeof window !== 'undefined' && window.location && window.location.origin) {
     const origin = window.location.origin
     if (origin.includes('vercel.app') || origin.includes('let-s-out-web')) {
-      return 'https://let-s-out.onrender.com'
+      return 'https://let-s-out-production.up.railway.app'
     }
     if (origin.includes(':3000')) return origin.replace(':3000', ':3001')
     
@@ -16,7 +16,7 @@ const API_BASE = (() => {
       try { return !!(window as any).Capacitor?.isNativePlatform?.() } catch { return false }
     }
     if (isCap() && process.env.NODE_ENV === 'production') {
-      return 'https://let-s-out.onrender.com'
+      return 'https://let-s-out-production.up.railway.app'
     }
     
     return origin
