@@ -1,5 +1,5 @@
 {
-  "installCommand": "corepack enable && corepack prepare pnpm@9.15.4 --activate && pnpm install --no-frozen-lockfile",
+  "installCommand": "corepack enable && corepack prepare pnpm@9.15.4 --activate && pnpm install --no-frozen-lockfile --filter @letsout/web...",
   "buildCommand": "pnpm --filter @letsout/web run build",
   "outputDirectory": "apps/web/dist",
   "build": {
