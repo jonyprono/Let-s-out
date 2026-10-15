@@ -1,42 +1,62 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { TopBar } from '@/components/ui/TopBar'
-import { pagesApi, Page, PagePost, PagePostComment } from '../api'
+import { pagesApi, Page, PagePost } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
-import { Loader2, Users, FileText, Image as ImageIcon, Send, X, Film, Trash2, MessageCircle, ChevronDown } from 'lucide-react'
+import {
+  ArrowLeft,
+  UserPlus,
+  UserCheck,
+  MessageCircle,
+  Calendar,
+  Star,
+  Plus,
+  Heart,
+  Share2,
+  MoreVertical,
+  Camera,
+  Video,
+  Tag,
+  Globe,
+  Lock,
+  Loader2,
+  Trash2,
+  Image as ImageIcon,
+} from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
+
+type PageTab = 'publications' | 'events' | 'about' | 'photos'
 
 export function PageView() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const me = useAuthStore(s => (s as any).user)
+  const me = useAuthStore((s) => (s as any).user)
 
   const [page, setPage] = useState<Page | null>(null)
   const [posts, setPosts] = useState<PagePost[]>([])
   const [loading, setLoading] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
+  const [activeTab, setActiveTab] = useState<PageTab>('publications')
 
-  // Post creation state
-  const [postText, setPostText] = useState('')
+  // Post modal state
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false)
+  const [postStep, setPostStep] = useState<1 | 2>(1)
+  const [postContent, setPostContent] = useState('')
+  const [postPrivacy, setPostPrivacy] = useState<'public' | 'private'>('public')
   const [postImage, setPostImage] = useState<File | null>(null)
   const [postImagePreview, setPostImagePreview] = useState<string | null>(null)
-  
   const [postVideo, setPostVideo] = useState<File | null>(null)
   const [postVideoPreview, setPostVideoPreview] = useState<string | null>(null)
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
-
   const [publishing, setPublishing] = useState(false)
+
+  // Likes state (local optimistic)
+  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({})
+  const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null)
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
-  // Comments state
-  const [commentTexts, setCommentTexts] = useState<Record<string, string>>({})
-  const [commentingPostId, setCommentingPostId] = useState<string | null>(null)
-  const [loadingComments, setLoadingComments] = useState<string | null>(null)
-  const [allComments, setAllComments] = useState<Record<string, PagePostComment[]>>({})
-  const [sendingComment, setSendingComment] = useState(false)
-  const [deletingPostId, setDeletingPostId] = useState<string | null>(null)
+  const isOwner = me?.id && page?.creatorId === me.id
 
   useEffect(() => {
     if (!id) return
@@ -45,189 +65,108 @@ export function PageView() {
       .then(([pageData, postsData]) => {
         setPage(pageData)
         setIsFollowing(pageData.isFollowing || false)
-        setPosts(postsData)
+        setPosts(postsData || [])
       })
-      .catch((error: any) => {
-        console.error("Erreur de chargement de la page (PageView):", error)
-        toast.error('Erreur de chargement de la page. Veuillez réessayer.')
-        navigate('/explorer')
+      .catch((error) => {
+        console.error('Erreur chargement page:', error)
+        toast.error('Erreur lors du chargement de la page')
+        navigate('/pages')
       })
       .finally(() => setLoading(false))
   }, [id, navigate])
 
-  const handleFollow = async () => {
+  const handleFollowToggle = async () => {
     if (!id || !page) return
     try {
       const { followed } = await pagesApi.follow(id)
       setIsFollowing(followed)
-      setPage(p => p ? {
-        ...p,
-        _count: {
-          ...p._count!,
-          followers: (p._count?.followers || 0) + (followed ? 1 : -1)
-        }
-      } : null)
+      setPage((p) =>
+        p
+          ? {
+              ...p,
+              _count: {
+                ...p._count!,
+                followers: (p._count?.followers || 0) + (followed ? 1 : -1),
+              },
+            }
+          : null
+      )
+      toast.success(followed ? 'Vous suivez maintenant cette page' : 'Abonnement retiré')
     } catch {
-      toast.error('Erreur lors de l\'abonnement')
+      toast.error("Erreur lors de l'abonnement")
     }
   }
 
-  const handlePickImage = (file: File) => {
-    clearVideo() // only one media
-    setPostImage(file)
-    const url = URL.createObjectURL(file)
-    setPostImagePreview(url)
+  const handlePickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setPostVideo(null)
+      setPostVideoPreview(null)
+      setPostImage(file)
+      setPostImagePreview(URL.createObjectURL(file))
+    }
   }
 
-  const handlePickVideo = async (file: File) => {
-    if (file.size > 200 * 1024 * 1024) {
-      toast.error('La vidéo est trop volumineuse (max 200 Mo).')
-      return
-    }
-    const videoEl = document.createElement('video')
-    videoEl.src = URL.createObjectURL(file)
-    const isValid = await new Promise<boolean>(resolve => {
-      videoEl.onloadedmetadata = () => {
-        if (Math.round(videoEl.duration) > 30) {
-          toast.error('La vidéo ne doit pas dépasser 30 secondes.')
-          resolve(false)
-        } else {
-          resolve(true)
-        }
+  const handlePickVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error('La vidéo ne doit pas dépasser 100 Mo')
+        return
       }
-    })
-    URL.revokeObjectURL(videoEl.src)
-    if (!isValid) return
-
-    clearImage() // only one media
-    setPostVideo(file)
-    setPostVideoPreview(URL.createObjectURL(file))
+      setPostImage(null)
+      setPostImagePreview(null)
+      setPostVideo(file)
+      setPostVideoPreview(URL.createObjectURL(file))
+    }
   }
 
-  const clearImage = () => {
-    setPostImage(null)
-    if (postImagePreview) URL.revokeObjectURL(postImagePreview)
-    setPostImagePreview(null)
-    if (fileInputRef.current) fileInputRef.current.value = ''
-  }
-
-  const clearVideo = () => {
-    setPostVideo(null)
-    if (postVideoPreview) URL.revokeObjectURL(postVideoPreview)
-    setPostVideoPreview(null)
-    if (videoInputRef.current) videoInputRef.current.value = ''
-    setUploadProgress(null)
-  }
-
-  const handlePublish = async () => {
-    if (!id || (!postText.trim() && !postImage && !postVideo)) return
+  const handlePublishPost = async () => {
+    if (!id || (!postContent.trim() && !postImage && !postVideo)) return
     setPublishing(true)
     try {
       let mediaUrls: string[] = []
-      
       if (postImage) {
         const uploaded = await pagesApi.uploadImage(id, postImage, 'post')
         mediaUrls = [uploaded.url]
-      } else if (postVideo) {
-        setUploadProgress(0)
-        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
-        const uploadPreset = import.meta.env.VITE_CLOUDINARY_VIDEO_UPLOAD_PRESET
-        const formData = new FormData()
-        formData.append('file', postVideo)
-        formData.append('upload_preset', uploadPreset)
-        formData.append('folder', 'event_videos')
-        formData.append('resource_type', 'video')
-
-        const xhr = new XMLHttpRequest()
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`)
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100))
-        }
-        
-        const uploadedUrl = await new Promise<string>((resolve, reject) => {
-          xhr.onload = () => {
-            if (xhr.status === 200) {
-              resolve(JSON.parse(xhr.responseText).secure_url)
-            } else {
-              reject(new Error('Erreur upload video'))
-            }
-          }
-          xhr.onerror = () => reject(new Error('Erreur réseau'))
-          xhr.send(formData)
-        })
-        mediaUrls = [uploadedUrl]
       }
-      
       const newPost = await pagesApi.createPost(id, {
-        content: postText.trim() || undefined,
-        mediaUrls
+        content: postContent.trim() || undefined,
+        mediaUrls,
       })
-      setPosts(prev => [newPost, ...prev])
-      setPostText('')
-      clearImage()
-      clearVideo()
-      toast.success('Publication réussie !')
+      setPosts((prev) => [newPost, ...prev])
+      toast.success('Publication créée avec succès !')
+      // Reset
+      setPostContent('')
+      setPostImage(null)
+      setPostImagePreview(null)
+      setPostVideo(null)
+      setPostVideoPreview(null)
+      setPostStep(1)
+      setShowCreatePostModal(false)
     } catch {
       toast.error('Erreur lors de la publication')
-      setUploadProgress(null)
     } finally {
       setPublishing(false)
-      setUploadProgress(null)
     }
   }
 
   const handleDeletePost = async (postId: string) => {
-    if (!id || !page) return
-    if (!window.confirm('Supprimer cette publication définitivement ?')) return
-    setDeletingPostId(postId)
+    if (!id) return
     try {
       await pagesApi.deletePost(id, postId)
-      setPosts(prev => prev.filter(p => p.id !== postId))
+      setPosts((prev) => prev.filter((p) => p.id !== postId))
       toast.success('Publication supprimée')
     } catch {
       toast.error('Erreur lors de la suppression')
     } finally {
-      setDeletingPostId(null)
-    }
-  }
-
-  const handleLoadComments = async (postId: string) => {
-    if (commentingPostId === postId) {
-      setCommentingPostId(null)
-      return
-    }
-    setCommentingPostId(postId)
-    if (allComments[postId]) return
-    setLoadingComments(postId)
-    try {
-      const comments = await pagesApi.getComments(id!, postId)
-      setAllComments(prev => ({ ...prev, [postId]: comments }))
-    } catch {
-      toast.error('Erreur lors du chargement des commentaires')
-    } finally {
-      setLoadingComments(null)
-    }
-  }
-
-  const handleSendComment = async (postId: string) => {
-    const text = (commentTexts[postId] || '').trim()
-    if (!text || !id) return
-    setSendingComment(true)
-    try {
-      const newComment = await pagesApi.addComment(id, postId, text)
-      setAllComments(prev => ({ ...prev, [postId]: [...(prev[postId] || []), newComment] }))
-      setCommentTexts(prev => ({ ...prev, [postId]: '' }))
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, _count: { comments: (p._count?.comments || 0) + 1 } } : p))
-    } catch {
-      toast.error('Erreur lors de l\'envoi')
-    } finally {
-      setSendingComment(false)
+      setActiveMenuPostId(null)
     }
   }
 
   if (loading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-[var(--color-background-primary)]">
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
         <Loader2 className="w-8 h-8 animate-spin text-[#FF7A00]" />
       </div>
     )
@@ -235,337 +174,660 @@ export function PageView() {
 
   if (!page) return null
 
-  const isCreator = me?.id === page.creatorId
-  const canPublish = postText.trim().length > 0 || postImage !== null || postVideo !== null
-
   return (
-    <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins relative">
-      <div className="pt-safe-6 relative z-20">
-        <TopBar
-          title={page.name}
-          onBack={() => navigate(-1)}
-        />
+    <div className="flex flex-col w-full min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white pb-20">
+      {/* ── Cover Area ── */}
+      <div className="relative w-full h-44 bg-gray-100 dark:bg-gray-900 overflow-hidden">
+        {page.coverUrl ? (
+          <SafeImage src={page.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+        ) : (
+          <div
+            className="w-full h-full bg-[#F3F4F6] dark:bg-[#1C1C1E]"
+            style={{
+              backgroundImage: `radial-gradient(#E5E7EB 1px, transparent 1px)`,
+              backgroundSize: '16px 16px',
+            }}
+          />
+        )}
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all z-10"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-        {/* Cover */}
-        <div className="h-44 w-full relative">
-          {page.coverUrl ? (
-            <SafeImage src={page.coverUrl} alt={page.name} className="w-full h-full object-cover" />
+      {/* ── Profile Info Header ── */}
+      <div className="flex flex-col items-center px-4 -mt-12 relative z-10">
+        {/* Avatar */}
+        <div className="w-24 h-24 rounded-full border-4 border-white dark:border-black bg-gray-200 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-gray-500 shadow-sm">
+          {page.avatarUrl ? (
+            <SafeImage src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-orange-400 to-orange-600" />
+            <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800 text-gray-500 text-2xl font-bold">
+              {page.name.charAt(0).toUpperCase()}
+            </div>
           )}
-          <div className="absolute inset-0 bg-black/10" />
         </div>
 
-        {/* Profile Info */}
-        <div className="px-5 pb-4">
-          {/* Avatar + Action Button row */}
-          <div className="flex items-end justify-between -mt-12 mb-3">
-            <div className="w-24 h-24 rounded-full border-4 border-[var(--color-background-primary)] bg-[var(--color-background-secondary)] overflow-hidden shrink-0 z-10 shadow-sm flex items-center justify-center text-2xl font-bold text-[var(--color-text-secondary)]">
-              {page.avatarUrl || (isCreator && me?.profile?.avatarUrl) ? (
-                <SafeImage src={page.avatarUrl || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
-              ) : (
-                page.name[0]?.toUpperCase()
-              )}
-            </div>
+        {/* Name & Stats */}
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2.5 text-center">{page.name}</h1>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          0 suivis · {page._count?.followers ?? 0} abonnés
+        </p>
 
-            <div className="mb-1">
-              {isCreator ? (
-                <button
-                  onClick={() => navigate(`/pages/${id}/manage`)}
-                  className="px-4 py-1.5 rounded-full border border-[var(--border-default)] text-[13px] font-semibold text-[var(--color-text-primary)] bg-[var(--color-background-primary)] active:scale-95 transition-transform"
-                >
-                  Gérer la page
-                </button>
-              ) : (
-                <button
-                  onClick={handleFollow}
-                  className={`px-6 py-1.5 rounded-full text-[13px] font-bold transition-all active:scale-95 ${
-                    isFollowing
-                      ? 'bg-[var(--color-background-secondary)] text-[var(--color-text-primary)]'
-                      : 'bg-[#FF7A00] text-white'
-                  }`}
-                >
-                  {isFollowing ? 'Abonné ✓' : "S'abonner"}
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Page Info */}
-          <div className="mb-4">
-            <h1 className="text-[18px] font-bold text-[var(--color-text-primary)]">{page.name}</h1>
-            <p className="text-[13px] text-[var(--color-text-secondary)] mb-2">{page.category}</p>
-
-            <div className="flex items-center gap-1.5 text-[13px]">
-              <Users className="w-4 h-4 text-[var(--color-text-muted)]" />
-              <span className="font-semibold text-[var(--color-text-primary)]">{page._count?.followers || 0}</span>
-              <span className="text-[var(--color-text-muted)]">abonnés</span>
-            </div>
-
-            {page.description && (
-              <p className="text-[14px] text-[var(--color-text-primary)] leading-relaxed mt-2">
-                {page.description}
-              </p>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2.5 w-full max-w-sm mt-4">
+          <button
+            onClick={handleFollowToggle}
+            className={`flex-1 h-9 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
+              isFollowing
+                ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700'
+                : 'bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-sm shadow-[#FF7A00]/20'
+            }`}
+          >
+            {isFollowing ? (
+              <>
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Suivi</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Suivre</span>
+              </>
             )}
-          </div>
+          </button>
+
+          <button
+            onClick={() => {
+              if (page.creatorId) navigate(`/chat/user/${page.creatorId}`)
+            }}
+            className="flex-1 h-9 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-200 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>Envoyer un message</span>
+          </button>
         </div>
+      </div>
 
-        {/* Divider */}
-        <div className="w-full h-2 bg-[var(--color-background-secondary)]" />
+      {/* ── Tabs Navigation ── */}
+      <div className="flex items-center justify-center gap-2 px-4 mt-6 border-b border-gray-100 dark:border-gray-800 pb-3 overflow-x-auto hide-scrollbar">
+        <button
+          onClick={() => setActiveTab('publications')}
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            activeTab === 'publications'
+              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
+              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+          }`}
+        >
+          Publications
+        </button>
+        <button
+          onClick={() => setActiveTab('events')}
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            activeTab === 'events'
+              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
+              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+          }`}
+        >
+          Evénements
+        </button>
+        <button
+          onClick={() => setActiveTab('about')}
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            activeTab === 'about'
+              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
+              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+          }`}
+        >
+          A propos
+        </button>
+        <button
+          onClick={() => setActiveTab('photos')}
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            activeTab === 'photos'
+              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
+              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+          }`}
+        >
+          Photos
+        </button>
+      </div>
 
-        {/* Posts section */}
-        <div className="px-5 py-4">
-          <h2 className="text-[16px] font-bold text-[var(--color-text-primary)] mb-4">Publications</h2>
-
-          {/* Compose Box (creator only) */}
-          {isCreator && (
-            <div className="mb-5 rounded-2xl border border-[var(--border-default)] bg-[var(--color-background-primary)] overflow-hidden shadow-sm">
-              <div className="flex items-start gap-3 p-3">
-                <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center font-bold text-[var(--color-text-secondary)] shrink-0 text-[15px] overflow-hidden">
-                  {page.avatarUrl || (isCreator && me?.profile?.avatarUrl)
-                    ? <SafeImage src={page.avatarUrl || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
-                    : page.name[0]?.toUpperCase()
-                  }
+      {/* ── TAB CONTENT ── */}
+      <div className="px-4 py-5 max-w-lg mx-auto w-full">
+        {/* ── 1. PUBLICATIONS TAB ── */}
+        {activeTab === 'publications' && (
+          <div className="flex flex-col gap-6">
+            {/* Détails Section */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-white">Détails</h3>
+              <div className="flex flex-col gap-2.5 text-xs text-gray-600 dark:text-gray-300">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <span>{page.category || 'Evénements'}</span>
                 </div>
-                <textarea
-                  value={postText}
-                  onChange={e => setPostText(e.target.value)}
-                  placeholder="Quoi de neuf ?"
-                  rows={postText.length > 60 ? 3 : 1}
-                  className="flex-1 bg-transparent text-[14px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] resize-none focus:outline-none pt-1"
-                />
+                <div className="flex items-center gap-1.5">
+                  <div className="flex items-center text-amber-400">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className="w-3.5 h-3.5 fill-current" />
+                    ))}
+                  </div>
+                  <span className="text-gray-500 text-[11px]">0 (aucun avis)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Publications List or Empty State */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-gray-900 dark:text-white">Publications</h3>
+                {posts.length > 0 && isOwner && (
+                  <button
+                    onClick={() => setShowCreatePostModal(true)}
+                    className="text-xs text-[#FF7A00] font-semibold flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Nouvelle
+                  </button>
+                )}
               </div>
 
-              {/* Image preview */}
-              {postImagePreview && (
-                <div className="relative mx-3 mb-3 rounded-xl overflow-hidden">
-                  <img src={postImagePreview} className="w-full max-h-48 object-cover rounded-xl" alt="preview" />
-                  <button
-                    onClick={clearImage}
-                    className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center"
-                  >
-                    <X className="w-4 h-4 text-white" />
-                  </button>
-                </div>
-              )}
-
-              {/* Video preview */}
-              {postVideoPreview && (
-                <div className="relative mx-3 mb-3 rounded-xl overflow-hidden bg-black flex justify-center">
-                  <video src={postVideoPreview} controls className="max-h-48 object-contain" />
-                  <button
-                    onClick={clearVideo}
-                    className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center z-10"
-                  >
-                    <X className="w-4 h-4 text-white" />
-                  </button>
-                </div>
-              )}
-
-              {/* Upload Progress */}
-              {uploadProgress !== null && (
-                <div className="mx-3 mb-3">
-                  <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                    <span className="font-medium">{uploadProgress < 100 ? 'Envoi de la vidéo...' : 'Envoi terminé ✓'}</span>
-                    <span className="font-bold text-[#FF7A00]">{uploadProgress}%</span>
+              {posts.length === 0 ? (
+                /* Empty state matching Figma */
+                <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+                  {/* Phone graphic */}
+                  <div className="w-24 h-24 mb-4 relative flex items-center justify-center">
+                    <svg viewBox="0 0 100 120" className="w-20 h-24" fill="none">
+                      <rect x="15" y="10" width="70" height="100" rx="14" stroke="#FF7A00" strokeWidth="4" fill="#FFF9EC" />
+                      <circle cx="50" cy="100" r="4" fill="#FF7A00" />
+                      <rect x="25" y="30" width="30" height="20" rx="6" fill="#FF7A00" />
+                      <circle cx="35" cy="40" r="2" fill="white" />
+                      <circle cx="45" cy="40" r="2" fill="white" />
+                      <path d="M65 55L80 47V63L65 55Z" fill="#FF7A00" />
+                    </svg>
                   </div>
-                  <div className="h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">Aucune publication</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5">
+                    Créez votre première publication
+                  </p>
+                  <button
+                    onClick={() => setShowCreatePostModal(true)}
+                    className="w-full max-w-xs h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white font-semibold text-xs shadow-md shadow-[#FF7A00]/20 transition-all"
+                  >
+                    Créer une publication
+                  </button>
+                </div>
+              ) : (
+                /* Posts List matching Screenshot 4 */
+                <div className="flex flex-col gap-4">
+                  {posts.map((post) => (
                     <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${Math.max(uploadProgress, 3)}%`,
-                        background: uploadProgress === 100
-                          ? 'linear-gradient(90deg, #22C55E, #16A34A)'
-                          : 'linear-gradient(90deg, #FF7A00, #FFA755)',
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Compose actions */}
-              <div className="flex items-center justify-between px-3 pb-3 border-t border-[var(--border-tertiary)] pt-2">
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-1.5 text-[13px] text-green-600 font-medium active:scale-95 transition-transform"
-                  >
-                    <ImageIcon className="w-5 h-5" />
-                    Photo
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={e => {
-                      const f = e.target.files?.[0]
-                      if (f) handlePickImage(f)
-                    }}
-                  />
-                  <button
-                    onClick={() => videoInputRef.current?.click()}
-                    className="flex items-center gap-1.5 text-[13px] text-blue-500 font-medium active:scale-95 transition-transform"
-                  >
-                    <Film className="w-5 h-5" />
-                    Vidéo
-                  </button>
-                  <input
-                    ref={videoInputRef}
-                    type="file"
-                    accept="video/mp4,video/webm,video/quicktime,video/avi"
-                    className="hidden"
-                    onChange={e => {
-                      const f = e.target.files?.[0]
-                      if (f) handlePickVideo(f)
-                    }}
-                  />
-                </div>
-                <button
-                  onClick={handlePublish}
-                  disabled={!canPublish || publishing || uploadProgress !== null}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[13px] font-bold transition-all ${
-                    canPublish && !publishing
-                      ? 'bg-[#FF7A00] text-white active:scale-95'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {publishing
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <><Send className="w-4 h-4" /> Publier</>
-                  }
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Posts list */}
-          {posts.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="w-12 h-12 rounded-full bg-[var(--color-background-secondary)] flex items-center justify-center mx-auto mb-3">
-                <FileText className="w-6 h-6 text-[var(--color-text-muted)]" />
-              </div>
-              <p className="text-[14px] text-[var(--color-text-secondary)]">Aucune publication pour le moment</p>
-            </div>
-          ) : (
-            <div className="space-y-5">
-              {posts.map(post => (
-                <div key={post.id} className="pb-5 border-b border-[var(--border-tertiary)] last:border-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center font-bold text-[var(--color-text-secondary)] text-[14px] shrink-0">
-                        {page.avatarUrl || (isCreator && me?.profile?.avatarUrl)
-                          ? <SafeImage src={page.avatarUrl || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
-                          : page.name[0]?.toUpperCase()
-                        }
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[14px] text-[var(--color-text-primary)]">{page.name}</p>
-                        <p className="text-[11px] text-[var(--color-text-muted)]">
-                          {new Date(post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      key={post.id}
+                      className="rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#141414] overflow-hidden"
+                    >
+                      {/* Post Text */}
+                      {post.content && (
+                        <p className="p-4 text-sm text-gray-900 dark:text-white leading-relaxed whitespace-pre-line">
+                          {post.content}
                         </p>
-                      </div>
-                    </div>
-                    {isCreator && (
-                      <button
-                        onClick={() => handleDeletePost(post.id)}
-                        disabled={deletingPostId === post.id}
-                        className="p-2 rounded-full text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-90 transition-all"
-                      >
-                        {deletingPostId === post.id
-                          ? <Loader2 className="w-4 h-4 animate-spin" />
-                          : <Trash2 className="w-4 h-4" />
-                        }
-                      </button>
-                    )}
-                  </div>
-                  {post.content && (
-                    <p className="text-[14px] text-[var(--color-text-primary)] mb-3 leading-relaxed whitespace-pre-wrap">
-                      {post.content}
-                    </p>
-                  )}
-                  {post.mediaUrls.length > 0 && (
-                    <div className="rounded-2xl overflow-hidden bg-[var(--color-background-secondary)] mb-3">
-                      {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
-                        <video src={post.mediaUrls[0]} controls className="w-full max-h-[300px] object-cover bg-black" />
-                      ) : (
-                        <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full object-cover max-h-[300px]" />
-                      )}
-                    </div>
-                  )}
-
-                  {/* Comment toggle button */}
-                  <button
-                    onClick={() => handleLoadComments(post.id)}
-                    className="flex items-center gap-1.5 text-[13px] text-[var(--color-text-secondary)] font-medium active:scale-95 transition-transform mt-1"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    {post._count?.comments || 0} commentaire{(post._count?.comments || 0) !== 1 ? 's' : ''}
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${commentingPostId === post.id ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Comments section */}
-                  {commentingPostId === post.id && (
-                    <div className="mt-3 space-y-3">
-                      {loadingComments === post.id ? (
-                        <div className="flex justify-center py-3">
-                          <Loader2 className="w-5 h-5 animate-spin text-[#FF7A00]" />
-                        </div>
-                      ) : (
-                        (allComments[post.id] || []).map(c => (
-                          <div key={c.id} className="flex gap-2.5">
-                            <div className="w-7 h-7 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center text-[11px] font-bold text-[var(--color-text-secondary)] shrink-0">
-                              {c.user?.profile?.avatarUrl
-                                ? <SafeImage src={c.user.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-                                : (c.user?.profile?.displayName?.[0] || c.user?.profile?.username?.[0] || '?').toUpperCase()
-                              }
-                            </div>
-                            <div className="flex-1 bg-[var(--color-background-secondary)] rounded-2xl px-3 py-2">
-                              <p className="text-[12px] font-semibold text-[var(--color-text-primary)] mb-0.5">
-                                {c.user?.profile?.displayName ? c.user.profile.displayName : c.user?.profile?.username || 'Utilisateur'}
-                              </p>
-                              <p className="text-[13px] text-[var(--color-text-primary)]">{c.text}</p>
-                            </div>
-                          </div>
-                        ))
                       )}
 
-                      {/* Comment input */}
-                      <div className="flex gap-2 mt-2">
-                        <div className="w-7 h-7 rounded-full bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center text-[11px] font-bold text-[var(--color-text-secondary)] shrink-0">
-                          {me?.profile?.avatarUrl
-                            ? <SafeImage src={me.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
-                            : (me?.profile?.displayName?.[0] || '?').toUpperCase()
-                          }
+                      {/* Post Media */}
+                      {post.mediaUrls && post.mediaUrls.length > 0 && (
+                        <div className="w-full max-h-96 bg-black flex items-center justify-center overflow-hidden">
+                          {post.mediaUrls[0].endsWith('.mp4') ? (
+                            <video src={post.mediaUrls[0]} controls className="w-full max-h-96 object-contain" />
+                          ) : (
+                            <SafeImage src={post.mediaUrls[0]} alt="Media" className="w-full max-h-96 object-contain" />
+                          )}
                         </div>
-                        <div className="flex-1 flex gap-2 bg-[var(--color-background-secondary)] rounded-2xl px-3 py-2">
-                          <input
-                            type="text"
-                            value={commentTexts[post.id] || ''}
-                            onChange={e => setCommentTexts(prev => ({ ...prev, [post.id]: e.target.value }))}
-                            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendComment(post.id)}
-                            placeholder="Écrire un commentaire..."
-                            className="flex-1 bg-transparent text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
-                          />
+                      )}
+
+                      {/* Post Actions Footer */}
+                      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-800 text-gray-500">
+                        <div className="flex items-center gap-6">
                           <button
-                            onClick={() => handleSendComment(post.id)}
-                            disabled={sendingComment || !(commentTexts[post.id] || '').trim()}
-                            className="text-[#FF7A00] disabled:opacity-40 active:scale-90 transition-transform"
+                            onClick={() =>
+                              setLikedPosts((prev) => ({ ...prev, [post.id]: !prev[post.id] }))
+                            }
+                            className={`flex items-center gap-1.5 transition-colors ${
+                              likedPosts[post.id] ? 'text-red-500' : 'hover:text-gray-900 dark:hover:text-white'
+                            }`}
                           >
-                            <Send className="w-4 h-4" />
+                            <Heart className={`w-4 h-4 ${likedPosts[post.id] ? 'fill-current' : ''}`} />
+                          </button>
+
+                          <button className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition-colors">
+                            <MessageCircle className="w-4 h-4" />
+                            {post._count?.comments ? (
+                              <span className="text-xs">{post._count.comments}</span>
+                            ) : null}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              if (navigator.share) {
+                                navigator.share({ title: page.name, text: post.content || '' })
+                              } else {
+                                toast.success('Lien copié dans le presse-papier')
+                              }
+                            }}
+                            className="hover:text-gray-900 dark:hover:text-white transition-colors"
+                          >
+                            <Share2 className="w-4 h-4" />
                           </button>
                         </div>
+
+                        {/* 3-dots Menu for owner */}
+                        {isOwner && (
+                          <div className="relative">
+                            <button
+                              onClick={() =>
+                                setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id)
+                              }
+                              className="p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+
+                            {activeMenuPostId === post.id && (
+                              <div className="absolute right-0 bottom-8 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg py-1 z-20 min-w-[120px]">
+                                <button
+                                  onClick={() => handleDeletePost(post.id)}
+                                  className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" /> Supprimer
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── 2. EVENTS TAB ── */}
+        {activeTab === 'events' && (
+          <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
+            {/* Calendar 17 illustration */}
+            <div className="w-24 h-24 mb-4 relative flex items-center justify-center">
+              <div className="w-16 h-18 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-[#141414] shadow-sm flex flex-col items-center overflow-hidden">
+                <div className="w-full h-5 bg-[#FF7A00] flex items-center justify-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                </div>
+                <div className="flex-1 flex items-center justify-center font-bold text-2xl text-gray-900 dark:text-white">
+                  17
+                </div>
+              </div>
+            </div>
+            <h4 className="text-sm font-bold text-gray-900 dark:text-white">Aucun événement</h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5">
+              Créez votre premier événement
+            </p>
+            <button
+              onClick={() => navigate('/events/create')}
+              className="w-full max-w-xs h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white font-semibold text-xs shadow-md shadow-[#FF7A00]/20 transition-all"
+            >
+              Créer un événement
+            </button>
+          </div>
+        )}
+
+        {/* ── 3. ABOUT TAB ── */}
+        {activeTab === 'about' && (
+          <div className="flex flex-col gap-6">
+            {/* Description */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-white">Description</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                {page.description ||
+                  'Aucune description. Modifiez le profil de la page pour en ajouter une.'}
+              </p>
+              {!page.description && isOwner && (
+                <button
+                  onClick={() => navigate(`/pages/${id}/manage`)}
+                  className="self-start text-xs text-[#FF7A00] font-semibold mt-1"
+                >
+                  Ajouter une bio
+                </button>
+              )}
+            </div>
+
+            {/* Catégorie */}
+            <div className="flex flex-col gap-1.5">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-white">Catégorie</h3>
+              <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <span>{page.category}</span>
+              </div>
+            </div>
+
+            {/* Créateur */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-white">Créateur</h3>
+              <div className="p-3.5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-[#FAFAFA] dark:bg-[#141414] flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+                    {me?.profile?.displayName?.charAt(0) || 'U'}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-gray-900 dark:text-white">
+                        {me?.profile?.displayName || 'Créateur'}
+                      </p>
+                      <div className="w-3.5 h-3.5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px]">
+                        ✓
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-gray-400">512 followers · 12 événements · 4.8★</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button className="px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Contacter
+                  </button>
+                  <button className="px-3 py-1 rounded-full bg-[#FF7A00] text-white text-xs font-medium">
+                    Suivre
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Avis */}
+            <div className="flex flex-col gap-1.5">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-white">Avis</h3>
+              <div className="flex items-center gap-1.5 text-amber-400">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} className="w-3.5 h-3.5 fill-current" />
+                ))}
+                <span className="text-gray-400 text-xs ml-1">0 (aucun avis)</span>
+              </div>
+            </div>
+
+            {/* Badges */}
+            <div className="flex flex-col gap-1.5">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-white">Badges</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Aucun badge reçu. Animez la page pour gagner des badges de progression.
+              </p>
+            </div>
+
+            {/* Edit Button */}
+            {isOwner && (
+              <button
+                onClick={() => navigate(`/pages/${id}/manage`)}
+                className="w-full h-11 rounded-full border border-gray-200 dark:border-gray-800 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors mt-2"
+              >
+                Modifier les informations de la page
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* ── 4. PHOTOS TAB ── */}
+        {activeTab === 'photos' && (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-20 h-20 rounded-2xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center mb-3 text-gray-400">
+              <ImageIcon className="w-10 h-10 text-orange-400" />
+            </div>
+            <h4 className="text-sm font-bold text-gray-900 dark:text-white">Aucune photo</h4>
+            <p className="text-xs text-gray-400 mt-1">
+              Les photos publiées sur votre page apparaîtront ici
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* ── CREATE POST FULLSCREEN / MODAL (Matching Screenshot 3) ── */}
+      {showCreatePostModal && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-black flex flex-col justify-between">
+          {/* STEP 1: Compose Post */}
+          {postStep === 1 && (
+            <div className="flex flex-col h-full justify-between">
+              <div>
+                {/* Header */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                  <button
+                    onClick={() => setShowCreatePostModal(false)}
+                    className="p-1 text-gray-700 dark:text-gray-300"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                    Créer une publication
+                  </h2>
+                </div>
+
+                {/* Profile info & Privacy */}
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
+                      {page.avatarUrl ? (
+                        <SafeImage src={page.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        page.name.charAt(0)
+                      )}
+                    </div>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{page.name}</span>
+                  </div>
+
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+                    {postPrivacy === 'public' ? 'Public' : 'Privé'}
+                  </span>
+                </div>
+
+                {/* Textarea */}
+                <div className="px-4">
+                  <textarea
+                    rows={6}
+                    value={postContent}
+                    onChange={(e) => setPostContent(e.target.value)}
+                    placeholder="Quoi de neuf ?"
+                    className="w-full text-base bg-transparent border-0 placeholder:text-gray-400 text-gray-900 dark:text-white focus:outline-none resize-none"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Media Preview */}
+                {postImagePreview && (
+                  <div className="relative mx-4 my-2 max-h-60 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+                    <img src={postImagePreview} alt="Preview" className="w-full max-h-60 object-contain bg-black" />
+                    <button
+                      onClick={() => {
+                        setPostImage(null)
+                        setPostImagePreview(null)
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-black/60 text-white"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+                {postVideoPreview && (
+                  <div className="relative mx-4 my-2 max-h-60 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+                    <video src={postVideoPreview} controls className="w-full max-h-60 object-contain bg-black" />
+                    <button
+                      onClick={() => {
+                        setPostVideo(null)
+                        setPostVideoPreview(null)
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-black/60 text-white"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Toolbar & Next Button */}
+              <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-3">
+                {/* 3 Icons Toolbar */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 h-11 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => videoInputRef.current?.click()}
+                    className="flex-1 h-11 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <Video className="w-5 h-5" />
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 h-11 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <Tag className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Hidden file inputs */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePickImage}
+                  className="hidden"
+                />
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handlePickVideo}
+                  className="hidden"
+                />
+
+                {/* Suivant Button */}
+                <button
+                  disabled={!postContent.trim() && !postImage && !postVideo}
+                  onClick={() => setPostStep(2)}
+                  className={`w-full h-12 rounded-full font-semibold text-sm transition-all ${
+                    postContent.trim() || postImage || postVideo
+                      ? 'bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-md shadow-[#FF7A00]/20 active:scale-[0.99]'
+                      : 'bg-[#FF7A00]/40 text-white/80 cursor-not-allowed'
+                  }`}
+                >
+                  Suivant
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Paramètres de publication (Privacy) */}
+          {postStep === 2 && (
+            <div className="flex flex-col h-full justify-between">
+              <div>
+                {/* Header */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+                  <button onClick={() => setPostStep(1)} className="p-1 text-gray-700 dark:text-gray-300">
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                    Paramètres de la publication
+                  </h2>
+                </div>
+
+                {/* Confidentialité Content */}
+                <div className="p-4 flex flex-col gap-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-gray-900 dark:text-white">Confidentialité</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      Qui peut voir et interagir avec cette publication ?
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2.5">
+                    {/* Public option */}
+                    <div
+                      onClick={() => setPostPrivacy('public')}
+                      className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-colors ${
+                        postPrivacy === 'public'
+                          ? 'border-[#FF7A00] bg-[#FFF2D3]/20 dark:bg-[#FF7A00]/10'
+                          : 'border-gray-200 dark:border-gray-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300">
+                          <Globe className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">Public</p>
+                          <p className="text-[11px] text-gray-400">Tout le monde sur Let's Out</p>
+                        </div>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          postPrivacy === 'public'
+                            ? 'border-[#FF7A00] bg-[#FF7A00]'
+                            : 'border-gray-300 dark:border-gray-700'
+                        }`}
+                      >
+                        {postPrivacy === 'public' && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+                    </div>
+
+                    {/* Private option */}
+                    <div
+                      onClick={() => setPostPrivacy('private')}
+                      className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-colors ${
+                        postPrivacy === 'private'
+                          ? 'border-[#FF7A00] bg-[#FFF2D3]/20 dark:bg-[#FF7A00]/10'
+                          : 'border-gray-200 dark:border-gray-800'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300">
+                          <Lock className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">Privé</p>
+                          <p className="text-[11px] text-gray-400">
+                            Uniquement les abonnés de la page
+                          </p>
+                        </div>
+                      </div>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          postPrivacy === 'private'
+                            ? 'border-[#FF7A00] bg-[#FF7A00]'
+                            : 'border-gray-300 dark:border-gray-700'
+                        }`}
+                      >
+                        {postPrivacy === 'private' && <div className="w-2 h-2 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Publier Button */}
+              <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+                <button
+                  disabled={publishing}
+                  onClick={handlePublishPost}
+                  className="w-full h-12 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] active:scale-[0.99] text-white font-semibold text-sm shadow-md shadow-[#FF7A00]/20 flex items-center justify-center transition-all"
+                >
+                  {publishing ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Publier'}
+                </button>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
   )
 }
