@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "build:api": "pnpm --filter @letsout/api build",
+    "start": "pnpm --filter @letsout/api start",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "setup-network": "node setup-network.js",
