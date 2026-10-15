@@ -1,6 +1,7 @@
 {
   "name": "@letsout/api",
   "private": true,
+  "packageManager": "pnpm@9.15.4",
   "version": "0.0.1",
   "scripts": {
     "dev": "tsx watch src/server.ts",
