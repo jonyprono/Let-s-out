@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban } from 'lucide-react';
+import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban, FileText } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -439,6 +439,14 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'profil' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             <span className="font-poppins font-medium text-[12px] leading-[16px]">Profil</span>
+          </button>
+
+          <button 
+            onClick={() => navigate('/pages')}
+            className="flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400 active:scale-95 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <FileText className="w-[18px] h-[18px] text-[#A3A3A3]" />
+            <span className="font-poppins font-medium text-[12px] leading-[16px]">Pages</span>
           </button>
 
           <button 

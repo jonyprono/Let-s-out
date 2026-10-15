@@ -9,6 +9,7 @@ import {
   UserAdd01Icon,
   Medal01Icon,
   HeadphonesIcon,
+  Book01Icon,
 } from 'hugeicons-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
@@ -72,6 +73,13 @@ export function AccountMenu() {
       subtitle: 'Gérez vos informations personnelles',
       icon: UserCircle02Icon,
       path: '/profile',
+      badge: null,
+    },
+    {
+      label: 'Pages',
+      subtitle: 'Découvrir, suivre et créer des pages',
+      icon: Book01Icon,
+      path: '/pages',
       badge: null,
     },
     {
