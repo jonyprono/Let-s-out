@@ -14,7 +14,14 @@ const isCapacitor = () => {
 
 const resolveApiUrl = (): string => {
   const envUrl = import.meta.env.VITE_API_URL as string | undefined
-  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1') && !envUrl.includes('172.30.') && !envUrl.includes('192.168.')) {
+  if (
+    envUrl &&
+    !envUrl.includes('localhost') &&
+    !envUrl.includes('127.0.0.1') &&
+    !envUrl.includes('172.30.') &&
+    !envUrl.includes('192.168.') &&
+    !envUrl.includes('onrender.com')
+  ) {
     // If a production API URL is explicitly configured in env, use it
     return envUrl
   }

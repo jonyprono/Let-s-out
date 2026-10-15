@@ -26,7 +26,7 @@ const messageHandlers = new Set<MessageHandler>()
 
 function getWsUrl(token: string): string {
   let wsUrl = (import.meta as any).env?.VITE_WS_URL as string | undefined
-  if (wsUrl && (wsUrl.includes('localhost') || wsUrl.includes('127.0.0.1') || wsUrl.includes('172.30.') || wsUrl.includes('192.168.'))) {
+  if (wsUrl && !wsUrl.includes('onrender.com') && (wsUrl.includes('localhost') || wsUrl.includes('127.0.0.1') || wsUrl.includes('172.30.') || wsUrl.includes('192.168.'))) {
     // Local dev config from env, keep it
   } else {
     if (typeof window !== 'undefined' && window.location?.origin) {
