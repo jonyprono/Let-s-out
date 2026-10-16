@@ -1,10 +1,6 @@
 import { Outlet, useLocation } from 'react-router'
 import { BottomNav } from '@/components/shared/BottomNav'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
-import { PendingEvaluationModal } from '@/features/events/components/PendingEvaluationModal'
-import { eventsApi } from '@/features/events/api'
-import { useEffect, useState } from 'react'
-
 
 export function AppLayout() {
   const location = useLocation()
@@ -23,23 +19,6 @@ export function AppLayout() {
     location.pathname.endsWith('/pay') ||
     location.pathname.startsWith('/pages/')
 
-  const [pendingEvent, setPendingEvent] = useState<any>(null)
-  
-  useEffect(() => {
-    const fetchPending = async () => {
-      try {
-        const res = await eventsApi.getPendingEvaluations()
-        if (res.data && res.data.data && res.data.data.length > 0) {
-          setPendingEvent(res.data.data[0])
-        }
-      } catch (e) {
-        console.error('Failed to fetch pending evaluations', e)
-      }
-    }
-    // Only check once on mount of AppLayout
-    fetchPending()
-  }, [])
-
   return (
     <div
       id="app-layout-wrapper"
@@ -52,14 +31,6 @@ export function AppLayout() {
           <Outlet />
         </main>
         {!hideBottomNav && <BottomNav />}
-        
-        {pendingEvent && (
-          <PendingEvaluationModal 
-            event={pendingEvent} 
-            onClose={() => setPendingEvent(null)}
-            onSubmit={() => setPendingEvent(null)}
-          />
-        )}
       </div>
     </div>
   )
