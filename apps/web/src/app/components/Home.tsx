@@ -67,43 +67,47 @@ function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string,
 
   return (
     <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 mb-4 cursor-pointer" onClick={() => onNavigate('page-view', post.page.id)}>
-      <div className="p-3.5">
-        <div className="flex items-center justify-between mb-2.5">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-500 text-xs overflow-hidden shrink-0">
-              {pageAvatarUrl
-                ? <img src={pageAvatarUrl} alt={post.page.name} className="w-full h-full object-cover" />
-                : post.page.name[0]?.toUpperCase()
-              }
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-[14px] text-gray-900 dark:text-white leading-tight truncate">{post.page.name}</p>
-              <p className="text-[10px] text-gray-400 mt-0.5">{new Date(post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
-            </div>
+      {/* Header */}
+      <div className="p-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-500 text-xs overflow-hidden shrink-0 border border-gray-100 dark:border-gray-800">
+            {pageAvatarUrl
+              ? <img src={pageAvatarUrl} alt={post.page.name} className="w-full h-full object-cover" />
+              : (
+                <div className="w-full h-full flex items-center justify-center bg-[#F3F4F6] dark:bg-[#262626]" style={{ backgroundImage: 'radial-gradient(#D1D5DB 1px, transparent 1px)', backgroundSize: '6px 6px' }}>
+                  <span className="text-gray-400 font-bold">{post.page.name[0]?.toUpperCase()}</span>
+                </div>
+              )
+            }
           </div>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setFollowing(!following);
-            }}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 shrink-0 ${
-              following
-                ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
-                : 'bg-[#FF7A00] text-white hover:bg-[#E06C00]'
-            }`}
-          >
-            {following ? 'Suivi' : 'Suivre'}
-          </button>
+          <p className="font-semibold text-sm text-gray-900 dark:text-white leading-tight truncate">{post.page.name}</p>
         </div>
 
-        {post.content && (
-          <p className="text-[13px] text-gray-800 dark:text-gray-200 mb-2 whitespace-pre-wrap leading-relaxed line-clamp-3">
-            {post.content}
-          </p>
-        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setFollowing(!following);
+          }}
+          className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 shrink-0 ${
+            following
+              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
+              : 'bg-[#FF7A00] text-white hover:bg-[#E06C00]'
+          }`}
+        >
+          {following ? 'Suivi' : 'Suivre'}
+        </button>
       </div>
 
+      {/* Content */}
+      {post.content && (
+        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
+          <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+            {post.content}
+          </p>
+        </div>
+      )}
+
+      {/* Media */}
       {post.mediaUrls?.length > 0 && (
         <div className="w-full bg-black/5 dark:bg-black overflow-hidden relative" style={{ maxHeight: '280px' }}>
           {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) ? (
@@ -114,31 +118,27 @@ function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string,
         </div>
       )}
 
-      {/* Footer Actions (Like, Comment, Share) */}
-      <div className="flex items-center justify-around py-2.5 border-t border-gray-100 dark:border-gray-800 text-gray-500">
+      {/* Footer 3 columns with vertical dividers */}
+      <div className="grid grid-cols-3 border-t border-gray-100 dark:border-gray-800 text-gray-500 py-3">
         <button
           onClick={(e) => {
             e.stopPropagation();
             setLiked(!liked);
           }}
-          className={`flex items-center gap-1.5 p-1 transition-colors ${liked ? 'text-red-500' : 'hover:text-gray-900 dark:hover:text-white'}`}
+          className="flex items-center justify-center p-1 transition-colors hover:text-gray-900 dark:hover:text-white"
         >
-          <Heart className={`w-4 h-4 ${liked ? 'fill-current' : ''}`} />
+          <Heart className={`w-4 h-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
         </button>
-
-        <div className="w-px h-4 bg-gray-200 dark:bg-gray-800" />
 
         <button
           onClick={(e) => {
             e.stopPropagation();
             onNavigate('page-view', post.page.id);
           }}
-          className="flex items-center gap-1.5 p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <MessageCircle className="w-4 h-4" />
         </button>
-
-        <div className="w-px h-4 bg-gray-200 dark:bg-gray-800" />
 
         <button
           onClick={(e) => {
@@ -147,7 +147,7 @@ function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string,
               navigator.share({ title: post.page.name, text: post.content || '' });
             }
           }}
-          className="flex items-center gap-1.5 p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
           <Share2 className="w-4 h-4" />
         </button>

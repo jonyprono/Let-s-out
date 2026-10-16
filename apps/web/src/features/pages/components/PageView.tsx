@@ -386,65 +386,66 @@ export function PageView() {
                         </div>
                       )}
 
-                      {/* Post Actions Footer */}
-                      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-800 text-gray-500">
-                        <div className="flex items-center gap-6">
+                      {/* Post Actions Footer matching Figma */}
+                      <div className="grid grid-cols-4 border-t border-gray-100 dark:border-gray-800 text-gray-500 py-3">
+                        <button
+                          onClick={() =>
+                            setLikedPosts((prev) => ({ ...prev, [post.id]: !prev[post.id] }))
+                          }
+                          className="flex items-center justify-center p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        >
+                          <Heart className={`w-4 h-4 ${likedPosts[post.id] ? 'fill-red-500 text-red-500' : ''}`} />
+                        </button>
+
+                        <button className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors">
+                          <MessageCircle className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            if (navigator.share) {
+                              navigator.share({ title: page.name, text: post.content || '' })
+                            } else {
+                              toast.success('Lien copié dans le presse-papier')
+                            }
+                          }}
+                          className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
+
+                        <div className="relative flex items-center justify-center border-l border-gray-100 dark:border-gray-800">
                           <button
                             onClick={() =>
-                              setLikedPosts((prev) => ({ ...prev, [post.id]: !prev[post.id] }))
+                              setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id)
                             }
-                            className={`flex items-center gap-1.5 transition-colors ${
-                              likedPosts[post.id] ? 'text-red-500' : 'hover:text-gray-900 dark:hover:text-white'
-                            }`}
+                            className="p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
                           >
-                            <Heart className={`w-4 h-4 ${likedPosts[post.id] ? 'fill-current' : ''}`} />
+                            <MoreVertical className="w-4 h-4" />
                           </button>
 
-                          <button className="flex items-center gap-1.5 hover:text-gray-900 dark:hover:text-white transition-colors">
-                            <MessageCircle className="w-4 h-4" />
-                            {post._count?.comments ? (
-                              <span className="text-xs">{post._count.comments}</span>
-                            ) : null}
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              if (navigator.share) {
-                                navigator.share({ title: page.name, text: post.content || '' })
-                              } else {
-                                toast.success('Lien copié dans le presse-papier')
-                              }
-                            }}
-                            className="hover:text-gray-900 dark:hover:text-white transition-colors"
-                          >
-                            <Share2 className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        {/* 3-dots Menu for owner */}
-                        {isOwner && (
-                          <div className="relative">
-                            <button
-                              onClick={() =>
-                                setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id)
-                              }
-                              className="p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-
-                            {activeMenuPostId === post.id && (
-                              <div className="absolute right-0 bottom-8 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg py-1 z-20 min-w-[120px]">
+                          {activeMenuPostId === post.id && (
+                            <div className="absolute right-2 bottom-8 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg py-1 z-20 min-w-[120px]">
+                              {isOwner && (
                                 <button
                                   onClick={() => handleDeletePost(post.id)}
                                   className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" /> Supprimer
                                 </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                              )}
+                              <button
+                                onClick={() => {
+                                  toast.success('Publication signalée')
+                                  setActiveMenuPostId(null)
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                              >
+                                Signaler
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
