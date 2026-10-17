@@ -15,7 +15,7 @@ const API_BASE = (() => {
     const isCap = () => {
       try { return !!(window as any).Capacitor?.isNativePlatform?.() } catch { return false }
     }
-    if (isCap() && process.env.NODE_ENV === 'production') {
+    if (isCap()) {
       return 'https://let-s-out-production.up.railway.app'
     }
     

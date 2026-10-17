@@ -9,19 +9,20 @@ import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 
+// 12 Catégories existantes du projet (identiques à CreateEvent)
 const PAGE_CATEGORIES = [
-  { label: 'Art et culture',            value: 'CULTURE' },
-  { label: 'Comédie',                   value: 'GAMING' },
-  { label: 'Sport',                     value: 'SPORT' },
-  { label: 'Santé et bien-être',        value: 'WELLNESS' },
-  { label: 'Cuisine et gastronomie',    value: 'FOOD' },
+  { label: 'Art et culture',            value: 'CULTURE'   },
+  { label: 'Comédie',                   value: 'GAMING'    },
+  { label: 'Sport',                     value: 'SPORT'     },
+  { label: 'Santé et bien-être',        value: 'WELLNESS'  },
+  { label: 'Cuisine et gastronomie',    value: 'FOOD'      },
   { label: 'Boissons',                  value: 'LIFESTYLE' },
-  { label: 'Réseautage professionnel',  value: 'SOCIAL' },
+  { label: 'Réseautage professionnel',  value: 'SOCIAL'    },
   { label: 'Fêtes',                     value: 'NIGHTLIFE' },
-  { label: 'Religion',                  value: 'OTHER' },
-  { label: 'Shopping',                  value: 'TECH' },
-  { label: 'Musique et son',            value: 'MUSIC' },
-  { label: 'Télévision et cinéma',      value: 'ART' },
+  { label: 'Religion',                  value: 'OTHER'     },
+  { label: 'Shopping',                  value: 'TECH'      },
+  { label: 'Musique et son',            value: 'MUSIC'     },
+  { label: 'Télévision et cinéma',      value: 'ART'       },
 ]
 
 export function ManagePage() {
@@ -92,8 +93,14 @@ export function ManagePage() {
       await pagesApi.update(id, type === 'avatar' ? { avatarUrl: url } : { coverUrl: url })
       setPage(p => p ? { ...p, [type === 'avatar' ? 'avatarUrl' : 'coverUrl']: url } : null)
       toast.success(`${type === 'avatar' ? 'Photo de profil' : 'Couverture'} mise à jour !`)
-    } catch {
-      toast.error('Erreur lors de l\'upload')
+    } catch (err: any) {
+      const apiMsg = err?.response?.data?.error || err?.response?.data?.message
+      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || "Erreur lors de l'upload")
+      toast.error(
+        String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')
+          ? 'Erreur de connexion au serveur. Vérifiez votre connexion.'
+          : errorStr
+      )
     } finally {
       setUploading(false)
     }
@@ -110,8 +117,14 @@ export function ManagePage() {
       })
       setPage(updated)
       toast.success('Page mise à jour !')
-    } catch {
-      toast.error('Erreur lors de la sauvegarde')
+    } catch (err: any) {
+      const apiMsg = err?.response?.data?.error || err?.response?.data?.message
+      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || 'Erreur lors de la sauvegarde')
+      toast.error(
+        String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')
+          ? 'Erreur de connexion au serveur. Vérifiez votre connexion.'
+          : errorStr
+      )
     } finally {
       setSaving(false)
     }
@@ -124,8 +137,14 @@ export function ManagePage() {
       await pagesApi.deletePage(id)
       toast.success('Page supprimée')
       navigate('/settings', { replace: true })
-    } catch {
-      toast.error('Erreur lors de la suppression')
+    } catch (err: any) {
+      const apiMsg = err?.response?.data?.error || err?.response?.data?.message
+      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || 'Erreur lors de la suppression')
+      toast.error(
+        String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')
+          ? 'Erreur de connexion au serveur. Vérifiez votre connexion.'
+          : errorStr
+      )
     } finally {
       setDeleting(false)
     }

@@ -76,7 +76,19 @@ export default async function pagesRoutes(app: FastifyInstance) {
     const page = await app.prisma.page.findUnique({
       where: { id },
       include: {
-        _count: { select: { followers: true, posts: true } }
+        _count: { select: { followers: true, posts: true } },
+        creator: {
+          select: {
+            id: true,
+            profile: {
+              select: {
+                displayName: true,
+                avatarUrl: true,
+                username: true,
+              }
+            }
+          }
+        }
       }
     })
     if (!page) return reply.code(404).send({ error: 'Page not found' })
@@ -105,6 +117,11 @@ export default async function pagesRoutes(app: FastifyInstance) {
 
     const page = await app.prisma.page.findUnique({ where: { id } })
     if (!page) return reply.code(404).send({ error: 'Page not found' })
+
+    // A creator cannot follow their own page
+    if (page.creatorId === sub) {
+      return reply.code(400).send({ error: 'Vous ne pouvez pas suivre votre propre page' })
+    }
 
     const existing = await app.prisma.pageFollower.findUnique({
       where: { pageId_userId: { pageId: id, userId: sub } }

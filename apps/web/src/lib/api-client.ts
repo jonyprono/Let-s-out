@@ -35,11 +35,11 @@ const resolveApiUrl = (): string => {
     if (origin.includes(':3000')) {
       return origin.replace(':3000', ':3001') + '/api/v1'
     }
-    // If running in Capacitor native platform in production build, point to Railway
+    // If running in Capacitor native platform, point to Railway backend
     const isCap = () => {
       try { return !!(window as any).Capacitor?.isNativePlatform?.() } catch { return false }
     }
-    if (isCap() && process.env.NODE_ENV === 'production') {
+    if (isCap()) {
       return 'https://let-s-out-production.up.railway.app/api/v1'
     }
     return `${origin}/api/v1`
@@ -110,16 +110,21 @@ const isAuthEndpoint = (url?: string) => authEndpoints.some(e => url?.includes(e
 apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
-    const original = error.config
-
     // ── Guard: raw browser event (e.g. ProgressEvent from XHR onerror on Capacitor) ──
-    // These are NOT proper Axios/Error objects — they have no .response, no .config,
-    // and stringify to "[object ProgressEvent]" which leaks to the UI if unhandled.
-    if (error && !(error instanceof Error) && !error?.response && !error?.config) {
-      const wrapped = new Error('Network Error')
+    const isProgressEvent =
+      !error ||
+      !(error instanceof Error) ||
+      String(error).includes('ProgressEvent') ||
+      String(error?.message).includes('ProgressEvent')
+
+    if (isProgressEvent && !error?.response) {
+      const wrapped = new Error('Erreur de connexion au serveur. Vérifiez votre connexion.')
       ;(wrapped as any).code = 'ERR_NETWORK'
+      ;(wrapped as any).isNetworkError = true
       return Promise.reject(wrapped)
     }
+
+    const original = error.config
 
     // ── 401: try to refresh token ──────────────────────────────────────────
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint(original.url)) {

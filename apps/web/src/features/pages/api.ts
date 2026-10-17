@@ -11,6 +11,14 @@ export interface Page {
   createdAt: string
   _count?: { followers: number; posts: number }
   isFollowing?: boolean
+  creator?: {
+    id: string
+    profile?: {
+      displayName?: string
+      avatarUrl?: string
+      username?: string
+    } | null
+  }
 }
 
 export interface PagePostComment {

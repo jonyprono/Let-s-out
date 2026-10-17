@@ -21,6 +21,7 @@ import {
   Loader2,
   Trash2,
   Image as ImageIcon,
+  Settings,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
@@ -55,8 +56,13 @@ export function PageView() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  const isOwner = me?.id && page?.creatorId === me.id
+  const isOwner = Boolean(me?.id && page?.creatorId && me.id === page.creatorId)
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
+  }, [id])
 
   useEffect(() => {
     if (!id) return
@@ -69,14 +75,20 @@ export function PageView() {
       })
       .catch((error) => {
         console.error('Erreur chargement page:', error)
-        toast.error('Erreur lors du chargement de la page')
+        const apiMsg = error?.response?.data?.error || error?.response?.data?.message
+        const errorStr = typeof apiMsg === 'string' ? apiMsg : (error?.message || 'Erreur lors du chargement de la page')
+        toast.error(
+          String(errorStr).includes('ProgressEvent') || String(error).includes('ProgressEvent')
+            ? 'Erreur de connexion au serveur'
+            : errorStr
+        )
         navigate('/pages')
       })
       .finally(() => setLoading(false))
   }, [id, navigate])
 
   const handleFollowToggle = async () => {
-    if (!id || !page) return
+    if (!id || !page || isOwner) return
     try {
       const { followed } = await pagesApi.follow(id)
       setIsFollowing(followed)
@@ -92,8 +104,14 @@ export function PageView() {
           : null
       )
       toast.success(followed ? 'Vous suivez maintenant cette page' : 'Abonnement retiré')
-    } catch {
-      toast.error("Erreur lors de l'abonnement")
+    } catch (err: any) {
+      const apiMsg = err?.response?.data?.error || err?.response?.data?.message
+      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || "Erreur lors de l'abonnement")
+      toast.error(
+        String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')
+          ? 'Erreur de connexion au serveur'
+          : errorStr
+      )
     }
   }
 
@@ -175,9 +193,9 @@ export function PageView() {
   if (!page) return null
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white pb-20">
+    <div ref={scrollRef} className="w-full h-full flex flex-col bg-white dark:bg-black text-gray-900 dark:text-white overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       {/* ── Cover Area ── */}
-      <div className="relative w-full h-44 bg-gray-100 dark:bg-gray-900 overflow-hidden">
+      <div className="relative w-full h-48 sm:h-56 min-h-[192px] sm:min-h-[224px] bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0">
         {page.coverUrl ? (
           <SafeImage src={page.coverUrl} alt="Cover" className="w-full h-full object-cover" />
         ) : (
@@ -190,115 +208,128 @@ export function PageView() {
           />
         )}
 
-        {/* Back Button */}
+        {/* Floating Back Button (aligned with safe area and stay inside mobile shell) */}
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-4 left-4 w-9 h-9 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all z-10"
+          className="absolute left-4 z-20 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all shadow-lg"
+          style={{ top: 'max(calc(env(safe-area-inset-top, 0px) + 12px), 16px)' }}
+          aria-label="Retour"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
       </div>
 
       {/* ── Profile Info Header ── */}
-      <div className="flex flex-col items-center px-4 -mt-12 relative z-10">
+      <div className="flex flex-col items-center px-4 -mt-12 relative z-10 shrink-0">
         {/* Avatar */}
-        <div className="w-24 h-24 rounded-full border-4 border-white dark:border-black bg-gray-200 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-gray-500 shadow-sm">
+        <div className="w-24 h-24 rounded-full border-4 border-white dark:border-black bg-gray-200 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-gray-500 shadow-md shrink-0">
           {page.avatarUrl ? (
             <SafeImage src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800 text-gray-500 text-2xl font-bold">
-              {page.name.charAt(0).toUpperCase()}
+            <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-2xl font-bold">
+              {page.name ? page.name.charAt(0).toUpperCase() : 'P'}
             </div>
           )}
         </div>
 
         {/* Name & Stats */}
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2.5 text-center">{page.name}</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2.5 text-center px-2 break-words max-w-full">
+          {page.name}
+        </h1>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
           0 suivis · {page._count?.followers ?? 0} abonnés
         </p>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2.5 w-full max-w-sm mt-4">
-          <button
-            onClick={handleFollowToggle}
-            className={`flex-1 h-9 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
-              isFollowing
-                ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700'
-                : 'bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-sm shadow-[#FF7A00]/20'
-            }`}
-          >
-            {isFollowing ? (
-              <>
-                <UserCheck className="w-3.5 h-3.5" />
-                <span>Suivi</span>
-              </>
-            ) : (
-              <>
-                <UserPlus className="w-3.5 h-3.5" />
-                <span>Suivre</span>
-              </>
-            )}
-          </button>
+        <div className="flex items-center gap-2 w-full max-w-sm mt-4">
+          {isOwner ? (
+            <>
+              <button
+                onClick={() => navigate(`/pages/${id}/manage`)}
+                className="flex-1 h-9 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-sm shadow-[#FF7A00]/20 active:scale-95 transition-all"
+              >
+                <Settings className="w-3.5 h-3.5 shrink-0" />
+                <span>Gérer la page</span>
+              </button>
 
-          <button
-            onClick={() => {
-              if (page.creatorId) navigate(`/chat/user/${page.creatorId}`)
-            }}
-            className="flex-1 h-9 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-200 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span>Envoyer un message</span>
-          </button>
+              <button
+                onClick={() => setShowCreatePostModal(true)}
+                className="flex-1 h-9 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-200 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <Plus className="w-3.5 h-3.5 shrink-0 text-[#FF7A00]" />
+                <span>Publier</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={handleFollowToggle}
+                className={`flex-1 h-9 rounded-full font-semibold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
+                  isFollowing
+                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700'
+                    : 'bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-sm shadow-[#FF7A00]/20'
+                }`}
+              >
+                {isFollowing ? (
+                  <>
+                    <UserCheck className="w-3.5 h-3.5 shrink-0" />
+                    <span>Suivi</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                    <span>Suivre</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (page.creatorId) navigate(`/chat/user/${page.creatorId}`)
+                }}
+                className="flex-1 h-9 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-gray-200 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all whitespace-nowrap hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <MessageCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>Envoyer un message</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* ── Tabs Navigation ── */}
-      <div className="flex items-center justify-center gap-2 px-4 mt-6 border-b border-gray-100 dark:border-gray-800 pb-3 overflow-x-auto hide-scrollbar">
-        <button
-          onClick={() => setActiveTab('publications')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
-            activeTab === 'publications'
-              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
-              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
-          }`}
-        >
-          Publications
-        </button>
-        <button
-          onClick={() => setActiveTab('events')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
-            activeTab === 'events'
-              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
-              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
-          }`}
-        >
-          Evénements
-        </button>
-        <button
-          onClick={() => setActiveTab('about')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
-            activeTab === 'about'
-              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
-              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
-          }`}
-        >
-          A propos
-        </button>
-        <button
-          onClick={() => setActiveTab('photos')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${
-            activeTab === 'photos'
-              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
-              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
-          }`}
-        >
-          Photos
-        </button>
+      {/* ── Tabs Navigation (Horizontally scrollable with pill pattern from Profile) ── */}
+      <div className="w-full border-b border-gray-100 dark:border-gray-800 shrink-0 bg-white dark:bg-black sticky top-0 z-20">
+        <div className="w-full overflow-x-auto hide-scrollbar px-4 py-2.5">
+          <div className="flex items-center gap-2 w-max">
+            {(
+              [
+                { key: 'publications', label: 'Publications' },
+                { key: 'events',       label: 'Événements'   },
+                { key: 'about',        label: 'À propos'     },
+                { key: 'photos',       label: 'Photos'       },
+              ] as const
+            ).map(({ key, label }) => {
+              const isActive = activeTab === key
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all active:scale-95 ${
+                    isActive
+                      ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20 shadow-sm'
+                      : 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       {/* ── TAB CONTENT ── */}
-      <div className="px-4 py-5 max-w-lg mx-auto w-full">
+      <div className="px-4 py-5 max-w-lg mx-auto w-full pb-24">
         {/* ── 1. PUBLICATIONS TAB ── */}
         {activeTab === 'publications' && (
           <div className="flex flex-col gap-6">
@@ -351,14 +382,16 @@ export function PageView() {
                   </div>
                   <h4 className="text-sm font-bold text-gray-900 dark:text-white">Aucune publication</h4>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5">
-                    Créez votre première publication
+                    {isOwner ? 'Créez votre première publication' : "Cette page n'a pas encore partagé de publication."}
                   </p>
-                  <button
-                    onClick={() => setShowCreatePostModal(true)}
-                    className="w-full max-w-xs h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white font-semibold text-xs shadow-md shadow-[#FF7A00]/20 transition-all"
-                  >
-                    Créer une publication
-                  </button>
+                  {isOwner && (
+                    <button
+                      onClick={() => setShowCreatePostModal(true)}
+                      className="w-full max-w-xs h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white font-semibold text-xs shadow-md shadow-[#FF7A00]/20 transition-all"
+                    >
+                      Créer une publication
+                    </button>
+                  )}
                 </div>
               ) : (
                 /* Posts List matching Screenshot 4 */
@@ -472,14 +505,16 @@ export function PageView() {
             </div>
             <h4 className="text-sm font-bold text-gray-900 dark:text-white">Aucun événement</h4>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5">
-              Créez votre premier événement
+              {isOwner ? 'Créez votre premier événement' : 'Les événements organisés par cette page apparaîtront ici.'}
             </p>
-            <button
-              onClick={() => navigate('/events/create')}
-              className="w-full max-w-xs h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white font-semibold text-xs shadow-md shadow-[#FF7A00]/20 transition-all"
-            >
-              Créer un événement
-            </button>
+            {isOwner && (
+              <button
+                onClick={() => navigate('/events/create')}
+                className="w-full max-w-xs h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white font-semibold text-xs shadow-md shadow-[#FF7A00]/20 transition-all"
+              >
+                Créer un événement
+              </button>
+            )}
           </div>
         )}
 
@@ -517,30 +552,42 @@ export function PageView() {
               <h3 className="text-xs font-bold text-gray-900 dark:text-white">Créateur</h3>
               <div className="p-3.5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-[#FAFAFA] dark:bg-[#141414] flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
-                    {me?.profile?.displayName?.charAt(0) || 'U'}
+                  <div className="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300 overflow-hidden shrink-0">
+                    {page.creator?.profile?.avatarUrl ? (
+                      <SafeImage src={page.creator.profile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : isOwner && me?.profile?.avatarUrl ? (
+                      <SafeImage src={me.profile.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      (page.creator?.profile?.displayName || me?.profile?.displayName || 'C').charAt(0).toUpperCase()
+                    )}
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
                       <p className="text-xs font-bold text-gray-900 dark:text-white">
-                        {me?.profile?.displayName || 'Créateur'}
+                        {isOwner ? (me?.profile?.displayName || 'Vous') : (page.creator?.profile?.displayName || 'Créateur')}
                       </p>
                       <div className="w-3.5 h-3.5 rounded-full bg-blue-500 flex items-center justify-center text-white text-[9px]">
                         ✓
                       </div>
                     </div>
-                    <p className="text-[11px] text-gray-400">512 followers · 12 événements · 4.8★</p>
+                    <p className="text-[11px] text-gray-400">
+                      {isOwner ? 'Propriétaire de cette page' : 'Créateur de cette page'}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
-                  <button className="px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300">
-                    Contacter
-                  </button>
-                  <button className="px-3 py-1 rounded-full bg-[#FF7A00] text-white text-xs font-medium">
-                    Suivre
-                  </button>
-                </div>
+                {!isOwner && (
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        if (page.creatorId) navigate(`/chat/user/${page.creatorId}`)
+                      }}
+                      className="px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-95 transition-all"
+                    >
+                      Contacter
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -583,7 +630,9 @@ export function PageView() {
             </div>
             <h4 className="text-sm font-bold text-gray-900 dark:text-white">Aucune photo</h4>
             <p className="text-xs text-gray-400 mt-1">
-              Les photos publiées sur votre page apparaîtront ici
+              {isOwner
+                ? 'Les photos publiées sur votre page apparaîtront ici'
+                : 'Les photos publiées par cette page apparaîtront ici'}
             </p>
           </div>
         )}

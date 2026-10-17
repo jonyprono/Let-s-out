@@ -82,56 +82,58 @@ export function PagesHub() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-white dark:bg-black text-gray-900 dark:text-white">
-      {/* TopBar */}
-      <TopBar title="Pages" onBack={() => navigate(-1)} />
+    <div className="w-full h-full flex flex-col bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden">
+      {/* TopBar avec titre et bouton Créer à droite - Safe Area Aware */}
+      <TopBar
+        title="Pages"
+        onBack={() => navigate(-1)}
+        containerClassName="pt-safe-4 pt-4 shrink-0 border-b border-gray-100 dark:border-gray-800"
+        rightAction={
+          <button
+            onClick={() => navigate('/pages/create')}
+            className="bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white text-xs font-semibold px-4 py-1.5 rounded-full transition-all shrink-0 shadow-sm shadow-[#FF7A00]/20"
+          >
+            Créer
+          </button>
+        }
+      />
 
-      {/* Tabs Header + Créer Button */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar">
-          <button
-            onClick={() => setActiveTab('decouvrir')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              activeTab === 'decouvrir'
-                ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20 font-semibold'
-                : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
-            }`}
-          >
-            Découvrir
-          </button>
-          <button
-            onClick={() => setActiveTab('invitations')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              activeTab === 'invitations'
-                ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20 font-semibold'
-                : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
-            }`}
-          >
-            Invitations
-          </button>
-          <button
-            onClick={() => setActiveTab('suivies')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              activeTab === 'suivies'
-                ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20 font-semibold'
-                : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
-            }`}
-          >
-            Suivies
-          </button>
-        </div>
-
-        {/* Orange Créer Button */}
+      {/* Tabs Header */}
+      <div className="flex items-center gap-1.5 px-4 py-2 border-b border-gray-100 dark:border-gray-800 overflow-x-auto hide-scrollbar shrink-0 bg-white dark:bg-black">
         <button
-          onClick={() => navigate('/pages/create')}
-          className="bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white text-xs font-semibold px-4 py-1.5 rounded-full transition-all shrink-0 ml-2 shadow-sm shadow-[#FF7A00]/20"
+          onClick={() => setActiveTab('decouvrir')}
+          className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            activeTab === 'decouvrir'
+              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20 font-semibold'
+              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+          }`}
         >
-          Créer
+          Découvrir
+        </button>
+        <button
+          onClick={() => setActiveTab('invitations')}
+          className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            activeTab === 'invitations'
+              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20 font-semibold'
+              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+          }`}
+        >
+          Invitations
+        </button>
+        <button
+          onClick={() => setActiveTab('suivies')}
+          className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+            activeTab === 'suivies'
+              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20 font-semibold'
+              : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
+          }`}
+        >
+          Suivies
         </button>
       </div>
 
       {/* Tab Content */}
-      <div className="flex-1 px-4 py-4 overflow-y-auto max-w-lg mx-auto w-full">
+      <div className="flex-1 px-4 py-4 overflow-y-auto max-w-lg mx-auto w-full pb-24" style={{ scrollbarWidth: 'none' }}>
         {/* ── 1. DÉCOUVRIR ── */}
         {activeTab === 'decouvrir' && (
           <div className="flex flex-col gap-6">
