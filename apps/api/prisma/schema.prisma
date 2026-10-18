@@ -242,6 +242,7 @@ model Event {
   reminder24hSent  Boolean       @default(false)
   reminder2hSent   Boolean       @default(false)
   genderRestriction GenderRestriction @default(ANY)
+  directPayments   Payment[]     @relation("DirectPayments") // Dons sans Booking
 
   @@index([creatorId])
   @@index([status])
@@ -440,10 +441,18 @@ model Payment {
   metadata        Json?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  // Contribution anonyme et/ou directe (sans Booking)
+  eventId         String?       // Toujours renseigné (backfillé via Booking pour les existants)
+  isAnonymous     Boolean       @default(false) // Masque identité dans les listes publiques
+
   booking         Booking?      @relation(fields: [bookingId], references: [id])
   user            User          @relation(fields: [userId], references: [id])
+  event           Event?        @relation("DirectPayments", fields: [eventId], references: [id])
+  payoutDirectItems PayoutDirectItem[] // Figement dans une demande de déblocage
 
   @@index([userId])
+  @@index([eventId])             // Requêtes par événement uniformes
   @@map("payments")
 }
 
@@ -462,6 +471,22 @@ model PayoutBookingItem {
   @@index([payoutRequestId])
   @@index([bookingId])
   @@map("payout_booking_items")
+}
+
+/// Table sœur de PayoutBookingItem — fige les dons directs (sans Booking) dans une demande de déblocage
+model PayoutDirectItem {
+  id              String             @id @default(cuid())
+  payoutRequestId String
+  paymentId       String             // FK vers Payment (don direct, bookingId = null)
+  amountDeducted  Float
+  createdAt       DateTime           @default(now())
+
+  payoutRequest   EventPayoutRequest @relation(fields: [payoutRequestId], references: [id], onDelete: Cascade)
+  payment         Payment            @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([payoutRequestId])
+  @@index([paymentId])
+  @@map("payout_direct_items")
 }
 
 model Friendship {
@@ -760,6 +785,7 @@ model EventPayoutRequest {
 
   event               Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   payoutItems         PayoutBookingItem[]
+  directItems         PayoutDirectItem[]    // Dons directs figés dans cette demande
   approvalsList       PayoutApproval[]
 
   idempotencyKey      String?                // Clé d'idempotence pour déduplication

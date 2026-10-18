@@ -17,6 +17,7 @@ export type AuditAction =
   | 'DELEGATION_REVOKED'
   | 'REFUND_REQUESTED'
   | 'SETTING_CHANGED'
+  | 'ANONYMOUS_IDENTITY_VIEWED'
 
 export interface AuditEntry {
   actorId?: string

@@ -6,7 +6,21 @@ export default async function paymentsRoutes(app: FastifyInstance) {
   // Initier une transaction FedaPay
   app.post('/fedapay/initiate', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { eventId, amount: customAmount, poolValidationStatus, delegatedToId } = req.body as { eventId: string; amount?: number; poolValidationStatus?: string; delegatedToId?: string }
+    const {
+      eventId,
+      amount: customAmount,
+      poolValidationStatus,
+      delegatedToId,
+      isAnonymous = false,   // Contribution anonyme (cache l'identité dans les listes publiques)
+      isNonParticipantDonation = false, // Don sans inscription à l'événement
+    } = req.body as {
+      eventId: string;
+      amount?: number;
+      poolValidationStatus?: string;
+      delegatedToId?: string;
+      isAnonymous?: boolean;
+      isNonParticipantDonation?: boolean;
+    }
 
     const event = await app.prisma.event.findUnique({
       where: { id: eventId },
@@ -90,7 +104,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
           email: user.email || `${user.id}@letsout.app`,
           ...(user.phone ? { phone_number: { number: user.phone.replace(/^\+229/, ''), country: 'BJ' } } : {}),
         },
-        metadata: JSON.stringify({ eventId, userId: sub, poolValidationStatus, delegatedToId }),
+        metadata: JSON.stringify({ eventId, userId: sub, poolValidationStatus, delegatedToId, isAnonymous, isNonParticipantDonation }),
       }),
     })
     const txData = (await txRes.json()) as any
@@ -162,21 +176,21 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     const { transaction } = body
     if (transaction?.status !== 'approved') return reply.send({ received: true })
 
-    let meta: { eventId?: string; userId?: string; poolValidationStatus?: string; delegatedToId?: string } = {}
+    let meta: { eventId?: string; userId?: string; poolValidationStatus?: string; delegatedToId?: string; isAnonymous?: boolean; isNonParticipantDonation?: boolean } = {}
     try {
       // FedaPay sandbox may nest metadata differently
       const rawMeta = transaction.metadata || transaction.custom_metadata || {}
       meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
     } catch {}
 
-    const { eventId, userId, poolValidationStatus, delegatedToId } = meta
+    const { eventId, userId, poolValidationStatus, delegatedToId, isAnonymous = false, isNonParticipantDonation = false } = meta
     if (!eventId || !userId) {
       app.log.warn({ meta }, '[FedaPay webhook] Missing eventId or userId in metadata')
       return reply.send({ received: true })
     }
 
     try {
-      await handleConfirmedBooking(app, { eventId, userId, amount: transaction.amount, poolValidationStatus, delegatedToId })
+      await handleConfirmedBooking(app, { eventId, userId, amount: transaction.amount, poolValidationStatus, delegatedToId, isAnonymous, isNonParticipantDonation })
     } catch (e) { app.log.error(e) }
 
     return reply.send({ received: true })
@@ -238,7 +252,21 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     // Block in production UNLESS using sandbox keys (testing mode)
     if (process.env.NODE_ENV === 'production' && !isSandboxKey && process.env.MOCK_PAYMENTS !== 'true') return reply.code(404).send()
     const { sub } = req.user as { sub: string }
-    const { eventId, amount: customAmount, poolValidationStatus, delegatedToId } = req.body as { eventId: string; amount?: number; poolValidationStatus?: string; delegatedToId?: string }
+    const {
+      eventId,
+      amount: customAmount,
+      poolValidationStatus,
+      delegatedToId,
+      isAnonymous = false,
+      isNonParticipantDonation = false,
+    } = req.body as {
+      eventId: string;
+      amount?: number;
+      poolValidationStatus?: string;
+      delegatedToId?: string;
+      isAnonymous?: boolean;
+      isNonParticipantDonation?: boolean;
+    }
 
     const event = await app.prisma.event.findUnique({
       where: { id: eventId },
@@ -266,7 +294,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     // We now await this since the frontend has a 30s timeout for this fallback route.
     // This ensures DB is fully updated before replying 200, so subsequent queries (my-booking, chat) succeed.
     try {
-      await handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount, poolValidationStatus, delegatedToId })
+      await handleConfirmedBooking(app, { eventId, userId: sub, amount: finalAmount, poolValidationStatus, delegatedToId, isAnonymous, isNonParticipantDonation })
       reply.send({ message: 'Booking confirmed (sandbox/dev)', eventId })
     } catch (e) {
       app.log.error({ err: e }, '[dev/confirm-booking] Error in handleConfirmedBooking')
@@ -306,10 +334,27 @@ export default async function paymentsRoutes(app: FastifyInstance) {
   })
 }
 
-// ── Shared helper: finalize a confirmed booking ──────────────────────────────
+// ── Shared helper: finalize a confirmed booking or direct donation ────────────
 async function handleConfirmedBooking(
   app: FastifyInstance,
-  { eventId, userId, amount, poolValidationStatus, delegatedToId }: { eventId: string; userId: string; amount: number; poolValidationStatus?: string; delegatedToId?: string },
+  {
+    eventId,
+    userId,
+    amount,
+    poolValidationStatus,
+    delegatedToId,
+    isAnonymous = false,
+    isNonParticipantDonation = false,
+  }: {
+    eventId: string;
+    userId: string;
+    amount: number;
+    poolValidationStatus?: string;
+    delegatedToId?: string;
+    isAnonymous?: boolean;
+    /** true = don sans inscription, pas de Booking créé */
+    isNonParticipantDonation?: boolean;
+  },
 ) {
   const existingBooking = await app.prisma.booking.findUnique({
     where: { userId_eventId: { userId, eventId } },
@@ -323,19 +368,87 @@ async function handleConfirmedBooking(
   })
   const isPoolContribution = !!(eventForPool?.poolTarget && eventForPool.poolTarget > 0)
 
+  // ── CAS 1 : Don direct sans Booking (non-participant) ──────────────────────
+  if (isNonParticipantDonation) {
+    // Pas de Booking créé. Pas de droit de vote/délégation.
+    // On enregistre uniquement le Payment avec eventId direct.
+    const directPayment = await app.prisma.payment.create({
+      data: {
+        userId,
+        eventId,
+        bookingId: null,
+        amount,
+        currency: 'XOF',
+        status: 'SUCCEEDED',
+        isAnonymous,
+        metadata: { source: 'direct_donation' },
+      }
+    })
+
+    // Incrémenter poolCollected sur l'événement
+    if (isPoolContribution) {
+      await app.prisma.event.update({
+        where: { id: eventId },
+        data: { poolCollected: { increment: amount } },
+      })
+    }
+
+    // Notification au donateur
+    const event = await app.prisma.event.findUnique({ where: { id: eventId }, select: { title: true, creatorId: true } })
+    await createAndSendNotification(app, {
+      userId,
+      type: 'PAYMENT_SUCCESS',
+      title: '💳 Don enregistré !',
+      body: `Votre don de ${amount.toLocaleString()} F CFA pour "${event?.title || "l\'\'événement"}" a bien été reçu. Merci !`,
+      data: { eventId, paymentId: directPayment.id, amount: String(amount), screen: 'event-details' },
+    })
+
+    // Notification à l'organisateur (toujours anonymisée si isAnonymous)
+    if (event?.creatorId && event.creatorId !== userId) {
+      await createAndSendNotification(app, {
+        userId: event.creatorId,
+        type: 'PAYMENT_SUCCESS',
+        title: '🎁 Don reçu !',
+        body: isAnonymous
+          ? `Un donateur anonyme a contribué ${amount.toLocaleString()} F CFA à la cagnotte de "${event.title}".`
+          : (() => { /* on va chercher le nom après */ return `Un participant a contribué ${amount.toLocaleString()} F CFA.` })(),
+        data: { eventId, amount: String(amount), screen: 'event-details' },
+      })
+      // Si non anonyme : on envoie une notif plus détaillée
+      if (!isAnonymous) {
+        const payer = await app.prisma.profile.findUnique({ where: { userId }, select: { displayName: true } })
+        const payerName = payer?.displayName || 'Quelqu\'un'
+        await createAndSendNotification(app, {
+          userId: event.creatorId,
+          type: 'PAYMENT_SUCCESS',
+          title: '🎁 Contribution reçue !',
+          body: `${payerName} a contribué ${amount.toLocaleString()} F CFA à la cagnotte de "${event.title}".`,
+          data: { eventId, contributorId: userId, amount: String(amount), screen: 'event-details' },
+        })
+      }
+    }
+
+    return { id: directPayment.id, isDirectDonation: true }
+  }
+
+  // ── CAS 2 : Contribution avec Booking (comportement actuel) ────────────────
+
   const finalPoolStatus = poolValidationStatus ? poolValidationStatus : (existingBooking?.poolValidationStatus || 'PENDING')
   const finalDelegatedToId = delegatedToId ? delegatedToId : existingBooking?.delegatedToId
 
-  const [booking] = await app.prisma.$transaction([
+  const transactionResults = await app.prisma.$transaction([
     app.prisma.booking.upsert({
       where: { userId_eventId: { userId, eventId } },
       create: { 
-        userId, eventId, status: 'CONFIRMED', totalPaid: amount,
+        userId, eventId, status: 'CONFIRMED', totalPaid: isAnonymous ? 0 : amount,
         poolValidationStatus: finalPoolStatus as any,
         delegatedToId: finalDelegatedToId || null
       },
       update: { 
-        status: 'CONFIRMED', totalPaid: { increment: amount },
+        status: 'CONFIRMED',
+        // Si anonyme : totalPaid du Booking n'est pas incrémenté (montant caché publiquement)
+        // Le paiement réel est tracé dans Payment avec isAnonymous=true
+        totalPaid: isAnonymous ? undefined : { increment: amount },
         poolValidationStatus: finalPoolStatus as any,
         delegatedToId: finalDelegatedToId || null
       },
@@ -349,6 +462,22 @@ async function handleConfirmedBooking(
     // L'argent reste stocké dans l'événement (poolCollected).
     // L'organisateur devra faire une demande de déblocage pour recevoir les fonds sur son Wallet.
   ])
+  // Le premier élément est toujours le booking (upsert)
+  const booking = transactionResults[0] as Awaited<ReturnType<typeof app.prisma.booking.upsert>>
+
+  // Enregistrement du Payment avec eventId et isAnonymous (hors transaction pour éviter la self-référence)
+  await app.prisma.payment.create({
+    data: {
+      userId,
+      eventId,
+      bookingId: booking.id,
+      amount,
+      currency: 'XOF',
+      status: 'SUCCEEDED',
+      isAnonymous,
+    }
+  })
+
 
   // ── Badge logic after confirmed pool contribution ─────────────────────────
   if (isPoolContribution) {
@@ -432,9 +561,10 @@ async function handleConfirmedBooking(
     // Send system message to the event chat
     const payer = await app.prisma.profile.findUnique({ where: { userId }, select: { displayName: true } })
     const payerName = payer?.displayName || 'Quelqu\'un'
+    // Si contribution anonyme : on masque le nom dans le message système du chat
     const systemMsg = isNewParticipant
-      ? `🎉 ${payerName} a rejoint l'événement !`
-      : `💰 ${payerName} a contribué ${amount.toLocaleString()} F CFA à la cagnotte !`
+      ? (isAnonymous ? '🎉 Un nouveau participant a rejoint l\'événement !' : `🎉 ${payerName} a rejoint l'événement !`)
+      : (isAnonymous ? `💰 Une contribution anonyme de ${amount.toLocaleString()} F CFA a été ajoutée à la cagnotte !` : `💰 ${payerName} a contribué ${amount.toLocaleString()} F CFA à la cagnotte !`)
     await app.prisma.message.create({
       data: {
         conversationId: conv.id,
@@ -469,16 +599,21 @@ async function handleConfirmedBooking(
         userId: event.creatorId,
         type: 'JOIN_CONFIRMED',
         title: '🎉 Nouveau participant !',
-        body: `${payerName} a payé et rejoint votre événement "${event.title}".`,
-        data: { eventId, joinerId: userId, amount: String(amount), screen: 'event-details' },
+        // Ne jamais révéler le nom si contribution anonyme
+        body: isAnonymous
+          ? `Un nouveau participant a payé et rejoint votre événement "${event.title}".`
+          : `${payerName} a payé et rejoint votre événement "${event.title}".`,
+        data: { eventId, amount: String(amount), screen: 'event-details' },
       })
     } else {
       await createAndSendNotification(app, {
         userId: event.creatorId,
         type: 'PAYMENT_SUCCESS',
         title: '🎁 Contribution reçue !',
-        body: `${payerName} a contribué ${amount} F à la cagnotte de "${event.title}".`,
-        data: { eventId, contributorId: userId, amount: String(amount), screen: 'event-details' },
+        body: isAnonymous
+          ? `Une contribution anonyme de ${amount.toLocaleString()} F CFA a été ajoutée à la cagnotte de "${event.title}".`
+          : `${payerName} a contribué ${amount} F à la cagnotte de "${event.title}".`,
+        data: { eventId, amount: String(amount), screen: 'event-details' },
       })
     }
   }

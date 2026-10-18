@@ -26,6 +26,10 @@ export interface PaymentFlowProps {
   summarySubmitText: string;
   transactionFee?: number;
   amountLabel?: string;
+  /** Contenu supplémentaire rendu dans le formulaire (ex : bloc anonymat) */
+  extraFormContent?: React.ReactNode;
+  /** Si true, affiche un badge "🚫 Anonyme" dans le résumé de transaction */
+  anonymousBadge?: boolean;
   onInitiate: (amount: number) => Promise<{
     devMode?: boolean;
     isSandbox?: boolean;
@@ -54,6 +58,8 @@ export function PaymentFlow({
   summarySubmitText,
   transactionFee,
   amountLabel = 'Participation',
+  extraFormContent,
+  anonymousBadge = false,
   onInitiate,
   onDevConfirm,
   onSuccess,
@@ -369,6 +375,9 @@ export function PaymentFlow({
           </div>
         </div>
 
+        {/* ── Contenu supplémentaire (ex : bloc anonymat) ── */}
+        {extraFormContent}
+
         {/* ── Phone number ── */}
         <div className="mb-8">
           <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Numéro de téléphone</label>
@@ -425,6 +434,18 @@ export function PaymentFlow({
                 <span className="text-[14px] font-semibold text-gray-900 dark:text-white flex-1">{selectedOperator.label} • {country.code.replace('+', '')} {phoneDisplay}</span>
               </div>
               <p className="text-[11px] text-[#8D8D8D] mb-5 text-center">Moyen sécurisé de paiement</p>
+
+              {/* Badge anonymat */}
+              {anonymousBadge && (
+                <div className="flex items-center gap-2 bg-[#FF7A00]/10 rounded-[10px] px-3 py-2 mb-4">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <line x1="1" y1="1" x2="23" y2="23" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  <span className="text-[12px] font-semibold text-[#FF7A00]">Contribution anonyme</span>
+                  <span className="text-[11px] text-[#FF7A00]/70 ml-auto">Votre nom ne sera pas affiché</span>
+                </div>
+              )}
 
               {/* Breakdown */}
               <div className="space-y-3 mb-6">

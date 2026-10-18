@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
-import { Loader2, Film } from 'lucide-react';
+import { Loader2, Film, EyeOff } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
@@ -1043,14 +1043,20 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
               </button>
               <div className="flex flex-col gap-3">
                 {contributions.slice(0, 5).map(c => (
-                  <div key={c.userId} className="flex justify-between items-center text-[13px]">
+                  <div key={c.id || c.userId} className="flex justify-between items-center text-[13px]">
                     <div className="flex items-center gap-2">
-                      {c.user?.profile?.avatarUrl ? (
+                      {c.isAnonymous ? (
+                        <div className="w-6 h-6 rounded-full bg-[#FF7A00]/10 flex items-center justify-center shrink-0">
+                          <EyeOff className="w-3.5 h-3.5 text-[#FF7A00]" />
+                        </div>
+                      ) : c.user?.profile?.avatarUrl ? (
                         <SafeImage src={c.user.profile.avatarUrl} alt="Avatar" className="w-6 h-6 rounded-full object-cover shrink-0" />
                       ) : (
                         <UserAvatarIcon size={24} className="shrink-0" />
                       )}
-                      <span className="text-gray-800 dark:text-gray-200">{c.user?.profile?.displayName || 'Anonyme'}</span>
+                      <span className="text-gray-800 dark:text-gray-200">
+                        {c.isAnonymous ? 'Contribution anonyme' : (c.user?.profile?.displayName || 'Anonyme')}
+                      </span>
                     </div>
                     <span className="font-semibold text-[#FF7A00]">{c.totalPaid.toLocaleString('fr-FR')} F</span>
                   </div>

@@ -585,6 +585,46 @@ export default async function adminRoutes(app: FastifyInstance) {
     return reply.send({ success: true, data: updatedUser })
   })
 
+  // ── Consultation d'identité d'un don anonyme (Auditée) ─────────
+  app.get('/payments/:id/anonymous-identity', async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const adminUser = req.user as { sub: string }
+
+    const payment = await app.prisma.payment.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            phone: true,
+            profile: { select: { displayName: true, username: true, avatarUrl: true } }
+          }
+        },
+        event: { select: { id: true, title: true } }
+      }
+    })
+
+    if (!payment) return reply.code(404).send({ error: 'Paiement introuvable' })
+
+    await writeAuditLog(app.prisma, {
+      actorId: adminUser.sub,
+      actorRole: 'ADMIN',
+      action: 'ANONYMOUS_IDENTITY_VIEWED',
+      targetType: 'payment',
+      targetId: payment.id,
+      eventId: payment.eventId || undefined,
+      comment: `Consultation de l'identité du paiement anonyme ${payment.id} pour l'événement "${payment.event?.title || payment.eventId}"`,
+    })
+
+    return reply.send({
+      paymentId: payment.id,
+      amount: payment.amount,
+      createdAt: payment.createdAt,
+      user: payment.user
+    })
+  })
+
   // Register stats routes
   app.register(adminStatsRoutes)
   app.register(adminListsRoutes)

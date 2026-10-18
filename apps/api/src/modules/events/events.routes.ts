@@ -1228,7 +1228,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     return reply.send({ message: 'Left event' })
   })
 
-  // Get event attendees
+  // Get event attendees & contributions (incluant les dons directs et contributions anonymes)
   app.get('/:id/attendees', async (req, reply) => {
     const { id } = req.params as { id: string }
     const { limit = '20', offset = '0' } = req.query as any
@@ -1243,9 +1243,32 @@ export default async function eventsRoutes(app: FastifyInstance) {
       },
       take: Number(limit),
       skip: Number(offset),
-    })
+    });
 
-    const data = bookings.map(b => {
+    // Contributions anonymes (participants ayant contribué anonymement + dons directs anonymes)
+    const anonymousPayments = await app.prisma.payment.findMany({
+      where: { eventId: id, status: 'SUCCEEDED', isAnonymous: true },
+      include: {
+        payoutDirectItems: {
+          select: { amountDeducted: true, payoutRequest: { select: { status: true } } }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Dons directs non anonymes (sans Booking)
+    const directNonAnonPayments = await app.prisma.payment.findMany({
+      where: { eventId: id, bookingId: null, status: 'SUCCEEDED', isAnonymous: false },
+      include: {
+        user: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
+        payoutDirectItems: {
+          select: { amountDeducted: true, payoutRequest: { select: { status: true } } }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const attendeesData = bookings.map(b => {
       const deducted = b.payoutItems
         .filter((item: any) => item.payoutRequest.status !== 'REJECTED' && item.payoutRequest.status !== 'CANCELLED')
         .reduce((sum: number, item: any) => sum + item.amountDeducted, 0);
@@ -1254,6 +1277,47 @@ export default async function eventsRoutes(app: FastifyInstance) {
         remainingAmount: Math.max(0, b.totalPaid - deducted)
       }
     });
+
+    const anonymousData = anonymousPayments.map(p => {
+      const deducted = (p.payoutDirectItems || [])
+        .filter((item: any) => item.payoutRequest.status !== 'REJECTED' && item.payoutRequest.status !== 'CANCELLED')
+        .reduce((sum: number, item: any) => sum + item.amountDeducted, 0);
+      return {
+        id: `anon-${p.id}`,
+        eventId: id,
+        status: 'CONFIRMED',
+        totalPaid: p.amount,
+        remainingAmount: Math.max(0, p.amount - deducted),
+        isAnonymous: true,
+        createdAt: p.createdAt,
+        user: {
+          id: null,
+          profile: {
+            displayName: 'Contribution anonyme',
+            username: null,
+            avatarUrl: null
+          }
+        }
+      }
+    });
+
+    const directNonAnonData = directNonAnonPayments.map(p => {
+      const deducted = (p.payoutDirectItems || [])
+        .filter((item: any) => item.payoutRequest.status !== 'REJECTED' && item.payoutRequest.status !== 'CANCELLED')
+        .reduce((sum: number, item: any) => sum + item.amountDeducted, 0);
+      return {
+        id: `direct-${p.id}`,
+        eventId: id,
+        status: 'CONFIRMED',
+        totalPaid: p.amount,
+        remainingAmount: Math.max(0, p.amount - deducted),
+        isAnonymous: false,
+        createdAt: p.createdAt,
+        user: p.user
+      }
+    });
+
+    const data = [...attendeesData, ...anonymousData, ...directNonAnonData];
 
     return reply.send({ data })
   })

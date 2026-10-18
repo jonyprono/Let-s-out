@@ -10,6 +10,14 @@ export interface PoolBookingInfo {
   isValidated: boolean;
 }
 
+// Représentation d'un don direct (sans Booking) dans le pool
+export interface PoolDirectDonationInfo {
+  paymentId: string;
+  userId: string;
+  amount: number;
+  remainingAmount: number;
+}
+
 /**
  * Calcule le montant débloqué de la cagnotte en fonction des validations individuelles
  * et prend en compte les retraits partiels déjà effectués.
@@ -17,14 +25,21 @@ export interface PoolBookingInfo {
 export async function calculateAvailablePoolAmount(
   app: FastifyInstance,
   eventId: string
-): Promise<{ availableAmount: number; totalCollected: number; pendingCount: number; breakdowns: PoolBookingInfo[]; hasPool: boolean }> {
+): Promise<{
+  availableAmount: number;
+  totalCollected: number;
+  pendingCount: number;
+  breakdowns: PoolBookingInfo[];
+  directDonations: PoolDirectDonationInfo[];
+  hasPool: boolean;
+}> {
   const event = await (app as any).prisma.event.findUnique({
     where: { id: eventId },
     select: { enableNonVoterPenalties: true, poolClosedAt: true, poolTarget: true, validatorVoteDeadline: true }
   });
   
   if (!event || !event.poolTarget || event.poolTarget <= 0) {
-    return { availableAmount: 0, totalCollected: 0, pendingCount: 0, breakdowns: [], hasPool: false };
+    return { availableAmount: 0, totalCollected: 0, pendingCount: 0, breakdowns: [], directDonations: [], hasPool: false };
   }
   
   // On récupère toutes les réservations avec leurs déductions
@@ -82,5 +97,40 @@ export async function calculateAvailablePoolAmount(
     }
   }
 
-  return { availableAmount, totalCollected, pendingCount, breakdowns, hasPool: true };
+  // ── Dons directs (sans Booking) ─────────────────────────────────────────
+  // Ces paiements n'ont pas de droit de vote/délégation.
+  // Leur montant restant est toujours disponible (pas de PENDING count).
+  const directPayments = await (app as any).prisma.payment.findMany({
+    where: { eventId, bookingId: null, status: 'SUCCEEDED' },
+    select: {
+      id: true,
+      userId: true,
+      amount: true,
+      payoutDirectItems: {
+        select: {
+          amountDeducted: true,
+          payoutRequest: { select: { status: true } }
+        }
+      }
+    }
+  });
+
+  const directDonations: PoolDirectDonationInfo[] = [];
+
+  for (const p of directPayments) {
+    const deducted = (p.payoutDirectItems as any[])
+      .filter(i => i.payoutRequest.status !== 'REJECTED' && i.payoutRequest.status !== 'CANCELLED')
+      .reduce((s: number, i: any) => s + i.amountDeducted, 0);
+    const remaining = Math.max(0, p.amount - deducted);
+    totalCollected += p.amount;
+    availableAmount += remaining;
+    directDonations.push({
+      paymentId: p.id,
+      userId: p.userId,
+      amount: p.amount,
+      remainingAmount: remaining,
+    });
+  }
+
+  return { availableAmount, totalCollected, pendingCount, breakdowns, directDonations, hasPool: true };
 }

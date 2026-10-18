@@ -219,7 +219,7 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
 
 
 
-      const { availableAmount, breakdowns } = await calculateAvailablePoolAmount(app, eventId)
+      const { availableAmount, breakdowns, directDonations } = await calculateAvailablePoolAmount(app, eventId)
       // `availableAmount` already excludes amounts from existing PayoutBookingItems!
       const maxAvailableNow = Math.min(availableAmount, maxCollected)
 
@@ -298,6 +298,30 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
             const validatorId = b.delegatedToId || b.userId;
             involvedValidatorIds.add(validatorId); // Add delegatee or self
             validatorDeductions.set(validatorId, (validatorDeductions.get(validatorId) || 0) + deduct);
+          }
+        }
+
+        // ── Figer les dons directs (PayoutDirectItem) ───────────────────────────────────────────────────
+        // Ces fonds sont toujours disponibles, pas de vote requis.
+        // On les inclut dans le montant débloqué proportionnellement.
+        if (directDonations && directDonations.length > 0) {
+          const totalDirectAvailable = directDonations.reduce((s, d) => s + d.remainingAmount, 0);
+          for (const d of directDonations) {
+            if (remainingToDeduct <= 0) break;
+            const proportion = totalDirectAvailable > 0 ? d.remainingAmount / totalDirectAvailable : 0;
+            let deduct = Math.min(d.remainingAmount, remainingToDeduct * proportion);
+            deduct = Math.round(deduct * 100) / 100;
+            if (deduct > remainingToDeduct) deduct = remainingToDeduct;
+            if (deduct > 0) {
+              await (app as any).prisma.payoutDirectItem.create({
+                data: {
+                  payoutRequestId: newPayoutReq.id,
+                  paymentId: d.paymentId,
+                  amountDeducted: deduct,
+                }
+              });
+              remainingToDeduct -= deduct;
+            }
           }
         }
 
@@ -442,6 +466,9 @@ export default async function eventPayoutRoutes(app: FastifyInstance) {
         poolClosedAt: event?.poolClosedAt,
         hasPool: stats.hasPool,
         commissionRate,
+        // Montant total issu de dons directs (sans exposer les identités)
+        directDonationsTotal: stats.directDonations.reduce((s, d) => s + d.amount, 0),
+        directDonationsCount: stats.directDonations.length,
         requests: enrichedRequests
       } 
     })

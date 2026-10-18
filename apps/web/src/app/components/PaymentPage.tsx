@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Loader2, ChevronLeft } from 'lucide-react'
+import { Loader2, ChevronLeft, EyeOff } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
 import { chatApi } from '@/features/chat/api'
@@ -33,10 +33,15 @@ export function PaymentPage() {
 
   const [resolvedAmount, setResolvedAmount] = useState<number | null>(null)
   const [paymentKey, setPaymentKey] = useState(0)
+  // ── État anonymat ───────────────────────────────────────────────────────────────────────────────────────────
+  const [isAnonymous, setIsAnonymous] = useState(false)
+  const [isNonParticipantDonation, setIsNonParticipantDonation] = useState(false)
 
   const handleReset = () => {
     setResolvedAmount(null)
     setPaymentKey(prev => prev + 1)
+    setIsAnonymous(false)
+    setIsNonParticipantDonation(false)
   }
 
   const { data: event, isLoading: eventLoading } = useQuery({
@@ -57,16 +62,23 @@ export function PaymentPage() {
 
   // ── API handlers ────────────────────────────────────────────
   const handleInitiate = async (amount: number) => {
-    const payload: { eventId: string; amount?: number } = { eventId: eventId! }
-    // Always send amount — the backend needs it to know this is a contribution
-    payload.amount = amount
+    const payload: {
+      eventId: string
+      amount?: number
+      isAnonymous?: boolean
+      isNonParticipantDonation?: boolean
+    } = { eventId: eventId!, amount, isAnonymous, isNonParticipantDonation }
     const { data } = await apiClient.post('/payments/fedapay/initiate', payload)
     return data
   }
 
   const handleDevConfirm = async (amount: number) => {
-    const payload: { eventId: string; amount?: number } = { eventId: eventId! }
-    payload.amount = amount
+    const payload: {
+      eventId: string
+      amount?: number
+      isAnonymous?: boolean
+      isNonParticipantDonation?: boolean
+    } = { eventId: eventId!, amount, isAnonymous, isNonParticipantDonation }
     await apiClient.post('/payments/dev/confirm-booking', payload)
   }
 
@@ -80,7 +92,9 @@ export function PaymentPage() {
     if (eventId) {
       if (isSandbox) {
         try {
-          await apiClient.post('/payments/dev/confirm-booking', { eventId, amount })
+          await apiClient.post('/payments/dev/confirm-booking', {
+            eventId, amount, isAnonymous, isNonParticipantDonation
+          })
         } catch (confirmErr) {
           console.warn('Dev confirm failed', confirmErr)
           throw new Error("Impossible de valider le paiement Sandbox. Assurez-vous d'avoir déployé le backend.")
@@ -100,9 +114,11 @@ export function PaymentPage() {
     await qc.invalidateQueries({ queryKey: ['events', eventId, 'my-booking'] })
     qc.invalidateQueries({ queryKey: ['events'] })
     toast.success(
-      isContribution
-        ? 'Contribution enregistrée avec succès !'
-        : "Paiement réussi ! Vous participez à l'événement",
+      isNonParticipantDonation
+        ? 'Don enregistré avec succès ! Merci pour votre générosité.'
+        : isContribution
+          ? 'Contribution enregistrée avec succès !'
+          : "Paiement réussi ! Vous participez à l'événement",
     )
   }
 
@@ -163,7 +179,166 @@ export function PaymentPage() {
     return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}${endD ? ` - ${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}` : ''}`
   })() : undefined
 
+  // ── Bloc anonymat (rendu dans le formulaire de PaymentFlow) ──────────────
+  // Visible uniquement pour les contributions à une cagnotte
+  const anonymityBlock = isContribution ? (
+    <div className="mb-5 rounded-[14px] border border-gray-100 dark:border-white/10 bg-[#FAFAFA] dark:bg-[#1E1E1E] p-4 space-y-3">
+      {/* Toggle : anonymat */}
+      <button
+        id="toggle-anonymous"
+        type="button"
+        onClick={() => setIsAnonymous(v => !v)}
+        className="w-full flex items-start gap-3 text-left"
+      >
+        <div className={`mt-0.5 w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+          isAnonymous ? 'bg-[#FF7A00]/10' : 'bg-gray-100 dark:bg-white/5'
+        }`}>
+          <EyeOff className={`w-4 h-4 transition-colors ${
+            isAnonymous ? 'text-[#FF7A00]' : 'text-gray-400'
+          }`} />
+        </div>
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-gray-900 dark:text-white leading-snug">
+            Contribuer anonymement
+          </p>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed mt-0.5">
+            Votre nom ne sera pas affiché publiquement.
+            L'administration de Let's Out conserve votre identité conformément aux CGU.
+          </p>
+        </div>
+        <div
+          aria-checked={isAnonymous}
+          role="switch"
+          className={`mt-1 shrink-0 w-11 h-6 rounded-full transition-colors duration-200 relative ${
+            isAnonymous ? 'bg-[#FF7A00]' : 'bg-gray-200 dark:bg-gray-700'
+          }`}
+        >
+          <span className={`absolute top-[3px] w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200 ${
+            isAnonymous ? 'translate-x-[22px]' : 'translate-x-[3px]'
+          }`} />
+        </div>
+      </button>
+
+      {/* Séparateur */}
+      <div className="border-t border-dashed border-gray-200 dark:border-gray-700" />
+
+      {/* Toggle : donner sans rejoindre */}
+      <button
+        id="toggle-non-participant"
+        type="button"
+        onClick={() => setIsNonParticipantDonation(v => !v)}
+        className="w-full flex items-start gap-3 text-left"
+      >
+        <div className={`mt-0.5 w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+          isNonParticipantDonation ? 'bg-[#007AFF]/10' : 'bg-gray-100 dark:bg-white/5'
+        }`}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+              fill={isNonParticipantDonation ? '#007AFF' : 'none'}
+              stroke={isNonParticipantDonation ? '#007AFF' : '#9CA3AF'}
+              strokeWidth="1.5"
+            />
+          </svg>
+        </div>
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-gray-900 dark:text-white leading-snug">
+            Donner sans rejoindre l'événement
+          </p>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed mt-0.5">
+            Votre don est inclus dans la cagnotte mais vous ne devenez pas participant.
+            Aucun droit de vote ou de validation.
+          </p>
+        </div>
+        <div
+          aria-checked={isNonParticipantDonation}
+          role="switch"
+          className={`mt-1 shrink-0 w-11 h-6 rounded-full transition-colors duration-200 relative ${
+            isNonParticipantDonation ? 'bg-[#007AFF]' : 'bg-gray-200 dark:bg-gray-700'
+          }`}
+        >
+          <span className={`absolute top-[3px] w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200 ${
+            isNonParticipantDonation ? 'translate-x-[22px]' : 'translate-x-[3px]'
+          }`} />
+        </div>
+      </button>
+    </div>
+  ) : null
+
   // ── Success screens ──────────────────────────────────────────
+  // ── Écran de succès pour un don direct (sans participation) ───────────────────────────────────────
+  const DonationSuccessScreen = () => (
+    <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col font-poppins">
+      <div className="flex-shrink-0 px-5 pt-safe-4 pt-4 pb-3 flex items-center">
+        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center active:scale-95">
+          <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
+        </button>
+        <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">
+          Don envoyé
+        </span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-5 pb-6 flex flex-col items-center" style={{ scrollbarWidth: 'none' }}>
+        <div className="mt-10 mb-6">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #007AFF, #5AC8FA)' }}
+          >
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                fill="white"
+              />
+            </svg>
+          </div>
+        </div>
+
+        <h1 className="text-[20px] font-bold text-[#007AFF] mb-2 text-center">Merci pour votre don !</h1>
+        <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-8 px-4 leading-relaxed max-w-[300px]">
+          {isAnonymous
+            ? 'Votre contribution anonyme a bien été reçue. Votre identité reste confidentielle.'
+            : 'Votre don a été ajouté à la cagnotte. La communauté vous remercie !'}
+        </p>
+
+        <div className="w-full rounded-[16px] border border-gray-100 dark:border-white/5 bg-[#FAFAFA] dark:bg-[#222] p-5 shadow-sm max-w-[358px] space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] text-gray-500">Montant donné</span>
+            <span className="text-[14px] font-bold text-[#007AFF]">{resolvedAmount?.toLocaleString()} F CFA</span>
+          </div>
+          {isAnonymous && (
+            <div className="flex items-center gap-2 bg-[#FF7A00]/8 rounded-[10px] px-3 py-2">
+              <EyeOff className="w-4 h-4 text-[#FF7A00] shrink-0" />
+              <span className="text-[12px] text-[#FF7A00] font-medium">Contribution anonyme</span>
+            </div>
+          )}
+          <div className="flex items-center justify-between border-t border-dashed border-gray-200 dark:border-gray-700 pt-3">
+            <span className="text-[13px] text-gray-500">Événement</span>
+            <span className="text-[13px] font-medium text-gray-900 dark:text-white text-right max-w-[180px] truncate">{event?.title}</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="flex-shrink-0 bg-white dark:bg-[#1A1A1A] px-5 pt-3 border-t border-gray-100 dark:border-white/10 flex flex-col gap-3"
+        style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
+      >
+        <Button
+          onClick={handleReset}
+          className="w-full font-semibold h-[52px]"
+          style={{ background: 'linear-gradient(135deg, #007AFF, #5AC8FA)' }}
+        >
+          Faire un autre don
+        </Button>
+        <button
+          onClick={() => navigate(`/events/${eventId}`)}
+          className="w-full h-[52px] flex items-center justify-center gap-2 rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
+        >
+          Voir l'événement
+        </button>
+      </div>
+    </div>
+  )
+
   const ContributionSuccessScreen = () => {
     const target = event?.poolTarget || 0
     const previousCollected = event?.poolCollected || 0
@@ -303,21 +478,35 @@ export function PaymentPage() {
   return (
     <PaymentFlow
       key={paymentKey}
-      headerTitle={isContribution ? 'Contribuer à la cagnotte' : "Rejoindre l'événement"}
+      headerTitle={
+        isNonParticipantDonation
+          ? 'Faire un don'
+          : isContribution
+            ? 'Contribuer à la cagnotte'
+            : "Rejoindre l'événement"
+      }
       headerCard={headerCard}
       minAmount={minAmount}
       defaultAmount={defaultAmount}
-      formSubmitText={isContribution ? 'Envoyer' : 'Rejoindre'}
+      formSubmitText={isNonParticipantDonation ? 'Donner' : isContribution ? 'Envoyer' : 'Rejoindre'}
       summaryTitle="Résumé de la transaction"
       summaryItemTitle={event?.title}
       summaryItemSubtitle={summarySubtitle}
       summaryItemDetails={event?.city ? `${event.address ? event.address + ', ' : ''}${event.city}` : undefined}
-      summarySubmitText={isContribution ? 'Payer la contribution' : 'Payer'}
-      amountLabel={isContribution ? 'Contribution' : 'Participation'}
+      summarySubmitText={isNonParticipantDonation ? 'Confirmer le don' : isContribution ? 'Payer la contribution' : 'Payer'}
+      amountLabel={isNonParticipantDonation ? 'Don' : isContribution ? 'Contribution' : 'Participation'}
+      extraFormContent={anonymityBlock}
+      anonymousBadge={isAnonymous}
       onInitiate={handleInitiate}
       onDevConfirm={handleDevConfirm}
       onSuccess={handleSuccess}
-      successScreen={isContribution ? <ContributionSuccessScreen /> : <JoinSuccessScreen />}
+      successScreen={
+        isNonParticipantDonation
+          ? <DonationSuccessScreen />
+          : isContribution
+            ? <ContributionSuccessScreen />
+            : <JoinSuccessScreen />
+      }
       onBack={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')}
     />
   )

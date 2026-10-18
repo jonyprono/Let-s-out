@@ -15,6 +15,7 @@ import {
   Users,
   Navigation,
   Shield,
+  EyeOff,
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -346,10 +347,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     hapticFeedback.impact()
     if (!user) {
       toast.error('Connectez-vous pour participer.')
+      navigate('/login')
       return
     }
     if (hasJoined) {
       goToChat()
+      return
+    }
+    if (hasPool) {
+      navigate(`/events/${id}/pay?type=contribution`)
+      return
+    }
+    if (event?.price && event.price > 0 && !event?.requiresApproval) {
+      navigate(`/events/${id}/pay?amount=${event.price}&type=participation`)
       return
     }
     setShowJoinModal(true)
@@ -505,6 +515,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const maxAttendees = event.maxAttendees
   const isFull = maxAttendees != null && maxAttendees > 0 && attendeeCount >= maxAttendees
   const isPastEvent = event?.startAt ? parseSafeDate(event.startAt) < new Date() : false
+  const isEventEnded = event?.endAt ? parseSafeDate(event.endAt) < new Date() : isPastEvent
   const deadline = event?.registrationDeadline || event?.startAt || event?.date
   const isPastDeadline = deadline ? parseSafeDate(deadline) < new Date() : false
 
@@ -547,7 +558,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   return (
     <>
-      <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
+      <div className="relative w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins overflow-hidden">
 
         {/* Header */}
         <TopBar
@@ -870,24 +881,28 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     </button>
                   )}
 
-                  {/* "Contribuer à nouveau" if already joined */}
-                  {(hasJoined || participationPaid) && (
-                    <button
-                      onClick={() => {
-                        if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
-                        if (isCreator || participationPaid) {
-                          navigate(`/events/${id}/pay?type=contribution`)
-                        } else {
-                          toast.info("Rejoignez l'événement avant de contribuer.")
-                        }
-                      }}
-                      disabled={isPastDeadline}
-                      className={`w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] dark:border-[#444] bg-white dark:bg-[#1A1A1A] text-[14px] font-medium text-[#1B1818] dark:text-white mt-[16px] ${isPastDeadline ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 transition-transform'}`}
-                    >
-                      <span className="text-[16px]">💵</span>
-                      {isPastDeadline ? 'Date limite dépassée' : 'Contribuer à nouveau'}
-                    </button>
-                  )}
+                  {/* Bouton de contribution à la cagnotte (accessible à TOUS avec option anonyme) */}
+                  <button
+                    onClick={() => {
+                      if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
+                      if (!user) {
+                        toast.error('Connectez-vous pour contribuer.');
+                        navigate('/login');
+                        return;
+                      }
+                      navigate(`/events/${id}/pay?type=contribution`);
+                    }}
+                    disabled={isPastDeadline}
+                    className={`w-full flex items-center justify-between py-[12px] px-4 rounded-[10px] border border-[#FF7A00] bg-[#FFF9EC] dark:bg-[#FF7A00]/10 text-[14px] font-semibold text-[#FF7A00] mt-[16px] ${isPastDeadline ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 transition-transform shadow-sm'}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <EyeOff className="w-4 h-4 text-[#FF7A00] shrink-0" />
+                      <span>{hasJoined ? 'Contribuer à nouveau' : 'Participer à la cagnotte'}</span>
+                    </div>
+                    <span className="text-[11px] font-medium bg-[#FF7A00]/15 px-2 py-0.5 rounded-full text-[#FF7A00]">
+                      Don anonyme possible
+                    </span>
+                  </button>
 
                   {hasJoined && participationPaid && event.poolTarget > 0 && !isCreator && (event.status === 'COMPLETED' || new Date() > new Date(event.endAt)) && (payoutStatus?.breakdowns?.find((b: any) => b.userId === user?.id)?.remainingAmount > 0) && (
                     <button
@@ -955,53 +970,102 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 </Button>
               )}
             </>
-          ) : (
-            /* Non-participant: pending, approved or wide button */
-            !isPastEvent && (
-              isPendingParticipant || isRejectedParticipant ? (
-                <JoinPendingScreen 
-                  event={event}
-                  status={myBookingData.status as any}
-                  organizer={event.creator}
-                  isCancelling={joinMutation.isPending}
-                  onCancel={() => {
-                    eventsApi.leave(id!).then(() => {
-                      qc.invalidateQueries({ queryKey: ['events', id] })
-                      qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
-                      toast.success("Demande annulée")
-                    })
-                  }}
-                />
-              ) : isApprovedButUnpaid ? (
-                /* APPROVED: demande acceptée mais paiement requis */
-                <div className="flex flex-col gap-2 w-full">
-                  <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl px-4 py-2">
-                    <span className="text-lg">✅</span>
-                    <div className="flex-1">
-                      <p className="text-[13px] font-semibold text-green-800 dark:text-green-300">Demande approuvée !</p>
-                      <p className="text-[11px] text-green-600 dark:text-green-400">Finalisez votre inscription en effectuant le paiement.</p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => navigate(`/events/${id}/pay?amount=${event.price}&type=participation`)}
-                    className="flex-1 rounded-full font-medium text-[14px] font-poppins"
-                  >
-                    💳 Payer ma participation ({event.price} €)
-                  </Button>
+          ) : isPendingParticipant || isRejectedParticipant ? (
+            <JoinPendingScreen 
+              event={event}
+              status={myBookingData.status as any}
+              organizer={event.creator}
+              isCancelling={joinMutation.isPending}
+              onCancel={() => {
+                eventsApi.leave(id!).then(() => {
+                  qc.invalidateQueries({ queryKey: ['events', id] })
+                  qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
+                  toast.success("Demande annulée")
+                })
+              }}
+            />
+          ) : isApprovedButUnpaid ? (
+            /* APPROVED: demande acceptée mais paiement requis */
+            <div className="flex flex-col gap-2 w-full">
+              <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl px-4 py-2">
+                <span className="text-lg">✅</span>
+                <div className="flex-1">
+                  <p className="text-[13px] font-semibold text-green-800 dark:text-green-300">Demande approuvée !</p>
+                  <p className="text-[11px] text-green-600 dark:text-green-400">Finalisez votre inscription en effectuant le paiement.</p>
                 </div>
+              </div>
+              <Button
+                onClick={() => navigate(`/events/${id}/pay?amount=${event.price}&type=participation`)}
+                className="flex-1 rounded-full font-medium text-[14px] font-poppins"
+              >
+                💳 Payer ma participation ({event.price} €)
+              </Button>
+            </div>
+          ) : hasPool ? (
+            <div className="flex items-center gap-2 w-full">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (!user) {
+                    toast.error('Connectez-vous pour faire un don.');
+                    navigate('/login');
+                    return;
+                  }
+                  navigate(`/events/${id}/pay?type=contribution`);
+                }}
+                className="flex-[0.4] rounded-full font-medium text-[13px] font-poppins border-[#FF7A00] text-[#FF7A00] flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+              >
+                <EyeOff className="w-4 h-4 text-[#FF7A00]" />
+                Faire un don
+              </Button>
+              <Button
+                onClick={() => {
+                  if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
+                  if (isEventEnded) return toast.info("Cet événement est terminé.");
+                  handleJoin();
+                }}
+                disabled={joinMutation.isPending || isFull || isPastDeadline || isEventEnded || bookingLoading}
+                className="flex-[0.6] rounded-full font-medium text-[14px] font-poppins"
+              >
+                {joinMutation.isPending || bookingLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : isEventEnded ? (
+                  'Événement terminé'
+                ) : isFull ? (
+                  'Complet'
+                ) : isPastDeadline ? (
+                  'Clôturé'
+                ) : event?.requiresApproval ? (
+                  'Demander à rejoindre'
+                ) : (
+                  'Rejoindre'
+                )}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={() => {
+                if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
+                if (isEventEnded) return toast.info("Cet événement est terminé.");
+                handleJoin();
+              }}
+              disabled={joinMutation.isPending || isFull || isPastDeadline || isEventEnded || bookingLoading}
+              className="flex-1 rounded-full font-medium text-[14px] font-poppins"
+            >
+              {joinMutation.isPending || bookingLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isEventEnded ? (
+                'Événement terminé'
+              ) : isFull ? (
+                'Complet'
+              ) : isPastDeadline ? (
+                'Clôturé'
+              ) : event?.requiresApproval ? (
+                'Demander à rejoindre'
               ) : (
-                <Button
-                  onClick={() => {
-                    if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
-                    handleJoin();
-                  }}
-                  disabled={joinMutation.isPending || isFull || isPastDeadline || bookingLoading}
-                  className="flex-1 rounded-full font-medium text-[14px] font-poppins"
-                >
-                  {joinMutation.isPending || bookingLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : isFull ? 'Complet' : isPastDeadline ? 'Clôturé' : event?.requiresApproval ? 'Demander à rejoindre' : "Rejoindre l'événement"}
-                </Button>
-              )
-            )
+                "Rejoindre l'événement"
+              )}
+            </Button>
           )}
         </div>
       </div>
@@ -1264,51 +1328,69 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 <div>
                   {(() => {
                     const groupedContributions = (Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []).reduce((acc: any, booking: any) => {
-                      const userId = booking?.user?.id;
-                      if (!userId) return acc;
+                      const isAnon = booking.isAnonymous;
+                      const key = isAnon ? `anon-${booking.id}` : booking?.user?.id;
+                      if (!key) return acc;
                       const amt = Number(booking?.totalPaid || booking?.amount || booking?.paidAmount || 0);
                       if (amt <= 0) return acc;
-                      if (!acc[userId]) {
-                        acc[userId] = { ...booking, totalAmount: 0 };
+                      if (!acc[key]) {
+                        acc[key] = { ...booking, totalAmount: 0 };
                       }
-                      acc[userId].totalAmount += amt;
+                      acc[key].totalAmount += amt;
                       return acc;
                     }, {});
                     const contributionsList = Object.values(groupedContributions).sort((a: any, b: any) => b.totalAmount - a.totalAmount);
 
                     return contributionsList.map((booking: any) => {
+                      const isAnon = booking.isAnonymous
                       const avatar = booking?.user?.profile?.avatarUrl
-                      const name = booking?.user?.profile?.displayName || '?'
-                      const isVerified = booking?.user?.profile?.isVerified
+                      const name = isAnon ? 'Contribution anonyme' : (booking?.user?.profile?.displayName || '?')
+                      const isVerified = isAnon ? false : booking?.user?.profile?.isVerified
                       const amount = booking?.totalAmount
                       return (
                         <button
                           key={booking.id}
                           className="w-full flex items-center gap-3 px-5 py-3 active:bg-gray-50 dark:bg-[#222222] transition-colors text-left"
-                          onClick={() => openUserProfile(
-                            booking.user.id, 
-                            { displayName: name, avatarUrl: avatar },
-                            { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
-                          )}
+                          disabled={isAnon}
+                          onClick={() => {
+                            if (!isAnon && booking?.user?.id) {
+                              openUserProfile(
+                                booking.user.id, 
+                                { displayName: name, avatarUrl: avatar },
+                                { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                              )
+                            }
+                          }}
                         >
-                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
-                            <SafeImage
-                              src={avatar}
-                              alt={name}
-                              className="w-full h-full object-cover"
-                              fallback={
-                                <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white font-bold text-[14px]">
-                                  {name.charAt(0).toUpperCase()}
-                                </div>
-                              }
-                            />
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 shrink-0 flex items-center justify-center">
+                            {isAnon ? (
+                              <div className="w-full h-full bg-[#FF7A00]/10 flex items-center justify-center">
+                                <EyeOff className="w-5 h-5 text-[#FF7A00]" />
+                              </div>
+                            ) : (
+                              <SafeImage
+                                src={avatar}
+                                alt={name}
+                                className="w-full h-full object-cover"
+                                fallback={
+                                  <div className="w-full h-full bg-[#FF7A00] flex items-center justify-center text-white font-bold text-[14px]">
+                                    {name.charAt(0).toUpperCase()}
+                                  </div>
+                                }
+                              />
+                            )}
                           </div>
-                          <div className="flex items-center gap-1 flex-1">
+                          <div className="flex items-center gap-1.5 flex-1">
                             <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
                             {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
+                            {isAnon && (
+                              <span className="text-[10px] bg-[#FF7A00]/10 text-[#FF7A00] font-medium px-2 py-0.5 rounded-full">
+                                Anonyme
+                              </span>
+                            )}
                           </div>
                           {amount > 0 && (
-                            <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{Number(amount).toLocaleString()} F</span>
+                            <span className="text-[13px] font-semibold text-[#FF7A00]">{Number(amount).toLocaleString()} F</span>
                           )}
                         </button>
                       )

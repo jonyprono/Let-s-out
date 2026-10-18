@@ -441,5 +441,19 @@
       "incorrectCode": "Code incorrect ou expiré",
       "pinsMismatch": "Les codes PIN ne correspondent pas"
     }
+  },
+  "anonymousDonation": {
+    "contributeAnonymously": "Contribuer anonymement",
+    "contributeAnonymouslyDesc": "Votre nom ne sera pas affiché publiquement. L'administration de Let's Out conserve votre identité conformément aux CGU.",
+    "donateWithoutJoining": "Donner sans rejoindre l'événement",
+    "donateWithoutJoiningDesc": "Votre don est inclus dans la cagnotte mais vous ne devenez pas participant. Aucun droit de vote ou de validation.",
+    "anonymousBadge": "Contribution anonyme",
+    "anonymousBadgeSubtitle": "Votre nom ne sera pas affiché",
+    "donationSuccessTitle": "Merci pour votre don !",
+    "donationSuccessDescAnon": "Votre contribution anonyme a bien été reçue. Votre identité reste confidentielle.",
+    "donationSuccessDescPublic": "Votre don a été ajouté à la cagnotte. La communauté vous remercie !",
+    "amountDonated": "Montant donné",
+    "makeAnotherDonation": "Faire un autre don",
+    "viewEvent": "Voir l'événement"
   }
 }
