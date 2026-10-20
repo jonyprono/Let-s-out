@@ -38,36 +38,92 @@ export default async function pagesRoutes(app: FastifyInstance) {
     return reply.send({ data: pages })
   })
 
-  // GET FEED OF FOLLOWED PAGES POSTS
-  app.get('/feed', { preHandler: [app.authenticate] }, async (req, reply) => {
-    const { sub } = req.user as { sub: string }
-    
-    // get pages the user follows
-    const follows = await app.prisma.pageFollower.findMany({
-      where: { userId: sub },
-      select: { pageId: true }
-    })
-    const pageIds = follows.map((f: any) => f.pageId)
+  // GET GLOBAL FEED OF PAGES POSTS (Public feed for all users, like events, respects blocks)
+  app.get('/feed', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
+    let sub: string | undefined = undefined
+    try {
+      const u = req.user as { sub?: string }
+      if (u?.sub) sub = u.sub
+    } catch {
+      // unauthenticated
+    }
 
-    // also include pages the user created
-    const myPages = await app.prisma.page.findMany({
-      where: { creatorId: sub },
-      select: { id: true }
-    })
-    const myPageIds = myPages.map((p: any) => p.id)
+    const query = req.query as { limit?: string; offset?: string; cursor?: string }
+    const limit = Math.min(Math.max(parseInt(query.limit || '20', 10), 1), 50)
+    const offset = query.offset !== undefined ? parseInt(query.offset, 10) : undefined
+    const cursor = query.cursor
 
-    const allPageIds = Array.from(new Set([...pageIds, ...myPageIds]))
+    const blockedUserIds = new Set<string>()
+    const followedPageIds = new Set<string>()
 
-    const posts = await app.prisma.pagePost.findMany({
-      where: { pageId: { in: allPageIds } },
+    if (sub) {
+      const [blocks, follows] = await Promise.all([
+        app.prisma.userBlock.findMany({
+          where: {
+            OR: [
+              { blockerId: sub },
+              { blockedId: sub }
+            ]
+          },
+          select: { blockerId: true, blockedId: true }
+        }),
+        app.prisma.pageFollower.findMany({
+          where: { userId: sub },
+          select: { pageId: true }
+        })
+      ])
+
+      for (const b of blocks) {
+        if (b.blockerId === sub) blockedUserIds.add(b.blockedId)
+        if (b.blockedId === sub) blockedUserIds.add(b.blockerId)
+      }
+
+      for (const f of follows) {
+        followedPageIds.add(f.pageId)
+      }
+    }
+
+    const where: any = {
+      page: {
+        creator: {
+          isBanned: false,
+          ...(blockedUserIds.size > 0 ? { NOT: { id: { in: Array.from(blockedUserIds) } } } : {})
+        }
+      }
+    }
+
+    const findManyArgs: any = {
+      where,
       include: {
-        page: { select: { id: true, name: true, avatarUrl: true, creatorId: true } }
+        page: { select: { id: true, name: true, avatarUrl: true, creatorId: true } },
+        _count: { select: { comments: true } }
       },
       orderBy: { createdAt: 'desc' },
-      take: 20
-    })
+      take: limit
+    }
 
-    return reply.send({ data: posts })
+    if (cursor) {
+      findManyArgs.cursor = { id: cursor }
+      findManyArgs.skip = 1
+    } else if (offset !== undefined && !isNaN(offset)) {
+      findManyArgs.skip = offset
+    }
+
+    const posts = await app.prisma.pagePost.findMany(findManyArgs)
+
+    const data = posts.map((post: any) => ({
+      ...post,
+      isFollowing: followedPageIds.has(post.pageId),
+      isOwner: sub ? post.page.creatorId === sub : false
+    }))
+
+    const nextCursor = data.length === limit ? data[data.length - 1].id : null
+
+    return reply.send({
+      data,
+      nextCursor,
+      hasMore: data.length === limit
+    })
   })
 
   // GET PAGE BY ID (works with or without authentication)

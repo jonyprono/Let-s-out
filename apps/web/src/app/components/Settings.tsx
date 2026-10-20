@@ -5,7 +5,7 @@ import {
   LogOut, User, Loader2, Phone, Mail,
   CheckCircle2, Trash2, AlertTriangle, Wallet as WalletIcon,
   Star, MessageCircle, AlertCircle, Share2, Heart, Award,
-  Calendar, Bot, FileText, Info, LayoutDashboard,
+  Calendar, Bot, FileText, Info, LayoutDashboard, Radio,
 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -366,6 +366,36 @@ export function Settings({ onBack }: SettingsProps) {
           </div>
         </div>
 
+        {/* ── OUT RADAR VEDETTE ──────────────────────────────────────────────── */}
+        <button
+          onClick={() => navigate('/radar')}
+          className="w-full bg-gradient-to-r from-[#FF7A00] to-[#FFA34D] rounded-2xl p-3.5 text-white shadow-md active:scale-[0.99] transition-all flex items-center justify-between gap-3 text-left relative overflow-hidden"
+        >
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-white/10 pointer-events-none" />
+          <div className="absolute -right-10 -bottom-10 w-36 h-36 rounded-full bg-white/5 pointer-events-none" />
+
+          <div className="flex items-center gap-3 relative z-10 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0">
+              <Radio className="w-5 h-5 text-white animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-sm tracking-wide">OUT RADAR</span>
+                <span className="bg-white/25 text-[9.5px] font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider">
+                  Nouveau
+                </span>
+              </div>
+              <p className="text-[11.5px] text-white/90 truncate mt-0.5">
+                Découvre les Outsters disponibles autour de toi
+              </p>
+            </div>
+          </div>
+
+          <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0 relative z-10">
+            <ChevronRight className="w-4 h-4 text-white" />
+          </div>
+        </button>
+
         {/* ── COORDONNÉES ───────────────────────────────────────────────────── */}
         <div>
           <SectionLabel>Coordonnées</SectionLabel>
@@ -433,6 +463,14 @@ export function Settings({ onBack }: SettingsProps) {
               title="Créer une page"
               subtitle="Publiez du contenu sous une identité dédiée"
               onClick={() => navigate('/pages/create')}
+            />
+            <SettingsRow
+              icon={<Radio className="w-4 h-4" />}
+              iconBg="bg-orange-50 dark:bg-orange-500/10"
+              iconColor="text-[#FF7A00]"
+              title="OUT RADAR"
+              subtitle="Découvre les Outsters disponibles autour de toi"
+              onClick={() => navigate('/radar')}
               isLast
             />
           </div>

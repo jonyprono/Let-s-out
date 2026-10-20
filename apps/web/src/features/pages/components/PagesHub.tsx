@@ -188,11 +188,21 @@ export function PagesHub() {
                     key={sug.id}
                     className="p-3.5 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-start gap-3 bg-[#FAFAFA] dark:bg-[#141414]"
                   >
-                    <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300">
+                    {/* Avatar cliquable → profil de la page */}
+                    <div
+                      onClick={() => navigate(`/pages/${sug.id}`)}
+                      className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300 cursor-pointer active:opacity-70 transition-opacity"
+                    >
                       {sug.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight">{sug.name}</p>
+                      {/* Nom cliquable → profil de la page */}
+                      <p
+                        onClick={() => navigate(`/pages/${sug.id}`)}
+                        className="text-sm font-bold text-gray-900 dark:text-white leading-tight cursor-pointer hover:underline"
+                      >
+                        {sug.name}
+                      </p>
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                         {sug.subtitle}
                       </p>

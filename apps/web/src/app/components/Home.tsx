@@ -59,11 +59,35 @@ function FeaturedSkeleton() {
 
 function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string, id?: string) => void }) {
   const me = useAuthStore(s => (s as any).user);
-  const [following, setFollowing] = useState(false);
+  const isCreator = me?.id === post.page.creatorId || post.isOwner;
+  const [following, setFollowing] = useState(Boolean(post.isFollowing));
+  const [followLoading, setFollowLoading] = useState(false);
   const [liked, setLiked] = useState(false);
-  const isCreator = me?.id === post.page.creatorId;
   const avatarFallback = isCreator ? me?.profile?.avatarUrl : null;
   const pageAvatarUrl = post.page.avatarUrl || avatarFallback;
+
+  useEffect(() => {
+    if (typeof post.isFollowing === 'boolean') {
+      setFollowing(post.isFollowing);
+    }
+  }, [post.isFollowing]);
+
+  const handleFollow = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isCreator || followLoading) return;
+    const previous = following;
+    const next = !previous;
+    setFollowing(next);
+    setFollowLoading(true);
+    try {
+      const res = await pagesApi.follow(post.page.id);
+      setFollowing(res.followed);
+    } catch {
+      setFollowing(previous);
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   return (
     <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 mb-4 cursor-pointer" onClick={() => onNavigate('page-view', post.page.id)}>
@@ -83,19 +107,23 @@ function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string,
           <p className="font-semibold text-sm text-gray-900 dark:text-white leading-tight truncate">{post.page.name}</p>
         </div>
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setFollowing(!following);
-          }}
-          className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 shrink-0 ${
-            following
-              ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
-              : 'bg-[#FF7A00] text-white hover:bg-[#E06C00]'
-          }`}
-        >
-          {following ? 'Suivi' : 'Suivre'}
-        </button>
+        {!isCreator ? (
+          <button
+            onClick={handleFollow}
+            disabled={followLoading}
+            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 shrink-0 ${
+              following
+                ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
+                : 'bg-[#FF7A00] text-white hover:bg-[#E06C00]'
+            }`}
+          >
+            {following ? 'Suivi' : 'Suivre'}
+          </button>
+        ) : (
+          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#262626] px-2.5 py-1 rounded-full shrink-0">
+            Ma page
+          </span>
+        )}
       </div>
 
       {/* Content */}
@@ -135,9 +163,12 @@ function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string,
             e.stopPropagation();
             onNavigate('page-view', post.page.id);
           }}
-          className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+          className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors gap-1.5"
         >
           <MessageCircle className="w-4 h-4" />
+          {post._count?.comments > 0 && (
+            <span className="text-xs font-semibold">{post._count.comments}</span>
+          )}
         </button>
 
         <button
@@ -266,9 +297,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
   });
 
   const { data: pagePostsData } = useQuery({
-    queryKey: ['feed', 'pages'],
-    queryFn: () => pagesApi.getFeed(),
-    enabled: !!user?.id,
+    queryKey: ['feed', 'pages', user?.id],
+    queryFn: () => pagesApi.getFeed({ limit: 20 }),
   });
 
   // Real user activity data
@@ -444,7 +474,12 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const [viewAll, setViewAll] = useState<'featured' | 'popular' | null>(null);
 
   const handleRefresh = async () => {
-    if (!isOffline) await qc.invalidateQueries({ queryKey: ['events'] });
+    if (!isOffline) {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['events'] }),
+        qc.invalidateQueries({ queryKey: ['feed', 'pages'] })
+      ]);
+    }
   };
 
   if (viewAll) {

@@ -74,18 +74,21 @@ export function clearCreateEventDraft() {
 // value font que find() retourne toujours la première, causant des bugs de
 // sélection et d'affichage (ex : "Fêtes" → "Boissons", "Comédie" par défaut).
 const CATEGORIES = [
-  { label: 'Art et culture',            value: 'CULTURE',   Icon: PaintBoardIcon },
-  { label: 'Comédie',                   value: 'GAMING',    Icon: MaskTheater01Icon },
-  { label: 'Sport',                     value: 'SPORT',     Icon: FootballIcon },
-  { label: 'Santé et bien-être',        value: 'WELLNESS',  Icon: HealthIcon },
-  { label: 'Cuisine et gastronomie',    value: 'FOOD',      Icon: KitchenUtensilsIcon },
-  { label: 'Boissons',                  value: 'LIFESTYLE', Icon: DrinkIcon },
-  { label: 'Réseautage professionnel',  value: 'SOCIAL',    Icon: MoleculesIcon },
-  { label: 'Fêtes',                     value: 'NIGHTLIFE', Icon: PartyIcon },
-  { label: 'Religion',                  value: 'OTHER',     Icon: HandPrayerIcon },
-  { label: 'Shopping',                  value: 'TECH',      Icon: ShoppingBag02Icon },
-  { label: 'Musique et son',            value: 'MUSIC',     Icon: MusicNote03Icon },
-  { label: 'Télévision et cinéma',      value: 'ART',       Icon: CameraVideoIcon },
+  { label: 'Art et culture',              value: 'CULTURE',   Icon: PaintBoardIcon },
+  { label: 'Comédie',                     value: 'GAMING',    Icon: MaskTheater01Icon },
+  { label: 'Sport',                       value: 'SPORT',     Icon: FootballIcon },
+  { label: 'Santé et bien-être',          value: 'WELLNESS',  Icon: HealthIcon },
+  { label: 'Cuisine et gastronomie',      value: 'FOOD',      Icon: KitchenUtensilsIcon },
+  { label: 'Boissons',                    value: 'LIFESTYLE', Icon: DrinkIcon },
+  { label: 'Réseautage professionnel',    value: 'SOCIAL',    Icon: MoleculesIcon },
+  { label: 'Fêtes',                       value: 'NIGHTLIFE', Icon: PartyIcon },
+  { label: 'Religion',                    value: 'OTHER',     Icon: HandPrayerIcon },
+  { label: 'Shopping',                    value: 'TECH',      Icon: ShoppingBag02Icon },
+  { label: 'Musique et son',              value: 'MUSIC',     Icon: MusicNote03Icon },
+  { label: 'Télévision et cinéma',        value: 'ART',       Icon: CameraVideoIcon },
+  { label: 'Jeux vidéos & jeux de société', value: 'GAMES',   Icon: MaskTheater01Icon },
+  { label: 'Concerts & festivals',        value: 'CONCERTS',  Icon: MusicNote03Icon },
+  { label: 'Voyages et découverte',       value: 'TRAVEL',    Icon: PaintBoardIcon },
 ]
 
 // ── Participation modes ──────────────────────────────────────────────────────

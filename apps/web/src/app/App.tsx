@@ -66,6 +66,7 @@ import { TermsOfService } from '@/app/components/TermsOfService'
 import { LandingPage } from '@/app/components/LandingPage'
 import HelpSupport from './components/HelpSupport'
 import { SmartAppBanner } from '@/components/shared/SmartAppBanner'
+import { OutRadar } from '@/features/radar/components/OutRadar'
 
 // All screens via adapter bridge (prop-based → React Router)
 import {
@@ -343,6 +344,7 @@ export default function App() {
             <Route path="/profile/events-joined" element={<JoinedEventsList />} />
             <Route path="/profile/:userId/events-joined" element={<JoinedEventsList />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/radar" element={<OutRadar />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/support" element={<HelpSupport />} />
             <Route path="/pages" element={<PagesHub />} />

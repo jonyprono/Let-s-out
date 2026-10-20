@@ -163,6 +163,35 @@ export default fp(async (fastify: FastifyInstance) => {
         }
         await (fastify as any).prisma.event.update({ where: { id: ev.id }, data: { reminder2hSent: true } })
       }
+
+      // ── OUT RADAR : Expiration automatique de la visibilité et purge intégrale des coordonnées GPS ──
+      try {
+        await (fastify as any).prisma.radarVisibility.updateMany({
+          where: {
+            isVisible: true,
+            expiresAt: { lte: now }
+          },
+          data: {
+            isVisible: false,
+            latitude: null,
+            longitude: null,
+            locationUpdatedAt: null
+          }
+        })
+
+        // Expiration des invitations radar en attente
+        await (fastify as any).prisma.radarInvite.updateMany({
+          where: {
+            status: 'PENDING',
+            expiresAt: { lte: now }
+          },
+          data: {
+            status: 'EXPIRED'
+          }
+        })
+      } catch (radarErr: any) {
+        fastify.log.warn({ radarErr }, '[OUT_RADAR_CRON] Failed to purge expired radar entries')
+      }
     } catch (err: any) {
       fastify.log.error({ err }, 'Error running payout expiration cron:')
     }

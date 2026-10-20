@@ -410,11 +410,20 @@ export function PageView() {
 
                       {/* Post Media */}
                       {post.mediaUrls && post.mediaUrls.length > 0 && (
-                        <div className="w-full max-h-96 bg-black flex items-center justify-center overflow-hidden">
-                          {post.mediaUrls[0].endsWith('.mp4') ? (
-                            <video src={post.mediaUrls[0]} controls className="w-full max-h-96 object-contain" />
+                        <div className="w-full overflow-hidden bg-black">
+                          {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
+                            <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+                              <video
+                                src={post.mediaUrls[0]}
+                                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                className="w-full h-full object-cover"
+                                controls
+                                playsInline
+                                preload="metadata"
+                              />
+                            </div>
                           ) : (
-                            <SafeImage src={post.mediaUrls[0]} alt="Media" className="w-full max-h-96 object-contain" />
+                            <SafeImage src={post.mediaUrls[0]} alt="Media" className="w-full max-h-96 object-cover" />
                           )}
                         </div>
                       )}
@@ -720,7 +729,10 @@ export function PageView() {
               </div>
 
               {/* Bottom Toolbar & Next Button */}
-              <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex flex-col gap-3">
+              <div
+                className="border-t border-gray-100 dark:border-gray-800 flex flex-col gap-3 px-4 pt-4"
+                style={{ paddingBottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
+              >
                 {/* 3 Icons Toolbar */}
                 <div className="flex items-center gap-2">
                   <button
@@ -865,7 +877,10 @@ export function PageView() {
               </div>
 
               {/* Publier Button */}
-              <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+              <div
+                className="border-t border-gray-100 dark:border-gray-800 px-4 pt-4"
+                style={{ paddingBottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
+              >
                 <button
                   disabled={publishing}
                   onClick={handlePublishPost}

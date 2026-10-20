@@ -57,6 +57,15 @@ const INTERESTS_LIST = [
   'Voyages',
   'Lifestyle',
   'Tourisme',
+  'Jeux vidéos & jeux de société',
+  'Concerts & festivals',
+  'Sport',
+  'Musique',
+  'Gastronomie',
+  'Nightlife & Fêtes',
+  'Shopping',
+  'Cinéma & Séries',
+  'Réseautage professionnel',
 ]
 
 function formatPhone(code: string, local: string) {

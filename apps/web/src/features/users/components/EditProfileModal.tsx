@@ -11,7 +11,10 @@ import { useNavigate } from 'react-router'
 
 const AVAILABLE_INTERESTS = [
   'Sorties', 'Sport', 'Cinéma', 'Voyage', 'Food', 'Business',
-  'Networking', 'Nightlife', 'Musique', 'Culture', 'Art', 'Tech'
+  'Networking', 'Nightlife', 'Musique', 'Culture', 'Art', 'Tech',
+  'Jeux vidéos & jeux de société', 'Concerts & festivals',
+  'Voyages & découverte', 'Gastronomie', 'Shopping', 'Bien-être',
+  'Réseautage professionnel', 'Science & Education', 'Lifestyle',
 ]
 
 interface EditProfileModalProps {
