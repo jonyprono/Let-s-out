@@ -14,12 +14,21 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): 
 }
 
 // Tranches de proximité génériques (AUCUNE coordonnée exacte ni distance précise au mètre près)
-function getProximityLabel(distanceKm: number): string {
-  if (distanceKm <= 0.5) return 'À proximité immédiate'
-  if (distanceKm <= 1.0) return "À moins d'1 km"
-  if (distanceKm <= 3.0) return "À moins de 3 km"
-  return 'Dans votre zone (moins de 5 km)'
+export type ProximityTier = 'IMMEDIATE' | 'UNDER_1KM' | 'UNDER_3KM' | 'UNDER_5KM'
+
+function getProximityInfo(distanceKm: number): { tier: ProximityTier; label: string } {
+  if (distanceKm <= 0.5) return { tier: 'IMMEDIATE', label: 'À proximité immédiate' }
+  if (distanceKm <= 1.0) return { tier: 'UNDER_1KM', label: "À moins d'1 km" }
+  if (distanceKm <= 3.0) return { tier: 'UNDER_3KM', label: "À moins de 3 km" }
+  return { tier: 'UNDER_5KM', label: 'Dans votre zone (moins de 5 km)' }
 }
+
+function getProximityLabel(distanceKm: number): string {
+  return getProximityInfo(distanceKm).label
+}
+
+// Anti-triangulation : mémorisation de l'horodatage de dernière recherche par utilisateur
+const lastSearchTimestamps = new Map<string, number>()
 
 // Vérification de la majorité (18 ans et plus)
 function isAdult(birthDate: Date | null | undefined): boolean {
@@ -213,6 +222,17 @@ export default async function radarRoutes(app: FastifyInstance) {
       outingType?: string
     }
 
+    // 0. Anti-triangulation : limite de 1 recherche toutes les 10 secondes
+    const nowMs = Date.now()
+    const lastSearch = lastSearchTimestamps.get(userId)
+    if (lastSearch && nowMs - lastSearch < 10000) {
+      const waitSec = Math.ceil((10000 - (nowMs - lastSearch)) / 1000)
+      return reply.code(429).send({
+        error: `Pour protéger la communauté, la prochaine recherche sera disponible dans ${waitSec} seconde${waitSec > 1 ? 's' : ''}.`,
+      })
+    }
+    lastSearchTimestamps.set(userId, nowMs)
+
     // 1. Validation des coordonnées de recherche
     if (
       typeof latitude !== 'number' ||
@@ -378,6 +398,7 @@ export default async function radarRoutes(app: FastifyInstance) {
       }
 
       // Retourne uniquement les données non géographiques (JAMAIS les coordonnées brutes)
+      const proxInfo = getProximityInfo(distance)
       results.push({
         id: item.user.id,
         displayName: item.user.profile?.displayName || 'Outster',
@@ -386,7 +407,8 @@ export default async function radarRoutes(app: FastifyInstance) {
         isVerified,
         gender: item.user.profile?.gender || null,
         outingType: item.outingType || null,
-        proximity: getProximityLabel(distance),
+        proximityTier: proxInfo.tier,
+        proximity: proxInfo.label,
         inviteStatus,
         canInvite,
       })

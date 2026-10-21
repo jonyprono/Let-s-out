@@ -50,6 +50,13 @@ input, textarea, .selectable-text {
   to   { transform: translateY(0);    opacity: 1; }
 }
 
+/* ── OUT RADAR — Pulse animation des cercles concentriques ───────────────── */
+@keyframes radarPulse {
+  0%   { r: 0;    opacity: 0.9; }
+  60%  { r: 140;  opacity: 0.2; }
+  100% { r: 145;  opacity: 0;   }
+}
+
 .page-enter {
   animation: slideInFromRight 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
   will-change: transform, opacity;

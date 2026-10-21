@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -26,6 +26,7 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { useAuthStore } from '@/stores/auth.store'
 import { apiClient } from '@/lib/api-client'
 import { radarApi, RadarSearchResult } from '../api'
+import { RadarView } from './RadarView'
 
 // Types de sortie avec libellés et icônes
 const OUTING_TYPES = [
@@ -68,6 +69,12 @@ export function OutRadar() {
   const [inviteTarget, setInviteTarget] = useState<RadarSearchResult | null>(null)
   const [inviteMessage, setInviteMessage] = useState('')
   const [sendingInvite, setSendingInvite] = useState(false)
+
+  // OUT RADAR : identifiant de session pour redistribuer les angles à chaque recherche
+  const [searchSessionId, setSearchSessionId] = useState(() => Math.random().toString(36).slice(2))
+
+  // Ref vers la liste complète (pour le scroll depuis le badge +N)
+  const listRef = useRef<HTMLDivElement>(null)
 
   // ── 1. Query: Statut de visibilité actuel ────────────────────────────────────
   const { data: statusData, isLoading: loadingStatus } = useQuery({
@@ -181,8 +188,20 @@ export function OutRadar() {
       currentCoords = await requestLocation()
       if (!currentCoords) return
     }
+    // Nouvelle session → positions des avatars redistribuées
+    setSearchSessionId(Math.random().toString(36).slice(2))
     triggerSearch()
   }
+
+  // ── 5b. Élargir le rayon d'un cran ───────────────────────────────────────────
+  const handleWidenRadius = useCallback(() => {
+    const radii = [0.5, 1, 3, 5]
+    const idx = radii.indexOf(radiusKm)
+    if (idx < radii.length - 1) {
+      setRadiusKm(radii[idx + 1])
+    }
+    handleLaunchSearch()
+  }, [radiusKm])
 
   // ── 6. Mutation : Activer / Désactiver la visibilité ──────────────────────────
   const visibilityMutation = useMutation({
@@ -614,55 +633,36 @@ export function OutRadar() {
               </button>
             </div>
 
-            {/* ── 5. LISTE DES RÉSULTATS (AUCUNE CARTE GÉO) ────────────────────── */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-                  Résultats à proximité{' '}
-                  {searchResults ? `(${searchResults.length})` : ''}
-                </h3>
-                {coords && (
-                  <span className="text-[11px] text-gray-400">Rayon : {radiusKm < 1 ? '500 m' : `${radiusKm} km`}</span>
-                )}
+            {/* ── 5. RADAR VISUEL + LISTE COMPLÈTE (AUCUNE CARTE GÉO) ─────────── */}
+
+            {/* Zone radar — affichée si recherche en cours ou résultats disponibles */}
+            {(fetchingSearch || loadingSearch || searchResults !== undefined) && (
+              <div className="bg-white dark:bg-[#1A1A1A] rounded-3xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs">
+                <RadarView
+                  isSearching={fetchingSearch || loadingSearch}
+                  results={searchResults}
+                  sessionId={searchSessionId}
+                  onSendInvite={(profile) => setInviteTarget(profile)}
+                  onBlockUser={handleBlockUser}
+                  onReportUser={handleReportUser}
+                  onModifyFilters={() => setShowFiltersModal(true)}
+                  onWidenRadius={handleWidenRadius}
+                  listRef={listRef}
+                />
               </div>
+            )}
 
-              {/* État de chargement initial */}
-              {loadingSearch && (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 animate-pulse flex items-center gap-3"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-1/3" />
-                        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
-                      </div>
-                    </div>
-                  ))}
+            {/* Liste complète des résultats (accessible, visible sous le radar) */}
+            {!loadingSearch && searchResults && searchResults.length > 0 && (
+              <div ref={listRef} className="space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                    {searchResults.length} Outster{searchResults.length > 1 ? 's' : ''} à proximité
+                  </h3>
+                  <span className="text-[11px] text-gray-400">Rayon : {radiusKm < 1 ? '500 m' : `${radiusKm} km`}</span>
                 </div>
-              )}
 
-              {/* Si recherche effectuée et aucun résultat : texte exact du cahier des charges */}
-              {!loadingSearch && searchResults && searchResults.length === 0 && (
-                <div className="text-center py-12 bg-white dark:bg-[#1A1A1A] rounded-3xl p-6 border border-gray-100 dark:border-gray-800 space-y-2">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto text-xl">
-                    🔍
-                  </div>
-                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    Aucun Outster disponible dans cette zone pour le moment.
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Essaie d’élargir le rayon ou de modifier tes filtres.
-                  </p>
-                </div>
-              )}
-
-              {/* Cartes de profils */}
-              {!loadingSearch &&
-                searchResults &&
-                searchResults.map((profile) => (
+                {searchResults.map((profile) => (
                   <div
                     key={profile.id}
                     className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs relative transition-all"
@@ -694,35 +694,23 @@ export function OutRadar() {
                               <CheckCircle2 className="w-4 h-4 text-blue-500 fill-blue-500 text-white shrink-0" />
                             )}
                           </div>
-
-                          {/* Proximité textuelle (strictement aucune coordonnée brute) */}
-                          <p className="text-xs text-[#FF7A00] font-medium mt-0.5">
-                            {profile.proximity}
-                          </p>
-
-                          {/* Type de sortie recherché */}
+                          <p className="text-xs text-[#FF7A00] font-medium mt-0.5">{profile.proximity}</p>
                           {profile.outingType && (
                             <span className="inline-block mt-1 text-[11px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
-                              {OUTING_TYPES.find((t) => t.value === profile.outingType)?.label ||
-                                profile.outingType}
+                              {OUTING_TYPES.find((t) => t.value === profile.outingType)?.label || profile.outingType}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* Menu modération (Bloquer / Signaler) */}
+                      {/* Menu modération */}
                       <div className="relative">
                         <button
-                          onClick={() =>
-                            setActionMenuProfileId(
-                              actionMenuProfileId === profile.id ? null : profile.id
-                            )
-                          }
+                          onClick={() => setActionMenuProfileId(actionMenuProfileId === profile.id ? null : profile.id)}
                           className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>
-
                         {actionMenuProfileId === profile.id && (
                           <div className="absolute right-0 top-8 z-30 w-36 bg-white dark:bg-[#252525] rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-1 text-xs font-medium">
                             <button
@@ -744,12 +732,10 @@ export function OutRadar() {
                       </div>
                     </div>
 
-                    {/* Bouton d'action invitation */}
+                    {/* Bouton invitation */}
                     <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end">
                       {profile.inviteStatus === 'PENDING' ? (
-                        <span className="text-xs font-semibold text-orange-500 bg-orange-50 dark:bg-orange-950/30 px-3 py-1.5 rounded-full">
-                          Demande envoyée
-                        </span>
+                        <span className="text-xs font-semibold text-orange-500 bg-orange-50 dark:bg-orange-950/30 px-3 py-1.5 rounded-full">Demande envoyée</span>
                       ) : profile.inviteStatus === 'ACCEPTED' ? (
                         <button
                           onClick={() => navigate('/messages')}
@@ -759,9 +745,7 @@ export function OutRadar() {
                           Discuter
                         </button>
                       ) : profile.inviteStatus === 'DECLINED' ? (
-                        <span className="text-xs font-semibold text-gray-400 px-3 py-1.5">
-                          Invitation déclinée
-                        </span>
+                        <span className="text-xs font-semibold text-gray-400 px-3 py-1.5">Invitation déclinée</span>
                       ) : (
                         <button
                           onClick={() => setInviteTarget(profile)}
@@ -774,20 +758,21 @@ export function OutRadar() {
                     </div>
                   </div>
                 ))}
-            </div>
+              </div>
+            )}
           </>
         )}
       </div>
 
       {/* ── MODAL : CONFIGURER LA VISIBILITÉ ─────────────────────────────────── */}
       {showVisibilityModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 border border-gray-100 dark:border-gray-800 space-y-4 animate-in slide-in-from-bottom duration-200">
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 border border-gray-100 dark:border-gray-800 space-y-4 max-h-[85dvh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-base">Activer ma visibilité</h3>
+              <h3 className="font-bold text-base text-gray-900 dark:text-white">Activer ma visibilité</h3>
               <button
                 onClick={() => setShowVisibilityModal(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"
+                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 ✕
               </button>
@@ -841,7 +826,7 @@ export function OutRadar() {
             <button
               onClick={() => handleToggleVisibility(true)}
               disabled={visibilityMutation.isPending}
-              className="w-full py-3 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/25"
             >
               {visibilityMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -855,13 +840,13 @@ export function OutRadar() {
 
       {/* ── MODAL : FILTRES COMBINABLES ──────────────────────────────────────── */}
       {showFiltersModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 border border-gray-100 dark:border-gray-800 space-y-4 animate-in slide-in-from-bottom duration-200">
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 border border-gray-100 dark:border-gray-800 space-y-4 max-h-[85dvh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-base">Filtres de recherche</h3>
+              <h3 className="font-bold text-base text-gray-900 dark:text-white">Filtres de recherche</h3>
               <button
                 onClick={() => setShowFiltersModal(false)}
-                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"
+                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 ✕
               </button>
@@ -942,7 +927,7 @@ export function OutRadar() {
                   setShowFiltersModal(false)
                   handleLaunchSearch()
                 }}
-                className="flex-1 py-2.5 rounded-full bg-[#FF7A00] text-white text-xs font-bold hover:bg-[#E06C00]"
+                className="flex-1 py-2.5 rounded-full bg-[#FF7A00] text-white text-xs font-bold hover:bg-[#E06C00] shadow-md shadow-[#FF7A00]/25"
               >
                 Appliquer les filtres
               </button>
@@ -953,13 +938,13 @@ export function OutRadar() {
 
       {/* ── MODAL : ENVOYER UNE INVITATION ──────────────────────────────────── */}
       {inviteTarget && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 border border-gray-100 dark:border-gray-800 space-y-4 animate-in slide-in-from-bottom duration-200">
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 border border-gray-100 dark:border-gray-800 space-y-4 max-h-[85dvh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-base">Inviter {inviteTarget.displayName}</h3>
+              <h3 className="font-bold text-base text-gray-900 dark:text-white">Inviter {inviteTarget.displayName}</h3>
               <button
                 onClick={() => setInviteTarget(null)}
-                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500"
+                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 ✕
               </button>
@@ -981,7 +966,7 @@ export function OutRadar() {
             <button
               onClick={handleSendInvite}
               disabled={sendingInvite}
-              className="w-full py-3 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/25"
             >
               {sendingInvite ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

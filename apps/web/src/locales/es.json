@@ -455,5 +455,24 @@
     "amountDonated": "Monto donado",
     "makeAnotherDonation": "Hacer otra donación",
     "viewEvent": "Ver el evento"
+  },
+  "radar": {
+    "title": "OUT RADAR",
+    "subtitle": "Descubre a los Outsters disponibles a tu alrededor para compartir una salida o actividad.",
+    "searching": "Buscando Outsters cercanos...",
+    "nearbyCount": "Outsters cercanos",
+    "nearbyCountSingular": "Outster cercano",
+    "noResultsTitle": "No hay Outsters disponibles en esta zona por el momento.",
+    "noResultsDesc": "Intenta ampliar el radio o cambiar tus filtros.",
+    "modifyFilters": "Modificar filtros",
+    "widenRadius": "Ampliar radio",
+    "launchSearch": "Buscar Outsters",
+    "launchSearchBtn": "Iniciar búsqueda",
+    "moreOutsters": "más",
+    "profilePreview": "Vista previa del perfil",
+    "sendInvite": "Enviar una invitación",
+    "block": "Bloquear",
+    "report": "Denunciar",
+    "close": "Cerrar"
   }
 }

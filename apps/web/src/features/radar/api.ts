@@ -16,6 +16,7 @@ export interface RadarSearchResult {
   isVerified: boolean
   gender: string | null
   outingType: string | null
+  proximityTier?: 'IMMEDIATE' | 'UNDER_1KM' | 'UNDER_3KM' | 'UNDER_5KM'
   proximity: string
   inviteStatus: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null
   canInvite: boolean
