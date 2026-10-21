@@ -256,11 +256,34 @@ function DeepLinkHandler() {
   return null
 }
 
+function GlobalVideoPlaybackCoordinator() {
+  useEffect(() => {
+    const handleGlobalPlay = (e: Event) => {
+      const currentVideo = e.target as HTMLVideoElement;
+      if (!currentVideo || currentVideo.tagName !== 'VIDEO') return;
+
+      document.querySelectorAll('video').forEach((v) => {
+        if (v !== currentVideo && !v.paused) {
+          v.pause();
+        }
+      });
+    };
+
+    document.addEventListener('play', handleGlobalPlay, true);
+    return () => {
+      document.removeEventListener('play', handleGlobalPlay, true);
+    };
+  }, []);
+
+  return null;
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <BrowserRouter>
+        <GlobalVideoPlaybackCoordinator />
         <DeepLinkHandler />
         <CapacitorThemeSync />
         <AppBootstrap />

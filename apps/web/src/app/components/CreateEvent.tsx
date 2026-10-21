@@ -852,7 +852,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto px-5 pt-3">
+        <div className="flex-1 overflow-y-auto px-5 pt-3" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
           {friends.filter(f => !selectedCoOrgs.find(o => o.id === (f.userId || f.id))).map((f: any) => {
             const name = f.displayName || f.username || 'Utilisateur'
             const uid = f.userId || f.id
@@ -929,7 +929,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* ── Scrollable content ───────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto pb-36">
+      <div 
+        className="flex-1 overflow-y-auto"
+        style={{ paddingBottom: 'max(9rem, calc(env(safe-area-inset-bottom, 0px) + 8rem))' }}
+      >
 
         {/* ── Cover photos (carousel, max 4) ──────────────────────────── */}
         <div className="px-5 pt-4 pb-4">
@@ -1267,7 +1270,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* ── Footer CTA ───────────────────────────────────────────────────── */}
-    <div className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] border-t border-[var(--border-tertiary)] px-5 py-4">
+      <div 
+        className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] border-t border-[var(--border-tertiary)] px-5 pt-4 z-20"
+        style={{ paddingBottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
+      >
         {formStep === 1 ? (
           <PrimaryButton
             onClick={() => setFormStep(2)}

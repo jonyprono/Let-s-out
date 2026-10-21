@@ -14,6 +14,7 @@ import { PermissionsRequest } from './PermissionsRequest';
 import { pagesApi, PagePost } from '@/features/pages/api';
 import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
 import { SafeImage } from '@/components/shared/SafeImage';
+import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer';
 import { sortFeaturedEvents, sortPopularEvents } from '@/utils/event-ranking';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
@@ -138,8 +139,8 @@ function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string,
       {/* Media */}
       {post.mediaUrls?.length > 0 && (
         <div className="w-full bg-black/5 dark:bg-black overflow-hidden relative" style={{ maxHeight: '280px' }}>
-          {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) ? (
-            <video src={post.mediaUrls[0]} controls className="w-full h-full object-cover max-h-[280px]" />
+          {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
+            <FeedVideoPlayer src={post.mediaUrls[0]} maxHeight="280px" />
           ) : (
             <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full h-full object-cover max-h-[280px]" />
           )}

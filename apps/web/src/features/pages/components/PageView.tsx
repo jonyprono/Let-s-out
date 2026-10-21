@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { pagesApi, Page, PagePost } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer'
 import {
   ArrowLeft,
   UserPlus,
@@ -412,16 +413,7 @@ export function PageView() {
                       {post.mediaUrls && post.mediaUrls.length > 0 && (
                         <div className="w-full overflow-hidden bg-black">
                           {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
-                            <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
-                              <video
-                                src={post.mediaUrls[0]}
-                                poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                                className="w-full h-full object-cover"
-                                controls
-                                playsInline
-                                preload="metadata"
-                              />
-                            </div>
+                            <FeedVideoPlayer src={post.mediaUrls[0]} maxHeight="384px" />
                           ) : (
                             <SafeImage src={post.mediaUrls[0]} alt="Media" className="w-full max-h-96 object-cover" />
                           )}

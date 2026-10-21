@@ -45,7 +45,8 @@ export function BottomSheet({ title, open, onClose, children, noPadding, classNa
       <div
         className={`relative w-full max-w-[600px] bg-[var(--color-background-primary)] max-h-[95vh] flex flex-col rounded-t-[32px] ${noPadding ? '' : 'px-5 pt-4 pb-10'} ${className || ''} animate-in slide-in-from-bottom-full duration-300`}
         style={{ 
-          boxShadow: 'var(--shadow-bottom-sheet)' 
+          boxShadow: 'var(--shadow-bottom-sheet)',
+          paddingBottom: noPadding ? undefined : 'max(2.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))'
         }}
         onClick={e => e.stopPropagation()}
       >

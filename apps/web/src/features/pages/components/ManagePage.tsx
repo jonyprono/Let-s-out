@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router'
 import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page, PagePost } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Loader2, Camera, Trash2, Settings, BarChart3, Users, FileText, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
@@ -335,7 +336,7 @@ export function ManagePage() {
                       {post.mediaUrls.length > 0 && (
                         <div className="rounded-xl overflow-hidden">
                           {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
-                            <video src={post.mediaUrls[0]} controls className="w-full max-h-48 bg-black" />
+                            <FeedVideoPlayer src={post.mediaUrls[0]} maxHeight="200px" />
                           ) : (
                             <SafeImage src={post.mediaUrls[0]} alt="" className="w-full max-h-48 object-cover" />
                           )}
