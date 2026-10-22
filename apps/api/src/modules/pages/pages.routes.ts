@@ -323,6 +323,23 @@ export default async function pagesRoutes(app: FastifyInstance) {
     return reply.code(201).send(comment)
   })
 
+  // DELETE COMMENT ON A POST (author or page creator)
+  app.delete('/:id/posts/:postId/comments/:commentId', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id, commentId } = req.params as { id: string; postId: string; commentId: string }
+
+    const page = await app.prisma.page.findUnique({ where: { id } })
+    const comment = await app.prisma.pagePostComment.findUnique({ where: { id: commentId } })
+    if (!comment) return reply.code(404).send({ error: 'Comment not found' })
+
+    if (comment.userId !== sub && page?.creatorId !== sub) {
+      return reply.code(403).send({ error: 'Forbidden' })
+    }
+
+    await app.prisma.pagePostComment.delete({ where: { id: commentId } })
+    return reply.send({ success: true })
+  })
+
   // DELETE A POST (creator of the page only)
   app.delete('/:id/posts/:postId', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }

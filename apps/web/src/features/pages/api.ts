@@ -89,6 +89,9 @@ export const pagesApi = {
   addComment: (pageId: string, postId: string, text: string) =>
     apiClient.post<PagePostComment>(`/pages/${pageId}/posts/${postId}/comments`, { text }).then(res => res.data),
 
+  deleteComment: (pageId: string, postId: string, commentId: string) =>
+    apiClient.delete(`/pages/${pageId}/posts/${postId}/comments/${commentId}`).then(res => res.data),
+
   uploadImage: async (pageId: string, file: File, type: 'avatar' | 'cover' | 'post') => {
     const formData = new FormData()
     formData.append('image', file)

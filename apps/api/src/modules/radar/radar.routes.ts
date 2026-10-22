@@ -23,10 +23,6 @@ function getProximityInfo(distanceKm: number): { tier: ProximityTier; label: str
   return { tier: 'UNDER_5KM', label: 'Dans votre zone (moins de 5 km)' }
 }
 
-function getProximityLabel(distanceKm: number): string {
-  return getProximityInfo(distanceKm).label
-}
-
 // Anti-triangulation : mémorisation de l'horodatage de dernière recherche par utilisateur
 const lastSearchTimestamps = new Map<string, number>()
 
@@ -339,6 +335,7 @@ export default async function radarRoutes(app: FastifyInstance) {
       isVerified: boolean
       gender: string | null
       outingType: string | null
+      proximityTier: ProximityTier
       proximity: string
       inviteStatus: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null
       canInvite: boolean

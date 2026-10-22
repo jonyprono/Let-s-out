@@ -12,6 +12,8 @@ import PullToRefresh from 'react-simple-pull-to-refresh';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { PermissionsRequest } from './PermissionsRequest';
 import { pagesApi, PagePost } from '@/features/pages/api';
+import { PagePostCommentsModal } from '@/features/pages/components/PagePostCommentsModal';
+import { PageVideoPlayerModal, PageVideoItem } from '@/features/pages/components/PageVideoPlayerModal';
 import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer';
@@ -58,14 +60,28 @@ function FeaturedSkeleton() {
   );
 }
 
-function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string, id?: string) => void }) {
+function PagePostCard({
+  post,
+  onNavigate,
+  onOpenVideo,
+}: {
+  post: any;
+  onNavigate: (s: string, id?: string) => void;
+  onOpenVideo?: (postId: string) => void;
+}) {
   const me = useAuthStore(s => (s as any).user);
   const isCreator = me?.id === post.page.creatorId || post.isOwner;
   const [following, setFollowing] = useState(Boolean(post.isFollowing));
   const [followLoading, setFollowLoading] = useState(false);
   const [liked, setLiked] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(post._count?.comments || 0);
   const avatarFallback = isCreator ? me?.profile?.avatarUrl : null;
   const pageAvatarUrl = post.page.avatarUrl || avatarFallback;
+
+  const isVideo = post.mediaUrls?.length > 0 && (
+    post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/')
+  );
 
   useEffect(() => {
     if (typeof post.isFollowing === 'boolean') {
@@ -91,100 +107,123 @@ function PagePostCard({ post, onNavigate }: { post: any, onNavigate: (s: string,
   };
 
   return (
-    <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 mb-4 cursor-pointer" onClick={() => onNavigate('page-view', post.page.id)}>
-      {/* Header */}
-      <div className="p-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-500 text-xs overflow-hidden shrink-0 border border-gray-100 dark:border-gray-800">
-            {pageAvatarUrl
-              ? <img src={pageAvatarUrl} alt={post.page.name} className="w-full h-full object-cover" />
-              : (
-                <div className="w-full h-full flex items-center justify-center bg-[#F3F4F6] dark:bg-[#262626]" style={{ backgroundImage: 'radial-gradient(#D1D5DB 1px, transparent 1px)', backgroundSize: '6px 6px' }}>
+    <>
+      <div
+        className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 mb-4 cursor-pointer"
+        onClick={() => onNavigate('page-view', post.page.id)}
+      >
+        {/* Header */}
+        <div className="p-3.5 flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-500 text-xs overflow-hidden shrink-0 border border-gray-100 dark:border-gray-800">
+              {pageAvatarUrl ? (
+                <img src={pageAvatarUrl} alt={post.page.name} className="w-full h-full object-cover" />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center bg-[#F3F4F6] dark:bg-[#262626]"
+                  style={{ backgroundImage: 'radial-gradient(#D1D5DB 1px, transparent 1px)', backgroundSize: '6px 6px' }}
+                >
                   <span className="text-gray-400 font-bold">{post.page.name[0]?.toUpperCase()}</span>
                 </div>
-              )
-            }
+              )}
+            </div>
+            <p className="font-semibold text-sm text-gray-900 dark:text-white leading-tight truncate">{post.page.name}</p>
           </div>
-          <p className="font-semibold text-sm text-gray-900 dark:text-white leading-tight truncate">{post.page.name}</p>
-        </div>
 
-        {!isCreator ? (
-          <button
-            onClick={handleFollow}
-            disabled={followLoading}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 shrink-0 ${
-              following
-                ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
-                : 'bg-[#FF7A00] text-white hover:bg-[#E06C00]'
-            }`}
-          >
-            {following ? 'Suivi' : 'Suivre'}
-          </button>
-        ) : (
-          <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#262626] px-2.5 py-1 rounded-full shrink-0">
-            Ma page
-          </span>
-        )}
-      </div>
-
-      {/* Content */}
-      {post.content && (
-        <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
-          <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
-            {post.content}
-          </p>
-        </div>
-      )}
-
-      {/* Media */}
-      {post.mediaUrls?.length > 0 && (
-        <div className="w-full bg-black/5 dark:bg-black overflow-hidden relative" style={{ maxHeight: '280px' }}>
-          {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
-            <FeedVideoPlayer src={post.mediaUrls[0]} maxHeight="280px" />
+          {!isCreator ? (
+            <button
+              onClick={handleFollow}
+              disabled={followLoading}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 shrink-0 ${
+                following
+                  ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
+                  : 'bg-[#FF7A00] text-white hover:bg-[#E06C00]'
+              }`}
+            >
+              {following ? 'Suivi' : 'Suivre'}
+            </button>
           ) : (
-            <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full h-full object-cover max-h-[280px]" />
+            <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#262626] px-2.5 py-1 rounded-full shrink-0">
+              Ma page
+            </span>
           )}
         </div>
-      )}
 
-      {/* Footer 3 columns with vertical dividers */}
-      <div className="grid grid-cols-3 border-t border-gray-100 dark:border-gray-800 text-gray-500 py-3">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setLiked(!liked);
-          }}
-          className="flex items-center justify-center p-1 transition-colors hover:text-gray-900 dark:hover:text-white"
-        >
-          <Heart className={`w-4 h-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
-        </button>
+        {/* Content */}
+        {post.content && (
+          <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
+            <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+              {post.content}
+            </p>
+          </div>
+        )}
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onNavigate('page-view', post.page.id);
-          }}
-          className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors gap-1.5"
-        >
-          <MessageCircle className="w-4 h-4" />
-          {post._count?.comments > 0 && (
-            <span className="text-xs font-semibold">{post._count.comments}</span>
-          )}
-        </button>
+        {/* Media */}
+        {post.mediaUrls?.length > 0 && (
+          <div className="w-full bg-black/5 dark:bg-black overflow-hidden relative" style={{ maxHeight: '280px' }}>
+            {isVideo ? (
+              <FeedVideoPlayer
+                src={post.mediaUrls[0]}
+                maxHeight="280px"
+                onExpand={() => onOpenVideo?.(post.id)}
+              />
+            ) : (
+              <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full h-full object-cover max-h-[280px]" />
+            )}
+          </div>
+        )}
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (navigator.share) {
-              navigator.share({ title: post.page.name, text: post.content || '' });
-            }
-          }}
-          className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
-        >
-          <Share2 className="w-4 h-4" />
-        </button>
+        {/* Footer 3 columns with vertical dividers */}
+        <div className="grid grid-cols-3 border-t border-gray-100 dark:border-gray-800 text-gray-500 py-3">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setLiked(!liked);
+            }}
+            className="flex items-center justify-center p-1 transition-colors hover:text-gray-900 dark:hover:text-white"
+          >
+            <Heart className={`w-4 h-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowComments(true);
+            }}
+            className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors gap-1.5"
+            title="Commenter"
+          >
+            <MessageCircle className="w-4 h-4" />
+            {commentsCount > 0 && (
+              <span className="text-xs font-semibold">{commentsCount}</span>
+            )}
+          </button>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (navigator.share) {
+                navigator.share({ title: post.page.name, text: post.content || '' });
+              }
+            }}
+            className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Direct Comment Sheet */}
+      <PagePostCommentsModal
+        pageId={post.page.id}
+        postId={post.id}
+        pageName={post.page.name}
+        pageCreatorId={post.page.creatorId}
+        open={showComments}
+        onClose={() => setShowComments(false)}
+        onCommentAdded={() => setCommentsCount((c: number) => c + 1)}
+      />
+    </>
   );
 }
 
@@ -262,6 +301,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null);
   const featuredScrollRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
   const isOffline = !useIsOnline();
@@ -301,6 +341,23 @@ export function Home({ userData, onNavigate }: HomeProps) {
     queryKey: ['feed', 'pages', user?.id],
     queryFn: () => pagesApi.getFeed({ limit: 20 }),
   });
+
+  const pageVideos: PageVideoItem[] = useMemo(() => {
+    if (!pagePostsData) return [];
+    return (pagePostsData as any[])
+      .filter((p: any) => p.mediaUrls?.some((url: string) => url.match(/\.(mp4|webm|mov|avi)$/i) || url.includes('/video/')))
+      .map((p: any) => ({
+        id: p.id,
+        pageId: p.page?.id || p.pageId,
+        videoUrl: p.mediaUrls.find((url: string) => url.match(/\.(mp4|webm|mov|avi)$/i) || url.includes('/video/')),
+        content: p.content,
+        createdAt: p.createdAt,
+        page: p.page || { id: p.pageId, name: 'Page' },
+        likesCount: p._count?.likes || 0,
+        commentsCount: p._count?.comments || 0,
+        hasLiked: false,
+      }));
+  }, [pagePostsData]);
 
   // Real user activity data
   const { data: activity } = useQuery({
@@ -733,7 +790,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
                           <PagePostCard 
                             key={`post-${item.data.id}-${idx}`} 
                             post={item.data} 
-                            onNavigate={onNavigate} 
+                            onNavigate={onNavigate}
+                            onOpenVideo={(postId) => setPlayingPageVideoId(postId)}
                           />
                         )
                       ))}
@@ -753,6 +811,14 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
       {showPermissions && (
         <PermissionsRequest onComplete={() => setShowPermissions(false)} />
+      )}
+
+      {playingPageVideoId && (
+        <PageVideoPlayerModal
+          videos={pageVideos}
+          initialVideoId={playingPageVideoId}
+          onClose={() => setPlayingPageVideoId(null)}
+        />
       )}
     </div>
   );

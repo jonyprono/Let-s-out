@@ -7,6 +7,7 @@ interface FeedVideoPlayerProps {
   className?: string;
   maxHeight?: string;
   objectFit?: 'cover' | 'contain';
+  onExpand?: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -22,6 +23,7 @@ export function FeedVideoPlayer({
   className = '',
   maxHeight = '280px',
   objectFit = 'cover',
+  onExpand,
 }: FeedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -272,9 +274,16 @@ export function FeedVideoPlayer({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={toggleFullscreen}
-              className="p-1 hover:text-[#FF7A00] transition-colors active:scale-90"
-              title={isFullscreen ? 'Quitter plein écran' : 'Plein écran'}
+              onClick={(e) => {
+                if (onExpand) {
+                  e.stopPropagation();
+                  onExpand();
+                } else {
+                  toggleFullscreen(e);
+                }
+              }}
+              className="p-1 hover:text-[#FF7A00] transition-colors active:scale-90 flex items-center gap-1"
+              title={onExpand ? 'Agrandir (plein écran)' : isFullscreen ? 'Quitter plein écran' : 'Plein écran'}
             >
               {isFullscreen ? (
                 <Minimize className="w-4 h-4" />
@@ -285,6 +294,21 @@ export function FeedVideoPlayer({
           </div>
         </div>
       </div>
+
+      {/* Floating Agrandir Button (when onExpand provided) */}
+      {onExpand && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onExpand();
+          }}
+          className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1.5 active:scale-95 transition-all shadow-md hover:bg-black/80"
+        >
+          <Maximize className="w-3 h-3" />
+          <span>Agrandir</span>
+        </button>
+      )}
     </div>
   );
 }

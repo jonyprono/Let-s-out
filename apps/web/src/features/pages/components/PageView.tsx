@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { pagesApi, Page, PagePost } from '../api'
+import { PagePostCommentsModal } from './PagePostCommentsModal'
+import { PageVideoPlayerModal, PageVideoItem } from './PageVideoPlayerModal'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer'
 import {
@@ -54,12 +56,36 @@ export function PageView() {
   // Likes state (local optimistic)
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({})
   const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null)
+  const [commentModalPost, setCommentModalPost] = useState<PagePost | null>(null)
+  const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const isOwner = Boolean(me?.id && page?.creatorId && me.id === page.creatorId)
+
+  const pageVideos: PageVideoItem[] = useMemo(() => {
+    if (!posts || !page) return []
+    return posts
+      .filter((p) => p.mediaUrls?.some((url) => url.match(/\.(mp4|webm|mov|avi)$/i) || url.includes('/video/')))
+      .map((p) => ({
+        id: p.id,
+        pageId: page.id,
+        videoUrl: p.mediaUrls.find((url) => url.match(/\.(mp4|webm|mov|avi)$/i) || url.includes('/video/'))!,
+        content: p.content,
+        createdAt: p.createdAt,
+        page: {
+          id: page.id,
+          name: page.name,
+          avatarUrl: page.avatarUrl,
+          creatorId: page.creatorId,
+        },
+        likesCount: 0,
+        commentsCount: p._count?.comments || p.comments?.length || 0,
+        hasLiked: Boolean(likedPosts[p.id]),
+      }))
+  }, [posts, page, likedPosts])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
@@ -147,7 +173,10 @@ export function PageView() {
       let mediaUrls: string[] = []
       if (postImage) {
         const uploaded = await pagesApi.uploadImage(id, postImage, 'post')
-        mediaUrls = [uploaded.url]
+        mediaUrls.push(uploaded.url)
+      } else if (postVideo) {
+        const uploaded = await pagesApi.uploadImage(id, postVideo, 'post')
+        mediaUrls.push(uploaded.url)
       }
       const newPost = await pagesApi.createPost(id, {
         content: postContent.trim() || undefined,
@@ -413,7 +442,11 @@ export function PageView() {
                       {post.mediaUrls && post.mediaUrls.length > 0 && (
                         <div className="w-full overflow-hidden bg-black">
                           {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
-                            <FeedVideoPlayer src={post.mediaUrls[0]} maxHeight="384px" />
+                            <FeedVideoPlayer
+                              src={post.mediaUrls[0]}
+                              maxHeight="384px"
+                              onExpand={() => setPlayingPageVideoId(post.id)}
+                            />
                           ) : (
                             <SafeImage src={post.mediaUrls[0]} alt="Media" className="w-full max-h-96 object-cover" />
                           )}
@@ -431,8 +464,17 @@ export function PageView() {
                           <Heart className={`w-4 h-4 ${likedPosts[post.id] ? 'fill-red-500 text-red-500' : ''}`} />
                         </button>
 
-                        <button className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <button
+                          onClick={() => setCommentModalPost(post)}
+                          className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors gap-1.5"
+                          title="Commenter"
+                        >
                           <MessageCircle className="w-4 h-4" />
+                          {((post._count?.comments ?? post.comments?.length) || 0) > 0 && (
+                            <span className="text-xs font-semibold">
+                              {(post._count?.comments ?? post.comments?.length) || 0}
+                            </span>
+                          )}
                         </button>
 
                         <button
@@ -884,6 +926,41 @@ export function PageView() {
             </div>
           )}
         </div>
+      )}
+
+      {/* ── Page Post Comments Modal ── */}
+      {commentModalPost && page && (
+        <PagePostCommentsModal
+          pageId={page.id}
+          postId={commentModalPost.id}
+          pageName={page.name}
+          pageCreatorId={page.creatorId}
+          open={Boolean(commentModalPost)}
+          onClose={() => setCommentModalPost(null)}
+          onCommentAdded={() => {
+            setPosts((prev) =>
+              prev.map((p) =>
+                p.id === commentModalPost.id
+                  ? {
+                      ...p,
+                      _count: {
+                        comments: ((p._count?.comments ?? p.comments?.length) || 0) + 1,
+                      },
+                    }
+                  : p
+              )
+            )
+          }}
+        />
+      )}
+
+      {/* ── Vertical Swiping Page Videos Player Modal (OUT VLOG style) ── */}
+      {playingPageVideoId && (
+        <PageVideoPlayerModal
+          videos={pageVideos}
+          initialVideoId={playingPageVideoId}
+          onClose={() => setPlayingPageVideoId(null)}
+        />
       )}
     </div>
   )
