@@ -73,6 +73,17 @@ export function OutRadar() {
   // OUT RADAR : identifiant de session pour redistribuer les angles à chaque recherche
   const [searchSessionId, setSearchSessionId] = useState(() => Math.random().toString(36).slice(2))
 
+  // Recherche avec durée minimale de 30 secondes
+  const [isManualSearching, setIsManualSearching] = useState(false)
+  const [searchCountdown, setSearchCountdown] = useState(30)
+  const searchTimerRef = useRef<any>(null)
+
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearInterval(searchTimerRef.current)
+    }
+  }, [])
+
   // Ref vers la liste complète (pour le scroll depuis le badge +N)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -181,7 +192,7 @@ export function OutRadar() {
     })
   }
 
-  // ── 5. Action : Lancer la recherche ──────────────────────────────────────────
+  // ── 5. Action : Lancer la recherche (durée 30s minimum) ────────────────────
   const handleLaunchSearch = async () => {
     let currentCoords = coords
     if (!currentCoords) {
@@ -190,7 +201,28 @@ export function OutRadar() {
     }
     // Nouvelle session → positions des avatars redistribuées
     setSearchSessionId(Math.random().toString(36).slice(2))
+    
+    // Déclenche l'appel API
     triggerSearch()
+
+    // Démarre la recherche animée de 30 secondes
+    if (searchTimerRef.current) clearInterval(searchTimerRef.current)
+    setIsManualSearching(true)
+    setSearchCountdown(30)
+
+    const startTime = Date.now()
+    const DURATION_MS = 30000
+
+    searchTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const remaining = Math.max(0, Math.ceil((DURATION_MS - elapsed) / 1000))
+      setSearchCountdown(remaining)
+      if (remaining <= 0) {
+        clearInterval(searchTimerRef.current)
+        searchTimerRef.current = null
+        setIsManualSearching(false)
+      }
+    }, 250)
   }
 
   // ── 5b. Élargir le rayon d'un cran ───────────────────────────────────────────
@@ -616,13 +648,18 @@ export function OutRadar() {
               {/* 4. Bouton principal "Rechercher" */}
               <button
                 onClick={handleLaunchSearch}
-                disabled={requestingGeo || fetchingSearch}
-                className="w-full h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white font-semibold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-[#FF7A00]/20"
+                disabled={requestingGeo || isManualSearching}
+                className="w-full h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white font-semibold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-[#FF7A00]/20 disabled:opacity-90"
               >
-                {requestingGeo || fetchingSearch ? (
+                {requestingGeo ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Recherche en cours...</span>
+                    <span>Localisation en cours...</span>
+                  </>
+                ) : isManualSearching ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Recherche en cours... ({searchCountdown}s)</span>
                   </>
                 ) : (
                   <>
@@ -636,10 +673,11 @@ export function OutRadar() {
             {/* ── 5. RADAR VISUEL + LISTE COMPLÈTE (AUCUNE CARTE GÉO) ─────────── */}
 
             {/* Zone radar — affichée si recherche en cours ou résultats disponibles */}
-            {(fetchingSearch || loadingSearch || searchResults !== undefined) && (
+            {(isManualSearching || fetchingSearch || loadingSearch || searchResults !== undefined) && (
               <div className="bg-white dark:bg-[#1A1A1A] rounded-3xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs">
                 <RadarView
-                  isSearching={fetchingSearch || loadingSearch}
+                  isSearching={isManualSearching || requestingGeo || fetchingSearch || loadingSearch}
+                  searchCountdown={isManualSearching ? searchCountdown : undefined}
                   results={searchResults}
                   sessionId={searchSessionId}
                   onSendInvite={(profile) => setInviteTarget(profile)}
@@ -652,8 +690,8 @@ export function OutRadar() {
               </div>
             )}
 
-            {/* Liste complète des résultats (accessible, visible sous le radar) */}
-            {!loadingSearch && searchResults && searchResults.length > 0 && (
+            {/* Liste complète des résultats (accessible, visible sous le radar après fin du scan) */}
+            {!(isManualSearching || requestingGeo || fetchingSearch || loadingSearch) && searchResults && searchResults.length > 0 && (
               <div ref={listRef} className="space-y-3">
                 <div className="flex items-center justify-between px-1">
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white">

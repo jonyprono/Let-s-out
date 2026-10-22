@@ -69,6 +69,7 @@ function computePositions(
 
 export interface RadarViewProps {
   isSearching: boolean
+  searchCountdown?: number
   results: RadarSearchResult[] | undefined
   sessionId: string
   onSendInvite: (profile: RadarSearchResult) => void
@@ -83,6 +84,7 @@ export interface RadarViewProps {
 
 export function RadarView({
   isSearching,
+  searchCountdown,
   results,
   sessionId,
   onSendInvite,
@@ -243,10 +245,18 @@ export function RadarView({
 
           {/* Label recherche */}
           {isSearching && (
-            <div className="absolute bottom-1 left-0 right-0 flex justify-center pointer-events-none">
+            <div className="absolute bottom-1 left-0 right-0 flex flex-col items-center pointer-events-none">
               <p className="text-[11px] font-semibold text-[#FF7A00] tracking-wide animate-pulse">
-                Recherche d'Outsters a proximite...
+                Recherche d'Outsters à proximité...
               </p>
+              {typeof searchCountdown === 'number' && searchCountdown > 0 && (
+                <div className="mt-1 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF7A00]/15 dark:bg-[#FF7A00]/20 border border-[#FF7A00]/30 backdrop-blur-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF7A00] animate-ping" />
+                  <span className="text-[10px] font-bold text-[#FF7A00] tracking-tight">
+                    Scan en cours : {searchCountdown}s
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
