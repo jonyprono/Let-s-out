@@ -108,13 +108,13 @@ function PagePostCard({
 
   return (
     <>
-      <div
-        className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 mb-4 cursor-pointer"
-        onClick={() => onNavigate('page-view', post.page.id)}
-      >
+      <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-white/10 mb-4">
         {/* Header */}
         <div className="p-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3 min-w-0">
+          <div
+            className="flex items-center gap-3 min-w-0 cursor-pointer active:opacity-80 transition-opacity"
+            onClick={() => onNavigate('page-view', post.page.id)}
+          >
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-500 text-xs overflow-hidden shrink-0 border border-gray-100 dark:border-gray-800">
               {pageAvatarUrl ? (
                 <img src={pageAvatarUrl} alt={post.page.name} className="w-full h-full object-cover" />
@@ -127,7 +127,7 @@ function PagePostCard({
                 </div>
               )}
             </div>
-            <p className="font-semibold text-sm text-gray-900 dark:text-white leading-tight truncate">{post.page.name}</p>
+            <p className="font-semibold text-sm text-gray-900 dark:text-white leading-tight truncate hover:underline">{post.page.name}</p>
           </div>
 
           {!isCreator ? (

@@ -11,13 +11,14 @@ import { useNavigate, useParams, useLocation } from 'react-router';
 import { EventCard } from '@/components/shared/EventCard';
 import { toast } from 'sonner';
 import { ReportModal } from '@/components/shared/ReportModal';
+import { pagesApi, Page } from '@/features/pages/api';
 
 
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
 }
 
-type Tab = 'profil' | 'events' | 'friends' | 'following';
+type Tab = 'profil' | 'pages' | 'events' | 'friends' | 'following';
 
 export function ProfileV2({ onNavigate }: ProfileProps) {
   const user = useAuthStore((s) => s.user);
@@ -73,6 +74,13 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     queryKey: ['users', 'friends'],
     queryFn: () => usersApi.getFriends(),
     enabled: !!user?.id && isOwnProfile,
+  });
+
+  // Pages created by this profile user
+  const { data: userPages, isLoading: loadingUserPages } = useQuery({
+    queryKey: ['pages', 'by-user', targetUserId, isOwnProfile],
+    queryFn: () => isOwnProfile ? pagesApi.getMyPages() : pagesApi.getByCreator(targetUserId!),
+    enabled: !!targetUserId,
   });
 
   const createdEvents = activity?.createdEvents ?? [];
@@ -442,10 +450,12 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           </button>
 
           <button 
-            onClick={() => navigate('/pages')}
-            className="flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400 active:scale-95 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+            onClick={() => setActiveTab('pages')}
+            className={`flex flex-row items-center px-3 py-2 gap-1.5 h-[36px] rounded-full transition-colors active:scale-95 cursor-pointer ${
+              activeTab === 'pages' ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/10' : 'bg-[#FAFAFA] text-[#56514F] dark:bg-[#1A1A1A] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+            }`}
           >
-            <FileText className="w-[18px] h-[18px] text-[#A3A3A3]" />
+            <FileText className={`w-[18px] h-[18px] ${activeTab === 'pages' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}`} />
             <span className="font-poppins font-medium text-[12px] leading-[16px]">Pages</span>
           </button>
 
@@ -598,6 +608,80 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               </div>
             )}
 
+          </div>
+        )}
+
+        {activeTab === 'pages' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-900 dark:text-white">
+                {isOwnProfile ? 'Vos pages' : `Pages créées par ${displayName}`}
+              </h3>
+              {isOwnProfile && (
+                <button
+                  onClick={() => navigate('/pages/create')}
+                  className="text-xs text-[#FF7A00] font-semibold flex items-center gap-1 active:scale-95"
+                >
+                  + Créer une page
+                </button>
+              )}
+            </div>
+
+            {loadingUserPages ? (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-6 h-6 animate-spin text-[#FF7A00]" />
+              </div>
+            ) : userPages && userPages.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {userPages.map((p: Page) => (
+                  <div
+                    key={p.id}
+                    onClick={() => navigate(`/pages/${p.id}`)}
+                    className="p-3.5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#141414] flex items-center justify-between cursor-pointer hover:border-[#FF7A00]/40 transition-all shadow-xs active:scale-[0.99]"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 shrink-0 flex items-center justify-center font-bold text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-800">
+                        {p.avatarUrl ? (
+                          <SafeImage src={p.avatarUrl} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          p.name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{p.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.category || 'Page'}</p>
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          {p._count?.followers || 0} abonné{(p._count?.followers || 0) > 1 ? 's' : ''} · {p._count?.posts || 0} publication{(p._count?.posts || 0) > 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-[#FF7A00] shrink-0">Consulter →</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-[#FFF9EC] dark:bg-[#FF7A00]/10 flex items-center justify-center mb-3">
+                  <FileText className="w-8 h-8 text-[#FF7A00]" />
+                </div>
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                  {isOwnProfile ? "Vous n'avez pas encore créé de page" : "Aucune page créée"}
+                </h4>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs">
+                  {isOwnProfile
+                    ? "Créez une page pour partager vos événements et vos publications avec vos abonnés."
+                    : `${displayName} n'a pas encore créé de page publique.`}
+                </p>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => navigate('/pages/create')}
+                    className="mt-4 px-5 py-2.5 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-semibold shadow-md shadow-[#FF7A00]/25 active:scale-95 transition-all"
+                  >
+                    Créer ma première page
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 

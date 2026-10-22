@@ -38,6 +38,54 @@ export default async function pagesRoutes(app: FastifyInstance) {
     return reply.send({ data: pages })
   })
 
+  // LIST PAGES (by creatorId or discovery)
+  app.get('/', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
+    let sub: string | undefined = undefined
+    try {
+      const u = req.user as { sub?: string }
+      if (u?.sub) sub = u.sub
+    } catch {}
+
+    const query = req.query as { creatorId?: string; limit?: string }
+    const where: any = {}
+    if (query.creatorId) {
+      where.creatorId = query.creatorId
+    }
+
+    const pages = await app.prisma.page.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: query.limit ? parseInt(query.limit, 10) : 50,
+      include: {
+        _count: { select: { followers: true, posts: true } },
+        creator: {
+          select: {
+            id: true,
+            profile: {
+              select: { displayName: true, avatarUrl: true, username: true }
+            }
+          }
+        }
+      }
+    })
+
+    let followedPageIds = new Set<string>()
+    if (sub && pages.length > 0) {
+      const follows = await app.prisma.pageFollower.findMany({
+        where: { userId: sub, pageId: { in: pages.map(p => p.id) } },
+        select: { pageId: true }
+      })
+      followedPageIds = new Set(follows.map(f => f.pageId))
+    }
+
+    const data = pages.map(p => ({
+      ...p,
+      isFollowing: followedPageIds.has(p.id)
+    }))
+
+    return reply.send({ data })
+  })
+
   // GET GLOBAL FEED OF PAGES POSTS (Public feed for all users, like events, respects blocks)
   app.get('/feed', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
     let sub: string | undefined = undefined

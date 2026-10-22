@@ -50,6 +50,12 @@ export const pagesApi = {
   getMyPages: () =>
     apiClient.get<{ data: Page[] }>('/pages/me').then(res => res.data.data),
 
+  getByCreator: (creatorId: string) =>
+    apiClient.get<{ data: Page[] }>('/pages', { params: { creatorId } }).then(res => res.data.data),
+
+  getAll: (params?: { limit?: number }) =>
+    apiClient.get<{ data: Page[] }>('/pages', { params }).then(res => res.data.data),
+
   getFeed: (params?: { limit?: number; offset?: number; cursor?: string }) =>
     apiClient.get<{
       data: (PagePost & {

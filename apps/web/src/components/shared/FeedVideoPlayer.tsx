@@ -41,7 +41,7 @@ export function FeedVideoPlayer({
     poster ||
     (src.includes('cloudinary.com') && src.includes('/video/upload/')
       ? src.replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
-      : undefined);
+      : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
 
   // Pause all other videos on the page when this video starts playing
   const pauseOtherVideos = useCallback(() => {
@@ -201,14 +201,7 @@ export function FeedVideoPlayer({
         style={{ maxHeight: isFullscreen ? '100vh' : maxHeight }}
       />
 
-      {/* Center Play Button Overlay when paused */}
-      {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/25 pointer-events-none transition-opacity">
-          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white shadow-2xl transition-transform hover:scale-110 active:scale-95 border border-white/20">
-            <Play className="w-6 h-6 ml-0.5 fill-white text-white drop-shadow" />
-          </div>
-        </div>
-      )}
+      {/* Center Play Button Overlay — supprimé pour éviter l'icône grand noir natif/flicker sur mobile */}
 
       {/* Bottom Controls Bar (Visible when paused, or temporarily on tap/hover when playing) */}
       <div

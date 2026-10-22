@@ -221,6 +221,21 @@ export function OutRadar() {
         clearInterval(searchTimerRef.current)
         searchTimerRef.current = null
         setIsManualSearching(false)
+        const cached = queryClient.getQueryData<any[]>([
+          'radar',
+          'search',
+          currentCoords?.latitude,
+          currentCoords?.longitude,
+          radiusKm,
+          genderFilter,
+          verifiedOnly,
+          outingTypeFilter,
+        ])
+        if (!cached || cached.length === 0) {
+          toast.info('Recherche terminée : aucun Outster détecté à proximité pour le moment.')
+        } else {
+          toast.success(`Recherche terminée : ${cached.length} Outster${cached.length > 1 ? 's' : ''} détecté${cached.length > 1 ? 's' : ''} !`)
+        }
       }
     }, 250)
   }

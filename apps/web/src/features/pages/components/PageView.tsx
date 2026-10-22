@@ -87,6 +87,8 @@ export function PageView() {
       }))
   }, [posts, page, likedPosts])
 
+  const [loadError, setLoadError] = useState<string | null>(null)
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0, behavior: 'instant' })
   }, [id])
@@ -94,6 +96,7 @@ export function PageView() {
   useEffect(() => {
     if (!id) return
     setLoading(true)
+    setLoadError(null)
     Promise.all([pagesApi.getById(id), pagesApi.getPosts(id)])
       .then(([pageData, postsData]) => {
         setPage(pageData)
@@ -104,15 +107,14 @@ export function PageView() {
         console.error('Erreur chargement page:', error)
         const apiMsg = error?.response?.data?.error || error?.response?.data?.message
         const errorStr = typeof apiMsg === 'string' ? apiMsg : (error?.message || 'Erreur lors du chargement de la page')
-        toast.error(
+        setLoadError(
           String(errorStr).includes('ProgressEvent') || String(error).includes('ProgressEvent')
             ? 'Erreur de connexion au serveur'
             : errorStr
         )
-        navigate('/pages')
       })
       .finally(() => setLoading(false))
-  }, [id, navigate])
+  }, [id])
 
   const handleFollowToggle = async () => {
     if (!id || !page || isOwner) return
@@ -216,6 +218,24 @@ export function PageView() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
         <Loader2 className="w-8 h-8 animate-spin text-[#FF7A00]" />
+      </div>
+    )
+  }
+
+  if (loadError && !page) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-black p-6 text-center">
+        <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-950/20 text-red-500 flex items-center justify-center text-2xl mb-4">
+          ⚠️
+        </div>
+        <h2 className="text-base font-bold text-gray-900 dark:text-white mb-1">Impossible de charger cette page</h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 max-w-xs">{loadError}</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-6 py-2.5 rounded-full bg-[#FF7A00] text-white text-xs font-semibold hover:bg-[#E06C00] active:scale-95 transition-all shadow-md shadow-[#FF7A00]/25"
+        >
+          Retour
+        </button>
       </div>
     )
   }

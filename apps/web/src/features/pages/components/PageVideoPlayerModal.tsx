@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, UIEvent } from 'react'
-import { ChevronLeft, Play, Heart, MessageCircle, Share2, Volume2, VolumeX } from 'lucide-react'
+import { ChevronLeft, Heart, MessageCircle, Share2, Volume2, VolumeX } from 'lucide-react'
 import { App } from '@capacitor/app'
 import { useNavigate } from 'react-router'
 import { PagePostCommentsModal } from './PagePostCommentsModal'
@@ -157,7 +157,6 @@ function PageVideoPlayerItem({
 }) {
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
   const [liked, setLiked] = useState(Boolean(item.hasLiked))
   const [likesCount, setLikesCount] = useState(item.likesCount || 0)
@@ -169,23 +168,21 @@ function PageVideoPlayerItem({
 
     if (isActive) {
       video.currentTime = 0
-      video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
+      video.play().catch(() => {})
     } else {
       video.pause()
-      setIsPlaying(false)
     }
   }, [isActive])
 
-  const togglePlay = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const togglePlay = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
     const video = videoRef.current
     if (!video) return
 
     if (video.paused) {
-      video.play().then(() => setIsPlaying(true)).catch(() => {})
+      video.play().catch(() => {})
     } else {
       video.pause()
-      setIsPlaying(false)
     }
   }
 
@@ -237,24 +234,29 @@ function PageVideoPlayerItem({
         <video
           ref={videoRef}
           src={item.videoUrl}
-          playsInline
+          poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
           loop
+          controls={false}
+          playsInline
+          disablePictureInPicture
+          webkit-playsinline="true"
+          x5-playsinline="true"
           muted={isMuted}
           onTimeUpdate={handleTimeUpdate}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
           className="w-full h-full object-contain pointer-events-none"
         />
       </div>
 
-      {/* Center Play Icon when paused */}
-      {!isPlaying && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-          <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-2xl">
-            <Play className="w-7 h-7 text-white fill-white ml-1" />
-          </div>
-        </div>
-      )}
+      {/* Transparent overlay to capture clicks without triggering native video controls */}
+      <div 
+        className="absolute inset-0 z-10" 
+        onClick={(e) => {
+          e.stopPropagation()
+          togglePlay()
+        }}
+      />
+
+      {/* Center Play Button Overlay — supprimé : Android/iOS affiche son propre overlay ou flicker noir */}
 
       {/* Top spacer */}
       <div className="h-16 shrink-0" />

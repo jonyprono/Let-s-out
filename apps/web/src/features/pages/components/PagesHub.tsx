@@ -18,12 +18,23 @@ export function PagesHub() {
     queryFn: () => pagesApi.getMyPages(),
   })
 
-  // Local interactive states for suggestions, invitations and follows
-  const [suggestedPages, setSuggestedPages] = useState([
-    { id: '1', name: "Let's Out", subtitle: 'John, Léa et 8 autres amis suivent cette page' },
-    { id: '2', name: 'Eventhub', subtitle: 'Suivie par 1200 personnes' },
-    { id: '3', name: 'Unchill', subtitle: 'John, Léa et 8 autres amis suivent cette page' },
-  ])
+  // Real public pages for suggestions
+  const { data: publicPagesData } = useQuery({
+    queryKey: ['pages', 'all-public'],
+    queryFn: () => pagesApi.getAll({ limit: 20 }),
+  })
+
+  const [hiddenSuggestionIds, setHiddenSuggestionIds] = useState<string[]>([])
+
+  const myPageIds = new Set(myPages?.map((p) => p.id) || [])
+  const suggestedPages = (publicPagesData || [])
+    .filter((p) => !myPageIds.has(p.id) && !hiddenSuggestionIds.includes(p.id))
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      avatarUrl: p.avatarUrl,
+      subtitle: p.category ? `${p.category} · ${p._count?.followers || 0} abonnés` : `${p._count?.followers || 0} abonnés`,
+    }))
 
   const [invitations, setInvitations] = useState([
     {
@@ -57,13 +68,16 @@ export function PagesHub() {
     { id: 'f-5', name: 'Education for all' },
   ])
 
-  const handleFollowSuggestion = (sug: { id: string; name: string }) => {
-    setSuggestedPages((prev) => prev.filter((p) => p.id !== sug.id))
+  const handleFollowSuggestion = async (sug: { id: string; name: string }) => {
+    setHiddenSuggestionIds((prev) => [...prev, sug.id])
     setFollowedPages((prev) => [...prev, { id: sug.id, name: sug.name }])
+    try {
+      await pagesApi.follow(sug.id)
+    } catch {}
   }
 
   const handleRemoveSuggestion = (id: string) => {
-    setSuggestedPages((prev) => prev.filter((p) => p.id !== id))
+    setHiddenSuggestionIds((prev) => [...prev, id])
   }
 
   const handleAcceptInvitation = (invId: string, pageName: string) => {
@@ -191,9 +205,13 @@ export function PagesHub() {
                     {/* Avatar cliquable → profil de la page */}
                     <div
                       onClick={() => navigate(`/pages/${sug.id}`)}
-                      className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 shrink-0 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300 cursor-pointer active:opacity-70 transition-opacity"
+                      className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 shrink-0 flex items-center justify-center text-sm font-bold text-gray-600 dark:text-gray-300 cursor-pointer active:opacity-70 transition-opacity"
                     >
-                      {sug.name.charAt(0)}
+                      {sug.avatarUrl ? (
+                        <SafeImage src={sug.avatarUrl} alt={sug.name} className="w-full h-full object-cover" />
+                      ) : (
+                        sug.name.charAt(0)
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       {/* Nom cliquable → profil de la page */}

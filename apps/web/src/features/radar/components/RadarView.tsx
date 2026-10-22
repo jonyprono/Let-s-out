@@ -259,6 +259,18 @@ export function RadarView({
               )}
             </div>
           )}
+
+          {/* Badge 0 Outster détecté quand la recherche est terminée sans résultat */}
+          {!isSearching && isEmpty && (
+            <div className="absolute bottom-1.5 left-0 right-0 flex flex-col items-center pointer-events-none animate-in fade-in duration-300">
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-900/80 dark:bg-black/90 backdrop-blur-md border border-white/10 shadow-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="text-[11px] font-bold text-white tracking-tight">
+                  0 Outster détecté
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -347,30 +359,35 @@ export function RadarView({
         </p>
       )}
 
-      {/* Etat vide */}
+      {/* Etat vide — Résultat signalant qu'aucun outster n'a été détecté */}
       {isEmpty && (
-        <div className="text-center space-y-3 py-4 w-full">
-          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto text-xl">
-            🔍
+        <div className="w-full bg-[#FFF9EC] dark:bg-[#1A1A1A] border border-[#FFE5B4] dark:border-[#333] rounded-2xl p-5 text-center space-y-3.5 shadow-sm animate-in fade-in duration-300">
+          <div className="w-12 h-12 rounded-full bg-white dark:bg-[#262626] border border-orange-200 dark:border-white/10 flex items-center justify-center mx-auto text-2xl shadow-xs">
+            📡
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-              Aucun Outster disponible dans cette zone pour le moment.
+            <div className="inline-block px-3 py-1 rounded-full bg-[#FF7A00]/10 text-[#FF7A00] font-bold text-xs mb-1.5">
+              Résultat du scan : 0 Outster
+            </div>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              Aucun Outster à proximité pour le moment
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Essaie d'elargir le rayon ou de modifier tes filtres.
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto leading-relaxed">
+              Le radar n'a détecté aucun utilisateur actif dans votre rayon de recherche. Vous pouvez élargir le rayon ou modifier vos filtres.
             </p>
           </div>
-          <div className="flex gap-2 justify-center flex-wrap">
-            <button
-              onClick={onModifyFilters}
-              className="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 active:scale-95 transition-all">
-              Modifier les filtres
-            </button>
+          <div className="flex gap-2.5 justify-center flex-wrap pt-1">
             <button
               onClick={onWidenRadius}
-              className="px-4 py-2 rounded-full bg-[#FF7A00] text-white text-xs font-semibold hover:bg-[#E06C00] active:scale-95 transition-all shadow-md shadow-[#FF7A00]/25">
-              Elargir le rayon
+              className="px-5 py-2.5 rounded-full bg-[#FF7A00] text-white text-xs font-semibold hover:bg-[#E06C00] active:scale-95 transition-all shadow-md shadow-[#FF7A00]/25"
+            >
+              Élargir le rayon
+            </button>
+            <button
+              onClick={onModifyFilters}
+              className="px-4 py-2.5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all"
+            >
+              Modifier les filtres
             </button>
           </div>
         </div>
