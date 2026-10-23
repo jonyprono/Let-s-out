@@ -76,24 +76,17 @@ jobs:
         run: |
           KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8"
 
-          # Create xcconfig to override signing for the App target only
-          cat > /tmp/signing.xcconfig << 'EOF'
-          CODE_SIGN_IDENTITY = Apple Distribution
-          CODE_SIGN_STYLE = Manual
-          DEVELOPMENT_TEAM = GWZQYSN37A
-          EOF
-
           xcodebuild archive \
             -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "./build/LetsOut.xcarchive" \
-            -xcconfig /tmp/signing.xcconfig \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$KEY_PATH" \
             -authenticationKeyID "$APPSTORE_KEY_ID" \
             -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID"
+
 
       - name: Export IPA
         working-directory: apps/web/ios/App
