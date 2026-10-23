@@ -270,9 +270,46 @@ def main():
     prov_file_path = os.path.join(prov_dir, f"{profile_uuid}.mobileprovision")
     with open(prov_file_path, "wb") as f:
         f.write(profile_bytes)
+    # Also write with profile_name for convenience
+    named_file_path = os.path.join(prov_dir, f"{profile_name}.mobileprovision")
+    with open(named_file_path, "wb") as f:
+        f.write(profile_bytes)
     log(f"✅ Provisioning profile installed at: {prov_file_path}")
     log(f"Profile UUID: {profile_uuid}")
     log(f"Profile Name: {profile_name}")
+
+    # Ensure project.pbxproj is properly configured for target App
+    pbxproj_path = "apps/web/ios/App/App.xcodeproj/project.pbxproj"
+    if os.path.exists(pbxproj_path):
+        import re
+        with open(pbxproj_path, "r", encoding="utf-8") as f:
+            pbx_content = f.read()
+
+        # Update TargetAttributes
+        pbx_content = re.sub(
+            r'(504EC3031FED79650016851F = \{[\s\S]*?)ProvisioningStyle = \w+;',
+            rf'\1DevelopmentTeam = {team_id};\n\t\t\t\t\t\tProvisioningStyle = Manual;',
+            pbx_content
+        )
+
+        # Update Release configuration for App target
+        def repl_rel(m):
+            block = m.group(0)
+            if 'CODE_SIGN_STYLE' in block:
+                block = re.sub(r'CODE_SIGN_STYLE = \w+;', 'CODE_SIGN_STYLE = Manual;', block)
+            if 'PROVISIONING_PROFILE_SPECIFIER' in block:
+                block = re.sub(r'PROVISIONING_PROFILE_SPECIFIER = [^;]+;', f'PROVISIONING_PROFILE_SPECIFIER = "{profile_name}";', block)
+            else:
+                block = block.replace('CODE_SIGN_STYLE = Manual;', f'CODE_SIGN_STYLE = Manual;\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "{profile_name}";')
+            if 'CODE_SIGN_IDENTITY' not in block:
+                block = block.replace('buildSettings = {', 'buildSettings = {\n\t\t\t\tCODE_SIGN_IDENTITY = "Apple Distribution";')
+            return block
+
+        pbx_content = re.sub(r'504EC3181FED79650016851F /\* Release \*/ = \{[\s\S]*?name = Release;\s*\};', repl_rel, pbx_content)
+
+        with open(pbxproj_path, "w", encoding="utf-8") as f:
+            f.write(pbx_content)
+        log(f"Ensured {pbxproj_path} has manual signing for target App.")
 
     # 10. Update ExportOptions.plist
     export_plist_path = "apps/web/ios/App/ExportOptions.plist"
