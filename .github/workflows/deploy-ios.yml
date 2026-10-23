@@ -77,6 +77,9 @@ jobs:
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath "./build/LetsOut.xcarchive" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            CODE_SIGN_STYLE="Automatic" \
+            DEVELOPMENT_TEAM="GWZQYSN37A" \
             -allowProvisioningUpdates \
             -authenticationKeyPath "$KEY_PATH" \
             -authenticationKeyID "$APPSTORE_KEY_ID" \
