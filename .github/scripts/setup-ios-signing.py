@@ -144,13 +144,27 @@ def main():
 
     p12_pass = "ci_p12_pass"
     p12_path = "/tmp/distribution.p12"
-    subprocess.run([
+    # OpenSSL 3.x defaults to modern encryption algorithms that macOS 'security import'
+    # cannot decode (failing with "MAC verification failed during PKCS12 import").
+    # The -legacy flag forces compatible legacy encryption.
+    cmd_legacy = [
         "openssl", "pkcs12", "-export",
+        "-legacy",
         "-inkey", dist_key_path,
         "-in", "/tmp/distribution.pem",
         "-out", p12_path,
         "-passout", f"pass:{p12_pass}"
-    ], check=True)
+    ]
+    res = subprocess.run(cmd_legacy, capture_output=True, text=True)
+    if res.returncode != 0:
+        log(f"openssl -legacy failed ({res.stderr.strip()}), falling back to standard openssl pkcs12 export...")
+        subprocess.run([
+            "openssl", "pkcs12", "-export",
+            "-inkey", dist_key_path,
+            "-in", "/tmp/distribution.pem",
+            "-out", p12_path,
+            "-passout", f"pass:{p12_pass}"
+        ], check=True)
 
     # 6. Import certificate and WWDR CA into keychain
     log(f"Importing certificate into keychain at {keychain_path}...")
@@ -167,6 +181,7 @@ def main():
         "security", "import", p12_path,
         "-k", keychain_path,
         "-P", p12_pass,
+        "-A",
         "-T", "/usr/bin/codesign",
         "-T", "/usr/bin/xcodebuild"
     ], check=True)
