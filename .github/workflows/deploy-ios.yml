@@ -88,12 +88,15 @@ jobs:
       - name: Archive app
         working-directory: apps/web/ios/App
         run: |
+          # Capacitor 8 requiert Swift $NonescapableTypes (activé par défaut dans Xcode 26/Swift 6.2).
+          # Sur Xcode 16.x (Swift 6.0/6.1) on doit l'activer manuellement via OTHER_SWIFT_FLAGS.
           xcodebuild archive \
             -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -destination "generic/platform=iOS" \
-            -archivePath "./build/LetsOut.xcarchive"
+            -archivePath "./build/LetsOut.xcarchive" \
+            OTHER_SWIFT_FLAGS="\$(inherited) -enable-experimental-feature NonescapableTypes"
 
       - name: Export IPA
         working-directory: apps/web/ios/App
