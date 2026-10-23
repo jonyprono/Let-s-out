@@ -9,6 +9,11 @@ jobs:
     runs-on: macos-14
 
     steps:
+      - name: Select Xcode 16
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.0'
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -49,7 +54,7 @@ jobs:
       - name: Setup Ruby for Fastlane
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: '3.3'
           bundler-cache: true
 
       - name: Install Fastlane
