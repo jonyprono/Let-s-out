@@ -3,6 +3,8 @@ default_platform(:ios)
 platform :ios do
   desc "Build and upload iOS app to TestFlight / App Store Connect"
   lane :release do
+    ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "120"
+
     api_key = app_store_connect_api_key(
       key_id: ENV["APPSTORE_KEY_ID"],
       issuer_id: ENV["APPSTORE_ISSUER_ID"],
@@ -10,7 +12,7 @@ platform :ios do
       in_house: false
     )
 
-    # 1. Create a temporary keychain on the CI runner
+    # 1. Create and unlock a temporary keychain on the CI runner
     keychain_name = "fastlane_tmp_keychain"
     keychain_password = "temporary_password_123"
     create_keychain(
@@ -25,17 +27,31 @@ platform :ios do
     # 2. Automatically fetch/create distribution certificate and install into keychain
     get_certificates(
       api_key: api_key,
-      keychain_path: ENV["KEYCHAIN_PATH"] || File.expand_path("~/Library/Keychains/#{keychain_name}-db"),
+      keychain_path: File.expand_path("~/Library/Keychains/#{keychain_name}-db"),
       keychain_password: keychain_password
     )
 
     # 3. Automatically fetch/create App Store provisioning profile
-    get_provisioning_profile(
+    profile = get_provisioning_profile(
       api_key: api_key,
       app_identifier: "com.letsout.app"
     )
 
-    # 4. Build and archive the IPA
+    profile_name = ENV["SIGH_NAME"] || "com.letsout.app AppStore"
+    profile_uuid = ENV["SIGH_UUID"]
+
+    # 4. Apply code signing settings strictly to the 'App' target (avoids SPM conflicts)
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "App.xcodeproj",
+      targets: ["App"],
+      team_id: "GWZQYSN37A",
+      code_sign_identity: "Apple Distribution",
+      profile_name: profile_name,
+      profile_uuid: profile_uuid
+    )
+
+    # 5. Build and archive the IPA
     build_app(
       project: "App.xcodeproj",
       scheme: "App",
@@ -43,16 +59,15 @@ platform :ios do
       clean: true,
       output_directory: "./build",
       output_name: "LetsOut.ipa",
-      xcargs: "DEVELOPMENT_TEAM=GWZQYSN37A CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='com.letsout.app AppStore' -allowProvisioningUpdates",
       export_options: {
         signingStyle: "manual",
         provisioningProfiles: {
-          "com.letsout.app" => "com.letsout.app AppStore"
+          "com.letsout.app" => profile_name
         }
       }
     )
 
-    # 5. Upload to TestFlight / App Store Connect
+    # 6. Upload to TestFlight / App Store Connect
     upload_to_testflight(
       api_key: api_key,
       ipa: "./build/LetsOut.ipa",
