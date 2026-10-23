@@ -43,10 +43,11 @@ platform :ios do
       clean: true,
       output_directory: "./build",
       output_name: "LetsOut.ipa",
+      xcargs: "DEVELOPMENT_TEAM=GWZQYSN37A CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='com.letsout.app AppStore' -allowProvisioningUpdates",
       export_options: {
         signingStyle: "manual",
         provisioningProfiles: {
-          "com.letsout.app" => ENV["sigh_com.letsout.app_app-store_profile-name"] || "com.letsout.app AppStore"
+          "com.letsout.app" => "com.letsout.app AppStore"
         }
       }
     )
