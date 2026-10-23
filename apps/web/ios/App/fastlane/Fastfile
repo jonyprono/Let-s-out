@@ -25,7 +25,7 @@ platform :ios do
     # 2. Automatically fetch/create distribution certificate and install into keychain
     get_certificates(
       api_key: api_key,
-      keychain_name: keychain_name,
+      keychain_path: ENV["KEYCHAIN_PATH"] || File.expand_path("~/Library/Keychains/#{keychain_name}-db"),
       keychain_password: keychain_password
     )
 
