@@ -71,19 +71,4 @@ jobs:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
         run: |
-          # Use fastlane with App.xcodeproj and App Store Connect API
-          fastlane gym \
-            --project "App.xcodeproj" \
-            --scheme "App" \
-            --export_method "app-store" \
-            --clean \
-            --output_directory "./build" \
-            --output_name "LetsOut.ipa" \
-            --export_options '{"signingStyle": "automatic"}'
-
-          fastlane pilot upload \
-            --api_key_path "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_KEY_ID}.p8" \
-            --key_id "$APPSTORE_KEY_ID" \
-            --issuer_id "$APPSTORE_ISSUER_ID" \
-            --ipa "./build/LetsOut.ipa" \
-            --skip_waiting_for_build_processing true
+          bundle exec fastlane release || fastlane release

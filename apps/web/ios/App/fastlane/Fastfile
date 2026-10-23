@@ -1,0 +1,61 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload iOS app to TestFlight / App Store Connect"
+  lane :release do
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APPSTORE_KEY_ID"],
+      issuer_id: ENV["APPSTORE_ISSUER_ID"],
+      key_filepath: File.expand_path("~/.appstoreconnect/private_keys/AuthKey_#{ENV['APPSTORE_KEY_ID']}.p8"),
+      in_house: false
+    )
+
+    # 1. Create a temporary keychain on the CI runner
+    keychain_name = "fastlane_tmp_keychain"
+    keychain_password = "temporary_password_123"
+    create_keychain(
+      name: keychain_name,
+      password: keychain_password,
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600,
+      lock_when_sleeps: false
+    )
+
+    # 2. Automatically fetch/create distribution certificate and install into keychain
+    get_certificates(
+      api_key: api_key,
+      keychain_name: keychain_name,
+      keychain_password: keychain_password
+    )
+
+    # 3. Automatically fetch/create App Store provisioning profile
+    get_provisioning_profile(
+      api_key: api_key,
+      app_identifier: "com.letsout.app"
+    )
+
+    # 4. Build and archive the IPA
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      export_method: "app-store",
+      clean: true,
+      output_directory: "./build",
+      output_name: "LetsOut.ipa",
+      export_options: {
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "com.letsout.app" => ENV["sigh_com.letsout.app_app-store_profile-name"] || "com.letsout.app AppStore"
+        }
+      }
+    )
+
+    # 5. Upload to TestFlight / App Store Connect
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: "./build/LetsOut.ipa",
+      skip_waiting_for_build_processing: true
+    )
+  end
+end
