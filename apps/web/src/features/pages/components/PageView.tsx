@@ -25,6 +25,9 @@ import {
   Trash2,
   Image as ImageIcon,
   Settings,
+  Copy,
+  Pencil,
+  X,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
@@ -58,6 +61,26 @@ export function PageView() {
   const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null)
   const [commentModalPost, setCommentModalPost] = useState<PagePost | null>(null)
   const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null)
+  const [editingPost, setEditingPost] = useState<PagePost | null>(null)
+  const [editPostContent, setEditPostContent] = useState('')
+  const [isUpdatingPost, setIsUpdatingPost] = useState(false)
+
+  const handleSavePostEdit = async () => {
+    if (!editingPost || !page) return
+    setIsUpdatingPost(true)
+    try {
+      await pagesApi.updatePost(page.id, editingPost.id, { content: editPostContent })
+      setPosts((prev) =>
+        prev.map((p) => (p.id === editingPost.id ? { ...p, content: editPostContent } : p))
+      )
+      toast.success('Publication modifiée avec succès')
+      setEditingPost(null)
+    } catch {
+      toast.error('Erreur lors de la modification de la publication')
+    } finally {
+      setIsUpdatingPost(false)
+    }
+  }
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
@@ -521,24 +544,50 @@ export function PageView() {
                           </button>
 
                           {activeMenuPostId === post.id && (
-                            <div className="absolute right-2 bottom-8 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg py-1 z-20 min-w-[120px]">
+                            <div className="absolute right-2 bottom-8 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl py-1.5 z-20 min-w-[150px] overflow-hidden">
+                              {post.content && (
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard?.writeText(post.content || '')
+                                    toast.success('Texte copié dans le presse-papier')
+                                    setActiveMenuPostId(null)
+                                  }}
+                                  className="w-full text-left px-3.5 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
+                                >
+                                  <Copy className="w-3.5 h-3.5 text-gray-500" /> Copier le texte
+                                </button>
+                              )}
+                              {isOwner && (
+                                <button
+                                  onClick={() => {
+                                    setEditingPost(post)
+                                    setEditPostContent(post.content || '')
+                                    setActiveMenuPostId(null)
+                                  }}
+                                  className="w-full text-left px-3.5 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
+                                >
+                                  <Pencil className="w-3.5 h-3.5 text-gray-500" /> Modifier
+                                </button>
+                              )}
                               {isOwner && (
                                 <button
                                   onClick={() => handleDeletePost(post.id)}
-                                  className="w-full text-left px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2"
+                                  className="w-full text-left px-3.5 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2"
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" /> Supprimer
+                                  <Trash2 className="w-3.5 h-3.5 text-red-500" /> Supprimer
                                 </button>
                               )}
-                              <button
-                                onClick={() => {
-                                  toast.success('Publication signalée')
-                                  setActiveMenuPostId(null)
-                                }}
-                                className="w-full text-left px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                              >
-                                Signaler
-                              </button>
+                              {!isOwner && (
+                                <button
+                                  onClick={() => {
+                                    toast.success('Publication signalée')
+                                    setActiveMenuPostId(null)
+                                  }}
+                                  className="w-full text-left px-3.5 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                >
+                                  Signaler
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>
@@ -981,6 +1030,51 @@ export function PageView() {
           initialVideoId={playingPageVideoId}
           onClose={() => setPlayingPageVideoId(null)}
         />
+      )}
+
+      {/* ── Edit Post Modal ── */}
+      {editingPost && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 shadow-2xl border border-gray-100 dark:border-gray-800">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 mb-4">
+              <h3 className="font-bold text-base text-gray-900 dark:text-white">Modifier la publication</h3>
+              <button
+                onClick={() => setEditingPost(null)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <textarea
+              value={editPostContent}
+              onChange={(e) => setEditPostContent(e.target.value)}
+              rows={5}
+              placeholder="Texte de votre publication..."
+              className="w-full p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7A00] resize-none"
+            />
+
+            <div className="flex items-center justify-end gap-2.5 mt-4">
+              <button
+                type="button"
+                onClick={() => setEditingPost(null)}
+                disabled={isUpdatingPost}
+                className="px-4 py-2 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleSavePostEdit}
+                disabled={isUpdatingPost}
+                className="px-5 py-2 rounded-full text-xs font-semibold bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-md shadow-[#FF7A00]/20 active:scale-95 transition-all flex items-center gap-1.5"
+              >
+                {isUpdatingPost && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

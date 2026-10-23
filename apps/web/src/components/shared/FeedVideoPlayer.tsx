@@ -270,6 +270,9 @@ export function FeedVideoPlayer({
               onClick={(e) => {
                 if (onExpand) {
                   e.stopPropagation();
+                  if (videoRef.current && !videoRef.current.paused) {
+                    videoRef.current.pause();
+                  }
                   onExpand();
                 } else {
                   toggleFullscreen(e);

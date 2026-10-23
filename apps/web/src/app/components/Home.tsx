@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Loader2, WifiOff, RefreshCw, Heart, MessageCircle, Share2 } from 'lucide-react';
+import { Loader2, WifiOff, RefreshCw, Heart, MessageCircle, Share2, MoreVertical, Copy, Pencil, Trash2, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { EventMediaFeed } from '@/features/events/components/EventMediaFeed';
 import { Search01Icon } from 'hugeicons-react';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
@@ -64,10 +65,12 @@ function PagePostCard({
   post,
   onNavigate,
   onOpenVideo,
+  onPostDeleted,
 }: {
   post: any;
   onNavigate: (s: string, id?: string) => void;
   onOpenVideo?: (postId: string) => void;
+  onPostDeleted?: (postId: string) => void;
 }) {
   const me = useAuthStore(s => (s as any).user);
   const isCreator = me?.id === post.page.creatorId || post.isOwner;
@@ -76,6 +79,13 @@ function PagePostCard({
   const [liked, setLiked] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post._count?.comments || 0);
+  const [postContent, setPostContent] = useState(post.content || '');
+  const [showMenu, setShowMenu] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editInput, setEditInput] = useState(post.content || '');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
+
   const avatarFallback = isCreator ? me?.profile?.avatarUrl : null;
   const pageAvatarUrl = post.page.avatarUrl || avatarFallback;
 
@@ -88,6 +98,12 @@ function PagePostCard({
       setFollowing(post.isFollowing);
     }
   }, [post.isFollowing]);
+
+  useEffect(() => {
+    setPostContent(post.content || '');
+  }, [post.content]);
+
+  if (isDeleted) return null;
 
   const handleFollow = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -103,6 +119,44 @@ function PagePostCard({
       setFollowing(previous);
     } finally {
       setFollowLoading(false);
+    }
+  };
+
+  const handleCopyText = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (postContent) {
+      navigator.clipboard?.writeText(postContent);
+      toast.success('Texte copié dans le presse-papier');
+    }
+    setShowMenu(false);
+  };
+
+  const handleSaveEdit = async () => {
+    setIsSavingEdit(true);
+    try {
+      await pagesApi.updatePost(post.page.id, post.id, { content: editInput });
+      setPostContent(editInput);
+      toast.success('Publication modifiée avec succès');
+      setShowEditModal(false);
+    } catch {
+      toast.error('Erreur lors de la modification');
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Supprimer cette publication ?')) return;
+    try {
+      await pagesApi.deletePost(post.page.id, post.id);
+      setIsDeleted(true);
+      toast.success('Publication supprimée');
+      onPostDeleted?.(post.id);
+    } catch {
+      toast.error('Erreur lors de la suppression');
+    } finally {
+      setShowMenu(false);
     }
   };
 
@@ -130,30 +184,102 @@ function PagePostCard({
             <p className="font-semibold text-sm text-gray-900 dark:text-white leading-tight truncate hover:underline">{post.page.name}</p>
           </div>
 
-          {!isCreator ? (
-            <button
-              onClick={handleFollow}
-              disabled={followLoading}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 shrink-0 ${
-                following
-                  ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
-                  : 'bg-[#FF7A00] text-white hover:bg-[#E06C00]'
-              }`}
-            >
-              {following ? 'Suivi' : 'Suivre'}
-            </button>
-          ) : (
-            <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#262626] px-2.5 py-1 rounded-full shrink-0">
-              Ma page
-            </span>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {!isCreator ? (
+              <button
+                onClick={handleFollow}
+                disabled={followLoading}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-95 shrink-0 ${
+                  following
+                    ? 'bg-[#FFF2D3] text-[#FF7A00] dark:bg-[#FF7A00]/20'
+                    : 'bg-[#FF7A00] text-white hover:bg-[#E06C00]'
+                }`}
+              >
+                {following ? 'Suivi' : 'Suivre'}
+              </button>
+            ) : (
+              <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#262626] px-2.5 py-1 rounded-full shrink-0">
+                Ma page
+              </span>
+            )}
+
+            {/* Menu options button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu((prev) => !prev);
+                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                aria-label="Options"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+
+              {showMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-20"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(false);
+                    }}
+                  />
+                  <div className="absolute right-0 top-9 bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl py-1 z-30 min-w-[150px] overflow-hidden">
+                    {postContent && (
+                      <button
+                        onClick={handleCopyText}
+                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/60 flex items-center gap-2.5 transition-colors"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-gray-500" /> Copier le texte
+                      </button>
+                    )}
+                    {isCreator && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditInput(postContent);
+                          setShowEditModal(true);
+                          setShowMenu(false);
+                        }}
+                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/60 flex items-center gap-2.5 transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-gray-500" /> Modifier
+                      </button>
+                    )}
+                    {isCreator && (
+                      <button
+                        onClick={handleDelete}
+                        className="w-full text-left px-3.5 py-2.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2.5 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-red-500" /> Supprimer
+                      </button>
+                    )}
+                    {!isCreator && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toast.success('Publication signalée');
+                          setShowMenu(false);
+                        }}
+                        className="w-full text-left px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/60 flex items-center gap-2.5 transition-colors"
+                      >
+                        Signaler
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Content */}
-        {post.content && (
+        {postContent && (
           <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
-            <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
-              {post.content}
+            <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed select-text">
+              {postContent}
             </p>
           </div>
         )}
@@ -203,7 +329,7 @@ function PagePostCard({
             onClick={(e) => {
               e.stopPropagation();
               if (navigator.share) {
-                navigator.share({ title: post.page.name, text: post.content || '' });
+                navigator.share({ title: post.page.name, text: postContent || '' });
               }
             }}
             className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -223,6 +349,51 @@ function PagePostCard({
         onClose={() => setShowComments(false)}
         onCommentAdded={() => setCommentsCount((c: number) => c + 1)}
       />
+
+      {/* Edit Post Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 shadow-2xl border border-gray-100 dark:border-gray-800">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 mb-4">
+              <h3 className="font-bold text-base text-gray-900 dark:text-white">Modifier la publication</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <textarea
+              value={editInput}
+              onChange={(e) => setEditInput(e.target.value)}
+              rows={5}
+              placeholder="Texte de votre publication..."
+              className="w-full p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7A00] resize-none"
+            />
+
+            <div className="flex items-center justify-end gap-2.5 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                disabled={isSavingEdit}
+                className="px-4 py-2 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={isSavingEdit}
+                className="px-5 py-2 rounded-full text-xs font-semibold bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-md shadow-[#FF7A00]/20 active:scale-95 transition-all flex items-center gap-1.5"
+              >
+                {isSavingEdit && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

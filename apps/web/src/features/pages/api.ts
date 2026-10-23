@@ -89,6 +89,9 @@ export const pagesApi = {
   deletePost: (pageId: string, postId: string) =>
     apiClient.delete(`/pages/${pageId}/posts/${postId}`),
 
+  updatePost: (pageId: string, postId: string, data: { content?: string }) =>
+    apiClient.patch<PagePost>(`/pages/${pageId}/posts/${postId}`, data).then(res => res.data),
+
   getComments: (pageId: string, postId: string) =>
     apiClient.get<{ data: PagePostComment[] }>(`/pages/${pageId}/posts/${postId}/comments`).then(res => res.data.data),
 

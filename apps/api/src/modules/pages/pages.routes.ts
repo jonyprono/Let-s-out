@@ -401,6 +401,28 @@ export default async function pagesRoutes(app: FastifyInstance) {
     return reply.send({ success: true })
   })
 
+  // UPDATE A POST (creator of the page only)
+  app.patch('/:id/posts/:postId', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id, postId } = req.params as { id: string; postId: string }
+    const { content } = req.body as { content?: string }
+
+    const page = await app.prisma.page.findUnique({ where: { id } })
+    if (!page) return reply.code(404).send({ error: 'Page not found' })
+    if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+
+    const post = await app.prisma.pagePost.findUnique({ where: { id: postId } })
+    if (!post || post.pageId !== id) return reply.code(404).send({ error: 'Post not found' })
+
+    const updated = await app.prisma.pagePost.update({
+      where: { id: postId },
+      data: {
+        content: content !== undefined ? content : post.content,
+      }
+    })
+    return reply.send(updated)
+  })
+
   // UPLOAD IMAGE (avatar or cover)
   app.post('/:id/upload-image', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
