@@ -6,10 +6,12 @@ import { adminsApi, type AdminUser } from '@/features/admin/api/admins.api'
 import { CountryPicker } from '@/components/shared/CountryPicker'
 import { COUNTRIES } from '@/lib/countries'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
+import { useConfirm } from '@/components/shared/ConfirmContext'
 
 export function AdminAdminsPage() {
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
+  const confirm = useConfirm()
   
   const [country, setCountry] = useState(COUNTRIES[0])
   const [name, setName] = useState('')
@@ -126,9 +128,18 @@ export function AdminAdminsPage() {
               </div>
             </div>
             <button
-              onClick={() => {
-                if (window.confirm("Voulez-vous vraiment retirer l'accès à ce numéro ?")) {
+              onClick={async () => {
+                const ok = await confirm({
+                  title: "Retirer l'accès admin ?",
+                  description: `Voulez-vous vraiment retirer l'accès à ce numéro ?`,
+                  confirmText: 'Retirer',
+                  variant: 'danger',
+                })
+                if (ok) {
                   removeMut.mutate(admin.id)
+                  toast.success('Accès retiré avec succès')
+                } else {
+                  toast.info('Action annulée')
                 }
               }}
               disabled={removeMut.isPending}

@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
+import { useConfirm } from '@/components/shared/ConfirmContext'
 
 type PageTab = 'publications' | 'events' | 'about' | 'photos'
 
@@ -38,6 +39,7 @@ export function PageView() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const me = useAuthStore((s) => (s as any).user)
+  const confirm = useConfirm()
 
   const [page, setPage] = useState<Page | null>(null)
   const [posts, setPosts] = useState<PagePost[]>([])
@@ -236,10 +238,19 @@ export function PageView() {
 
   const handleDeletePost = async (postId: string) => {
     if (!id) return
+    const confirmed = await confirm({
+      title: 'Supprimer cette publication ?',
+      description: 'Voulez-vous vraiment supprimer cette publication ? Cette action est irréversible et supprimera définitivement les photos et commentaires.',
+      confirmText: 'Oui, supprimer',
+      cancelText: 'Non, annuler',
+      cancelMessage: 'Suppression annulée',
+    })
+    if (!confirmed) return
+
     try {
       await pagesApi.deletePost(id, postId)
       setPosts((prev) => prev.filter((p) => p.id !== postId))
-      toast.success('Publication supprimée')
+      toast.success('Publication supprimée avec succès')
     } catch {
       toast.error('Erreur lors de la suppression')
     } finally {

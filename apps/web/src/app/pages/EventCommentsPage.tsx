@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { ArrowLeft, Send, Loader2, MoreHorizontal, Heart, ChevronDown, MessageCircle } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
+import { useConfirm } from '@/components/shared/ConfirmContext'
+import { toast } from 'sonner'
 
 interface Comment {
   id: string
@@ -36,6 +38,7 @@ export function EventCommentsPage() {
   const location = useLocation()
   const qc = useQueryClient()
   const currentUser = useAuthStore(s => s.user)
+  const confirm = useConfirm()
 
   const organizerId: string | undefined = (location.state as any)?.organizerId
   const eventTitle: string | undefined = (location.state as any)?.eventTitle
@@ -241,10 +244,19 @@ export function EventCommentsPage() {
                     </div>
                     <button
                       className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 ml-2 flex-shrink-0"
-                      onClick={() => {
+                      onClick={async () => {
                         if (isMe || currentUser?.id === organizerId) {
-                          if (window.confirm('Supprimer ce commentaire ?')) {
+                          const ok = await confirm({
+                            title: 'Supprimer ce commentaire ?',
+                            description: 'Cette action est irréversible.',
+                            confirmText: 'Supprimer',
+                            variant: 'danger',
+                          })
+                          if (ok) {
                             deleteMutation.mutate(comment.id)
+                            toast.success('Commentaire supprimé')
+                          } else {
+                            toast.info('Suppression annulée')
                           }
                         }
                       }}

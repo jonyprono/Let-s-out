@@ -102,6 +102,7 @@ import {
 import { EventValidatorsVote } from '@/app/pages/EventValidatorsVote'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
+import { ConfirmProvider } from '@/components/shared/ConfirmContext'
 import { CallOverlay } from '@/features/chat/components/CallOverlay'
 import { AdminLayout } from '@/app/layouts/AdminLayout'
 import { AdminRoute } from '@/app/components/admin/AdminRoute'
@@ -290,6 +291,7 @@ export default function App() {
         <SmartAppBanner />
         <CapacitorBackButton />
         <UserProfileProvider>
+        <ConfirmProvider>
         <Routes>
           <Route path="/" element={<RootRoute />} />
 
@@ -380,6 +382,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/app" replace />} />
         </Routes>
         <CallOverlay />
+        </ConfirmProvider>
         </UserProfileProvider>
       </BrowserRouter>
       <Toaster position="top-center" richColors toastOptions={{ style: { marginTop: 'env(safe-area-inset-top, 44px)' } }} />

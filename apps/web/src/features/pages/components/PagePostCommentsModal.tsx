@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Send, Loader2, MoreHorizontal, X } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { pagesApi, PagePostComment } from '../api'
+import { useConfirm } from '@/components/shared/ConfirmContext'
+import { toast } from 'sonner'
 
 interface PagePostCommentsModalProps {
   pageId: string
@@ -37,6 +39,7 @@ export function PagePostCommentsModal({
   const [content, setContent] = useState('')
   const qc = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
+  const confirm = useConfirm()
 
   const { data: comments = [], isLoading } = useQuery<PagePostComment[]>({
     queryKey: ['pages', pageId, 'posts', postId, 'comments'],
@@ -162,9 +165,18 @@ export function PagePostCommentsModal({
                         <button
                           className="text-gray-400 hover:text-red-500 p-1 transition-colors"
                           title="Supprimer le commentaire"
-                          onClick={() => {
-                            if (window.confirm('Supprimer ce commentaire ?')) {
+                          onClick={async () => {
+                            const ok = await confirm({
+                              title: 'Supprimer ce commentaire ?',
+                              description: 'Cette action est irréversible.',
+                              confirmText: 'Supprimer',
+                              variant: 'danger',
+                            })
+                            if (ok) {
                               deleteMutation.mutate(comment.id)
+                              toast.success('Commentaire supprimé')
+                            } else {
+                              toast.info('Suppression annulée')
                             }
                           }}
                         >

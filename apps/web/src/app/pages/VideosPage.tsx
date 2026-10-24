@@ -8,6 +8,7 @@ import { UploadVideoModal } from '@/features/videos/components/UploadVideoModal'
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
+import { useConfirm } from '@/components/shared/ConfirmContext'
 
 const CATEGORIES = [
   { key: '', label: 'Tout' },
@@ -24,6 +25,7 @@ export function VideosPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const currentUser = useAuthStore(s => s.user)
+  const confirm = useConfirm()
   const [activeCategory, setActiveCategory] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
@@ -128,10 +130,17 @@ export function VideosPage() {
                 <VideoCard video={v} onClick={(video) => setPlayingVideoId(video.id)} />
                 {v.userId === currentUser?.id && (
                   <button
-                    onClick={() => {
-                      if (window.confirm('Supprimer cette vidéo ?')) deleteMutation.mutate(v.id)
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: 'Supprimer cette vidéo ?',
+                        description: 'Voulez-vous vraiment supprimer cette vidéo définitivement ?',
+                        confirmText: 'Oui, supprimer',
+                        cancelText: 'Non, annuler',
+                        cancelMessage: 'Suppression annulée',
+                      })
+                      if (ok) deleteMutation.mutate(v.id)
                     }}
-                    className="absolute top-2 left-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
+                    className="absolute top-2 left-2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
                   >
                     <X className="w-3 h-3 text-white" />
                   </button>

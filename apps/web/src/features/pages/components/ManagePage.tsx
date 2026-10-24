@@ -9,6 +9,7 @@ import { Loader2, Camera, Trash2, Settings, BarChart3, Users, FileText, ChevronR
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
+import { useConfirm } from '@/components/shared/ConfirmContext'
 
 // 15 Catégories (12 existantes + 3 nouvelles)
 const PAGE_CATEGORIES = [
@@ -33,6 +34,7 @@ export function ManagePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const me = useAuthStore(s => (s as any).user)
+  const confirm = useConfirm()
 
   const [page, setPage] = useState<Page | null>(null)
   const [loading, setLoading] = useState(true)
@@ -136,10 +138,19 @@ export function ManagePage() {
 
   const handleDelete = async () => {
     if (!id) return
+    const confirmed = await confirm({
+      title: 'Supprimer cette page ?',
+      description: `Voulez-vous vraiment supprimer la page "${page?.name || ''}" ? Cette action est irréversible et supprimera définitivement tous les contenus, publications et images associés.`,
+      confirmText: 'Oui, supprimer définitivement',
+      cancelText: 'Non, annuler',
+      cancelMessage: 'Suppression de la page annulée',
+    })
+    if (!confirmed) return
+
     setDeleting(true)
     try {
       await pagesApi.deletePage(id)
-      toast.success('Page supprimée')
+      toast.success('Page supprimée définitivement')
       navigate('/settings', { replace: true })
     } catch (err: any) {
       const apiMsg = err?.response?.data?.error || err?.response?.data?.message
@@ -190,13 +201,22 @@ export function ManagePage() {
     loadPostsIfNeeded()
 
     const handleDeletePost = async (postId: string) => {
-      if (!id || !window.confirm('Supprimer cette publication définitivement ?')) return
+      if (!id) return
+      const confirmed = await confirm({
+        title: 'Supprimer cette publication ?',
+        description: 'Voulez-vous vraiment supprimer cette publication définitivement ? Toutes les images et commentaires associés seront supprimés.',
+        confirmText: 'Oui, supprimer',
+        cancelText: 'Non, annuler',
+        cancelMessage: 'Suppression annulée',
+      })
+      if (!confirmed) return
+
       setDeletingPostId(postId)
       try {
         await pagesApi.deletePost(id, postId)
         setPosts(prev => prev.filter(p => p.id !== postId))
         setPage(prev => prev ? { ...prev, _count: { ...prev._count!, posts: (prev._count?.posts || 1) - 1 } } : null)
-        toast.success('Publication supprimée')
+        toast.success('Publication supprimée avec succès')
       } catch {
         toast.error('Erreur lors de la suppression')
       } finally {

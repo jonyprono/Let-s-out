@@ -13,6 +13,7 @@ import PullToRefresh from 'react-simple-pull-to-refresh';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { PermissionsRequest } from './PermissionsRequest';
 import { pagesApi, PagePost } from '@/features/pages/api';
+import { useConfirm } from '@/components/shared/ConfirmContext';
 import { PagePostCommentsModal } from '@/features/pages/components/PagePostCommentsModal';
 import { PageVideoPlayerModal, PageVideoItem } from '@/features/pages/components/PageVideoPlayerModal';
 import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
@@ -73,6 +74,7 @@ function PagePostCard({
   onPostDeleted?: (postId: string) => void;
 }) {
   const me = useAuthStore(s => (s as any).user);
+  const confirm = useConfirm();
   const isCreator = me?.id === post.page.creatorId || post.isOwner;
   const [following, setFollowing] = useState(Boolean(post.isFollowing));
   const [followLoading, setFollowLoading] = useState(false);
@@ -147,16 +149,22 @@ function PagePostCard({
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm('Supprimer cette publication ?')) return;
+    setShowMenu(false);
+    const confirmed = await confirm({
+      title: 'Supprimer cette publication ?',
+      description: 'Voulez-vous vraiment supprimer cette publication définitivement ?',
+      confirmText: 'Oui, supprimer',
+      cancelText: 'Non, annuler',
+      cancelMessage: 'Suppression annulée',
+    });
+    if (!confirmed) return;
     try {
       await pagesApi.deletePost(post.page.id, post.id);
       setIsDeleted(true);
-      toast.success('Publication supprimée');
+      toast.success('Publication supprimée avec succès');
       onPostDeleted?.(post.id);
     } catch {
       toast.error('Erreur lors de la suppression');
-    } finally {
-      setShowMenu(false);
     }
   };
 
