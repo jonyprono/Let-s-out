@@ -24,7 +24,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
     options: ConfirmOptions
     resolve: (value: boolean) => void
   } | null>(null)
-  const [isPending, setIsPending] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 
   const confirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
     return new Promise<boolean>((resolve) => {
