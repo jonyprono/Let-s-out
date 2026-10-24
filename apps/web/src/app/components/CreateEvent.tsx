@@ -86,7 +86,7 @@ const CATEGORIES = [
   { label: 'Shopping',                    value: 'TECH',      Icon: ShoppingBag02Icon },
   { label: 'Musique et son',              value: 'MUSIC',     Icon: MusicNote03Icon },
   { label: 'Télévision et cinéma',        value: 'ART',       Icon: CameraVideoIcon },
-  { label: 'Jeux vidéos & jeux de société', value: 'GAMES',   Icon: MaskTheater01Icon },
+  { label: 'Jeux vidéos & jeux de société', value: 'GAMING',  Icon: MaskTheater01Icon },
   { label: 'Concerts & festivals',        value: 'CONCERTS',  Icon: MusicNote03Icon },
   { label: 'Voyages et découverte',       value: 'TRAVEL',    Icon: PaintBoardIcon },
 ]

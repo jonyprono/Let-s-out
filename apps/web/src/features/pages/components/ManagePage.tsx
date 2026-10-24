@@ -24,7 +24,7 @@ const PAGE_CATEGORIES = [
   { label: 'Shopping',                     value: 'TECH'      },
   { label: 'Musique et son',               value: 'MUSIC'     },
   { label: 'Télévision et cinéma',         value: 'ART'       },
-  { label: 'Jeux vidéos & jeux de société', value: 'GAMES'     },
+  { label: 'Jeux vidéos & jeux de société', value: 'GAMING'    },
   { label: 'Concerts & festivals',         value: 'CONCERTS'  },
   { label: 'Voyages et découverte',        value: 'TRAVEL'    },
 ]
