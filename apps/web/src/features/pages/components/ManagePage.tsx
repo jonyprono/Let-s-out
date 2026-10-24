@@ -96,7 +96,7 @@ export function ManagePage() {
       // Auto-save the url to the page
       await pagesApi.update(id, type === 'avatar' ? { avatarUrl: url } : { coverUrl: url })
       setPage(p => p ? { ...p, [type === 'avatar' ? 'avatarUrl' : 'coverUrl']: url } : null)
-      toast.success(`${type === 'avatar' ? 'Photo de profil' : 'Couverture'} mise à jour !`)
+      toast.success(`${type === 'avatar' ? 'Photo de profil' : 'Bannière'} mise à jour !`)
     } catch (err: any) {
       const apiMsg = err?.response?.data?.error || err?.response?.data?.message
       const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || "Erreur lors de l'upload")
@@ -337,8 +337,21 @@ export function ManagePage() {
                         <div className="rounded-xl overflow-hidden">
                           {post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/') ? (
                             <FeedVideoPlayer src={post.mediaUrls[0]} maxHeight="200px" />
-                          ) : (
+                          ) : post.mediaUrls.length === 1 ? (
                             <SafeImage src={post.mediaUrls[0]} alt="" className="w-full max-h-48 object-cover" />
+                          ) : (
+                            <div className="grid grid-cols-2 gap-1">
+                              {post.mediaUrls.slice(0, 4).map((url, idx) => (
+                                <div key={idx} className="aspect-square relative overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                  <SafeImage src={url} alt="" className="w-full h-full object-cover" />
+                                  {idx === 3 && post.mediaUrls.length > 4 && (
+                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-sm">
+                                      +{post.mediaUrls.length - 4}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
                       )}
@@ -409,7 +422,7 @@ export function ManagePage() {
         {/* Cover Photo */}
         <div className="relative h-36 bg-gradient-to-r from-orange-400 to-orange-600">
           {coverPreview && (
-            <SafeImage src={coverPreview} alt="Couverture" className="w-full h-full object-cover" />
+            <SafeImage src={coverPreview} alt="Bannière" className="w-full h-full object-cover" />
           )}
           {uploadingCover && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">

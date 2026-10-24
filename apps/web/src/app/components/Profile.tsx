@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Users, Medal, Activity, User } from 'lucide-react';
+import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Users, Medal, Activity, User, X, Camera, ChevronLeft } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -33,6 +33,7 @@ export function Profile({ onNavigate }: ProfileProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddFriendsModal, setShowAddFriendsModal] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('events');
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; title: string; type: 'avatar' | 'cover' } | null>(null);
   const { username } = useParams<{ username?: string }>()
   // Optimistic follow state: null = use server value, true/false = override
   const [optimisticIsFollowing, setOptimisticIsFollowing] = useState<boolean | null>(null);
@@ -197,7 +198,16 @@ export function Profile({ onNavigate }: ProfileProps) {
           {/* Avatar & Info (Left-aligned) */}
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-shrink-0">
-              <div className="w-[84px] h-[84px] rounded-full ring-[3px] ring-white shadow-sm overflow-hidden bg-white dark:bg-[#1A1A1A]">
+              <div 
+                onClick={() => {
+                  if (displayProfile?.avatarUrl) {
+                    setFullscreenMedia({ url: displayProfile.avatarUrl, title: 'Photo de profil', type: 'avatar' });
+                  } else if (isOwnProfile) {
+                    setShowEditModal(true);
+                  }
+                }}
+                className="w-[84px] h-[84px] rounded-full ring-[3px] ring-white shadow-sm overflow-hidden bg-white dark:bg-[#1A1A1A] cursor-pointer"
+              >
                 <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2a2a2a]">{displayName.charAt(0).toUpperCase()}</div>} />
               </div>
               <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full border-2 border-white shadow-sm bg-yellow-400 flex items-center justify-center text-[9px] font-bold text-white">
@@ -418,6 +428,70 @@ export function Profile({ onNavigate }: ProfileProps) {
 
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
       {showAddFriendsModal && <AddFriendsModal onClose={() => setShowAddFriendsModal(false)} />}
+
+      {/* ── Fullscreen Photo Viewer (Facebook-style) ────────────────────────── */}
+      {fullscreenMedia && (
+        <div
+          className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex flex-col justify-between animate-in fade-in duration-200"
+          onClick={() => setFullscreenMedia(null)}
+        >
+          {/* Top Bar */}
+          <div
+            className="w-full flex items-center justify-between px-4 pt-12 pb-4 z-10 bg-gradient-to-b from-black/80 to-transparent"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setFullscreenMedia(null)}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white transition-all"
+                aria-label="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div>
+                <p className="text-sm font-semibold text-white leading-tight">{fullscreenMedia.title}</p>
+                <p className="text-xs text-white/60">{displayName}</p>
+              </div>
+            </div>
+
+            {isOwnProfile && (
+              <button
+                onClick={() => {
+                  setFullscreenMedia(null);
+                  setShowEditModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-semibold text-white transition-all border border-white/20"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Modifier
+              </button>
+            )}
+          </div>
+
+          {/* Media Center */}
+          <div
+            className="flex-1 flex items-center justify-center p-4"
+            onClick={() => setFullscreenMedia(null)}
+          >
+            <img
+              src={fullscreenMedia.url}
+              alt={fullscreenMedia.title}
+              className={`max-w-full max-h-[80vh] object-contain select-none shadow-2xl transition-transform duration-200 ${
+                fullscreenMedia.type === 'avatar' ? 'rounded-2xl max-h-[70vh]' : 'rounded-lg'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+
+          {/* Bottom Bar / Hint */}
+          <div
+            className="w-full text-center pb-8 pt-4 text-xs text-white/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Appuyez n'importe où pour fermer
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -880,9 +880,6 @@ export function Home({ userData, onNavigate }: HomeProps) {
                   />
                 </div>
 
-                {/* ── OUT VLOGS ── */}
-                <EventMediaFeed />
-
                 {/* ── À ne pas manquer ── */}
                 <div className="mb-3">
                   <div className="flex items-center justify-between px-4 mb-3">
@@ -930,6 +927,9 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     </>
                   ) : null}
                 </div>
+
+                {/* ── OUT VLOGS ── */}
+                <EventMediaFeed />
 
                 {/* ── Événements populaires ── */}
                 <div className="pt-1 pb-1">

@@ -103,10 +103,10 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
       await refreshUser()
       qc.invalidateQueries({ queryKey: ['me'] })
       qc.invalidateQueries({ queryKey: ['public-profile'] })
-      toast.success('Photo de couverture mise à jour !')
+      toast.success('Bannière mise à jour !')
     } catch (error) {
       setCoverPreview(coverUrl) // revert on error
-      toast.error("Erreur lors de l'envoi de la couverture.")
+      toast.error("Erreur lors de l'envoi de la bannière.")
     } finally {
       setIsUploadingCover(false)
     }
@@ -208,7 +208,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                   className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full text-white text-[12px] font-medium border border-white/20 active:scale-95 transition-transform"
                 >
                   {isUploadingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-                  Changer la couverture
+                  Changer la bannière
                 </button>
               </div>
               <input type="file" ref={coverInputRef} accept="image/*" className="hidden" onChange={handleCoverChange} />

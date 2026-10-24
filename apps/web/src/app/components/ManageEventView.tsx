@@ -223,11 +223,11 @@ export function ManageEventView({
             )}
           </SectionCard>
 
-          {/* Couverture */}
-          <SectionCard title="Couverture" onEdit={() => handleEdit(4)}>
+          {/* Bannière */}
+          <SectionCard title="Bannière" onEdit={() => handleEdit(4)}>
             {event.coverUrl ? (
               <div className="w-full h-40 rounded-[12px] overflow-hidden">
-                <SafeImage src={event.coverUrl} alt="Couverture" className="w-full h-full object-cover" />
+                <SafeImage src={event.coverUrl} alt="Bannière" className="w-full h-full object-cover" />
               </div>
             ) : (
               <div className="w-full h-40 rounded-[12px] bg-gray-100 dark:bg-[#2a2a2a] flex flex-col items-center justify-center gap-2">

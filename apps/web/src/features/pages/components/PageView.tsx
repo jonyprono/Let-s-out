@@ -50,11 +50,12 @@ export function PageView() {
   const [postStep, setPostStep] = useState<1 | 2>(1)
   const [postContent, setPostContent] = useState('')
   const [postPrivacy, setPostPrivacy] = useState<'public' | 'private'>('public')
-  const [postImage, setPostImage] = useState<File | null>(null)
-  const [postImagePreview, setPostImagePreview] = useState<string | null>(null)
+  const [postImages, setPostImages] = useState<File[]>([])
+  const [postImagePreviews, setPostImagePreviews] = useState<string[]>([])
   const [postVideo, setPostVideo] = useState<File | null>(null)
   const [postVideoPreview, setPostVideoPreview] = useState<string | null>(null)
   const [publishing, setPublishing] = useState(false)
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; title: string } | null>(null)
 
   // Likes state (local optimistic)
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({})
@@ -168,13 +169,20 @@ export function PageView() {
   }
 
   const handlePickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setPostVideo(null)
-      setPostVideoPreview(null)
-      setPostImage(file)
-      setPostImagePreview(URL.createObjectURL(file))
-    }
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+    setPostVideo(null)
+    setPostVideoPreview(null)
+    const remaining = 4 - postImages.length
+    const toAdd = files.slice(0, remaining)
+    setPostImages((prev) => [...prev, ...toAdd])
+    setPostImagePreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))])
+    e.target.value = ''
+  }
+
+  const removePostImage = (idx: number) => {
+    setPostImages((prev) => prev.filter((_, i) => i !== idx))
+    setPostImagePreviews((prev) => prev.filter((_, i) => i !== idx))
   }
 
   const handlePickVideo = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,21 +192,23 @@ export function PageView() {
         toast.error('La vidéo ne doit pas dépasser 100 Mo')
         return
       }
-      setPostImage(null)
-      setPostImagePreview(null)
+      setPostImages([])
+      setPostImagePreviews([])
       setPostVideo(file)
       setPostVideoPreview(URL.createObjectURL(file))
     }
   }
 
   const handlePublishPost = async () => {
-    if (!id || (!postContent.trim() && !postImage && !postVideo)) return
+    if (!id || (!postContent.trim() && postImages.length === 0 && !postVideo)) return
     setPublishing(true)
     try {
       let mediaUrls: string[] = []
-      if (postImage) {
-        const uploaded = await pagesApi.uploadImage(id, postImage, 'post')
-        mediaUrls.push(uploaded.url)
+      if (postImages.length > 0) {
+        for (const file of postImages) {
+          const uploaded = await pagesApi.uploadImage(id, file, 'post')
+          mediaUrls.push(uploaded.url)
+        }
       } else if (postVideo) {
         const uploaded = await pagesApi.uploadImage(id, postVideo, 'post')
         mediaUrls.push(uploaded.url)
@@ -211,8 +221,8 @@ export function PageView() {
       toast.success('Publication créée avec succès !')
       // Reset
       setPostContent('')
-      setPostImage(null)
-      setPostImagePreview(null)
+      setPostImages([])
+      setPostImagePreviews([])
       setPostVideo(null)
       setPostVideoPreview(null)
       setPostStep(1)
@@ -268,9 +278,14 @@ export function PageView() {
   return (
     <div ref={scrollRef} className="w-full h-full flex flex-col bg-white dark:bg-black text-gray-900 dark:text-white overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       {/* ── Cover Area ── */}
-      <div className="relative w-full h-48 sm:h-56 min-h-[192px] sm:min-h-[224px] bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0">
+      <div 
+        className={`relative w-full h-48 sm:h-56 min-h-[192px] sm:min-h-[224px] bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 ${page.coverUrl ? 'cursor-pointer' : ''}`}
+        onClick={() => {
+          if (page.coverUrl) setFullscreenMedia({ url: page.coverUrl, title: `Bannière de ${page.name}` })
+        }}
+      >
         {page.coverUrl ? (
-          <SafeImage src={page.coverUrl} alt="Cover" className="w-full h-full object-cover" />
+          <SafeImage src={page.coverUrl} alt="Bannière" className="w-full h-full object-cover" />
         ) : (
           <div
             className="w-full h-full bg-[#F3F4F6] dark:bg-[#1C1C1E]"
@@ -295,7 +310,12 @@ export function PageView() {
       {/* ── Profile Info Header ── */}
       <div className="flex flex-col items-center px-4 -mt-12 relative z-10 shrink-0">
         {/* Avatar */}
-        <div className="w-24 h-24 rounded-full border-4 border-white dark:border-black bg-gray-200 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-gray-500 shadow-md shrink-0">
+        <div 
+          onClick={() => {
+            if (page.avatarUrl) setFullscreenMedia({ url: page.avatarUrl, title: page.name })
+          }}
+          className={`w-24 h-24 rounded-full border-4 border-white dark:border-black bg-gray-200 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-gray-500 shadow-md shrink-0 ${page.avatarUrl ? 'cursor-pointer' : ''}`}
+        >
           {page.avatarUrl ? (
             <SafeImage src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
           ) : (
@@ -490,8 +510,62 @@ export function PageView() {
                               maxHeight="384px"
                               onExpand={() => setPlayingPageVideoId(post.id)}
                             />
+                          ) : post.mediaUrls.length === 1 ? (
+                            <div 
+                              className="w-full cursor-pointer"
+                              onClick={() => setFullscreenMedia({ url: post.mediaUrls[0], title: page.name })}
+                            >
+                              <SafeImage src={post.mediaUrls[0]} alt="Media" className="w-full max-h-96 object-cover" />
+                            </div>
+                          ) : post.mediaUrls.length === 2 ? (
+                            <div className="grid grid-cols-2 gap-1 w-full bg-black">
+                              {post.mediaUrls.map((url, idx) => (
+                                <div
+                                  key={idx}
+                                  className="aspect-square cursor-pointer overflow-hidden bg-neutral-900"
+                                  onClick={() => setFullscreenMedia({ url, title: `${page.name} (${idx + 1}/${post.mediaUrls.length})` })}
+                                >
+                                  <SafeImage src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                                </div>
+                              ))}
+                            </div>
+                          ) : post.mediaUrls.length === 3 ? (
+                            <div className="grid grid-cols-2 gap-1 w-full bg-black">
+                              <div
+                                className="row-span-2 aspect-[3/4] cursor-pointer overflow-hidden bg-neutral-900"
+                                onClick={() => setFullscreenMedia({ url: post.mediaUrls[0], title: `${page.name} (1/3)` })}
+                              >
+                                <SafeImage src={post.mediaUrls[0]} alt="Photo 1" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                {post.mediaUrls.slice(1, 3).map((url, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="aspect-square cursor-pointer overflow-hidden bg-neutral-900"
+                                    onClick={() => setFullscreenMedia({ url, title: `${page.name} (${idx + 2}/3)` })}
+                                  >
+                                    <SafeImage src={url} alt={`Photo ${idx + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           ) : (
-                            <SafeImage src={post.mediaUrls[0]} alt="Media" className="w-full max-h-96 object-cover" />
+                            <div className="grid grid-cols-2 gap-1 w-full bg-black">
+                              {post.mediaUrls.slice(0, 4).map((url, idx) => (
+                                <div
+                                  key={idx}
+                                  className="aspect-square cursor-pointer overflow-hidden bg-neutral-900 relative"
+                                  onClick={() => setFullscreenMedia({ url, title: `${page.name} (${idx + 1}/${post.mediaUrls.length})` })}
+                                >
+                                  <SafeImage src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                                  {idx === 3 && post.mediaUrls.length > 4 && (
+                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-bold text-lg">
+                                      +{post.mediaUrls.length - 4}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
                       )}
@@ -801,18 +875,30 @@ export function PageView() {
                 </div>
 
                 {/* Media Preview */}
-                {postImagePreview && (
-                  <div className="relative mx-4 my-2 max-h-60 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
-                    <img src={postImagePreview} alt="Preview" className="w-full max-h-60 object-contain bg-black" />
-                    <button
-                      onClick={() => {
-                        setPostImage(null)
-                        setPostImagePreview(null)
-                      }}
-                      className="absolute top-2 right-2 p-1 rounded-full bg-black/60 text-white"
-                    >
-                      ✕
-                    </button>
+                {postImagePreviews.length > 0 && (
+                  <div className="mx-4 my-2">
+                    <div className={`grid gap-2 ${postImagePreviews.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                      {postImagePreviews.map((preview, idx) => (
+                        <div key={idx} className="relative aspect-video rounded-xl overflow-hidden bg-black/10 border border-gray-200 dark:border-gray-800">
+                          <img src={preview} alt={`Preview ${idx + 1}`} className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removePostImage(idx)}
+                            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center text-xs hover:bg-black/80 transition-colors"
+                          >
+                            ✕
+                          </button>
+                          {idx === 0 && (
+                            <span className="absolute bottom-1.5 left-1.5 text-[10px] font-semibold bg-[#FF7A00] text-white px-2 py-0.5 rounded-full">
+                              Bannière
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[12px] text-gray-400 mt-1.5">
+                      {postImagePreviews.length}/4 photo{postImagePreviews.length > 1 ? 's' : ''} {postImagePreviews.length < 4 ? '· Vous pouvez en ajouter d\'autres' : ''}
+                    </p>
                   </div>
                 )}
                 {postVideoPreview && (
@@ -840,10 +926,18 @@ export function PageView() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    disabled={postImagePreviews.length >= 4}
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 h-11 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className={`flex-1 h-11 rounded-xl flex items-center justify-center transition-colors gap-1.5 ${
+                      postImagePreviews.length >= 4
+                        ? 'opacity-40 cursor-not-allowed bg-gray-50 dark:bg-gray-900 text-gray-400'
+                        : 'bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
                   >
                     <Camera className="w-5 h-5" />
+                    {postImagePreviews.length > 0 && (
+                      <span className="text-xs font-semibold">{postImagePreviews.length}/4</span>
+                    )}
                   </button>
                   <button
                     type="button"
@@ -865,6 +959,7 @@ export function PageView() {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handlePickImage}
                   className="hidden"
                 />
@@ -878,10 +973,10 @@ export function PageView() {
 
                 {/* Suivant Button */}
                 <button
-                  disabled={!postContent.trim() && !postImage && !postVideo}
+                  disabled={!postContent.trim() && postImages.length === 0 && !postVideo}
                   onClick={() => setPostStep(2)}
                   className={`w-full h-12 rounded-full font-semibold text-sm transition-all ${
-                    postContent.trim() || postImage || postVideo
+                    postContent.trim() || postImages.length > 0 || postVideo
                       ? 'bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-md shadow-[#FF7A00]/20 active:scale-[0.99]'
                       : 'bg-[#FF7A00]/40 text-white/80 cursor-not-allowed'
                   }`}
@@ -1073,6 +1168,49 @@ export function PageView() {
                 Enregistrer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Fullscreen Media Viewer ── */}
+      {fullscreenMedia && (
+        <div
+          className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex flex-col justify-between animate-in fade-in duration-200"
+          onClick={() => setFullscreenMedia(null)}
+        >
+          <div
+            className="w-full flex items-center justify-between px-4 pt-12 pb-4 z-10 bg-gradient-to-b from-black/80 to-transparent"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setFullscreenMedia(null)}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white transition-all"
+                aria-label="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <p className="text-sm font-semibold text-white leading-tight">{fullscreenMedia.title}</p>
+            </div>
+          </div>
+
+          <div
+            className="flex-1 flex items-center justify-center p-4"
+            onClick={() => setFullscreenMedia(null)}
+          >
+            <img
+              src={fullscreenMedia.url}
+              alt={fullscreenMedia.title}
+              className="max-w-full max-h-[80vh] object-contain select-none shadow-2xl rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+
+          <div
+            className="w-full text-center pb-8 pt-4 text-xs text-white/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Appuyez n'importe où pour fermer
           </div>
         </div>
       )}

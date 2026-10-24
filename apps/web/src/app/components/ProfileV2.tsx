@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban, FileText } from 'lucide-react';
+import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban, FileText, Camera, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -34,6 +34,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; title: string; type: 'avatar' | 'cover' } | null>(null);
 
   // Scroll to top whenever the profile page mounts
   useEffect(() => {
@@ -249,7 +250,17 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     <div ref={scrollRef} className="w-full h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       
       {/* Dynamic Cover Header */}
-      <div className="w-full h-[200px] relative shrink-0" style={{ borderBottom: '1px solid #D4D4D4' }}>
+      <div
+        className={`w-full h-[200px] relative shrink-0 ${coverUrl ? 'cursor-pointer' : ''}`}
+        style={{ borderBottom: '1px solid #D4D4D4' }}
+        onClick={() => {
+          if (coverUrl) {
+            setFullscreenMedia({ url: coverUrl, title: 'Bannière', type: 'cover' });
+          } else if (isOwnProfile) {
+            setShowEditModal(true);
+          }
+        }}
+      >
         <div
           className="absolute inset-0"
           style={{ background: coverUrl ? `url(${coverUrl}) center/cover no-repeat` : 'url(/Checker.png) center/cover repeat' }}
@@ -287,7 +298,13 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         <div className="flex flex-col gap-3 mb-2">
           {/* Avatar */}
           <div 
-            onClick={() => { if (isOwnProfile) setShowEditModal(true) }}
+            onClick={() => {
+              if (displayProfile?.avatarUrl) {
+                setFullscreenMedia({ url: displayProfile.avatarUrl, title: 'Photo de profil', type: 'avatar' });
+              } else if (isOwnProfile) {
+                setShowEditModal(true);
+              }
+            }}
             className="w-[72px] h-[72px] rounded-full ring-4 ring-[#F9F9F9] dark:ring-[#0a0a0b] overflow-hidden bg-gray-200 shadow-sm relative cursor-pointer shrink-0"
           >
             <SafeImage src={displayProfile?.avatarUrl} alt="Avatar" className="w-full h-full object-cover" fallback={<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -842,6 +859,70 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         isPending={reportMut.isPending}
         type="USER"
       />
+
+      {/* ── Fullscreen Photo Viewer (Facebook-style) ────────────────────────── */}
+      {fullscreenMedia && (
+        <div
+          className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex flex-col justify-between animate-in fade-in duration-200"
+          onClick={() => setFullscreenMedia(null)}
+        >
+          {/* Top Bar */}
+          <div
+            className="w-full flex items-center justify-between px-4 pt-12 pb-4 z-10 bg-gradient-to-b from-black/80 to-transparent"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setFullscreenMedia(null)}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white transition-all"
+                aria-label="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div>
+                <p className="text-sm font-semibold text-white leading-tight">{fullscreenMedia.title}</p>
+                <p className="text-xs text-white/60">{displayName}</p>
+              </div>
+            </div>
+
+            {isOwnProfile && (
+              <button
+                onClick={() => {
+                  setFullscreenMedia(null);
+                  setShowEditModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-semibold text-white transition-all border border-white/20"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Modifier
+              </button>
+            )}
+          </div>
+
+          {/* Media Center */}
+          <div
+            className="flex-1 flex items-center justify-center p-4"
+            onClick={() => setFullscreenMedia(null)}
+          >
+            <img
+              src={fullscreenMedia.url}
+              alt={fullscreenMedia.title}
+              className={`max-w-full max-h-[80vh] object-contain select-none shadow-2xl transition-transform duration-200 ${
+                fullscreenMedia.type === 'avatar' ? 'rounded-2xl max-h-[70vh]' : 'rounded-lg'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+
+          {/* Bottom Bar / Hint */}
+          <div
+            className="w-full text-center pb-8 pt-4 text-xs text-white/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Appuyez n'importe où pour fermer
+          </div>
+        </div>
+      )}
 
     </div>
   );

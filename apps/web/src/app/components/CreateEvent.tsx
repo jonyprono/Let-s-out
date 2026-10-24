@@ -950,7 +950,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   </button>
                   {idx === 0 && (
                     <span className="absolute bottom-1.5 left-1.5 text-[10px] font-semibold bg-[var(--brand-orange-500)] text-white px-1.5 py-0.5 rounded-full">
-                      Couverture
+                      Bannière
                     </span>
                   )}
                 </div>
@@ -984,7 +984,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {/* Count indicator */}
           {coverPreviews.length > 0 && (
             <p className="text-[12px] text-[var(--color-text-muted)] mt-1.5">
-              {coverPreviews.length}/4 photo{coverPreviews.length > 1 ? 's' : ''} · La première est la couverture principale
+              {coverPreviews.length}/4 photo{coverPreviews.length > 1 ? 's' : ''} · La première est la bannière principale
             </p>
           )}
         </div>
