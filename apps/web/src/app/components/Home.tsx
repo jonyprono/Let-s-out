@@ -88,8 +88,7 @@ function PagePostCard({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
 
-  const avatarFallback = isCreator ? me?.profile?.avatarUrl : null;
-  const pageAvatarUrl = post.page.avatarUrl || avatarFallback;
+  const pageAvatarUrl = post.page.avatarUrl || null;
 
   const isVideo = post.mediaUrls?.length > 0 && (
     post.mediaUrls[0].match(/\.(mp4|webm|mov|avi)$/i) || post.mediaUrls[0].includes('/video/')

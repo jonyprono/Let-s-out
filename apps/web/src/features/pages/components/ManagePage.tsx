@@ -469,9 +469,9 @@ export function ManagePage() {
         <div className="px-5 -mt-10 mb-5 relative z-10">
           <div className="relative w-20 h-20">
             <div className="w-20 h-20 rounded-full border-4 border-[var(--color-background-primary)] bg-[var(--color-background-secondary)] overflow-hidden flex items-center justify-center text-xl font-bold text-[var(--color-text-secondary)] shadow-md">
-              {avatarPreview || me?.profile?.avatarUrl
-                ? <SafeImage src={avatarPreview || me?.profile?.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
-                : page.name[0]?.toUpperCase()
+              {avatarPreview
+                ? <SafeImage src={avatarPreview} alt={page.name} className="w-full h-full object-cover" />
+                : <span className="text-2xl font-bold text-[var(--color-text-secondary)]">{page.name[0]?.toUpperCase()}</span>
               }
             </div>
             {uploadingAvatar && (
