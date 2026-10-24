@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Users, Medal, Activity, User, X, Camera, ChevronLeft } from 'lucide-react';
+import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Users, Medal, Activity, User, X, Camera } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
