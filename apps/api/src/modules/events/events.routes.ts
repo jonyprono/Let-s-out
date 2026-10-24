@@ -163,7 +163,12 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const { sub } = req.user as { sub: string }
 
     const createdEvents = await app.prisma.event.findMany({
-      where: { creatorId: sub },
+      where: {
+        OR: [
+          { creatorId: sub },
+          { coHostIds: { has: sub } },
+        ],
+      },
       orderBy: { startAt: 'desc' },
       include: {
         creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
@@ -327,7 +332,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({ where: { id }, include: { conversation: true } })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
-    if (event.creatorId !== userId) return reply.code(403).send({ error: 'Forbidden' })
+    const isOrganizer = event.creatorId === userId || (event.coHostIds || []).includes(userId)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
     if (event.validatorVoteStatus === 'OPEN') return reply.code(400).send({ error: 'Vote is already open' })
 
     const updatedEvent = await app.prisma.event.update({
@@ -399,7 +405,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
     if (event.validatorVoteStatus !== 'OPEN') return reply.code(400).send({ error: 'Vote is not open' })
 
     const booking = event.bookings.find(b => b.userId === userId)
-    if (!booking && event.creatorId !== userId) return reply.code(403).send({ error: 'You are not a participant' })
+    const isOrganizer = event.creatorId === userId || (event.coHostIds || []).includes(userId)
+    if (!booking && !isOrganizer) return reply.code(403).send({ error: 'You are not a participant' })
 
     // Enregistrer le vote
     await app.prisma.validatorVote.upsert({
@@ -498,7 +505,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
       include: { bookings: { where: { status: 'CONFIRMED' }, select: { userId: true } } }
     })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
-    if (event.creatorId !== userId) return reply.code(403).send({ error: 'Forbidden' })
+    const isOrganizer = event.creatorId === userId || (event.coHostIds || []).includes(userId)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
     if (event.validatorVoteStatus !== 'OPEN') return reply.code(400).send({ error: 'Vote is not open' })
 
     // Recalculer les validateurs retenus avant de clôturer
@@ -574,11 +582,12 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({
       where: { id },
-      select: { creatorId: true, validatorCandidates: true, title: true }
+      select: { creatorId: true, coHostIds: true, validatorCandidates: true, title: true }
     })
     
     if (!event) return reply.code(404).send({ error: 'Event not found' })
-    if (event.creatorId !== userId) return reply.code(403).send({ error: 'Only organizer can modify candidates' })
+    const isOrganizer = event.creatorId === userId || (event.coHostIds || []).includes(userId)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Only organizer can modify candidates' })
 
     if (action === 'ADD') {
       if (!event.validatorCandidates.includes(candidateId)) {
@@ -903,13 +912,15 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({ where: { id } })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
-    if (event.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+    const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
 
     const needsVerification = (event.price && event.price > 0) || (event.poolTarget && event.poolTarget > 0)
     if (needsVerification) {
-      const userProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
-      if (userProfile?.kycStatus !== 'verified') {
-        return reply.code(403).send({ error: "Le profil doit être vérifié (KYC) pour publier cet événement." })
+      const creatorProfile = await app.prisma.profile.findUnique({ where: { userId: event.creatorId } })
+      const userProfile = sub === event.creatorId ? creatorProfile : await app.prisma.profile.findUnique({ where: { userId: sub } })
+      if (creatorProfile?.kycStatus !== 'verified' && userProfile?.kycStatus !== 'verified') {
+        return reply.code(403).send({ error: "Le profil de l'organisateur doit être vérifié (KYC) pour publier cet événement." })
       }
     }
 
@@ -929,22 +940,32 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({ where: { id } })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
-    if (event.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+    const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
 
     const body = req.body as any;
 
+    // Prevent overwriting creatorId, id, or creation timestamp
+    const { id: _ignoreId, creatorId: _ignoreCreatorId, createdAt: _ignoreCreatedAt, ...updateData } = body;
+
+    // Keep published status if already published
+    if (event.status === 'PUBLISHED' && updateData.status === 'DRAFT') {
+      delete updateData.status;
+    }
+
     // Determine effective new values
-    const newPrice = body.price !== undefined ? body.price : event.price;
+    const newPrice = updateData.price !== undefined ? updateData.price : event.price;
     // poolTarget: null means organizer is removing the pool (switching to free)
-    const isRemovingPool = body.poolTarget === null;
-    const newPoolTarget = body.poolTarget !== undefined ? body.poolTarget : event.poolTarget;
+    const isRemovingPool = updateData.poolTarget === null;
+    const newPoolTarget = updateData.poolTarget !== undefined ? updateData.poolTarget : event.poolTarget;
 
     // KYC check only when setting/keeping a paid feature — not when removing it
     const needsVerification = !isRemovingPool && ((newPrice && newPrice > 0) || (newPoolTarget && newPoolTarget > 0));
     if (needsVerification) {
-      const userProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
-      if (userProfile?.kycStatus !== 'verified') {
-        return reply.code(403).send({ error: "Le profil doit être vérifié (KYC) pour activer cette option financière." })
+      const creatorProfile = await app.prisma.profile.findUnique({ where: { userId: event.creatorId } })
+      const userProfile = sub === event.creatorId ? creatorProfile : await app.prisma.profile.findUnique({ where: { userId: sub } })
+      if (creatorProfile?.kycStatus !== 'verified' && userProfile?.kycStatus !== 'verified') {
+        return reply.code(403).send({ error: "Le profil de l'organisateur doit être vérifié (KYC) pour activer cette option financière." })
       }
     }
 
@@ -953,8 +974,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: "Impossible de supprimer la cagnotte : des contributions ont déjà été reçues. Vous devez rembourser les participants d'abord." })
     }
 
-    if (body.registrationDeadline) {
-      const newDeadline = new Date(body.registrationDeadline)
+    if (updateData.registrationDeadline) {
+      const newDeadline = new Date(updateData.registrationDeadline)
       if (newDeadline < new Date()) {
         return reply.code(400).send({ error: "La date limite d'inscription ne peut pas être fixée dans le passé." })
       }
@@ -962,13 +983,13 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const updated = await app.prisma.event.update({
       where: { id },
-      data: body,
+      data: updateData,
     })
 
     // Notify new co-hosts if any
-    if (body.coHostIds && Array.isArray(body.coHostIds)) {
+    if (updateData.coHostIds && Array.isArray(updateData.coHostIds)) {
       const oldCoHosts = event.coHostIds || [];
-      const newCoHosts = body.coHostIds.filter((cid: string) => !oldCoHosts.includes(cid));
+      const newCoHosts = updateData.coHostIds.filter((cid: string) => !oldCoHosts.includes(cid));
       
       if (newCoHosts.length > 0) {
         try {
@@ -1011,7 +1032,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({ where: { id } })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
-    if (event.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+    const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+    if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
 
     await app.prisma.event.update({ where: { id }, data: { status: 'CANCELLED' } })
 

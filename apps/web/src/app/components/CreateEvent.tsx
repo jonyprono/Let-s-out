@@ -254,9 +254,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [loading, setLoading] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [createdEventId, setCreatedEventId] = useState<string | null>(null)
+  const [eventCreator, setEventCreator] = useState<any>(null)
+  const [eventStatus, setEventStatus] = useState<string>('DRAFT')
   const [step, setStep] = useState<'form' | 'preview' | 'done' | 'published'>('form')
   const qc = useQueryClient()
   const [formStep, setFormStep] = useState<1 | 2>(1)
+  const isEdit = Boolean(location.state?.editEventId || createdEventId)
+
+  const displayOrganizerName = isEdit && eventCreator
+    ? (eventCreator.profile?.displayName || eventCreator.profile?.username || (eventCreator.firstName ? `${eventCreator.firstName} ${eventCreator.lastName || ''}`.trim() : 'Organisateur'))
+    : (me?.profile?.displayName || (me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : 'Organisateur'))
+  const displayOrganizerAvatar = isEdit && eventCreator
+    ? eventCreator.profile?.avatarUrl
+    : me?.profile?.avatarUrl
 
   const [enablePool, setEnablePool] = useState(sessionDraft?.enablePool ?? false)
   const [poolDescription, setPoolDescription] = useState(sessionDraft?.poolDescription ?? '')
@@ -355,6 +365,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     const eventData = location.state?.eventData
 
     const applyEventData = (d: any) => {
+      if (d.creator) setEventCreator(d.creator)
+      if (d.status) setEventStatus(d.status)
       if (d.title) setTitle(d.title)
       if (d.category) setCategory(d.category)
       if (d.startAt) {
@@ -395,11 +407,23 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         setRegEndDate(rd.toISOString().split('T')[0])
         setRegEndTime(rd.toISOString().split('T')[1].slice(0, 5))
       }
+      if (d.coHosts && Array.isArray(d.coHosts)) {
+        setSelectedCoOrgs(d.coHosts.map((c: any) => ({
+          id: c.id,
+          name: c.profile?.displayName || c.profile?.username || (c.firstName ? `${c.firstName} ${c.lastName || ''}`.trim() : 'Co-organisateur'),
+          avatarUrl: c.profile?.avatarUrl
+        })))
+      }
     }
 
     if (eventData && editEventId) {
       // Data already passed via navigation state
       applyEventData(eventData)
+      // Fetch fresh data from API to ensure coHosts and creator are fully populated
+      apiClient.get(`/events/${editEventId}`).then((res: any) => {
+        const d = res.data
+        if (d) applyEventData(d)
+      }).catch(() => {})
     } else if (editEventId) {
       // Only ID passed — fetch from API
       apiClient.get(`/events/${editEventId}`).then((res: any) => {
@@ -500,7 +524,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           ? poolDescription.trim()
           : isEdit ? null : undefined,
         registrationDeadline: regEndDate && regEndTime ? new Date(`${regEndDate}T${regEndTime}`).toISOString() : undefined,
-        status: 'DRAFT',
+        status: isEdit ? (eventStatus || undefined) : 'DRAFT',
         coHostIds: selectedCoOrgs.map(o => o.id),
       }
 
@@ -508,7 +532,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       const optimisticEvent = {
         id: editEventId || `temp-${Date.now()}`,
         ...payload,
-        creator: { id: me?.id, profile: me?.profile },
+        status: isEdit ? eventStatus : payload.status,
+        creator: eventCreator || { id: me?.id, profile: me?.profile },
         bookings: []
       }
       
@@ -554,7 +579,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       const eventId = editEventId || res.data?.id
       setCreatedEventId(eventId)
-      toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
+      if (isEdit) {
+        toast.success('Événement mis à jour avec succès !')
+        qc.invalidateQueries({ queryKey: ['events', eventId] })
+        qc.invalidateQueries({ queryKey: ['events'] })
+        qc.invalidateQueries({ queryKey: ['my-events'] })
+        if (eventStatus === 'PUBLISHED') {
+          navigate(-1)
+          return
+        }
+      } else {
+        toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
+      }
       setStep('done')
     } catch (err: any) {
       console.error('CreateEvent Error:', err)
@@ -614,12 +650,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         poolMode: enablePool && poolTarget ? (poolMinAmount ? 'minimum' : 'libre') : undefined,
         poolMinAmount: enablePool && poolMinAmount ? parseFloat(poolMinAmount) : undefined,
         registrationDeadline: regEndDate && regEndTime ? new Date(`${regEndDate}T${regEndTime}`).toISOString() : undefined,
-        creatorId: me?.id,
+        creatorId: eventCreator?.id || me?.id,
         coHostIds: selectedCoOrgs.map(o => o.id),
-        creator: { id: me?.id, profile: me?.profile },
+        creator: eventCreator || { id: me?.id, profile: me?.profile },
         _count: { bookings: 0 },
         bookings: [],
-        coHosts: [],
+        coHosts: selectedCoOrgs,
       }
 
       // Inject into the ['events', id] cache so ManageEvent finds it instantly (no loader, no crash)
@@ -918,7 +954,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           >
             <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-primary)]" />
           </button>
-          <span className="text-[length:var(--font-size-title-xsmall)] font-semibold text-[var(--color-text-primary)]">Créer un événement</span>
+          <span className="text-[length:var(--font-size-title-xsmall)] font-semibold text-[var(--color-text-primary)]">
+            {isEdit ? "Modifier l'événement" : "Créer un événement"}
+          </span>
         </div>
       </div>
 
@@ -993,18 +1031,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="px-5 mb-4 flex flex-col gap-2">
           {/* Main Organizer */}
           <div className="flex items-center gap-3">
-            {me?.profile?.avatarUrl ? (
+            {displayOrganizerAvatar ? (
               <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-                <SafeImage src={me.profile.avatarUrl} alt={me?.profile?.displayName || me?.firstName || 'Organisateur'} className="w-full h-full object-cover" />
+                <SafeImage src={displayOrganizerAvatar} alt={displayOrganizerName} className="w-full h-full object-cover" />
               </div>
             ) : (
               <div className="w-10 h-10 rounded-full bg-[var(--brand-orange-500)] text-white flex items-center justify-center font-bold text-[length:var(--font-size-title-small)] shrink-0">
-                {me?.profile?.displayName?.[0]?.toUpperCase() || me?.firstName?.[0]?.toUpperCase() || 'A'}
+                {displayOrganizerName?.[0]?.toUpperCase() || 'A'}
               </div>
             )}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] truncate">
-                {me?.profile?.displayName || (me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : 'Organisateur')}
+                {displayOrganizerName}
               </p>
               <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate">Organisateur de l'événement</p>
             </div>
@@ -1023,7 +1061,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               )}
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] truncate">
-                  {org.name}
+                  {org.name} {org.id === me?.id ? "(Vous)" : ""}
                 </p>
                 <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate">Co-organisateur</p>
               </div>
@@ -1287,7 +1325,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             disabled={!canSubmit}
             loading={loading}
           >
-            Créer l'événement
+            {isEdit ? "Enregistrer les modifications" : "Créer l'événement"}
           </PrimaryButton>
         )}
       </div>
