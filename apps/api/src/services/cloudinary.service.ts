@@ -31,11 +31,13 @@ export const uploadBufferToCloudinary = (
   filename: string
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
+    const isVideo = /\.(mp4|webm|mov|avi|mkv|3gp)$/i.test(filename);
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
         public_id: `${filename.split('.')[0]}-${uuidv4()}`,
-        resource_type: 'auto',
+        resource_type: isVideo ? 'video' : 'auto',
+        chunk_size: 6000000,
         overwrite: true,
         invalidate: true,
       },

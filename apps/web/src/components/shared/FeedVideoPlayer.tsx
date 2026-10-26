@@ -17,6 +17,9 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
+// Shared mute preference across feed videos during a session (like FB/Instagram)
+let globalIsMuted = true;
+
 export function FeedVideoPlayer({
   src,
   poster,
@@ -27,9 +30,10 @@ export function FeedVideoPlayer({
 }: FeedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const userPausedRef = useRef(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(globalIsMuted);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(false);
@@ -40,8 +44,8 @@ export function FeedVideoPlayer({
   const derivedPoster =
     poster ||
     (src.includes('cloudinary.com') && src.includes('/video/upload/')
-      ? src.replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
-      : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+      ? src.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
+      : undefined);
 
   // Pause all other videos on the page when this video starts playing
   const pauseOtherVideos = useCallback(() => {
@@ -75,9 +79,11 @@ export function FeedVideoPlayer({
     if (!video) return;
 
     if (video.paused) {
+      userPausedRef.current = false;
       pauseOtherVideos();
       video.play().catch(() => {});
     } else {
+      userPausedRef.current = true;
       video.pause();
     }
     triggerControlsVisibility();
@@ -87,8 +93,10 @@ export function FeedVideoPlayer({
     e.stopPropagation();
     const video = videoRef.current;
     if (!video) return;
-    video.muted = !video.muted;
-    setIsMuted(video.muted);
+    const nextMuted = !video.muted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
+    globalIsMuted = nextMuted;
     triggerControlsVisibility();
   };
 
@@ -132,22 +140,42 @@ export function FeedVideoPlayer({
     }
   };
 
-  // Pause automatically when scrolled away (IntersectionObserver)
+  // Autoplay when scrolling into view and auto-pause when scrolled away (like FB / Twitter)
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    const video = videoRef.current;
+    if (!container || !video) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting || entry.intersectionRatio < 0.25) {
-            if (videoRef.current && !videoRef.current.paused) {
-              videoRef.current.pause();
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.55) {
+            // Video is in focus in the viewport: autoplay if user hasn't explicitly clicked pause
+            if (!userPausedRef.current && video.paused) {
+              pauseOtherVideos();
+              video.muted = globalIsMuted;
+              setIsMuted(globalIsMuted);
+              video.play().catch(() => {
+                // If browser blocks unmuted autoplay without prior interaction, fallback to muted autoplay
+                if (!video.muted) {
+                  video.muted = true;
+                  setIsMuted(true);
+                  globalIsMuted = true;
+                  video.play().catch(() => {});
+                }
+              });
             }
+          } else if (!entry.isIntersecting || entry.intersectionRatio < 0.35) {
+            // Scrolled away: pause video
+            if (!video.paused) {
+              video.pause();
+            }
+            // Reset manual pause flag so next time user scrolls here it can autoplay again
+            userPausedRef.current = false;
           }
         });
       },
-      { threshold: [0, 0.25] }
+      { threshold: [0, 0.25, 0.35, 0.55, 0.75] }
     );
 
     observer.observe(container);
@@ -155,7 +183,7 @@ export function FeedVideoPlayer({
       observer.disconnect();
       if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     };
-  }, []);
+  }, [pauseOtherVideos]);
 
   // Listen for fullscreen change
   useEffect(() => {
@@ -185,6 +213,8 @@ export function FeedVideoPlayer({
         src={src}
         poster={derivedPoster}
         controls={false}
+        loop
+        muted={isMuted}
         playsInline
         webkit-playsinline="true"
         x5-playsinline="true"
@@ -194,14 +224,34 @@ export function FeedVideoPlayer({
         onPause={handlePause}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => setIsPlaying(false)}
-        className={`w-full h-full pointer-events-none transition-all ${
+        className={`w-full h-full transition-all ${
           objectFit === 'cover' ? 'object-cover' : 'object-contain'
         }`}
         style={{ maxHeight: isFullscreen ? '100vh' : maxHeight }}
       />
 
-      {/* Center Play Button Overlay — supprimé pour éviter l'icône grand noir natif/flicker sur mobile */}
+      {/* Center Play Button Overlay (visible when paused) */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-xl transition-transform transform scale-100 group-hover:scale-105">
+            <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white ml-0.5" />
+          </div>
+        </div>
+      )}
+
+      {/* Floating Sound Toggle Button (Instagram / Twitter / Facebook style) */}
+      <button
+        type="button"
+        onClick={toggleMute}
+        className="absolute top-2.5 left-2.5 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/80 active:scale-90 transition-all shadow-md"
+        title={isMuted ? 'Activer le son' : 'Couper le son'}
+      >
+        {isMuted ? (
+          <VolumeX className="w-4 h-4 text-white" />
+        ) : (
+          <Volume2 className="w-4 h-4 text-white" />
+        )}
+      </button>
 
       {/* Bottom Controls Bar (Visible when paused, or temporarily on tap/hover when playing) */}
       <div

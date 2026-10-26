@@ -107,8 +107,82 @@ export const pagesApi = {
     formData.append('type', type)
     return apiClient.post<{ url: string; type: string }>(
       `/pages/${pageId}/upload-image`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } }
+      formData
     ).then(res => res.data)
+  },
+
+  uploadVideo: async (
+    pageId: string,
+    file: File,
+    onProgress?: (percent: number) => void
+  ): Promise<{ url: string }> => {
+    const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+    const uploadPreset = import.meta.env.VITE_CLOUDINARY_VIDEO_UPLOAD_PRESET
+
+    if (cloudName && uploadPreset) {
+      try {
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('upload_preset', uploadPreset)
+        formData.append('folder', `pages/${pageId}`)
+        formData.append('resource_type', 'video')
+
+        const res = await new Promise<{ secure_url: string }>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`)
+          if (xhr.upload) {
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable && onProgress) {
+                onProgress(Math.min(Math.round((e.loaded / e.total) * 100), 99))
+              }
+            }
+          }
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText)
+                resolve(data)
+              } catch (e) {
+                reject(e)
+              }
+            } else {
+              try {
+                const errData = JSON.parse(xhr.responseText)
+                reject(new Error(errData?.error?.message || 'Erreur Cloudinary'))
+              } catch {
+                reject(new Error(`Erreur HTTP ${xhr.status}`))
+              }
+            }
+          }
+          xhr.onerror = () => reject(new Error('Erreur réseau Cloudinary'))
+          xhr.send(formData)
+        })
+
+        if (onProgress) onProgress(100)
+        return { url: res.secure_url }
+      } catch (err) {
+        console.warn('[uploadVideo] Direct Cloudinary upload failed, falling back to server:', err)
+      }
+    }
+
+    // Fallback via server
+    const formData = new FormData()
+    formData.append('image', file)
+    formData.append('type', 'post')
+    return apiClient.post<{ url: string; type: string }>(
+      `/pages/${pageId}/upload-image`,
+      formData,
+      {
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percent = Math.min(Math.round((progressEvent.loaded / progressEvent.total) * 100), 99)
+            onProgress(percent)
+          }
+        }
+      }
+    ).then(res => {
+      if (onProgress) onProgress(100)
+      return { url: res.data.url }
+    })
   }
 }
