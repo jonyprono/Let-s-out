@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, UIEvent } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, UIEvent } from 'react';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { App } from '@capacitor/app';
 import { EventVideo } from '../api';
@@ -19,8 +19,13 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
   const initialIdx = videos.findIndex(v => v.id === initialVideoId);
   const [activeIndex, setActiveIndex] = useState(initialIdx >= 0 ? initialIdx : 0);
 
-  // Initialize scroll position on mount
-  const [hasScrolledToInitial, setHasScrolledToInitial] = useState(false);
+  // Position immediately on the clicked video before browser paint (no black scroll void)
+  useLayoutEffect(() => {
+    if (containerRef.current && videos.length > 0) {
+      const idx = initialIdx >= 0 ? initialIdx : 0;
+      containerRef.current.scrollTop = idx * containerRef.current.offsetHeight;
+    }
+  }, [initialIdx, videos.length]);
 
   useEffect(() => {
     // Intercept native back button using Capacitor App
@@ -40,15 +45,6 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
       }
     };
   }, [onClose]);
-
-  useEffect(() => {
-    if (containerRef.current && !hasScrolledToInitial && videos.length > 0) {
-      const idx = initialIdx >= 0 ? initialIdx : 0;
-      // Use offsetHeight which represents the height of one item (100vh)
-      containerRef.current.scrollTop = idx * containerRef.current.offsetHeight;
-      setHasScrolledToInitial(true);
-    }
-  }, [hasScrolledToInitial, initialIdx, videos.length]);
 
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget;
@@ -89,7 +85,7 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
       <div 
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-scroll snap-y snap-mandatory scroll-smooth"
+        className="flex-1 overflow-y-scroll snap-y snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {videos.map((video, index) => (

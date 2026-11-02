@@ -219,7 +219,7 @@ export function FeedVideoPlayer({
         webkit-playsinline="true"
         x5-playsinline="true"
         disablePictureInPicture
-        preload="metadata"
+        preload="auto"
         onPlay={handlePlay}
         onPause={handlePause}
         onTimeUpdate={handleTimeUpdate}

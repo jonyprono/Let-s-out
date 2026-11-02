@@ -29,7 +29,6 @@ import {
   Copy,
   Pencil,
   X,
-  Play,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
@@ -37,61 +36,7 @@ import { useConfirm } from '@/components/shared/ConfirmContext'
 
 type PageTab = 'publications' | 'events' | 'about' | 'photos'
 
-function extractVideoThumbnail(file: File): Promise<string> {
-  return new Promise((resolve) => {
-    const video = document.createElement('video')
-    video.preload = 'auto'
-    video.muted = true
-    video.playsInline = true
-    const url = URL.createObjectURL(file)
-    video.src = url
 
-    let done = false
-    const finish = (result: string) => {
-      if (!done) {
-        done = true
-        URL.revokeObjectURL(url)
-        resolve(result)
-      }
-    }
-
-    const capture = () => {
-      try {
-        const canvas = document.createElement('canvas')
-        canvas.width = video.videoWidth || 640
-        canvas.height = video.videoHeight || 360
-        const ctx = canvas.getContext('2d')
-        if (ctx && canvas.width > 0 && canvas.height > 0) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
-          finish(dataUrl)
-          return
-        }
-      } catch (err) {
-        console.warn('Video frame capture error:', err)
-      }
-      finish('')
-    }
-
-    video.onloadeddata = () => {
-      try {
-        video.currentTime = Math.min(0.2, (video.duration || 1) / 2)
-      } catch {
-        capture()
-      }
-    }
-
-    video.onseeked = () => {
-      capture()
-    }
-
-    video.onerror = () => finish('')
-
-    setTimeout(() => {
-      capture()
-    }, 1500)
-  })
-}
 
 export function PageView() {
   const { id } = useParams<{ id: string }>()
@@ -114,7 +59,6 @@ export function PageView() {
   const [postImagePreviews, setPostImagePreviews] = useState<string[]>([])
   const [postVideo, setPostVideo] = useState<File | null>(null)
   const [postVideoPreview, setPostVideoPreview] = useState<string | null>(null)
-  const [postVideoThumbnail, setPostVideoThumbnail] = useState<string | null>(null)
   const [publishing, setPublishing] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   
@@ -274,15 +218,6 @@ export function PageView() {
       }
       const previewUrl = URL.createObjectURL(file)
       setPostVideoPreview(previewUrl)
-      setPostVideoThumbnail(null)
-      try {
-        const thumb = await extractVideoThumbnail(file)
-        if (thumb) {
-          setPostVideoThumbnail(thumb)
-        }
-      } catch (err) {
-        console.warn('Failed to extract thumbnail:', err)
-      }
     }
   }
 
@@ -316,7 +251,6 @@ export function PageView() {
       if (postVideoPreview) URL.revokeObjectURL(postVideoPreview)
       setPostVideo(null)
       setPostVideoPreview(null)
-      setPostVideoThumbnail(null)
       setPostStep(1)
       setShowCreatePostModal(false)
     } catch (err: any) {
@@ -1012,40 +946,15 @@ export function PageView() {
                 {postVideoPreview && (
                   <div className="relative mx-4 my-2 rounded-2xl overflow-hidden bg-black border border-gray-200 dark:border-gray-800 shadow-md">
                     <div className="relative aspect-video max-h-72 w-full flex items-center justify-center bg-black">
-                      {postVideoThumbnail ? (
-                        <img
-                          src={postVideoThumbnail}
-                          alt="Aperçu vidéo"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <video
-                          src={postVideoPreview}
-                          playsInline
-                          muted
-                          autoPlay
-                          loop
-                          className="w-full h-full object-cover pointer-events-none"
-                        />
-                      )}
-
-                      {/* Center Play Icon Badge */}
-                      <div className="absolute inset-0 bg-black/25 flex items-center justify-center pointer-events-none">
-                        <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white shadow-xl border border-white/20">
-                          <Play className="w-6 h-6 fill-white ml-0.5" />
-                        </div>
-                      </div>
-
-                      {/* Video info badge */}
-                      <div className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-sm">
-                        <Video className="w-3.5 h-3.5 text-[#FF7A00]" />
-                        <span>Vidéo attachée</span>
-                        {postVideo && (
-                          <span className="text-gray-300 font-normal">
-                            · {(postVideo.size / (1024 * 1024)).toFixed(1)} Mo
-                          </span>
-                        )}
-                      </div>
+                      <video
+                        src={postVideoPreview}
+                        playsInline
+                        muted
+                        autoPlay
+                        loop
+                        preload="auto"
+                        className="w-full h-full object-cover"
+                      />
 
                       {/* Remove video button */}
                       <button
@@ -1054,10 +963,10 @@ export function PageView() {
                           if (postVideoPreview) URL.revokeObjectURL(postVideoPreview)
                           setPostVideo(null)
                           setPostVideoPreview(null)
-                          setPostVideoThumbnail(null)
                           if (videoInputRef.current) videoInputRef.current.value = ''
                         }}
-                        className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-transform active:scale-90 shadow-md backdrop-blur-md text-xs"
+                        className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-transform active:scale-90 shadow-md backdrop-blur-md text-xs z-10"
+                        title="Supprimer la vidéo"
                       >
                         <X className="w-4 h-4" />
                       </button>

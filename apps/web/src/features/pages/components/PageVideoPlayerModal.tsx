@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, UIEvent, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, UIEvent, useMemo } from 'react'
 import { ChevronLeft, Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Sparkles } from 'lucide-react'
 import { App } from '@capacitor/app'
 import { useNavigate } from 'react-router'
@@ -39,7 +39,6 @@ export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVi
   const [commentPost, setCommentPost] = useState<PageVideoItem | null>(null)
   const [outVlogs, setOutVlogs] = useState<EventVideo[]>([])
   const [playingOutVlogId, setPlayingOutVlogId] = useState<string | null>(null)
-  const [hasScrolledToInitial, setHasScrolledToInitial] = useState(false)
 
   // Load Out Vlogs so they can be proposed in the feed
   useEffect(() => {
@@ -106,13 +105,12 @@ export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVi
     }
   }, [onClose, commentPost, playingOutVlogId])
 
-  // Scroll to selected video on mount
-  useEffect(() => {
-    if (containerRef.current && !hasScrolledToInitial && entries.length > 0) {
+  // Position immediately on the clicked video before browser paint (no black scroll void)
+  useLayoutEffect(() => {
+    if (containerRef.current && entries.length > 0) {
       containerRef.current.scrollTop = initialIdx * containerRef.current.offsetHeight
-      setHasScrolledToInitial(true)
     }
-  }, [hasScrolledToInitial, initialIdx, entries.length])
+  }, [initialIdx, entries.length])
 
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
     const container = e.currentTarget
@@ -146,7 +144,7 @@ export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVi
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory scroll-smooth"
+        className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {entries.map((entry, index) => {
@@ -389,7 +387,12 @@ function PageVideoPlayerItem({
         <video
           ref={videoRef}
           src={item.videoUrl}
-          poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+          poster={
+            item.videoUrl?.includes('cloudinary.com')
+              ? item.videoUrl.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
+              : undefined
+          }
+          preload="auto"
           loop
           controls={false}
           playsInline
