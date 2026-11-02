@@ -71,7 +71,7 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col h-[100dvh] w-full overflow-hidden">
       {/* Global Close Button — placed high to avoid Android nav bar overlap */}
       <button
         onClick={onClose}
@@ -85,7 +85,7 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
       <div 
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-scroll snap-y snap-mandatory"
+        className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {videos.map((video, index) => (

@@ -145,7 +145,17 @@ export function VideoPlayerItem({ video, isActive }: Props) {
   };
 
   return (
-    <div className="relative w-full h-full snap-start shrink-0 flex items-center justify-center bg-black">
+    <div className="relative w-full h-[100dvh] min-h-[100dvh] snap-start snap-always shrink-0 flex items-center justify-center bg-black overflow-hidden">
+      {/* Ambient background glow for seamless visual continuity */}
+      {(video.thumbnailUrl || video.event?.coverUrl) && (
+        <div
+          className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-20 scale-110 pointer-events-none"
+          style={{
+            backgroundImage: `url(${video.thumbnailUrl || video.event?.coverUrl})`,
+          }}
+        />
+      )}
+
       {/* Main Video */}
       <video
         ref={videoRef}
@@ -159,7 +169,7 @@ export function VideoPlayerItem({ video, isActive }: Props) {
         webkit-playsinline="true"
         x5-playsinline="true"
         onTimeUpdate={handleTimeUpdate}
-        className="max-w-full max-h-full object-contain pointer-events-none"
+        className="w-full h-full object-contain pointer-events-none relative z-0"
       />
 
       {/* Transparent overlay to capture clicks without triggering native video controls */}

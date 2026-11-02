@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export function SmartAppBanner() {
   const [isVisible, setIsVisible] = useState(false);
@@ -54,32 +53,36 @@ export function SmartAppBanner() {
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between p-3 bg-white dark:bg-[#1A1A1A] border-b border-gray-200 dark:border-white/10 shadow-md animate-in slide-in-from-top-full duration-300 lg:hidden">
+    <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between px-3.5 py-2.5 bg-white/95 dark:bg-[#1A1A1A]/95 backdrop-blur-md border-b border-gray-200/80 dark:border-white/10 shadow-sm animate-in slide-in-from-top-full duration-300 lg:hidden">
       
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1 mr-3">
         <button 
           onClick={handleDismiss}
-          className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-white"
+          className="p-1 -ml-1 text-gray-400 hover:text-gray-600 dark:hover:text-white shrink-0 rounded-full active:bg-gray-100 dark:active:bg-white/10 transition-colors"
+          aria-label="Fermer la bannière"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
         <img 
           src="/icons/icon-192.webp" 
           alt="Let's Out" 
-          className="w-10 h-10 rounded-[10px] shadow-sm border border-gray-100 dark:border-white/10"
+          className="w-9 h-9 rounded-xl shadow-sm border border-gray-100 dark:border-white/10 shrink-0 object-cover"
         />
-        <div className="flex flex-col">
-          <span className="text-[14px] font-bold text-gray-900 dark:text-white leading-tight">Let's Out</span>
-          <span className="text-[11px] text-gray-500 dark:text-gray-400">Gratuit - {isIOS ? 'App Store' : 'Google Play'}</span>
+        <div className="flex flex-col min-w-0">
+          <span className="text-[13px] font-bold text-gray-900 dark:text-white leading-tight truncate">Let's Out</span>
+          <span className="text-[10.5px] text-gray-500 dark:text-gray-400 truncate">
+            Gratuit · {isIOS ? 'App Store' : 'Google Play'}
+          </span>
         </div>
       </div>
 
-      <Button 
+      <button
+        type="button"
         onClick={handleDownload}
-        className="h-8 px-4 text-[13px] font-semibold rounded-full bg-[#FF7A00] text-white hover:bg-[#FF7A00]/90 shadow-sm"
+        className="shrink-0 h-7.5 px-3.5 text-xs font-semibold rounded-full bg-[#FF7A00] text-white hover:bg-[#E06C00] active:scale-95 transition-all shadow-sm flex items-center justify-center whitespace-nowrap"
       >
         Ouvrir
-      </Button>
+      </button>
 
     </div>
   );
