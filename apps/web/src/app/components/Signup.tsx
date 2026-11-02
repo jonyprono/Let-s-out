@@ -7,6 +7,7 @@ import {
   Location01Icon,
   Cancel01Icon,
   Calendar01Icon,
+  RefreshIcon,
 } from 'hugeicons-react'
 import { BackButton } from '@/components/ui/BackButton';
 import {
@@ -14,12 +15,15 @@ import {
   useRegister,
   useCheckTarget,
   useCheckOtp,
+  useGoogleSignIn,
 } from '@/features/auth/hooks/useAuth'
 import { toast } from 'sonner'
 import {
   RecaptchaVerifier,
   signInWithPhoneNumber,
   ConfirmationResult,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { apiClient } from '@/lib/api-client'
@@ -43,9 +47,11 @@ import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { CategoryChip } from '@/components/shared/CategoryChip'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { Input } from '@/components/ui/input'
+import { SocialButton } from '@/components/ui/social-button'
+import { Divider } from '@/components/ui/divider'
 import { isFieldValid } from '@/lib/validation'
 import { ProgressBar } from '@/components/ui/progress-bar'
-import { otpLogger } from '@/lib/auth-logger'
+import { otpLogger, googleAuthLogger } from '@/lib/auth-logger'
 import { useTranslation } from 'react-i18next'
 
 const INTERESTS_LIST = [
@@ -152,6 +158,63 @@ export function Signup({ onBack }: SignupProps) {
   const { mutate: sendOtp, isPending: sendingOtp } = useSendOtp()
   const { mutate: register, isPending: registering } = useRegister()
   const { mutate: checkOtp, isPending: checkingOtp } = useCheckOtp()
+  const { mutate: googleSignIn } = useGoogleSignIn()
+  const [googleLoading, setGoogleLoading] = useState(false)
+
+  const handleGoogleSignup = async () => {
+    try {
+      setGoogleLoading(true)
+      let idToken = ''
+      let email = ''
+
+      const platform = Capacitor.isNativePlatform() ? 'native' : 'web'
+      googleAuthLogger.start(platform)
+
+      if (Capacitor.isNativePlatform()) {
+        googleAuthLogger.nativeSignInAttempt()
+        const result = await FirebaseAuthentication.signInWithGoogle()
+        googleAuthLogger.nativeSignInResult(result.user?.email ?? undefined)
+        if (!result.user?.email) {
+          toast.error(t('login.errorGoogle'))
+          return
+        }
+        googleAuthLogger.nativeGetIdToken()
+        const tokenResult = await FirebaseAuthentication.getIdToken()
+        googleAuthLogger.nativeIdTokenResult(!!tokenResult.token)
+        if (!tokenResult.token) {
+          toast.error(t('login.errorToken'))
+          return
+        }
+        idToken = tokenResult.token
+        email = result.user.email
+      } else {
+        googleAuthLogger.webSignInAttempt()
+        const provider = new GoogleAuthProvider()
+        provider.setCustomParameters({
+          prompt: 'select_account consent'
+        })
+        const result = await signInWithPopup(auth, provider)
+        idToken = await result.user.getIdToken()
+        email = result.user.email || ''
+        googleAuthLogger.webSignInResult(email)
+      }
+
+      if (idToken && email) {
+        googleAuthLogger.backendCallStart(email)
+        googleSignIn({ idToken, email }, {
+          onSuccess: (data: any) => googleAuthLogger.backendCallSuccess(data?.user?.id),
+          onError: (err: unknown) => googleAuthLogger.backendCallError(err),
+        })
+      }
+    } catch (err: any) {
+      googleAuthLogger.error('handleGoogleSignup', err)
+      if (err?.code !== 'auth/popup-closed-by-user' && err?.message?.indexOf('canceled') === -1) {
+        toast.error(t('login.errorGoogle'))
+      }
+    } finally {
+      setGoogleLoading(false)
+    }
+  }
 
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
 
@@ -422,12 +485,43 @@ export function Signup({ onBack }: SignupProps) {
   const handleOtpKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus()
   }
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, OTP_LENGTH)
+    if (!pasted) return
+    e.preventDefault()
+    const next = [...otp]
+    pasted.split('').forEach((ch, idx) => { next[idx] = ch })
+    setOtp(next)
+    const focusIdx = Math.min(pasted.length, OTP_LENGTH - 1)
+    otpRefs.current[focusIdx]?.focus()
+  }
 
   const handleResend = async () => {
     if (countdown > 0) return
     setOtp(Array(OTP_LENGTH).fill(''))
     try {
       setIsFirebaseSending(true)
+
+      if (currentChannel === 'whatsapp') {
+        otpLogger.sendStart(fullPhone, 'whatsapp')
+        otpLogger.sendRequest('whatsapp')
+        setLastCodeVia('backend')
+        sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
+          onSuccess: () => {
+            otpLogger.sendSuccess('whatsapp', 'OTP WhatsApp renvoyé avec succès')
+            setCountdown(59)
+            toast.success(t('signup.successResendAlt') || 'Code renvoyé')
+            setTimeout(() => otpRefs.current[0]?.focus(), 100)
+          },
+          onError: (e: any) => {
+            otpLogger.sendError(e)
+            if (e?.response?.status === 429) toast.error('Trop de tentatives.')
+            else toast.error(e?.response?.data?.message || t('signup.errorResend'))
+          },
+        })
+        return
+      }
+
       otpLogger.sendStart(fullPhone, 'sms')
       if (Capacitor.isNativePlatform()) {
         otpLogger.sendRequest('sms')
@@ -466,10 +560,20 @@ export function Signup({ onBack }: SignupProps) {
       setLastCodeVia('backend')
       otpLogger.sendRequest('sms')
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
-        onSuccess: () => { otpLogger.sendSuccess('sms', '[Resend fallback] Backend SMS'); setCountdown(59); toast.success(t('signup.successResendAlt')); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-        onError: (e: unknown) => { otpLogger.sendError(e); toast.error(t('signup.errorResend')) },
+        onSuccess: () => {
+          otpLogger.sendSuccess('sms', '[Resend fallback] Backend SMS')
+          setCountdown(59)
+          toast.success(t('signup.successResendAlt'))
+          setTimeout(() => otpRefs.current[0]?.focus(), 100)
+        },
+        onError: (e: unknown) => {
+          otpLogger.sendError(e)
+          toast.error(t('signup.errorResend'))
+        },
       })
-    } finally { setIsFirebaseSending(false) }
+    } finally {
+      setIsFirebaseSending(false)
+    }
   }
 
   const toggleInterest = (interest: string) => {
@@ -594,6 +698,23 @@ export function Signup({ onBack }: SignupProps) {
                 )
               })}
             </div>
+
+            {/* Séparateur Ou */}
+            <div className="my-6 w-full">
+              <Divider label={t('login.or')} className="text-[#404040] dark:text-gray-400 font-inter text-[12px] font-normal leading-[16px]" />
+            </div>
+
+            {/* Bouton S'inscrire avec Google */}
+            <div className="w-full">
+              <SocialButton
+                provider="google"
+                onClick={handleGoogleSignup}
+                disabled={googleLoading}
+                className="w-full h-[46px] rounded-full font-inter text-[14px]"
+              >
+                {googleLoading ? t('login.googleLoading') : t('signup.google')}
+              </SocialButton>
+            </div>
           </div>
         )}
 
@@ -626,6 +747,7 @@ export function Signup({ onBack }: SignupProps) {
                   value={d}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleOtpKey(i, e)}
+                  onPaste={i === 0 ? handleOtpPaste : undefined}
                   className={`aspect-square w-full text-center font-poppins text-[24px] font-semibold rounded-[12px] border-2 outline-none transition-colors bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white ${
                     d
                       ? 'border-[var(--brand-orange-500)]'
@@ -635,21 +757,14 @@ export function Signup({ onBack }: SignupProps) {
               ))}
             </div>
 
-            {/* Resend */}
-            <div className="flex items-center gap-2">
+            {/* Resend — design identique à ForgotPassword */}
+            <div className="flex items-center gap-2 mb-6">
               <button
                 onClick={handleResend}
                 disabled={countdown > 0}
                 className="flex items-center gap-1.5 font-poppins text-[13px] text-gray-500 dark:text-gray-400 disabled:opacity-50 transition-opacity"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
+                <RefreshIcon className="w-4 h-4" strokeWidth={2} />
                 {t('signup.resend')}
               </button>
               {countdown > 0 && (
@@ -659,6 +774,21 @@ export function Signup({ onBack }: SignupProps) {
                   {String(countdown % 60).padStart(2, '0')}
                 </span>
               )}
+            </div>
+
+            {/* Option de secours Google si le code tarde */}
+            <div className="pt-4 border-t border-gray-100 dark:border-white/10">
+              <p className="font-poppins text-[12px] text-gray-500 dark:text-gray-400 mb-3 text-center">
+                {t('signup.otpAlternative')}
+              </p>
+              <SocialButton
+                provider="google"
+                onClick={handleGoogleSignup}
+                disabled={googleLoading}
+                className="w-full h-[44px] rounded-full font-inter text-[13px]"
+              >
+                {googleLoading ? t('login.googleLoading') : t('signup.google')}
+              </SocialButton>
             </div>
           </div>
         )}

@@ -163,6 +163,8 @@
     "step2Subtitle": "Code à {{length}} chiffres envoyé par {{channel}} au",
     "resend": "Renvoyer le code",
     "resendIn": "dans",
+    "google": "S'inscrire avec Google",
+    "otpAlternative": "Le code tarde à arriver ? Vous pouvez aussi :",
     "step3Title": "Quel est votre nom ?",
     "step3Subtitle": "Ces informations aideront vos amis à vous reconnaître et ne seront visibles que sur Lets Out.",
     "step3NamePlaceholder": "Nom complet",
