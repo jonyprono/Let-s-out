@@ -101,7 +101,9 @@ export function RadarView({
     const el = wrapRef.current
     if (!el) return
     const obs = new ResizeObserver(([entry]) => {
-      setSize(Math.min(entry.contentRect.width, 320))
+      // Cap to 90% of viewport height so the circle never gets cut off
+      const maxFromHeight = Math.floor(window.innerHeight * 0.45)
+      setSize(Math.min(entry.contentRect.width, 320, maxFromHeight))
     })
     obs.observe(el)
     return () => obs.disconnect()
@@ -150,7 +152,7 @@ export function RadarView({
     <div className="flex flex-col items-center gap-4 w-full">
 
       {/* ── Zone Radar ───────────────────────────────────────────────────────── */}
-      <div ref={wrapRef} className="w-full flex justify-center">
+      <div ref={wrapRef} className="w-full flex justify-center overflow-visible">
         <div
           className="relative select-none"
           style={{ width: size, height: size }}

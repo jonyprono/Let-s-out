@@ -402,7 +402,7 @@ export function OutRadar() {
       </div>
 
       {/* ── CORPS DU RADAR ───────────────────────────────────────────────────── */}
-      <div className="flex-1 p-4 max-w-xl mx-auto w-full space-y-4 pb-20">
+      <div className="flex-1 overflow-y-auto p-4 max-w-xl mx-auto w-full space-y-4 pb-20" style={{ scrollbarWidth: 'none' }}>
         {activeTab === 'invites' ? (
           /* ── ONGLET : MES INVITATIONS ─────────────────────────────────────── */
           <div className="space-y-4">

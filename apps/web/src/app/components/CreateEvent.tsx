@@ -213,6 +213,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [participationMode, setParticipationMode] = useState<string | null>(sessionDraft?.participationMode ?? null)
   const [coverFiles, setCoverFiles] = useState<File[]>(sessionDraft?.coverFiles ?? [])
   const [coverPreviews, setCoverPreviews] = useState<string[]>(sessionDraft?.coverPreviews ?? [])
+  // Track when user explicitly clears all cover images in edit mode (to send coverUrl: null)
+  const [coverExplicitlyCleared, setCoverExplicitlyCleared] = useState(false)
   const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>(sessionDraft?.selectedCoOrgs ?? [])
   const [maxPlaces, setMaxPlaces] = useState(sessionDraft?.maxPlaces ?? '')
   const [amount, setAmount] = useState(sessionDraft?.amount ?? '')
@@ -355,8 +357,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   }
 
   const removeCoverImage = (idx: number) => {
-    setCoverFiles(prev => prev.filter((_, i) => i !== idx))
-    setCoverPreviews(prev => prev.filter((_, i) => i !== idx))
+    const newFiles = coverFiles.filter((_, i) => i !== idx)
+    const newPreviews = coverPreviews.filter((_, i) => i !== idx)
+    setCoverFiles(newFiles)
+    setCoverPreviews(newPreviews)
+    // If all images removed in edit mode, mark as explicitly cleared
+    if (newPreviews.length === 0) {
+      setCoverExplicitlyCleared(true)
+    }
   }
 
   // ── Pre-fill from editing ─────────────────────────────────────────────
@@ -467,10 +475,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           console.warn('Cover upload failed, proceeding without cover:', uploadErr)
           toast.warning("Les images n'ont pas pu être téléchargées, mais l'événement sera sauvegardé.")
         }
-      } else if (coverPreviews.length > 0 && !coverPreviews[0].startsWith('blob:')) {
-        // Hosted URLs from edit mode
+      } else if (!coverExplicitlyCleared && coverPreviews.length > 0 && !coverPreviews[0].startsWith('blob:')) {
+        // Hosted URLs from edit mode (not cleared by user)
         coverUrl = coverPreviews[0]
         mediaUrls = coverPreviews.filter(u => !u.startsWith('blob:'))
+      } else if (coverExplicitlyCleared) {
+        // User explicitly removed all cover images — send null to clear in DB
+        coverUrl = undefined  // will be sent as null in payload below
       }
 
       const startAt = new Date(`${startDate}T${startTime}`).toISOString()
@@ -508,8 +519,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         isPrivate: privacy === 'PRIVATE',
         requiresApproval,
         genderRestriction,
-        coverUrl,
-        mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+        coverUrl: coverExplicitlyCleared && coverFiles.length === 0 ? null : coverUrl,
+        mediaUrls: coverExplicitlyCleared && coverFiles.length === 0 ? [] : (mediaUrls.length > 0 ? mediaUrls : undefined),
         // Cagnotte fields: send explicit null on edit to erase from DB when switching to free
         poolTarget: enablePool && poolTarget
           ? parseFloat(poolTarget)

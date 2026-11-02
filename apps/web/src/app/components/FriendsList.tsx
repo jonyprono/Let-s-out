@@ -110,10 +110,16 @@ export function FriendsList() {
 
   const filterList = (list: any[]) => {
     if (!list) return []
-    return list.filter(item => 
-      item.displayName?.toLowerCase().includes(debouncedQuery.toLowerCase()) || 
-      item.username?.toLowerCase().includes(debouncedQuery.toLowerCase())
-    )
+    // Exclude deleted accounts (no username or "Utilisateur Supprimé")
+    return list.filter(item => {
+      const isDeleted = !item.username || 
+        item.displayName === 'Utilisateur Supprimé' ||
+        item.displayName === 'Deleted User' ||
+        item.isDeleted === true
+      if (isDeleted) return false
+      return item.displayName?.toLowerCase().includes(debouncedQuery.toLowerCase()) || 
+        item.username?.toLowerCase().includes(debouncedQuery.toLowerCase())
+    })
   }
 
   const filteredFriends = filterList(friends || [])
@@ -271,14 +277,21 @@ export function FriendsList() {
                 const displayName = user.displayName || 'Utilisateur'
                 const avatar = user.avatarUrl
                 const uid = user.userId
+                const isPage = user.isPage === true || user.type === 'page'
 
                 return (
                   <div
                     key={user.friendshipId || uid}
-                    onClick={() => openUserProfile(uid, { displayName, avatarUrl: avatar })}
+                    onClick={() => {
+                      if (isPage) {
+                        navigate(`/pages/${uid}`)
+                      } else {
+                        openUserProfile(uid, { displayName, avatarUrl: avatar })
+                      }
+                    }}
                     className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 flex items-center gap-3 shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
                   >
-                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#2a2a2a]">
+                    <div className={`w-12 h-12 overflow-hidden flex-shrink-0 bg-gray-100 dark:bg-[#2a2a2a] ${isPage ? 'rounded-xl' : 'rounded-full'}`}>
                       <SafeImage
                         src={avatar}
                         alt={displayName}
@@ -286,7 +299,7 @@ export function FriendsList() {
                         fallback={
                           <div
                             className="w-full h-full flex items-center justify-center text-white font-bold text-lg"
-                            style={{ background: 'linear-gradient(135deg, #FF7A00, #FF7A00)' }}
+                            style={{ background: isPage ? 'linear-gradient(135deg, #FF7A00, #E06C00)' : 'linear-gradient(135deg, #FF7A00, #FF7A00)' }}
                           >
                             {displayName.charAt(0).toUpperCase()}
                           </div>
@@ -294,9 +307,17 @@ export function FriendsList() {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-[15px] text-gray-900 dark:text-white truncate">{displayName}</p>
-                      {user.username && (
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-[15px] text-gray-900 dark:text-white truncate">{displayName}</p>
+                        {isPage && (
+                          <span className="text-[10px] font-semibold bg-[#FF7A00]/10 text-[#FF7A00] px-1.5 py-0.5 rounded-full shrink-0">Page</span>
+                        )}
+                      </div>
+                      {user.username && !isPage && (
                         <p className="text-[13px] text-gray-400 truncate">@{user.username}</p>
+                      )}
+                      {isPage && user.category && (
+                        <p className="text-[12px] text-gray-400 truncate">{user.category}</p>
                       )}
                     </div>
                     
@@ -326,7 +347,7 @@ export function FriendsList() {
                       </button>
                     )}
 
-                    {activeTab === 'following' && (
+                    {activeTab === 'following' && !isPage && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -335,6 +356,25 @@ export function FriendsList() {
                         disabled={unfollowMut.isPending}
                         className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
                         title="Se désabonner"
+                      >
+                        <UserMinus className="w-5 h-5" />
+                      </button>
+                    )}
+
+                    {activeTab === 'following' && isPage && (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          try {
+                            await apiClient.post(`/pages/${uid}/follow`)
+                            qc.invalidateQueries({ queryKey: ['users', 'following', targetUserId] })
+                            toast.success('Désabonné de la page')
+                          } catch {
+                            toast.error('Erreur lors du désabonnement')
+                          }
+                        }}
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
+                        title="Se désabonner de la page"
                       >
                         <UserMinus className="w-5 h-5" />
                       </button>

@@ -101,17 +101,25 @@ export function CreatePage() {
       navigate(`/pages/${pageId}`, { replace: true })
     } catch (err: any) {
       console.error('CreatePage Error:', err)
-      const apiMsg = err?.response?.data?.error || err?.response?.data?.message
-      const msg = Array.isArray(apiMsg) ? apiMsg[0] : apiMsg
-      let errorStr = typeof msg === 'string' ? msg : (err?.message || 'Erreur lors de la création de la page')
-      if (
-        !errorStr ||
-        String(errorStr).includes('ProgressEvent') ||
-        String(err).includes('ProgressEvent')
-      ) {
-        errorStr = 'Erreur de connexion au serveur. Vérifiez votre connexion et réessayez.'
+
+      // Normalize all possible error shapes into a user-friendly message
+      const normalize = (e: any): string => {
+        if (!e) return 'Erreur lors de la création de la page'
+        // ProgressEvent from XHR (network loss, CORS, etc.)
+        if (typeof e === 'object' && (e instanceof ProgressEvent || e?.type === 'error' || String(e) === '[object ProgressEvent]')) {
+          return 'Erreur de connexion au serveur. Vérifiez votre connexion et réessayez.'
+        }
+        const apiMsg = e?.response?.data?.error || e?.response?.data?.message
+        const msg = Array.isArray(apiMsg) ? apiMsg[0] : apiMsg
+        if (typeof msg === 'string' && msg.length > 0 && !msg.includes('ProgressEvent')) return msg
+        if (typeof e?.message === 'string' && e.message.length > 0 && !e.message.includes('ProgressEvent')) return e.message
+        if (String(e).includes('Network Error') || String(e).includes('timeout')) {
+          return 'Erreur de connexion au serveur. Vérifiez votre connexion et réessayez.'
+        }
+        return 'Erreur lors de la création de la page'
       }
-      toast.error(errorStr)
+
+      toast.error(normalize(err))
     } finally {
       setLoading(false)
     }

@@ -869,14 +869,34 @@ export default async function usersRoutes(app: FastifyInstance) {
     return reply.send({ data: follows.map(f => f.follower.profile) })
   })
 
-  // Get following
+  // Get following (users + pages)
   app.get('/:userId/following', async (req, reply) => {
     const { userId } = req.params as { userId: string }
-    const follows = await app.prisma.follow.findMany({
+
+    // 1. Users followed
+    const userFollows = await app.prisma.follow.findMany({
       where: { followerId: userId },
       include: { following: { select: { profile: { select: { userId: true, username: true, displayName: true, avatarUrl: true } } } } }
     })
-    return reply.send({ data: follows.map(f => f.following.profile) })
+
+    // 2. Pages followed
+    const pageFollows = await app.prisma.pageFollower.findMany({
+      where: { userId },
+      include: { page: { select: { id: true, name: true, avatarUrl: true, category: true } } }
+    })
+
+    const users = userFollows.map(f => ({ ...f.following.profile, type: 'user' as const }))
+    const pages = pageFollows.map(f => ({
+      userId: f.page.id,           // Use page id as userId for uniform list rendering
+      username: null,
+      displayName: f.page.name,
+      avatarUrl: f.page.avatarUrl,
+      category: f.page.category,
+      type: 'page' as const,
+      isPage: true,
+    }))
+
+    return reply.send({ data: [...users, ...pages] })
   })
 
   // Delete own account (soft delete + tracking)
