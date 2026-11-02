@@ -5,6 +5,7 @@ import { PagePostCommentsModal } from './PagePostCommentsModal'
 import { PageVideoPlayerModal, PageVideoItem } from './PageVideoPlayerModal'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer'
+import { PhotoLightboxModal } from '@/components/shared/PhotoLightboxModal'
 import {
   ArrowLeft,
   UserPlus,
@@ -116,7 +117,19 @@ export function PageView() {
   const [postVideoThumbnail, setPostVideoThumbnail] = useState<string | null>(null)
   const [publishing, setPublishing] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
-  const [fullscreenMedia, setFullscreenMedia] = useState<{ url: string; title: string } | null>(null)
+  
+  // Facebook-like Fullscreen Photo Lightbox State
+  const [lightboxImages, setLightboxImages] = useState<string[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [lightboxTitle, setLightboxTitle] = useState('')
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+
+  const openLightbox = (images: string[], index = 0, title?: string) => {
+    setLightboxImages(images)
+    setLightboxIndex(index)
+    setLightboxTitle(title || '')
+    setIsLightboxOpen(true)
+  }
 
   // Likes state (local optimistic)
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({})
@@ -376,7 +389,7 @@ export function PageView() {
       <div 
         className={`relative w-full h-48 sm:h-56 min-h-[192px] sm:min-h-[224px] bg-gray-100 dark:bg-gray-900 overflow-hidden shrink-0 ${page.coverUrl ? 'cursor-pointer' : ''}`}
         onClick={() => {
-          if (page.coverUrl) setFullscreenMedia({ url: page.coverUrl, title: `Bannière de ${page.name}` })
+          if (page.coverUrl) openLightbox([page.coverUrl], 0, `Bannière de ${page.name}`)
         }}
       >
         {page.coverUrl ? (
@@ -407,7 +420,7 @@ export function PageView() {
         {/* Avatar */}
         <div 
           onClick={() => {
-            if (page.avatarUrl) setFullscreenMedia({ url: page.avatarUrl, title: page.name })
+            if (page.avatarUrl) openLightbox([page.avatarUrl], 0, page.name)
           }}
           className={`w-24 h-24 rounded-full border-4 border-white dark:border-black bg-gray-200 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-gray-500 shadow-md shrink-0 ${page.avatarUrl ? 'cursor-pointer' : ''}`}
         >
@@ -608,7 +621,7 @@ export function PageView() {
                           ) : post.mediaUrls.length === 1 ? (
                             <div 
                               className="w-full cursor-pointer"
-                              onClick={() => setFullscreenMedia({ url: post.mediaUrls[0], title: page.name })}
+                              onClick={() => openLightbox(post.mediaUrls, 0, page.name)}
                             >
                               <SafeImage src={post.mediaUrls[0]} alt="Media" className="w-full max-h-96 object-cover" />
                             </div>
@@ -618,7 +631,7 @@ export function PageView() {
                                 <div
                                   key={idx}
                                   className="aspect-square cursor-pointer overflow-hidden bg-neutral-900"
-                                  onClick={() => setFullscreenMedia({ url, title: `${page.name} (${idx + 1}/${post.mediaUrls.length})` })}
+                                  onClick={() => openLightbox(post.mediaUrls, idx, page.name)}
                                 >
                                   <SafeImage src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                                 </div>
@@ -628,7 +641,7 @@ export function PageView() {
                             <div className="grid grid-cols-2 gap-1 w-full bg-black">
                               <div
                                 className="row-span-2 aspect-[3/4] cursor-pointer overflow-hidden bg-neutral-900"
-                                onClick={() => setFullscreenMedia({ url: post.mediaUrls[0], title: `${page.name} (1/3)` })}
+                                onClick={() => openLightbox(post.mediaUrls, 0, page.name)}
                               >
                                 <SafeImage src={post.mediaUrls[0]} alt="Photo 1" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                               </div>
@@ -637,7 +650,7 @@ export function PageView() {
                                   <div
                                     key={idx}
                                     className="aspect-square cursor-pointer overflow-hidden bg-neutral-900"
-                                    onClick={() => setFullscreenMedia({ url, title: `${page.name} (${idx + 2}/3)` })}
+                                    onClick={() => openLightbox(post.mediaUrls, idx + 1, page.name)}
                                   >
                                     <SafeImage src={url} alt={`Photo ${idx + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                                   </div>
@@ -650,7 +663,7 @@ export function PageView() {
                                 <div
                                   key={idx}
                                   className="aspect-square cursor-pointer overflow-hidden bg-neutral-900 relative"
-                                  onClick={() => setFullscreenMedia({ url, title: `${page.name} (${idx + 1}/${post.mediaUrls.length})` })}
+                                  onClick={() => openLightbox(post.mediaUrls, idx, page.name)}
                                 >
                                   <SafeImage src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
                                   {idx === 3 && post.mediaUrls.length > 4 && (
@@ -1319,48 +1332,14 @@ export function PageView() {
         </div>
       )}
 
-      {/* ── Fullscreen Media Viewer ── */}
-      {fullscreenMedia && (
-        <div
-          className="fixed inset-0 z-[120] bg-black/95 backdrop-blur-md flex flex-col justify-between animate-in fade-in duration-200"
-          onClick={() => setFullscreenMedia(null)}
-        >
-          <div
-            className="w-full flex items-center justify-between px-4 pt-12 pb-4 z-10 bg-gradient-to-b from-black/80 to-transparent"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setFullscreenMedia(null)}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white transition-all"
-                aria-label="Fermer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <p className="text-sm font-semibold text-white leading-tight">{fullscreenMedia.title}</p>
-            </div>
-          </div>
-
-          <div
-            className="flex-1 flex items-center justify-center p-4"
-            onClick={() => setFullscreenMedia(null)}
-          >
-            <img
-              src={fullscreenMedia.url}
-              alt={fullscreenMedia.title}
-              className="max-w-full max-h-[80vh] object-contain select-none shadow-2xl rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-
-          <div
-            className="w-full text-center pb-8 pt-4 text-xs text-white/50"
-            onClick={(e) => e.stopPropagation()}
-          >
-            Appuyez n'importe où pour fermer
-          </div>
-        </div>
-      )}
+      {/* ── Facebook-Style Fullscreen Photo Lightbox with Zoom & Swipe ── */}
+      <PhotoLightboxModal
+        images={lightboxImages}
+        initialIndex={lightboxIndex}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+        title={lightboxTitle}
+      />
     </div>
   )
 }

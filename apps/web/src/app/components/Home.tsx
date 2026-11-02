@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { Loader2, WifiOff, RefreshCw, Heart, MessageCircle, Share2, MoreVertical, Copy, Pencil, Trash2, X } from 'lucide-react';
+import { Loader2, WifiOff, RefreshCw, Heart, MessageCircle, Share2, MoreVertical, Copy, Pencil, Trash2, X, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EventMediaFeed } from '@/features/events/components/EventMediaFeed';
 import { Search01Icon } from 'hugeicons-react';
@@ -15,6 +15,9 @@ import { PermissionsRequest } from './PermissionsRequest';
 import { pagesApi, PagePost } from '@/features/pages/api';
 import { useConfirm } from '@/components/shared/ConfirmContext';
 import { PagePostCommentsModal } from '@/features/pages/components/PagePostCommentsModal';
+import { PagePostDetailModal } from '@/features/pages/components/PagePostDetailModal';
+import { PhotoLightboxModal } from '@/components/shared/PhotoLightboxModal';
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/app/components/ui/carousel';
 import { PageVideoPlayerModal, PageVideoItem } from '@/features/pages/components/PageVideoPlayerModal';
 import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -88,6 +91,13 @@ function PagePostCard({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
 
+  // States for single publication view and multi-photo carousel + lightbox
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
   const pageAvatarUrl = post.page.avatarUrl || null;
 
   const isVideo = post.mediaUrls?.length > 0 && (
@@ -103,6 +113,17 @@ function PagePostCard({
   useEffect(() => {
     setPostContent(post.content || '');
   }, [post.content]);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+    const onSelect = () => {
+      setCurrentSlide(carouselApi.selectedScrollSnap());
+    };
+    carouselApi.on('select', onSelect);
+    return () => {
+      carouselApi.off('select', onSelect);
+    };
+  }, [carouselApi]);
 
   if (isDeleted) return null;
 
@@ -282,9 +303,13 @@ function PagePostCard({
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content - Clicking opens single publication view */}
         {postContent && (
-          <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800">
+          <div
+            className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-white/5 active:opacity-80 transition-all"
+            onClick={() => setShowDetailModal(true)}
+            title="Afficher la publication"
+          >
             <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed select-text">
               {postContent}
             </p>
@@ -293,15 +318,86 @@ function PagePostCard({
 
         {/* Media */}
         {post.mediaUrls?.length > 0 && (
-          <div className="w-full bg-black/5 dark:bg-black overflow-hidden relative" style={{ maxHeight: '280px' }}>
+          <div className="w-full bg-black/5 dark:bg-black overflow-hidden relative">
             {isVideo ? (
               <FeedVideoPlayer
                 src={post.mediaUrls[0]}
-                maxHeight="280px"
+                maxHeight="320px"
                 onExpand={() => onOpenVideo?.(post.id)}
               />
+            ) : post.mediaUrls.length === 1 ? (
+              <div
+                className="relative w-full max-h-[320px] flex items-center justify-center cursor-pointer group bg-black/5 dark:bg-black"
+                onClick={() => {
+                  setLightboxIndex(0);
+                  setLightboxOpen(true);
+                }}
+              >
+                <SafeImage
+                  src={post.mediaUrls[0]}
+                  alt="publication"
+                  className="w-full h-full object-cover max-h-[320px]"
+                />
+                <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Maximize2 className="w-3.5 h-3.5" />
+                </div>
+              </div>
             ) : (
-              <SafeImage src={post.mediaUrls[0]} alt="publication" className="w-full h-full object-cover max-h-[280px]" />
+              /* Multi-photo carousel with swipe */
+              <div className="relative w-full h-[280px] sm:h-[320px] bg-black group">
+                <Carousel setApi={setCarouselApi} className="w-full h-full">
+                  <CarouselContent className="h-full">
+                    {post.mediaUrls.map((url: string, idx: number) => (
+                      <CarouselItem key={idx} className="h-full pl-0">
+                        <div
+                          className="relative w-full h-full flex items-center justify-center cursor-pointer bg-black/90"
+                          onClick={() => {
+                            setLightboxIndex(idx);
+                            setLightboxOpen(true);
+                          }}
+                        >
+                          <SafeImage
+                            src={url}
+                            alt={`Photo ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+
+                {/* Photo counter and Enlarge button */}
+                <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+                  <span className="bg-black/65 backdrop-blur-sm text-white text-[11px] font-semibold px-2 py-0.5 rounded-full border border-white/10">
+                    {currentSlide + 1} / {post.mediaUrls.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightboxIndex(currentSlide);
+                      setLightboxOpen(true);
+                    }}
+                    className="bg-black/65 backdrop-blur-sm text-white p-1.5 rounded-full border border-white/10 hover:bg-black/90 transition-colors"
+                    title="Agrandir en plein écran"
+                  >
+                    <Maximize2 className="w-3 h-3" />
+                  </button>
+                </div>
+
+                {/* Dot indicators */}
+                <div className="absolute bottom-2.5 inset-x-0 flex items-center justify-center gap-1.5 pointer-events-none z-10">
+                  {post.mediaUrls.map((_: any, idx: number) => (
+                    <span
+                      key={idx}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        idx === currentSlide ? 'w-4 bg-[#FF7A00]' : 'w-1.5 bg-white/60'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -355,6 +451,25 @@ function PagePostCard({
         open={showComments}
         onClose={() => setShowComments(false)}
         onCommentAdded={() => setCommentsCount((c: number) => c + 1)}
+      />
+
+      {/* Single Publication View Modal */}
+      <PagePostDetailModal
+        post={post}
+        open={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        onNavigate={onNavigate}
+        onPostDeleted={onPostDeleted}
+        onOpenVideo={onOpenVideo}
+      />
+
+      {/* Facebook-style Fullscreen Photo Lightbox with Zoom */}
+      <PhotoLightboxModal
+        images={post.mediaUrls || []}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        title={post.page?.name}
       />
 
       {/* Edit Post Modal */}
