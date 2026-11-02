@@ -885,16 +885,21 @@ export default async function usersRoutes(app: FastifyInstance) {
       include: { page: { select: { id: true, name: true, avatarUrl: true, category: true } } }
     })
 
-    const users = userFollows.map(f => ({ ...f.following.profile, type: 'user' as const }))
-    const pages = pageFollows.map(f => ({
-      userId: f.page.id,           // Use page id as userId for uniform list rendering
-      username: null,
-      displayName: f.page.name,
-      avatarUrl: f.page.avatarUrl,
-      category: f.page.category,
-      type: 'page' as const,
-      isPage: true,
-    }))
+    const users = userFollows
+      .filter(f => f.following?.profile)
+      .map(f => ({ ...f.following.profile, type: 'user' as const, isPage: false }))
+
+    const pages = pageFollows
+      .filter(f => f.page)
+      .map(f => ({
+        userId: f.page.id,
+        username: f.page.name,
+        displayName: f.page.name,
+        avatarUrl: f.page.avatarUrl,
+        category: f.page.category,
+        type: 'page' as const,
+        isPage: true,
+      }))
 
     return reply.send({ data: [...users, ...pages] })
   })

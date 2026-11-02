@@ -85,7 +85,34 @@ export const usersApi = {
 
   getFollowing: async (userId: string) => {
     const { data } = await apiClient.get(`/users/${userId}/following`)
-    return data.data
+    const items = Array.isArray(data?.data) ? data.data : []
+
+    // Fallback: If backend hasn't been redeployed yet and only returns users,
+    // fetch followed pages via /pages to ensure they are visible immediately
+    const hasPages = items.some((i: any) => i.isPage || i.type === 'page')
+    if (!hasPages) {
+      try {
+        const pagesRes = await apiClient.get('/pages?limit=100')
+        const followedPages = (pagesRes.data?.data || [])
+          .filter((p: any) => p.isFollowing)
+          .map((p: any) => ({
+            userId: p.id,
+            username: p.name,
+            displayName: p.name,
+            avatarUrl: p.avatarUrl,
+            category: p.category,
+            type: 'page' as const,
+            isPage: true,
+          }))
+        if (followedPages.length > 0) {
+          return [...items, ...followedPages]
+        }
+      } catch {
+        // Fallback failed silently, return original items
+      }
+    }
+
+    return items
   }
 }
 

@@ -110,15 +110,32 @@ export function FriendsList() {
 
   const filterList = (list: any[]) => {
     if (!list) return []
-    // Exclude deleted accounts (no username or "Utilisateur Supprimé")
     return list.filter(item => {
+      const isPage = item.isPage === true || item.type === 'page'
+
+      if (isPage) {
+        if (!item.displayName || item.isDeleted === true) return false
+        if (!debouncedQuery) return true
+        const q = debouncedQuery.toLowerCase()
+        return (
+          item.displayName.toLowerCase().includes(q) ||
+          (item.category && item.category.toLowerCase().includes(q))
+        )
+      }
+
+      // Exclude deleted accounts (no username or "Utilisateur Supprimé")
       const isDeleted = !item.username || 
         item.displayName === 'Utilisateur Supprimé' ||
         item.displayName === 'Deleted User' ||
         item.isDeleted === true
       if (isDeleted) return false
-      return item.displayName?.toLowerCase().includes(debouncedQuery.toLowerCase()) || 
-        item.username?.toLowerCase().includes(debouncedQuery.toLowerCase())
+
+      if (!debouncedQuery) return true
+      const q = debouncedQuery.toLowerCase()
+      return (
+        item.displayName?.toLowerCase().includes(q) || 
+        item.username?.toLowerCase().includes(q)
+      )
     })
   }
 
@@ -366,10 +383,14 @@ export function FriendsList() {
                         onClick={async (e) => {
                           e.stopPropagation()
                           try {
+                            qc.setQueryData(['users', 'following', targetUserId], (old: any[]) =>
+                              old ? old.filter((u: any) => u.userId !== uid) : old
+                            )
                             await apiClient.post(`/pages/${uid}/follow`)
                             qc.invalidateQueries({ queryKey: ['users', 'following', targetUserId] })
                             toast.success('Désabonné de la page')
                           } catch {
+                            qc.invalidateQueries({ queryKey: ['users', 'following', targetUserId] })
                             toast.error('Erreur lors du désabonnement')
                           }
                         }}
