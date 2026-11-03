@@ -183,7 +183,6 @@ export function Signup({ onBack }: SignupProps) {
   const { mutate: checkOtp, isPending: checkingOtp } = useCheckOtp()
   const { mutate: googleSignIn } = useGoogleSignIn()
   const [googleLoading, setGoogleLoading] = useState(false)
-  const accessToken = useAuthStore((s) => s.accessToken)
 
   const handlePhotoUpload = async (file: File) => {
     if (!file) return
@@ -198,33 +197,20 @@ export function Signup({ onBack }: SignupProps) {
     }
     setIsUploadingPhoto(true)
     try {
-      const resolveApiBase = () => {
-        const envUrl = import.meta.env.VITE_API_URL as string | undefined
-        if (envUrl) return envUrl.replace('/api/v1', '')
-        if (typeof window !== 'undefined' && window.location?.origin) {
-          const origin = window.location.origin
-          if (origin.includes(':3000')) return origin.replace(':3000', ':3001')
-          return origin
-        }
-        return 'http://localhost:3001'
-      }
+      // Utiliser apiClient (Axios) qui résout l'URL correcte sur tous les environnements
+      // (web, Capacitor Android/iOS, production) via son intercepteur interne
       const formData = new FormData()
       formData.append('file', file)
-      const res = await fetch(`${resolveApiBase()}/api/v1/chat/upload`, {
-        method: 'POST',
-        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-        body: formData,
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Upload échoué')
+      const { data } = await apiClient.post('/chat/upload', formData)
       setProfilePhoto(data.url)
       toast.success('Photo ajoutée !')
     } catch (e: any) {
-      toast.error(e.message || "Erreur lors de l'upload")
+      toast.error(e?.response?.data?.error || e.message || "Erreur lors de l'upload")
     } finally {
       setIsUploadingPhoto(false)
     }
   }
+
 
   const handleGoogleSignup = async () => {
     try {
