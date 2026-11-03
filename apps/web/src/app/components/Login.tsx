@@ -9,9 +9,6 @@ import { auth } from '@/lib/firebase'
 import { Capacitor } from '@capacitor/core'
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 import { useNavigate } from 'react-router'
-import {
-  authShell,
-} from '@/lib/auth-ui'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { Input } from '@/components/ui/input'
 import { SocialButton } from '@/components/ui/social-button'
@@ -122,8 +119,11 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
   }
 
   return (
-    <div className={`${authShell} bg-white dark:bg-[#121212] overflow-y-auto min-h-[100dvh] w-full flex flex-col`}>
-      <div className="flex flex-col flex-1 px-4 sm:px-6 py-6 justify-center w-full max-w-full max-w-[390px] mx-auto">
+    <div
+      className="w-full h-full flex flex-col bg-white dark:bg-[#121212] overflow-x-hidden overflow-y-auto"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      <div className="flex flex-col flex-1 px-4 sm:px-6 py-6 w-full max-w-[390px] mx-auto my-auto min-h-min">
         
         <div className="flex flex-col justify-center w-full pb-2">
           
@@ -228,7 +228,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
         </div>
 
         {/* Bas de page */}
-        <div className="flex flex-col justify-end w-full mt-8 gap-2">
+        <div className="flex flex-col justify-end w-full mt-6 pb-8 gap-2">
 
           <div className="w-full h-px bg-[#D4D4D4] mt-2 mb-2 hidden" />
 

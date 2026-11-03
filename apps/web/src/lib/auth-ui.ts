@@ -30,7 +30,7 @@
 
 /** Wrapper de page auth complet */
 export const authShell =
-  'auth-flow w-full h-full flex flex-col bg-background-default text-foreground transition-colors overflow-hidden relative'
+  'auth-flow w-full h-full flex flex-col bg-background-default text-foreground transition-colors relative'
 
 /** Conteneur scrollable avec marges latérales strictes de 16px */
 export const authScrollArea =
