@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { TopBar } from '@/components/ui/TopBar'
@@ -44,9 +44,6 @@ export function CreatePage() {
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
 
-  const avatarInputRef = useRef<HTMLInputElement>(null)
-  const coverInputRef = useRef<HTMLInputElement>(null)
-
   const selectedCat = PAGE_CATEGORIES.find((c) => c.value === category)
   const canSubmit = name.trim().length >= 2 && category !== '' && !loading
 
@@ -79,20 +76,36 @@ export function CreatePage() {
       const pageId = res.data.id
 
       // 2. Upload photo de profil si sélectionnée
+      let uploadedAvatarUrl: string | undefined = undefined
       if (avatarFile) {
         try {
-          await pagesApi.uploadImage(pageId, avatarFile, 'avatar')
+          const upRes = await pagesApi.uploadImage(pageId, avatarFile, 'avatar')
+          uploadedAvatarUrl = upRes?.url
         } catch {
           toast.error("Erreur lors de l'upload de la photo de profil, vous pourrez la modifier plus tard")
         }
       }
 
       // 3. Upload bannière si sélectionnée
+      let uploadedCoverUrl: string | undefined = undefined
       if (coverFile) {
         try {
-          await pagesApi.uploadImage(pageId, coverFile, 'cover')
+          const upRes = await pagesApi.uploadImage(pageId, coverFile, 'cover')
+          uploadedCoverUrl = upRes?.url
         } catch {
           toast.error("Erreur lors de l'upload de la bannière, vous pourrez la modifier plus tard")
+        }
+      }
+
+      // 4. Double garantie : mise à jour explicite si au moins une image a été uploadée
+      if (uploadedAvatarUrl || uploadedCoverUrl) {
+        try {
+          await pagesApi.update(pageId, {
+            ...(uploadedAvatarUrl ? { avatarUrl: uploadedAvatarUrl } : {}),
+            ...(uploadedCoverUrl ? { coverUrl: uploadedCoverUrl } : {}),
+          })
+        } catch (e) {
+          console.warn('Fallback update failed, but server auto-update handled it:', e)
         }
       }
 
@@ -143,16 +156,15 @@ export function CreatePage() {
             <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Bannière</label>
             <span className="text-[11px] text-gray-400">Facultatif</span>
           </div>
-          <div
-            className="relative w-full h-32 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-900 cursor-pointer border-2 border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-center"
-            onClick={() => coverInputRef.current?.click()}
+          <label
+            className="relative w-full h-32 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-900 cursor-pointer border-2 border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-center active:scale-[0.99] transition-transform"
           >
             {coverPreview ? (
               <>
                 <SafeImage src={coverPreview} alt="Bannière" className="w-full h-full object-cover" />
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
                   className="absolute top-2 right-2 w-7 h-7 bg-black/60 rounded-full flex items-center justify-center text-white z-10"
                 >
                   <X className="w-4 h-4" />
@@ -171,13 +183,12 @@ export function CreatePage() {
               </div>
             )}
             <input
-              ref={coverInputRef}
               type="file"
               accept="image/*"
-              className="hidden"
+              className="sr-only"
               onChange={handlePickCover}
             />
-          </div>
+          </label>
         </div>
 
         {/* ── Photo de profil ── */}
@@ -187,9 +198,8 @@ export function CreatePage() {
             <span className="text-[11px] text-gray-400">Facultatif</span>
           </div>
           <div className="flex items-center gap-4">
-            <div
-              className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-900 cursor-pointer border-2 border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-center shrink-0"
-              onClick={() => avatarInputRef.current?.click()}
+            <label
+              className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-900 cursor-pointer border-2 border-dashed border-gray-200 dark:border-gray-800 flex items-center justify-center shrink-0 active:scale-95 transition-transform"
             >
               {avatarPreview ? (
                 <>
@@ -204,24 +214,27 @@ export function CreatePage() {
                 </div>
               )}
               <input
-                ref={avatarInputRef}
                 type="file"
                 accept="image/*"
-                className="hidden"
+                className="sr-only"
                 onChange={handlePickAvatar}
               />
-            </div>
+            </label>
             <div className="flex flex-col gap-1">
               <p className="text-[13px] text-gray-600 dark:text-gray-400">
                 {avatarPreview ? 'Photo sélectionnée ✓' : 'Aucune photo sélectionnée'}
               </p>
-              <button
-                type="button"
-                onClick={() => avatarInputRef.current?.click()}
-                className="text-[12px] text-[#FF7A00] font-semibold text-left"
+              <label
+                className="text-[12px] text-[#FF7A00] font-semibold text-left cursor-pointer"
               >
                 {avatarPreview ? 'Changer la photo' : 'Choisir une photo'}
-              </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={handlePickAvatar}
+                />
+              </label>
               {avatarPreview && (
                 <button
                   type="button"

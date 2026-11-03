@@ -99,6 +99,13 @@ export function Signup({ onBack }: SignupProps) {
   // Steps: 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=password
   const [step, setStep] = useState(isGoogleMode ? 3 : 1)
 
+  // Avoid blank screen if mode=google is set after initial mount
+  useEffect(() => {
+    if (isGoogleMode && step < 3) {
+      setStep(3)
+    }
+  }, [isGoogleMode, step])
+
   // Step 1 – Phone
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
   const {
@@ -123,6 +130,15 @@ export function Signup({ onBack }: SignupProps) {
 
   const [firstName, setFirstName] = useState(defaultFirstName)
   const [pseudo, setPseudo] = useState(defaultPseudo)
+
+  // Synchronize Google user name once auth state is updated
+  useEffect(() => {
+    if (isGoogleMode && currentUser?.profile?.displayName) {
+      const parts = currentUser.profile.displayName.split(' ')
+      setFirstName(prev => prev || parts[0] || '')
+      setPseudo(prev => prev || parts.slice(1).join(' ') || '')
+    }
+  }, [isGoogleMode, currentUser?.profile?.displayName])
 
   // Step 4 – Birthday
   const [birthday, setBirthday] = useState('')
@@ -202,7 +218,12 @@ export function Signup({ onBack }: SignupProps) {
       if (idToken && email) {
         googleAuthLogger.backendCallStart(email)
         googleSignIn({ idToken, email }, {
-          onSuccess: (data: any) => googleAuthLogger.backendCallSuccess(data?.user?.id),
+          onSuccess: (data: any) => {
+            googleAuthLogger.backendCallSuccess(data?.user?.id)
+            if (data?.isNewUser) {
+              setStep(3)
+            }
+          },
           onError: (err: unknown) => googleAuthLogger.backendCallError(err),
         })
       }

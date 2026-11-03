@@ -450,6 +450,20 @@ export default async function pagesRoutes(app: FastifyInstance) {
     }
 
     if (!imageUrl) return reply.code(400).send({ error: 'No file provided' })
+
+    // Automatically persist the avatar or cover URL to the page
+    if (imageType === 'avatar') {
+      await app.prisma.page.update({
+        where: { id },
+        data: { avatarUrl: imageUrl }
+      })
+    } else if (imageType === 'cover') {
+      await app.prisma.page.update({
+        where: { id },
+        data: { coverUrl: imageUrl }
+      })
+    }
+
     return reply.send({ url: imageUrl, type: imageType })
   })
 }

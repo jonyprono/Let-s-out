@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page, PagePost } from '../api'
@@ -53,8 +53,6 @@ export function ManagePage() {
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [uploadingCover, setUploadingCover] = useState(false)
-  const avatarInputRef = useRef<HTMLInputElement>(null)
-  const coverInputRef = useRef<HTMLInputElement>(null)
 
   // Posts state for the posts section
   const [posts, setPosts] = useState<PagePost[]>([])
@@ -449,20 +447,22 @@ export function ManagePage() {
               <Loader2 className="w-6 h-6 animate-spin text-white" />
             </div>
           )}
-          <button
-            onClick={() => coverInputRef.current?.click()}
-            className="absolute bottom-2 right-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-[12px] font-semibold"
+          <label
+            className="absolute bottom-2 right-3 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full text-white text-[12px] font-semibold cursor-pointer active:scale-95 transition-transform shadow-md"
           >
             <Camera className="w-3.5 h-3.5" />
-            Modifier
-          </button>
-          <input
-            ref={coverInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadImage(f, 'cover') }}
-          />
+            <span>Modifier</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={e => {
+                const f = e.target.files?.[0]
+                if (f) handleUploadImage(f, 'cover')
+                e.target.value = ''
+              }}
+            />
+          </label>
         </div>
 
         {/* Avatar */}
@@ -479,19 +479,21 @@ export function ManagePage() {
                 <Loader2 className="w-5 h-5 animate-spin text-white" />
               </div>
             )}
-            <button
-              onClick={() => avatarInputRef.current?.click()}
-              className="absolute bottom-0 right-0 w-7 h-7 bg-[#FF7A00] rounded-full flex items-center justify-center shadow-md"
+            <label
+              className="absolute bottom-0 right-0 w-7 h-7 bg-[#FF7A00] rounded-full flex items-center justify-center shadow-md cursor-pointer active:scale-95 transition-transform"
             >
               <Camera className="w-3.5 h-3.5 text-white" />
-            </button>
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadImage(f, 'avatar') }}
-            />
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={e => {
+                  const f = e.target.files?.[0]
+                  if (f) handleUploadImage(f, 'avatar')
+                  e.target.value = ''
+                }}
+              />
+            </label>
           </div>
         </div>
 
