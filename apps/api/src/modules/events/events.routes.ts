@@ -201,13 +201,16 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
   // List events (with filters) — optionally authenticated to filter blocked creators
   app.get('/', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
-    const { category, city, status = 'PUBLISHED', limit = '20', offset = '0', search, upcoming, maxPrice, date, time, ongoing } = req.query as any
+    const { category, city, status = 'PUBLISHED', limit = '20', offset = '0', search, upcoming, maxPrice, date, time, ongoing, recentlyEnded } = req.query as any
     const currentUser = (req.user as any)?.sub as string | undefined
 
     let startDateBoundary: Date | undefined;
     let endDateBoundary: Date | undefined;
 
     const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const isRecentlyEnded = recentlyEnded === 'true' || recentlyEnded === true;
+    const isUpcoming = upcoming === 'true' || upcoming === true;
 
     if (date) {
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -258,10 +261,6 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     }
 
-    if (!startDateBoundary && upcoming === 'true') {
-      startDateBoundary = new Date();
-    }
-
     // Filter out events from blocked users (if authenticated)
     let blockedCreatorIds: string[] = []
     if (currentUser) {
@@ -283,14 +282,28 @@ export default async function eventsRoutes(app: FastifyInstance) {
       ...(blockedCreatorIds.length > 0 && { creatorId: { notIn: blockedCreatorIds } }),
     };
 
-    if (ongoing === 'true') {
+    if (isRecentlyEnded) {
+      // Events that ended within the last 7 days
+      whereClause.endAt = { gte: sevenDaysAgo, lt: now };
+    } else if (ongoing === 'true') {
       whereClause.startAt = { lte: now };
       whereClause.endAt = { gte: now };
+    } else if (isUpcoming) {
+      // Upcoming or live events (not finished)
+      whereClause.endAt = { gte: now };
+      if (startDateBoundary) {
+        whereClause.startAt = { gte: startDateBoundary };
+      }
     } else if (startDateBoundary || endDateBoundary) {
       whereClause.startAt = {};
       if (startDateBoundary) whereClause.startAt.gte = startDateBoundary;
       if (endDateBoundary) whereClause.startAt.lt = endDateBoundary;
+    } else if (!search) {
+      // General public listing: automatically exclude events older than 7 days
+      whereClause.endAt = { gte: sevenDaysAgo };
     }
+
+    const orderByClause = isRecentlyEnded ? { endAt: 'desc' as const } : { startAt: 'asc' as const };
 
     const events = await app.prisma.event.findMany({
       where: {
@@ -307,7 +320,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
         },
         _count: { select: { bookings: true, comments: true } },
       },
-      orderBy: { startAt: 'asc' },
+      orderBy: orderByClause,
       take: Number(limit),
       skip: Number(offset),
     })

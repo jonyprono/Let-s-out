@@ -80,6 +80,8 @@ export interface EventsQuery {
   maxPrice?: number
   date?: string
   time?: string
+  ongoing?: string
+  recentlyEnded?: boolean | string
 }
 
 export interface CreateEventPayload {

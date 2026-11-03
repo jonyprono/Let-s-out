@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router';
 import { Loader2, ChevronLeft, Lock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -86,7 +86,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [selectedIconCategory, setSelectedIconCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [eventSearchFocused, setEventSearchFocused] = useState(false);
-  const [viewAll, setViewAll] = useState<'featured' | 'nearby' | null>(null);
+  const [viewAll, setViewAll] = useState<'featured' | 'nearby' | 'recent' | null>(null);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const featuredScrollRef = useRef<HTMLDivElement>(null);
 
@@ -115,7 +115,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const { data: eventsPages, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['events', 'explorer'],
     queryFn: async ({ pageParam = 0 }) => {
-      const res = await eventsApi.list({ limit: 30, offset: pageParam as number });
+      const res = await eventsApi.list({ limit: 30, offset: pageParam as number, upcoming: true });
       return res.data;
     },
     getNextPageParam: (lastPage: any, allPages) => {
@@ -126,10 +126,22 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
-  const events = eventsPages?.pages.flatMap((p: any) => p?.data || []) ?? [];
+  const rawEvents = eventsPages?.pages.flatMap((p: any) => p?.data || []) ?? [];
+
+  // Query for recently ended events (ended within the last 7 days)
+  const { data: recentlyEndedData, refetch: refetchRecentlyEnded } = useQuery({
+    queryKey: ['events', 'explorer', 'recently-ended'],
+    queryFn: async () => {
+      const res = await eventsApi.list({ limit: 12, recentlyEnded: true });
+      return res.data?.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const recentlyEndedEvents = recentlyEndedData ?? [];
 
   const handleRefresh = async () => {
-    await refetch();
+    await Promise.all([refetch(), refetchRecentlyEnded()]);
   };
 
 
@@ -322,8 +334,18 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   // Recherche d'événements : active dès 2 caractères ou si vide (= affiche tout)
   // + filtre de catégorie par onglet actif
   const now = new Date();
-  const filteredEvents = events.filter(ev => {
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  // Active / upcoming events only: strictly filter out past events from main listings
+  const filteredEvents = rawEvents.filter(ev => {
     if (!ev) return false;
+
+    // Strict cutoff: event must not have ended in the past
+    const end = (ev as any)?.endAt ? new Date((ev as any).endAt) : (ev.startAt ? new Date(ev.startAt) : null);
+    if (end && end < now) {
+      return false; // Eliminate all past events from main active listings
+    }
+
     const searchLower = eventSearch.trim().toLowerCase();
     const searchActive = searchLower.length >= 2;
     const textMatch = !searchActive ||
@@ -341,7 +363,6 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     if (tabFilter === 'ongoing') {
       // En ce moment : a commencé et pas encore terminé
       const start = ev?.startAt ? new Date(ev.startAt) : null;
-      const end = (ev as any)?.endAt ? new Date((ev as any).endAt) : null;
       tabMatch = !!start && start <= now && (!end || end >= now);
     } else if (tabFilter === 'tonight') {
       // Ce soir : entre ce soir 18h et demain matin 6h
@@ -383,6 +404,27 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     return textMatch && (searchActive ? true : cityMatch) && tabMatch && categoryMatch;
   });
 
+  // Recently ended events: strictly ended within the last 7 days
+  const filteredRecentlyEnded = recentlyEndedEvents.filter(ev => {
+    if (!ev) return false;
+    const end = (ev as any)?.endAt ? new Date((ev as any).endAt) : (ev.startAt ? new Date(ev.startAt) : null);
+    if (!end) return false;
+    const isWithin7Days = end >= sevenDaysAgo && end < now;
+    if (!isWithin7Days) return false;
+
+    const searchLower = eventSearch.trim().toLowerCase();
+    const searchActive = searchLower.length >= 2;
+    const textMatch = !searchActive ||
+      (ev.title?.toLowerCase() || '').includes(searchLower) ||
+      (ev.city?.toLowerCase() || '').includes(searchLower);
+    const cityMatch = currentLocation
+      ? (!ev.city || (ev.city || '').toLowerCase().trim() === currentLocation.toLowerCase().trim())
+      : true;
+    const categoryMatch = (!selectedIconCategory || ev.category === selectedIconCategory);
+
+    return textMatch && (searchActive ? true : cityMatch) && categoryMatch;
+  });
+
   // Nombre de notifications non lues (directement depuis unreadCount renvoyé par l'API)
   const unreadNotifCount = notificationsData?.unreadCount ?? 0;
 
@@ -400,8 +442,16 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   })) as any[];
 
   if (viewAll) {
-    const listEvents = viewAll === 'featured' ? sortFeaturedEvents(filteredEvents) : sortNearbyEvents(filteredEvents);
-    const title = viewAll === 'featured' ? 'En vedette' : 'Près de vous';
+    const listEvents = viewAll === 'featured'
+      ? sortFeaturedEvents(filteredEvents)
+      : viewAll === 'nearby'
+      ? sortNearbyEvents(filteredEvents)
+      : filteredRecentlyEnded;
+    const title = viewAll === 'featured'
+      ? 'En vedette'
+      : viewAll === 'nearby'
+      ? 'Près de vous'
+      : 'Récemment passés';
     
     return (
       <div className="w-full h-full flex flex-col bg-white dark:bg-black">
@@ -626,7 +676,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </div>
 
             <div className="px-4 pt-1 pb-[100px]">
-              {filteredEvents.length > 0 ? (
+              {filteredEvents.length > 0 || filteredRecentlyEnded.length > 0 ? (
                 <>
                   {/* ── En vedette (Horizontal scroll — 3 cards visible) ── */}
                   {sortFeaturedEvents(filteredEvents).length > 0 && (
@@ -673,35 +723,71 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   )}
 
                   {/* ── Événements près de vous (Vertical) ── */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Événements près de vous</h2>
-                      <button onClick={() => setViewAll('nearby')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
-                    </div>
-                    <div className="space-y-3">
-                      {sortNearbyEvents(filteredEvents).map(ev => (
-                        <RowEventCard
-                          key={ev.id}
-                          event={ev}
-                          onClick={() => onNavigate('event-details', ev.id)}
-                        />
-                      ))}
-                    </div>
-                    {hasNextPage && (
-                      <div className="flex justify-center pt-4">
-                        <button
-                          onClick={() => fetchNextPage()}
-                          disabled={isFetchingNextPage}
-                          className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-gray-700 dark:text-gray-300 active:scale-95 transition-all disabled:opacity-50"
-                        >
-                          {isFetchingNextPage ? (
-                            <svg className="animate-spin w-4 h-4 text-[#FF7A00]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                          ) : null}
-                          {isFetchingNextPage ? 'Chargement...' : 'Voir plus d\'événements'}
-                        </button>
+                  {filteredEvents.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Événements près de vous</h2>
+                        <button onClick={() => setViewAll('nearby')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
                       </div>
-                    )}
-                  </div>
+                      <div className="space-y-3">
+                        {sortNearbyEvents(filteredEvents).map(ev => (
+                          <RowEventCard
+                            key={ev.id}
+                            event={ev}
+                            onClick={() => onNavigate('event-details', ev.id)}
+                          />
+                        ))}
+                      </div>
+                      {hasNextPage && (
+                        <div className="flex justify-center pt-4">
+                          <button
+                            onClick={() => fetchNextPage()}
+                            disabled={isFetchingNextPage}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-gray-700 dark:text-gray-300 active:scale-95 transition-all disabled:opacity-50"
+                          >
+                            {isFetchingNextPage ? (
+                              <svg className="animate-spin w-4 h-4 text-[#FF7A00]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            ) : null}
+                            {isFetchingNextPage ? 'Chargement...' : 'Voir plus d\'événements'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Événements récemment passés (terminés depuis moins de 7 jours) ── */}
+                  {filteredRecentlyEnded.length > 0 && (
+                    <div className="mt-8 pt-4 border-t border-gray-100 dark:border-gray-800">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">
+                            Événements récemment passés
+                          </h2>
+                          <span className="text-[10px] bg-orange-50 dark:bg-orange-500/10 text-[#FF7A00] font-semibold px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/20">
+                            7 jours
+                          </span>
+                        </div>
+                        {filteredRecentlyEnded.length > 3 && (
+                          <button onClick={() => setViewAll('recent')} className="text-[13px] font-semibold text-[#FF7A00]">
+                            Voir tout &gt;
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
+                        Ces événements sont terminés depuis moins de 7 jours. Retrouvez les souvenirs et les avis.
+                      </p>
+                      <div className="space-y-3">
+                        {filteredRecentlyEnded.slice(0, 4).map(ev => (
+                          <div key={ev.id} className="opacity-95">
+                            <RowEventCard
+                              event={ev}
+                              onClick={() => onNavigate('event-details', ev.id)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="flex flex-col items-center py-20 gap-3 text-center">

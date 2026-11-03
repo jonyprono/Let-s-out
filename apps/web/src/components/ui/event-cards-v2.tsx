@@ -524,11 +524,18 @@ export function RowEventCard({
           </div>
 
           {/* Bottom-left: Status Badge */}
-          {isUpcoming && !isCompact && (
-            <div className="absolute bottom-3 left-2 right-2 bg-black/45 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
-              <div className="w-2 h-2 rounded-full bg-[#FF7A00] shrink-0" />
-              <span className="text-white text-[9px] font-semibold tracking-wide truncate">Événement à venir</span>
-            </div>
+          {!isCompact && (
+            isUpcoming ? (
+              <div className="absolute bottom-3 left-2 right-2 bg-black/45 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
+                <div className="w-2 h-2 rounded-full bg-[#FF7A00] shrink-0" />
+                <span className="text-white text-[9px] font-semibold tracking-wide truncate">Événement à venir</span>
+              </div>
+            ) : (
+              <div className="absolute bottom-3 left-2 right-2 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
+                <div className="w-2 h-2 rounded-full bg-gray-400 shrink-0" />
+                <span className="text-gray-200 text-[9px] font-semibold tracking-wide truncate">Événement terminé</span>
+              </div>
+            )
           )}
         </div>
 
