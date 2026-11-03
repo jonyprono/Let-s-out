@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { App as CapacitorApp } from '@capacitor/app'
@@ -56,7 +56,7 @@ function CapacitorThemeSync() {
 
   return null
 }
-import { Toaster } from 'sonner'
+import { Toaster, toast } from 'sonner'
 import { queryClient } from '@/lib/query-client'
 import { useAuthStore } from '@/stores/auth.store'
 import { AppLayout } from '@/app/layouts/AppLayout'
@@ -207,16 +207,37 @@ function RootRoute() {
 function CapacitorBackButton() {
   const navigate = useNavigate()
   const location = useLocation()
+  const lastBackPressRef = useRef<number>(0)
 
   useEffect(() => {
     const handleBackButton = ({ canGoBack }: { canGoBack: boolean }) => {
-      // If we are on the main tab screens or login, exit the app
+      const pathname = location.pathname
       const exitRoutes = ['/app', '/home', '/login', '/welcome']
-      if (exitRoutes.includes(location.pathname) || !canGoBack) {
-        CapacitorApp.exitApp()
-      } else {
-        navigate(-1)
+      const secondaryTabs = ['/explorer', '/my-events', '/messages', '/profile', '/account']
+
+      // If user is on an exit route (or has nowhere to go back)
+      if (exitRoutes.includes(pathname) || (!canGoBack && !secondaryTabs.includes(pathname))) {
+        const now = Date.now()
+        if (now - lastBackPressRef.current < 2000) {
+          CapacitorApp.exitApp()
+        } else {
+          lastBackPressRef.current = now
+          toast('Appuyez à nouveau pour quitter l\'application', {
+            id: 'exit-app-toast',
+            duration: 2000,
+          })
+        }
+        return
       }
+
+      // If user is on a secondary bottom tab and history cannot go back further
+      if (secondaryTabs.includes(pathname) && (!canGoBack || (window.history.state && window.history.state.idx <= 0))) {
+        navigate('/home')
+        return
+      }
+
+      // Otherwise standard back navigation
+      navigate(-1)
     }
     
     CapacitorApp.addListener('backButton', handleBackButton)

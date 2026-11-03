@@ -448,14 +448,14 @@ export function ManagePage() {
             </div>
           )}
           <label
-            className="absolute bottom-2 right-3 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full text-white text-[12px] font-semibold cursor-pointer active:scale-95 transition-transform shadow-md"
+            className="absolute bottom-2 right-3 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full text-white text-[12px] font-semibold cursor-pointer active:scale-95 transition-transform shadow-md overflow-hidden"
           >
-            <Camera className="w-3.5 h-3.5" />
-            <span>Modifier</span>
+            <Camera className="w-3.5 h-3.5 pointer-events-none" />
+            <span className="pointer-events-none">Modifier</span>
             <input
               type="file"
               accept="image/*"
-              className="sr-only"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
               onChange={e => {
                 const f = e.target.files?.[0]
                 if (f) handleUploadImage(f, 'cover')
@@ -480,13 +480,13 @@ export function ManagePage() {
               </div>
             )}
             <label
-              className="absolute bottom-0 right-0 w-7 h-7 bg-[#FF7A00] rounded-full flex items-center justify-center shadow-md cursor-pointer active:scale-95 transition-transform"
+              className="absolute bottom-0 right-0 w-7 h-7 bg-[#FF7A00] rounded-full flex items-center justify-center shadow-md cursor-pointer active:scale-95 transition-transform overflow-hidden"
             >
-              <Camera className="w-3.5 h-3.5 text-white" />
+              <Camera className="w-3.5 h-3.5 text-white pointer-events-none" />
               <input
                 type="file"
                 accept="image/*"
-                className="sr-only"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                 onChange={e => {
                   const f = e.target.files?.[0]
                   if (f) handleUploadImage(f, 'avatar')

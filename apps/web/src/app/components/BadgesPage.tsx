@@ -441,3 +441,5 @@ export function BadgesPage() {
     </div>
   )
 }
+
+export default BadgesPage

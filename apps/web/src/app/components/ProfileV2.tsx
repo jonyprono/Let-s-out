@@ -268,7 +268,16 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         {/* Top buttons — always above the cover image */}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-12 z-20">
           <button
-            onClick={(e) => { e.stopPropagation(); window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/profile'); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.history.length > 1 && window.history.state && window.history.state.idx > 0) {
+                navigate(-1);
+              } else if (onNavigate) {
+                onNavigate('home');
+              } else {
+                navigate('/home');
+              }
+            }}
             className="w-9 h-9 flex items-center justify-center bg-white/80 dark:bg-black/50 backdrop-blur rounded-lg shadow-sm border border-gray-200"
           >
             <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-white" />

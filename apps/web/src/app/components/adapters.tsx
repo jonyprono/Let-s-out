@@ -56,7 +56,7 @@ const CreatedEventsListBase = lazy(() => import('@/app/components/CreatedEventsL
 const JoinedEventsListBase = lazy(() => import('@/app/components/JoinedEventsList').then(m => ({ default: m.JoinedEventsList })))
 const ManageEventBase = lazy(() => import('@/app/components/ManageEvent').then(m => ({ default: m.ManageEvent })))
 const AccountMenuBase = lazy(() => import('@/app/components/AccountMenu').then(m => ({ default: m.AccountMenu })))
-const BadgesPageBase = lazy(() => import('@/app/components/BadgesPage').then(m => ({ default: m.BadgesPage })))
+const BadgesPageBase = lazy(() => import('@/app/components/BadgesPage').then(m => ({ default: m?.default || m?.BadgesPage || (m as any) })))
 
 // ─── Splashscreen ─────────────────────────────────────────────────────────────
 export function Splashscreen() {

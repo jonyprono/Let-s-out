@@ -51,8 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // ── Production: silent auto-recovery strategy ──────────────────────────
-    // TEMPORARILY DISABLED for debugging — show the error screen immediately
-    if (false && !IS_DEV) {
+    if (!IS_DEV) {
       const attemptCount = Number(sessionStorage.getItem('error-recovery-count') || '0')
 
       if (attemptCount === 0) {
@@ -103,7 +102,7 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       // ── Production: minimal, non-technical fallback ─────────────────────
-      if (false) {
+      if (!IS_DEV) {
         return (
           <div
             style={{
