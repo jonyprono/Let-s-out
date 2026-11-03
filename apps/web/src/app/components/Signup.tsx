@@ -8,6 +8,8 @@ import {
   Cancel01Icon,
   Calendar01Icon,
   RefreshIcon,
+  Camera01Icon,
+  UserIcon,
 } from 'hugeicons-react'
 import { BackButton } from '@/components/ui/BackButton';
 import {
@@ -96,7 +98,7 @@ export function Signup({ onBack }: SignupProps) {
   const queryParams = new URLSearchParams(location.search)
   const isGoogleMode = queryParams.get('mode') === 'google'
 
-  // Steps: 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=password
+  // Steps: 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=photo+cgu (google) or 7=password (normal)
   const [step, setStep] = useState(isGoogleMode ? 3 : 1)
 
   // Avoid blank screen if mode=google is set after initial mount
@@ -153,7 +155,12 @@ export function Signup({ onBack }: SignupProps) {
   // Step 6 – Interests
   const [interests, setInterests] = useState<string[]>([])
 
-  // Step 7 – Password
+  // Step 7 (Google mode) – Profile photo + terms
+  const [profilePhoto, setProfilePhoto] = useState('')
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const profilePhotoInputRef = useRef<HTMLInputElement>(null)
+
+  // Step 7 – Password (non-Google)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -176,6 +183,48 @@ export function Signup({ onBack }: SignupProps) {
   const { mutate: checkOtp, isPending: checkingOtp } = useCheckOtp()
   const { mutate: googleSignIn } = useGoogleSignIn()
   const [googleLoading, setGoogleLoading] = useState(false)
+  const accessToken = useAuthStore((s) => s.accessToken)
+
+  const handlePhotoUpload = async (file: File) => {
+    if (!file) return
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Format non supporté. Utilisez JPG, PNG ou WebP.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image trop grande (max 5 Mo).')
+      return
+    }
+    setIsUploadingPhoto(true)
+    try {
+      const resolveApiBase = () => {
+        const envUrl = import.meta.env.VITE_API_URL as string | undefined
+        if (envUrl) return envUrl.replace('/api/v1', '')
+        if (typeof window !== 'undefined' && window.location?.origin) {
+          const origin = window.location.origin
+          if (origin.includes(':3000')) return origin.replace(':3000', ':3001')
+          return origin
+        }
+        return 'http://localhost:3001'
+      }
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch(`${resolveApiBase()}/api/v1/chat/upload`, {
+        method: 'POST',
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload échoué')
+      setProfilePhoto(data.url)
+      toast.success('Photo ajoutée !')
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de l'upload")
+    } finally {
+      setIsUploadingPhoto(false)
+    }
+  }
 
   const handleGoogleSignup = async () => {
     try {
@@ -441,12 +490,21 @@ export function Signup({ onBack }: SignupProps) {
       }
       setStep((s) => s + 1)
     } else if (step === 6) {
+      // Step 6 is always Interests — move to next step regardless of mode
+      setStep((s) => s + 1)
+    } else if (step === 7) {
       if (isGoogleMode) {
+        // Google mode step 7: photo + CGU → finalize account
+        if (!acceptedTerms) {
+          toast.error(t('signup.step7TermsRequired') || "Veuillez accepter les conditions d'utilisation")
+          return
+        }
         setIsFirebaseVerifying(true)
         try {
           const profileData: any = { interests, displayName: `${firstName} ${pseudo}`.trim() }
           if (birthday) profileData.birthdate = birthday
           if (city) profileData.city = city
+          if (profilePhoto) profileData.avatar = profilePhoto
           await apiClient.patch('/users/me/profile', profileData)
           localStorage.setItem('letsout_onboarding_done', 'true')
           localStorage.removeItem('pending_google_signup')
@@ -457,10 +515,7 @@ export function Signup({ onBack }: SignupProps) {
           setIsFirebaseVerifying(false)
         }
       } else {
-        setStep((s) => s + 1)
-      }
-    } else if (step === 7) {
-      if (!isGoogleMode) {
+        // Normal mode step 7: password → register
         const isFirebaseFlow = currentChannel === 'sms' && (!!idToken || !!nativeVerificationId)
         register({
           target: fullPhone,
@@ -625,13 +680,14 @@ export function Signup({ onBack }: SignupProps) {
     }
     if (step === 5) return false
     if (step === 6) return interests.length === 0
-    if (step === 7) return !isPwdValid || !acceptedTerms || registering
+    if (isGoogleMode && step === 7) return !acceptedTerms || isUploadingPhoto || isFirebaseVerifying
+    if (!isGoogleMode && step === 7) return !isPwdValid || !acceptedTerms || registering
     return false
   }
 
-  const isLoading = sendingOtp || registering || checkingTarget || isFirebaseSending || checkingOtp || isFirebaseVerifying
+  const isLoading = sendingOtp || registering || checkingTarget || isFirebaseSending || checkingOtp || isFirebaseVerifying || isUploadingPhoto
 
-  const buttonLabel = (isGoogleMode && step === 6) || step === 7 ? t('signup.buttonJoin') : t('signup.buttonNext')
+  const buttonLabel = (isGoogleMode && step === 7) || (!isGoogleMode && step === 7) ? t('signup.buttonJoin') : t('signup.buttonNext')
 
   return (
     <div className="w-full h-full flex flex-col flex-1 bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden relative">
@@ -652,7 +708,7 @@ export function Signup({ onBack }: SignupProps) {
         </div>
 
         {/* Barre de progression orange fine — sous le header */}
-        <ProgressBar value={step} max={isGoogleMode ? 6 : 7} className="h-[3px] rounded-none" />
+        <ProgressBar value={step} max={isGoogleMode ? 7 : 7} className="h-[3px] rounded-none" />
       </div>
 
       {/* ── Content ────────────────────────────────────── */}
@@ -995,8 +1051,68 @@ export function Signup({ onBack }: SignupProps) {
           </div>
         )}
 
-        {/* ── STEP 7: PASSWORD ── */}
-        {step === 7 && (
+        {/* ── STEP 7 (GOOGLE MODE): PHOTO DE PROFIL + CGU ── */}
+        {isGoogleMode && step === 7 && (
+          <div>
+            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
+              Votre photo de profil
+            </h1>
+            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
+              Ajoutez une photo pour que la communauté vous reconnaisse. Vous pourrez la modifier plus tard.
+            </p>
+
+            {/* Avatar preview + upload */}
+            <div className="flex flex-col items-center mb-8">
+              <div
+                className="w-[120px] h-[120px] rounded-full bg-gray-100 dark:bg-[#1A1A1A] border-2 border-dashed border-gray-200 dark:border-white/10 flex items-center justify-center mb-4 overflow-hidden relative cursor-pointer active:scale-95 transition-transform"
+                onClick={() => !isUploadingPhoto && profilePhotoInputRef.current?.click()}
+              >
+                {isUploadingPhoto ? (
+                  <div className="w-8 h-8 border-2 border-[var(--brand-orange-500)] border-t-transparent rounded-full animate-spin" />
+                ) : profilePhoto ? (
+                  <img src={profilePhoto} alt="Photo de profil" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    <UserIcon size={36} strokeWidth={1.2} className="text-gray-300 dark:text-gray-600" />
+                    <Camera01Icon size={18} strokeWidth={1.5} className="text-gray-300 dark:text-gray-600" />
+                  </div>
+                )}
+                {/* Camera overlay on hover quand photo déjà choisie */}
+                {profilePhoto && !isUploadingPhoto && (
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                    <Camera01Icon size={28} strokeWidth={1.5} className="text-white" />
+                  </div>
+                )}
+              </div>
+
+              <input
+                ref={profilePhotoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) handlePhotoUpload(file)
+                }}
+              />
+
+              <button
+                type="button"
+                onClick={() => !isUploadingPhoto && profilePhotoInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+                className="font-poppins text-[13px] font-medium text-[var(--brand-orange-500)] bg-orange-50 dark:bg-orange-500/10 px-4 py-2 rounded-full transition-opacity active:scale-95 disabled:opacity-50"
+              >
+                {isUploadingPhoto ? 'Chargement...' : profilePhoto ? 'Changer la photo' : 'Choisir une photo'}
+              </button>
+              <p className="font-poppins text-[11px] text-gray-400 mt-2">
+                {profilePhoto ? 'Appuyez pour modifier' : 'Vous pourrez la modifier plus tard'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 7: PASSWORD (mode non-Google) ── */}
+        {!isGoogleMode && step === 7 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
               {t('signup.step7Title')}
@@ -1089,7 +1205,7 @@ export function Signup({ onBack }: SignupProps) {
         className="px-5 pt-3 mt-auto shrink-0 bg-white dark:bg-black"
         style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}
       >
-        {/* CGU — uniquement à l'étape 7 */}
+        {/* CGU — à l'étape 7 quelle que soit le mode */}
         {step === 7 && (
           <div
             className="flex items-start gap-3 cursor-pointer mb-5"
