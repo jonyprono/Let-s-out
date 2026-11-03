@@ -490,8 +490,10 @@ export function Signup({ onBack }: SignupProps) {
           const profileData: any = { interests, displayName: `${firstName} ${pseudo}`.trim() }
           if (birthday) profileData.birthdate = birthday
           if (city) profileData.city = city
-          if (profilePhoto) profileData.avatar = profilePhoto
+          if (profilePhoto) profileData.avatarUrl = profilePhoto
           await apiClient.patch('/users/me/profile', profileData)
+          // Recharger le profil depuis l'API pour mettre à jour le store (avatarUrl, etc.)
+          await useAuthStore.getState().refreshUser()
           localStorage.setItem('letsout_onboarding_done', 'true')
           localStorage.removeItem('pending_google_signup')
           nav('/home')
