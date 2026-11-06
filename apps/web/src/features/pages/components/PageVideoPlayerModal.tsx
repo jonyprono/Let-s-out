@@ -6,6 +6,7 @@ import { PagePostCommentsModal } from './PagePostCommentsModal'
 import { videosApi, EventVideo } from '@/features/videos/api'
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal'
 import { toast } from 'sonner'
+import { getOptimizedVideoUrl } from '@/features/videos/utils/video-url'
 
 export interface PageVideoItem {
   id: string // post ID
@@ -105,14 +106,33 @@ export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVi
     }
   }, [onClose, commentPost, playingOutVlogId])
 
+  const isReadyRef = useRef(false)
+  const [snapEnabled, setSnapEnabled] = useState(false)
+
   // Position immediately on the clicked video before browser paint (no black scroll void)
   useLayoutEffect(() => {
-    if (containerRef.current && entries.length > 0) {
-      containerRef.current.scrollTop = initialIdx * containerRef.current.offsetHeight
+    const container = containerRef.current
+    if (!container || entries.length === 0) return
+
+    const itemHeight = container.clientHeight || window.innerHeight
+    container.scrollTop = initialIdx * itemHeight
+
+    const targetChild = container.children[initialIdx] as HTMLElement
+    if (targetChild && typeof targetChild.scrollIntoView === 'function') {
+      targetChild.scrollIntoView({ behavior: 'instant', block: 'start' })
     }
+
+    const timer = setTimeout(() => {
+      isReadyRef.current = true
+      setSnapEnabled(true)
+    }, 40)
+
+    return () => clearTimeout(timer)
   }, [initialIdx, entries.length])
 
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
+    if (!isReadyRef.current) return
+
     const container = e.currentTarget
     const itemHeight = container.clientHeight
     if (itemHeight === 0) return
@@ -144,7 +164,7 @@ export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVi
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory"
+        className={`flex-1 w-full h-full overflow-y-scroll ${snapEnabled ? 'snap-y snap-mandatory' : ''}`}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {entries.map((entry, index) => {
@@ -386,17 +406,19 @@ function PageVideoPlayerItem({
       <div className="absolute inset-0 flex items-center justify-center bg-black">
         <video
           ref={videoRef}
-          src={item.videoUrl}
+          src={getOptimizedVideoUrl(item.videoUrl)}
           poster={
             item.videoUrl?.includes('cloudinary.com')
               ? item.videoUrl.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
               : undefined
           }
-          preload="auto"
+          preload={isActive ? 'auto' : 'metadata'}
           loop
           controls={false}
-          playsInline
+          controlsList="nodownload nofullscreen noremoteplayback"
           disablePictureInPicture
+          disableRemotePlayback
+          playsInline
           webkit-playsinline="true"
           x5-playsinline="true"
           muted={isMuted}

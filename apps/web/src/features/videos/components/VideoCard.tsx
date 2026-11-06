@@ -1,6 +1,7 @@
 import { Play } from 'lucide-react'
 import { EventVideo, formatDuration } from '@/features/videos/api'
 import { useRef, useCallback } from 'react'
+import { getVideoPosterUrl } from '../utils/video-url'
 
 interface VideoCardProps {
   video: EventVideo
@@ -58,11 +59,12 @@ export function VideoCard({ video, onClick, onLongPress, size = 'md' }: VideoCar
     >
       {/* Thumbnail */}
       <div className={`relative w-full ${isSmall ? 'h-[200px]' : 'aspect-video'}`}>
-        {video.thumbnailUrl ? (
+        {getVideoPosterUrl(video) ? (
           <img
-            src={video.thumbnailUrl}
+            src={getVideoPosterUrl(video)}
             alt={video.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-700 flex items-center justify-center">

@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, CalendarPlus } from 'lucide-react';
+import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, CalendarPlus, Play } from 'lucide-react';
 import { EventVideo, videosApi } from '../api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
 import { useUserProfile } from '@/features/users/UserProfileContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
+import { getOptimizedVideoUrl, getVideoPosterUrl } from '../utils/video-url';
 
 interface Props {
   video: EventVideo;
   isActive: boolean;
+  isNear?: boolean;
 }
 
-export function VideoPlayerItem({ video, isActive }: Props) {
+export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
@@ -24,15 +26,39 @@ export function VideoPlayerItem({ video, isActive }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [progress, setProgress] = useState(0);
+  const [videoUrl, setVideoUrl] = useState(() => getOptimizedVideoUrl(video.url));
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [isUserPaused, setIsUserPaused] = useState(false);
+
+  const posterUrl = getVideoPosterUrl(video);
+
+  // Synchronise l'URL optimisée si la prop video change
+  useEffect(() => {
+    setVideoUrl(getOptimizedVideoUrl(video.url));
+  }, [video.url]);
 
   useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
     if (isActive) {
-      videoRef.current?.play().catch(() => {});
-    } else {
-      videoRef.current?.pause();
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
+      setIsUserPaused(false);
+      const playPromise = videoEl.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          if (err.name === 'NotAllowedError') {
+            videoEl.muted = true;
+            videoEl.play().catch(() => {});
+          }
+        });
       }
+    } else {
+      videoEl.pause();
+      if (videoEl.currentTime > 0) {
+        videoEl.currentTime = 0;
+      }
+      setIsBuffering(false);
+      setIsUserPaused(false);
       setShowComments(false);
       setShowShareSheet(false);
     }
@@ -144,48 +170,89 @@ export function VideoPlayerItem({ video, isActive }: Props) {
     }
   };
 
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
+    if (videoEl.paused) {
+      videoEl.play().catch(() => {});
+      setIsUserPaused(false);
+    } else {
+      videoEl.pause();
+      setIsUserPaused(true);
+    }
+  };
+
   return (
-    <div className="relative w-full h-[100dvh] min-h-[100dvh] snap-start snap-always shrink-0 flex items-center justify-center bg-black overflow-hidden">
+    <div className="relative w-full h-[100dvh] min-h-[100dvh] snap-start snap-always shrink-0 flex items-center justify-center bg-black overflow-hidden select-none">
       {/* Ambient background glow for seamless visual continuity */}
-      {(video.thumbnailUrl || video.event?.coverUrl) && (
+      {posterUrl && (
         <div
-          className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-20 scale-110 pointer-events-none"
-          style={{
-            backgroundImage: `url(${video.thumbnailUrl || video.event?.coverUrl})`,
-          }}
+          className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-25 scale-110 pointer-events-none"
+          style={{ backgroundImage: `url(${posterUrl})` }}
         />
       )}
 
-      {/* Main Video */}
-      <video
-        ref={videoRef}
-        src={video.url}
-        poster={video.thumbnailUrl || video.event?.coverUrl || undefined}
-        preload="auto"
-        loop
-        controls={false}
-        playsInline
-        disablePictureInPicture
-        webkit-playsinline="true"
-        x5-playsinline="true"
-        onTimeUpdate={handleTimeUpdate}
-        className="w-full h-full object-contain pointer-events-none relative z-0"
-      />
+      {/* Main Video or Poster Placeholder for distant items */}
+      {isNear ? (
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          poster={posterUrl}
+          preload={isActive ? 'auto' : 'metadata'}
+          loop
+          controls={false}
+          controlsList="nodownload nofullscreen noremoteplayback"
+          disablePictureInPicture
+          disableRemotePlayback
+          playsInline
+          webkit-playsinline="true"
+          x5-playsinline="true"
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
+          onCanPlay={() => setIsBuffering(false)}
+          onTimeUpdate={handleTimeUpdate}
+          onError={() => {
+            // Fallback sur l'URL d'origine si l'optimisation Cloudinary échoue
+            if (videoUrl !== video.url) {
+              setVideoUrl(video.url);
+            }
+          }}
+          className="w-full h-full object-contain pointer-events-none relative z-0"
+        />
+      ) : posterUrl ? (
+        <img
+          src={posterUrl}
+          alt={video.title}
+          className="w-full h-full object-contain pointer-events-none relative z-0"
+          loading="lazy"
+        />
+      ) : null}
 
       {/* Transparent overlay to capture clicks without triggering native video controls */}
       <div 
-        className="absolute inset-0 z-0" 
-        onClick={(e) => {
-          e.stopPropagation();
-          if (videoRef.current?.paused) {
-            videoRef.current.play();
-          } else {
-            videoRef.current?.pause();
-          }
-        }}
+        className="absolute inset-0 z-10 cursor-pointer" 
+        onClick={togglePlay}
       />
 
-      {/* Center Play Button Overlay — supprimé : Android affiche son propre overlay natif */}
+      {/* Center Buffering Indicator */}
+      {isBuffering && isActive && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-xl">
+            <Loader2 className="w-8 h-8 animate-spin text-white" />
+          </div>
+        </div>
+      )}
+
+      {/* Center Play Button Overlay when user paused */}
+      {isUserPaused && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none animate-in fade-in zoom-in-75 duration-150">
+          <div className="w-16 h-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-2xl">
+            <Play className="w-8 h-8 text-white fill-white translate-x-0.5" />
+          </div>
+        </div>
+      )}
 
       {/* Overlay Information & Interactions (TikTok style) */}
       <div className="absolute inset-0 pointer-events-none flex flex-col justify-end">

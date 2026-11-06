@@ -14,17 +14,33 @@ interface Props {
 
 export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached, isLoadingMore }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const isReadyRef = useRef(false);
   
   // Find the initial index based on the ID passed
-  const initialIdx = videos.findIndex(v => v.id === initialVideoId);
-  const [activeIndex, setActiveIndex] = useState(initialIdx >= 0 ? initialIdx : 0);
+  const initialIdx = Math.max(0, videos.findIndex(v => v.id === initialVideoId));
+  const [activeIndex, setActiveIndex] = useState(initialIdx);
+  const [snapEnabled, setSnapEnabled] = useState(false);
 
-  // Position immediately on the clicked video before browser paint (no black scroll void)
+  // Position immediately on the clicked video without black scroll void or snap jump
   useLayoutEffect(() => {
-    if (containerRef.current && videos.length > 0) {
-      const idx = initialIdx >= 0 ? initialIdx : 0;
-      containerRef.current.scrollTop = idx * containerRef.current.offsetHeight;
+    const container = containerRef.current;
+    if (!container || videos.length === 0) return;
+
+    const itemHeight = container.clientHeight || window.innerHeight;
+    container.scrollTop = initialIdx * itemHeight;
+
+    const targetChild = container.children[initialIdx] as HTMLElement;
+    if (targetChild && typeof targetChild.scrollIntoView === 'function') {
+      targetChild.scrollIntoView({ behavior: 'instant', block: 'start' });
     }
+
+    // Enable scroll snap and active tracking only after initial scroll has settled
+    const timer = setTimeout(() => {
+      isReadyRef.current = true;
+      setSnapEnabled(true);
+    }, 40);
+
+    return () => clearTimeout(timer);
   }, [initialIdx, videos.length]);
 
   useEffect(() => {
@@ -32,9 +48,13 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
     let backButtonListener: any = null;
     
     const setupListener = async () => {
-      backButtonListener = await App.addListener('backButton', () => {
-        onClose();
-      });
+      try {
+        backButtonListener = await App.addListener('backButton', () => {
+          onClose();
+        });
+      } catch {
+        // Not native
+      }
     };
     
     setupListener();
@@ -47,6 +67,9 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
   }, [onClose]);
 
   const handleScroll = (e: UIEvent<HTMLDivElement>) => {
+    // Ignore false scroll events during initial mount
+    if (!isReadyRef.current) return;
+
     const container = e.currentTarget;
     const itemHeight = container.clientHeight;
     
@@ -71,12 +94,13 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col h-[100dvh] w-full overflow-hidden">
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col h-[100dvh] w-full overflow-hidden select-none">
       {/* Global Close Button — placed high to avoid Android nav bar overlap */}
       <button
         onClick={onClose}
-        className="absolute top-10 left-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10"
+        className="absolute top-10 left-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 active:scale-95 transition-transform"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 40px)' }}
+        aria-label="Fermer"
       >
         <ChevronLeft className="w-7 h-7 text-white" strokeWidth={2.5} />
       </button>
@@ -85,7 +109,7 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
       <div 
         ref={containerRef}
         onScroll={handleScroll}
-        className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory"
+        className={`flex-1 w-full h-full overflow-y-scroll ${snapEnabled ? 'snap-y snap-mandatory' : ''}`}
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {videos.map((video, index) => (
@@ -93,6 +117,7 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
             key={video.id}
             video={video}
             isActive={index === activeIndex}
+            isNear={Math.abs(index - activeIndex) <= 1}
           />
         ))}
 
