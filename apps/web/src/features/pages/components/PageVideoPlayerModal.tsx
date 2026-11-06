@@ -6,7 +6,6 @@ import { PagePostCommentsModal } from './PagePostCommentsModal'
 import { videosApi, EventVideo } from '@/features/videos/api'
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal'
 import { toast } from 'sonner'
-import { getOptimizedVideoUrl } from '@/features/videos/utils/video-url'
 
 export interface PageVideoItem {
   id: string // post ID
@@ -406,13 +405,13 @@ function PageVideoPlayerItem({
       <div className="absolute inset-0 flex items-center justify-center bg-black">
         <video
           ref={videoRef}
-          src={getOptimizedVideoUrl(item.videoUrl)}
+          src={item.videoUrl}
           poster={
             item.videoUrl?.includes('cloudinary.com')
               ? item.videoUrl.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
               : undefined
           }
-          preload={isActive ? 'auto' : 'metadata'}
+          preload={isActive ? 'auto' : 'none'}
           loop
           controls={false}
           controlsList="nodownload nofullscreen noremoteplayback"

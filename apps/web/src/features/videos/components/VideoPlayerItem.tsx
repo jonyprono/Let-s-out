@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, CalendarPlus, Play } from 'lucide-react';
 import { EventVideo, videosApi } from '../api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useUserProfile } from '@/features/users/UserProfileContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { getOptimizedVideoUrl, getVideoPosterUrl } from '../utils/video-url';
+import { getVideoPosterUrl } from '../utils/video-url';
 
 interface Props {
   video: EventVideo;
@@ -24,45 +24,53 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   const [commentText, setCommentText] = useState('');
   
   const videoRef = useRef<HTMLVideoElement>(null);
+  // Track if the video has had its first successful play (to avoid false buffering state)
+  const hasPlayedOnceRef = useRef(false);
 
   const [progress, setProgress] = useState(0);
-  const [videoUrl, setVideoUrl] = useState(() => getOptimizedVideoUrl(video.url));
+  // Use raw URL — no Cloudinary transforms that break HTTP Range requests (206 Partial Content)
+  const videoUrl = video.url || '';
   const [isBuffering, setIsBuffering] = useState(false);
   const [isUserPaused, setIsUserPaused] = useState(false);
 
   const posterUrl = getVideoPosterUrl(video);
 
-  // Synchronise l'URL optimisée si la prop video change
-  useEffect(() => {
-    setVideoUrl(getOptimizedVideoUrl(video.url));
-  }, [video.url]);
+  const attemptPlay = useCallback((videoEl: HTMLVideoElement) => {
+    const playPromise = videoEl.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        if (err.name === 'NotAllowedError' || err.name === 'NotSupportedError') {
+          // Autoplay blocked — try muted
+          videoEl.muted = true;
+          videoEl.play().catch(() => {});
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const videoEl = videoRef.current;
     if (!videoEl) return;
 
     if (isActive) {
+      hasPlayedOnceRef.current = false;
       setIsUserPaused(false);
-      const playPromise = videoEl.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          if (err.name === 'NotAllowedError') {
-            videoEl.muted = true;
-            videoEl.play().catch(() => {});
-          }
-        });
+      setIsBuffering(false);
+      // If already has enough data, play immediately
+      if (videoEl.readyState >= 3) {
+        attemptPlay(videoEl);
       }
+      // Otherwise onCanPlay will trigger play
     } else {
       videoEl.pause();
-      if (videoEl.currentTime > 0) {
-        videoEl.currentTime = 0;
-      }
+      videoEl.currentTime = 0;
+      hasPlayedOnceRef.current = false;
       setIsBuffering(false);
       setIsUserPaused(false);
       setShowComments(false);
       setShowShareSheet(false);
     }
-  }, [isActive]);
+  }, [isActive, attemptPlay]);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -200,7 +208,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           ref={videoRef}
           src={videoUrl}
           poster={posterUrl}
-          preload={isActive ? 'auto' : 'metadata'}
+          preload={isActive ? 'auto' : 'none'}
           loop
           controls={false}
           controlsList="nodownload nofullscreen noremoteplayback"
@@ -209,16 +217,24 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           playsInline
           webkit-playsinline="true"
           x5-playsinline="true"
-          onWaiting={() => setIsBuffering(true)}
-          onPlaying={() => setIsBuffering(false)}
-          onCanPlay={() => setIsBuffering(false)}
-          onTimeUpdate={handleTimeUpdate}
-          onError={() => {
-            // Fallback sur l'URL d'origine si l'optimisation Cloudinary échoue
-            if (videoUrl !== video.url) {
-              setVideoUrl(video.url);
+          onCanPlay={(e) => {
+            // Video has enough data — start playing if this item is active
+            if (isActive && !isUserPaused) {
+              attemptPlay(e.currentTarget);
             }
           }}
+          onPlaying={() => {
+            // Video actually started playing — clear any buffering state
+            hasPlayedOnceRef.current = true;
+            setIsBuffering(false);
+          }}
+          onWaiting={() => {
+            // Only show buffering spinner if video has already started once (avoid false initial state)
+            if (hasPlayedOnceRef.current) {
+              setIsBuffering(true);
+            }
+          }}
+          onTimeUpdate={handleTimeUpdate}
           className="w-full h-full object-contain pointer-events-none relative z-0"
         />
       ) : posterUrl ? (
