@@ -67,6 +67,7 @@ import { LandingPage } from '@/app/components/LandingPage'
 import HelpSupport from './components/HelpSupport'
 import { SmartAppBanner } from '@/components/shared/SmartAppBanner'
 import { OutRadar } from '@/features/radar/components/OutRadar'
+import { initializePushNotifications } from '@/lib/push-notifications'
 
 // All screens via adapter bridge (prop-based → React Router)
 import {
@@ -300,11 +301,25 @@ function GlobalVideoPlaybackCoordinator() {
   return null;
 }
 
+function PushNotificationCoordinator() {
+  const navigate = useNavigate()
+  const token = useAuthStore((s) => s.accessToken)
+
+  useEffect(() => {
+    if (token) {
+      initializePushNotifications(navigate)
+    }
+  }, [token, navigate])
+
+  return null
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <BrowserRouter>
+        <PushNotificationCoordinator />
         <GlobalVideoPlaybackCoordinator />
         <DeepLinkHandler />
         <CapacitorThemeSync />

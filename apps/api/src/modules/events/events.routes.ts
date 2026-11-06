@@ -59,6 +59,58 @@ export default async function eventsRoutes(app: FastifyInstance) {
     return Array.from(ids)
   }
 
+  // Helper: notify friends and followers when a public event is created or published
+  async function notifyFriendsAndFollowersNewEvent(
+    creatorId: string,
+    event: { id: string; title: string; isPrivate?: boolean }
+  ) {
+    if (event.isPrivate) return
+
+    try {
+      const creatorProfile = await app.prisma.profile.findUnique({
+        where: { userId: creatorId },
+        select: { displayName: true },
+      })
+      const creatorName = creatorProfile?.displayName || 'Un ami'
+
+      const [friendships, follows] = await Promise.all([
+        app.prisma.friendship.findMany({
+          where: {
+            status: 'ACCEPTED',
+            OR: [{ initiatorId: creatorId }, { receiverId: creatorId }],
+          },
+          select: { initiatorId: true, receiverId: true },
+        }),
+        app.prisma.follow.findMany({
+          where: { followingId: creatorId },
+          select: { followerId: true },
+        }),
+      ])
+
+      const friendIds = friendships.map(f => f.initiatorId === creatorId ? f.receiverId : f.initiatorId)
+      const followerIds = follows.map(f => f.followerId)
+      const recipientIds = Array.from(new Set([...friendIds, ...followerIds])).filter(id => id !== creatorId)
+
+      if (recipientIds.length === 0) return
+
+      const notifications = recipientIds.map(uid => ({
+        userId: uid,
+        type: 'EVENT_INVITE',
+        title: `🎉 ${creatorName} a créé un nouvel événement !`,
+        body: `"${event.title}" vient d'être publié. Rejoins la sortie !`,
+        data: { eventId: event.id, screen: 'event-details' },
+      }))
+
+      const BATCH = 50
+      for (let i = 0; i < notifications.length; i += BATCH) {
+        await createAndSendNotificationMany(app, notifications.slice(i, i + BATCH))
+      }
+      app.log.info(`[notifyFriendsAndFollowersNewEvent] Notified ${recipientIds.length} friends & followers for event ${event.id}`)
+    } catch (err) {
+      app.log.warn(`[notifyFriendsAndFollowersNewEvent] Error: ${err}`)
+    }
+  }
+
   // ── Public routes ────────────────────────────────────────────────────────
   // Get recommended events based on user interests
   app.get('/recommended', { preHandler: [app.authenticate] }, async (req, reply) => {
@@ -936,6 +988,13 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     }
 
+    // Notify friends & followers when a public event is published at creation
+    if (!event.isPrivate && event.status === 'PUBLISHED') {
+      notifyFriendsAndFollowersNewEvent(sub, event).catch((err) => {
+        app.log.warn(`[notifyFriendsAndFollowersNewEvent] Error: ${err}`)
+      })
+    }
+
     return reply.code(201).send(event)
   })
 
@@ -962,6 +1021,13 @@ export default async function eventsRoutes(app: FastifyInstance) {
       where: { id },
       data: { status: 'PUBLISHED' },
     })
+
+    // Notify friends & followers
+    if (!updated.isPrivate) {
+      notifyFriendsAndFollowersNewEvent(updated.creatorId, updated).catch((err) => {
+        app.log.warn(`[notifyFriendsAndFollowersNewEvent] Error: ${err}`)
+      })
+    }
 
     return reply.send(updated)
   })

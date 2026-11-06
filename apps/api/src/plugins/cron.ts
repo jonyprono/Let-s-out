@@ -164,6 +164,87 @@ export default fp(async (fastify: FastifyInstance) => {
         await (fastify as any).prisma.event.update({ where: { id: ev.id }, data: { reminder2hSent: true } })
       }
 
+      // ── Relance utilisateurs inactifs (> 72h) avec les événements populaires / vedettes ──
+      try {
+        const seventyTwoHoursAgo = new Date(now.getTime() - 72 * 60 * 60 * 1000)
+
+        // 1. Trouver les événements populaires / vedettes à venir
+        const popularEvents = await (fastify as any).prisma.event.findMany({
+          where: {
+            status: 'PUBLISHED',
+            isPrivate: false,
+            startAt: { gte: now },
+          },
+          orderBy: [
+            { currentAttendees: 'desc' },
+            { viewCount: 'desc' },
+          ],
+          take: 3,
+          select: { id: true, title: true, city: true },
+        })
+
+        if (popularEvents.length > 0) {
+          const topEvent = popularEvents[0]
+
+          // 2. Utilisateurs inactifs depuis > 72h ayant au moins un appareil enregistré
+          const inactiveUsers = await (fastify as any).prisma.user.findMany({
+            where: {
+              isActive: true,
+              isBanned: false,
+              deletedAt: null,
+              deviceTokens: { some: {} },
+              OR: [
+                { lastSeenAt: { lte: seventyTwoHoursAgo } },
+                { lastSeenAt: null },
+              ],
+            },
+            select: { id: true },
+            take: 200, // Limite par cycle cron
+          })
+
+          if (inactiveUsers.length > 0) {
+            // 3. Filtrer ceux qui ont déjà reçu une relance dans les dernières 72h
+            const recentReminders = await (fastify as any).prisma.notification.findMany({
+              where: {
+                type: 'SYSTEM',
+                createdAt: { gte: seventyTwoHoursAgo },
+              },
+              select: { userId: true, data: true },
+            })
+
+            const recentlyNotified = new Set(
+              recentReminders
+                .filter((n: any) => n.data && (n.data as any).subType === 'INACTIVE_REMINDER')
+                .map((n: any) => n.userId)
+            )
+
+            const targetUsers = inactiveUsers.filter((u: any) => !recentlyNotified.has(u.id))
+
+            if (targetUsers.length > 0) {
+              const notifications = targetUsers.map((u: any) => ({
+                userId: u.id,
+                type: 'SYSTEM',
+                title: '🔥 Ça bouge sur Let\'s Out !',
+                body: `"${topEvent.title}" fait sensation en ce moment ! Rejoins les autres outsters.`,
+                data: {
+                  eventId: topEvent.id,
+                  screen: 'event-details',
+                  subType: 'INACTIVE_REMINDER',
+                },
+              }))
+
+              const BATCH = 50
+              for (let i = 0; i < notifications.length; i += BATCH) {
+                await createAndSendNotificationMany(fastify, notifications.slice(i, i + BATCH)).catch(() => {})
+              }
+              fastify.log.info(`[INACTIVE_CRON] Sent popular event reminder to ${targetUsers.length} inactive users`)
+            }
+          }
+        }
+      } catch (inactiveErr: any) {
+        fastify.log.warn({ inactiveErr }, '[INACTIVE_CRON] Failed to process inactive user notifications')
+      }
+
       // ── OUT RADAR : Expiration automatique de la visibilité et purge intégrale des coordonnées GPS ──
       try {
         await (fastify as any).prisma.radarVisibility.updateMany({

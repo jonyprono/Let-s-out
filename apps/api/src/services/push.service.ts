@@ -100,9 +100,12 @@ export async function sendToToken(token: string, payload: PushPayload): Promise<
         // TTL : 30s pour les appels (inutile de livrer un appel vieux de 2 min)
         ttl: isCall ? 30_000 : 3_600_000,
         notification: {
-          channelId: isCall ? 'calls' : isMessage ? 'messages' : 'default',
+          channelId: isCall ? 'calls' : isMessage ? 'messages' : payload.data?.eventId ? 'events' : 'default',
           clickAction: isMessage ? 'REPLY_ACTION' : undefined,
-          ...(isCall && { sound: 'ringtone' }),
+          sound: isCall ? 'ringtone' : 'default',
+          defaultSound: true,
+          defaultVibrateTimings: true,
+          priority: 'high',
         },
       },
       apns: {

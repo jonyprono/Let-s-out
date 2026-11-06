@@ -191,6 +191,8 @@ export default async function usersRoutes(app: FastifyInstance) {
   app.patch('/me/profile', async (req, reply) => {
     const { sub } = req.user as { sub: string }
     const body = req.body as any
+    const birthDateValue = body.birthDate || body.birthdate
+
     const profile = await app.prisma.profile.update({
       where: { userId: sub },
       data: {
@@ -204,6 +206,8 @@ export default async function usersRoutes(app: FastifyInstance) {
         avatarUrl: body.avatarUrl,
         coverUrl: body.coverUrl,
         isPublic: body.isPublic,
+        gender: body.gender,
+        ...(birthDateValue ? { birthDate: new Date(birthDateValue) } : {}),
       },
     })
     return reply.send(profile)

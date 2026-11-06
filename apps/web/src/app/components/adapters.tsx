@@ -122,9 +122,10 @@ export function Onboarding() {
               displayName: displayName || undefined,
               city: data.city || undefined,
               country: data.country || undefined,
+              gender: data.gender || undefined,
               interests: data.interests?.length ? data.interests : undefined,
               avatarUrl: data.profilePicture || undefined,
-              birthdate: data.birthDate || undefined,
+              birthDate: data.birthDate || undefined,
             })
             await refreshUser()
             nav('/home')

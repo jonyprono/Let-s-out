@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronLeft, Loader2, Camera, User, Eye, X, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, Loader2, Camera, User, Eye, X, ShieldCheck, Calendar } from 'lucide-react'
 import { usersApi } from '@/features/users/api'
 import { chatApi } from '@/features/chat/api'
 import { useAuthStore } from '@/stores/auth.store'
@@ -30,6 +30,8 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const [displayName, setDisplayName] = useState(profile?.displayName || '')
   const [city, setCity] = useState(profile?.city || '')
   const [bio, setBio] = useState(profile?.bio || '')
+  const initialBirthDate = profile?.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : ''
+  const [birthDate, setBirthDate] = useState(initialBirthDate)
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests || [])
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || '')
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatarUrl || '')
@@ -130,6 +132,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         interests: selectedInterests,
         avatarUrl,
         coverUrl,
+        birthDate: birthDate ? new Date(birthDate).toISOString() : undefined,
       } as any)
       await refreshUser()
       invalidateAvatarQueries(qc)
@@ -292,6 +295,26 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                     className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors pr-10"
                   />
                   <ChevronLeft className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 -rotate-90 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Date de naissance */}
+            <div className="flex items-start gap-3">
+              <div className="mt-7 w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-5 h-5 text-[#FF7A00]" strokeWidth={2} />
+              </div>
+              <div className="flex-1">
+                <label className="text-[12px] font-bold text-gray-800 dark:text-gray-200 block mb-1.5 ml-1">
+                  Date de naissance <span className="text-[11px] font-normal text-gray-400">(Requis pour OUT RADAR 18+)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors"
+                  />
                 </div>
               </div>
             </div>

@@ -27,12 +27,14 @@ function getProximityInfo(distanceKm: number): { tier: ProximityTier; label: str
 const lastSearchTimestamps = new Map<string, number>()
 
 // Vérification de la majorité (18 ans et plus)
-function isAdult(birthDate: Date | null | undefined): boolean {
+function isAdult(birthDate: Date | string | null | undefined): boolean {
   if (!birthDate) return false
+  const d = typeof birthDate === 'string' ? new Date(birthDate) : birthDate
+  if (isNaN(d.getTime())) return false
   const now = new Date()
-  let age = now.getFullYear() - birthDate.getFullYear()
-  const m = now.getMonth() - birthDate.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < birthDate.getDate())) {
+  let age = now.getFullYear() - d.getFullYear()
+  const m = now.getMonth() - d.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) {
     age--
   }
   return age >= 18
@@ -116,7 +118,10 @@ export default async function radarRoutes(app: FastifyInstance) {
     const birthDate = profile?.kycBirthDate || profile?.birthDate
     if (!isAdult(birthDate)) {
       return reply.code(403).send({
-        error: 'OUT RADAR est réservé aux membres majeurs (18 ans et plus) pour des raisons de sécurité.',
+        error: !birthDate
+          ? 'Veuillez renseigner votre date de naissance pour utiliser OUT RADAR (18 ans et plus).'
+          : 'OUT RADAR est réservé aux membres majeurs (18 ans et plus) pour des raisons de sécurité.',
+        needsBirthDate: !birthDate,
       })
     }
 
@@ -255,7 +260,10 @@ export default async function radarRoutes(app: FastifyInstance) {
     const userBirthDate = userProfile?.kycBirthDate || userProfile?.birthDate
     if (!isAdult(userBirthDate)) {
       return reply.code(403).send({
-        error: 'OUT RADAR est réservé aux membres majeurs (18 ans et plus).',
+        error: !userBirthDate
+          ? 'Veuillez renseigner votre date de naissance pour utiliser OUT RADAR (18 ans et plus).'
+          : 'OUT RADAR est réservé aux membres majeurs (18 ans et plus).',
+        needsBirthDate: !userBirthDate,
       })
     }
 

@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import { createAndSendNotificationMany } from '../notifications/notifications.routes'
 
 // Génère la miniature Cloudinary automatiquement depuis l'URL vidéo
 // Ex: .../upload/v123/xyz.mp4 → .../upload/w_480,h_270,c_fill,so_auto/v123/xyz.jpg
@@ -149,6 +150,82 @@ export async function videoRoutes(app: FastifyInstance) {
     })
 
     req.log.info({ videoId: video.id, eventId, userId }, '[VIDEO] Moments forts publiés')
+
+    // Fan-out notifications to attendees and friends/followers
+    setImmediate(async () => {
+      try {
+        const authorName = video.user?.profile?.displayName || 'Un participant'
+        const eventTitle = video.event?.title || event.title
+
+        // 1. Confirmed attendees of the event (excluding author)
+        const bookings = await app.prisma.booking.findMany({
+          where: { eventId, status: 'CONFIRMED', userId: { not: userId } },
+          select: { userId: true },
+        })
+        const attendeeIds = new Set(bookings.map((b) => b.userId))
+
+        const notifications: Array<{
+          userId: string
+          type: string
+          title: string
+          body: string
+          data: Record<string, any>
+        }> = []
+
+        for (const attendeeId of attendeeIds) {
+          notifications.push({
+            userId: attendeeId,
+            type: 'EVENT_UPDATE',
+            title: `🎬 Nouveaux moments forts sur "${eventTitle}" !`,
+            body: `${authorName} a partagé une vidéo. Viens revivre l'événement !`,
+            data: { eventId, videoId: video.id, screen: 'videos' },
+          })
+        }
+
+        // 2. If video is public, also notify friends and followers who are not attendees
+        if (video.privacy === 'PUBLIC') {
+          const [friendships, follows] = await Promise.all([
+            app.prisma.friendship.findMany({
+              where: {
+                status: 'ACCEPTED',
+                OR: [{ initiatorId: userId }, { receiverId: userId }],
+              },
+              select: { initiatorId: true, receiverId: true },
+            }),
+            app.prisma.follow.findMany({
+              where: { followingId: userId },
+              select: { followerId: true },
+            }),
+          ])
+
+          const friendIds = friendships.map((f) => (f.initiatorId === userId ? f.receiverId : f.initiatorId))
+          const followerIds = follows.map((f) => f.followerId)
+          const otherNetworkIds = Array.from(new Set([...friendIds, ...followerIds])).filter(
+            (id) => id !== userId && !attendeeIds.has(id)
+          )
+
+          for (const netId of otherNetworkIds) {
+            notifications.push({
+              userId: netId,
+              type: 'SYSTEM',
+              title: `📹 Nouveau Out Vlog de ${authorName} !`,
+              body: `"${video.title}" vient d'être partagé. Viens le découvrir !`,
+              data: { eventId, videoId: video.id, screen: 'videos' },
+            })
+          }
+        }
+
+        if (notifications.length > 0) {
+          const BATCH = 50
+          for (let i = 0; i < notifications.length; i += BATCH) {
+            await createAndSendNotificationMany(app, notifications.slice(i, i + BATCH))
+          }
+        }
+      } catch (err) {
+        req.log.warn({ err }, '[VIDEO] Failed to send video notifications')
+      }
+    })
+
     return reply.code(201).send({ data: video })
   })
 

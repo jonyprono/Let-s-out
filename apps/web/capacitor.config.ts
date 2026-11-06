@@ -67,6 +67,9 @@ const config: CapacitorConfig = {
       skipNativeAuth: false,
       providers: ["phone", "google.com"],
     },
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"],
+    },
   },
 }
 
