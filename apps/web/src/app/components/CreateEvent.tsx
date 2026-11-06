@@ -218,6 +218,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const [selectedCoOrgs, setSelectedCoOrgs] = useState<any[]>(sessionDraft?.selectedCoOrgs ?? [])
   const [maxPlaces, setMaxPlaces] = useState(sessionDraft?.maxPlaces ?? '')
   const [amount, setAmount] = useState(sessionDraft?.amount ?? '')
+  // Private event visibility options
+  const [showInFeed, setShowInFeed] = useState<boolean>(sessionDraft?.showInFeed ?? false)
+  const [showParticipants, setShowParticipants] = useState<boolean>(sessionDraft?.showParticipants ?? true)
 
   // ── UI state ────────────────────────────────────────────────────────────
   const [showCategorySheet, setShowCategorySheet] = useState(false)
@@ -281,14 +284,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       regEndDate, regEndTime,
       address, city, lat, lon, privacy, requiresApproval, allowGuestInvites, description,
       participationMode, coverFiles, coverPreviews, selectedCoOrgs, maxPlaces, amount,
-      enablePool, poolDescription, poolTarget, poolMinAmount
+      enablePool, poolDescription, poolTarget, poolMinAmount, showInFeed, showParticipants
     }
   }, [
     title, category, startDate, startTime, hasEndDate, endDate, endTime,
     regEndDate, regEndTime,
     address, city, lat, lon, privacy, requiresApproval, allowGuestInvites, description,
     participationMode, coverFiles, coverPreviews, selectedCoOrgs, maxPlaces, amount,
-    enablePool, poolDescription, poolTarget, poolMinAmount
+    enablePool, poolDescription, poolTarget, poolMinAmount, showInFeed, showParticipants
   ])
 
   const fileRef = useRef<HTMLInputElement>(null)
@@ -491,6 +494,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       const isEdit = !!(location.state?.editEventId || createdEventId)
 
+      // Bug-2 guard: cagnotte or paid events require verified KYC
+      const isPaidOrCagnotte = (enablePool && poolTarget && parseFloat(poolTarget) > 0) || (amount && parseFloat(amount) > 0)
+      if (isPaidOrCagnotte && !isKycVerified) {
+        toast.error('Votre compte doit être vérifié (KYC) pour créer un événement avec cagnotte ou payant.')
+        setLoading(false)
+        return
+      }
+
       // Bug-1 guard: poolMinAmount must be < poolTarget
       if (enablePool && poolTarget && poolMinAmount) {
         const target = parseFloat(poolTarget)
@@ -519,6 +530,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         isPrivate: privacy === 'PRIVATE',
         requiresApproval,
         genderRestriction,
+        showInFeed: privacy === 'PRIVATE' ? showInFeed : false,
+        showParticipants: privacy === 'PRIVATE' ? showParticipants : true,
         coverUrl: coverExplicitlyCleared && coverFiles.length === 0 ? null : coverUrl,
         mediaUrls: coverExplicitlyCleared && coverFiles.length === 0 ? [] : (mediaUrls.length > 0 ? mediaUrls : undefined),
         // Cagnotte fields: send explicit null on edit to erase from DB when switching to free
@@ -535,7 +548,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           ? poolDescription.trim()
           : isEdit ? null : undefined,
         registrationDeadline: regEndDate && regEndTime ? new Date(`${regEndDate}T${regEndTime}`).toISOString() : undefined,
-        status: isEdit ? (eventStatus || undefined) : 'DRAFT',
+        status: isEdit ? (eventStatus || undefined) : 'PUBLISHED',
         coHostIds: selectedCoOrgs.map(o => o.id),
       }
 
@@ -599,10 +612,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           navigate(-1)
           return
         }
+        setStep('done')
       } else {
-        toast.success('Événement créé ! Publiez-le quand vous êtes prêt.')
+        toast.success('🎉 Événement créé et publié avec succès !')
+        setStep('published')
       }
-      setStep('done')
     } catch (err: any) {
       console.error('CreateEvent Error:', err)
       // Guard: raw ProgressEvent or non-Error object (XHR onerror on Capacitor)
@@ -1576,11 +1590,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="flex flex-col">
           {[
             { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde sur ou en dehors de Let's Out`, Icon: EarthIcon },
-            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invités', Icon: SquareLock01Icon },
+            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invitées', Icon: SquareLock01Icon },
           ].map(opt => (
             <div key={opt.value} className="flex flex-col w-full py-4 border-b border-[var(--border-tertiary)] last:border-0">
               <button
-                onClick={() => { setPrivacy(opt.value); if (opt.value === 'PUBLIC') setAllowGuestInvites(false); setShowPrivacySheet(false) }}
+                onClick={() => {
+                  setPrivacy(opt.value)
+                  if (opt.value === 'PUBLIC') {
+                    setAllowGuestInvites(false)
+                    setShowInFeed(false)
+                    setShowParticipants(true)
+                  }
+                  setShowPrivacySheet(false)
+                }}
                 className="w-full flex items-center gap-4 text-left"
               >
                 {/* Frame icon */}
@@ -1597,18 +1619,38 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   {privacy === opt.value && <div className="w-[10px] h-[10px] rounded-full bg-[var(--brand-orange-500)]" />}
                 </div>
               </button>
-              
-              {/* Toggle switch for PRIVATE */}
+
+              {/* Options supplémentaires pour PRIVATE */}
               {opt.value === 'PRIVATE' && privacy === 'PRIVATE' && (
-                <div className="flex items-center justify-between mt-3 pt-1 ml-[48px]">
-                  <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les OUTSTERS à inviter d'autres OUTSTERS</span>
-                  <SettingsToggle checked={allowGuestInvites} onChange={setAllowGuestInvites} />
+                <div className="ml-[48px] mt-3 space-y-0">
+                  {/* Autoriser les invitations entre OUTSTERS */}
+                  <div className="flex items-center justify-between py-2.5">
+                    <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les OUTSTERS à inviter d'autres OUTSTERS</span>
+                    <SettingsToggle checked={allowGuestInvites} onChange={setAllowGuestInvites} />
+                  </div>
+                  {/* Visible dans le fil d'actualité */}
+                  <div className="flex items-start justify-between py-2.5 border-t border-[var(--border-tertiary)]">
+                    <div className="flex-1 mr-4">
+                      <span className="text-[12px] font-medium text-[var(--color-text-secondary)] leading-tight block">Visible dans le fil d'actualité</span>
+                      <span className="text-[11px] text-[var(--color-text-muted)] leading-tight block mt-0.5">S'affiche avec la mention «&nbsp;Privé&nbsp;». Rejoindre uniquement sur invitation.</span>
+                    </div>
+                    <SettingsToggle checked={showInFeed} onChange={setShowInFeed} />
+                  </div>
+                  {/* Profils des participants visibles */}
+                  <div className="flex items-start justify-between py-2.5 border-t border-[var(--border-tertiary)]">
+                    <div className="flex-1 mr-4">
+                      <span className="text-[12px] font-medium text-[var(--color-text-secondary)] leading-tight block">Profils des participants visibles</span>
+                      <span className="text-[11px] text-[var(--color-text-muted)] leading-tight block mt-0.5">Si non, seul l'organisateur sera visible. Le nombre de participants restera affiché.</span>
+                    </div>
+                    <SettingsToggle checked={showParticipants} onChange={setShowParticipants} />
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
       </BottomSheet>
+
 
       {/* ── Join Mode Sheet ──────────────────────────────────────────────── */}
       <BottomSheet title="Mode d'adhésion" open={showJoinModeSheet} onClose={() => setShowJoinModeSheet(false)}>
@@ -1672,26 +1714,33 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <p className="text-[13px] text-[var(--color-text-secondary)] mb-5">Comment participer à cet événement.</p>
         <div className="flex flex-col">
           {[
-            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: SquareUnlock01Icon },
-            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins01Icon },
+            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: SquareUnlock01Icon, requiresKyc: false },
+            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins01Icon, requiresKyc: true },
           ].map(mode => {
             const isSelected = participationMode === mode.value
+            const isLocked = mode.requiresKyc && !isKycVerified
             return (
               <button
                 key={mode.value}
                 onClick={() => {
+                  if (isLocked) {
+                    toast.error('Votre compte doit être vérifié (KYC) pour activer la cagnotte.')
+                    return
+                  }
                   setParticipationMode(mode.value);
                   setShowParticipationSheet(false);
                   setEnablePool(mode.value === 'cagnotte');
                 }}
-                className={`w-full flex items-center gap-4 py-4 text-left`}
+                className={`w-full flex items-center gap-4 py-4 text-left ${isLocked ? 'opacity-60' : ''}`}
               >
                 <div className="w-[32px] h-[32px] rounded-[16px] bg-[#F5F5F5] flex items-center justify-center shrink-0">
                   <mode.Icon className="w-[20px] h-[20px] text-[#737373]" strokeWidth={1.25} />
                 </div>
                 <div className="flex-1">
                   <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)]">{mode.label}</p>
-                  <p className="text-[12px] text-[var(--color-text-secondary)]">{mode.desc}</p>
+                  <p className="text-[12px] text-[var(--color-text-secondary)]">
+                    {isLocked ? '🔒 Compte vérifié requis pour activer cette option' : mode.desc}
+                  </p>
                 </div>
                 <div
                   className="w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors"

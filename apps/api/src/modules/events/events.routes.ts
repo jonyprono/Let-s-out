@@ -16,6 +16,8 @@ const CreateEventSchema = z.object({
   currency: z.string().length(3).default('XOF'),
   isPrivate: z.boolean().default(false),
   requiresApproval: z.boolean().default(false),
+  showInFeed: z.boolean().default(false),
+  showParticipants: z.boolean().default(true),
   address: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
@@ -269,14 +271,21 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const whereClause: any = {
       status,
-      isPrivate: false,
+      OR: [
+        { isPrivate: false },
+        { isPrivate: true, showInFeed: true },
+      ],
       ...(category && { category: category.includes(',') ? { in: category.split(',') } : category }),
       ...(city && { city: { contains: city, mode: 'insensitive' } }),
       ...(maxPrice && { price: { lte: Number(maxPrice) } }),
       ...(search && {
-        OR: [
-          { title: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } },
+        AND: [
+          {
+            OR: [
+              { title: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
+            ],
+          },
         ],
       }),
       ...(blockedCreatorIds.length > 0 && { creatorId: { notIn: blockedCreatorIds } }),
@@ -808,6 +817,18 @@ export default async function eventsRoutes(app: FastifyInstance) {
       })
     }
 
+    // Bug-2 guard: cagnotte/paid events require KYC verification even at creation
+    const hasFinancialFeature = (body.poolTarget && body.poolTarget > 0) || (body.price && body.price > 0)
+    if (hasFinancialFeature) {
+      const creatorProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
+      if (creatorProfile?.kycStatus !== 'verified') {
+        return reply.code(403).send({
+          error: 'Vérification requise',
+          message: "Votre compte doit être vérifié (KYC) pour créer un événement avec cagnotte ou ticket payant.",
+        })
+      }
+    }
+
     const event = await app.prisma.event.create({
       data: {
         ...body,
@@ -1267,6 +1288,25 @@ export default async function eventsRoutes(app: FastifyInstance) {
   app.get('/:id/attendees', async (req, reply) => {
     const { id } = req.params as { id: string }
     const { limit = '20', offset = '0' } = req.query as any
+    const event = await app.prisma.event.findUnique({
+      where: { id },
+      select: { creatorId: true, coHostIds: true, isPrivate: true, showParticipants: true },
+    })
+    if (!event) return reply.code(404).send({ error: 'Event not found' })
+
+    // If private event with hidden participant profiles, only organizer/co-hosts can see the list
+    if (event.isPrivate && !event.showParticipants) {
+      let callerId: string | null = null
+      try {
+        const decoded: any = await req.jwtVerify()
+        callerId = decoded?.sub
+      } catch (_) {}
+
+      const isOrganizer = callerId && (event.creatorId === callerId || (event.coHostIds || []).includes(callerId))
+      if (!isOrganizer) {
+        return reply.send({ data: [] })
+      }
+    }
 
     const bookings = await app.prisma.booking.findMany({
       where: { eventId: id, status: 'CONFIRMED' },
@@ -1499,7 +1539,22 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     })
     if (!event) return reply.code(404).send({ error: 'Code invalide ou événement introuvable' })
-    if (event.status !== 'PUBLISHED') return reply.code(400).send({ error: 'Événement non disponible' })
+    if (event.status === 'CANCELLED') return reply.code(400).send({ error: "Cet événement a été annulé." })
+
+    // Auto-publish private events that were created in DRAFT if they don't have unverified financial obligations
+    if (event.status === 'DRAFT') {
+      const hasFinancialFeature = (event.price && event.price > 0) || (event.poolTarget && event.poolTarget > 0)
+      if (!hasFinancialFeature) {
+        await app.prisma.event.update({
+          where: { id: event.id },
+          data: { status: 'PUBLISHED' },
+        })
+        event.status = 'PUBLISHED'
+      } else {
+        return reply.code(400).send({ error: "Cet événement n'a pas encore été publié par l'organisateur. Réessayez dans quelques instants." })
+      }
+    }
+    if (event.status !== 'PUBLISHED') return reply.code(400).send({ error: "Cet événement n'est plus disponible." })
 
     // Block the creator and co-hosts from joining their own event
     if (event.creatorId === sub || (event.coHostIds && event.coHostIds.includes(sub))) {

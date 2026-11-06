@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, QrCode, Loader2, Camera } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
@@ -10,13 +10,24 @@ import { Input } from '@/components/ui/input';
 
 export function JoinPrivateEvent() {
   const navigate = useNavigate();
-  const [code, setCode] = useState('');
+  const { code: urlCode } = useParams<{ code?: string }>();
+  const [code, setCode] = useState(urlCode ? urlCode.toUpperCase() : '');
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [hasPermission, setHasPermission] = useState(true);
+  const autoJoinedRef = useRef(false);
   // Ref to track scanning state in the cleanup function — avoids stale closure bug
   // (the cleanup captures variables from mount time; the ref always reflects current value)
   const isScanningRef = useRef(false);
+
+  useEffect(() => {
+    if (urlCode && !autoJoinedRef.current) {
+      autoJoinedRef.current = true;
+      const clean = urlCode.trim().toUpperCase();
+      setCode(clean);
+      handleJoin(clean);
+    }
+  }, [urlCode]);
 
   useEffect(() => {
     if (Capacitor.isNativePlatform()) {

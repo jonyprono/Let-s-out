@@ -173,15 +173,15 @@ export const EventCard = memo(function EventCard({
           event.creatorId === user?.id ? (
             <button
               onClick={(e) => { e.stopPropagation(); setShowQRModal(true); }}
-              className="absolute top-3 left-3 bg-gray-900/90 backdrop-blur-md px-2 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-transform z-10"
+              className="absolute top-3 left-3 bg-gray-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-transform z-10"
             >
               <QrCode className="w-3.5 h-3.5 text-action-primary" />
-              <span className="text-[11px] font-bold text-white uppercase tracking-wider">Privé</span>
+              <span className="text-[11px] font-bold text-white tracking-wide">Événement privé</span>
             </button>
           ) : (
-            <div className="absolute top-3 left-3 bg-gray-900/80 backdrop-blur-md px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm z-10">
+            <div className="absolute top-3 left-3 bg-gray-900/85 backdrop-blur-md px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm z-10">
               <Lock className="w-3 h-3 text-action-primary" />
-              <span className="text-[10px] font-bold text-white uppercase tracking-wider">Privé</span>
+              <span className="text-[10px] font-bold text-white tracking-wide">Événement privé</span>
             </div>
           )
         )}
@@ -215,7 +215,17 @@ export const EventCard = memo(function EventCard({
           
           <div className="flex items-center gap-2">
             {/* Avatars */}
-            {count > 0 ? (
+            {event?.isPrivate && (event as any)?.showParticipants === false && event?.creatorId !== user?.id ? (
+              event?.creator?.profile?.avatarUrl ? (
+                <div className="w-[26px] h-[26px] rounded-full border-[2px] border-white overflow-hidden shrink-0 shadow-sm" title="Organisateur">
+                  <SafeImage src={event.creator.profile.avatarUrl} alt="Organisateur" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-[26px] h-[26px] rounded-full bg-[var(--action-primary)] text-white text-[10px] font-bold flex items-center justify-center border-[2px] border-white shrink-0 shadow-sm" title="Organisateur">
+                  👑
+                </div>
+              )
+            ) : count > 0 ? (
               <div className="flex -space-x-2">
                 {Array.from({ length: Math.min(count, 3) }).map((_, i) => {
                   const avatar = attendees[i]?.user?.profile?.avatarUrl;

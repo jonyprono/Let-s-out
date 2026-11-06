@@ -644,8 +644,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   </span>
                 )}
                 {event.isPrivate && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-700">
-                    🔒 Privé
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm">
+                    <Lock className="w-3 h-3 text-[var(--brand-orange-500)]" />
+                    Événement privé • Sur invitation uniquement
                   </span>
                 )}
               </div>
@@ -767,36 +768,52 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             </div>
 
             {/* Participants */}
-            <div>
-              <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">OUTSTERS</h2>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-[8px]">
-                  {/* Stacked avatars */}
-                  <div className="flex items-center -space-x-[8px]">
-                    {displayedAttendees.map((booking: any, index: number) => {
-                      const avatar = booking?.user?.profile?.avatarUrl
-                      const name = booking?.user?.profile?.displayName || '?'
-                      return (
-                        <div key={index} className="w-[32px] h-[32px] rounded-full border-2 border-white bg-[var(--color-background-secondary)] overflow-hidden relative" style={{ zIndex: 10 - index }}>
-                          <SafeImage src={avatar} alt={name} className="w-full h-full object-cover" />
+            {(() => {
+              const hideAttendeeProfiles = event.isPrivate && (event as any).showParticipants === false && !isCreator && !(event.coHostIds || []).includes(user?.id);
+              return (
+                <div>
+                  <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">OUTSTERS</h2>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-[8px]">
+                      {/* Stacked avatars or hidden indicator */}
+                      {hideAttendeeProfiles ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-[32px] h-[32px] rounded-full bg-gray-100 dark:bg-[#252525] border border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-500">
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <span className="text-[12px] text-gray-500 italic">Profils masqués par l'organisateur</span>
                         </div>
-                      )
-                    })}
+                      ) : (
+                        <div className="flex items-center -space-x-[8px]">
+                          {displayedAttendees.map((booking: any, index: number) => {
+                            const avatar = booking?.user?.profile?.avatarUrl
+                            const name = booking?.user?.profile?.displayName || '?'
+                            return (
+                              <div key={index} className="w-[32px] h-[32px] rounded-full border-2 border-white bg-[var(--color-background-secondary)] overflow-hidden relative" style={{ zIndex: 10 - index }}>
+                                <SafeImage src={avatar} alt={name} className="w-full h-full object-cover" />
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                      {/* Count text */}
+                      <p className="text-[14px] text-[var(--brand-orange-500)] font-semibold font-poppins">
+                        {hasJoined ? 'Vous' : ''}
+                        {extraCount > 0 ? `${hasJoined ? ' +' : '+'}${extraCount} OUTSTERS` : attendeeCount > 0 ? ` ${attendeeCount} OUTSTER${attendeeCount > 1 ? 'S' : ''}` : ''}
+                      </p>
+                    </div>
+                    {!hideAttendeeProfiles && (
+                      <button
+                        onClick={() => setShowParticipantsModal(true)}
+                        className="px-[12px] py-[6px] rounded-[8px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[12px] font-medium text-[var(--color-text-secondary)] active:scale-95 transition-transform"
+                      >
+                        Voir la liste
+                      </button>
+                    )}
                   </div>
-                  {/* Count text */}
-                  <p className="text-[14px] text-[var(--brand-orange-500)] font-semibold font-poppins">
-                    {hasJoined ? 'Vous' : ''}
-                    {extraCount > 0 ? `${hasJoined ? ' +' : '+'}${extraCount} OUTSTERS` : attendeeCount > 0 ? ` ${attendeeCount} OUTSTER${attendeeCount > 1 ? 'S' : ''}` : ''}
-                  </p>
                 </div>
-                <button
-                  onClick={() => setShowParticipantsModal(true)}
-                  className="px-[12px] py-[6px] rounded-[8px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[12px] font-medium text-[var(--color-text-secondary)] active:scale-95 transition-transform"
-                >
-                  Voir la liste
-                </button>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* Commentaires */}
             <div className="border border-[var(--border-default)] rounded-[12px] bg-[var(--color-background-primary)] overflow-hidden h-[400px]">
@@ -1041,6 +1058,23 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   'Rejoindre'
                 )}
               </Button>
+            </div>
+          ) : event.isPrivate ? (
+            <div className="flex-1 flex flex-col items-center gap-1.5">
+              <Button
+                disabled
+                className="w-full rounded-full font-medium text-[14px] font-poppins bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                Uniquement sur invitation
+              </Button>
+              <button
+                type="button"
+                onClick={() => navigate('/scan-qr')}
+                className="text-[12px] text-[var(--brand-orange-500)] font-medium hover:underline py-0.5"
+              >
+                Vous avez un code ? Rejoindre avec le code
+              </button>
             </div>
           ) : (
             <Button

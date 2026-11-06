@@ -372,6 +372,8 @@ export default function App() {
             <Route path="/events/:id/comments" element={<EventCommentsPage />} />
             <Route path="/videos" element={<VideosPage />} />
             <Route path="/scan-qr" element={<JoinPrivateEvent />} />
+            <Route path="/event/join/:code" element={<JoinPrivateEvent />} />
+            <Route path="/events/join/:code" element={<JoinPrivateEvent />} />
             <Route path="/events/:id/pay" element={<PaymentPage />} />
             <Route path="/payments/:bookingId" element={<PaymentReceipt />} />
             <Route path="/verify-profile" element={<VerifyProfile />} />
