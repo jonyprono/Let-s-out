@@ -966,7 +966,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-primary)]" />
           </button>
           <span className="text-[length:var(--font-size-title-xsmall)] font-semibold text-[var(--color-text-primary)]">
-            {isEdit ? "Modifier l'événement" : "Créer un événement"}
+            {isEdit ? "Modifier l'événement, la sortie" : "Créer un événement, une sortie"}
           </span>
         </div>
       </div>
@@ -1098,10 +1098,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="animate-in slide-in-from-right-2">
               {/* Nom */}
               <InputField
-                label="Nom"
+                label="Nom de l'événement, sortie"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="Nom de l'événement..."
+                placeholder="Nom de l'événement, sortie..."
               />
 
               {/* Date et heure de début */}

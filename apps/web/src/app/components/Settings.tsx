@@ -122,6 +122,7 @@ export function Settings({ onBack }: SettingsProps) {
   const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'rejected' | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [deleteReason, setDeleteReason] = useState('');
 
@@ -158,7 +159,7 @@ export function Settings({ onBack }: SettingsProps) {
   const userBadges: any[] = (user as any)?.badges ?? myProfile?.badges ?? [];
   const hasEarlyAdopter = userBadges.some((b: any) => b.badge === 'Early adopter');
 
-  const handleLogout = () => doLogout();
+  const handleLogout = () => setShowLogoutModal(true);
 
   const handleShare = async () => {
     try {
@@ -814,6 +815,55 @@ export function Settings({ onBack }: SettingsProps) {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modale de confirmation de déconnexion ─────────────────────────── */}
+      {showLogoutModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-4 pb-6 sm:p-4"
+          onClick={() => !loggingOut && setShowLogoutModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-[#1A1A1A] w-full max-w-sm rounded-[32px] p-6 shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center text-center gap-3 mb-6">
+              <div className="w-16 h-16 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-[#FF7A00]">
+                <LogOut className="w-8 h-8" />
+              </div>
+              <h2 className="text-[20px] font-bold text-gray-900 dark:text-white">
+                Voulez-vous vous déconnecter ?
+              </h2>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
+                Vous devrez vous reconnecter pour accéder à vos événements et messages.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="button"
+                disabled={loggingOut}
+                onClick={() => {
+                  setShowLogoutModal(false);
+                  doLogout();
+                }}
+                className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-[#FF7A00] text-white hover:bg-[#E06C00] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/20 disabled:opacity-50"
+              >
+                {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                Oui, me déconnecter
+              </button>
+
+              <button
+                type="button"
+                disabled={loggingOut}
+                onClick={() => setShowLogoutModal(false)}
+                className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#303030] active:scale-[0.98] transition-all"
+              >
+                Non, annuler
+              </button>
+            </div>
           </div>
         </div>
       )}

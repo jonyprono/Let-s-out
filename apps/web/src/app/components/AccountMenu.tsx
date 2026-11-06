@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   UserCircle02Icon,
@@ -65,6 +66,7 @@ export function AccountMenu() {
   const friendsCount = friends?.length ?? (user?.profile?.followersCount ?? 0);
   const joinedCount = activity?.joinedEvents?.length ?? 0;
   const pendingRequests = (friendRequests?.data?.length ?? 0) + (friendRequests?.received?.length ?? 0);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const rating = myProfile?.detailedStats?.rating?.toFixed(1) ?? '0.0';
 
   const menuItems = [
@@ -270,10 +272,7 @@ export function AccountMenu() {
           {/* Logout */}
           <div className="pt-6 pb-4">
             <button
-              onClick={() => {
-                logout();
-                navigate('/login');
-              }}
+              onClick={() => setShowLogoutModal(true)}
               className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl active:opacity-70 transition-opacity"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round">
@@ -284,6 +283,55 @@ export function AccountMenu() {
           </div>
         </div>
       </div>
+
+      {/* ── Modale de confirmation de déconnexion ─────────────────────────── */}
+      {showLogoutModal && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm px-4 pb-6 sm:p-4"
+          onClick={() => setShowLogoutModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-[#1A1A1A] w-full max-w-sm rounded-[32px] p-6 shadow-2xl animate-in slide-in-from-bottom-10 sm:zoom-in-95"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col items-center text-center gap-3 mb-6">
+              <div className="w-16 h-16 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-[#FF7A00]">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                </svg>
+              </div>
+              <h2 className="text-[20px] font-bold text-gray-900 dark:text-white">
+                Voulez-vous vous déconnecter ?
+              </h2>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">
+                Vous devrez vous reconnecter pour accéder à vos événements et messages.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLogoutModal(false);
+                  logout();
+                  navigate('/login');
+                }}
+                className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-[#FF7A00] text-white hover:bg-[#E06C00] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/20"
+              >
+                Oui, me déconnecter
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#303030] active:scale-[0.98] transition-all"
+              >
+                Non, annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

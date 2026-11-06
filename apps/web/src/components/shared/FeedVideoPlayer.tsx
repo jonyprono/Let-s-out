@@ -40,12 +40,13 @@ export function FeedVideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const controlsTimeoutRef = useRef<any>(null);
 
-  // Auto-generate Cloudinary poster if available and poster not explicitly provided
+  // Auto-generate Cloudinary poster if available and poster not explicitly provided,
+  // with a transparent 1x1 gif fallback to completely suppress the native Android black play watermark
   const derivedPoster =
     poster ||
     (src.includes('cloudinary.com') && src.includes('/video/upload/')
       ? src.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
-      : undefined);
+      : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
 
   // Pause all other videos on the page when this video starts playing
   const pauseOtherVideos = useCallback(() => {

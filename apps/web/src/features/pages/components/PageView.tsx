@@ -29,6 +29,7 @@ import {
   Copy,
   Pencil,
   X,
+  Play,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
@@ -59,6 +60,7 @@ export function PageView() {
   const [postImagePreviews, setPostImagePreviews] = useState<string[]>([])
   const [postVideo, setPostVideo] = useState<File | null>(null)
   const [postVideoPreview, setPostVideoPreview] = useState<string | null>(null)
+  const [isVideoReady, setIsVideoReady] = useState(false)
   const [publishing, setPublishing] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   
@@ -216,6 +218,7 @@ export function PageView() {
       if (postVideoPreview) {
         URL.revokeObjectURL(postVideoPreview)
       }
+      setIsVideoReady(false)
       const previewUrl = URL.createObjectURL(file)
       setPostVideoPreview(previewUrl)
     }
@@ -251,6 +254,7 @@ export function PageView() {
       if (postVideoPreview) URL.revokeObjectURL(postVideoPreview)
       setPostVideo(null)
       setPostVideoPreview(null)
+      setIsVideoReady(false)
       setPostStep(1)
       setShowCreatePostModal(false)
     } catch (err: any) {
@@ -946,6 +950,13 @@ export function PageView() {
                 {postVideoPreview && (
                   <div className="relative mx-4 my-2 rounded-2xl overflow-hidden bg-black border border-gray-200 dark:border-gray-800 shadow-md">
                     <div className="relative aspect-video max-h-72 w-full flex items-center justify-center bg-black">
+                      {/* Spinner pendant le chargement / décodage de la vidéo (évite tout affichage de l'icône noire native Android) */}
+                      {!isVideoReady && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black z-[1]">
+                          <Loader2 className="w-8 h-8 text-[#FF7A00] animate-spin" />
+                        </div>
+                      )}
+
                       <video
                         src={postVideoPreview}
                         playsInline
@@ -953,8 +964,33 @@ export function PageView() {
                         autoPlay
                         loop
                         preload="auto"
-                        className="w-full h-full object-cover"
+                        controls={false}
+                        poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                        disablePictureInPicture
+                        onLoadedData={() => setIsVideoReady(true)}
+                        onCanPlay={() => setIsVideoReady(true)}
+                        className={`w-full h-full object-cover transition-opacity duration-300 pointer-events-none ${
+                          isVideoReady ? 'opacity-100' : 'opacity-0'
+                        }`}
                       />
+
+                      {/* Center Play Icon Badge */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                        <div className="w-12 h-12 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white shadow-xl border border-white/20">
+                          <Play className="w-6 h-6 fill-white ml-0.5" />
+                        </div>
+                      </div>
+
+                      {/* Video info badge */}
+                      <div className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-sm z-10">
+                        <Video className="w-3.5 h-3.5 text-[#FF7A00]" />
+                        <span>Vidéo attachée</span>
+                        {postVideo && (
+                          <span className="text-gray-300 font-normal">
+                            · {(postVideo.size / (1024 * 1024)).toFixed(1)} Mo
+                          </span>
+                        )}
+                      </div>
 
                       {/* Remove video button */}
                       <button
@@ -963,9 +999,10 @@ export function PageView() {
                           if (postVideoPreview) URL.revokeObjectURL(postVideoPreview)
                           setPostVideo(null)
                           setPostVideoPreview(null)
+                          setIsVideoReady(false)
                           if (videoInputRef.current) videoInputRef.current.value = ''
                         }}
-                        className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-transform active:scale-90 shadow-md backdrop-blur-md text-xs z-10"
+                        className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-black/70 hover:bg-black/90 text-white flex items-center justify-center transition-transform active:scale-90 shadow-md backdrop-blur-md text-xs z-20"
                         title="Supprimer la vidéo"
                       >
                         <X className="w-4 h-4" />
