@@ -342,8 +342,31 @@ function PagePostCard({
                   <Maximize2 className="w-3.5 h-3.5" />
                 </div>
               </div>
+            ) : post.mediaUrls.length === 2 ? (
+              /* Grille 2 photos côte à côte (style Twitter / X comme Image 2) */
+              <div className="grid grid-cols-2 gap-1 w-full bg-black h-[280px] sm:h-[340px] overflow-hidden">
+                {post.mediaUrls.map((url: string, idx: number) => (
+                  <div
+                    key={idx}
+                    className="relative w-full h-full cursor-pointer overflow-hidden group bg-neutral-900"
+                    onClick={() => {
+                      setLightboxIndex(idx);
+                      setLightboxOpen(true);
+                    }}
+                  >
+                    <SafeImage
+                      src={url}
+                      alt={`Photo ${idx + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              /* Multi-photo carousel with swipe */
+              /* Multi-photo carousel with swipe (> 2 photos) */
               <div className="relative w-full h-[280px] sm:h-[320px] bg-black group">
                 <Carousel setApi={setCarouselApi} className="w-full h-full">
                   <CarouselContent className="h-full">

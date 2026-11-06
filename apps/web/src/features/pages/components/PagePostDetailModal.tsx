@@ -374,8 +374,31 @@ export function PagePostDetailModal({
                       <Maximize2 className="w-4 h-4" />
                     </div>
                   </div>
+                ) : post.mediaUrls.length === 2 ? (
+                  /* Grille 2 photos côte à côte (style Twitter / X) */
+                  <div className="grid grid-cols-2 gap-1 w-full bg-black h-[320px] sm:h-[400px] overflow-hidden">
+                    {post.mediaUrls.map((url: string, idx: number) => (
+                      <div
+                        key={idx}
+                        className="relative w-full h-full cursor-pointer overflow-hidden group bg-neutral-900"
+                        onClick={() => {
+                          setLightboxInitialIndex(idx);
+                          setLightboxOpen(true);
+                        }}
+                      >
+                        <SafeImage
+                          src={url}
+                          alt={`Photo ${idx + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Maximize2 className="w-4 h-4" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  /* Multi-Photo Carousel with swipe & click to zoom */
+                  /* Multi-Photo Carousel with swipe & click to zoom (> 2 photos) */
                   <div className="relative w-full bg-black group">
                     <Carousel setApi={setApi} className="w-full">
                       <CarouselContent>

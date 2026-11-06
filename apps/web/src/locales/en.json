@@ -171,7 +171,7 @@
     "step3PseudoPlaceholder": "Username",
     "step4Title": "And what about your birthday?",
     "step4Subtitle": "This information will remain private and will help us to provide you with the best possible event suggestions.",
-    "step4DatePlaceholder": "Select a date",
+    "step4DatePlaceholder": "DD/MM/YYYY",
     "step5Title": "Which town do you live in?",
     "step5Subtitle": "Enter your town to find events and meet friends near you.",
     "step5CityPlaceholder": "Enter your city",

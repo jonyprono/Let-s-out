@@ -145,6 +145,65 @@ export function Signup({ onBack }: SignupProps) {
   // Step 4 – Birthday
   const [birthday, setBirthday] = useState('')
   const [birthdayText, setBirthdayText] = useState('')
+  const birthdayNativeRef = useRef<HTMLInputElement>(null)
+
+  const handleBirthdayChange = (raw: string) => {
+    if (!raw) {
+      setBirthdayText('')
+      setBirthday('')
+      return
+    }
+
+    // Gestion du collage au format ISO AAAA-MM-JJ ou AAAA/MM/JJ
+    const isoMatch = raw.trim().match(/^(\d{4})[\/\-\.](\d{2})[\/\-\.](\d{2})$/)
+    if (isoMatch) {
+      const [, yyyy, mm, dd] = isoMatch
+      setBirthdayText(`${dd}/${mm}/${yyyy}`)
+      setBirthday(`${yyyy}-${mm}-${dd}`)
+      return
+    }
+
+    // Extraction des chiffres uniquement (max 8 chiffres pour JJMMAAAA)
+    const digits = raw.replace(/\D/g, '').slice(0, 8)
+    let formatted = digits
+    if (digits.length >= 3 && digits.length <= 4) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`
+    } else if (digits.length > 4) {
+      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
+    }
+    setBirthdayText(formatted)
+
+    if (digits.length === 8) {
+      const day = parseInt(digits.slice(0, 2), 10)
+      const month = parseInt(digits.slice(2, 4), 10)
+      const year = parseInt(digits.slice(4, 8), 10)
+      const currentYear = new Date().getFullYear()
+
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= currentYear) {
+        const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+        const d = new Date(`${iso}T00:00:00`)
+        if (!isNaN(d.getTime()) && d.getDate() === day && d.getMonth() + 1 === month) {
+          setBirthday(iso)
+          return
+        }
+      }
+    }
+    setBirthday('')
+  }
+
+  const handleNativeBirthdayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setBirthday(val)
+    if (val) {
+      const parts = val.split('-')
+      if (parts.length === 3) {
+        const [yyyy, mm, dd] = parts
+        setBirthdayText(`${dd}/${mm}/${yyyy}`)
+      }
+    } else {
+      setBirthdayText('')
+    }
+  }
 
   // Step 5 – City
   const [city, setCity] = useState('')
@@ -897,42 +956,35 @@ export function Signup({ onBack }: SignupProps) {
             <div className="relative">
               <Input
                 type="text"
+                inputMode="numeric"
+                maxLength={10}
                 value={birthdayText}
-                onChange={(e) => {
-                  let val = e.target.value
-                  setBirthdayText(val)
-                  const match = val.match(/^(\d{2})[\/\-\.](\d{2})[\/\-\.](\d{4})$/)
-                  if (match) {
-                    setBirthday(`${match[3]}-${match[2]}-${match[1]}`)
-                  } else {
-                    setBirthday('')
-                  }
-                }}
-                placeholder={t('signup.step4DatePlaceholder')}
+                onChange={(e) => handleBirthdayChange(e.target.value)}
+                placeholder={t('signup.step4DatePlaceholder') || 'JJ/MM/AAAA'}
                 icon={
-                  <button
-                    type="button"
-                    onClick={() => (document.getElementById('birthday-native') as HTMLInputElement)?.showPicker?.()}
-                    className="focus:outline-none text-[var(--color-icon-secondary)]"
+                  <div
+                    className="relative flex items-center justify-center w-7 h-7 cursor-pointer"
+                    onClick={() => {
+                      try {
+                        birthdayNativeRef.current?.showPicker?.()
+                      } catch {}
+                    }}
                   >
-                    <Calendar01Icon size={18} strokeWidth={1.5} />
-                  </button>
+                    <Calendar01Icon size={18} strokeWidth={1.5} className="text-[var(--color-icon-secondary)] pointer-events-none" />
+                    <input
+                      ref={birthdayNativeRef}
+                      type="date"
+                      id="birthday-native"
+                      value={birthday}
+                      max={new Date().toISOString().split('T')[0]}
+                      min="1900-01-01"
+                      onChange={handleNativeBirthdayChange}
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 [color-scheme:light_dark]"
+                      aria-label={t('signup.step4Title')}
+                    />
+                  </div>
                 }
-              />
-              <input
-                type="date"
-                id="birthday-native"
-                value={birthday}
-                onChange={(e) => {
-                  setBirthday(e.target.value)
-                  if (e.target.value) {
-                    const d = new Date(e.target.value + 'T00:00:00')
-                    setBirthdayText(
-                      d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-                    )
-                  }
-                }}
-                className="sr-only"
               />
             </div>
           </div>
