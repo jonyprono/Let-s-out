@@ -65,19 +65,34 @@ export function ManageEvent() {
     enabled: !!id,
   });
 
+  const { data: myBookingData, isLoading: isLoadingBooking } = useQuery({
+    queryKey: ['events', id, 'my-booking'],
+    queryFn: async () => {
+      try {
+        const { data } = await apiClient.get(`/events/${id}/my-booking`);
+        return data?.data ?? data;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!id && !!user,
+  });
+
   // Redirect unauthorized users back to details
   useEffect(() => {
-    if (!isLoading && !isLoadingAttendees && event && user) {
+    if (!isLoading && !isLoadingAttendees && !isLoadingBooking && event && user) {
       const isOrganizer = event.creatorId === user.id || (event.coHostIds || []).includes(user.id);
       const participants = Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || [];
-      const isConfirmedParticipant = participants.some((b: any) => b.userId === user.id);
+      const isInAttendees = participants.some((b: any) => b.userId === user.id);
+      const isConfirmedBooking = myBookingData?.status === 'CONFIRMED';
+      const isConfirmedParticipant = isInAttendees || isConfirmedBooking;
       
       if (!isOrganizer && !isConfirmedParticipant) {
         navigate(`/events/${id}`, { replace: true });
         toast.error("Vous devez payer et confirmer votre participation pour accéder à cet espace.");
       }
     }
-  }, [isLoading, isLoadingAttendees, event, user, attendeesData, navigate, id]);
+  }, [isLoading, isLoadingAttendees, isLoadingBooking, event, user, attendeesData, myBookingData, navigate, id]);
 
 
   const { data: pendingRequests } = useQuery({

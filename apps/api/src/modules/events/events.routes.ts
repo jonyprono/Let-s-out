@@ -18,6 +18,7 @@ const CreateEventSchema = z.object({
   requiresApproval: z.boolean().default(false),
   showInFeed: z.boolean().default(false),
   showParticipants: z.boolean().default(true),
+  allowGuestShare: z.boolean().default(false),
   address: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
@@ -1687,6 +1688,22 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({ where: { id } })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
+
+    // If private event, verify sharing/invitation permission
+    if (event.isPrivate) {
+      const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+      if (!isOrganizer) {
+        if (!event.allowGuestShare) {
+          return reply.code(403).send({ error: "L'organisateur n'a pas autorisé les invitations pour cet événement privé." })
+        }
+        const hasJoined = await app.prisma.booking.findFirst({
+          where: { eventId: id, userId: sub, status: 'CONFIRMED' }
+        })
+        if (!hasJoined) {
+          return reply.code(403).send({ error: "Vous devez d'abord rejoindre l'événement privé pour pouvoir inviter d'autres personnes." })
+        }
+      }
+    }
 
     const senderProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
     const senderName = senderProfile?.displayName || 'Quelqu\'un'

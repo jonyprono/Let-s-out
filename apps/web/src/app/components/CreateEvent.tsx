@@ -398,6 +398,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (d.maxAttendees) setMaxPlaces(String(d.maxAttendees))
       if (d.price !== undefined) setAmount(String(d.price))
       if (d.isPrivate !== undefined) setPrivacy(d.isPrivate ? 'PRIVATE' : 'PUBLIC')
+      if (d.showInFeed !== undefined) setShowInFeed(Boolean(d.showInFeed))
+      if (d.showParticipants !== undefined) setShowParticipants(Boolean(d.showParticipants))
+      if (d.allowGuestShare !== undefined) setAllowGuestInvites(Boolean(d.allowGuestShare))
       if (d.description) setDescription(d.description)
       if (d.coverUrl || d.mediaUrls?.length) {
         const urls: string[] = d.mediaUrls?.length ? d.mediaUrls : [d.coverUrl]
@@ -532,6 +535,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         genderRestriction,
         showInFeed: privacy === 'PRIVATE' ? showInFeed : false,
         showParticipants: privacy === 'PRIVATE' ? showParticipants : true,
+        allowGuestShare: privacy === 'PRIVATE' ? allowGuestInvites : false,
         coverUrl: coverExplicitlyCleared && coverFiles.length === 0 ? null : coverUrl,
         mediaUrls: coverExplicitlyCleared && coverFiles.length === 0 ? [] : (mediaUrls.length > 0 ? mediaUrls : undefined),
         // Cagnotte fields: send explicit null on edit to erase from DB when switching to free
@@ -668,6 +672,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         coverUrl: coverPreviews[0] || undefined,
         status: 'PUBLISHED',
         isPrivate: privacy === 'PRIVATE',
+        showInFeed: privacy === 'PRIVATE' ? showInFeed : false,
+        showParticipants: privacy === 'PRIVATE' ? showParticipants : true,
+        allowGuestShare: privacy === 'PRIVATE' ? allowGuestInvites : false,
         requiresApproval,
         maxAttendees: maxPlaces ? parseInt(maxPlaces) : undefined,
         price: amount ? parseFloat(amount) : undefined,

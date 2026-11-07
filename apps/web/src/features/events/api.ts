@@ -15,6 +15,9 @@ export interface Event {
   currency: string
   isPrivate: boolean
   requiresApproval: boolean
+  showInFeed?: boolean
+  showParticipants?: boolean
+  allowGuestShare?: boolean
   coHostIds?: string[]
   address?: string
   city?: string
@@ -93,6 +96,9 @@ export interface CreateEventPayload {
   currency?: string
   isPrivate?: boolean
   requiresApproval?: boolean
+  showInFeed?: boolean
+  showParticipants?: boolean
+  allowGuestShare?: boolean
   address?: string
   city?: string
   country?: string

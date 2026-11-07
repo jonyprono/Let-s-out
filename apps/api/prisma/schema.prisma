@@ -220,6 +220,7 @@ model Event {
   joinCode         String?       @unique
   showInFeed       Boolean       @default(false)  // Événement privé visible dans le fil
   showParticipants Boolean       @default(true)   // Profils des participants visibles
+  allowGuestShare  Boolean       @default(false)  // Autoriser les outsters/participants à partager l'événement privé
   poolCollected    Float         @default(0)
   poolWithdrawn    Float         @default(0)
   poolReleased     Boolean       @default(false)

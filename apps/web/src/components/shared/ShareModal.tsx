@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Copy, Share2, Download, Check } from 'lucide-react';
+import { Copy, Share2, Download, Check, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi } from '@/features/events/api';
+import { apiClient } from '@/lib/api-client';
+import { useAuthStore } from '@/stores/auth.store';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface ShareModalProps {
@@ -13,15 +15,37 @@ interface ShareModalProps {
 }
 
 export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
+  const { user } = useAuthStore();
   const [codeCopied, setCodeCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
-  // Fetch event details to get the join code
+  // Fetch event details to get the join code and privacy settings
   const { data: eventData } = useQuery({
     queryKey: ['events', eventId],
     queryFn: () => eventsApi.getById(eventId).then(r => r.data),
     enabled: !!eventId,
   });
+
+  // Fetch current user's booking to check participation
+  const { data: myBookingData } = useQuery({
+    queryKey: ['events', eventId, 'my-booking'],
+    queryFn: async () => {
+      try {
+        const { data } = await apiClient.get(`/events/${eventId}/my-booking`);
+        return data?.data ?? data;
+      } catch {
+        return null;
+      }
+    },
+    enabled: !!eventId && !!user,
+  });
+
+  const isOrganizer = Boolean(user && eventData && (eventData.creatorId === user.id || (eventData.coHostIds || []).includes(user.id)));
+  const isJoined = Boolean(myBookingData && myBookingData.status === 'CONFIRMED');
+  const isPrivate = Boolean(eventData?.isPrivate);
+  const allowGuestShare = Boolean(eventData?.allowGuestShare);
+
+  const canShare = !isPrivate || isOrganizer || (isJoined && allowGuestShare);
   
   const joinCode = eventData?.joinCode || eventId.slice(0, 5).toUpperCase();
   const eventLink = `https://letsout.app/event/join/${joinCode}`;
@@ -144,6 +168,37 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
     document.body.removeChild(a);
     toast.success('QR Code téléchargé !');
   };
+
+  if (eventData && !canShare) {
+    return createPortal(
+      <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
+        <div className="absolute inset-0" onClick={onClose} />
+        <div className="w-full max-h-[90%] bg-white dark:bg-[#1A1A1A] rounded-t-[28px] flex flex-col relative animate-in slide-in-from-bottom duration-300 shadow-2xl p-6">
+          <div className="flex justify-center pt-1 pb-3 flex-shrink-0">
+            <div className="w-10 h-1 bg-gray-200 rounded-full" />
+          </div>
+          <div className="flex flex-col items-center text-center py-4">
+            <div className="w-16 h-16 rounded-full bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-action-primary" />
+            </div>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">Partage restreint</h3>
+            <p className="text-[14px] text-gray-600 dark:text-gray-300 max-w-xs mb-6 leading-relaxed">
+              {!isJoined
+                ? "Cet événement est privé. Vous devez d'abord avoir rejoint l'événement pour pouvoir le partager."
+                : "L'organisateur de cet événement privé n'a pas autorisé les participants à le partager."}
+            </p>
+            <button
+              onClick={onClose}
+              className="w-full py-3.5 rounded-full bg-action-primary text-white font-semibold text-[14px] active:scale-95 transition-transform shadow-md"
+            >
+              Compris
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  }
 
   return createPortal(
     <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">

@@ -14,7 +14,6 @@ export function JoinPrivateEvent() {
   const [code, setCode] = useState(urlCode ? urlCode.toUpperCase() : '');
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  const [hasPermission, setHasPermission] = useState(true);
   const autoJoinedRef = useRef(false);
   // Ref to track scanning state in the cleanup function — avoids stale closure bug
   // (the cleanup captures variables from mount time; the ref always reflects current value)
@@ -30,10 +29,6 @@ export function JoinPrivateEvent() {
   }, [urlCode]);
 
   useEffect(() => {
-    if (Capacitor.isNativePlatform()) {
-      checkPermissions();
-    }
-    
     // Cleanup: stop the camera unconditionally on unmount, regardless of how the
     // user exits (app back button, system back, programmatic navigation).
     // stopScan() is a no-op if the camera is already stopped, so this is safe.
@@ -48,20 +43,18 @@ export function JoinPrivateEvent() {
     };
   }, []);
 
-  const checkPermissions = async () => {
+  const requestCameraPermission = async (): Promise<boolean> => {
     try {
-      const { camera } = await BarcodeScanner.checkPermissions();
-      if (camera === 'granted') {
-        setHasPermission(true);
-      } else if (camera === 'prompt') {
-        const result = await BarcodeScanner.requestPermissions();
-        setHasPermission(result.camera === 'granted');
-      } else {
-        setHasPermission(false);
+      const status = await BarcodeScanner.checkPermissions();
+      if (status.camera === 'granted') {
+        return true;
       }
+      
+      const result = await BarcodeScanner.requestPermissions();
+      return result.camera === 'granted';
     } catch (e) {
-      console.error(e);
-      setHasPermission(false);
+      console.error('Erreur vérification permission caméra:', e);
+      return false;
     }
   };
 
@@ -71,8 +64,30 @@ export function JoinPrivateEvent() {
       return;
     }
 
-    if (!hasPermission) {
-      toast.error('Permission d\'utiliser la caméra refusée.');
+    // On Android, ensure Google ML Kit barcode scanner module is installed
+    if (Capacitor.getPlatform() === 'android') {
+      try {
+        const { available } = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
+        if (!available) {
+          toast.loading('Téléchargement du module de scan en cours...', { duration: 3000 });
+          await BarcodeScanner.installGoogleBarcodeScannerModule();
+        }
+      } catch (e) {
+        console.warn('Erreur vérification module scanner:', e);
+      }
+    }
+
+    const granted = await requestCameraPermission();
+    if (!granted) {
+      toast.error('Permission caméra requise pour scanner le QR code.', {
+        action: {
+          label: 'Paramètres',
+          onClick: () => {
+            BarcodeScanner.openSettings().catch(() => {});
+          },
+        },
+        duration: 5000,
+      });
       return;
     }
 
@@ -97,6 +112,7 @@ export function JoinPrivateEvent() {
 
       await BarcodeScanner.startScan();
     } catch (e) {
+      console.error('Erreur démarrage scanner:', e);
       toast.error('Erreur lors du démarrage du scanner');
       stopScan();
     }
