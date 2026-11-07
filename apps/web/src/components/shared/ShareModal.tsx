@@ -79,23 +79,69 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
     }
   };
 
-  const downloadQR = () => {
+  const downloadQR = async () => {
     const svg = document.getElementById('share-qr-code');
     if (!svg) return;
+
+    // 1. Serialize SVG → PNG via canvas
     const svgData = new XMLSerializer().serializeToString(svg);
     const canvas = document.createElement('canvas');
-    canvas.width = 200;
-    canvas.height = 200;
+    const SIZE = 400; // Higher resolution for better quality
+    canvas.width = SIZE;
+    canvas.height = SIZE;
     const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.onload = () => {
-      ctx?.drawImage(img, 0, 0);
-      const a = document.createElement('a');
-      a.download = `qr-${eventId}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
-    };
-    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+    if (!ctx) return;
+
+    await new Promise<void>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, SIZE, SIZE);
+        ctx.drawImage(img, 0, 0, SIZE, SIZE);
+        resolve();
+      };
+      img.onerror = reject;
+      img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    });
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const base64Data = dataUrl.split(',')[1];
+    const fileName = `letsout-qr-${eventId}.png`;
+
+    try {
+      // Try Capacitor native save (Android / iOS)
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        
+        // Write to cache directory
+        const writeResult = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache,
+        });
+
+        // Share it via the native share sheet (user can save to gallery from there)
+        const { Share } = await import('@capacitor/share');
+        await Share.share({
+          title: `QR Code – ${eventTitle}`,
+          text: `QR Code pour "${eventTitle}"`,
+          url: writeResult.uri,
+          dialogTitle: 'Enregistrer le QR Code dans la galerie',
+        });
+        return;
+      }
+    } catch {
+      // Not native or plugin not available — fall through to web download
+    }
+
+    // Web fallback: anchor download
+    const a = document.createElement('a');
+    a.download = fileName;
+    a.href = dataUrl;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     toast.success('QR Code téléchargé !');
   };
 

@@ -51,6 +51,10 @@ export function CreatedEventsList() {
     return createdEvents.filter((e: any) => e.poolTarget != null || e.poolMode != null);
   }, [createdEvents]);
 
+  // Determine which events are co-hosted (not created by the user, but they are in coHostIds)
+  const isCoHostedEvent = (ev: any) => 
+    isOwnProfile && user?.id && ev.creatorId !== user.id && (ev.coHostIds || []).includes(user.id);
+
   return (
     <div className="w-full min-h-full flex flex-col bg-[#F9F9F9] dark:bg-[#0a0a0b] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
       
@@ -126,7 +130,12 @@ export function CreatedEventsList() {
               <p className="text-[13px] text-gray-400">Aucun événement à venir.</p>
             ) : (
               upcomingEvents.map((ev: any) => (
-                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
+                <div key={ev.id} className="relative">
+                  {isCoHostedEvent(ev) && (
+                    <span className="absolute top-2 right-2 z-10 text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Co-organisateur</span>
+                  )}
+                  <RowEventCard event={ev} onClick={() => navigate(`/events/${ev.id}/manage`)} />
+                </div>
               ))
             )}
           </div>
@@ -137,7 +146,12 @@ export function CreatedEventsList() {
               <p className="text-[13px] text-gray-400">Aucun événement passé.</p>
             ) : (
               pastEvents.map((ev: any) => (
-                <RowEventCard key={ev.id} event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
+                <div key={ev.id} className="relative">
+                  {isCoHostedEvent(ev) && (
+                    <span className="absolute top-2 right-2 z-10 text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Co-organisateur</span>
+                  )}
+                  <RowEventCard event={ev} onClick={() => navigate(isOwnProfile ? `/events/${ev.id}/manage` : `/events/${ev.id}`)} />
+                </div>
               ))
             )}
           </div>

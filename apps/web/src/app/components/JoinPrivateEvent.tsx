@@ -189,10 +189,19 @@ export function JoinPrivateEvent() {
   return (
     <div className="w-full h-full bg-white dark:bg-[#1A1A1A] flex flex-col">
       <div className="px-6 pt-safe-4 pb-4 border-b border-gray-100 dark:border-white/10 flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center bg-gray-100 dark:bg-[#2a2a2a] rounded-full">
-          <ChevronLeft className="w-5 h-5 text-gray-700" />
+        <button 
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate('/');
+            }
+          }} 
+          className="w-9 h-9 flex items-center justify-center bg-gray-100 dark:bg-[#2a2a2a] rounded-full active:scale-95 transition-transform"
+        >
+          <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
         </button>
-        <h1 className="text-[17px] font-bold text-[#1A1A1A]">Événement privé</h1>
+        <h1 className="text-[17px] font-bold text-[#1A1A1A] dark:text-white">Rejoindre via code</h1>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center -mt-10">

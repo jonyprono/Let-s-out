@@ -1180,6 +1180,46 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 onClick={() => setShowPrivacySheet(true)}
               />
 
+              {/* Options visibles pour les événements PRIVÉS */}
+              {privacy === 'PRIVATE' && (
+                <div className="rounded-[12px] border border-[var(--border-default)] bg-[var(--color-background-secondary,#FAFAFA)] dark:bg-[#1A1A1A] px-4 py-3 space-y-3 animate-in slide-in-from-top-1">
+                  <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Options de l'événement privé</p>
+
+                  {/* Visible dans le fil d'actualité */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]">Visible dans le fil d'actualité</p>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-tight">
+                        S'affiche avec la mention «&nbsp;Privé&nbsp;». Pour rejoindre, les utilisateurs devront passer par le code ou lien d'invitation.
+                      </p>
+                    </div>
+                    <SettingsToggle checked={showInFeed} onChange={setShowInFeed} />
+                  </div>
+
+                  {/* Autoriser les invitations entre OUTSTERS */}
+                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-[var(--border-tertiary)]">
+                    <div className="flex-1">
+                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]">Invitations entre OUTSTERS</p>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-tight">
+                        Les participants peuvent inviter d'autres OUTSTERS
+                      </p>
+                    </div>
+                    <SettingsToggle checked={allowGuestInvites} onChange={setAllowGuestInvites} />
+                  </div>
+
+                  {/* Profils des participants visibles */}
+                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-[var(--border-tertiary)]">
+                    <div className="flex-1">
+                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]">Profils des participants visibles</p>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-tight">
+                        Si non, seul l'organisateur sera visible
+                      </p>
+                    </div>
+                    <SettingsToggle checked={showParticipants} onChange={setShowParticipants} />
+                  </div>
+                </div>
+              )}
+
               {/* Restriction de genre */}
               <InputField
                 label="Restriction de genre"

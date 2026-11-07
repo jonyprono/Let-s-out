@@ -706,10 +706,13 @@ export default async function usersRoutes(app: FastifyInstance) {
     const { sub } = req.user as { sub: string }
     const isOwner = sub === userId
 
-    // Events created by user
+    // Events created by user OR where user is a co-host
     const createdEvents = await app.prisma.event.findMany({
       where: { 
-        creatorId: userId, 
+        OR: [
+          { creatorId: userId },
+          { coHostIds: { has: userId } },
+        ],
         status: 'PUBLISHED', 
         ...(isOwner ? {} : { isPrivate: false }) 
       },
