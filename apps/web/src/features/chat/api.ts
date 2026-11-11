@@ -40,6 +40,40 @@ export interface MessageReaction {
   }
 }
 
+export interface PollVote {
+  id: string
+  optionId: string
+  userId: string
+  createdAt: string
+  user?: {
+    id: string
+    profile?: {
+      displayName: string
+      avatarUrl?: string | null
+    } | null
+  }
+}
+
+export interface PollOption {
+  id: string
+  pollId: string
+  text: string
+  order: number
+  votes: PollVote[]
+}
+
+export interface Poll {
+  id: string
+  messageId: string
+  question: string
+  allowMultiple: boolean
+  expiresAt: string | null
+  isClosed: boolean
+  createdAt: string
+  updatedAt: string
+  options: PollOption[]
+}
+
 export interface Message {
   id: string
   content: string | null
@@ -50,6 +84,7 @@ export interface Message {
   createdAt: string
   isDeleted?: boolean
   reactions?: MessageReaction[]
+  poll?: Poll | null
   sender?: {
     id?: string
     profile?: {
@@ -144,6 +179,24 @@ export const chatApi = {
 
   markAsRead: async (conversationId: string): Promise<void> => {
     await apiClient.post(`/chat/conversations/${conversationId}/read`)
+  },
+
+  createPoll: async (
+    conversationId: string,
+    payload: {
+      question: string
+      options: string[]
+      allowMultiple?: boolean
+      durationDays?: number | null
+    }
+  ): Promise<Message> => {
+    const { data } = await apiClient.post(`/chat/conversations/${conversationId}/polls`, payload)
+    return data.data
+  },
+
+  votePoll: async (pollId: string, optionId: string): Promise<Poll> => {
+    const { data } = await apiClient.post(`/chat/polls/${pollId}/vote`, { optionId })
+    return data.data
   },
 }
 

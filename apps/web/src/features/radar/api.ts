@@ -16,7 +16,7 @@ export interface RadarSearchResult {
   isVerified: boolean
   gender: string | null
   outingType: string | null
-  proximityTier?: 'IMMEDIATE' | 'UNDER_1KM' | 'UNDER_3KM' | 'UNDER_5KM'
+  proximityTier?: 'IMMEDIATE' | 'UNDER_1KM' | 'UNDER_3KM' | 'UNDER_5KM' | 'UNDER_10KM'
   proximity: string
   inviteStatus: 'PENDING' | 'ACCEPTED' | 'DECLINED' | null
   canInvite: boolean
@@ -60,7 +60,7 @@ export const radarApi = {
 
   setVisibility: (data: {
     isVisible: boolean
-    durationMinutes?: 30 | 60
+    durationMinutes?: 30 | 60 | 180
     outingType?: string
     latitude?: number
     longitude?: number

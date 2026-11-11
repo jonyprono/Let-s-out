@@ -68,6 +68,7 @@ model User {
   radarVisibility  RadarVisibility?
   radarInvitesSent     RadarInvite[]   @relation("RadarInvitesSent")
   radarInvitesReceived RadarInvite[]   @relation("RadarInvitesReceived")
+  pollVotes        PollVote[]
 
   @@map("users")
 }
@@ -374,10 +375,51 @@ model Message {
   replyTo        Message?          @relation("MessageReply", fields: [replyToId], references: [id])
   replies        Message[]         @relation("MessageReply")
   sender         User              @relation("MessageSender", fields: [senderId], references: [id])
+  poll           Poll?
 
   @@index([conversationId])
   @@index([senderId])
   @@map("messages")
+}
+
+model Poll {
+  id            String       @id @default(cuid())
+  messageId     String       @unique
+  question      String
+  allowMultiple Boolean      @default(false)
+  expiresAt     DateTime?
+  isClosed      Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  message       Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  options       PollOption[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id     String     @id @default(cuid())
+  pollId String
+  text   String
+  order  Int        @default(0)
+  poll   Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes  PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollVote {
+  id        String     @id @default(cuid())
+  optionId  String
+  userId    String
+  createdAt DateTime   @default(now())
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, userId])
+  @@index([userId])
+  @@map("poll_votes")
 }
 
 model MessageReaction {

@@ -24,6 +24,8 @@ import { ChatInput } from '@/components/ui/chat-input'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { GroupChatInfoSheet } from './GroupChatInfoSheet'
 import { ForwardMessageModal } from './ForwardMessageModal'
+import { CreatePollModal } from './CreatePollModal'
+import { PollCard } from './PollCard'
 
 // Swipe to reply row component — must be top-level for React hooks
 interface SwipeReplyRowProps {
@@ -353,6 +355,8 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const qc = useQueryClient()
+  const [showAttachSheet, setShowAttachSheet] = useState(false)
+  const [showCreatePoll, setShowCreatePoll] = useState(false)
 
   // Voice recording states
   const [isRecording, setIsRecording] = useState(false)
@@ -1037,6 +1041,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                     imageUrl={isImage && (msg.mediaUrl || msg.content) ? (msg.mediaUrl || msg.content || undefined) : undefined}
                     onImageClick={() => setFullscreenImage((msg.mediaUrl || msg.content) ?? null)}
                     content={!isMedia && !msg.isDeleted && msg.type !== 'POLL' ? (msg.content ?? undefined) : (msg.mediaUrl ? (msg.content ?? undefined) : undefined)}
+                    bubbleClassName={msg.type === 'POLL' && msg.poll ? 'p-0 bg-transparent border-0 shadow-none' : undefined}
                     replyTo={msg.replyTo ? {
                       senderName: msg.replyTo.sender?.profile?.displayName ?? 'Inconnu',
                       content: msg.replyTo.content ?? '',
@@ -1052,24 +1057,35 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                         </span>
                       </div>
                     ) : msg.type === 'POLL' ? (
-                      <div className="w-[240px] flex flex-col gap-3 p-1">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'color-mix(in srgb, currentColor 15%, transparent)' }}>
-                            <span className="text-lg">📊</span>
+                      msg.poll ? (
+                        <PollCard
+                          message={msg}
+                          onPollUpdated={(updatedPoll) => {
+                            qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) =>
+                              old.map((m) => (m.id === msg.id ? { ...m, poll: updatedPoll } : m))
+                            )
+                          }}
+                        />
+                      ) : (
+                        <div className="w-[240px] flex flex-col gap-3 p-1">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: 'color-mix(in srgb, currentColor 15%, transparent)' }}>
+                              <span className="text-lg">📊</span>
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-bold" style={{ color: 'currentColor' }}>Vote des validateurs</p>
+                              <p className="text-[11px]" style={{ color: 'color-mix(in srgb, currentColor 80%, transparent)' }}>Votre avis est requis pour débloquer les fonds</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-[13px] font-bold" style={{ color: 'currentColor' }}>Vote des validateurs</p>
-                            <p className="text-[11px]" style={{ color: 'color-mix(in srgb, currentColor 80%, transparent)' }}>Votre avis est requis pour débloquer les fonds</p>
-                          </div>
+                          <button 
+                            onClick={() => navigate(`/events/${conversation?.eventId}/validators-vote`)}
+                            className="w-full py-2 rounded-lg font-bold text-sm transition-transform active:scale-95"
+                            style={{ backgroundColor: 'color-mix(in srgb, currentColor 10%, transparent)', color: 'currentColor' }}
+                          >
+                            {(event as any)?.validatorVoteStatus === 'CLOSED' ? 'Voir les résultats' : 'Voter'}
+                          </button>
                         </div>
-                        <button 
-                          onClick={() => navigate(`/events/${conversation?.eventId}/validators-vote`)}
-                          className="w-full py-2 rounded-lg font-bold text-sm transition-transform active:scale-95"
-                          style={{ backgroundColor: 'color-mix(in srgb, currentColor 10%, transparent)', color: 'currentColor' }}
-                        >
-                          {(event as any)?.validatorVoteStatus === 'CLOSED' ? 'Voir les résultats' : 'Voter'}
-                        </button>
-                      </div>
+                      )
                     ) : isVideo && (msg.mediaUrl || msg.content) ? (
                       <div className="relative">
                         <VideoMessage src={(msg.mediaUrl || msg.content) as string} isMe={isMe} />
@@ -1170,7 +1186,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
             value={inputText}
             onChange={handleTyping}
             onSend={handleSendText}
-            onAttach={() => fileInputRef.current?.click()}
+            onAttach={() => setShowAttachSheet(true)}
             onCamera={() => cameraInputRef.current?.click()}
             onMic={startRecording}
             className="p-0 flex-1"
@@ -1466,6 +1482,56 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
             </button>
           </div>
         </div>
+      )}
+
+      {/* Attachment Options Sheet */}
+      <BottomSheet open={showAttachSheet} onClose={() => setShowAttachSheet(false)}>
+        <div className="p-4 space-y-3 pb-8">
+          <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-[#444] mx-auto mb-2" />
+          <h4 className="text-sm font-bold text-gray-900 dark:text-white px-2">Partager dans la discussion</h4>
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowAttachSheet(false)
+                fileInputRef.current?.click()
+              }}
+              className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-gray-50 dark:bg-[#2A2A2A] border border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-[#333] transition-all active:scale-95 text-gray-800 dark:text-gray-200"
+            >
+              <div className="w-12 h-12 rounded-full bg-blue-500/15 text-blue-500 flex items-center justify-center text-xl">
+                🖼️
+              </div>
+              <span className="text-xs font-bold">Photo / Vidéo</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowAttachSheet(false)
+                setShowCreatePoll(true)
+              }}
+              className="flex flex-col items-center justify-center gap-2.5 p-4 rounded-2xl bg-gray-50 dark:bg-[#2A2A2A] border border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-[#333] transition-all active:scale-95 text-gray-800 dark:text-gray-200"
+            >
+              <div className="w-12 h-12 rounded-full bg-[#FF7A00]/15 text-[#FF7A00] flex items-center justify-center text-xl">
+                📊
+              </div>
+              <span className="text-xs font-bold">Sondage</span>
+            </button>
+          </div>
+        </div>
+      </BottomSheet>
+
+      {/* Create Poll Modal */}
+      {showCreatePoll && id && (
+        <CreatePollModal
+          conversationId={id}
+          isOpen={showCreatePoll}
+          onClose={() => setShowCreatePoll(false)}
+          onCreated={(newMsg) => {
+            qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [newMsg, ...old])
+            qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
+          }}
+        />
       )}
     </div>
   )

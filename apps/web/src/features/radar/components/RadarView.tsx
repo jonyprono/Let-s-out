@@ -13,6 +13,7 @@ const TIER_TO_RING: Record<string, number> = {
   UNDER_1KM: 1,
   UNDER_3KM: 2,
   UNDER_5KM: 3,
+  UNDER_10KM: 3,
 }
 
 const RING_FRACS = [0.27, 0.46, 0.63, 0.77]

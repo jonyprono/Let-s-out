@@ -788,6 +788,22 @@ export default async function chatRoutes(app: FastifyInstance) {
         reactions: {
           include: { user: { select: { id: true, profile: { select: { displayName: true } } } } },
         },
+        poll: {
+          include: {
+            options: {
+              include: {
+                votes: {
+                  include: {
+                    user: {
+                      select: { id: true, profile: { select: { displayName: true, avatarUrl: true } } },
+                    },
+                  },
+                },
+              },
+              orderBy: { order: 'asc' },
+            },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
       take: Number(limit),
@@ -855,6 +871,251 @@ export default async function chatRoutes(app: FastifyInstance) {
     broadcastToConversation(app, msg.conversationId, { type: 'message_deleted', messageId: msg.id }, sub)
 
     return reply.send({ message: 'Deleted' })
+  })
+
+  // ── Create a Poll in a conversation ───────────────────────────────────────
+  app.post('/conversations/:id/polls', async (req, reply) => {
+    const { sub, role } = req.user as { sub: string; role?: string }
+    const { id: conversationId } = req.params as { id: string }
+    const {
+      question,
+      options,
+      allowMultiple = false,
+      durationDays = null,
+    } = req.body as {
+      question?: string
+      options?: string[]
+      allowMultiple?: boolean
+      durationDays?: number | null
+    }
+
+    if (!question || !question.trim()) {
+      return reply.code(400).send({ error: 'La question du sondage est requise.' })
+    }
+
+    const cleanOptions = (options || [])
+      .map((o) => (typeof o === 'string' ? o.trim() : ''))
+      .filter((o) => o.length > 0)
+
+    if (cleanOptions.length < 2) {
+      return reply.code(400).send({ error: 'Un sondage doit comporter au moins 2 options.' })
+    }
+
+    if (cleanOptions.length > 25) {
+      return reply.code(400).send({ error: 'Un sondage ne peut pas dépasser 25 options.' })
+    }
+
+    const conversation = await app.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { members: { include: { user: true } } },
+    })
+    if (!conversation) return reply.code(404).send({ error: 'Conversation non trouvée.' })
+
+    const member = conversation.members.find((m) => m.userId === sub)
+    if (!member && role !== 'ADMIN') return reply.code(403).send({ error: 'Vous ne faites pas partie de cette conversation.' })
+
+    let expiresAt: Date | null = null
+    if (durationDays && Number(durationDays) > 0) {
+      expiresAt = new Date(Date.now() + Number(durationDays) * 24 * 60 * 60 * 1000)
+    }
+
+    // Créer le message de type POLL avec le sondage et ses options
+    const message = await app.prisma.message.create({
+      data: {
+        conversationId,
+        senderId: sub,
+        type: 'POLL',
+        content: question.trim(),
+        poll: {
+          create: {
+            question: question.trim(),
+            allowMultiple: Boolean(allowMultiple),
+            expiresAt,
+            options: {
+              create: cleanOptions.map((text, idx) => ({
+                text,
+                order: idx,
+              })),
+            },
+          },
+        },
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            profile: { select: { username: true, displayName: true, avatarUrl: true } },
+          },
+        },
+        poll: {
+          include: {
+            options: {
+              include: {
+                votes: {
+                  include: {
+                    user: {
+                      select: { id: true, profile: { select: { displayName: true, avatarUrl: true } } },
+                    },
+                  },
+                },
+              },
+              orderBy: { order: 'asc' },
+            },
+          },
+        },
+      },
+    })
+
+    await app.prisma.conversation.update({
+      where: { id: conversationId },
+      data: { lastMessageAt: new Date() },
+    })
+
+    // Broadcast à la conversation
+    broadcastToConversation(app, conversationId, { type: 'new_message', message }, sub)
+
+    // Notifier les membres hors ligne
+    const offlineMembers = conversation.members.filter((m) => m.userId !== sub)
+    if (offlineMembers.length > 0) {
+      const groupName = conversation.name || 'Discussion'
+      const senderName = message.sender.profile?.displayName || "Quelqu'un"
+      const title = conversation.isGroup ? (conversation.name || 'Groupe') : senderName
+      const body = `📊 ${senderName} a créé un sondage : ${question.trim()}`
+
+      await app.prisma.notification.createMany({
+        data: offlineMembers.map((m) => ({
+          userId: m.userId,
+          type: 'NEW_MESSAGE',
+          title: `Nouveau sondage dans ${groupName}`,
+          body,
+          data: { conversationId, messageId: message.id },
+        })),
+      })
+
+      await Promise.allSettled(
+        offlineMembers.map(({ userId: recipientId }) =>
+          sendPushToUser(app.prisma, recipientId, {
+            title,
+            body,
+            data: {
+              type: 'NEW_MESSAGE',
+              conversationId,
+              messageId: message.id,
+              senderId: sub,
+            },
+          })
+        )
+      )
+    }
+
+    return reply.code(201).send({ data: message })
+  })
+
+  // ── Vote / Toggle vote on a poll option ──────────────────────────────────
+  app.post('/polls/:id/vote', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id: pollId } = req.params as { id: string }
+    const { optionId } = req.body as { optionId: string }
+
+    if (!optionId) {
+      return reply.code(400).send({ error: 'optionId requis' })
+    }
+
+    const poll = await app.prisma.poll.findUnique({
+      where: { id: pollId },
+      include: {
+        message: { select: { id: true, conversationId: true } },
+        options: { select: { id: true } },
+      },
+    })
+
+    if (!poll) return reply.code(404).send({ error: 'Sondage non trouvé.' })
+
+    if (poll.isClosed || (poll.expiresAt && poll.expiresAt < new Date())) {
+      return reply.code(400).send({ error: 'Ce sondage est clôturé.' })
+    }
+
+    // Vérifier l'appartenance à la conversation
+    const member = await app.prisma.conversationMember.findUnique({
+      where: {
+        conversationId_userId: {
+          conversationId: poll.message.conversationId,
+          userId: sub,
+        },
+      },
+    })
+    if (!member) return reply.code(403).send({ error: 'Non autorisé' })
+
+    const targetOption = poll.options.find((o) => o.id === optionId)
+    if (!targetOption) return reply.code(404).send({ error: 'Option non trouvée dans ce sondage.' })
+
+    // Vérifier si l'utilisateur a déjà voté pour cette option
+    const existingVote = await app.prisma.pollVote.findUnique({
+      where: {
+        optionId_userId: { optionId, userId: sub },
+      },
+    })
+
+    if (existingVote) {
+      // Annuler ce vote
+      await app.prisma.pollVote.delete({
+        where: { id: existingVote.id },
+      })
+    } else {
+      // Si réponses multiples non autorisées, retirer les autres votes éventuels de cet utilisateur
+      if (!poll.allowMultiple) {
+        const otherOptionIds = poll.options.map((o) => o.id)
+        await app.prisma.pollVote.deleteMany({
+          where: {
+            optionId: { in: otherOptionIds },
+            userId: sub,
+          },
+        })
+      }
+
+      await app.prisma.pollVote.create({
+        data: {
+          optionId,
+          userId: sub,
+        },
+      })
+    }
+
+    // Récupérer le sondage mis à jour complet
+    const updatedPoll = await app.prisma.poll.findUnique({
+      where: { id: pollId },
+      include: {
+        options: {
+          include: {
+            votes: {
+              include: {
+                user: {
+                  select: { id: true, profile: { select: { displayName: true, avatarUrl: true } } },
+                },
+              },
+            },
+          },
+          orderBy: { order: 'asc' },
+        },
+        message: {
+          select: { id: true, conversationId: true },
+        },
+      },
+    })
+
+    // Broadcast en temps réel de la mise à jour du sondage
+    broadcastToConversation(
+      app,
+      poll.message.conversationId,
+      {
+        type: 'poll_voted',
+        messageId: poll.message.id,
+        poll: updatedPoll,
+      },
+      undefined
+    )
+
+    return reply.send({ data: updatedPoll })
   })
 
   // ── Get single conversation details ─────────────────────────────────────────

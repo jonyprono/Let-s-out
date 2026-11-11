@@ -13,6 +13,7 @@ export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement>
   onAvatarClick?: () => void;
   onImageClick?: () => void;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
+  bubbleClassName?: string;
   replyTo?: {
     senderName: string;
     content: string;
@@ -55,6 +56,7 @@ export function MessageBubble({
   onAvatarClick,
   onImageClick,
   status,
+  bubbleClassName,
   className,
   children,
   ...props
@@ -171,10 +173,13 @@ export function MessageBubble({
         ) : (
           <div
             className={cn(
-              "relative px-3.5 py-2 font-poppins text-[var(--font-size-body-medium)] rounded-[var(--radius-large)]",
-              isSender
-                ? "bg-[var(--brand-orange-100)] text-[#1B1818] dark:bg-[var(--brand-orange-500)] dark:text-white rounded-tr-sm"
-                : "bg-[var(--color-background-secondary)] text-[#1B1818] dark:text-white rounded-tl-sm"
+              "relative font-poppins text-[var(--font-size-body-medium)]",
+              bubbleClassName ? bubbleClassName : cn(
+                "px-3.5 py-2 rounded-[var(--radius-large)]",
+                isSender
+                  ? "bg-[var(--brand-orange-100)] text-[#1B1818] dark:bg-[var(--brand-orange-500)] dark:text-white rounded-tr-sm"
+                  : "bg-[var(--color-background-secondary)] text-[#1B1818] dark:text-white rounded-tl-sm"
+              )
             )}
           >
             {children ? (

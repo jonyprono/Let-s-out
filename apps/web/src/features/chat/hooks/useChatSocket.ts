@@ -195,6 +195,16 @@ export function useChatSocket() {
         qc.invalidateQueries({ queryKey: ['chat', 'messages', data.conversationId] })
       }
 
+      if (data.type === 'poll_voted') {
+        const { messageId, poll } = data
+        if (messageId && poll) {
+          qc.setQueriesData({ queryKey: ['chat', 'messages'] }, (old: any) => {
+            if (!Array.isArray(old)) return old
+            return old.map((m: any) => (m.id === messageId ? { ...m, poll } : m))
+          })
+        }
+      }
+
       if (data.type === 'notification:new') {
         qc.invalidateQueries({ queryKey: ['notifications'] })
         qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })

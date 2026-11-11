@@ -62,7 +62,7 @@ export function OutRadar() {
   const [requestingGeo, setRequestingGeo] = useState(false)
 
   // Paramètres de recherche
-  const [radiusKm, setRadiusKm] = useState<number>(1) // 500m (0.5), 1km, 3km, 5km
+  const [radiusKm, setRadiusKm] = useState<number>(1) // 1km, 5km, 10km
   const [genderFilter, setGenderFilter] = useState<'ALL' | 'FEMALE' | 'MALE'>('ALL')
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [outingTypeFilter, setOutingTypeFilter] = useState('ALL')
@@ -70,7 +70,7 @@ export function OutRadar() {
 
   // Visibilité
   const [showVisibilityModal, setShowVisibilityModal] = useState(false)
-  const [selectedDuration, setSelectedDuration] = useState<30 | 60>(30)
+  const [selectedDuration, setSelectedDuration] = useState<30 | 60 | 180>(30)
   const [visibilityOutingType, setVisibilityOutingType] = useState('SPONTANEOUS')
 
   // Date de naissance manquante (18+)
@@ -119,12 +119,24 @@ export function OutRadar() {
       return
     }
 
+    const end = new Date(statusData.expiresAt).getTime()
+    if (end <= Date.now()) {
+      setRemainingSec(0)
+      queryClient.setQueryData(['radar', 'status'], (old: any) =>
+        old ? { ...old, isVisible: false, remainingSeconds: 0, expiresAt: null } : old
+      )
+      queryClient.invalidateQueries({ queryKey: ['radar', 'status'] })
+      return
+    }
+
     const updateTimer = () => {
       const now = Date.now()
-      const end = new Date(statusData.expiresAt!).getTime()
       const diff = Math.max(0, Math.floor((end - now) / 1000))
       setRemainingSec(diff)
       if (diff === 0) {
+        queryClient.setQueryData(['radar', 'status'], (old: any) =>
+          old ? { ...old, isVisible: false, remainingSeconds: 0, expiresAt: null } : old
+        )
         queryClient.invalidateQueries({ queryKey: ['radar', 'status'] })
       }
     }
@@ -258,7 +270,7 @@ export function OutRadar() {
 
   // ── 5b. Élargir le rayon d'un cran ───────────────────────────────────────────
   const handleWidenRadius = useCallback(() => {
-    const radii = [0.5, 1, 3, 5]
+    const radii = [1, 5, 10]
     const idx = radii.indexOf(radiusKm)
     if (idx < radii.length - 1) {
       setRadiusKm(radii[idx + 1])
@@ -426,7 +438,10 @@ export function OutRadar() {
     return `${m}:${s < 10 ? '0' : ''}${s}`
   }
 
-  const isVisible = Boolean(statusData?.isVisible)
+  const isExpired = Boolean(
+    statusData?.expiresAt && new Date(statusData.expiresAt).getTime() <= Date.now()
+  )
+  const isVisible = Boolean(statusData?.isVisible) && !isExpired && remainingSec > 0
 
   if (activeDiscussionConvId) {
     return (
@@ -710,13 +725,12 @@ export function OutRadar() {
                   </button>
                 </div>
 
-                {/* Sélecteur de rayon (500m, 1km, 3km, 5km) */}
-                <div className="grid grid-cols-4 gap-2">
+                {/* Sélecteur de rayon (1km, 5km, 10km) */}
+                <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: 0.5, label: '500 m' },
                     { value: 1.0, label: '1 km' },
-                    { value: 3.0, label: '3 km' },
                     { value: 5.0, label: '5 km' },
+                    { value: 10.0, label: '10 km' },
                   ].map((r) => (
                     <button
                       key={r.value}
@@ -916,24 +930,28 @@ export function OutRadar() {
               Votre profil sera temporairement détectable par les Outsters à proximité. À la fin du délai, vous repasserez automatiquement en invisible.
             </p>
 
-            {/* Durée obligatoire (30 ou 60 minutes) */}
+            {/* Durée obligatoire (30, 60 ou 180 minutes) */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                 Durée de visibilité
               </label>
-              <div className="grid grid-cols-2 gap-2">
-                {[30, 60].map((d) => (
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: 30, label: '30 min' },
+                  { value: 60, label: '60 min' },
+                  { value: 180, label: '180 min' },
+                ].map((item) => (
                   <button
-                    key={d}
+                    key={item.value}
                     type="button"
-                    onClick={() => setSelectedDuration(d as 30 | 60)}
+                    onClick={() => setSelectedDuration(item.value as 30 | 60 | 180)}
                     className={`py-2 rounded-xl text-xs font-semibold transition-all ${
-                      selectedDuration === d
+                      selectedDuration === item.value
                         ? 'bg-[#FF7A00] text-white'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                     }`}
                   >
-                    {d} minutes
+                    {item.label}
                   </button>
                 ))}
               </div>

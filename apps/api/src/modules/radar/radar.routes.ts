@@ -14,13 +14,14 @@ function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): 
 }
 
 // Tranches de proximité génériques (AUCUNE coordonnée exacte ni distance précise au mètre près)
-export type ProximityTier = 'IMMEDIATE' | 'UNDER_1KM' | 'UNDER_3KM' | 'UNDER_5KM'
+export type ProximityTier = 'IMMEDIATE' | 'UNDER_1KM' | 'UNDER_3KM' | 'UNDER_5KM' | 'UNDER_10KM'
 
 function getProximityInfo(distanceKm: number): { tier: ProximityTier; label: string } {
   if (distanceKm <= 0.5) return { tier: 'IMMEDIATE', label: 'À proximité immédiate' }
   if (distanceKm <= 1.0) return { tier: 'UNDER_1KM', label: "À moins d'1 km" }
   if (distanceKm <= 3.0) return { tier: 'UNDER_3KM', label: "À moins de 3 km" }
-  return { tier: 'UNDER_5KM', label: 'Dans votre zone (moins de 5 km)' }
+  if (distanceKm <= 5.0) return { tier: 'UNDER_5KM', label: 'À moins de 5 km' }
+  return { tier: 'UNDER_10KM', label: 'Dans votre zone (moins de 10 km)' }
 }
 
 // Anti-triangulation : mémorisation de l'horodatage de dernière recherche par utilisateur
@@ -68,6 +69,7 @@ export default async function radarRoutes(app: FastifyInstance) {
           latitude: null,
           longitude: null,
           locationUpdatedAt: null,
+          expiresAt: null,
         },
       })
 
@@ -76,7 +78,7 @@ export default async function radarRoutes(app: FastifyInstance) {
           isVisible: false,
           durationMinutes: visibility.durationMinutes,
           remainingSeconds: 0,
-          expiresAt: visibility.expiresAt,
+          expiresAt: null,
           outingType: visibility.outingType,
         },
       })
@@ -103,7 +105,7 @@ export default async function radarRoutes(app: FastifyInstance) {
     const { sub: userId } = req.user as { sub: string }
     const { isVisible, durationMinutes, outingType, latitude, longitude } = req.body as {
       isVisible: boolean
-      durationMinutes?: 30 | 60
+      durationMinutes?: 30 | 60 | 180
       outingType?: string
       latitude?: number
       longitude?: number
@@ -126,8 +128,8 @@ export default async function radarRoutes(app: FastifyInstance) {
     }
 
     if (isVisible) {
-      if (!durationMinutes || ![30, 60].includes(durationMinutes)) {
-        return reply.code(400).send({ error: 'La durée de visibilité doit être de 30 ou 60 minutes.' })
+      if (!durationMinutes || ![30, 60, 180].includes(durationMinutes)) {
+        return reply.code(400).send({ error: 'La durée de visibilité doit être de 30, 60 ou 180 minutes.' })
       }
 
       if (
@@ -246,10 +248,10 @@ export default async function radarRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Position actuelle requise pour effectuer une recherche.' })
     }
 
-    // 2. Validation du rayon (liste fermée : 0.5, 1, 3, 5 km)
-    const allowedRadii = [0.5, 1, 3, 5]
+    // 2. Validation du rayon (liste fermée : 1, 5, 10 km)
+    const allowedRadii = [1, 5, 10]
     if (!allowedRadii.includes(radiusKm)) {
-      return reply.code(400).send({ error: 'Le rayon doit être de 500m, 1km, 3km ou 5km.' })
+      return reply.code(400).send({ error: 'Le rayon doit être de 1km, 5km ou 10km.' })
     }
 
     // 3. Vérifier l'âge du chercheur (18+)
