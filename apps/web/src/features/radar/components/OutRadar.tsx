@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ChatDetails } from '@/features/chat/components/ChatDetails'
 import {
   ChevronLeft,
   Radio,
@@ -48,7 +47,6 @@ export function OutRadar() {
   // Onglet principal : 'radar' (Recherche & Profils) ou 'invites' (Mes invitations)
   const initialTab = searchParams.get('tab') === 'invites' ? 'invites' : 'radar'
   const [activeTab, setActiveTab] = useState<'radar' | 'invites'>(initialTab)
-  const [activeDiscussionConvId, setActiveDiscussionConvId] = useState<string | null>(null)
 
   useEffect(() => {
     if (searchParams.get('tab') === 'invites') {
@@ -401,7 +399,7 @@ export function OutRadar() {
       if (vars.action === 'ACCEPT') {
         toast.success('Invitation acceptée !')
         if (res.conversationId) {
-          setActiveDiscussionConvId(res.conversationId)
+          navigate(`/chat/${res.conversationId}`)
         }
       } else {
         toast.info('Invitation refusée.')
@@ -442,18 +440,6 @@ export function OutRadar() {
     statusData?.expiresAt && new Date(statusData.expiresAt).getTime() <= Date.now()
   )
   const isVisible = Boolean(statusData?.isVisible) && !isExpired && remainingSec > 0
-
-  if (activeDiscussionConvId) {
-    return (
-      <div className="fixed inset-0 z-50 bg-[var(--color-background-primary)] flex flex-col">
-        <ChatDetails
-          conversationId={activeDiscussionConvId}
-          onBack={() => setActiveDiscussionConvId(null)}
-          isRadarMode={true}
-        />
-      </div>
-    )
-  }
 
   return (
     <div className="w-full min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white flex flex-col">
@@ -623,7 +609,7 @@ export function OutRadar() {
                         <button
                           onClick={() => {
                             if (inv.conversationId) {
-                              setActiveDiscussionConvId(inv.conversationId)
+                              navigate(`/chat/${inv.conversationId}`)
                             } else {
                               toast.info('Ouverture de la discussion OUT RADAR...')
                             }

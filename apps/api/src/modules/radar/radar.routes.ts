@@ -564,38 +564,26 @@ export default async function radarRoutes(app: FastifyInstance) {
     })
 
     // Ensure every accepted invite has a valid conversationId linked
+    // Si conversationId est déjà défini, on le garde tel quel (pas de recyclage)
     const invitesWithConvs = await Promise.all(
       invites.map(async (inv) => {
         if (inv.status === 'ACCEPTED' && !inv.conversationId) {
           try {
-            const existingConv = await app.prisma.conversation.findFirst({
-              where: {
+            // Toujours créer une nouvelle conversation radar dédiée
+            const newConv = await app.prisma.conversation.create({
+              data: {
                 isGroup: false,
-                members: { every: { userId: { in: [inv.senderId, inv.receiverId] } } },
+                isRadar: true,
+                members: {
+                  create: [{ userId: inv.senderId }, { userId: inv.receiverId }],
+                },
               },
             })
-            if (existingConv) {
-              await app.prisma.radarInvite.update({
-                where: { id: inv.id },
-                data: { conversationId: existingConv.id },
-              })
-              return { ...inv, conversationId: existingConv.id }
-            } else {
-              const newConv = await app.prisma.conversation.create({
-                data: {
-                  isGroup: false,
-                  isRadar: true,
-                  members: {
-                    create: [{ userId: inv.senderId }, { userId: inv.receiverId }],
-                  },
-                },
-              })
-              await app.prisma.radarInvite.update({
-                where: { id: inv.id },
-                data: { conversationId: newConv.id },
-              })
-              return { ...inv, conversationId: newConv.id }
-            }
+            await app.prisma.radarInvite.update({
+              where: { id: inv.id },
+              data: { conversationId: newConv.id },
+            })
+            return { ...inv, conversationId: newConv.id }
           } catch {
             return inv
           }
@@ -634,35 +622,20 @@ export default async function radarRoutes(app: FastifyInstance) {
     }
 
     if (action === 'ACCEPT') {
-      // Créer ou récupérer la conversation DM marquée isRadar
+      // Toujours créer une NOUVELLE conversation pour cette session radar
+      // On ne recycle jamais une conversation existante (même entre les mêmes utilisateurs)
       let conversationId: string | null = null
       try {
-        const existingConv = await app.prisma.conversation.findFirst({
-          where: {
+        const newConv = await app.prisma.conversation.create({
+          data: {
             isGroup: false,
-            members: { every: { userId: { in: [invite.senderId, invite.receiverId] } } },
+            isRadar: true,
+            members: {
+              create: [{ userId: invite.senderId }, { userId: invite.receiverId }],
+            },
           },
         })
-
-        if (existingConv) {
-          conversationId = existingConv.id
-          // Mark conversation as radar discussion
-          await app.prisma.conversation.update({
-            where: { id: existingConv.id },
-            data: { isRadar: true },
-          }).catch(() => {})
-        } else {
-          const newConv = await app.prisma.conversation.create({
-            data: {
-              isGroup: false,
-              isRadar: true,
-              members: {
-                create: [{ userId: invite.senderId }, { userId: invite.receiverId }],
-              },
-            },
-          })
-          conversationId = newConv.id
-        }
+        conversationId = newConv.id
       } catch (err) {
         app.log.warn(`[OUT_RADAR] Failed to auto-create conversation: ${err}`)
       }
