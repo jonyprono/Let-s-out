@@ -173,3 +173,4 @@ export function PollCard({ message, onPollUpdated }: PollCardProps) {
     </div>
   )
 }
+
