@@ -150,7 +150,7 @@ export function AppBootstrap() {
             title: notification.title || "Let's Out",
             body: notification.body || '',
             extra: { ...data },   // spread so Capacitor serialises it correctly
-            smallIcon: 'ic_launcher',
+            smallIcon: 'ic_stat_notification',
             iconColor: '#FF7A00',
             largeIcon: '/logoci.svg',
             actionTypeId: data.type === 'NEW_MESSAGE' ? 'REPLY_ACTION' : undefined,

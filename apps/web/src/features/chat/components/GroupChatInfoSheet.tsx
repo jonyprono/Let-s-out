@@ -43,6 +43,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
   })
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const isOrganizer = !event?.creatorId || event.creatorId === user?.id || (event.coHostIds || []).includes(user?.id)
@@ -396,7 +397,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
 
             {(!event || event.userId !== user?.id) && (
               <button 
-                onClick={() => leaveMut.mutate()}
+                onClick={() => setShowLeaveConfirm(true)}
                 disabled={leaveMut.isPending}
                 className="flex flex-row items-center !justify-start py-2 gap-3 w-full rounded-[8px] active:bg-gray-100 dark:bg-[#2a2a2a] transition-colors"
               >
@@ -411,6 +412,46 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
           </div>
         </div>
       </div>
+
+      {showLeaveConfirm && (
+        <div 
+          className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200" 
+          onClick={() => !leaveMut.isPending && setShowLeaveConfirm(false)}
+        >
+          <div 
+            className="w-full max-w-sm bg-white dark:bg-[#1E1E1E] rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-950/40 text-red-500 flex items-center justify-center mb-4">
+              <LogOut className="w-7 h-7" />
+            </div>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">
+              Quitter le groupe ?
+            </h3>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
+              Voulez-vous vraiment quitter ce groupe ? Vous ne recevrez plus les messages de cette discussion.
+            </p>
+            <div className="flex gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => setShowLeaveConfirm(false)}
+                disabled={leaveMut.isPending}
+                className="flex-1 py-3 px-4 rounded-xl border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 font-medium text-[14px] active:scale-95 transition-transform"
+              >
+                Non
+              </button>
+              <button
+                type="button"
+                onClick={() => leaveMut.mutate()}
+                disabled={leaveMut.isPending}
+                className="flex-1 py-3 px-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium text-[14px] flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md"
+              >
+                {leaveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Oui, quitter'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ReportModal
         open={isReportModalOpen}

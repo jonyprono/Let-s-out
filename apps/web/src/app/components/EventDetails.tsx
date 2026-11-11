@@ -439,8 +439,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const handleShare = async () => {
     if (!event) return;
     hapticFeedback.impact();
-    if (!hasJoined && !isOrganizer) {
-      toast.info("Vous devez rejoindre l'événement pour pouvoir le partager.");
+    const requiresApproval = Boolean(event.requiresApproval);
+    if ((event.isPrivate || requiresApproval) && !hasJoined && !isOrganizer) {
+      toast.info(requiresApproval
+        ? "Cet événement nécessite la validation de l'organisateur avant de pouvoir le partager."
+        : "Vous devez rejoindre l'événement pour pouvoir le partager.");
       return;
     }
     setShowInviteModal(true);

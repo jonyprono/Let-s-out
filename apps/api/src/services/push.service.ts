@@ -106,6 +106,8 @@ export async function sendToToken(token: string, payload: PushPayload): Promise<
           defaultSound: true,
           defaultVibrateTimings: true,
           priority: 'high',
+          icon: 'ic_stat_notification',
+          color: '#FF7A00',
         },
       },
       apns: {

@@ -43,9 +43,16 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
   const isOrganizer = Boolean(user && eventData && (eventData.creatorId === user.id || (eventData.coHostIds || []).includes(user.id)));
   const isJoined = Boolean(myBookingData && myBookingData.status === 'CONFIRMED');
   const isPrivate = Boolean(eventData?.isPrivate);
+  const requiresApproval = Boolean(eventData?.requiresApproval);
   const allowGuestShare = Boolean(eventData?.allowGuestShare);
 
-  const canShare = !isPrivate || isOrganizer || (isJoined && allowGuestShare);
+  const canShare = isOrganizer || (
+    isPrivate
+      ? (isJoined && allowGuestShare)
+      : requiresApproval
+        ? isJoined
+        : true
+  );
   
   const joinCode = eventData?.joinCode || eventId.slice(0, 5).toUpperCase();
   const eventLink = `https://letsout.app/event/join/${joinCode}`;
@@ -183,9 +190,13 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
             </div>
             <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">Partage restreint</h3>
             <p className="text-[14px] text-gray-600 dark:text-gray-300 max-w-xs mb-6 leading-relaxed">
-              {!isJoined
-                ? "Cet événement est privé. Vous devez d'abord avoir rejoint l'événement pour pouvoir le partager."
-                : "L'organisateur de cet événement privé n'a pas autorisé les participants à le partager."}
+              {isPrivate
+                ? (!isJoined
+                    ? "Cet événement est privé. Vous devez d'abord avoir rejoint l'événement pour pouvoir le partager."
+                    : "L'organisateur de cet événement privé n'a pas autorisé les participants à le partager.")
+                : (!isJoined
+                    ? "Cet événement nécessite la validation de l'organisateur. Vous devez être accepté avant de pouvoir le partager."
+                    : "L'organisateur n'a pas autorisé le partage de cet événement.")}
             </p>
             <button
               onClick={onClose}
