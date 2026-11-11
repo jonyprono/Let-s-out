@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { BadgeCheck, Edit3, Loader2, PiggyBank, Megaphone, ChevronLeft } from 'lucide-react'
+import { Edit3, Loader2, PiggyBank, Megaphone, ChevronLeft } from 'lucide-react'
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { useNavigate } from 'react-router'
 import { apiClient } from '@/lib/api-client'
@@ -181,8 +182,8 @@ export function ManageEventView({
                 <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FFCA28] to-[#FF7A00] flex items-center justify-center">
                   <span className="text-white font-bold text-[10px]">LO</span>
                 </div>
-                <span className="text-[14px] text-gray-700 font-medium flex items-center gap-1">
-                  Let's Out Staff <BadgeCheck className="w-4 h-4 text-blue-500 fill-blue-500" />
+                <span className="text-[14px] text-gray-700 font-medium flex items-center gap-1.5">
+                  Let's Out Staff <VerifiedBadge size={16} />
                 </span>
               </div>
             </div>

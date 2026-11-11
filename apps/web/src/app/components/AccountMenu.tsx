@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { apiClient } from '@/lib/api-client';
 import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
 export function AccountMenu() {
   const navigate = useNavigate();
@@ -158,12 +159,7 @@ export function AccountMenu() {
                 <span className="text-[19px] font-bold text-gray-900 dark:text-white leading-tight truncate">
                   {displayName}
                 </span>
-                {isVerified && (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#3B82F6">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
+                {isVerified && <VerifiedBadge size={18} />}
               </div>
               <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium truncate w-full">{username}</span>
               <span className="mt-1 inline-block bg-[#FF7A00] text-white text-[10px] font-bold px-2 py-0.5 rounded-md self-start shrink-0">

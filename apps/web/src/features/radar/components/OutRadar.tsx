@@ -9,7 +9,6 @@ import {
   EyeOff,
   Clock,
   Send,
-  CheckCircle2,
   AlertCircle,
   MessageCircle,
   Compass,
@@ -28,6 +27,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { apiClient } from '@/lib/api-client'
 import { radarApi, RadarSearchResult } from '../api'
 import { RadarView } from './RadarView'
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 
 // Types de sortie avec libellés et icônes
 const OUTING_TYPES = [
@@ -551,7 +551,7 @@ export function OutRadar() {
                             <div className="flex items-center gap-1.5">
                               <p className="font-semibold text-sm truncate">{profile?.displayName || 'Outster'}</p>
                               {(profile?.kycStatus === 'verified' || otherUser?.isVerified) && (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 fill-blue-500 text-white shrink-0" />
+                                <VerifiedBadge size={14} />
                               )}
                             </div>
                             <p className="text-xs text-gray-400">
@@ -838,9 +838,7 @@ export function OutRadar() {
                             <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">
                               {profile.displayName}
                             </p>
-                            {profile.isVerified && (
-                              <CheckCircle2 className="w-4 h-4 text-blue-500 fill-blue-500 text-white shrink-0" />
-                            )}
+                            {profile.isVerified && <VerifiedBadge size={15} />}
                           </div>
                           <p className="text-xs text-[#FF7A00] font-medium mt-0.5">{profile.proximity}</p>
                           {profile.outingType && (

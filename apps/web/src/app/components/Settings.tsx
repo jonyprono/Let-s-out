@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import {
   ChevronLeft, ChevronRight, Globe, Lock, Bell, Shield, HelpCircle,
   LogOut, User, Loader2, Phone, Mail,
-  CheckCircle2, Trash2, AlertTriangle, Wallet as WalletIcon,
+  Trash2, AlertTriangle, Wallet as WalletIcon,
   Star, MessageCircle, AlertCircle, Share2, Heart, Award,
   Calendar, Bot, FileText, Info, LayoutDashboard, Radio,
 } from 'lucide-react';
@@ -23,6 +23,7 @@ import { useLogout, useDeleteAccount } from '@/features/auth/hooks/useAuth';
 import { useSettingsStore } from '@/stores/settings.store';
 import { toast } from 'sonner';
 import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
 interface SettingsProps {
   onBack?: () => void;
@@ -244,9 +245,7 @@ export function Settings({ onBack }: SettingsProps) {
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-[16px] font-bold text-gray-900 dark:text-white truncate">{displayName}</p>
                 {(kycStatus === 'verified' || user?.isVerified) && (
-                  <div className="w-[18px] h-[18px] rounded-full bg-[#FF7A00] flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="w-[11px] h-[11px] text-white" />
-                  </div>
+                  <VerifiedBadge size={18} />
                 )}
               </div>
               <p className="text-[13px] text-gray-400 dark:text-gray-500">{username}</p>

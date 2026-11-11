@@ -164,11 +164,9 @@ export function PollCard({ message, onPollUpdated }: PollCardProps) {
           {totalVotes} vote{totalVotes > 1 ? 's' : ''}
           {remainingTimeStr ? ` · ${remainingTimeStr}` : ''}
         </span>
-        {poll.allowMultiple && (
-          <span className="text-[10px] text-[#FF7A00] font-medium bg-[#FF7A00]/10 px-2 py-0.5 rounded-full">
-            Choix multiple
-          </span>
-        )}
+        <span className="text-[10px] text-gray-400 font-medium">
+          1 choix par personne
+        </span>
       </div>
     </div>
   )

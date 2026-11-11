@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Plus, Trash2, Loader2, CheckSquare, Clock } from 'lucide-react'
+import { X, Plus, Trash2, Loader2, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { chatApi, Message } from '../api'
 
@@ -25,7 +25,6 @@ export function CreatePollModal({
 }: CreatePollModalProps) {
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState<string[]>(['', ''])
-  const [allowMultiple, setAllowMultiple] = useState(false)
   const [durationDays, setDurationDays] = useState<number>(7)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -75,7 +74,7 @@ export function CreatePollModal({
       const newMsg = await chatApi.createPoll(conversationId, {
         question: trimmedQuestion,
         options: cleanOptions,
-        allowMultiple,
+        allowMultiple: false,
         durationDays: durationDays > 0 ? durationDays : null,
       })
       toast.success('Sondage créé !')
@@ -84,7 +83,6 @@ export function CreatePollModal({
       // Reset form
       setQuestion('')
       setOptions(['', ''])
-      setAllowMultiple(false)
       setDurationDays(7)
     } catch (err: any) {
       const msg = err?.response?.data?.error || err.message || 'Erreur lors de la création du sondage'
@@ -184,27 +182,6 @@ export function CreatePollModal({
 
           {/* Options de configuration */}
           <div className="pt-2 space-y-3 border-t border-gray-100 dark:border-gray-800">
-            {/* Réponses multiples */}
-            <label className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 dark:bg-[#2A2A2A] cursor-pointer hover:bg-gray-100 dark:hover:bg-[#333] transition-colors">
-              <div className="flex items-center gap-2.5">
-                <CheckSquare className="w-4 h-4 text-[#FF7A00]" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-900 dark:text-white">
-                    Plusieurs réponses possibles
-                  </p>
-                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                    Les participants peuvent choisir plus d&apos;une option
-                  </p>
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={allowMultiple}
-                onChange={(e) => setAllowMultiple(e.target.checked)}
-                className="w-4 h-4 rounded text-[#FF7A00] focus:ring-[#FF7A00] accent-[#FF7A00] cursor-pointer"
-              />
-            </label>
-
             {/* Durée du sondage */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">

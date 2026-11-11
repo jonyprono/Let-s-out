@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { CheckCircle2, Send, Ban, Flag, X, MessageCircle } from 'lucide-react'
+import { Send, Ban, Flag, X, MessageCircle } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import type { RadarSearchResult } from '../api'
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -225,8 +226,8 @@ export function RadarView({
                     </div>
                   )}
                   {result.isVerified && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
+                    <div className="absolute -bottom-0.5 -right-0.5 rounded-full bg-white dark:bg-gray-900 p-0.5 flex items-center justify-center">
+                      <VerifiedBadge size={13} />
                     </div>
                   )}
                 </div>
@@ -293,8 +294,8 @@ export function RadarView({
                   )}
                 </div>
                 {selectedProfile.isVerified && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-white dark:bg-[#1A1A1A] flex items-center justify-center">
-                    <CheckCircle2 className="w-4 h-4 text-blue-500 fill-blue-500" />
+                  <div className="absolute -bottom-0.5 -right-0.5 rounded-full bg-white dark:bg-[#1A1A1A] p-0.5 flex items-center justify-center">
+                    <VerifiedBadge size={16} />
                   </div>
                 )}
               </div>

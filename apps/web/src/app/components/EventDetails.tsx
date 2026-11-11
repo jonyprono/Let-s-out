@@ -30,6 +30,7 @@ import { Share08Icon, PencilEdit01Icon } from 'hugeicons-react'
 import { chatApi } from '@/features/chat/api'
 import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -1344,7 +1345,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           <div className="flex flex-col flex-1 items-start">
                             <div className="flex items-center gap-1">
                               <p className={`text-[14px] font-semibold ${isDeleted ? 'text-gray-500 line-through' : 'text-gray-900 dark:text-white'}`}>{name}</p>
-                              {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
+                              {isVerified && <VerifiedBadge size={16} />}
                             </div>
                             {delegationsMap[booking.user.id] && delegationsMap[booking.user.id].length > 0 && (
                               <div className="flex items-center gap-1 mt-1 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
@@ -1464,7 +1465,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           </div>
                           <div className="flex items-center gap-1.5 flex-1">
                             <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{name}</p>
-                            {isVerified && <BadgeCheck className="w-4 h-4 text-blue-500" />}
+                            {isVerified && <VerifiedBadge size={16} />}
                             {isAnon && (
                               <span className="text-[10px] bg-[#FF7A00]/10 text-[#FF7A00] font-medium px-2 py-0.5 rounded-full">
                                 Anonyme

@@ -880,7 +880,6 @@ export default async function chatRoutes(app: FastifyInstance) {
     const {
       question,
       options,
-      allowMultiple = false,
       durationDays = null,
     } = req.body as {
       question?: string
@@ -919,7 +918,7 @@ export default async function chatRoutes(app: FastifyInstance) {
       expiresAt = new Date(Date.now() + Number(durationDays) * 24 * 60 * 60 * 1000)
     }
 
-    // Créer le message de type POLL avec le sondage et ses options
+    // Créer le message de type POLL avec le sondage et ses options (un seul choix par utilisateur)
     const message = await app.prisma.message.create({
       data: {
         conversationId,
@@ -929,7 +928,7 @@ export default async function chatRoutes(app: FastifyInstance) {
         poll: {
           create: {
             question: question.trim(),
-            allowMultiple: Boolean(allowMultiple),
+            allowMultiple: false,
             expiresAt,
             options: {
               create: cleanOptions.map((text, idx) => ({
@@ -1062,16 +1061,14 @@ export default async function chatRoutes(app: FastifyInstance) {
         where: { id: existingVote.id },
       })
     } else {
-      // Si réponses multiples non autorisées, retirer les autres votes éventuels de cet utilisateur
-      if (!poll.allowMultiple) {
-        const otherOptionIds = poll.options.map((o) => o.id)
-        await app.prisma.pollVote.deleteMany({
-          where: {
-            optionId: { in: otherOptionIds },
-            userId: sub,
-          },
-        })
-      }
+      // Un seul choix par utilisateur : supprimer tout vote existant pour ce sondage
+      const allOptionIds = poll.options.map((o) => o.id)
+      await app.prisma.pollVote.deleteMany({
+        where: {
+          optionId: { in: allOptionIds },
+          userId: sub,
+        },
+      })
 
       await app.prisma.pollVote.create({
         data: {
