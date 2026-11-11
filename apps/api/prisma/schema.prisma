@@ -333,6 +333,7 @@ model Conversation {
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
   isBotPaused        Boolean         @default(false)
+  isRadar            Boolean         @default(false)
   adminLastMessageAt DateTime?
   members       ConversationMember[]
   event         Event?               @relation("EventConversation", fields: [eventId], references: [id])
@@ -704,6 +705,8 @@ enum NotifType {
   POOL_VOTE_STARTED
   POOL_PAYOUT
   EVENT_REMINDER
+  RADAR_INVITE
+  RADAR_INVITE_ACCEPTED
 }
 
 enum PaymentStatus {
@@ -1068,6 +1071,7 @@ model RadarInvite {
   status     RadarInviteStatus @default(PENDING)
   outingType String?
   message    String?
+  conversationId String?
   expiresAt  DateTime
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt

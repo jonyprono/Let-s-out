@@ -107,6 +107,7 @@ export function AppBootstrap() {
         if (data?.eventId) { navigate(`/events/${data.eventId}`); return }
         if (data?.bookingId) { navigate(`/payments/${data.bookingId}`); return }
         if (data?.type === 'FRIEND_REQUEST') { navigate('/friend-requests'); return }
+        if (data?.type === 'RADAR_INVITE' || data?.type === 'RADAR_INVITE_ACCEPTED') { navigate('/radar?tab=invites'); return }
       }
 
       // ── Helper: send a quick reply with auth token refresh fallback ────

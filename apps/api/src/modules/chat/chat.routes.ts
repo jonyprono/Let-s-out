@@ -523,14 +523,16 @@ export default async function chatRoutes(app: FastifyInstance) {
     return reply.send({ success: true })
   })
 
-
   // List conversations
   app.get('/conversations', async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { limit = '20', offset = '0' } = req.query as any
+    const { limit = '20', offset = '0', includeRadar } = req.query as any
 
     const convos = await app.prisma.conversationMember.findMany({
-      where: { userId: sub },
+      where: {
+        userId: sub,
+        ...(includeRadar === 'true' ? {} : { conversation: { isRadar: false } }),
+      },
       include: {
         conversation: {
           include: {
@@ -924,6 +926,27 @@ export default async function chatRoutes(app: FastifyInstance) {
     })
 
     return reply.send({ success: true })
+  })
+
+  // ── Update conversation (avatarUrl, name) ──────────────────────────────────
+  app.patch('/conversations/:id', async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const { avatarUrl, name } = req.body as { avatarUrl?: string; name?: string }
+
+    const member = await app.prisma.conversationMember.findUnique({
+      where: { conversationId_userId: { conversationId: id, userId: sub } },
+    })
+    if (!member) return reply.code(403).send({ error: 'Not a member' })
+
+    const updated = await app.prisma.conversation.update({
+      where: { id },
+      data: {
+        ...(avatarUrl !== undefined ? { avatarUrl } : {}),
+        ...(name !== undefined ? { name } : {}),
+      },
+    })
+    return reply.send({ success: true, conversation: updated })
   })
 
   // ── Create group conversation ────────────────────────────────────────────────

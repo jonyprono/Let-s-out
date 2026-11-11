@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router';
 import { Loader2, ChevronLeft, Lock } from 'lucide-react';
@@ -13,6 +13,7 @@ import { sortFeaturedEvents, sortNearbyEvents } from '@/utils/event-ranking';
 import ExplorerMap from '@/app/components/ExplorerMap';
 import { useNotifications } from '@/features/notifications/api';
 import PullToRefresh from 'react-simple-pull-to-refresh';
+import { searchPlaces, GeoPlace } from '@/lib/geo';
 
 interface ExplorerProps {
   onNavigate: (screen: string, id?: string) => void;
@@ -86,6 +87,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [selectedIconCategory, setSelectedIconCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [eventSearchFocused, setEventSearchFocused] = useState(false);
+  const [selectedPlaceTarget, setSelectedPlaceTarget] = useState<{ lat: number; lon: number; label: string } | null>(null);
+  const [placeSuggestions, setPlaceSuggestions] = useState<GeoPlace[]>([]);
+  const placeSearchTimeoutRef = useRef<number | null>(null);
   const [viewAll, setViewAll] = useState<'featured' | 'nearby' | 'recent' | null>(null);
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const featuredScrollRef = useRef<HTMLDivElement>(null);
@@ -112,6 +116,27 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [currentLocation, setCurrentLocation] = useState('');
   const [mapSearch, setMapSearch] = useState('');
   const [eventSearch, setEventSearch] = useState('');
+
+  // Recherche de lieux et restaurants pour la carte
+  useEffect(() => {
+    if (viewMode !== 'map' || eventSearch.trim().length < 2) {
+      setPlaceSuggestions([]);
+      return;
+    }
+    if (placeSearchTimeoutRef.current) window.clearTimeout(placeSearchTimeoutRef.current);
+    placeSearchTimeoutRef.current = window.setTimeout(async () => {
+      try {
+        const places = await searchPlaces(eventSearch.trim(), {
+          cityContext: currentLocation,
+          lat: currentLocation === 'Abomey-Calavi' ? 6.4485 : 6.36536,
+          lon: currentLocation === 'Abomey-Calavi' ? 2.3556 : 2.41833,
+        });
+        setPlaceSuggestions(places);
+      } catch {
+        setPlaceSuggestions([]);
+      }
+    }, 350);
+  }, [eventSearch, viewMode, currentLocation]);
   const { data: eventsPages, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['events', 'explorer'],
     queryFn: async ({ pageParam = 0 }) => {
@@ -528,6 +553,37 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               <span className="text-[13px] font-semibold text-gray-600 dark:text-gray-300">Liste</span>
             </button>
           </div>
+
+          {/* Suggestions de lieux / restaurants trouvés */}
+          {placeSuggestions.length > 0 && (
+            <div className="absolute top-[108px] left-4 right-4 z-[950] bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 max-h-56 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-800">
+              <div className="px-3.5 py-1.5 bg-orange-50/70 dark:bg-orange-950/20 text-[11px] font-semibold text-[#FF7A00]">
+                Lieux & restaurants correspondants
+              </div>
+              {placeSuggestions.map((place, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setSelectedPlaceTarget({ lat: place.lat, lon: place.lon, label: place.label });
+                    setPlaceSuggestions([]);
+                    toast.success(`Positionné sur : ${place.name || place.label.split(',')[0]}`);
+                  }}
+                  className="w-full text-left px-3.5 py-2.5 flex items-center gap-2.5 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-orange-50 transition-colors"
+                >
+                  <Location01Icon className="w-4 h-4 text-[#FF7A00] shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-gray-900 dark:text-white truncate">
+                      {place.name || place.label.split(',')[0]}
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                      {place.label.split(',').slice(1).join(',').trim() || place.city || 'Bénin'}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
           <button onClick={openSearch} className="flex items-center gap-1 mb-2 active:opacity-70 transition-opacity">
             <Location01Icon className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
             <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
@@ -546,6 +602,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             mapCenter={currentLocation === 'Abomey-Calavi' ? [6.4485, 2.3556] : [6.36536, 2.41833]}
             onNavigate={onNavigate}
             onSwitchToList={() => setViewMode('list')}
+            searchTarget={selectedPlaceTarget}
           />
         </div>
       )}

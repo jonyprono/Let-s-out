@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { EventReactions } from '@/features/events/components/EventReactions'
 import { EventComments } from '@/features/events/components/EventComments'
@@ -253,6 +253,30 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const isCreator = user?.id === event?.creatorId
   const isCoHost = user?.id ? event?.coHostIds?.includes(user.id) : false
   const isOrganizer = isCreator || isCoHost
+  const coverInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingCover, setIsUploadingCover] = useState(false)
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !event?.id) return
+    setIsUploadingCover(true)
+    try {
+      const res = await eventsApi.uploadCover(file)
+      const uploadedUrl = res.data.url
+      await eventsApi.update(event.id, {
+        coverUrl: uploadedUrl,
+        mediaUrls: event.mediaUrls?.length ? [uploadedUrl, ...event.mediaUrls.filter((u: string) => u !== uploadedUrl)] : [uploadedUrl]
+      })
+      qc.invalidateQueries({ queryKey: ['events'] })
+      qc.invalidateQueries({ queryKey: ['events', event.id] })
+      toast.success('Photo ajoutée avec succès !')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || err.message || "Erreur lors de l'upload de la photo")
+    } finally {
+      setIsUploadingCover(false)
+      if (e.target) e.target.value = ''
+    }
+  }
   const { data: pendingBookingsData, refetch: refetchPending } = useQuery({
     queryKey: ['events', id, 'pending-bookings'],
     queryFn: () => eventsApi.getPendingBookings(id!).then(r => r.data),
@@ -603,8 +627,32 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               ) : coverUrl ? (
                 <SafeImage src={coverUrl} alt={event.title} className="w-full h-full object-cover absolute inset-0" />
               ) : (
-                <div className="flex flex-col items-center justify-center text-[var(--color-icon-muted)]">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <div
+                  onClick={() => isOrganizer && coverInputRef.current?.click()}
+                  className={`flex flex-col items-center justify-center text-[var(--color-icon-muted)] w-full h-full ${
+                    isOrganizer ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors' : ''
+                  }`}
+                  title={isOrganizer ? 'Ajouter une photo' : undefined}
+                >
+                  <input
+                    ref={coverInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleCoverUpload}
+                  />
+                  {isUploadingCover ? (
+                    <Loader2 className="w-8 h-8 text-[var(--brand-orange-500)] animate-spin" />
+                  ) : (
+                    <>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      {isOrganizer && (
+                        <span className="text-[12px] font-medium text-[var(--brand-orange-500)] mt-2">
+                          + Ajouter une photo
+                        </span>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
               {/* Badge superposé en bas à gauche */}

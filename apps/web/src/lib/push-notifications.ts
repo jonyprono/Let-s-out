@@ -133,6 +133,11 @@ export async function initializePushNotifications(navigate?: (path: string) => v
 export function handleNotificationRouting(data: any, navigate?: (path: string) => void) {
   if (!data || !navigate) return;
 
+  if (data.type === 'RADAR_INVITE' || data.type === 'RADAR_INVITE_ACCEPTED' || data.screen === 'radar') {
+    navigate('/radar?tab=invites');
+    return;
+  }
+
   const screen = data.screen;
   const eventId = data.eventId;
   const conversationId = data.conversationId || data.chatId;

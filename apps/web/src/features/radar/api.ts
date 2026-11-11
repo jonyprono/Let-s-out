@@ -29,6 +29,7 @@ export interface RadarInviteItem {
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED'
   outingType: string | null
   message: string | null
+  conversationId?: string | null
   expiresAt: string
   createdAt: string
   sender: {

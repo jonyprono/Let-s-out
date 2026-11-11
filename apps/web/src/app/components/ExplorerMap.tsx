@@ -24,6 +24,7 @@ interface ExplorerMapProps {
   mapCenter: [number, number]
   onNavigate: (screen: string, id?: string) => void
   onSwitchToList?: () => void
+  searchTarget?: { lat: number; lon: number; label: string } | null
 }
 
 /** Cluster events by proximity */
@@ -229,12 +230,19 @@ export default function ExplorerMap({
   mapCenter,
   onNavigate,
   onSwitchToList,
+  searchTarget,
 }: ExplorerMapProps) {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [zoom, setZoom] = useState(13)
   const [zoomTarget, setZoomTarget] = useState<{ lat: number; lon: number; id: number } | null>(null)
   const [mapRef, setMapRef] = useState<L.Map | null>(null)
   const [isLocating, setIsLocating] = useState(false)
+
+  useEffect(() => {
+    if (searchTarget && mapRef) {
+      mapRef.flyTo([searchTarget.lat, searchTarget.lon], 16, { duration: 0.8 })
+    }
+  }, [searchTarget, mapRef])
 
   const handleGeolocateReal = async () => {
     if (!mapRef) return
@@ -299,9 +307,27 @@ export default function ExplorerMap({
         <MapAccessor onMap={setMapRef} />
         <ZoomWatcher onZoom={setZoom} onMapClick={closeCard} zoomTarget={zoomTarget} />
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
+        {searchTarget && (
+          <Marker
+            position={[searchTarget.lat, searchTarget.lon]}
+            icon={L.divIcon({
+              className: '',
+              html: `
+                <div style="display:flex; flex-direction:column; align-items:center; filter:drop-shadow(0 4px 12px rgba(255,122,0,0.6)); pointer-events:none;">
+                  <div style="background:#111827; color:white; border-radius:8px; padding:4px 8px; font-size:11px; font-weight:600; white-space:nowrap; margin-bottom:4px; font-family:sans-serif;">
+                    ${searchTarget.label.split(',')[0]}
+                  </div>
+                  <div style="width:16px; height:16px; border-radius:50%; background:#FF7A00; border:3px solid white; box-shadow:0 0 10px #FF7A00;"></div>
+                </div>
+              `,
+              iconSize: [120, 40],
+              iconAnchor: [60, 36],
+            })}
+          />
+        )}
         {clusters.map((cluster, i) => {
           const isSelected =
             selectedEvent != null &&

@@ -561,7 +561,48 @@ export default async function radarRoutes(app: FastifyInstance) {
       take: 50,
     })
 
-    return reply.send({ data: invites })
+    // Ensure every accepted invite has a valid conversationId linked
+    const invitesWithConvs = await Promise.all(
+      invites.map(async (inv) => {
+        if (inv.status === 'ACCEPTED' && !inv.conversationId) {
+          try {
+            const existingConv = await app.prisma.conversation.findFirst({
+              where: {
+                isGroup: false,
+                members: { every: { userId: { in: [inv.senderId, inv.receiverId] } } },
+              },
+            })
+            if (existingConv) {
+              await app.prisma.radarInvite.update({
+                where: { id: inv.id },
+                data: { conversationId: existingConv.id },
+              })
+              return { ...inv, conversationId: existingConv.id }
+            } else {
+              const newConv = await app.prisma.conversation.create({
+                data: {
+                  isGroup: false,
+                  isRadar: true,
+                  members: {
+                    create: [{ userId: inv.senderId }, { userId: inv.receiverId }],
+                  },
+                },
+              })
+              await app.prisma.radarInvite.update({
+                where: { id: inv.id },
+                data: { conversationId: newConv.id },
+              })
+              return { ...inv, conversationId: newConv.id }
+            }
+          } catch {
+            return inv
+          }
+        }
+        return inv
+      })
+    )
+
+    return reply.send({ data: invitesWithConvs })
   })
 
   // ── 6. PATCH /invites/:id/respond — Répondre à une invitation (Accepter / Refuser)
@@ -591,12 +632,7 @@ export default async function radarRoutes(app: FastifyInstance) {
     }
 
     if (action === 'ACCEPT') {
-      const updated = await app.prisma.radarInvite.update({
-        where: { id },
-        data: { status: 'ACCEPTED' },
-      })
-
-      // Créer ou récupérer la conversation DM dans le chat existant
+      // Créer ou récupérer la conversation DM marquée isRadar
       let conversationId: string | null = null
       try {
         const existingConv = await app.prisma.conversation.findFirst({
@@ -608,10 +644,16 @@ export default async function radarRoutes(app: FastifyInstance) {
 
         if (existingConv) {
           conversationId = existingConv.id
+          // Mark conversation as radar discussion
+          await app.prisma.conversation.update({
+            where: { id: existingConv.id },
+            data: { isRadar: true },
+          }).catch(() => {})
         } else {
           const newConv = await app.prisma.conversation.create({
             data: {
               isGroup: false,
+              isRadar: true,
               members: {
                 create: [{ userId: invite.senderId }, { userId: invite.receiverId }],
               },
@@ -623,14 +665,22 @@ export default async function radarRoutes(app: FastifyInstance) {
         app.log.warn(`[OUT_RADAR] Failed to auto-create conversation: ${err}`)
       }
 
+      const updated = await app.prisma.radarInvite.update({
+        where: { id },
+        data: {
+          status: 'ACCEPTED',
+          conversationId,
+        },
+      })
+
       // Notification à l'émetteur
       try {
         const receiverName = invite.receiver.profile?.displayName || 'Un Outster'
         await createAndSendNotification(app, {
           userId: invite.senderId,
-          type: 'RADAR_ACCEPT' as any,
+          type: 'RADAR_INVITE_ACCEPTED' as any,
           title: 'Invitation OUT RADAR acceptée !',
-          body: `${receiverName} a accepté votre invitation. Vous pouvez désormais discuter ensemble.`,
+          body: `${receiverName} a accepté votre invitation. Vous pouvez désormais discuter dans OUT RADAR.`,
           data: { inviteId: invite.id, conversationId },
         })
       } catch (e) {

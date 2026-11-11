@@ -74,28 +74,28 @@ export function clearCreateEventDraft() {
 // value font que find() retourne toujours la première, causant des bugs de
 // sélection et d'affichage (ex : "Fêtes" → "Boissons", "Comédie" par défaut).
 const CATEGORIES = [
-  { label: 'Art et culture',              value: 'CULTURE',   Icon: PaintBoardIcon },
-  { label: 'Comédie',                     value: 'GAMING',    Icon: MaskTheater01Icon },
-  { label: 'Sport',                       value: 'SPORT',     Icon: FootballIcon },
-  { label: 'Santé et bien-être',          value: 'WELLNESS',  Icon: HealthIcon },
-  { label: 'Cuisine et gastronomie',      value: 'FOOD',      Icon: KitchenUtensilsIcon },
-  { label: 'Boissons',                    value: 'LIFESTYLE', Icon: DrinkIcon },
-  { label: 'Réseautage professionnel',    value: 'SOCIAL',    Icon: MoleculesIcon },
-  { label: 'Fêtes',                       value: 'NIGHTLIFE', Icon: PartyIcon },
-  { label: 'Religion',                    value: 'OTHER',     Icon: HandPrayerIcon },
-  { label: 'Shopping',                    value: 'TECH',      Icon: ShoppingBag02Icon },
-  { label: 'Musique et son',              value: 'MUSIC',     Icon: MusicNote03Icon },
-  { label: 'Télévision et cinéma',        value: 'ART',       Icon: CameraVideoIcon },
-  { label: 'Jeux vidéos & jeux de société', value: 'GAMING',  Icon: MaskTheater01Icon },
-  { label: 'Concerts & festivals',        value: 'CONCERTS',  Icon: MusicNote03Icon },
-  { label: 'Voyages et découverte',       value: 'TRAVEL',    Icon: PaintBoardIcon },
+  { label: 'Art et culture', value: 'CULTURE', Icon: PaintBoardIcon },
+  { label: 'Comédie', value: 'GAMING', Icon: MaskTheater01Icon },
+  { label: 'Sport', value: 'SPORT', Icon: FootballIcon },
+  { label: 'Santé et bien-être', value: 'WELLNESS', Icon: HealthIcon },
+  { label: 'Cuisine et gastronomie', value: 'FOOD', Icon: KitchenUtensilsIcon },
+  { label: 'Boissons', value: 'LIFESTYLE', Icon: DrinkIcon },
+  { label: 'Réseautage professionnel', value: 'SOCIAL', Icon: MoleculesIcon },
+  { label: 'Fêtes', value: 'NIGHTLIFE', Icon: PartyIcon },
+  { label: 'Religion', value: 'OTHER', Icon: HandPrayerIcon },
+  { label: 'Shopping', value: 'TECH', Icon: ShoppingBag02Icon },
+  { label: 'Musique et son', value: 'MUSIC', Icon: MusicNote03Icon },
+  { label: 'Télévision et cinéma', value: 'ART', Icon: CameraVideoIcon },
+  { label: 'Jeux vidéos & jeux de société', value: 'GAMING', Icon: MaskTheater01Icon },
+  { label: 'Concerts & festivals', value: 'CONCERTS', Icon: MusicNote03Icon },
+  { label: 'Voyages et découverte', value: 'TRAVEL', Icon: PaintBoardIcon },
 ]
 
 // ── Participation modes ──────────────────────────────────────────────────────
 const PARTICIPATION_MODES = [
-  { value: 'free',    label: 'Gratuit',      desc: 'Entrée ouverte à tous sans paiement',              emoji: '🔓' },
-  { value: 'ticket',  label: 'Sur ticket',   desc: "Accès sur achat de tickets d'entrée",               emoji: '🎫' },
-  { value: 'cagnotte',label: 'Sur cagnotte', desc: 'Accès sur contribution à une cagnotte partagée',   emoji: '💰' },
+  { value: 'free', label: 'Gratuit', desc: 'Entrée ouverte à tous sans paiement', emoji: '🔓' },
+  { value: 'ticket', label: 'Sur ticket', desc: "Accès sur achat de tickets d'entrée", emoji: '🎫' },
+  { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Accès sur contribution à une cagnotte partagée', emoji: '💰' },
 ]
 
 // ── Main Component ──────────────────────────────────────────────────────────
@@ -247,7 +247,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // ── Location search ─────────────────────────────────────────────────────
   const [locationTab, setLocationTab] = useState<'liste' | 'carte'>('liste')
   const [locationQuery, setLocationQuery] = useState('')
-  const [locationSuggestions, setLocationSuggestions] = useState<{label:string;lat:number;lon:number}[]>([])
+  const [locationSuggestions, setLocationSuggestions] = useState<{ label: string; lat: number; lon: number }[]>([])
   const [tempLat, setTempLat] = useState<number>(6.36536)
   const [tempLon, setTempLon] = useState<number>(2.41833)
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false)
@@ -316,18 +316,24 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     if (locationTimeoutRef.current) window.clearTimeout(locationTimeoutRef.current)
     locationTimeoutRef.current = window.setTimeout(async () => {
       try {
-        const res = await searchPlaces(q, city)
+        const res = await searchPlaces(q, {
+          cityContext: city,
+          lat: lat ?? tempLat ?? 6.36536,
+          lon: lon ?? tempLon ?? 2.41833,
+        })
         setLocationSuggestions(res)
       } catch { setLocationSuggestions([]) }
-    }, 400)
+    }, 350)
   }
 
-  const selectLocation = (s: {label:string;lat:number;lon:number}) => {
+  const selectLocation = (s: { label: string; lat: number; lon: number }) => {
     const parts = s.label.split(',')
     setCity(parts[0].trim())
     setAddress(s.label)
     setLat(s.lat)
     setLon(s.lon)
+    setTempLat(s.lat)
+    setTempLon(s.lon)
     setShowLocationSearch(false)
     setLocationQuery('')
     setLocationSuggestions([])
@@ -437,19 +443,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       apiClient.get(`/events/${editEventId}`).then((res: any) => {
         const d = res.data
         if (d) applyEventData(d)
-      }).catch(() => {})
+      }).catch(() => { })
     } else if (editEventId) {
       // Only ID passed — fetch from API
       apiClient.get(`/events/${editEventId}`).then((res: any) => {
         const d = res.data
         if (d) applyEventData(d)
-      }).catch(() => {})
+      }).catch(() => { })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Enable/disable 'Next' button
   const isDescriptionValid = description.trim().length >= 3
-  const isStartDateValid = startDate ? new Date(startDate) >= new Date(new Date().setHours(0,0,0,0)) : false;
+  const isStartDateValid = startDate ? new Date(startDate) >= new Date(new Date().setHours(0, 0, 0, 0)) : false;
   const canGoToStep2 = isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid
   const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
   const canSubmit = canGoToStep2 && !!participationMode && isCagnotteValid
@@ -564,7 +570,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         creator: eventCreator || { id: me?.id, profile: me?.profile },
         bookings: []
       }
-      
+
       qc.setQueryData(['my-events'], (old: any) => {
         if (!old) return old
         const created = old.data?.createdEvents || []
@@ -572,7 +578,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         const existingIdx = created.findIndex((e: any) => e.id === optimisticEvent.id)
         if (existingIdx >= 0) created[existingIdx] = { ...created[existingIdx], ...optimisticEvent }
         else created.unshift(optimisticEvent)
-        
+
         return { ...old, data: { ...old.data, createdEvents: created } }
       })
 
@@ -595,14 +601,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       } else {
         res = await apiClient.post('/events', payload)
       }
-      
+
       // Update cache with real ID if it was a creation
       if (!editEventId && res.data?.id) {
-         qc.setQueryData(['my-events'], (old: any) => {
-            if (!old) return old
-            const created = (old.data?.createdEvents || []).map((e: any) => e.id === optimisticEvent.id ? { ...e, id: res.data.id } : e)
-            return { ...old, data: { ...old.data, createdEvents: created } }
-         })
+        qc.setQueryData(['my-events'], (old: any) => {
+          if (!old) return old
+          const created = (old.data?.createdEvents || []).map((e: any) => e.id === optimisticEvent.id ? { ...e, id: res.data.id } : e)
+          return { ...old, data: { ...old.data, createdEvents: created } }
+        })
       }
 
       const eventId = editEventId || res.data?.id
@@ -741,7 +747,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   if (step === 'done' || step === 'published') {
     const isPublished = step === 'published'
     return (
-      <div 
+      <div
         className={`w-full h-full flex flex-col relative overflow-hidden ${isPublished ? 'bg-[var(--color-background-primary)]' : ''}`}
         style={!isPublished ? { background: 'var(--color-bg-warm)' } : {}}
       >
@@ -753,7 +759,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             {/* Top Section */}
             <div className="flex flex-col items-center gap-3 w-full">
               {/* Icon */}
-              <div 
+              <div
                 className={`flex items-center justify-center mb-1 ${isPublished ? 'w-[72px] h-[72px] rounded-full bg-gradient-to-tr from-[var(--brand-yellow-500)] to-[var(--functional-green-500)]' : 'w-[80px] h-[80px] rounded-[40px]'}`}
                 style={!isPublished ? { background: 'var(--gradient-success-orange)' } : {}}
               >
@@ -763,18 +769,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               </div>
 
               {/* Title */}
-              <h1 
-                className={`text-center font-semibold ${isPublished ? 'text-[var(--functional-green-500)] text-[24px]' : 'text-[20px] leading-[24px]'}`} 
+              <h1
+                className={`text-center font-semibold ${isPublished ? 'text-[var(--functional-green-500)] text-[24px]' : 'text-[20px] leading-[24px]'}`}
                 style={
-                  isPublished 
+                  isPublished
                     ? { fontFamily: 'Poppins, sans-serif' }
-                    : { 
-                        fontFamily: 'Poppins, sans-serif',
-                        background: 'var(--gradient-success-orange)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        backgroundClip: 'text'
-                      }
+                    : {
+                      fontFamily: 'Poppins, sans-serif',
+                      background: 'var(--gradient-success-orange)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }
                 }
               >
                 {isPublished ? 'Publié !' : 'Terminé !'}
@@ -904,9 +910,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col">
         <div className="px-5 pt-safe-6 pb-3 border-b border-[var(--border-tertiary)] shrink-0">
           <div className="flex items-center gap-3">
-            <BackButton 
+            <BackButton
               onClick={() => setShowOrganizerSearch(false)}
-              className="rounded-full bg-[var(--color-background-secondary)]" 
+              className="rounded-full bg-[var(--color-background-secondary)]"
             />
             <div className="flex-1 relative">
               <Search01Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-icon-muted)]" />
@@ -999,7 +1005,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* ── Scrollable content ───────────────────────────────────────────── */}
-      <div 
+      <div
         className="flex-1 overflow-y-auto"
         style={{ paddingBottom: 'max(9rem, calc(env(safe-area-inset-bottom, 0px) + 8rem))' }}
       >
@@ -1380,7 +1386,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </div>
 
       {/* ── Footer CTA ───────────────────────────────────────────────────── */}
-      <div 
+      <div
         className="absolute bottom-0 left-0 right-0 bg-[var(--color-background-primary)] border-t border-[var(--border-tertiary)] px-5 pt-4 z-20"
         style={{ paddingBottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))' }}
       >
@@ -1549,7 +1555,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         <div className="flex flex-col h-[70vh] -mx-5 -mb-6">
           {/* Tabs */}
           <div className="flex border-b border-[var(--border-tertiary)] shrink-0 mb-4 px-5">
-            {(['liste','carte'] as const).map(tab => (
+            {(['liste', 'carte'] as const).map(tab => (
               <button key={tab} onClick={() => setLocationTab(tab)}
                 className={`flex-1 py-2.5 text-[14px] font-semibold border-b-2 transition-colors ${locationTab === tab ? 'border-[var(--brand-orange-500)] text-[var(--brand-orange-500)]' : 'border-transparent text-[var(--color-text-secondary)]'}`}>
                 {tab === 'liste' ? 'Lieu' : 'Carte'}
@@ -1570,6 +1576,30 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 />
               </div>
               <div className="flex-1 bg-white dark:bg-[#1A1A1A]">
+                {/* Option to use custom typed venue/place name */}
+                {locationQuery.trim().length >= 2 && (
+                  <button
+                    onClick={() => selectLocation({
+                      label: locationQuery.trim() + (city ? `, ${city}` : ''),
+                      lat: tempLat || 6.36536,
+                      lon: tempLon || 2.41833
+                    })}
+                    className="w-full flex items-center gap-3 py-3 px-3 mb-2 rounded-xl bg-orange-50/70 dark:bg-orange-950/20 border border-orange-200/80 dark:border-orange-900/40 text-left active:scale-[0.99] transition-all"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#FF7A00] flex items-center justify-center shrink-0 text-white">
+                      <HugeMapPin className="w-4 h-4" strokeWidth={2} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold text-[#FF7A00] truncate">
+                        Utiliser « {locationQuery.trim()} »
+                      </p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                        Définir ce lieu et ajuster sur la carte
+                      </p>
+                    </div>
+                  </button>
+                )}
+
                 {locationSuggestions.map((s, i) => (
                   <button key={i} onClick={() => selectLocation(s)}
                     className="w-full flex items-center gap-3 py-4 border-b border-[var(--border-tertiary)] last:border-0 hover:bg-gray-50 dark:bg-[#222222] text-left active:bg-orange-50 transition-colors">
@@ -1583,9 +1613,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   </button>
                 ))}
                 {locationSuggestions.length === 0 && locationQuery.length >= 2 && (
-                  <div className="flex flex-col items-center justify-center pt-10">
-                    <HugeMapPin className="w-10 h-10 text-[var(--color-icon-muted)] mb-3" strokeWidth={1.5} />
-                    <p className="text-[14px] text-[var(--color-text-secondary)]">Aucun lieu trouvé</p>
+                  <div className="flex flex-col items-center justify-center pt-8 pb-4">
+                    <HugeMapPin className="w-8 h-8 text-[var(--color-icon-muted)] mb-2" strokeWidth={1.5} />
+                    <p className="text-[13px] text-[var(--color-text-secondary)]">Aucun lieu répertorié trouvé</p>
+                    <p className="text-[11px] text-gray-400 mt-1">Vous pouvez utiliser l'option ci-dessus pour définir ce lieu.</p>
                   </div>
                 )}
               </div>
@@ -1747,9 +1778,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               {/* Label */}
               <span className="flex-1 text-[length:var(--font-size-body-medium)] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
               {/* Radio */}
-              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                category === cat.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
-              }`}>
+              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${category === cat.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
+                }`}>
                 {category === cat.value && <div className="w-[11px] h-[11px] rounded-full bg-[var(--brand-orange-500)]" />}
               </div>
             </button>
@@ -1806,7 +1836,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 }
 
 // -- Map helper ----------------------------------------------------------------
-function MapInteractionHandler({ onMapClick }: { onMapClick: (coords: {lat: number, lng: number}) => void }) {
+function MapInteractionHandler({ onMapClick }: { onMapClick: (coords: { lat: number, lng: number }) => void }) {
   useMapEvents({ click(e) { onMapClick(e.latlng) } })
   return null
 }

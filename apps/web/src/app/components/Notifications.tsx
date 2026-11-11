@@ -11,6 +11,7 @@ import {
   Settings03Icon,
   Notification01Icon,
   UserMultiple02Icon,
+  Location01Icon,
 } from 'hugeicons-react';
 import { TopBar } from '@/components/ui/TopBar';
 import { Tag } from 'lucide-react';
@@ -42,6 +43,8 @@ const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string; bg:
   SYSTEM:              { icon: Notification01Icon,  label: 'Système',                    color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
   EVENT_REVIEW_REQUEST:{ icon: Notification01Icon,  label: 'Avis demandé',               color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
   PAGE_POST:           { icon: Notification01Icon,  label: 'Nouvelle publication',       color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
+  RADAR_INVITE:        { icon: Location01Icon,      label: 'OUT RADAR',                  color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
+  RADAR_INVITE_ACCEPTED:{ icon: TickDouble01Icon,   label: 'OUT RADAR Accepté',          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
   default:             { icon: Notification01Icon,  label: 'Notification',               color: 'text-gray-400',   bg: 'bg-gray-50 dark:bg-gray-800' },
 };
 
@@ -59,6 +62,8 @@ function getActionLabel(type: string) {
     case 'JOIN_REJECTED':       return 'Voir l\'événement';
     case 'JOIN_REQUEST':        return 'Gérer la demande';
     case 'PAGE_POST':           return 'Voir la publication';
+    case 'RADAR_INVITE':
+    case 'RADAR_INVITE_ACCEPTED':return 'Voir les invitations OUT RADAR';
     default:                    return 'Voir les détails';
   }
 }
@@ -151,6 +156,10 @@ export function Notifications({ onBack }: NotificationsProps) {
         break;
       case 'PAGE_POST':
         if (d?.pageId) navigate(`/pages/${d.pageId}`);
+        break;
+      case 'RADAR_INVITE':
+      case 'RADAR_INVITE_ACCEPTED':
+        navigate('/radar?tab=invites');
         break;
       case 'NEW_MESSAGE':
         if (d?.conversationId) navigate(`/chat/${d.conversationId}`);

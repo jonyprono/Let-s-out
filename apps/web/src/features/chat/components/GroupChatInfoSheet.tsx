@@ -1,8 +1,8 @@
-import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, Bell, AlertTriangle, LogOut, UserPlus, Loader2 } from 'lucide-react'
+import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, Bell, AlertTriangle, LogOut, UserPlus, Loader2, Camera } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { useNavigate } from 'react-router'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Conversation, chatApi } from '../api'
@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { usersApi } from '@/features/users/api'
 import { ReportModal } from '@/components/shared/ReportModal'
+import { apiClient } from '@/lib/api-client'
 
 interface GroupChatInfoSheetProps {
   conversation: Conversation
@@ -42,6 +43,55 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
   })
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const isOrganizer = !event?.creatorId || event.creatorId === user?.id || (event.coHostIds || []).includes(user?.id)
+
+  const handleAvatarClick = () => {
+    if (event?.creatorId && !isOrganizer) {
+      toast.info("Seul l'organisateur peut modifier la photo de l'événement.")
+      return
+    }
+    fileInputRef.current?.click()
+  }
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setIsUploadingPhoto(true)
+    try {
+      let uploadedUrl = ''
+      if (event?.id) {
+        const res = await eventsApi.uploadCover(file)
+        uploadedUrl = res.data.url
+        await eventsApi.update(event.id, {
+          coverUrl: uploadedUrl,
+          mediaUrls: event.mediaUrls?.length ? [uploadedUrl, ...event.mediaUrls.filter((u: string) => u !== uploadedUrl)] : [uploadedUrl]
+        })
+      } else {
+        uploadedUrl = await chatApi.uploadMedia(file)
+      }
+
+      if (conversation?.id) {
+        try {
+          await apiClient.patch(`/chat/conversations/${conversation.id}`, { avatarUrl: uploadedUrl })
+        } catch {}
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['chat'] })
+      queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] })
+      if (conversation?.id) {
+        queryClient.invalidateQueries({ queryKey: ['chat', 'conversations', conversation.id] })
+      }
+      toast.success('Photo mise à jour avec succès')
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || err.message || "Erreur lors de l'upload de la photo")
+    } finally {
+      setIsUploadingPhoto(false)
+      if (e.target) e.target.value = ''
+    }
+  }
 
   const reportMut = useMutation({
     mutationFn: async (reason: string) => {
@@ -115,13 +165,45 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
         {/* Chat info */}
         <div className="flex flex-col items-center gap-4 w-full mt-4">
           {/* Cover */}
-          <div className="w-[64px] h-[64px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0">
-            <SafeImage
-              src={event?.coverUrl || conversation?.avatarUrl}
-              alt={event?.title || conversation?.name || 'Groupe'}
-              className="w-full h-full object-cover"
-              fallback={groupSvg}
+          <div className="relative">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
             />
+            <div
+              onClick={handleAvatarClick}
+              className="relative w-[64px] h-[64px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0 cursor-pointer group shadow-sm border border-gray-100 dark:border-gray-800"
+              title="Modifier la photo"
+            >
+              <SafeImage
+                src={event?.coverUrl || conversation?.avatarUrl}
+                alt={event?.title || conversation?.name || 'Groupe'}
+                className="w-full h-full object-cover"
+                fallback={groupSvg}
+              />
+              {isUploadingPhoto ? (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                </div>
+              ) : (
+                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-white drop-shadow" />
+                </div>
+              )}
+            </div>
+            {/* Camera badge indicating it is editable */}
+            {!isUploadingPhoto && isOrganizer && (
+              <button
+                onClick={handleAvatarClick}
+                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#FF7A00] flex items-center justify-center border-2 border-white dark:border-[#1A1A1A] shadow-sm active:scale-95 transition-transform"
+                title="Choisir une photo"
+              >
+                <Camera className="w-3 h-3 text-white" />
+              </button>
+            )}
           </div>
 
           {/* About */}

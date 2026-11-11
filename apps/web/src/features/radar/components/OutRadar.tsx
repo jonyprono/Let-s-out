@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { ChatDetails } from '@/features/chat/components/ChatDetails'
 import {
   ChevronLeft,
   Radio,
@@ -39,12 +40,21 @@ const OUTING_TYPES = [
 
 export function OutRadar() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s: any) => s.user)
   const refreshUser = useAuthStore((s) => s.refreshUser)
 
   // Onglet principal : 'radar' (Recherche & Profils) ou 'invites' (Mes invitations)
-  const [activeTab, setActiveTab] = useState<'radar' | 'invites'>('radar')
+  const initialTab = searchParams.get('tab') === 'invites' ? 'invites' : 'radar'
+  const [activeTab, setActiveTab] = useState<'radar' | 'invites'>(initialTab)
+  const [activeDiscussionConvId, setActiveDiscussionConvId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (searchParams.get('tab') === 'invites') {
+      setActiveTab('invites')
+    }
+  }, [searchParams])
 
   // État de localisation
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
@@ -379,7 +389,7 @@ export function OutRadar() {
       if (vars.action === 'ACCEPT') {
         toast.success('Invitation acceptée !')
         if (res.conversationId) {
-          navigate('/messages', { state: { conversationId: res.conversationId } })
+          setActiveDiscussionConvId(res.conversationId)
         }
       } else {
         toast.info('Invitation refusée.')
@@ -417,6 +427,18 @@ export function OutRadar() {
   }
 
   const isVisible = Boolean(statusData?.isVisible)
+
+  if (activeDiscussionConvId) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[var(--color-background-primary)] flex flex-col">
+        <ChatDetails
+          conversationId={activeDiscussionConvId}
+          onBack={() => setActiveDiscussionConvId(null)}
+          isRadarMode={true}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="w-full min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white flex flex-col">
@@ -584,7 +606,13 @@ export function OutRadar() {
 
                       {inv.status === 'ACCEPTED' && (
                         <button
-                          onClick={() => navigate('/messages')}
+                          onClick={() => {
+                            if (inv.conversationId) {
+                              setActiveDiscussionConvId(inv.conversationId)
+                            } else {
+                              toast.info('Ouverture de la discussion OUT RADAR...')
+                            }
+                          }}
                           className="w-full py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-xs font-semibold hover:bg-gray-200 active:scale-95 transition-all flex items-center justify-center gap-1.5"
                         >
                           <MessageCircle className="w-3.5 h-3.5 text-[#FF7A00]" />

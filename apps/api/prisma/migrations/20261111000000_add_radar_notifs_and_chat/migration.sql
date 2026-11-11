@@ -1,0 +1,10 @@
+-- AlterEnum
+ALTER TYPE "NotifType" ADD VALUE IF NOT EXISTS 'RADAR_INVITE';
+ALTER TYPE "NotifType" ADD VALUE IF NOT EXISTS 'RADAR_INVITE_ACCEPTED';
+
+-- AlterTable
+ALTER TABLE "radar_invites" ADD COLUMN IF NOT EXISTS "conversationId" TEXT;
+
+-- AlterTable
+ALTER TABLE "conversations" ADD COLUMN IF NOT EXISTS "isRadar" BOOLEAN NOT NULL DEFAULT false;
+

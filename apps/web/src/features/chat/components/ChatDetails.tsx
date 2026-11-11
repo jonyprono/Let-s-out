@@ -241,8 +241,15 @@ const MessageStatusIcon = ({ status, color = "currentColor" }: { status: string,
   return null;
 }
 
-export function ChatDetails() {
-  const { id } = useParams<{ id: string }>()
+export interface ChatDetailsProps {
+  conversationId?: string
+  onBack?: () => void
+  isRadarMode?: boolean
+}
+
+export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }: ChatDetailsProps = {}) {
+  const { id: paramId } = useParams<{ id: string }>()
+  const id = propConvId || paramId
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const { sendTyping, sendRead } = useChatSocket()
@@ -681,7 +688,18 @@ export function ChatDetails() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-[var(--color-background-primary)] border-b border-gray-100 dark:border-white/10 pt-safe-6 pb-2">
         <div className="flex items-center px-4">
-          <button onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/messages')} className="p-2 -ml-2 hover:bg-gray-50 dark:bg-[#222222] rounded-full transition-colors active:scale-95">
+          <button
+            onClick={() => {
+              if (onBack) {
+                onBack()
+              } else if (window.history.state && window.history.state.idx > 0) {
+                navigate(-1)
+              } else {
+                navigate('/messages')
+              }
+            }}
+            className="p-2 -ml-2 hover:bg-gray-50 dark:bg-[#222222] rounded-full transition-colors active:scale-95"
+          >
             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
           </button>
 
@@ -713,7 +731,14 @@ export function ChatDetails() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="font-bold text-gray-900 dark:text-white text-[16px] truncate leading-tight tracking-tight">{conversationTitle}</h2>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <h2 className="font-bold text-gray-900 dark:text-white text-[16px] truncate leading-tight tracking-tight">{conversationTitle}</h2>
+                {(isRadarMode || (conversation as any)?.isRadar) && (
+                  <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FF7A00]/15 text-[#FF7A00]">
+                    OUT RADAR
+                  </span>
+                )}
+              </div>
               {typingUser ? (
                 <p className="text-[13px] text-action-primary font-medium animate-pulse mt-0.5">{typingUser} écrit...</p>
               ) : isGroup ? (
