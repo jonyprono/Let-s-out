@@ -317,12 +317,15 @@ export class AuthController {
     let actualUserId: string = userId as string;
     
     if (token === 'admin_no_refresh_token_needed') {
-      // Decode the expired access token to get the admin's ID
+      // Verify (signature + claims) the expired access token to get the admin's ID.
+      // ignoreExpiration is required since the whole point is refreshing a token that
+      // has expired, but the signature must still be valid — never use jwt.decode()
+      // here, as it performs no cryptographic verification at all.
       const authHeader = req.headers.authorization
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const expiredToken = authHeader.split(' ')[1]
         try {
-          const decoded = this.app.jwt.decode(expiredToken) as { sub: string, role: string }
+          const decoded = this.app.jwt.verify(expiredToken, { ignoreExpiration: true }) as { sub: string, role: string }
           if (decoded && decoded.role === 'ADMIN') {
             actualUserId = decoded.sub
 
@@ -456,27 +459,6 @@ export class AuthController {
     
     if (!target || !password) {
       return reply.code(400).send({ error: 'L\'identifiant et le mot de passe sont requis.' })
-    }
-
-    // Auto-repair/Seed mechanism specifically for the default admin during login
-    if (target === '+2290156363337') {
-      try {
-        let admin = await this.app.prisma.admin.findFirst({ where: { phone: target } })
-        if (!admin) {
-          const passwordHash = await bcrypt.hash('Azerty01', 10)
-          await this.app.prisma.admin.create({
-            data: { phone: target, name: 'Admin Principal', passwordHash }
-          })
-        } else if (!admin.passwordHash) {
-          const passwordHash = await bcrypt.hash('Azerty01', 10)
-          await this.app.prisma.admin.update({
-            where: { id: admin.id },
-            data: { passwordHash }
-          })
-        }
-      } catch (e) {
-        this.app.log.error({ err: e }, 'Failed to auto-repair default admin')
-      }
     }
 
     // Verify Admin Table by phone or email

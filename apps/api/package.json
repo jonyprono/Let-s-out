@@ -12,7 +12,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "tsx src/prisma/seed.ts"
+    "prisma:seed": "tsx src/prisma/seed.ts",
+    "seed:admins": "tsx src/scripts/seed-admins.ts"
   },
   "dependencies": {
     "@fastify/compress": "^7.0.3",
