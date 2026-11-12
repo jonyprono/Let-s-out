@@ -59,5 +59,14 @@
 	<string>Let's Out a besoin d'accéder à votre microphone pour les messages audio et les appels.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Let's Out a besoin de votre position pour OUT RADAR, afin de vous montrer les Outsters à proximité.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.259737951981-egc736gs4p0r2oi1t86utjnic648agoj</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
