@@ -49,5 +49,15 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Let's Out a besoin d'accéder à votre appareil photo pour prendre des photos et vidéos à partager dans vos événements et conversations.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Let's Out a besoin d'accéder à vos photos pour les partager dans vos événements et conversations.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Let's Out a besoin d'enregistrer des photos dans votre galerie.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Let's Out a besoin d'accéder à votre microphone pour les messages audio et les appels.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Let's Out a besoin de votre position pour OUT RADAR, afin de vous montrer les Outsters à proximité.</string>
 </dict>
 </plist>
