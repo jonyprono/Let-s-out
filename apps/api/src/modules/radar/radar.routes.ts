@@ -27,6 +27,16 @@ function getProximityInfo(distanceKm: number): { tier: ProximityTier; label: str
 // Anti-triangulation : mémorisation de l'horodatage de dernière recherche par utilisateur
 const lastSearchTimestamps = new Map<string, number>()
 
+// Purge périodique des entrées obsolètes (largement au-delà des 10s de cooldown)
+// pour éviter que cette Map ne grossisse indéfiniment en mémoire.
+const SEARCH_TIMESTAMP_TTL_MS = 10 * 60 * 1000
+setInterval(() => {
+  const cutoff = Date.now() - SEARCH_TIMESTAMP_TTL_MS
+  for (const [userId, ts] of lastSearchTimestamps) {
+    if (ts < cutoff) lastSearchTimestamps.delete(userId)
+  }
+}, 5 * 60 * 1000).unref()
+
 // Vérification de la majorité (18 ans et plus)
 function isAdult(birthDate: Date | string | null | undefined): boolean {
   if (!birthDate) return false
@@ -579,10 +589,19 @@ export default async function radarRoutes(app: FastifyInstance) {
                 },
               },
             })
-            await app.prisma.radarInvite.update({
-              where: { id: inv.id },
+            // Attache la conversation de façon atomique, uniquement si personne d'autre
+            // n'a déjà rempli conversationId en parallèle (ex: polling multi-onglets).
+            const claim = await app.prisma.radarInvite.updateMany({
+              where: { id: inv.id, conversationId: null },
               data: { conversationId: newConv.id },
             })
+            if (claim.count === 0) {
+              // Perdu la course : on supprime la conversation orpheline qu'on vient de
+              // créer et on renvoie celle déjà attachée par la requête concurrente.
+              await app.prisma.conversation.delete({ where: { id: newConv.id } }).catch(() => {})
+              const fresh = await app.prisma.radarInvite.findUnique({ where: { id: inv.id } })
+              return { ...inv, conversationId: fresh?.conversationId ?? null }
+            }
             return { ...inv, conversationId: newConv.id }
           } catch {
             return inv
@@ -622,6 +641,17 @@ export default async function radarRoutes(app: FastifyInstance) {
     }
 
     if (action === 'ACCEPT') {
+      // Réclame l'invitation de façon atomique : si deux requêtes concurrentes (double-clic,
+      // double appel réseau) arrivent ici, une seule passera ce updateMany conditionné sur
+      // status === 'PENDING'. Ça évite de créer deux conversations radar pour la même invite.
+      const claim = await app.prisma.radarInvite.updateMany({
+        where: { id, status: 'PENDING' },
+        data: { status: 'ACCEPTED' },
+      })
+      if (claim.count === 0) {
+        return reply.code(409).send({ error: 'Cette invitation a déjà été traitée.' })
+      }
+
       // Toujours créer une NOUVELLE conversation pour cette session radar
       // On ne recycle jamais une conversation existante (même entre les mêmes utilisateurs)
       let conversationId: string | null = null
@@ -636,17 +666,15 @@ export default async function radarRoutes(app: FastifyInstance) {
           },
         })
         conversationId = newConv.id
+        await app.prisma.radarInvite.update({
+          where: { id },
+          data: { conversationId },
+        })
       } catch (err) {
         app.log.warn(`[OUT_RADAR] Failed to auto-create conversation: ${err}`)
       }
 
-      const updated = await app.prisma.radarInvite.update({
-        where: { id },
-        data: {
-          status: 'ACCEPTED',
-          conversationId,
-        },
-      })
+      const updated = { ...invite, status: 'ACCEPTED' as const, conversationId }
 
       // Notification à l'émetteur
       try {

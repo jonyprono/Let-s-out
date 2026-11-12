@@ -18,6 +18,7 @@ export default async function authRoutes(app: FastifyInstance) {
 
   // Check if a target (phone/email) exists
   app.post('/check-target', {
+    config: { rateLimit: { max: 20, timeWindow: '5 minutes' } },
     handler: ctrl.checkTarget.bind(ctrl),
   })
 

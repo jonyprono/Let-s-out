@@ -170,7 +170,13 @@ export class AuthService {
 
   async verifyFirebaseToken(idToken: string, targetPhone: string): Promise<boolean> {
     if (!admin.apps.length) {
-      if (process.env.NODE_ENV === 'development') {
+      // Double safety net: the bypass requires BOTH a non-production NODE_ENV AND an
+      // explicit opt-in flag, so a misconfigured/missing NODE_ENV in a real deployment
+      // can never silently enable it — only a deliberately-set env var can.
+      const isProduction = process.env.NODE_ENV === 'production'
+      const devBypassAllowed = !isProduction && process.env.ALLOW_DEV_AUTH_BYPASS === 'true'
+
+      if (devBypassAllowed) {
         console.warn('Firebase Admin not initialized. Bypassing token signature validation for DEV MODE.');
         try {
           const parts = idToken.split('.')
@@ -184,7 +190,7 @@ export class AuthService {
           console.error('Failed to decode JWT locally:', e)
         }
       } else {
-        console.warn('Firebase Admin not initialized. Cannot verify token.');
+        console.error('Firebase Admin not initialized and dev bypass is disabled. Cannot verify token.');
       }
       return false;
     }
