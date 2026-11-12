@@ -55,7 +55,7 @@
       "appVersion": "App version",
       "terms": "Terms of Use",
       "privacy": "Privacy Policy",
-      "rateApp": "Rate Lets Out",
+      "rateApp": "Rate Let's Out",
       "rateAppDesc": "Have your say",
       "shareApp": "Share the app",
       "shareAppDesc": "Invite your friends",
@@ -71,7 +71,7 @@
       "deleteAccount": "Delete my account"
     },
     "modals": {
-      "rateTitle": "Rate Lets Out",
+      "rateTitle": "Rate Let's Out",
       "rateSubtitle": "Where would you like to leave your review?",
       "deleteTitle1": "Delete my account",
       "deleteDesc1": "This action cannot be undone. Your profile will be anonymised and you will no longer be able to log in with this account.",
@@ -142,7 +142,7 @@
     "or": "Or",
     "google": "Sign in with Google",
     "googleLoading": "Sign in with Google...",
-    "newUser": "Are you new to Lets Out?",
+    "newUser": "Are you new to Let's Out?",
     "signUp": "Sign up",
     "terms": "By continuing, you agree to our",
     "termsLink": "Terms of Use",
@@ -166,7 +166,7 @@
     "google": "Sign up with Google",
     "otpAlternative": "Code taking too long? You can also:",
     "step3Title": "What is your name?",
-    "step3Subtitle": "This information will help your friends recognise you and will only be visible on Lets Out.",
+    "step3Subtitle": "This information will help your friends recognise you and will only be visible on Let's Out.",
     "step3NamePlaceholder": "Full name",
     "step3PseudoPlaceholder": "Username",
     "step4Title": "And what about your birthday?",
@@ -187,9 +187,9 @@
     "step7Rule3": "At least 1 digit",
     "step7TermsCheck": "I confirm that I am over 18 years of age. I have read and accept the",
     "step7TermsLink": "Terms of Use",
-    "step7TermsOf": "by Lets Out.",
+    "step7TermsOf": "by Let's Out.",
     "buttonNext": "Next",
-    "buttonJoin": "Join Lets Out",
+    "buttonJoin": "Join Let's Out",
     "errorSelectChannel": "Please select SMS or WhatsApp.",
     "errorBenin": "In Benin, the number must be 10 digits long and begin with 01.",
     "errorPhone": "The format of your telephone number is incorrect.",
@@ -229,7 +229,7 @@
       "tryAnother": "Try a different time slot or come back later."
     },
     "header": {
-      "welcome": "Welcome, {{name}} Ã°Å¸â€˜â€¹",
+      "welcome": "Welcome, {{name}} 👋",
       "readyFor": "Ready for some",
       "newExperiences": "new experiences",
       "readyForEnd": " ?"

@@ -17,6 +17,7 @@ import { PushNotifications } from '@capacitor/push-notifications'
 import { LocalNotifications } from '@capacitor/local-notifications'
 import { chatApi } from '@/features/chat/api'
 import { apiClient } from '@/lib/api-client'
+import { DebugPanel } from '@/app/components/DebugPanel'
 
 export function AppBootstrap() {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -211,5 +212,5 @@ export function AppBootstrap() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only on mount
 
-  return null
+  return <DebugPanel />
 }

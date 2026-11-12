@@ -84,8 +84,17 @@ export const useAuthStore = create<AuthState>()(
                 : state.user?.profile,
             },
           }))
-        } catch {
-          set({ accessToken: null, refreshToken: null, user: null })
+        } catch (err: any) {
+          // Only a confirmed 401 means the session is genuinely dead — the response
+          // interceptor already attempted its own token refresh before this rejection
+          // reached us. Any other failure (network error, timeout, 5xx — common right
+          // after a native OAuth round-trip on iOS, or during a flaky bootstrap fetch)
+          // must NOT wipe the cached session: callers rely on refreshUser() being a
+          // "best-effort refresh, keep cached data on failure" operation (see
+          // AppBootstrap's fire-and-forget usage).
+          if (err?.response?.status === 401) {
+            set({ accessToken: null, refreshToken: null, user: null })
+          }
         } finally {
           set({ isLoading: false })
         }

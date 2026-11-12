@@ -60,6 +60,13 @@ const config: CapacitorConfig = {
       style: 'LIGHT',
       backgroundColor: '#ffffff',
     },
+    Keyboard: {
+      // 'native' lets the WKWebView handle its own resize (prevents the page
+      // from sliding/jumping when the keyboard opens on iOS); scroll-to-focused-input
+      // is handled natively too.
+      resize: 'native',
+      resizeOnFullScreen: true,
+    },
     CapacitorHttp: {
       enabled: true,
     },

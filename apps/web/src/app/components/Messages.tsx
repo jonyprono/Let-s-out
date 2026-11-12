@@ -7,6 +7,7 @@ import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
 import { NewConversationModal } from '@/features/chat/components/NewConversationModal';
 import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
 import { SafeImage } from '@/components/shared/SafeImage';
+import { ErrorRetryState } from '@/components/shared/ErrorRetryState';
 import { useAuthStore } from '@/stores/auth.store';
 import { useQueryClient } from '@tanstack/react-query';
 import PullToRefresh from 'react-simple-pull-to-refresh';
@@ -19,7 +20,7 @@ export function Messages(_props: MessagesProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   useChatSocket();
-  const { data: conversations, isLoading, refetch } = useConversations();
+  const { data: conversations, isLoading, isError: isConversationsError, refetch } = useConversations();
   const [showNewConv, setShowNewConv] = useState(false);
   const [showAddFriends, setShowAddFriends] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,7 +214,7 @@ export function Messages(_props: MessagesProps) {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={t('messages.searchPlaceholder')}
-                className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] dark:text-[#f5f5f5] placeholder:text-[#BDBDBD] font-['Inter_Display'] min-w-0"
+                className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] dark:text-[#f5f5f5] placeholder:text-[#BDBDBD] font-inter min-w-0"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] rounded-full transition-colors flex-shrink-0">
@@ -267,6 +268,8 @@ export function Messages(_props: MessagesProps) {
                   </div>
                 ))}
               </div>
+            ) : isConversationsError ? (
+              <ErrorRetryState onRetry={() => refetch()} className="flex-1 justify-center" />
             ) : (
               <>
                 {visibleConversations.length > 0 ? (
@@ -327,7 +330,7 @@ export function Messages(_props: MessagesProps) {
                   <h3 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5] text-center">
                     {t('messages.noConversations')}
                   </h3>
-                  <p className="font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-center text-[#404040] dark:text-[#a3a3a3]">
+                  <p className="font-inter font-normal text-[12px] leading-[16px] text-center text-[#404040] dark:text-[#a3a3a3]">
                     {t('messages.noConversationsSub')}
                   </p>
                 </div>
@@ -488,21 +491,21 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu, onPre
           <h3 className="font-poppins font-medium text-[14px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5] truncate">
             {conv.name}
           </h3>
-          <span className="font-['Inter_Display'] font-normal text-[10px] leading-[16px] text-[#737373] flex-shrink-0 ml-2">
+          <span className="font-inter font-normal text-[10px] leading-[16px] text-[#737373] flex-shrink-0 ml-2">
             {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
           </span>
         </div>
         
         {/* Bottom Row */}
         <div className="w-full flex flex-row items-center gap-[8px] h-[16px]">
-          <p className="flex-1 font-['Inter_Display'] font-normal text-[12px] leading-[16px] text-[#525252] dark:text-[#A3A3A3] truncate">
+          <p className="flex-1 font-inter font-normal text-[12px] leading-[16px] text-[#525252] dark:text-[#A3A3A3] truncate">
             {conv.lastMsgPrefix && <span className="font-medium mr-1">{conv.lastMsgPrefix}</span>}
             {conv.lastMsg}
           </p>
           {/* Status badge */}
           {hasUnread && (
             <div className="flex-shrink-0 min-w-[16px] h-[16px] px-[4px] bg-[#FF7A00] rounded-[12px] flex items-center justify-center">
-              <span className="font-['Inter_Display'] font-semibold text-[12px] leading-[16px] text-[#FFFFFF]">
+              <span className="font-inter font-semibold text-[12px] leading-[16px] text-[#FFFFFF]">
                 {conv.unread > 9 ? '9+' : conv.unread}
               </span>
             </div>

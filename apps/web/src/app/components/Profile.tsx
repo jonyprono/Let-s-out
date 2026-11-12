@@ -3,6 +3,7 @@ import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Users, Medal, 
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { SafeImage } from '@/components/shared/SafeImage';
+import { ErrorRetryState } from '@/components/shared/ErrorRetryState';
 import { useUserProfile } from '@/features/users/UserProfileContext';
 import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -41,7 +42,7 @@ export function Profile({ onNavigate }: ProfileProps) {
   const targetUsername = username || profile?.username;
   const isOwnProfile = !username || (!!profile?.username && username === profile?.username);
 
-  const { data: viewedProfile, isLoading: isLoadingProfile } = useQuery({
+  const { data: viewedProfile, isLoading: isLoadingProfile, isError: isProfileError, refetch: refetchProfile } = useQuery({
     queryKey: ['public-profile', targetUsername],
     queryFn: async () => {
       const { data } = await apiClient.get(`/users/${targetUsername}`);
@@ -151,6 +152,16 @@ export function Profile({ onNavigate }: ProfileProps) {
           <div className="h-4 w-32 bg-gray-200 rounded-lg animate-pulse" />
           <div className="h-3 w-24 bg-gray-200 rounded-lg animate-pulse" />
         </div>
+      </div>
+    );
+  }
+
+  // Fetch genuinely failed (not just "user has no badges/interests") — show a retry
+  // instead of silently rendering an empty/unknown profile.
+  if (username && !isOwnProfile && !viewedProfile && isProfileError) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0b]">
+        <ErrorRetryState onRetry={() => refetchProfile()} />
       </div>
     );
   }

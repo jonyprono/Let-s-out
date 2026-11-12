@@ -7,7 +7,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Avoid a black flash between the native splash screen hiding and the
+        // WKWebView's first paint (WKWebView defaults to a black background
+        // until CSS loads, especially noticeable on the remote server.url load).
+        window?.backgroundColor = .white
         return true
     }
 

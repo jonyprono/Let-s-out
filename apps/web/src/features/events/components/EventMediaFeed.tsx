@@ -8,12 +8,14 @@ export function EventMediaFeed() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null);
   
-  const { 
-    data, 
-    isLoading, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage 
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
   } = useInfiniteQuery({
     queryKey: ['feed', 'videos', 'infinite'],
     queryFn: ({ pageParam }) => videosApi.list({ limit: 10, cursor: pageParam }),
@@ -30,6 +32,16 @@ export function EventMediaFeed() {
           <div key={i} className="w-[140px] aspect-square bg-gray-200 dark:bg-gray-800 rounded-2xl animate-pulse shrink-0" />
         ))}
       </div>
+    );
+  }
+
+  // Failed fetch must stay visible (with a retry) instead of silently vanishing —
+  // a genuinely empty result (no error) is the only case where hiding this strip is correct.
+  if (isError) {
+    return (
+      <button onClick={() => refetch()} className="mx-4 my-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-[#2a2a2a] text-xs text-gray-500 dark:text-gray-400">
+        OUT VLOGS — Erreur de chargement, toucher pour réessayer
+      </button>
     );
   }
 

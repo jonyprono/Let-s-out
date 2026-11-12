@@ -229,7 +229,7 @@
       "tryAnother": "Prueba con otra franja horaria o vuelve mÃ¡s tarde."
     },
     "header": {
-      "welcome": "Bienvenido, {{name}} ðŸ‘‹",
+      "welcome": "Bienvenido, {{name}} 👋",
       "readyFor": "Â¿Listo para un poco de...",
       "newExperiences": "nuevas experiencias",
       "readyForEnd": " ?"

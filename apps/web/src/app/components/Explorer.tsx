@@ -5,6 +5,7 @@ import { Loader2, ChevronLeft, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Search01Icon, Location01Icon, ArrowDown01Icon, MapsIcon, Cancel01Icon, Tick01Icon } from 'hugeicons-react';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
+import { ErrorRetryState } from '@/components/shared/ErrorRetryState';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { eventsApi } from '@/features/events/api';
@@ -137,7 +138,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       }
     }, 350);
   }, [eventSearch, viewMode, currentLocation]);
-  const { data: eventsPages, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+  const { data: eventsPages, isError: isEventsError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['events', 'explorer'],
     queryFn: async ({ pageParam = 0 }) => {
       const res = await eventsApi.list({ limit: 30, offset: pageParam as number, upcoming: true });
@@ -733,7 +734,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </div>
 
             <div className="px-4 pt-1 pb-[100px]">
-              {filteredEvents.length > 0 || filteredRecentlyEnded.length > 0 ? (
+              {isEventsError && filteredEvents.length === 0 && filteredRecentlyEnded.length === 0 ? (
+                <ErrorRetryState onRetry={() => refetch()} />
+              ) : filteredEvents.length > 0 || filteredRecentlyEnded.length > 0 ? (
                 <>
                   {/* ── En vedette (Horizontal scroll — 3 cards visible) ── */}
                   {sortFeaturedEvents(filteredEvents).length > 0 && (

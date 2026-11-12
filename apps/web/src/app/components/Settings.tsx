@@ -24,6 +24,7 @@ import { useSettingsStore } from '@/stores/settings.store';
 import { toast } from 'sonner';
 import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
+import { openDebugPanel } from '@/app/components/DebugPanel';
 
 interface SettingsProps {
   onBack?: () => void;
@@ -124,6 +125,19 @@ export function Settings({ onBack }: SettingsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [versionTapCount, setVersionTapCount] = useState(0);
+
+  // Hidden debug panel: 5 taps on "Version de l'app" within 2s opens it
+  useEffect(() => {
+    if (versionTapCount === 0) return
+    if (versionTapCount >= 5) {
+      setVersionTapCount(0);
+      openDebugPanel();
+      return
+    }
+    const t = setTimeout(() => setVersionTapCount(0), 2000)
+    return () => clearTimeout(t)
+  }, [versionTapCount]);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [deleteReason, setDeleteReason] = useState('');
 
@@ -558,6 +572,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconColor="text-gray-500"
               title={t('settings.rows.appVersion')}
               rightEl={<span className="text-[13px] text-gray-400 font-medium">1.0.0</span>}
+              onClick={() => setVersionTapCount((c) => c + 1)}
             />
             <SettingsRow
               icon={<FileText className="w-4 h-4" />}

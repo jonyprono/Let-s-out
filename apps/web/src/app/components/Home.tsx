@@ -22,6 +22,7 @@ import { PageVideoPlayerModal, PageVideoItem } from '@/features/pages/components
 import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer';
+import { ErrorRetryState } from '@/components/shared/ErrorRetryState';
 import { sortFeaturedEvents, sortPopularEvents } from '@/utils/event-ranking';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
@@ -639,6 +640,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const {
     data: eventsData,
     isLoading,
+    isError: isEventsError,
+    refetch: refetchEvents,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
@@ -1087,6 +1090,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     <div className="px-4 space-y-3">
                       {[1, 2, 3].map(i => <EventCardSkeleton key={i} />)}
                     </div>
+                  ) : isEventsError && mixedFeed.length === 0 ? (
+                    <ErrorRetryState onRetry={() => refetchEvents()} />
                   ) : mixedFeed.length === 0 ? (
                     <div className="flex flex-col items-center py-14 gap-3 text-center px-8">
                       <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center text-2xl">📭</div>

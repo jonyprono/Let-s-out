@@ -2,6 +2,7 @@ import axios from 'axios'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth.store'
 import { isOnline } from '@/lib/offline'
+import { logRequest, logResponse, logError } from '@/lib/debugLog'
 
 // Detect if running in Capacitor (native mobile)
 const isCapacitor = () => {
@@ -82,6 +83,8 @@ apiClient.interceptors.request.use((config) => {
     }
   }
 
+  ;(config as any).__debugId = logRequest((config.method || 'get').toUpperCase(), `${config.baseURL ?? ''}${config.url ?? ''}`)
+
   return config
 })
 
@@ -108,8 +111,20 @@ const authEndpoints = ['/auth/login', '/auth/register', '/auth/check-', '/auth/v
 const isAuthEndpoint = (url?: string) => authEndpoints.some(e => url?.includes(e))
 
 apiClient.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    const debugId = (res.config as any).__debugId
+    if (debugId) logResponse(debugId, res.status, res.data)
+    return res
+  },
   async (error) => {
+    // ── Debug log: record every failed request for the hidden debug panel ──
+    const debugId = (error?.config as any)?.__debugId
+    if (debugId) {
+      const status = error?.response?.status ?? 'ERROR'
+      const message = error?.response?.data?.message || error?.response?.data?.error || error?.message || String(error)
+      logError(debugId, status, message, error?.response?.data)
+    }
+
     // ── Guard: raw browser event (e.g. ProgressEvent from XHR onerror on Capacitor) ──
     const isProgressEvent =
       !error ||

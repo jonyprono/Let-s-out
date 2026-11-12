@@ -9,6 +9,10 @@ html, body, #root {
   /* Dynamic viewport height — collapses browser chrome on mobile (iOS/Android) */
   min-height: 100dvh;
   overflow: hidden;
+  max-width: 100vw;
+  /* Disables the iOS WKWebView rubber-band bounce/slide at scroll edges —
+     a common cause of the page appearing to "slide" even when nothing overflows. */
+  overscroll-behavior: none;
 }
 
 body {
