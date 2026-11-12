@@ -215,7 +215,7 @@ export class AuthController {
 
       reply.setCookie('refresh_token', refreshToken, {
         httpOnly: true,
-        secure: false, // Allow HTTP for local network (Capacitor app)
+        secure: process.env.NODE_ENV === 'production', // Allow HTTP only for local network/Capacitor dev
         sameSite: 'lax', // Allow cookies from Capacitor/mobile apps
         path: '/', // Send to all endpoints, not just /auth
         maxAge: 30 * 24 * 60 * 60,
@@ -365,7 +365,7 @@ export class AuthController {
 
     reply.setCookie('refresh_token', newRefreshToken, {
       httpOnly: true,
-      secure: false, // Allow HTTP for local network (Capacitor app)
+      secure: process.env.NODE_ENV === 'production', // Allow HTTP only for local network/Capacitor dev
       sameSite: 'lax', // Allow cookies from Capacitor/mobile apps
       path: '/', // Send to all endpoints, not just /auth
       maxAge: 30 * 24 * 60 * 60,

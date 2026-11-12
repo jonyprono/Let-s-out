@@ -219,7 +219,11 @@ export function OutRadar() {
   }
 
   // ── 5. Action : Lancer la recherche (durée 30s minimum) ────────────────────
-  const handleLaunchSearch = async () => {
+  // radiusOverride permet d'annoncer le bon rayon dans le toast de fin quand le rayon
+  // vient d'être changé dans le même tick (ex: handleWidenRadius) — radiusKm via la
+  // closure serait encore l'ancienne valeur tant que React n'a pas re-rendu.
+  const handleLaunchSearch = async (radiusOverride?: number) => {
+    const effectiveRadius = radiusOverride ?? radiusKm
     let currentCoords = coords
     if (!currentCoords) {
       currentCoords = await requestLocation()
@@ -252,7 +256,7 @@ export function OutRadar() {
           'search',
           currentCoords?.latitude,
           currentCoords?.longitude,
-          radiusKm,
+          effectiveRadius,
           genderFilter,
           verifiedOnly,
           outingTypeFilter,
@@ -271,9 +275,12 @@ export function OutRadar() {
     const radii = [1, 5, 10]
     const idx = radii.indexOf(radiusKm)
     if (idx < radii.length - 1) {
-      setRadiusKm(radii[idx + 1])
+      const nextRadius = radii[idx + 1]
+      setRadiusKm(nextRadius)
+      handleLaunchSearch(nextRadius)
+    } else {
+      handleLaunchSearch()
     }
-    handleLaunchSearch()
   }, [radiusKm])
 
   // ── 6. Mutation : Activer / Désactiver la visibilité ──────────────────────────
@@ -743,7 +750,7 @@ export function OutRadar() {
 
               {/* 4. Bouton principal "Rechercher" */}
               <button
-                onClick={handleLaunchSearch}
+                onClick={() => handleLaunchSearch()}
                 disabled={requestingGeo || isManualSearching}
                 className="w-full h-11 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white font-semibold text-sm flex items-center justify-center gap-2 active:scale-95 transition-all shadow-md shadow-[#FF7A00]/20 disabled:opacity-90"
               >

@@ -395,7 +395,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
             </button>
 
-            {(!event || event.userId !== user?.id) && (
+            {(!event || event.creatorId !== user?.id) && (
               <button 
                 onClick={() => setShowLeaveConfirm(true)}
                 disabled={leaveMut.isPending}

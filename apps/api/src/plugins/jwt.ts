@@ -3,8 +3,16 @@ import fastifyJwt from '@fastify/jwt'
 import type { FastifyRequest, FastifyReply } from 'fastify'
 
 export default fp(async (app) => {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET environment variable must be set in production')
+    }
+    app.log.warn('[jwt] JWT_SECRET is not set — using an insecure development-only default')
+  }
+
   await app.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET || 'super-secret-jwt-change-in-prod',
+    secret: secret || 'dev-only-insecure-jwt-secret',
     sign: { expiresIn: process.env.JWT_EXPIRES_IN || '15m' },
   })
 
