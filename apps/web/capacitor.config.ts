@@ -67,8 +67,15 @@ const config: CapacitorConfig = {
       resize: 'native',
       resizeOnFullScreen: true,
     },
+    // Disabled: CapacitorHttp reroutes all axios requests through the native HTTP
+    // bridge, which has well-documented bugs on iOS (header/response-shape handling)
+    // causing list endpoints (events, conversations) to silently come back empty
+    // while simple auth calls still work. Disabling it makes the WKWebView use its
+    // standard fetch/XHR — exactly like the web and Android builds — and is safe
+    // here because the app's own backend CORS config already explicitly allows the
+    // https://letsout.app origin this WebView loads from (server.url below).
     CapacitorHttp: {
-      enabled: true,
+      enabled: false,
     },
     FirebaseAuthentication: {
       skipNativeAuth: false,
