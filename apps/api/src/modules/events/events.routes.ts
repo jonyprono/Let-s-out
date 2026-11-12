@@ -38,6 +38,42 @@ const CreateEventSchema = z.object({
   status: z.enum(['DRAFT', 'PUBLISHED']).default('PUBLISHED'),
 })
 
+// Whitelist for PATCH /:id — Zod strips any key not listed here by default,
+// so sensitive fields (poolCollected, poolWithdrawn, validatorIds, joinCode,
+// creatorId, id, createdAt, validatorVoteStatus, …) can never be mass-assigned
+// by the organizer through this endpoint.
+const UpdateEventSchema = z.object({
+  title: z.string().min(3).max(100).optional(),
+  description: z.string().min(3).max(5000).optional(),
+  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM']).nullable().optional(),
+  maxAttendees: z.number().int().positive().nullable().optional(),
+  price: z.number().min(0).optional(),
+  currency: z.string().length(3).optional(),
+  isPrivate: z.boolean().optional(),
+  requiresApproval: z.boolean().optional(),
+  showInFeed: z.boolean().optional(),
+  showParticipants: z.boolean().optional(),
+  allowGuestShare: z.boolean().optional(),
+  genderRestriction: z.enum(['ANY', 'MALE', 'FEMALE']).optional(),
+  address: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+  startAt: z.string().datetime().optional(),
+  endAt: z.string().datetime().optional(),
+  tags: z.array(z.string()).optional(),
+  coverUrl: z.string().nullable().optional(),
+  mediaUrls: z.array(z.string()).optional(),
+  coHostIds: z.array(z.string()).optional(),
+  poolTarget: z.number().nullable().optional(),
+  poolDescription: z.string().nullable().optional(),
+  registrationDeadline: z.string().datetime().nullable().optional(),
+  poolMode: z.enum(['libre', 'minimum', 'fixe']).nullable().optional(),
+  poolMinAmount: z.number().nullable().optional(),
+  status: z.enum(['DRAFT', 'PUBLISHED']).optional(),
+})
+
 export default async function eventsRoutes(app: FastifyInstance) {
 
   // Helper: get all user IDs that are blocked (in either direction) for a given user
@@ -727,8 +763,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
   }
 
   // Get single event
-  app.get('/:id', async (req, reply) => {
+  app.get('/:id', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
     const { id } = req.params as { id: string }
+    const sub = (req.user as { sub?: string } | undefined)?.sub
     const event = await app.prisma.event.findUnique({
       where: { id },
       include: {
@@ -738,6 +775,24 @@ export default async function eventsRoutes(app: FastifyInstance) {
       },
     })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
+
+    // joinCode is only disclosed to the organizer/co-hosts or confirmed participants —
+    // anonymous visitors and users who haven't joined must never see it.
+    let canSeeJoinCode = false
+    if (sub) {
+      const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+      if (isOrganizer) {
+        canSeeJoinCode = true
+      } else {
+        const booking = await app.prisma.booking.findUnique({
+          where: { userId_eventId: { userId: sub, eventId: id } },
+        })
+        canSeeJoinCode = booking?.status === 'CONFIRMED'
+      }
+    }
+    if (!canSeeJoinCode) {
+      event.joinCode = null
+    }
 
     const creatorRating = await getUserRating(event.creatorId)
     const eventWithRating = {
@@ -1044,10 +1099,14 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
     if (!isOrganizer) return reply.code(403).send({ error: 'Forbidden' })
 
-    const body = req.body as any;
-
-    // Prevent overwriting creatorId, id, or creation timestamp
-    const { id: _ignoreId, creatorId: _ignoreCreatorId, createdAt: _ignoreCreatedAt, ...updateData } = body;
+    let updateData: z.infer<typeof UpdateEventSchema>
+    try {
+      updateData = UpdateEventSchema.parse(req.body)
+    } catch (e: any) {
+      const issues = e.issues ?? []
+      const messages = issues.map((i: any) => i.message)
+      return reply.code(400).send({ error: 'Validation échouée', details: messages, message: messages.join(', ') })
+    }
 
     // Keep published status if already published
     if (event.status === 'PUBLISHED' && updateData.status === 'DRAFT') {
@@ -1084,7 +1143,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const updated = await app.prisma.event.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        // category is non-nullable in the DB — explicit null means "reset to default"
+        category: updateData.category === null ? 'OTHER' : updateData.category,
+      },
     })
 
     // Notify new co-hosts if any

@@ -1274,10 +1274,26 @@ export default async function chatRoutes(app: FastifyInstance) {
 
     const conversation = await app.prisma.conversation.findUnique({
       where: { id },
+      include: { event: true },
     })
 
     if (!conversation || !conversation.isGroup) {
       return reply.code(404).send({ error: 'Public group not found' })
+    }
+
+    // Groups tied to a private or approval-gated event are not open-join:
+    // only the organizer/co-hosts or users with a CONFIRMED booking may enter.
+    const event = conversation.event
+    if (event && (event.isPrivate || event.requiresApproval)) {
+      const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
+      if (!isOrganizer) {
+        const booking = await app.prisma.booking.findUnique({
+          where: { userId_eventId: { userId: sub, eventId: event.id } },
+        })
+        if (!booking || booking.status !== 'CONFIRMED') {
+          return reply.code(403).send({ error: 'Vous devez avoir rejoint cet événement pour accéder à sa discussion.' })
+        }
+      }
     }
 
     await app.prisma.conversationMember.upsert({
