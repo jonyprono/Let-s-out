@@ -32,6 +32,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   const videoUrl = video.url || '';
   const [isBuffering, setIsBuffering] = useState(false);
   const [isUserPaused, setIsUserPaused] = useState(false);
+  const [hasPlaybackError, setHasPlaybackError] = useState(false);
 
   const posterUrl = getVideoPosterUrl(video);
 
@@ -210,6 +211,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           poster={posterUrl}
           preload={isActive ? 'auto' : 'none'}
           loop
+          muted
           controls={false}
           controlsList="nodownload nofullscreen noremoteplayback"
           disablePictureInPicture
@@ -235,13 +237,20 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
             }
           }}
           onTimeUpdate={handleTimeUpdate}
-          className="w-full h-full object-contain pointer-events-none relative z-0"
+          onError={(e) => {
+            // Previously silent: an undecodable codec/format on iOS left the
+            // frame frozen/black forever with no feedback. Surface it instead.
+            console.error('[VideoPlayerItem] video error', e.currentTarget.error, videoUrl);
+            setHasPlaybackError(true);
+          }}
+          onLoadStart={() => setHasPlaybackError(false)}
+          className="w-full h-full object-cover pointer-events-none relative z-0"
         />
       ) : posterUrl ? (
         <img
           src={posterUrl}
           alt={video.title}
-          className="w-full h-full object-contain pointer-events-none relative z-0"
+          className="w-full h-full object-cover pointer-events-none relative z-0"
           loading="lazy"
         />
       ) : null}
@@ -252,8 +261,17 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
         onClick={togglePlay}
       />
 
+      {/* Playback error — e.g. undecodable format/codec on this device */}
+      {hasPlaybackError && isActive && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="px-4 py-2.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-white text-[13px] text-center">
+            Vidéo illisible sur cet appareil
+          </div>
+        </div>
+      )}
+
       {/* Center Buffering Indicator */}
-      {isBuffering && isActive && (
+      {isBuffering && isActive && !hasPlaybackError && (
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
           <div className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 shadow-xl">
             <Loader2 className="w-8 h-8 animate-spin text-white" />

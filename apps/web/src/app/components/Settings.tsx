@@ -126,18 +126,6 @@ export function Settings({ onBack }: SettingsProps) {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [versionTapCount, setVersionTapCount] = useState(0);
-
-  // Hidden debug panel: 5 taps on "Version de l'app" within 2s opens it
-  useEffect(() => {
-    if (versionTapCount === 0) return
-    if (versionTapCount >= 5) {
-      setVersionTapCount(0);
-      openDebugPanel();
-      return
-    }
-    const t = setTimeout(() => setVersionTapCount(0), 2000)
-    return () => clearTimeout(t)
-  }, [versionTapCount]);
   const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
   const [deleteReason, setDeleteReason] = useState('');
 
@@ -145,6 +133,22 @@ export function Settings({ onBack }: SettingsProps) {
   const { mutate: doLogout, isPending: loggingOut } = useLogout();
   const { mutate: doDeleteAccount, isPending: deletingAccount } = useDeleteAccount();
   const { isEnabled } = useFeatureFlags();
+
+  // Hidden debug panel: 5 taps on "Version de l'app" within 2s opens it.
+  // Remote kill-switch: an admin can disable it instantly (no app update needed)
+  // by activating the 'debug_panel_disabled' feature flag.
+  useEffect(() => {
+    if (versionTapCount === 0) return
+    if (versionTapCount >= 5) {
+      setVersionTapCount(0);
+      if (!isEnabled(FLAG_KEYS.DEBUG_PANEL_DISABLED)) {
+        openDebugPanel();
+      }
+      return
+    }
+    const t = setTimeout(() => setVersionTapCount(0), 2000)
+    return () => clearTimeout(t)
+  }, [versionTapCount, isEnabled]);
 
   // Fetch KYC status
   useEffect(() => {

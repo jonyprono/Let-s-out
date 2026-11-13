@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, UIEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, Loader2 } from 'lucide-react';
 import { App } from '@capacitor/app';
 import { EventVideo } from '../api';
@@ -93,7 +94,15 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
     }
   };
 
-  return (
+  // Rendered via a portal straight onto <body>: on iOS/WKWebView, a `position: fixed`
+  // descendant can get trapped inside the nearest ancestor that forms its own
+  // containing block (any `relative`/`overflow-hidden` wrapper in the layout tree
+  // between here and <body> — AppLayout's #app-layout-inner/<main> are exactly that).
+  // That trapping is what made the player render squeezed between the header and
+  // the bottom nav instead of covering the real viewport. A portal sidesteps the
+  // whole ancestor chain, so `fixed inset-0` always resolves against the true
+  // viewport, matching Android/web where this containing-block quirk doesn't exist.
+  return createPortal(
     <div className="fixed inset-0 z-[100] bg-black flex flex-col h-[100dvh] w-full overflow-hidden select-none">
       {/* Global Close Button — placed high to avoid Android nav bar overlap */}
       <button
@@ -106,11 +115,11 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
       </button>
 
       {/* Snap Scroll Container */}
-      <div 
+      <div
         ref={containerRef}
         onScroll={handleScroll}
         className={`flex-1 w-full h-full overflow-y-scroll ${snapEnabled ? 'snap-y snap-mandatory' : ''}`}
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >
         {videos.map((video, index) => (
           <VideoPlayerItem
@@ -128,6 +137,7 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

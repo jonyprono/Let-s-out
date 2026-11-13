@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Geolocation } from '@capacitor/geolocation'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { useAuthStore } from '@/stores/auth.store'
 import { apiClient } from '@/lib/api-client'
@@ -184,38 +185,45 @@ export function OutRadar() {
   })
 
   // ── 4. Demande de géolocalisation native uniquement au moment de la recherche ──
-  const requestLocation = (): Promise<{ latitude: number; longitude: number } | null> => {
-    return new Promise((resolve) => {
-      if (!navigator.geolocation) {
-        setGeoError('La géolocalisation n’est pas supportée par votre appareil.')
-        resolve(null)
-        return
+  // Utilise le plugin @capacitor/geolocation (et pas l'API web navigator.geolocation
+  // directement) : sur iOS, le WKWebView ne déclenche pas la fenêtre de permission
+  // native via navigator.geolocation seul — il faut passer par le pont natif du
+  // plugin, qui relaie correctement vers CLLocationManager. Sur web, ce même appel
+  // retombe automatiquement sur l'API navigateur standard (aucun changement de
+  // comportement côté web/Android, qui fonctionnaient déjà).
+  const requestLocation = async (): Promise<{ latitude: number; longitude: number } | null> => {
+    setRequestingGeo(true)
+    setGeoError(null)
+
+    try {
+      const status = await Geolocation.checkPermissions()
+      if (status.location !== 'granted' && status.location !== 'prompt-with-rationale') {
+        const requested = await Geolocation.requestPermissions()
+        if (requested.location !== 'granted') {
+          setRequestingGeo(false)
+          setGeoError(
+            'La recherche ne peut pas fonctionner sans autorisation de localisation. Activez-la dans les réglages de l\'app.'
+          )
+          return null
+        }
       }
 
-      setRequestingGeo(true)
-      setGeoError(null)
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setRequestingGeo(false)
-          const newCoords = {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          }
-          setCoords(newCoords)
-          resolve(newCoords)
-        },
-        (err) => {
-          setRequestingGeo(false)
-          console.warn('Geolocation error:', err)
-          setGeoError(
-            'La recherche ne peut pas fonctionner sans autorisation de localisation. Veuillez autoriser l’accès à votre position.'
-          )
-          resolve(null)
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 })
+      setRequestingGeo(false)
+      const newCoords = {
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+      }
+      setCoords(newCoords)
+      return newCoords
+    } catch (err) {
+      setRequestingGeo(false)
+      console.warn('Geolocation error:', err)
+      setGeoError(
+        'Impossible d\'obtenir votre position (délai dépassé ou permission refusée). Vérifiez les réglages de localisation.'
       )
-    })
+      return null
+    }
   }
 
   // ── 5. Action : Lancer la recherche (durée 30s minimum) ────────────────────
@@ -449,7 +457,7 @@ export function OutRadar() {
   const isVisible = Boolean(statusData?.isVisible) && !isExpired && remainingSec > 0
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white flex flex-col">
+    <div className="w-full h-full min-h-0 bg-gray-50 dark:bg-black text-gray-900 dark:text-white flex flex-col overflow-hidden">
       {/* ── HEADER ───────────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-30 bg-white/90 dark:bg-[#1A1A1A]/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-4 pt-safe-4 pt-3 pb-3">
         <div className="flex items-center justify-between">
@@ -485,7 +493,16 @@ export function OutRadar() {
       </div>
 
       {/* ── CORPS DU RADAR ───────────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto p-4 max-w-xl mx-auto w-full space-y-4 pb-20" style={{ scrollbarWidth: 'none' }}>
+      <div
+        className="flex-1 min-h-0 overflow-y-auto p-4 max-w-xl mx-auto w-full space-y-4"
+        style={{
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch',
+          // Clears the fixed BottomNav (height: 62px + safe-area-inset-bottom, see BottomNav.tsx)
+          // plus breathing room — without this the last content was hidden behind the nav bar.
+          paddingBottom: 'calc(62px + env(safe-area-inset-bottom) + 16px)',
+        }}
+      >
         {activeTab === 'invites' ? (
           /* ── ONGLET : MES INVITATIONS ─────────────────────────────────────── */
           <div className="space-y-4">
