@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { createAndSendNotification } from '../notifications/notifications.routes'
 import { EmailService } from '../../services/email.service'
+import { eventGenderDenial } from '../../services/signup-policy.service'
 export default async function paymentsRoutes(app: FastifyInstance) {
 
   // Initier une transaction FedaPay
@@ -28,11 +29,18 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         id: true, title: true, price: true, currency: true, status: true,
         maxAttendees: true, currentAttendees: true,
         poolTarget: true, poolMode: true, poolMinAmount: true,
+        genderRestriction: true,
       },
     })
     if (!event) return reply.code(404).send({ error: 'Événement introuvable' })
     if (event.status !== 'PUBLISHED') return reply.code(400).send({ error: 'Événement non disponible' })
-    
+
+    // Restriction de genre : bloque l'achat d'une place (un don sans participation reste possible)
+    if (!isNonParticipantDonation) {
+      const genderDenied = await eventGenderDenial(app.prisma, sub, event.genderRestriction)
+      if (genderDenied) return reply.code(genderDenied.status).send(genderDenied.body)
+    }
+
     const finalAmount = customAmount !== undefined ? customAmount : event.price;
     if (finalAmount <= 0) return reply.code(400).send({ error: 'Le montant doit être supérieur à 0' })
 
@@ -270,9 +278,14 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, price: true, poolTarget: true, poolMode: true, poolMinAmount: true },
+      select: { id: true, price: true, poolTarget: true, poolMode: true, poolMinAmount: true, genderRestriction: true },
     })
     if (!event) return reply.code(404).send({ error: 'Not found' })
+
+    if (!isNonParticipantDonation) {
+      const genderDenied = await eventGenderDenial(app.prisma, sub, event.genderRestriction)
+      if (genderDenied) return reply.code(genderDenied.status).send(genderDenied.body)
+    }
 
     const finalAmount = customAmount !== undefined ? customAmount : event.price;
     if (finalAmount <= 0) return reply.code(400).send({ error: 'Le montant doit être supérieur à 0' })

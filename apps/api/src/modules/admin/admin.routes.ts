@@ -6,6 +6,14 @@ import { releaseFunds } from '../payments/event-payout.routes'
 import { format } from 'date-fns'
 import adminStatsRoutes from './admin-stats.routes'
 import adminListsRoutes from './admin-lists.routes'
+import {
+  validateSystemSettingValue,
+  clearSignupPolicyCache,
+  parseBirthDateInput,
+  ymdToDate,
+  computeAge,
+  MAX_PLAUSIBLE_AGE,
+} from '../../services/signup-policy.service'
 
 const KYC_STATUSES = ['pending', 'verified', 'rejected'] as const
 
@@ -429,6 +437,12 @@ export default async function adminRoutes(app: FastifyInstance) {
     const { value, description } = req.body as { value: string; description?: string }
     const { sub: adminId } = req.user as { sub: string }
 
+    // Validation des réglages sensibles (l'âge minimum ne peut pas devenir incohérent)
+    const settingError = validateSystemSettingValue(key, value)
+    if (settingError) {
+      return reply.code(400).send({ error: settingError })
+    }
+
     // Fetch previous value for audit log
     const prevSetting = await app.prisma.systemSetting.findUnique({ where: { key } })
     const previousValue = prevSetting?.value || null
@@ -438,6 +452,7 @@ export default async function adminRoutes(app: FastifyInstance) {
       update: { value, ...(description !== undefined ? { description } : {}) },
       create: { key, value, description: description ?? '' },
     })
+    clearSignupPolicyCache()
 
     // Write audit log if value changed
     if (previousValue !== value) {
@@ -458,6 +473,45 @@ export default async function adminRoutes(app: FastifyInstance) {
     }
 
     return reply.send({ data: setting })
+  })
+
+  // ── Date de naissance (verrouillée côté utilisateur : seul un admin la modifie) ──
+  app.put('/users/:userId/birth-date', async (req, reply) => {
+    const { userId } = req.params as { userId: string }
+    const { birthDate, reason } = z
+      .object({ birthDate: z.string().min(1), reason: z.string().min(3).max(500) })
+      .parse(req.body)
+    const { sub: adminId } = req.user as { sub: string }
+
+    const ymd = parseBirthDateInput(birthDate)
+    if (!ymd) return reply.code(400).send({ error: 'Date invalide (format AAAA-MM-JJ).' })
+    const age = computeAge(ymd)
+    if (age < 0 || age > MAX_PLAUSIBLE_AGE) {
+      return reply.code(400).send({ error: 'Date de naissance hors limites.' })
+    }
+
+    const previous = await app.prisma.profile.findUnique({ where: { userId }, select: { birthDate: true } })
+    if (!previous) return reply.code(404).send({ error: 'Profil introuvable.' })
+
+    const profile = await app.prisma.profile.update({
+      where: { userId },
+      data: { birthDate: ymdToDate(ymd) },
+      select: { userId: true, birthDate: true },
+    })
+
+    await writeAuditLog(app.prisma, {
+      actorId: adminId,
+      action: 'BIRTHDATE_CHANGED',
+      targetId: userId,
+      targetType: 'USER',
+      oldValue: { birthDate: previous.birthDate ? previous.birthDate.toISOString().slice(0, 10) : null },
+      newValue: { birthDate: profile.birthDate?.toISOString().slice(0, 10) ?? null },
+      comment: reason,
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    })
+
+    return reply.send({ data: profile })
   })
 
   app.get('/system-settings/:key/history', async (req, reply) => {

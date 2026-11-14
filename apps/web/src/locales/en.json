@@ -87,9 +87,9 @@
       "deleteTitle2": "Final stage",
       "deleteDesc2": "Please help us improve by stating the reason (optional).",
       "deleteReasonLabel": "Reason for deletion",
-      "deleteReason1": "I canÃ¢â‚¬â„¢t find any interesting events",
+      "deleteReason1": "I can’t find any interesting events",
       "deleteReason2": "Technical problem",
-      "deleteReason3": "IÃ¢â‚¬â„¢m creating a new account",
+      "deleteReason3": "I’m creating a new account",
       "deleteReason4": "Privacy and personal data",
       "deleteReasonOther": "Another reason (optional)...",
       "deleteBack": "Back",
@@ -206,6 +206,55 @@
     "successResendAlt": "Code returned",
     "errorResend": "Unable to resend the code."
   },
+  "editProfile": {
+    "birthDateLabel": "Date of birth",
+    "birthDateHint": "(required for OUT RADAR)",
+    "birthDateLocked": "Your date of birth can no longer be changed. Please contact support if there is an error.",
+    "errorSaving": "Error whilst updating the profile"
+  },
+  "signupIntro": {
+    "next": "Next",
+    "back": "Back",
+    "progressLabel": "Step {{step}} of {{total}}",
+    "haveAccount": "Already have an account?",
+    "login": "Log in",
+    "nameTitle": "What’s your name?",
+    "nameSubtitle": "Please enter the full name you use on a day-to-day basis.",
+    "firstNameLabel": "First name",
+    "lastNameLabel": "Surname",
+    "nameHint": "Letters, accents, hyphens and apostrophes only. Minimum of 2 characters.",
+    "nameErrorEmpty": "This field is required.",
+    "nameErrorTooShort": "At least 2 characters.",
+    "nameErrorTooLong": "{{max}} characters maximum.",
+    "nameErrorChars": "Letters, hyphens and apostrophes only (no numbers or emojis).",
+    "birthTitle": "What is your date of birth?",
+    "birthSubtitle": "Please select your date of birth. You can make it private at any time afterwards.",
+    "birthLabel": "Date of birth",
+    "birthDay": "Day",
+    "birthMonth": "Month",
+    "birthYear": "Year",
+    "ageDisplay_one": "{{count}} year",
+    "ageDisplay_other": "{{count}} years",
+    "birthErrorInvalid": "That date does not exist. Please check the day and month.",
+    "birthErrorFuture": "The date of birth cannot be in the future.",
+    "birthErrorTooOld": "Please check your year of birth.",
+    "configError": "We are unable to check the registration requirements at the moment.",
+    "retry": "Try again",
+    "errorTooManyAttempts": "Too many attempts. Please try again in a few minutes.",
+    "errorNetwork": "Unable to connect. Please check your network and try again.",
+    "googleExpired": "Your Google session has expired. Please tap ‘Sign up with Google’ again.",
+    "underageTitle": "Let's Out is for people aged {{age}} and over",
+    "underageTitleGeneric": "You cannot create an account at the moment",
+    "underageBody": "Thank you for your interest in Let's Out. You cannot create an account at the moment, but we look forward to welcoming you in the future.",
+    "underageNotSaved": "Your date of birth has not been recorded.",
+    "genderTitle": "What’s your gender?",
+    "genderSubtitle": "You can change who can see your gender on your profile at a later date.",
+    "genderLegend": "Gender",
+    "genderFemale": "Female",
+    "genderMale": "Male",
+    "genderOther": "Other options",
+    "genderOtherHint": "Select ‘Other options’ to choose a different gender or if you’d prefer not to say."
+  },
   "home": {
     "timeFilters": {
       "discover": "Discover",
@@ -298,7 +347,7 @@
       "draftsSubtitle": "Your upcoming events will appear here",
       "followers": "No subscribers",
       "followersSubtitle": "No one is following you yet",
-      "following": "You arenÃ¢â‚¬â„¢t following anyone",
+      "following": "You aren’t following anyone",
       "followingSubtitle": "Browse profiles to follow them",
       "friends": "No friends",
       "friendsSubtitle": "Send friend requests to get started"
@@ -313,9 +362,9 @@
       "groups": "Groups"
     },
     "types": {
-      "photo": "Ã°Å¸â€œÂ· Photo",
-      "audio": "Ã°Å¸Å½â„¢Ã¯Â¸Â Audio",
-      "video": "Ã°Å¸Å½Â¥ Video",
+      "photo": "📷 Photo",
+      "audio": "🎙️ Audio",
+      "video": "🎥 Video",
       "newConversation": "New conversation"
     },
     "noConversations": "No conversation",
@@ -475,6 +524,9 @@
     "sendInvite": "Send invitation",
     "block": "Block",
     "report": "Report",
-    "close": "Close"
+    "close": "Close",
+    "birthDateRequiredTitle": "Date of birth required",
+    "birthDateRequiredBody": "For security reasons, OUT RADAR requires your date of birth. Please enter it once in your profile to continue.",
+    "birthDateRequiredCta": "Complete my profile"
   }
 }

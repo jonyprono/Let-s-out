@@ -6,6 +6,15 @@ import { v4 as uuidv4 } from 'uuid'
 import { createAndSendNotification } from '../notifications/notifications.routes'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 import { evaluateUserBadges } from '../../services/badge.service'
+import {
+  checkBirthDate,
+  parseBirthDateInput,
+  sameBirthDay,
+  normalizeGender,
+  birthDateErrorMessage,
+  SignupConfigError,
+  type BirthDateCheck,
+} from '../../services/signup-policy.service'
 
 async function getDetailedStats(app: FastifyInstance, userId: string) {
   const events = await app.prisma.event.findMany({
@@ -193,6 +202,53 @@ export default async function usersRoutes(app: FastifyInstance) {
     const body = req.body as any
     const birthDateValue = body.birthDate || body.birthdate
 
+    // ── Date de naissance : 1re saisie contrôlée (MIN_SIGNUP_AGE), puis verrouillée ──
+    let birthDateToSet: Date | undefined
+    if (birthDateValue) {
+      const current = await app.prisma.profile.findUnique({
+        where: { userId: sub },
+        select: { birthDate: true },
+      })
+      if (current?.birthDate) {
+        const parsed = parseBirthDateInput(birthDateValue)
+        // Renvoyer la même date est accepté (no-op) ; la changer est interdit.
+        if (!parsed || !sameBirthDay(current.birthDate, parsed)) {
+          return reply.code(403).send({
+            error: 'Votre date de naissance est verrouillée. Contactez le support pour la modifier.',
+            code: 'BIRTHDATE_LOCKED',
+          })
+        }
+      } else {
+        let check: BirthDateCheck
+        try {
+          check = await checkBirthDate(app.prisma, birthDateValue)
+        } catch (err) {
+          if (err instanceof SignupConfigError) {
+            return reply.code(503).send({ error: 'Service momentanément indisponible.', code: 'SIGNUP_CONFIG_MISSING' })
+          }
+          throw err
+        }
+        if (!check.ok) {
+          return reply.code(check.code === 'UNDERAGE' ? 403 : 400).send({
+            error: birthDateErrorMessage(check),
+            code: check.code,
+            minSignupAge: check.minAge,
+          })
+        }
+        birthDateToSet = check.date
+      }
+    }
+
+    // ── Genre : valeurs normalisées FEMALE | MALE | OTHER (anciennes valeurs acceptées) ──
+    let genderToSet: string | undefined
+    if (body.gender !== undefined && body.gender !== null && body.gender !== '') {
+      const normalized = normalizeGender(body.gender)
+      if (!normalized) {
+        return reply.code(400).send({ error: 'Genre invalide.', code: 'INVALID_GENDER' })
+      }
+      genderToSet = normalized
+    }
+
     const profile = await app.prisma.profile.update({
       where: { userId: sub },
       data: {
@@ -206,8 +262,8 @@ export default async function usersRoutes(app: FastifyInstance) {
         avatarUrl: body.avatarUrl,
         coverUrl: body.coverUrl,
         isPublic: body.isPublic,
-        gender: body.gender,
-        ...(birthDateValue ? { birthDate: new Date(birthDateValue) } : {}),
+        gender: genderToSet,
+        ...(birthDateToSet ? { birthDate: birthDateToSet } : {}),
       },
     })
     return reply.send(profile)

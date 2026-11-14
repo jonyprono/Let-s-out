@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ChevronLeft,
@@ -43,7 +44,7 @@ export function OutRadar() {
   const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s: any) => s.user)
-  const refreshUser = useAuthStore((s) => s.refreshUser)
+  const { t } = useTranslation()
 
   // Onglet principal : 'radar' (Recherche & Profils) ou 'invites' (Mes invitations)
   const initialTab = searchParams.get('tab') === 'invites' ? 'invites' : 'radar'
@@ -72,10 +73,8 @@ export function OutRadar() {
   const [selectedDuration, setSelectedDuration] = useState<30 | 60 | 180>(30)
   const [visibilityOutingType, setVisibilityOutingType] = useState('SPONTANEOUS')
 
-  // Date de naissance manquante (18+)
+  // Date de naissance manquante (anciens comptes) : on renvoie vers le profil, plus de saisie ici
   const [showBirthDateModal, setShowBirthDateModal] = useState(false)
-  const [inputBirthDate, setInputBirthDate] = useState('')
-  const [isSavingBirthDate, setIsSavingBirthDate] = useState(false)
 
   // Menu action profil (bloquer / signaler)
   const [actionMenuProfileId, setActionMenuProfileId] = useState<string | null>(null)
@@ -313,40 +312,6 @@ export function OutRadar() {
       toast.error(msg)
     },
   })
-
-  const handleSaveBirthDate = async () => {
-    if (!inputBirthDate) {
-      toast.error('Veuillez sélectionner votre date de naissance.')
-      return
-    }
-    const d = new Date(inputBirthDate)
-    const now = new Date()
-    let age = now.getFullYear() - d.getFullYear()
-    const m = now.getMonth() - d.getMonth()
-    if (m < 0 || (m === 0 && now.getDate() < d.getDate())) {
-      age--
-    }
-    if (age < 18) {
-      toast.error('OUT RADAR est strictement réservé aux personnes majeures (18 ans et plus).')
-      return
-    }
-
-    setIsSavingBirthDate(true)
-    try {
-      await apiClient.patch('/users/me/profile', {
-        birthDate: d.toISOString(),
-      })
-      await refreshUser()
-      toast.success('Date de naissance enregistrée !')
-      setShowBirthDateModal(false)
-      // Déclencher directement la visibilité
-      handleToggleVisibility(true)
-    } catch (e: any) {
-      toast.error(e?.response?.data?.error || 'Erreur lors de l’enregistrement')
-    } finally {
-      setIsSavingBirthDate(false)
-    }
-  }
 
   const handleToggleVisibility = async (makeVisible: boolean) => {
     if (!makeVisible) {
@@ -998,52 +963,42 @@ export function OutRadar() {
         </div>
       )}
 
-      {/* ── MODAL : VÉRIFICATION DATE DE NAISSANCE (18+) ────────────────────── */}
+      {/* ── MODAL : DATE DE NAISSANCE MANQUANTE (anciens comptes) ───────────── */}
+      {/* Plus de saisie ici : la date se renseigne une seule fois dans le profil
+          (contrôlée par MIN_SIGNUP_AGE côté serveur, puis verrouillée). */}
       {showBirthDateModal && (
         <div className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-6 border border-gray-100 dark:border-gray-800 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="radar-birthdate-title"
+            className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-6 border border-gray-100 dark:border-gray-800 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+          >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center">
-                  <span className="text-lg">🔞</span>
-                </div>
-                <h3 className="font-bold text-base text-gray-900 dark:text-white">Vérification de l'âge</h3>
-              </div>
+              <h3 id="radar-birthdate-title" className="font-bold text-base text-gray-900 dark:text-white">
+                {t('radar.birthDateRequiredTitle')}
+              </h3>
               <button
                 onClick={() => setShowBirthDateModal(false)}
+                aria-label={t('radar.close')}
                 className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               >
-                ✕
+                <span aria-hidden="true">✕</span>
               </button>
             </div>
 
             <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-              Pour des raisons de sécurité, <strong>OUT RADAR</strong> est strictement réservé aux personnes majeures (18 ans et plus). Veuillez renseigner votre date de naissance pour continuer.
+              {t('radar.birthDateRequiredBody')}
             </p>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                Date de naissance
-              </label>
-              <input
-                type="date"
-                value={inputBirthDate}
-                onChange={(e) => setInputBirthDate(e.target.value)}
-                max={new Date().toISOString().split('T')[0]}
-                className="w-full p-3 rounded-xl bg-gray-100 dark:bg-gray-800 text-sm font-medium outline-none text-gray-900 dark:text-white border border-transparent focus:border-[#FF7A00]"
-              />
-            </div>
-
             <button
-              onClick={handleSaveBirthDate}
-              disabled={isSavingBirthDate || !inputBirthDate}
-              className="w-full py-3 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/25 disabled:opacity-50"
+              onClick={() => {
+                setShowBirthDateModal(false)
+                navigate('/profile', { state: { openEdit: true } })
+              }}
+              className="w-full py-3 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/25"
             >
-              {isSavingBirthDate ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                'Confirmer mon âge et continuer'
-              )}
+              <span>{t('radar.birthDateRequiredCta')}</span>
             </button>
           </div>
         </div>

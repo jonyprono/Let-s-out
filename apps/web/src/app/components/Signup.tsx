@@ -6,7 +6,6 @@ import {
   Tick01Icon,
   Location01Icon,
   Cancel01Icon,
-  Calendar01Icon,
   RefreshIcon,
   Camera01Icon,
   UserIcon,
@@ -51,7 +50,7 @@ import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { Input } from '@/components/ui/input'
 import { SocialButton } from '@/components/ui/social-button'
 import { Divider } from '@/components/ui/divider'
-import { isFieldValid } from '@/lib/validation'
+import { useSignupIntroStore, hasCompletedSignupIntro } from '@/stores/signup-intro.store'
 import { ProgressBar } from '@/components/ui/progress-bar'
 import { otpLogger, googleAuthLogger } from '@/lib/auth-logger'
 import { useTranslation } from 'react-i18next'
@@ -76,6 +75,9 @@ const INTERESTS_LIST = [
   'Réseautage professionnel',
 ]
 
+/** 1re étape de profil après l'OTP (les étapes 3 et 4 sont dans le parcours d'accueil) */
+const FIRST_PROFILE_STEP = 5
+
 function formatPhone(code: string, local: string) {
   const digits = local.replace(/\s+/g, '')
   const grouped = digits.match(/.{1,2}/g)?.join(' ') || digits
@@ -98,15 +100,25 @@ export function Signup({ onBack }: SignupProps) {
   const queryParams = new URLSearchParams(location.search)
   const isGoogleMode = queryParams.get('mode') === 'google'
 
-  // Steps: 1=phone, 2=otp, 3=name, 4=birthday, 5=city, 6=interests, 7=photo+cgu (google) or 7=password (normal)
-  const [step, setStep] = useState(isGoogleMode ? 3 : 1)
+  // Steps: 1=phone, 2=otp, 5=city, 6=interests, 7=photo+cgu (google) or 7=password (normal)
+  // Les anciennes étapes 3 (nom) et 4 (date de naissance) sont désormais saisies dans le
+  // parcours d'accueil (features/auth/signup-intro) : elles ne sont plus redemandées ici.
+  const [step, setStep] = useState(isGoogleMode ? FIRST_PROFILE_STEP : 1)
+
+  // Réponses du parcours d'accueil (prénom, nom, date de naissance, genre)
+  const intro = useSignupIntroStore()
 
   // Avoid blank screen if mode=google is set after initial mount
   useEffect(() => {
-    if (isGoogleMode && step < 3) {
-      setStep(3)
+    if (isGoogleMode && step < FIRST_PROFILE_STEP) {
+      setStep(FIRST_PROFILE_STEP)
     }
   }, [isGoogleMode, step])
+
+  // Sécurité : sans parcours d'accueil complet, retour au parcours (normalement déjà géré par la route)
+  useEffect(() => {
+    if (!isGoogleMode && !hasCompletedSignupIntro(intro)) nav('/signup?step=1', { replace: true })
+  }, [isGoogleMode, intro, nav])
 
   // Step 1 – Phone
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
@@ -123,87 +135,6 @@ export function Signup({ onBack }: SignupProps) {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''))
   const [countdown, setCountdown] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
-
-  // Step 3 – Name
-  const currentUser = useAuthStore((s) => s.user)
-  const defaultDisplayName = isGoogleMode && currentUser?.profile?.displayName ? currentUser.profile.displayName : ''
-  const defaultFirstName = defaultDisplayName.split(' ')[0] || ''
-  const defaultPseudo = defaultDisplayName.split(' ').slice(1).join(' ') || ''
-
-  const [firstName, setFirstName] = useState(defaultFirstName)
-  const [pseudo, setPseudo] = useState(defaultPseudo)
-
-  // Synchronize Google user name once auth state is updated
-  useEffect(() => {
-    if (isGoogleMode && currentUser?.profile?.displayName) {
-      const parts = currentUser.profile.displayName.split(' ')
-      setFirstName(prev => prev || parts[0] || '')
-      setPseudo(prev => prev || parts.slice(1).join(' ') || '')
-    }
-  }, [isGoogleMode, currentUser?.profile?.displayName])
-
-  // Step 4 – Birthday
-  const [birthday, setBirthday] = useState('')
-  const [birthdayText, setBirthdayText] = useState('')
-  const birthdayNativeRef = useRef<HTMLInputElement>(null)
-
-  const handleBirthdayChange = (raw: string) => {
-    if (!raw) {
-      setBirthdayText('')
-      setBirthday('')
-      return
-    }
-
-    // Gestion du collage au format ISO AAAA-MM-JJ ou AAAA/MM/JJ
-    const isoMatch = raw.trim().match(/^(\d{4})[\/\-\.](\d{2})[\/\-\.](\d{2})$/)
-    if (isoMatch) {
-      const [, yyyy, mm, dd] = isoMatch
-      setBirthdayText(`${dd}/${mm}/${yyyy}`)
-      setBirthday(`${yyyy}-${mm}-${dd}`)
-      return
-    }
-
-    // Extraction des chiffres uniquement (max 8 chiffres pour JJMMAAAA)
-    const digits = raw.replace(/\D/g, '').slice(0, 8)
-    let formatted = digits
-    if (digits.length >= 3 && digits.length <= 4) {
-      formatted = `${digits.slice(0, 2)}/${digits.slice(2)}`
-    } else if (digits.length > 4) {
-      formatted = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
-    }
-    setBirthdayText(formatted)
-
-    if (digits.length === 8) {
-      const day = parseInt(digits.slice(0, 2), 10)
-      const month = parseInt(digits.slice(2, 4), 10)
-      const year = parseInt(digits.slice(4, 8), 10)
-      const currentYear = new Date().getFullYear()
-
-      if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 && year <= currentYear) {
-        const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-        const d = new Date(`${iso}T00:00:00`)
-        if (!isNaN(d.getTime()) && d.getDate() === day && d.getMonth() + 1 === month) {
-          setBirthday(iso)
-          return
-        }
-      }
-    }
-    setBirthday('')
-  }
-
-  const handleNativeBirthdayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setBirthday(val)
-    if (val) {
-      const parts = val.split('-')
-      if (parts.length === 3) {
-        const [yyyy, mm, dd] = parts
-        setBirthdayText(`${dd}/${mm}/${yyyy}`)
-      }
-    } else {
-      setBirthdayText('')
-    }
-  }
 
   // Step 5 – City
   const [city, setCity] = useState('')
@@ -311,12 +242,11 @@ export function Signup({ onBack }: SignupProps) {
 
       if (idToken && email) {
         googleAuthLogger.backendCallStart(email)
+        // Navigation gérée par useGoogleSignIn : compte existant → /home ;
+        // nouvel e-mail → /auth/google/complete avec les réponses du parcours d'accueil.
         googleSignIn({ idToken, email }, {
-          onSuccess: (data: any) => {
-            googleAuthLogger.backendCallSuccess(data?.user?.id)
-            if (data?.isNewUser) {
-              setStep(3)
-            }
+          onSuccess: (res: any) => {
+            googleAuthLogger.backendCallSuccess(res?.data?.user?.id)
           },
           onError: (err: unknown) => googleAuthLogger.backendCallError(err),
         })
@@ -499,12 +429,12 @@ export function Signup({ onBack }: SignupProps) {
             const tokenResult = await FirebaseAuthentication.getIdToken()
             if (tokenResult.token) setIdToken(tokenResult.token)
             otpLogger.verifySuccess()
-            setStep(3)
+            setStep(FIRST_PROFILE_STEP)
           } else if (confirmationResult) {
             const result = await confirmationResult.confirm(codeStr)
             const token = await result.user.getIdToken()
             otpLogger.verifySuccess()
-            setIdToken(token); setStep(3)
+            setIdToken(token); setStep(FIRST_PROFILE_STEP)
           }
         } catch (err: unknown) {
           otpLogger.verifyError(err)
@@ -515,25 +445,10 @@ export function Signup({ onBack }: SignupProps) {
         // Vérification via backend (WhatsApp, fallback SMS, ou lastCodeVia=backend)
         otpLogger.verifyRequest()
         checkOtp({ target: fullPhone, code: codeStr }, {
-          onSuccess: () => { otpLogger.verifySuccess(); setStep(3) },
+          onSuccess: () => { otpLogger.verifySuccess(); setStep(FIRST_PROFILE_STEP) },
           onError: (err: unknown) => { otpLogger.verifyError(err); toast.error(t('signup.errorOtp')) },
         })
       }
-    } else if (step === 4) {
-      if (!birthday) {
-        toast.error(t('signup.errorBirthdate'))
-        return
-      }
-      const birthDate = new Date(birthday)
-      const today = new Date()
-      let age = today.getFullYear() - birthDate.getFullYear()
-      const m = today.getMonth() - birthDate.getMonth()
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
-      if (age < 18) {
-        toast.error(t('signup.errorAge'))
-        return
-      }
-      setStep((s) => s + 1)
     } else if (step === 6) {
       // Step 6 is always Interests — move to next step regardless of mode
       setStep((s) => s + 1)
@@ -546,8 +461,8 @@ export function Signup({ onBack }: SignupProps) {
         }
         setIsFirebaseVerifying(true)
         try {
-          const profileData: any = { interests, displayName: `${firstName} ${pseudo}`.trim() }
-          if (birthday) profileData.birthdate = birthday
+          // Prénom, nom, date de naissance et genre sont déjà enregistrés par /auth/google/complete
+          const profileData: any = { interests }
           if (city) profileData.city = city
           if (profilePhoto) profileData.avatarUrl = profilePhoto
           await apiClient.patch('/users/me/profile', profileData)
@@ -564,18 +479,25 @@ export function Signup({ onBack }: SignupProps) {
       } else {
         // Normal mode step 7: password → register
         const isFirebaseFlow = currentChannel === 'sms' && (!!idToken || !!nativeVerificationId)
+        if (!intro.birthDate || !intro.gender) { nav('/signup?step=1', { replace: true }); return }
+        const usernameBase = intro.firstName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '') || 'outster'
         register({
           target: fullPhone,
           code: isFirebaseFlow ? undefined : otp.join(''),
           idToken: isFirebaseFlow ? idToken : undefined,
-          username: `${firstName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '')}_${Math.floor(Math.random() * 9999)}`,
-          displayName: `${firstName} ${pseudo}`.trim(),
+          username: `${usernameBase.padEnd(3, '0').slice(0, 24)}_${Math.floor(Math.random() * 9999)}`,
+          // R\u00e9ponses du parcours d'accueil \u2014 le serveur rev\u00e9rifie tout (\u00e2ge MIN_SIGNUP_AGE compris)
+          firstName: intro.firstName,
+          lastName: intro.lastName,
+          birthDate: intro.birthDate,
+          gender: intro.gender,
           password,
         }, {
           onSuccess: async () => {
+            // Inscription r\u00e9ussie : les r\u00e9ponses du parcours d'accueil ne sont plus utiles
+            useSignupIntroStore.getState().reset()
             try {
               const profileData: any = { interests }
-              if (birthday) profileData.birthdate = birthday
               if (city) profileData.city = city
               await apiClient.patch('/users/me/profile', profileData)
             } catch (e) { console.error('Background updates error:', e) }
@@ -583,7 +505,13 @@ export function Signup({ onBack }: SignupProps) {
           },
           onError: (e: any) => {
             const msg = e.response?.data?.error || ''
-            if (msg.includes('exists') || msg.includes('USER_ALREADY_EXISTS')) toast.error(t('signup.errorExists'))
+            const code = e.response?.data?.code
+            if (e.response?.status === 403 && code === 'UNDERAGE') {
+              useSignupIntroStore.getState().markUnderage()
+              nav('/signup', { replace: true })
+            }
+            else if (['INVALID_DATE', 'FUTURE_DATE', 'TOO_OLD'].includes(code)) { toast.error(msg); nav('/signup?step=2') }
+            else if (msg.includes('exists') || msg.includes('USER_ALREADY_EXISTS')) toast.error(t('signup.errorExists'))
             else if (msg.includes('OTP') || msg.includes('code') || msg.includes('expiré')) { toast.error(t('signup.errorCodeExpired')); setStep(1) }
             else if (e.message === 'Network Error') toast.error(t('signup.errorNetwork'))
             else toast.error(t('signup.errorRegistration'))
@@ -597,8 +525,17 @@ export function Signup({ onBack }: SignupProps) {
 
   const handlePrev = () => {
     if (step === 1) onBack()
+    // Après l'OTP (étape 2), la 1re étape de profil est la 5 (3 et 4 sont dans le parcours d'accueil)
+    else if (step === FIRST_PROFILE_STEP) setStep(2)
     else setStep((s) => s - 1)
   }
+
+  // Mode Google : le compte existe déjà à l'étape 5 → pas de retour possible avant
+  const canGoBack = !(isGoogleMode && step === FIRST_PROFILE_STEP)
+
+  // Progression affichée sans trou (les étapes 3 et 4 n'existent plus ici)
+  const visibleSteps = isGoogleMode ? [5, 6, 7] : [1, 2, 5, 6, 7]
+  const progressIndex = Math.max(visibleSteps.indexOf(step), 0) + 1
 
   const handleOtpChange = (i: number, v: string) => {
     if (!/^\d*$/.test(v)) return
@@ -715,16 +652,6 @@ export function Signup({ onBack }: SignupProps) {
   const isNextDisabled = () => {
     if (!isGoogleMode && step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
     if (!isGoogleMode && step === 2) return otp.join('').length < OTP_LENGTH || isFirebaseVerifying || checkingOtp
-    if (step === 3) return !isFieldValid(firstName)
-    if (step === 4) {
-      if (!birthday) return true
-      const birthDate = new Date(birthday)
-      const today = new Date()
-      let age = today.getFullYear() - birthDate.getFullYear()
-      const m = today.getMonth() - birthDate.getMonth()
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--
-      return age < 18
-    }
     if (step === 5) return false
     if (step === 6) return interests.length === 0
     if (isGoogleMode && step === 7) return !acceptedTerms || isUploadingPhoto || isFirebaseVerifying
@@ -744,18 +671,20 @@ export function Signup({ onBack }: SignupProps) {
       <div className="px-4 pt-5 pb-0 shrink-0">
         {/* Titre "Inscription" centré avec flèche retour */}
         <div className="flex items-center justify-center relative mb-3">
-          <BackButton
-            onClick={handlePrev}
-            aria-label="Retour"
-            className="absolute left-0 shrink-0"
-          />
+          {canGoBack && (
+            <BackButton
+              onClick={handlePrev}
+              aria-label="Retour"
+              className="absolute left-0 shrink-0"
+            />
+          )}
           <span className="font-poppins text-[15px] font-semibold text-gray-900 dark:text-white">
             {t('signup.title')}
           </span>
         </div>
 
         {/* Barre de progression orange fine — sous le header */}
-        <ProgressBar value={step} max={isGoogleMode ? 7 : 7} className="h-[3px] rounded-none" />
+        <ProgressBar value={progressIndex} max={visibleSteps.length} className="h-[3px] rounded-none" />
       </div>
 
       {/* ── Content ────────────────────────────────────── */}
@@ -917,78 +846,8 @@ export function Signup({ onBack }: SignupProps) {
           </div>
         )}
 
-        {/* ── STEP 3: NAME ── */}
-        {step === 3 && (
-          <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              {t('signup.step3Title')}
-            </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              {t('signup.step3Subtitle')}
-            </p>
-            <div className="flex flex-col gap-4">
-              <Input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder={t('signup.step3NamePlaceholder')}
-              />
-              <Input
-                type="text"
-                value={pseudo}
-                onChange={(e) => setPseudo(e.target.value)}
-                placeholder={t('signup.step3PseudoPlaceholder')}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 4: BIRTHDAY ── */}
-        {step === 4 && (
-          <div>
-            <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              {t('signup.step4Title')}
-            </h1>
-            <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              {t('signup.step4Subtitle')}
-            </p>
-
-            <div className="relative">
-              <Input
-                type="text"
-                inputMode="numeric"
-                maxLength={10}
-                value={birthdayText}
-                onChange={(e) => handleBirthdayChange(e.target.value)}
-                placeholder={t('signup.step4DatePlaceholder') || 'JJ/MM/AAAA'}
-                icon={
-                  <div
-                    className="relative flex items-center justify-center w-7 h-7 cursor-pointer"
-                    onClick={() => {
-                      try {
-                        birthdayNativeRef.current?.showPicker?.()
-                      } catch {}
-                    }}
-                  >
-                    <Calendar01Icon size={18} strokeWidth={1.5} className="text-[var(--color-icon-secondary)] pointer-events-none" />
-                    <input
-                      ref={birthdayNativeRef}
-                      type="date"
-                      id="birthday-native"
-                      value={birthday}
-                      max={new Date().toISOString().split('T')[0]}
-                      min="1900-01-01"
-                      onChange={handleNativeBirthdayChange}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 [color-scheme:light_dark]"
-                      aria-label={t('signup.step4Title')}
-                    />
-                  </div>
-                }
-              />
-            </div>
-          </div>
-        )}
+        {/* Étapes 3 (nom) et 4 (date de naissance) : déplacées dans le parcours d'accueil
+            features/auth/signup-intro — plus redemandées ici. */}
 
         {/* ── STEP 5: CITY ── */}
         {step === 5 && (

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+import { validateSystemSettingValue, clearSignupPolicyCache } from '../../services/signup-policy.service';
 
 export default async function adminListsRoutes(app: FastifyInstance) {
   // ── Users List ────────────────────────────────────────────────────────
@@ -169,12 +170,18 @@ export default async function adminListsRoutes(app: FastifyInstance) {
       description: z.string().optional()
     }).parse(req.body);
 
+    const settingError = validateSystemSettingValue(key, value);
+    if (settingError) {
+      return reply.code(400).send({ error: settingError });
+    }
+
     const setting = await app.prisma.systemSetting.upsert({
       where: { key },
       update: { value, ...(description ? { description } : {}) },
       create: { key, value, description },
     });
-    
+    clearSignupPolicyCache();
+
     return reply.send({ data: setting });
   });
 }

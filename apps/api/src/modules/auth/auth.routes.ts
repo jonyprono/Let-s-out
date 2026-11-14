@@ -54,6 +54,23 @@ export default async function authRoutes(app: FastifyInstance) {
     handler: ctrl.googleSignIn.bind(ctrl),
   })
 
+  // Google Sign-In — finalisation d'un NOUVEAU compte (parcours d'accueil terminé)
+  app.post('/google/complete', {
+    config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
+    handler: ctrl.googleComplete.bind(ctrl),
+  })
+
+  // Configuration publique du parcours d'inscription (MIN_SIGNUP_AGE)
+  app.get('/signup-config', {
+    handler: ctrl.signupConfig.bind(ctrl),
+  })
+
+  // Vérification serveur de l'âge à l'écran 2 (rien n'est enregistré) — limitée par IP
+  app.post('/check-age', {
+    config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
+    handler: ctrl.checkAge.bind(ctrl),
+  })
+
   // Refresh access token
   app.post('/refresh', {
     handler: ctrl.refresh.bind(ctrl),

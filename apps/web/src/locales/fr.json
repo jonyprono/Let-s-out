@@ -206,6 +206,55 @@
     "successResendAlt": "Code renvoyé",
     "errorResend": "Impossible de renvoyer le code."
   },
+  "editProfile": {
+    "birthDateLabel": "Date de naissance",
+    "birthDateHint": "(requise pour OUT RADAR)",
+    "birthDateLocked": "Votre date de naissance ne peut plus être modifiée. Contactez le support en cas d'erreur.",
+    "errorSaving": "Erreur lors de la mise à jour du profil"
+  },
+  "signupIntro": {
+    "next": "Suivant",
+    "back": "Retour",
+    "progressLabel": "Étape {{step}} sur {{total}}",
+    "haveAccount": "J'ai déjà un compte ?",
+    "login": "Se connecter",
+    "nameTitle": "Comment vous appelez-vous ?",
+    "nameSubtitle": "Entrez le nom complet que vous utilisez au quotidien.",
+    "firstNameLabel": "Prénom",
+    "lastNameLabel": "Nom de famille",
+    "nameHint": "Lettres, accents, tirets et apostrophes uniquement. 2 caractères minimum.",
+    "nameErrorEmpty": "Ce champ est requis.",
+    "nameErrorTooShort": "2 caractères minimum.",
+    "nameErrorTooLong": "{{max}} caractères maximum.",
+    "nameErrorChars": "Lettres, tirets et apostrophes uniquement (pas de chiffres ni d'emoji).",
+    "birthTitle": "Quelle est votre date de naissance ?",
+    "birthSubtitle": "Choisissez votre date de naissance. Vous pourrez à tout moment la rendre privée par la suite.",
+    "birthLabel": "Date de naissance",
+    "birthDay": "Jour",
+    "birthMonth": "Mois",
+    "birthYear": "Année",
+    "ageDisplay_one": "{{count}} an",
+    "ageDisplay_other": "{{count}} ans",
+    "birthErrorInvalid": "Cette date n'existe pas. Vérifiez le jour et le mois.",
+    "birthErrorFuture": "La date de naissance ne peut pas être dans le futur.",
+    "birthErrorTooOld": "Veuillez vérifier votre année de naissance.",
+    "configError": "Impossible de vérifier les conditions d'inscription pour le moment.",
+    "retry": "Réessayer",
+    "errorTooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes.",
+    "errorNetwork": "Connexion impossible. Vérifiez votre réseau et réessayez.",
+    "googleExpired": "Votre session Google a expiré. Appuyez à nouveau sur « S'inscrire avec Google ».",
+    "underageTitle": "Let's Out est réservé aux personnes de {{age}} ans et plus",
+    "underageTitleGeneric": "Vous ne pouvez pas créer de compte pour le moment",
+    "underageBody": "Merci de votre intérêt pour Let's Out. Vous ne pouvez pas créer de compte pour le moment, mais nous serons ravis de vous accueillir plus tard.",
+    "underageNotSaved": "Votre date de naissance n'a pas été enregistrée.",
+    "genderTitle": "Quel est votre genre ?",
+    "genderSubtitle": "Vous pouvez modifier plus tard qui voit votre genre sur votre profil.",
+    "genderLegend": "Genre",
+    "genderFemale": "Féminin",
+    "genderMale": "Masculin",
+    "genderOther": "Autres options",
+    "genderOtherHint": "Sélectionnez Autres options pour choisir un autre genre ou si vous préférez ne rien indiquer."
+  },
   "home": {
     "timeFilters": {
       "discover": "Découvrir",
@@ -475,6 +524,9 @@
     "sendInvite": "Envoyer une invitation",
     "block": "Bloquer",
     "report": "Signaler",
-    "close": "Fermer"
+    "close": "Fermer",
+    "birthDateRequiredTitle": "Date de naissance requise",
+    "birthDateRequiredBody": "Pour des raisons de sécurité, OUT RADAR nécessite votre date de naissance. Renseignez-la une fois dans votre profil pour continuer.",
+    "birthDateRequiredCta": "Compléter mon profil"
   }
 }

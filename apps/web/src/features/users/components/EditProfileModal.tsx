@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { invalidateAvatarQueries } from '@/lib/avatar-cache'
 import { useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
 const AVAILABLE_INTERESTS = [
   'Sorties', 'Sport', 'Cinéma', 'Voyage', 'Food', 'Business',
@@ -30,8 +31,11 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const [displayName, setDisplayName] = useState(profile?.displayName || '')
   const [city, setCity] = useState(profile?.city || '')
   const [bio, setBio] = useState(profile?.bio || '')
+  const { t } = useTranslation()
   const initialBirthDate = profile?.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : ''
   const [birthDate, setBirthDate] = useState(initialBirthDate)
+  // Une fois enregistrée, la date de naissance n'est modifiable que par un admin
+  const birthDateLocked = !!initialBirthDate
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests || [])
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || '')
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatarUrl || '')
@@ -132,16 +136,23 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         interests: selectedInterests,
         avatarUrl,
         coverUrl,
-        birthDate: birthDate ? new Date(birthDate).toISOString() : undefined,
+        // Date verrouillée une fois enregistrée : on ne l'envoie que lors de la 1re saisie
+        birthDate: !birthDateLocked && birthDate ? birthDate : undefined,
       } as any)
       await refreshUser()
       invalidateAvatarQueries(qc)
       qc.invalidateQueries({ queryKey: ['me'] })
       toast.success('Profil mis à jour avec succès')
       onClose()
-    } catch (e) {
+    } catch (e: any) {
       console.error(e)
-      toast.error('Erreur lors de la mise à jour du profil')
+      // Message serveur explicite pour la date (âge minimum, date invalide, verrouillage)
+      const code = e?.response?.data?.code
+      if (['UNDERAGE', 'INVALID_DATE', 'FUTURE_DATE', 'TOO_OLD', 'BIRTHDATE_LOCKED'].includes(code)) {
+        toast.error(e.response.data.error)
+      } else {
+        toast.error(t('editProfile.errorSaving'))
+      }
     } finally {
       setIsSaving(false)
     }
@@ -305,17 +316,26 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                 <Calendar className="w-5 h-5 text-[#FF7A00]" strokeWidth={2} />
               </div>
               <div className="flex-1">
-                <label className="text-[12px] font-bold text-gray-800 dark:text-gray-200 block mb-1.5 ml-1">
-                  Date de naissance <span className="text-[11px] font-normal text-gray-400">(Requis pour OUT RADAR 18+)</span>
+                <label htmlFor="edit-profile-birthdate" className="text-[12px] font-bold text-gray-800 dark:text-gray-200 block mb-1.5 ml-1">
+                  <span>{t('editProfile.birthDateLabel')}</span>{' '}
+                  <span className="text-[11px] font-normal text-gray-500">{t('editProfile.birthDateHint')}</span>
                 </label>
                 <div className="relative">
                   <input
+                    id="edit-profile-birthdate"
                     type="date"
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
-                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors"
+                    disabled={birthDateLocked}
+                    aria-describedby={birthDateLocked ? 'edit-profile-birthdate-locked' : undefined}
+                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
+                {birthDateLocked && (
+                  <p id="edit-profile-birthdate-locked" className="text-[11px] text-gray-500 mt-1.5 ml-1">
+                    <span>{t('editProfile.birthDateLocked')}</span>
+                  </p>
+                )}
               </div>
             </div>
 

@@ -18,6 +18,7 @@ export type AuditAction =
   | 'REFUND_REQUESTED'
   | 'SETTING_CHANGED'
   | 'ANONYMOUS_IDENTITY_VIEWED'
+  | 'BIRTHDATE_CHANGED'
 
 export interface AuditEntry {
   actorId?: string

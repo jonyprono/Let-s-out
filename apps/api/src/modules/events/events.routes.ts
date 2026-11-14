@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto'
 import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 import { EmailService } from '../../services/email.service'
+import { eventGenderDenial } from '../../services/signup-policy.service'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -1234,20 +1235,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(402).send({ error: 'PAYMENT_REQUIRED', message: 'Ce événement est payant. Veuillez procéder au paiement.' })
     }
 
-    // Gender check
-    if (event.genderRestriction !== 'ANY') {
-      const userProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
-      if (!userProfile?.gender) {
-        return reply.code(403).send({ error: 'GENDER_REQUIRED', message: "Cet événement a une restriction de genre. Veuillez d'abord renseigner votre genre dans votre profil." })
-      }
-      const isMale = userProfile.gender.toLowerCase() === 'homme' || userProfile.gender.toLowerCase() === 'male' || userProfile.gender.toLowerCase() === 'm'
-      if (event.genderRestriction === 'MALE' && !isMale) {
-        return reply.code(403).send({ error: 'GENDER_RESTRICTED', message: 'Cet événement est réservé aux hommes.' })
-      }
-      if (event.genderRestriction === 'FEMALE' && isMale) {
-        return reply.code(403).send({ error: 'GENDER_RESTRICTED', message: 'Cet événement est réservé aux femmes.' })
-      }
-    }
+    // Gender check — règle validée : FEMALE ↔ événements femmes, MALE ↔ événements hommes,
+    // OTHER (et toute valeur non reconnue) uniquement pour les événements mixtes (ANY).
+    const genderDenied = await eventGenderDenial(app.prisma, sub, event.genderRestriction)
+    if (genderDenied) return reply.code(genderDenied.status).send(genderDenied.body)
 
     // maxAttendees check: count only CONFIRMED bookings to avoid PENDING requests consuming slots
     if (event.maxAttendees) {
@@ -1699,6 +1690,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
       where: { userId_eventId: { userId: sub, eventId: event.id } },
     })
     if (existing) return reply.send({ event, alreadyJoined: true })
+
+    // Restriction de genre (même règle que le join classique et le paiement)
+    const genderDenied = await eventGenderDenial(app.prisma, sub, event.genderRestriction)
+    if (genderDenied) return reply.code(genderDenied.status).send(genderDenied.body)
 
     if (event.price > 0) {
       // Return event info for the user to proceed to payment

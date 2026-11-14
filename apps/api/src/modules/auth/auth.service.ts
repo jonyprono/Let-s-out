@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@prisma/client'
 import type Redis from 'ioredis'
-import { randomInt } from 'crypto'
+import { randomInt, createHmac, timingSafeEqual } from 'crypto'
 import { addMinutes, isAfter } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
 import bcrypt from 'bcryptjs'
@@ -20,6 +20,7 @@ const OTP_TTL_MINUTES = 10
 const OTP_MAX_ATTEMPTS = 5
 const REFRESH_TOKEN_TTL_DAYS = 30
 const PRE_VERIFIED_TTL_SECONDS = 30 * 60 // 30 minutes for multi-step signup flow
+const GOOGLE_SIGNUP_TOKEN_TTL_MS = 30 * 60 * 1000 // jeton d'inscription Google : 30 min
 
 export class AuthService {
   constructor(
@@ -226,25 +227,68 @@ export class AuthService {
   }
 
   /**
-   * Google Sign-In: find existing account or create a new one.
-   * Returns { user, isNewUser }.
+   * Google Sign-In : retourne le compte existant pour cet e-mail, ou null.
+   * Un NOUVEL utilisateur Google n'est plus créé ici : il reçoit un
+   * signupToken et doit passer par /auth/google/complete (date de naissance
+   * + genre obligatoires, âge contrôlé côté serveur).
    */
-  async googleRegisterOrLogin(decoded: admin.auth.DecodedIdToken): Promise<{ user: any; isNewUser: boolean }> {
-    const email = decoded.email
-    if (!email) throw new Error('GOOGLE_NO_EMAIL')
-
-    const existing = await this.prisma.user.findFirst({
+  async findGoogleUser(email: string) {
+    return this.prisma.user.findFirst({
       where: { email },
       include: { profile: true },
     })
+  }
 
-    if (existing) {
-      return { user: existing, isNewUser: false }
+  // ── Jeton d'inscription Google (temporaire, signé HMAC) ─────────────────────
+  // Volontairement PAS un JWT signé avec JWT_SECRET : `app.authenticate`
+  // accepterait n'importe quel JWT valide. Clé dérivée + format distinct.
+
+  private signupTokenKey(): string {
+    const base = process.env.JWT_SECRET || 'dev-only-insecure-jwt-secret'
+    return `${base}:google-signup:v1`
+  }
+
+  createGoogleSignupToken(decoded: admin.auth.DecodedIdToken): string {
+    const payload = {
+      typ: 'google_signup',
+      uid: decoded.uid,
+      email: decoded.email,
+      picture: decoded.picture || null,
+      exp: Date.now() + GOOGLE_SIGNUP_TOKEN_TTL_MS,
     }
+    const body = Buffer.from(JSON.stringify(payload)).toString('base64url')
+    const sig = createHmac('sha256', this.signupTokenKey()).update(body).digest('base64url')
+    return `${body}.${sig}`
+  }
 
-    // Auto-create account from Google profile
-    const displayName = decoded.name || decoded.email?.split('@')[0] || 'Utilisateur'
-    const avatarUrl = decoded.picture || undefined
+  verifyGoogleSignupToken(token: string): { uid: string; email: string; picture: string | null } | null {
+    const [body, sig] = token.split('.')
+    if (!body || !sig) return null
+    const expected = createHmac('sha256', this.signupTokenKey()).update(body).digest('base64url')
+    const a = Buffer.from(sig)
+    const b = Buffer.from(expected)
+    if (a.length !== b.length || !timingSafeEqual(a, b)) return null
+    try {
+      const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf-8'))
+      if (payload.typ !== 'google_signup' || typeof payload.email !== 'string') return null
+      if (typeof payload.exp !== 'number' || payload.exp < Date.now()) return null
+      return { uid: payload.uid, email: payload.email, picture: payload.picture ?? null }
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Crée le compte Google APRÈS le parcours d'accueil (âge déjà validé par le
+   * contrôleur via checkBirthDate).
+   */
+  async createGoogleUser(
+    google: { email: string; picture: string | null },
+    identity: { firstName: string; lastName: string; gender: string; birthDate: Date },
+  ) {
+    const email = google.email
+    const displayName = `${identity.firstName} ${identity.lastName}`.trim()
+    const avatarUrl = google.picture || undefined
 
     // Generate a safe unique username
     const baseUsername = email
@@ -265,6 +309,10 @@ export class AuthService {
           create: {
             username,
             displayName,
+            firstName: identity.firstName,
+            lastName: identity.lastName,
+            birthDate: identity.birthDate,
+            gender: identity.gender,
             avatarUrl,
           },
         },
@@ -273,7 +321,7 @@ export class AuthService {
       include: { profile: true },
     })
 
-    // Asynchronously send welcome email for new Google signups
+    // Asynchronously send welcome email for new Google signups (un seul envoi)
     this.sendWelcomeEmail(email, displayName).catch((err) => {
       console.error('[Welcome Email Error] Google Signup:', err)
     })
@@ -283,7 +331,7 @@ export class AuthService {
       console.error('[Badge Error] Early Adopter badge assignment failed:', err)
     })
 
-    return { user, isNewUser: true }
+    return user
   }
 
   // ── Pre-verified Session ────────────────────────────────────────────────────
@@ -315,7 +363,8 @@ export class AuthService {
 
   // ── Register ───────────────────────────────────────────────────────────────
 
-  async register(input: RegisterInput) {
+  /** `birthDate` : déjà validée (MIN_SIGNUP_AGE) par le contrôleur. */
+  async register(input: RegisterInput, birthDate: Date) {
     const isPhone = input.target.startsWith('+')
 
     const existing = await this.prisma.user.findFirst({
@@ -333,6 +382,8 @@ export class AuthService {
       ? await bcrypt.hash(input.password, 12)
       : undefined
 
+    const displayName = `${input.firstName} ${input.lastName}`.trim()
+
     const user = await this.prisma.user.create({
       data: {
         ...(isPhone ? { phone: input.target } : { email: input.target }),
@@ -342,8 +393,10 @@ export class AuthService {
         profile: {
           create: {
             username: input.username,
-            displayName: input.displayName,
-            birthDate: input.birthDate ? new Date(input.birthDate) : undefined,
+            displayName,
+            firstName: input.firstName,
+            lastName: input.lastName,
+            birthDate,
             gender: input.gender,
           },
         },
@@ -357,7 +410,7 @@ export class AuthService {
 
     // Asynchronously send welcome email if registered via Email
     if (!isPhone) {
-      this.sendWelcomeEmail(input.target, input.displayName).catch((err) => {
+      this.sendWelcomeEmail(input.target, displayName).catch((err) => {
         console.error('[Welcome Email Error] Email Signup:', err)
       })
     }

@@ -1,7 +1,14 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { apiClient } from '@/lib/api-client'
+import { SignupIntro } from '@/features/auth/signup-intro'
+import { useCompleteGoogleSignup } from '@/features/auth/hooks/useAuth'
+import {
+  useSignupIntroStore,
+  hasCompletedSignupIntro,
+  isSignupBlockedForSession,
+} from '@/stores/signup-intro.store'
 
 // ── Page loader (shown between route transitions while lazy chunks download) ──
 function PageLoader() {
@@ -98,11 +105,49 @@ export function ForgotPassword() {
 }
 
 // ─── Signup ───────────────────────────────────────────────────────────────────
+// /signup affiche d'abord le parcours d'accueil (nom, date de naissance, genre),
+// puis l'inscription existante (téléphone, OTP, ville, intérêts, mot de passe).
+// /signup?mode=google = suite d'une inscription Google dont le compte existe déjà.
 export function Signup() {
   const nav = useNavigate()
+  const [params] = useSearchParams()
+  const firstName = useSignupIntroStore((s) => s.firstName)
+  const lastName = useSignupIntroStore((s) => s.lastName)
+  const birthDate = useSignupIntroStore((s) => s.birthDate)
+  const gender = useSignupIntroStore((s) => s.gender)
+  const { mutate: completeGoogle, isPending: completingGoogle } = useCompleteGoogleSignup()
+
+  const isGoogleContinuation = params.get('mode') === 'google'
+  const introDone = hasCompletedSignupIntro({ firstName, lastName, birthDate, gender })
+  const showIntro =
+    !isGoogleContinuation && (params.has('step') || !introDone || isSignupBlockedForSession())
+
+  if (completingGoogle) return <PageLoader />
+
+  // Quitter le parcours abandonne une inscription Google en attente (les réponses restent)
+  const leaveToLogin = () => {
+    useSignupIntroStore.getState().setGoogle(null)
+    nav('/login')
+  }
+
+  if (showIntro) {
+    return (
+      <SignupIntro
+        onExit={leaveToLogin}
+        onLogin={leaveToLogin}
+        onComplete={() => {
+          // Inscription Google en attente → création du compte via /auth/google/complete
+          if (useSignupIntroStore.getState().google) completeGoogle()
+          else nav('/signup')
+        }}
+      />
+    )
+  }
+
   return (
     <Suspense fallback={<PageLoader />}>
-      <SignupBase onBack={() => nav('/login')} />
+      {/* Retour depuis l'écran téléphone → dernier écran du parcours d'accueil (genre) */}
+      <SignupBase onBack={() => nav('/signup?step=3')} />
     </Suspense>
   )
 }

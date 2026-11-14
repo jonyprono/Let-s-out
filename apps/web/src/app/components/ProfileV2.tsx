@@ -27,10 +27,11 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const location = useLocation();
+  // Ouverture directe de l'édition du profil (ex. OUT RADAR : date de naissance manquante)
+  const [showEditModal, setShowEditModal] = useState(() => !!(location.state as any)?.openEdit);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
   const { username } = useParams<{ username?: string }>();
-  const location = useLocation();
   const preloadedProfile = location.state?.profile;
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [showActionsSheet, setShowActionsSheet] = useState(false);

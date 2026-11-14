@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { createAndSendNotification } from '../notifications/notifications.routes'
+import { getMinSignupAge, ageFromStoredDate, SignupConfigError } from '../../services/signup-policy.service'
 
 // Formule de Haversine pour le calcul de distance en kilomètres
 function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -37,18 +38,37 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000).unref()
 
-// Vérification de la majorité (18 ans et plus)
-function isAdult(birthDate: Date | string | null | undefined): boolean {
-  if (!birthDate) return false
-  const d = typeof birthDate === 'string' ? new Date(birthDate) : birthDate
-  if (isNaN(d.getTime())) return false
-  const now = new Date()
-  let age = now.getFullYear() - d.getFullYear()
-  const m = now.getMonth() - d.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) {
-    age--
+
+/**
+ * Contrôle d'âge OUT RADAR : date de naissance obligatoire et âge ≥ MIN_SIGNUP_AGE.
+ * Retourne la réponse d'erreur à envoyer, ou null si l'accès est autorisé.
+ */
+async function radarAgeDenial(
+  app: FastifyInstance,
+  birthDate: Date | null | undefined,
+): Promise<{ status: number; body: Record<string, unknown> } | null> {
+  if (!birthDate) {
+    return {
+      status: 403,
+      body: { error: 'Veuillez renseigner votre date de naissance dans votre profil pour utiliser OUT RADAR.', needsBirthDate: true },
+    }
   }
-  return age >= 18
+  let minAge: number
+  try {
+    minAge = await getMinSignupAge(app.prisma)
+  } catch (err) {
+    if (err instanceof SignupConfigError) {
+      return { status: 503, body: { error: 'OUT RADAR est momentanément indisponible.', code: 'SIGNUP_CONFIG_MISSING' } }
+    }
+    throw err
+  }
+  if (ageFromStoredDate(birthDate) < minAge) {
+    return {
+      status: 403,
+      body: { error: `OUT RADAR est réservé aux membres de ${minAge} ans et plus.`, code: 'UNDERAGE', minSignupAge: minAge, needsBirthDate: false },
+    }
+  }
+  return null
 }
 
 // Types de sorties autorisés
@@ -121,21 +141,14 @@ export default async function radarRoutes(app: FastifyInstance) {
       longitude?: number
     }
 
-    // Vérifier l'âge de l'utilisateur (18+ ans requis)
+    // Âge ≥ MIN_SIGNUP_AGE (SystemSetting, aucun seuil codé en dur).
+    // Un ancien compte sans date de naissance doit d'abord la renseigner dans son profil.
     const profile = await app.prisma.profile.findUnique({
       where: { userId },
       select: { birthDate: true, kycBirthDate: true },
     })
-
-    const birthDate = profile?.kycBirthDate || profile?.birthDate
-    if (!isAdult(birthDate)) {
-      return reply.code(403).send({
-        error: !birthDate
-          ? 'Veuillez renseigner votre date de naissance pour utiliser OUT RADAR (18 ans et plus).'
-          : 'OUT RADAR est réservé aux membres majeurs (18 ans et plus) pour des raisons de sécurité.',
-        needsBirthDate: !birthDate,
-      })
-    }
+    const ageDenied = await radarAgeDenial(app, profile?.kycBirthDate || profile?.birthDate)
+    if (ageDenied) return reply.code(ageDenied.status).send(ageDenied.body)
 
     if (isVisible) {
       if (!durationMinutes || ![30, 60, 180].includes(durationMinutes)) {
@@ -264,20 +277,14 @@ export default async function radarRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Le rayon doit être de 1km, 5km ou 10km.' })
     }
 
-    // 3. Vérifier l'âge du chercheur (18+)
+    // 3. Âge du chercheur ≥ MIN_SIGNUP_AGE
     const userProfile = await app.prisma.profile.findUnique({
       where: { userId },
       select: { birthDate: true, kycBirthDate: true },
     })
-    const userBirthDate = userProfile?.kycBirthDate || userProfile?.birthDate
-    if (!isAdult(userBirthDate)) {
-      return reply.code(403).send({
-        error: !userBirthDate
-          ? 'Veuillez renseigner votre date de naissance pour utiliser OUT RADAR (18 ans et plus).'
-          : 'OUT RADAR est réservé aux membres majeurs (18 ans et plus).',
-        needsBirthDate: !userBirthDate,
-      })
-    }
+    const ageDenied = await radarAgeDenial(app, userProfile?.kycBirthDate || userProfile?.birthDate)
+    if (ageDenied) return reply.code(ageDenied.status).send(ageDenied.body)
+    const minAge = await getMinSignupAge(app.prisma)
 
     const now = new Date()
 
@@ -364,9 +371,9 @@ export default async function radarRoutes(app: FastifyInstance) {
     for (const item of candidates) {
       if (!item.latitude || !item.longitude) continue
 
-      // Sécurité : n'afficher que les utilisateurs majeurs (18+)
+      // Sécurité : n'afficher que les profils d'au moins MIN_SIGNUP_AGE ans
       const targetBirthDate = item.user.profile?.kycBirthDate || item.user.profile?.birthDate
-      if (!isAdult(targetBirthDate)) continue
+      if (!targetBirthDate || ageFromStoredDate(targetBirthDate) < minAge) continue
 
       // Calcul de la distance
       const distance = getDistanceKm(latitude, longitude, item.latitude, item.longitude)

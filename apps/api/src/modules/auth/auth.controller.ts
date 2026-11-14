@@ -17,7 +17,17 @@ import {
   type InitLoginInput,
   ResetPasswordSchema,
   type ResetPasswordInput,
+  GoogleCompleteSchema,
+  type GoogleCompleteInput,
+  CheckAgeSchema,
 } from './auth.schema'
+import {
+  checkBirthDate,
+  getMinSignupAge,
+  birthDateErrorMessage,
+  SignupConfigError,
+  type BirthDateCheck,
+} from '../../services/signup-policy.service'
 import bcrypt from 'bcryptjs'
 
 export class AuthController {
@@ -33,6 +43,122 @@ export class AuthController {
       return reply.code(400).send({ error: message })
     }
     throw err
+  }
+
+  /**
+   * Vérifie la date de naissance contre MIN_SIGNUP_AGE.
+   * Envoie la réponse d'erreur et retourne null si refusée.
+   * La date n'est jamais journalisée.
+   */
+  private async checkBirthDateOrReply(birthDate: unknown, reply: FastifyReply) {
+    let check: BirthDateCheck
+    try {
+      check = await checkBirthDate(this.app.prisma, birthDate)
+    } catch (err) {
+      if (err instanceof SignupConfigError) {
+        reply.code(503).send({ error: 'Inscriptions momentanément indisponibles. Réessayez plus tard.', code: 'SIGNUP_CONFIG_MISSING' })
+        return null
+      }
+      throw err
+    }
+    if (!check.ok) {
+      reply.code(check.code === 'UNDERAGE' ? 403 : 400).send({
+        error: birthDateErrorMessage(check),
+        code: check.code,
+        minSignupAge: check.minAge,
+      })
+      return null
+    }
+    return check
+  }
+
+  private async issueSession(req: FastifyRequest, reply: FastifyReply, user: { id: string; role: any }, sameSite: 'lax' | 'none') {
+    const accessToken = this.app.jwt.sign({ sub: user.id, role: user.role })
+    const refreshToken = await this.service.createRefreshToken(user.id, {
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+    })
+    reply.setCookie('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite,
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60,
+    })
+    return { accessToken, refreshToken }
+  }
+
+  /** GET /auth/signup-config — configuration publique du parcours d'inscription. */
+  async signupConfig(_req: FastifyRequest, reply: FastifyReply) {
+    try {
+      const minSignupAge = await getMinSignupAge(this.app.prisma)
+      return reply.send({ minSignupAge })
+    } catch (err) {
+      if (err instanceof SignupConfigError) {
+        return reply.code(503).send({ error: 'Configuration indisponible.', code: 'SIGNUP_CONFIG_MISSING' })
+      }
+      throw err
+    }
+  }
+
+  /**
+   * POST /auth/check-age — confirmation serveur de l'âge à l'écran 2.
+   * Ne stocke RIEN (la date d'un mineur n'est jamais enregistrée) ; limité par IP.
+   */
+  async checkAge(req: FastifyRequest, reply: FastifyReply) {
+    let body: { birthDate: string }
+    try {
+      body = CheckAgeSchema.parse(req.body)
+    } catch (err) {
+      return this.handleValidationError(err, reply)
+    }
+    const check = await this.checkBirthDateOrReply(body.birthDate, reply)
+    if (!check) return reply
+    return reply.send({ allowed: true, age: check.age, minSignupAge: check.minAge })
+  }
+
+  /**
+   * POST /auth/google/complete — crée le compte d'un NOUVEL utilisateur Google
+   * après le parcours d'accueil (prénom, nom, date de naissance, genre).
+   */
+  async googleComplete(req: FastifyRequest, reply: FastifyReply) {
+    let body: GoogleCompleteInput
+    try {
+      body = GoogleCompleteSchema.parse(req.body)
+    } catch (err) {
+      return this.handleValidationError(err, reply)
+    }
+
+    const google = this.service.verifyGoogleSignupToken(body.signupToken)
+    if (!google) {
+      return reply.code(401).send({ error: 'Session Google expirée. Veuillez recommencer avec Google.', code: 'GOOGLE_SIGNUP_TOKEN_INVALID' })
+    }
+
+    const ageCheck = await this.checkBirthDateOrReply(body.birthDate, reply)
+    if (!ageCheck) return reply
+
+    const existing = await this.service.findGoogleUser(google.email)
+    if (existing) {
+      return reply.code(409).send({ error: 'Un compte existe déjà avec cette adresse. Connectez-vous.', code: 'USER_ALREADY_EXISTS' })
+    }
+
+    const user = await this.service.createGoogleUser(google, {
+      firstName: body.firstName,
+      lastName: body.lastName,
+      gender: body.gender,
+      birthDate: ageCheck.date,
+    })
+
+    const { accessToken, refreshToken } = await this.issueSession(
+      req, reply, user, process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    )
+
+    return reply.code(201).send({
+      accessToken,
+      refreshToken,
+      isNewUser: true,
+      user: { ...user, passwordHash: undefined },
+    })
   }
 
   async sendOtp(req: FastifyRequest, reply: FastifyReply) {
@@ -178,6 +304,11 @@ export class AuthController {
       return this.handleValidationError(err, reply)
     }
 
+    // Âge minimum (MIN_SIGNUP_AGE) — contrôlé AVANT toute vérification/consommation d'OTP.
+    // Un client modifié ne peut pas contourner ce contrôle.
+    const ageCheck = await this.checkBirthDateOrReply(body.birthDate, reply)
+    if (!ageCheck) return reply
+
     // Validate OTP or Firebase token.
     // For the multi-step signup flow: after checkOtp at step 2 we store a
     // 30-min pre-verified session in Redis so the user isn't blocked at step 11
@@ -199,7 +330,7 @@ export class AuthController {
     }
 
     try {
-      const user = await this.service.register(body)
+      const user = await this.service.register(body, ageCheck.date)
 
       // Consume OTP and pre-verified session only after successful user creation
       if (body.code) {
@@ -619,18 +750,27 @@ export class AuthController {
       return reply.code(400).send({ error: 'Aucune adresse email associée à ce compte Google.' })
     }
 
-    // Step 3: Find or auto-create the user account
-    let user: any
-    let isNewUser: boolean
-    try {
-      const result = await this.service.googleRegisterOrLogin(decoded)
-      user = result.user
-      isNewUser = result.isNewUser
-    } catch (err: any) {
-      if (err.message === 'GOOGLE_NO_EMAIL') {
-        return reply.code(400).send({ error: 'Aucune adresse email associée à ce compte Google.' })
-      }
-      throw err
+    if (!decoded.email) {
+      return reply.code(400).send({ error: 'Aucune adresse email associée à ce compte Google.' })
+    }
+
+    // Step 3: Find the existing account. A NEW Google user is NOT created here:
+    // they get a short-lived signupToken and must complete the intro flow
+    // (birth date + gender, age checked server-side) via /auth/google/complete.
+    const user: any = await this.service.findGoogleUser(decoded.email)
+    if (!user) {
+      const fullName = (decoded.name || '').trim()
+      const [firstName = '', ...rest] = fullName.split(/\s+/)
+      return reply.send({
+        isNewUser: true,
+        needsCompletion: true,
+        signupToken: this.service.createGoogleSignupToken(decoded),
+        prefill: {
+          firstName,
+          lastName: rest.join(' '),
+          email: decoded.email,
+        },
+      })
     }
 
     if (!user.isActive) {
@@ -658,25 +798,12 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60,
     })
 
-    // Step 6: Send welcome email for new Google users (fire-and-forget — never blocks login)
-    if (isNewUser && user.email) {
-      import('../../services/email.service').then(({ EmailService }) => {
-        const emailSvc = new EmailService()
-        emailSvc.sendWelcomeEmail({
-          to: user.email,
-          displayName: user.profile?.displayName || user.email.split('@')[0],
-        }).catch((err: unknown) => {
-          this.app.log.warn({ err }, '[Welcome Email] Failed to send for new Google user')
-        })
-      }).catch((err: unknown) => {
-        this.app.log.warn({ err }, '[Welcome Email] Failed to import EmailService')
-      })
-    }
-
+    // (Welcome email for new Google users is now sent once, by createGoogleUser
+    //  in /auth/google/complete — this route only logs in existing accounts.)
     return reply.send({
       accessToken,
       refreshToken,
-      isNewUser,
+      isNewUser: false,
       user: { ...user, passwordHash: undefined },
     })
   }
