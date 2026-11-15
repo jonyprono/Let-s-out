@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Send, Loader2, MoreHorizontal, X } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
@@ -14,6 +15,31 @@ interface PagePostCommentsModalProps {
   open: boolean
   onClose: () => void
   onCommentAdded?: () => void
+}
+
+/**
+ * Hauteur masquée par le clavier virtuel, via visualViewport.
+ * Safari / navigateur mobile : la page n'est pas redimensionnée → la valeur sert à remonter la fiche.
+ * App Capacitor (resize: 'native') : la vue est déjà redimensionnée → la valeur reste ~0.
+ */
+function useKeyboardInset(active: boolean) {
+  const [inset, setInset] = useState(0)
+  useEffect(() => {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null
+    if (!active || !vv) return
+    const update = () => {
+      const hidden = window.innerHeight - vv.height - vv.offsetTop
+      setInset(hidden > 80 ? Math.round(hidden) : 0) // ignore les petites variations (barre d'adresse)
+    }
+    update()
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
+  }, [active])
+  return inset
 }
 
 function getRelativeTime(dateString: string) {
@@ -58,6 +84,16 @@ export function PagePostCommentsModal({
     },
   })
 
+  const keyboardInset = useKeyboardInset(open)
+
+  // Bloque le défilement de la page derrière la fiche (web / Safari)
+  useEffect(() => {
+    if (!open) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = previous }
+  }, [open])
+
   const deleteMutation = useMutation({
     mutationFn: (commentId: string) => pagesApi.deleteComment(pageId, postId, commentId),
     onSuccess: () => {
@@ -69,18 +105,28 @@ export function PagePostCommentsModal({
 
   if (!open) return null
 
-  return (
+  // Portal sur <body> : rendue dans la carte du fil, la fiche était enfermée dans la zone qui
+  // défile et, sur iOS (défilement composité), rognée/décalée hors de l'écran.
+  // z-[110] : au-dessus du plein écran vidéo (90) et de la fiche publication (100),
+  // sous les confirmations (150).
+  return createPortal(
     <div
-      className="fixed inset-0 z-[80] flex items-end"
+      className="fixed inset-0 z-[110] flex items-end overscroll-contain"
       onClick={onClose}
-      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(2px)' }}
+      style={{
+        background: 'rgba(0,0,0,0.65)',
+        backdropFilter: 'blur(2px)',
+        // Clavier : remonte la fiche de la hauteur masquée par le clavier (Safari / web).
+        // Dans l'app, Capacitor redimensionne déjà la vue (resize: native) → valeur 0.
+        paddingBottom: keyboardInset,
+      }}
     >
-      {/* Sheet — 90% height */}
+      {/* Sheet — hauteurs en dvh : suivent la zone réellement visible (clavier compris) */}
       <div
         className="w-full flex flex-col rounded-t-3xl overflow-hidden relative"
         style={{
-          height: '85vh',
-          maxHeight: '90dvh',
+          height: '85dvh',
+          maxHeight: keyboardInset ? `calc(100dvh - ${keyboardInset}px - 24px)` : '90dvh',
           background: 'var(--color-background-primary, #fff)',
           boxShadow: '0 -8px 30px rgba(0,0,0,0.25)',
           animation: 'slideUp 0.3s cubic-bezier(.32,1.06,.55,1)',
@@ -112,8 +158,8 @@ export function PagePostCommentsModal({
           </button>
         </div>
 
-        {/* ── Comment list ── */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
+        {/* ── Comment list ── (overscroll-contain : ne fait pas défiler le fil derrière) */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-5">
           {isLoading ? (
             <div className="flex justify-center py-12">
               <Loader2 className="w-6 h-6 animate-spin text-[#FF7A00]" />
@@ -222,6 +268,7 @@ export function PagePostCommentsModal({
               <div className="flex-1 bg-[#F5F5F5] dark:bg-[#222] rounded-3xl px-4 py-2 flex items-center gap-2">
                 <input
                   type="text"
+                  enterKeyHint="send"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="Écrire un commentaire..."
@@ -255,6 +302,7 @@ export function PagePostCommentsModal({
       </div>
 
       <style>{`@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
-    </div>
+    </div>,
+    document.body,
   )
 }

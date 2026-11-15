@@ -39,6 +39,14 @@ const OUTING_TYPES = [
   { value: 'GROUP_ACTIVITY', label: 'Activité de groupe' },
 ]
 
+/** Rayons proposés (km) — doivent correspondre à RADAR_ALLOWED_RADII_KM (apps/api radar.routes.ts) */
+const RADAR_RADII = [
+  { value: 0.5, label: '500 m' },
+  { value: 1, label: '1 km' },
+  { value: 5, label: '5 km' },
+  { value: 10, label: '10 km' },
+]
+
 export function OutRadar() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -62,7 +70,7 @@ export function OutRadar() {
   const [requestingGeo, setRequestingGeo] = useState(false)
 
   // Paramètres de recherche
-  const [radiusKm, setRadiusKm] = useState<number>(1) // 1km, 5km, 10km
+  const [radiusKm, setRadiusKm] = useState<number>(1) // 500 m, 1 km, 5 km ou 10 km (RADAR_RADII)
   const [genderFilter, setGenderFilter] = useState<'ALL' | 'FEMALE' | 'MALE'>('ALL')
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [outingTypeFilter, setOutingTypeFilter] = useState('ALL')
@@ -279,7 +287,7 @@ export function OutRadar() {
 
   // ── 5b. Élargir le rayon d'un cran ───────────────────────────────────────────
   const handleWidenRadius = useCallback(() => {
-    const radii = [1, 5, 10]
+    const radii = RADAR_RADII.map((r) => r.value)
     const idx = radii.indexOf(radiusKm)
     if (idx < radii.length - 1) {
       const nextRadius = radii[idx + 1]
@@ -700,13 +708,9 @@ export function OutRadar() {
                   </button>
                 </div>
 
-                {/* Sélecteur de rayon (1km, 5km, 10km) */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 1.0, label: '1 km' },
-                    { value: 5.0, label: '5 km' },
-                    { value: 10.0, label: '10 km' },
-                  ].map((r) => (
+                {/* Sélecteur de rayon (500 m, 1 km, 5 km, 10 km) — mêmes valeurs que RADAR_ALLOWED_RADII_KM côté API */}
+                <div className="grid grid-cols-4 gap-2">
+                  {RADAR_RADII.map((r) => (
                     <button
                       key={r.value}
                       onClick={() => setRadiusKm(r.value)}

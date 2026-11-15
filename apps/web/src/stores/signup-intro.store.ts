@@ -30,14 +30,14 @@ interface SignupIntroState {
   setBirthDate: (birthDate: string | null) => void
   setGender: (gender: SignupGender) => void
   setGoogle: (google: PendingGoogleSignup | null, prefill?: { firstName?: string; lastName?: string }) => void
-  /** Âge insuffisant : efface la date et pose le flag de blocage de session. */
+  /** Âge insuffisant : efface uniquement la date (pas de blocage — l'utilisateur peut la corriger). */
   markUnderage: () => void
   /** Après inscription réussie (ou abandon volontaire) : tout effacer. */
   reset: () => void
 }
 
 const STORE_KEY = 'letsout-signup-intro'
-const UNDERAGE_FLAG_KEY = 'letsout-signup-underage'
+const LEGACY_UNDERAGE_FLAG_KEY = 'letsout-signup-underage'
 
 function safeStorage(getStorage: () => Storage): StateStorage {
   return {
@@ -53,15 +53,11 @@ function safeStorage(getStorage: () => Storage): StateStorage {
   }
 }
 
-const sessionStore = safeStorage(() => window.sessionStorage)
-
-// Repli en mémoire si sessionStorage est indisponible (le flag tient alors jusqu'au rechargement)
-let underageInMemory = false
-
-/** Vrai si un âge insuffisant a été saisi pendant cette session. */
-export function isSignupBlockedForSession(): boolean {
-  return underageInMemory || sessionStore.getItem(UNDERAGE_FLAG_KEY) === '1'
-}
+// Le verrouillage de session « âge insuffisant » a été SUPPRIMÉ (trop bloquant : une simple erreur
+// de saisie empêchait toute inscription). On efface le drapeau laissé par l'ancienne version pour
+// qu'aucun utilisateur ne reste bloqué après la mise à jour. Le serveur continue, lui, de refuser
+// toute création de compte sous MIN_SIGNUP_AGE.
+safeStorage(() => window.sessionStorage).removeItem(LEGACY_UNDERAGE_FLAG_KEY)
 
 const emptyAnswers = {
   firstName: '',
@@ -85,12 +81,8 @@ export const useSignupIntroStore = create<SignupIntroState>()(
           firstName: s.firstName || prefill?.firstName || '',
           lastName: s.lastName || prefill?.lastName || '',
         })),
-      markUnderage: () => {
-        underageInMemory = true
-        sessionStore.setItem(UNDERAGE_FLAG_KEY, '1')
-        // La date d'un mineur n'est jamais conservée, ni le reste des réponses
-        set({ ...emptyAnswers })
-      },
+      // La date refusée n'est jamais conservée ; prénom, nom et genre restent pour ne rien ressaisir
+      markUnderage: () => set({ birthDate: null }),
       reset: () => set({ ...emptyAnswers }),
     }),
     {

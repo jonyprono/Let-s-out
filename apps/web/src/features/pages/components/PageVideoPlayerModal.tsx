@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, UIEvent, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronLeft, Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Sparkles } from 'lucide-react'
 import { App } from '@capacitor/app'
 import { useNavigate } from 'react-router'
 import { PagePostCommentsModal } from './PagePostCommentsModal'
 import { videosApi, EventVideo } from '@/features/videos/api'
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal'
+import { useVideoFit, FIT_CLASS } from '@/features/videos/utils/video-fit'
 import { toast } from 'sonner'
 
 export interface PageVideoItem {
@@ -143,7 +145,9 @@ export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVi
 
   if (videos.length === 0) return null
 
-  return (
+  // Portal sur <body> : sur iOS, un `fixed` rendu dans le fil (zone qui défile) est rogné/décalé
+  // par le défilement composité. Même correctif que VideoPlayerModal (OUT VLOGS).
+  return createPortal(
     <div className="fixed inset-0 z-[90] bg-black flex flex-col select-none overflow-hidden">
       {/* Top Navigation Bar */}
       <div
@@ -212,7 +216,8 @@ export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVi
           }}
         />
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -329,6 +334,10 @@ function PageVideoPlayerItem({
 }) {
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const { fit, onLoadedMetadata: onFitMetadata } = useVideoFit()
+  const posterUrl = item.videoUrl?.includes('cloudinary.com')
+    ? item.videoUrl.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
+    : undefined
   const [isMuted, setIsMuted] = useState(false)
   const [liked, setLiked] = useState(Boolean(item.hasLiked))
   const [likesCount, setLikesCount] = useState(item.likesCount || 0)
@@ -401,16 +410,19 @@ function PageVideoPlayerItem({
       className="relative w-full h-full snap-start snap-always flex flex-col justify-between overflow-hidden bg-black"
       onClick={togglePlay}
     >
-      {/* Background Video */}
+      {/* Background Video — cadrage commun (video-fit) : verticale = cover, horizontale = contain + fond flou */}
       <div className="absolute inset-0 flex items-center justify-center bg-black">
+        {fit === 'contain' && posterUrl && (
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 bg-cover bg-center blur-2xl opacity-60 scale-110 pointer-events-none"
+            style={{ backgroundImage: `url(${posterUrl})` }}
+          />
+        )}
         <video
           ref={videoRef}
           src={item.videoUrl}
-          poster={
-            item.videoUrl?.includes('cloudinary.com')
-              ? item.videoUrl.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
-              : undefined
-          }
+          poster={posterUrl}
           preload={isActive ? 'auto' : 'none'}
           loop
           controls={false}
@@ -421,8 +433,9 @@ function PageVideoPlayerItem({
           webkit-playsinline="true"
           x5-playsinline="true"
           muted={isMuted}
+          onLoadedMetadata={onFitMetadata}
           onTimeUpdate={handleTimeUpdate}
-          className="w-full h-full object-contain pointer-events-none"
+          className={`relative w-full h-full ${FIT_CLASS[fit]} pointer-events-none`}
         />
       </div>
 

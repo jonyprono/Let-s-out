@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
-import { Loader2, Film, EyeOff } from 'lucide-react';
+import { Loader2, Film, EyeOff, Ticket, ScanLine } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { MyTicketModal } from '@/features/events/components/MyTicketModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
@@ -102,6 +104,12 @@ export function ManageEvent() {
     refetchInterval: 10000,
   });
 
+  // Billetterie (hooks déclarés avant les retours anticipés)
+  const { t } = useTranslation();
+  const [showTicket, setShowTicket] = useState(false);
+  const isEventOrganizer = !!event && !!user && (event.creatorId === user.id || (event.coHostIds || []).includes(user.id));
+  const isTicketHolder = myBookingData?.status === 'CONFIRMED';
+
   if (isLoading) {
     return <div className="w-full h-full flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]"><div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF7A00] animate-spin" /></div>;
   }
@@ -170,7 +178,41 @@ export function ManageEvent() {
             }
           })()}
         </p>
+
+        {/* ── Billetterie : « Mon billet » (participant confirmé) / « Scanner » (créateur + co-organisateurs) ── */}
+        {(isTicketHolder || (isEventOrganizer && event.status === 'PUBLISHED')) && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {isTicketHolder && (
+              <button
+                type="button"
+                onClick={() => setShowTicket(true)}
+                className="flex-1 min-w-[140px] h-11 rounded-full border border-[#FF7A00] text-[#FF7A00] font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98]"
+              >
+                <Ticket className="w-4 h-4" aria-hidden="true" />
+                <span>{t('tickets.myTicket')}</span>
+              </button>
+            )}
+            {isEventOrganizer && event.status === 'PUBLISHED' && (
+              <button
+                type="button"
+                onClick={() => navigate(`/events/${event.id}/check-in`)}
+                className="flex-1 min-w-[140px] h-11 rounded-full bg-[#FF7A00] text-white font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98]"
+              >
+                <ScanLine className="w-4 h-4" aria-hidden="true" />
+                <span>{t('tickets.scanTickets')}</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
+
+      <MyTicketModal
+        eventId={event.id}
+        eventTitle={event.title}
+        eventDate={event.startAt}
+        open={showTicket}
+        onClose={() => setShowTicket(false)}
+      />
 
       {/* Tabs */}
       <div className="flex w-full border-b border-gray-200 dark:border-gray-800 shrink-0 bg-white dark:bg-[#1A1A1A]">

@@ -92,7 +92,8 @@ export const authApi = {
   directLogin: (payload: { target: string; password: string }) =>
     apiClient.post<AuthResponse>('/auth/login', { target: payload.target, password: payload.password }),
 
-  googleSignIn: (payload: { idToken: string; email: string }) =>
+  /** intent : bouton cliqué. 'login' = connexion stricte (404 si aucun compte), 'signup' = inscription. */
+  googleSignIn: (payload: { idToken: string; email: string; intent: 'login' | 'signup' }) =>
     apiClient.post<AuthResponse | GoogleNeedsCompletionResponse>('/auth/google', payload),
 
   refresh: () =>

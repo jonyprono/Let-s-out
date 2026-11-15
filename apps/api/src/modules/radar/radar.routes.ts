@@ -71,6 +71,9 @@ async function radarAgeDenial(
   return null
 }
 
+/** Rayons de recherche autorisés (km). 0,5 = 500 m. Le filtre de distance (Haversine) est en km. */
+export const RADAR_ALLOWED_RADII_KM = [0.5, 1, 5, 10]
+
 // Types de sorties autorisés
 export const RADAR_OUTING_TYPES = [
   'SPONTANEOUS',     // Sortie spontanée
@@ -271,10 +274,9 @@ export default async function radarRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Position actuelle requise pour effectuer une recherche.' })
     }
 
-    // 2. Validation du rayon (liste fermée : 1, 5, 10 km)
-    const allowedRadii = [1, 5, 10]
-    if (!allowedRadii.includes(radiusKm)) {
-      return reply.code(400).send({ error: 'Le rayon doit être de 1km, 5km ou 10km.' })
+    // 2. Validation du rayon (liste fermée : 500 m, 1, 5, 10 km)
+    if (!RADAR_ALLOWED_RADII_KM.includes(radiusKm)) {
+      return reply.code(400).send({ error: 'Le rayon doit être de 500 m, 1 km, 5 km ou 10 km.' })
     }
 
     // 3. Âge du chercheur ≥ MIN_SIGNUP_AGE

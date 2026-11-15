@@ -5,6 +5,7 @@ import { createAndSendNotification, createAndSendNotificationMany } from '../not
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 import { EmailService } from '../../services/email.service'
 import { eventGenderDenial } from '../../services/signup-policy.service'
+import { checkInTicket, ensureTicketToken, parseTicketPayload, ticketQrPayload, ticketQrPng } from '../../services/ticket.service'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -1328,6 +1329,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
             eventDate: event.startAt,
             location: event.address || event.city || 'Lieu non spécifié',
             bookingId: booking.id,
+            ticketToken: await ensureTicketToken(app.prisma, booking.id),
             price: 0,
             quantity: 1,
             coverImage: event.coverUrl || undefined,
@@ -1644,6 +1646,57 @@ export default async function eventsRoutes(app: FastifyInstance) {
     } catch (e) { app.log.warn(`Failed to send rejection notification: ${e}`) }
 
     return reply.send({ message: 'Request rejected' })
+  })
+
+  // ── Billets ─────────────────────────────────────────────────────────────────
+
+  // Image PNG du QR d'un billet (utilisée dans l'e-mail). Publique : le jeton de 256 bits EST le secret,
+  // et l'image ne fait que l'encoder. Générée par notre API — aucun service tiers ne voit le jeton.
+  app.get('/tickets/qr/:file', {
+    config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
+  }, async (req, reply) => {
+    const { file } = req.params as { file: string }
+    const token = parseTicketPayload(file.replace(/\.png$/, ''))
+    if (!token) return reply.code(404).send({ error: 'Not found' })
+    const exists = await app.prisma.booking.findUnique({ where: { ticketToken: token }, select: { id: true } })
+    if (!exists) return reply.code(404).send({ error: 'Not found' })
+    const png = await ticketQrPng(token)
+    return reply
+      .header('Content-Type', 'image/png')
+      .header('Cache-Control', 'private, max-age=86400')
+      .send(png)
+  })
+
+  // « Mon billet » : QR du participant connecté pour cet événement (réservation CONFIRMED uniquement)
+  app.get('/:id/my-ticket', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const booking = await app.prisma.booking.findUnique({
+      where: { userId_eventId: { userId: sub, eventId: id } },
+      select: { id: true, status: true, checkedInAt: true },
+    })
+    if (!booking || booking.status !== 'CONFIRMED') {
+      return reply.code(404).send({ error: 'Aucun billet confirmé pour cet événement.', code: 'NO_TICKET' })
+    }
+    const token = await ensureTicketToken(app.prisma, booking.id)
+    return reply.send({
+      bookingRef: booking.id.slice(-8).toUpperCase(),
+      qrPayload: ticketQrPayload(token),
+      checkedInAt: booking.checkedInAt,
+    })
+  })
+
+  // Validation à l'entrée — créateur et co-organisateurs uniquement (403 sinon).
+  // 1er scan : 200 + participant. 2e scan : 409 « Billet déjà validé » + heure du 1er scan.
+  app.post('/:id/tickets/check-in', {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 120, timeWindow: '1 minute' } },
+  }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const { qr } = (req.body ?? {}) as { qr?: string }
+    const result = await checkInTicket(app.prisma, id, sub, qr)
+    return reply.code(result.status).send(result.body)
   })
 
   // Join private event via code (QR scan)

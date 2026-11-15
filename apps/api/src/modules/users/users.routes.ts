@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { createAndSendNotification } from '../notifications/notifications.routes'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 import { evaluateUserBadges } from '../../services/badge.service'
+import { findUpcomingConfirmedBookings, sendUpcomingTicketsToEmail } from '../../services/ticket-mailer.service'
+import { AuthService } from '../auth/auth.service'
 import {
   checkBirthDate,
   parseBirthDateInput,
@@ -202,23 +204,18 @@ export default async function usersRoutes(app: FastifyInstance) {
     const body = req.body as any
     const birthDateValue = body.birthDate || body.birthdate
 
-    // ── Date de naissance : 1re saisie contrôlée (MIN_SIGNUP_AGE), puis verrouillée ──
+    // ── Date de naissance : modifiable par l'utilisateur (plus de verrou BIRTHDATE_LOCKED) ──
+    // Chaque nouvelle valeur reste contrôlée : date réelle, pas dans le futur, ≤ 120 ans et
+    // ≥ MIN_SIGNUP_AGE (cohérence avec l'inscription et l'accès à OUT RADAR).
     let birthDateToSet: Date | undefined
     if (birthDateValue) {
       const current = await app.prisma.profile.findUnique({
         where: { userId: sub },
         select: { birthDate: true },
       })
-      if (current?.birthDate) {
-        const parsed = parseBirthDateInput(birthDateValue)
-        // Renvoyer la même date est accepté (no-op) ; la changer est interdit.
-        if (!parsed || !sameBirthDay(current.birthDate, parsed)) {
-          return reply.code(403).send({
-            error: 'Votre date de naissance est verrouillée. Contactez le support pour la modifier.',
-            code: 'BIRTHDATE_LOCKED',
-          })
-        }
-      } else {
+      const parsed = parseBirthDateInput(birthDateValue)
+      const unchanged = !!current?.birthDate && !!parsed && sameBirthDay(current.birthDate, parsed)
+      if (!unchanged) {
         let check: BirthDateCheck
         try {
           check = await checkBirthDate(app.prisma, birthDateValue)
@@ -236,6 +233,7 @@ export default async function usersRoutes(app: FastifyInstance) {
           })
         }
         birthDateToSet = check.date
+        if (current?.birthDate) app.log.info({ userId: sub }, '[profile] date de naissance modifiée par l\'utilisateur')
       }
     }
 
@@ -538,24 +536,60 @@ export default async function usersRoutes(app: FastifyInstance) {
   })
 
   // Update email
-  app.patch('/me/email', async (req, reply) => {
+  // L'adresse n'est enregistrée qu'avec le code OTP reçu SUR cette adresse, vérifié ici côté
+  // serveur (l'app le contrôlait seule auparavant) : on n'envoie jamais de billets ni d'e-mails
+  // Let's Out à une adresse non prouvée.
+  app.patch('/me/email', {
+    config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
+  }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const schema = z.object({ email: z.string().email() })
+    const schema = z.object({
+      email: z.string().trim().email(),
+      code: z.string().regex(/^\d{6}$/),
+    })
 
     const result = schema.safeParse(req.body)
-    if (!result.success) return reply.code(400).send({ error: 'E-mail invalide' })
+    if (!result.success) {
+      const missingCode = !(req.body as any)?.code
+      return reply.code(400).send({
+        error: missingCode ? 'Code de vérification requis.' : 'E-mail ou code invalide',
+        code: missingCode ? 'OTP_REQUIRED' : 'INVALID_INPUT',
+      })
+    }
 
     const existing = await app.prisma.user.findUnique({ where: { email: result.data.email } })
     if (existing && existing.id !== sub) {
       return reply.code(409).send({ error: 'Cet e-mail est déjà utilisé' })
     }
 
+    // Vérification + consommation du code (usage unique, compteur de tentatives de verifyOtp)
+    const authService = new AuthService(app.prisma, app.redis)
+    const otpValid = await authService.verifyOtp(result.data.email, result.data.code)
+    if (!otpValid) {
+      return reply.code(400).send({ error: 'Code invalide ou expiré.', code: 'OTP_INVALID' })
+    }
+    await authService.consumeVerifiedSession(result.data.email)
+
+    const before = await app.prisma.user.findUnique({ where: { id: sub }, select: { email: true } })
     const updated = await app.prisma.user.update({
       where: { id: sub },
       data: { email: result.data.email }
     })
 
-    return reply.send({ success: true, email: updated.email })
+    // Nouvelle adresse (ex. compte créé par téléphone) : on lui envoie aussitôt les billets des
+    // événements à venir, depuis tickets@letsout.app. Les réservations futures y partiront
+    // automatiquement (comme pour les comptes Google). Envoi en arrière-plan : réponse immédiate.
+    let ticketsToSend = 0
+    if (updated.email && updated.email !== before?.email) {
+      ticketsToSend = (await findUpcomingConfirmedBookings(app.prisma, sub)).length
+      if (ticketsToSend > 0) {
+        sendUpcomingTicketsToEmail(app.prisma, sub, updated.email).catch((err) =>
+          app.log.error({ err }, '[me/email] envoi des billets échoué'),
+        )
+      }
+    }
+
+    return reply.send({ success: true, email: updated.email, ticketsToSend })
   })
 
   // Get friends list

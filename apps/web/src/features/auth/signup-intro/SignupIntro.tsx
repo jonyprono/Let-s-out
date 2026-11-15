@@ -8,10 +8,7 @@ import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { useCheckAge, useSignupConfig } from '@/features/auth/hooks/useAuth'
 import { validateBirthDate } from '@/lib/age'
 import { normalizeName, validateName } from '@/lib/person-name'
-import {
-  useSignupIntroStore,
-  isSignupBlockedForSession,
-} from '@/stores/signup-intro.store'
+import { useSignupIntroStore } from '@/stores/signup-intro.store'
 import { StepName } from './StepName'
 import { StepBirthdate } from './StepBirthdate'
 import { StepGender } from './StepGender'
@@ -52,7 +49,9 @@ export function SignupIntro({ onExit, onLogin, onComplete }: SignupIntroProps) {
   const minAge = config.data?.minSignupAge ?? null
   const { mutate: checkAge, isPending: checkingAge } = useCheckAge()
 
-  const [blocked, setBlocked] = useState(isSignupBlockedForSession)
+  // Écran « âge insuffisant » : état local uniquement (plus de verrou de session).
+  // ?underage=1 : arrivée depuis un refus serveur (inscription / Google) → affiché une fois.
+  const [showUnderage, setShowUnderage] = useState(() => params.get('underage') === '1')
   // Date en cours de saisie : écrite dans le store SEULEMENT après validation
   // client + serveur (la date d'un mineur n'est jamais conservée).
   const [birthDraft, setBirthDraft] = useState<string | null>(storedBirthDate)
@@ -74,14 +73,14 @@ export function SignupIntro({ onExit, onLogin, onComplete }: SignupIntroProps) {
   const birthRef = useRef<HTMLButtonElement>(null)
   const genderRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
-    if (blocked) return
+    if (showUnderage) return
     const id = window.setTimeout(() => {
       if (step === 1) nameRef.current?.focus()
       if (step === 2) birthRef.current?.focus()
       if (step === 3) genderRef.current?.focus()
     }, 150)
     return () => window.clearTimeout(id)
-  }, [step, blocked])
+  }, [step, showUnderage])
 
   const birthValidation = minAge !== null ? validateBirthDate(birthDraft, minAge) : null
 
@@ -99,9 +98,15 @@ export function SignupIntro({ onExit, onLogin, onComplete }: SignupIntroProps) {
   }
 
   const block = () => {
+    // Efface la date du stockage ; la saisie reste dans le sélecteur (mémoire seulement) pour être corrigée
     markUnderage()
-    setBirthDraft(null)
-    setBlocked(true)
+    setShowUnderage(true)
+  }
+
+  const backToBirthdate = () => {
+    setShowUnderage(false)
+    // Retire ?underage=1 (sinon un rechargement réafficherait l'écran) et revient à l'étape date
+    setParams((p) => { p.delete('underage'); p.set('step', '2'); return p }, { replace: true })
   }
 
   const handleSubmit = (e: FormEvent) => {
@@ -163,8 +168,10 @@ export function SignupIntro({ onExit, onLogin, onComplete }: SignupIntroProps) {
 
   const footerStyle = { paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }
 
-  // ── Écran de blocage (âge insuffisant) ──────────────────────────────
-  if (blocked) {
+  // ── Écran « âge insuffisant » (non bloquant) ──────────────────────
+  // « Retour » ramène à l'étape date de naissance avec la saisie précédente, pour corriger
+  // une erreur. Aucun verrou n'est conservé ; le serveur refuse toujours un compte < MIN_SIGNUP_AGE.
+  if (showUnderage) {
     return (
       <div className="w-full h-full flex flex-col flex-1 bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden">
         <div className="px-4 pt-5 shrink-0">
@@ -176,7 +183,7 @@ export function SignupIntro({ onExit, onLogin, onComplete }: SignupIntroProps) {
           <UnderageScreen minAge={minAge} />
         </div>
         <div className="px-5 pt-3 shrink-0 flex flex-col gap-4" style={footerStyle}>
-          <PrimaryButton onClick={onExit}>{t('signupIntro.back')}</PrimaryButton>
+          <PrimaryButton onClick={backToBirthdate}>{t('signupIntro.back')}</PrimaryButton>
           {loginLink}
         </div>
       </div>

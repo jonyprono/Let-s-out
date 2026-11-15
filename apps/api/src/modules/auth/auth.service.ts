@@ -12,6 +12,7 @@ const OTP_SEND_LIMIT = 5
 const OTP_SEND_WINDOW_SECONDS = 10 * 60
 
 import { getFirebaseApp } from '../../services/push.service'
+import { emailFromGeneral } from '../../services/email-senders'
 
 // Initialize Firebase Admin (handles both SERVICE_ACCOUNT and individual vars)
 getFirebaseApp()
@@ -596,7 +597,7 @@ export class AuthService {
     const { Resend } = await import('resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
     await resend.emails.send({
-      from: "Let's Out <noreply@letsout.app>",
+      from: emailFromGeneral(),
       to: email,
       subject: `Votre code de connexion : ${code}`,
       html: `<p>Votre code de vérification <strong>Let's Out</strong> : <strong style="font-size:24px">${code}</strong></p><p>Valable ${OTP_TTL_MINUTES} minutes.</p>`,
@@ -673,8 +674,9 @@ export class AuthService {
       </div>
     `;
 
+    // Unique e-mail de bienvenue de l'app (téléphone : pas d'e-mail ; e-mail : register ; Google : createGoogleUser)
     await resend.emails.send({
-      from: "Let's Out <bonjour@letsout.app>",
+      from: emailFromGeneral(),
       to: email,
       subject: "Bienvenue sur Let's Out ! 🎉",
       html: htmlContent,

@@ -272,6 +272,10 @@ model Booking {
   notes     String?
   poolValidationStatus PoolValidationStatus @default(PENDING)
   delegatedToId        String?
+  // Billet : jeton secret (256 bits, aléatoire) encodé dans le QR — jamais l'id de réservation
+  ticketToken   String?   @unique
+  checkedInAt   DateTime? // 1er scan valide à l'entrée (null = pas encore entré)
+  checkedInById String?   // créateur ou co-organisateur qui a validé
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   event     Event         @relation(fields: [eventId], references: [id])

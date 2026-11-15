@@ -103,9 +103,13 @@ button, [role="button"], a {
 }
 
 /* ── GPU acceleration for animated elements ──────────────────────────────── */
+/* [class*="transition-"] a été RETIRÉ : `will-change: transform` fait de l'élément le
+   cadre de référence de tous ses descendants `position: fixed`. #app-layout-inner porte
+   `transition-colors` → toutes les fenêtres fixed de l'app y étaient enfermées, ce qui
+   sur iOS (défilement composité) les rognait/décalait avec le fil (fiche commentaires
+   invisible). Cela créait aussi une couche GPU par élément animé (mémoire iOS). */
 .animate-spin,
 .animate-pulse,
-[class*="transition-"],
 [class*="active:scale"] {
   will-change: transform;
 }

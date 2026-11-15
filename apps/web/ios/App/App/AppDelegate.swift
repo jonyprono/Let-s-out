@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import AVFoundation
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -11,6 +12,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // WKWebView's first paint (WKWebView defaults to a black background
         // until CSS loads, especially noticeable on the remote server.url load).
         window?.backgroundColor = .white
+
+        // Son des vidéos (OUT VLOGS, pages) même avec le commutateur silencieux/vibreur.
+        // Sans catégorie explicite, iOS utilise .soloAmbient qui coupe l'audio du WKWebView
+        // quand l'iPhone est en mode silencieux. La catégorie est seulement déclarée ici :
+        // la session n'est activée (et la musique d'une autre app interrompue) que lorsqu'une
+        // vidéo AVEC son démarre — les aperçus muets ne l'activent pas.
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [])
+        } catch {
+            print("[AudioSession] Impossible de passer en mode playback : \(error)")
+        }
         return true
     }
 

@@ -34,8 +34,6 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
   const { t } = useTranslation()
   const initialBirthDate = profile?.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : ''
   const [birthDate, setBirthDate] = useState(initialBirthDate)
-  // Une fois enregistrée, la date de naissance n'est modifiable que par un admin
-  const birthDateLocked = !!initialBirthDate
   const [selectedInterests, setSelectedInterests] = useState<string[]>(profile?.interests || [])
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || '')
   const [avatarPreview, setAvatarPreview] = useState(profile?.avatarUrl || '')
@@ -136,8 +134,8 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
         interests: selectedInterests,
         avatarUrl,
         coverUrl,
-        // Date verrouillée une fois enregistrée : on ne l'envoie que lors de la 1re saisie
-        birthDate: !birthDateLocked && birthDate ? birthDate : undefined,
+        // Modifiable ; envoyée seulement si changée (le serveur revérifie l'âge minimum)
+        birthDate: birthDate && birthDate !== initialBirthDate ? birthDate : undefined,
       } as any)
       await refreshUser()
       invalidateAvatarQueries(qc)
@@ -148,7 +146,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
       console.error(e)
       // Message serveur explicite pour la date (âge minimum, date invalide, verrouillage)
       const code = e?.response?.data?.code
-      if (['UNDERAGE', 'INVALID_DATE', 'FUTURE_DATE', 'TOO_OLD', 'BIRTHDATE_LOCKED'].includes(code)) {
+      if (['UNDERAGE', 'INVALID_DATE', 'FUTURE_DATE', 'TOO_OLD'].includes(code)) {
         toast.error(e.response.data.error)
       } else {
         toast.error(t('editProfile.errorSaving'))
@@ -326,16 +324,9 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                     type="date"
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
-                    disabled={birthDateLocked}
-                    aria-describedby={birthDateLocked ? 'edit-profile-birthdate-locked' : undefined}
-                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors"
                   />
                 </div>
-                {birthDateLocked && (
-                  <p id="edit-profile-birthdate-locked" className="text-[11px] text-gray-500 mt-1.5 ml-1">
-                    <span>{t('editProfile.birthDateLocked')}</span>
-                  </p>
-                )}
               </div>
             </div>
 

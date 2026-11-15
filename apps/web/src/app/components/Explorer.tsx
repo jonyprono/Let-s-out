@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { Search01Icon, Location01Icon, ArrowDown01Icon, MapsIcon, Cancel01Icon, Tick01Icon } from 'hugeicons-react';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
 import { ErrorRetryState } from '@/components/shared/ErrorRetryState';
+import { ExplorerSkeleton } from '@/components/shared/ExplorerSkeleton';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '@/lib/api-client';
 import { hapticFeedback } from '@/lib/haptics';
 import { eventsApi } from '@/features/events/api';
@@ -64,6 +66,7 @@ const filterTabs = [
 type Screen = 'list' | 'filter' | 'search' | 'join';
 
 export function Explorer({ onNavigate }: ExplorerProps) {
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
   const { data: notificationsData } = useNotifications();
@@ -138,7 +141,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       }
     }, 350);
   }, [eventSearch, viewMode, currentLocation]);
-  const { data: eventsPages, isError: isEventsError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+  const { data: eventsPages, isPending: isEventsPending, isError: isEventsError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['events', 'explorer'],
     queryFn: async ({ pageParam = 0 }) => {
       const res = await eventsApi.list({ limit: 30, offset: pageParam as number, upcoming: true });
@@ -155,7 +158,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const rawEvents = eventsPages?.pages.flatMap((p: any) => p?.data || []) ?? [];
 
   // Query for recently ended events (ended within the last 7 days)
-  const { data: recentlyEndedData, refetch: refetchRecentlyEnded } = useQuery({
+  const { data: recentlyEndedData, isPending: isRecentPending, isError: isRecentError, refetch: refetchRecentlyEnded } = useQuery({
     queryKey: ['events', 'explorer', 'recently-ended'],
     queryFn: async () => {
       const res = await eventsApi.list({ limit: 12, recentlyEnded: true });
@@ -169,6 +172,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const handleRefresh = async () => {
     await Promise.all([refetch(), refetchRecentlyEnded()]);
   };
+
+  // États de chargement : l'état vide ne doit s'afficher qu'APRÈS une réponse réussie.
+  // (avant : pendant le chargement, data === undefined → liste vide → « Aucun résultat » pendant ~4 s)
+  const isListLoading = isEventsPending || isRecentPending;
+  const isListError = isEventsError || isRecentError;
 
 
 
@@ -499,7 +507,15 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             />
           ))}
           {listEvents.length === 0 && (
-            <p className="text-center text-gray-500 py-10">Aucun événement disponible.</p>
+            isListLoading ? (
+              <ExplorerSkeleton showFeatured={false} />
+            ) : isListError ? (
+              <ErrorRetryState onRetry={handleRefresh} />
+            ) : (
+              <p className="text-center text-gray-500 py-10">
+                <span>{t('explorer.emptyTitle')}</span>
+              </p>
+            )
           )}
         </div>
       </div>
@@ -734,8 +750,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             </div>
 
             <div className="px-4 pt-1 pb-[100px]">
-              {isEventsError && filteredEvents.length === 0 && filteredRecentlyEnded.length === 0 ? (
-                <ErrorRetryState onRetry={() => refetch()} />
+              {/* Ordre des états : contenu → chargement (squelette) → erreur (Réessayer) → vide réel */}
+              {filteredEvents.length === 0 && filteredRecentlyEnded.length === 0 && isListLoading ? (
+                <ExplorerSkeleton />
+              ) : filteredEvents.length === 0 && filteredRecentlyEnded.length === 0 && isListError ? (
+                <ErrorRetryState onRetry={handleRefresh} />
               ) : filteredEvents.length > 0 || filteredRecentlyEnded.length > 0 ? (
                 <>
                   {/* ── En vedette (Horizontal scroll — 3 cards visible) ── */}
@@ -850,10 +869,20 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   )}
                 </>
               ) : (
+                /* Requêtes réussies et liste vide : vide réel (aucun événement) ou filtres trop restrictifs */
                 <div className="flex flex-col items-center py-20 gap-3 text-center">
-                  <div className="text-4xl">🔍</div>
-                  <p className="text-[15px] font-semibold text-gray-700 dark:text-gray-300">Aucun résultat</p>
-                  <p className="text-[13px] text-gray-400">Essayez un autre mot-clé ou une autre ville.</p>
+                  <div className="text-4xl" aria-hidden="true">🔍</div>
+                  {rawEvents.length === 0 && recentlyEndedEvents.length === 0 ? (
+                    <>
+                      <p className="text-[15px] font-semibold text-gray-700 dark:text-gray-300"><span>{t('explorer.emptyTitle')}</span></p>
+                      <p className="text-[13px] text-gray-400"><span>{t('explorer.emptyBody')}</span></p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[15px] font-semibold text-gray-700 dark:text-gray-300"><span>{t('explorer.noMatchTitle')}</span></p>
+                      <p className="text-[13px] text-gray-400"><span>{t('explorer.noMatchBody')}</span></p>
+                    </>
+                  )}
                 </div>
               )}
             </div>

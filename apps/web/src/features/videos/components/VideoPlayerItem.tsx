@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, CalendarPlus, Play } from 'lucide-react';
+import { X, Heart, MessageCircle, Share2, Send, Loader2, Trash2, CalendarPlus, Play, Volume2, VolumeX } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { useVideoSoundStore } from '@/stores/video-sound.store';
 import { EventVideo, videosApi } from '../api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
@@ -7,6 +9,7 @@ import { useUserProfile } from '@/features/users/UserProfileContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { getVideoPosterUrl } from '../utils/video-url';
+import { useVideoFit, FIT_CLASS } from '../utils/video-fit';
 
 interface Props {
   video: EventVideo;
@@ -16,6 +19,7 @@ interface Props {
 
 export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   const qc = useQueryClient();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const { openUserProfile } = useUserProfile();
@@ -35,19 +39,64 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
 
   const posterUrl = getVideoPosterUrl(video);
+  // Cadrage commun : verticale = cover (plein écran), horizontale = contain sur fond flou
+  const { fit, onLoadedMetadata: onFitMetadata } = useVideoFit();
+
+  // ── Son ──────────────────────────────────────────────────────────────
+  // Préférence mémorisée (store persistant). Le son est piloté via la ref :
+  // l'attribut React `muted` n'est pas répercuté sur le DOM après le montage.
+  const vlogMuted = useVideoSoundStore((s) => s.vlogMuted);
+  const setVlogMuted = useVideoSoundStore((s) => s.setVlogMuted);
+  // Coupé par le navigateur (lecture automatique avec son refusée) sans que l'utilisateur l'ait choisi
+  const [mutedByBrowser, setMutedByBrowser] = useState(false);
+  // null = inconnu (on suppose qu'il y a du son), false = aucune piste audio (ex. diaporama sans musique)
+  const [hasAudio, setHasAudio] = useState<boolean | null>(null);
+  const isMuted = vlogMuted || mutedByBrowser;
 
   const attemptPlay = useCallback((videoEl: HTMLVideoElement) => {
+    videoEl.muted = useVideoSoundStore.getState().vlogMuted;
+    setMutedByBrowser(false);
     const playPromise = videoEl.play();
     if (playPromise !== undefined) {
       playPromise.catch((err) => {
-        if (err.name === 'NotAllowedError' || err.name === 'NotSupportedError') {
-          // Autoplay blocked — try muted
+        if (err.name === 'NotAllowedError' && !videoEl.muted) {
+          // Lecture avec son refusée (web sans geste récent) : on lit en muet,
+          // le bouton affiche « muet » et un tap le réactive.
           videoEl.muted = true;
+          setMutedByBrowser(true);
           videoEl.play().catch(() => {});
         }
       });
     }
   }, []);
+
+  // Applique la préférence quand elle change (ex. choix fait sur un autre vlog)
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (videoEl && !mutedByBrowser) videoEl.muted = vlogMuted;
+  }, [vlogMuted, mutedByBrowser]);
+
+  /** Détecte une vidéo sans piste audio (Safari: audioTracks, Firefox: mozHasAudio, Chrome: octets audio décodés) */
+  const detectAudio = (videoEl: HTMLVideoElement) => {
+    const el = videoEl as HTMLVideoElement & { audioTracks?: { length: number }; mozHasAudio?: boolean; webkitAudioDecodedByteCount?: number };
+    if (el.audioTracks !== undefined) return setHasAudio(el.audioTracks.length > 0);
+    if (el.mozHasAudio !== undefined) return setHasAudio(el.mozHasAudio);
+    if (el.webkitAudioDecodedByteCount !== undefined && el.currentTime > 1) {
+      setHasAudio(el.webkitAudioDecodedByteCount > 0);
+    }
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const videoEl = videoRef.current;
+    if (!videoEl || hasAudio === false) return;
+    // Geste utilisateur : le navigateur autorise désormais le son
+    const nextMuted = !isMuted;
+    videoEl.muted = nextMuted;
+    setMutedByBrowser(false);
+    setVlogMuted(nextMuted);
+    if (videoEl.paused && !isUserPaused) videoEl.play().catch(() => {});
+  };
 
   useEffect(() => {
     const videoEl = videoRef.current;
@@ -198,7 +247,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
       {/* Ambient background glow for seamless visual continuity */}
       {posterUrl && (
         <div
-          className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-25 scale-110 pointer-events-none"
+          className={`absolute inset-0 bg-cover bg-center filter blur-2xl scale-110 pointer-events-none ${fit === 'contain' ? 'opacity-60' : 'opacity-25'}`}
           style={{ backgroundImage: `url(${posterUrl})` }}
         />
       )}
@@ -211,7 +260,6 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           poster={posterUrl}
           preload={isActive ? 'auto' : 'none'}
           loop
-          muted
           controls={false}
           controlsList="nodownload nofullscreen noremoteplayback"
           disablePictureInPicture
@@ -236,7 +284,14 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
               setIsBuffering(true);
             }
           }}
-          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={(e) => {
+            detectAudio(e.currentTarget);
+            onFitMetadata(e);
+          }}
+          onTimeUpdate={(e) => {
+            handleTimeUpdate();
+            if (hasAudio === null) detectAudio(e.currentTarget);
+          }}
           onError={(e) => {
             // Previously silent: an undecodable codec/format on iOS left the
             // frame frozen/black forever with no feedback. Surface it instead.
@@ -244,7 +299,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
             setHasPlaybackError(true);
           }}
           onLoadStart={() => setHasPlaybackError(false)}
-          className="w-full h-full object-cover pointer-events-none relative z-0"
+          className={`w-full h-full ${FIT_CLASS[fit]} pointer-events-none relative z-0`}
         />
       ) : posterUrl ? (
         <img
@@ -314,7 +369,28 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
 
           {/* Action Buttons */}
           <div className="flex flex-col items-center gap-6">
-            <button 
+            {/* Son / muet — grisé « Pas de son » si la vidéo n'a aucune piste audio */}
+            <button
+              type="button"
+              onClick={toggleMute}
+              disabled={hasAudio === false}
+              aria-pressed={hasAudio === false ? undefined : !isMuted}
+              aria-label={hasAudio === false ? t('vlogs.noSound') : isMuted ? t('vlogs.soundOn') : t('vlogs.soundOff')}
+              className="flex flex-col items-center gap-1 disabled:cursor-not-allowed"
+            >
+              <div className={`w-12 h-12 rounded-full backdrop-blur-md flex items-center justify-center ${hasAudio === false ? 'bg-white/5' : 'bg-white/10'}`}>
+                {hasAudio === false || isMuted ? (
+                  <VolumeX className={`w-6 h-6 ${hasAudio === false ? 'text-white/40' : 'text-white'}`} aria-hidden="true" />
+                ) : (
+                  <Volume2 className="w-6 h-6 text-white" aria-hidden="true" />
+                )}
+              </div>
+              <span className={`text-[12px] font-medium drop-shadow-md ${hasAudio === false ? 'text-white/50' : 'text-white'}`}>
+                {hasAudio === false ? t('vlogs.noSound') : isMuted ? t('vlogs.muted') : t('vlogs.soundLabel')}
+              </span>
+            </button>
+
+            <button
               onClick={() => toggleLikeMut.mutate()}
               className="flex flex-col items-center gap-1 group"
             >

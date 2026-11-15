@@ -112,6 +112,27 @@ export interface CreateEventPayload {
   mediaUrls?: string[]
 }
 
+export interface MyTicket {
+  bookingRef: string
+  qrPayload: string
+  checkedInAt: string | null
+}
+
+export interface CheckInSuccess {
+  result: 'VALID'
+  checkedInAt: string
+  participant: { name: string; avatarUrl: string | null }
+}
+
+/** Corps des refus de validation (codes stables, à traduire côté app) */
+export interface CheckInError {
+  error: string
+  code: 'CHECKIN_FORBIDDEN' | 'TICKET_INVALID_FORMAT' | 'TICKET_NOT_FOUND' | 'TICKET_WRONG_EVENT' | 'TICKET_NOT_CONFIRMED' | 'TICKET_ALREADY_USED' | 'EVENT_NOT_FOUND'
+  firstCheckedInAt?: string | null
+  checkedInBy?: string | null
+  participant?: { name: string; avatarUrl: string | null }
+}
+
 export const eventsApi = {
   list: (params?: EventsQuery) =>
     apiClient.get<{ data: Event[]; total: number }>('/events', { params }),
@@ -142,6 +163,14 @@ export const eventsApi = {
 
   getMyBooking: (id: string) =>
     apiClient.get<{ id: string; status: string; totalPaid: number; createdAt: string }>(`/events/${id}/my-booking`),
+
+  /** Billet du participant connecté (réservation CONFIRMED) — QR = jeton secret, pas l'id de réservation */
+  getMyTicket: (id: string) =>
+    apiClient.get<MyTicket>(`/events/${id}/my-ticket`).then((r) => r.data),
+
+  /** Validation à l'entrée (créateur / co-organisateurs). 200 = valide ; 409 = déjà validé / non confirmé */
+  checkInTicket: (id: string, qr: string) =>
+    apiClient.post<CheckInSuccess>(`/events/${id}/tickets/check-in`, { qr }).then((r) => r.data),
 
   /** Invite friends to an event */
   inviteFriends: (id: string, userIds: string[]) =>

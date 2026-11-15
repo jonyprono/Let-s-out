@@ -244,7 +244,7 @@ export function Signup({ onBack }: SignupProps) {
         googleAuthLogger.backendCallStart(email)
         // Navigation gérée par useGoogleSignIn : compte existant → /home ;
         // nouvel e-mail → /auth/google/complete avec les réponses du parcours d'accueil.
-        googleSignIn({ idToken, email }, {
+        googleSignIn({ idToken, email, intent: 'signup' }, {
           onSuccess: (res: any) => {
             googleAuthLogger.backendCallSuccess(res?.data?.user?.id)
           },
@@ -508,7 +508,7 @@ export function Signup({ onBack }: SignupProps) {
             const code = e.response?.data?.code
             if (e.response?.status === 403 && code === 'UNDERAGE') {
               useSignupIntroStore.getState().markUnderage()
-              nav('/signup', { replace: true })
+              nav('/signup?step=2&underage=1', { replace: true })
             }
             else if (['INVALID_DATE', 'FUTURE_DATE', 'TOO_OLD'].includes(code)) { toast.error(msg); nav('/signup?step=2') }
             else if (msg.includes('exists') || msg.includes('USER_ALREADY_EXISTS')) toast.error(t('signup.errorExists'))

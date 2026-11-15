@@ -5,7 +5,6 @@ import { useAuthStore } from '@/stores/auth.store'
 import {
   useSignupIntroStore,
   hasCompletedSignupIntro,
-  isSignupBlockedForSession,
 } from '@/stores/signup-intro.store'
 import i18n from '@/lib/i18n'
 
@@ -115,9 +114,7 @@ export function useGoogleSignIn() {
           { signupToken: data.signupToken, email: data.prefill.email },
           { firstName: data.prefill.firstName, lastName: data.prefill.lastName },
         )
-        if (isSignupBlockedForSession()) {
-          nav('/signup', { replace: true })
-        } else if (hasCompletedSignupIntro(useSignupIntroStore.getState())) {
+        if (hasCompletedSignupIntro(useSignupIntroStore.getState())) {
           // Parcours déjà rempli (Google choisi depuis l'écran téléphone) → finalisation directe
           completeGoogle()
         } else {
@@ -135,13 +132,34 @@ export function useGoogleSignIn() {
       nav('/home', { replace: true })
     },
     onError: (err: any) => {
-      if (err.response?.status === 403) {
+      if (err.response?.data?.code === 'GOOGLE_ACCOUNT_NOT_FOUND') {
+        // Connexion stricte : aucun compte pour cette adresse Google → on reste sur /login.
+        // Déconnexion Firebase pour pouvoir choisir un autre compte Google au prochain essai.
+        signOutGoogleSession()
+        toast.error(i18n.t('login.googleNoAccount'), { duration: 6000 })
+      } else if (err.response?.status === 403) {
         toast.error('Ce compte est désactivé. Contactez le support.')
       } else {
         toast.error(err.response?.data?.error || 'Erreur de connexion avec Google')
       }
     },
   })
+}
+
+/** Ferme la session Google côté Firebase (web + natif) sans toucher à la session Let's Out. */
+async function signOutGoogleSession() {
+  try {
+    const { Capacitor } = await import('@capacitor/core')
+    if (Capacitor.isNativePlatform()) {
+      const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication')
+      await FirebaseAuthentication.signOut()
+    } else {
+      const [{ auth }, { signOut }] = await Promise.all([import('@/lib/firebase'), import('firebase/auth')])
+      await signOut(auth)
+    }
+  } catch {
+    /* sans incidence : la prochaine tentative rouvrira le sélecteur de compte */
+  }
 }
 
 /**
@@ -181,8 +199,9 @@ export function useCompleteGoogleSignup() {
       if (err?.message === 'INTRO_INCOMPLETE') {
         nav('/signup?step=1', { replace: true })
       } else if (status === 403 && code === 'UNDERAGE') {
+        // Refus serveur : écran d'information, puis retour à la date pour corriger (aucun verrou)
         intro.markUnderage()
-        nav('/signup', { replace: true })
+        nav('/signup?step=2&underage=1', { replace: true })
       } else if (status === 401) {
         // Jeton d'inscription expiré (30 min) : on garde les réponses, il suffit de relancer Google
         intro.setGoogle(null)

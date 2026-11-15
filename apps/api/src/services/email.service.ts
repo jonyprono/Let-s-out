@@ -1,6 +1,8 @@
 import { Resend } from 'resend'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { emailFromGeneral, emailFromTickets } from './email-senders'
+import { ticketQrImageUrl, ticketQrPng } from './ticket.service'
 
 export interface TicketEmailData {
   to: string
@@ -9,6 +11,8 @@ export interface TicketEmailData {
   eventDate: Date
   location: string
   bookingId: string
+  /** Jeton secret du billet (ensureTicketToken) — c'est LUI qui est encodé dans le QR */
+  ticketToken: string
   price: number
   quantity: number
   coverImage?: string
@@ -28,7 +32,10 @@ export class EmailService {
   async sendTicketEmail(data: TicketEmailData): Promise<void> {
     if (!this.resend) return
 
-    const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(data.bookingId)}&size=300&margin=2`
+    // QR = jeton secret du billet, image générée par NOTRE API (plus de quickchart.io : le service
+    // tiers recevait l'identifiant). Le PNG est aussi joint, pour un accès hors connexion.
+    const qrCodeUrl = ticketQrImageUrl(data.ticketToken)
+    const bookingRef = data.bookingId.slice(-8).toUpperCase()
     
     const formattedDate = format(data.eventDate, "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })
     
@@ -71,7 +78,8 @@ export class EmailService {
           <div class="qr-section">
             <img src="${qrCodeUrl}" alt="QR Code" class="qr-image" />
             <p class="qr-text">Présentez ce QR Code à l'entrée</p>
-            <p class="booking-id">${data.bookingId.toUpperCase()}</p>
+            <p class="booking-id">${bookingRef}</p>
+            <p class="qr-text">Billet personnel à usage unique — valable pour une seule entrée.</p>
           </div>
 
           <div class="details-box">
@@ -104,10 +112,11 @@ export class EmailService {
 
     try {
       const response = await this.resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || 'tickets@letsout.app',
+        from: emailFromTickets(), // billets : expéditeur Billetterie exclusivement
         to: data.to,
         subject: `Votre ticket pour ${data.eventName}`,
-        html: htmlContent
+        html: htmlContent,
+        attachments: [{ filename: `billet-${bookingRef}.png`, content: await ticketQrPng(data.ticketToken) }],
       })
       console.log(`[DEBUG EMAIL] Resend API response for ${data.to}:`, JSON.stringify(response))
     } catch (err) {
@@ -115,26 +124,8 @@ export class EmailService {
     }
   }
 
-  // ── Welcome email (Google Sign-In first connection) ────────────────────────
-  // Fire-and-forget — never throws, never blocks the login response.
-  async sendWelcomeEmail(data: { to: string; displayName: string }): Promise<void> {
-    if (!this.resend) {
-      console.log(`[DEV EMAIL] Welcome email would be sent to ${data.to} (displayName: ${data.displayName})`)
-      return
-    }
-    try {
-      await this.resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || "Let's Out <tickets@letsout.app>",
-        to: data.to,
-        subject: "Bienvenue sur Let's Out ! 🎉",
-        html: buildWelcomeHtml(data.displayName),
-      })
-      console.log(`[EmailService] Welcome email sent to ${data.to}`)
-    } catch (err) {
-      // Log only — never rethrow (must not block login)
-      console.error('[EmailService] Failed to send welcome email:', err)
-    }
-  }
+  // (Ancien sendWelcomeEmail SUPPRIMÉ : second e-mail de bienvenue envoyé en doublon aux
+  //  inscriptions Google. L'unique bienvenue est AuthService.sendWelcomeEmail.)
 
   // ── Withdrawal receipt email ───────────────────────────────────────────────
   // Fire-and-forget — never throws, never blocks the payout response.
@@ -152,7 +143,7 @@ export class EmailService {
     }
     try {
       await this.resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL || "Let's Out <tickets@letsout.app>",
+        from: emailFromGeneral(), // reçu financier : expéditeur général, pas la billetterie
         to: data.to,
         subject: `Confirmation de retrait — ${data.amount.toLocaleString('fr-FR')} F CFA`,
         html: buildWithdrawalReceiptHtml(data),
@@ -166,40 +157,6 @@ export class EmailService {
 }
 
 // ── HTML Templates ─────────────────────────────────────────────────────────────
-
-function buildWelcomeHtml(displayName: string): string {
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bienvenue sur Let's Out</title>
-</head>
-<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f4f4f5;margin:0;padding:20px;">
-  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.05);">
-    <div style="background:linear-gradient(135deg,#FF7A00,#FF991C);padding:48px 32px;text-align:center;">
-      <div style="font-size:48px;margin-bottom:16px;">🎉</div>
-      <h1 style="color:#ffffff;margin:0;font-size:28px;font-weight:800;letter-spacing:-0.5px;">Bienvenue sur Let's Out !</h1>
-    </div>
-    <div style="padding:36px 32px;">
-      <p style="font-size:18px;font-weight:600;color:#18181b;margin:0 0 12px;">Bonjour ${displayName} 👋</p>
-      <p style="color:#52525b;line-height:1.7;margin:0 0 16px;">Votre compte <strong>Let's Out</strong> a été créé avec succès via Google. Vous pouvez maintenant :</p>
-      <ul style="color:#52525b;line-height:2;padding-left:20px;margin:0 0 28px;">
-        <li>Explorer des événements près de chez vous</li>
-        <li>Rencontrer de nouvelles personnes</li>
-        <li>Créer et gérer vos propres événements</li>
-        <li>Utiliser votre portefeuille Let's Out</li>
-      </ul>
-      <div style="text-align:center;margin:32px 0 24px;">
-        <a href="https://letsout.app" style="display:inline-block;background:#FF7A00;color:#ffffff;text-decoration:none;padding:16px 36px;border-radius:16px;font-weight:700;font-size:16px;">Découvrir Let's Out →</a>
-      </div>
-      <hr style="border:none;border-top:1px solid #f4f4f5;margin:24px 0;">
-      <p style="color:#a1a1aa;font-size:12px;text-align:center;margin:0;">© 2025 Let's Out. Tous droits réservés.<br>Cet email vous a été envoyé car vous avez créé un compte.</p>
-    </div>
-  </div>
-</body>
-</html>`
-}
 
 function buildWithdrawalReceiptHtml(data: {
   displayName: string

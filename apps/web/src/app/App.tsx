@@ -101,6 +101,7 @@ import {
   BadgesPage,
 } from '@/app/components/adapters'
 import { EventValidatorsVote } from '@/app/pages/EventValidatorsVote'
+import { TicketScanner } from '@/features/events/components/TicketScanner'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
 import { ConfirmProvider } from '@/components/shared/ConfirmContext'
@@ -385,6 +386,8 @@ export default function App() {
             <Route path="/events/:id/pool-validation" element={<EventPoolValidation />} />
             <Route path="/events/:id/success" element={<EventSuccessScreen />} />
             <Route path="/events/:id/comments" element={<EventCommentsPage />} />
+            {/* Contrôle des billets à l'entrée — créateur / co-organisateurs (vérifié côté serveur) */}
+            <Route path="/events/:id/check-in" element={<TicketScanner />} />
             <Route path="/videos" element={<VideosPage />} />
             <Route path="/scan-qr" element={<JoinPrivateEvent />} />
             <Route path="/event/join/:code" element={<JoinPrivateEvent />} />

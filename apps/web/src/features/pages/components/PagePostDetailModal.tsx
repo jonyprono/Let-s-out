@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Heart, 
@@ -208,7 +209,8 @@ export function PagePostDetailModal({
 
   if (!open) return null;
 
-  return (
+  // Portal sur <body> (iOS : un `fixed` rendu dans le fil est rogné par le défilement composité)
+  return createPortal(
     <>
       <div
         className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex justify-center items-end sm:items-center sm:p-4 animate-in fade-in duration-200"
@@ -637,6 +639,7 @@ export function PagePostDetailModal({
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body,
   );
 }

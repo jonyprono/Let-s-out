@@ -151,7 +151,8 @@
     "errorBenin": "In Benin, the number must be 10 digits long and begin with 01.",
     "errorPhone": "The format of your telephone number is incorrect.",
     "errorGoogle": "Google sign-in failed. Please try again.",
-    "errorToken": "Unable to retrieve the authentication token."
+    "errorToken": "Unable to retrieve the authentication token.",
+    "googleNoAccount": "No account is linked to this Google address. Please create an account first."
   },
   "signup": {
     "title": "Registration",
@@ -209,7 +210,6 @@
   "editProfile": {
     "birthDateLabel": "Date of birth",
     "birthDateHint": "(required for OUT RADAR)",
-    "birthDateLocked": "Your date of birth can no longer be changed. Please contact support if there is an error.",
     "errorSaving": "Error whilst updating the profile"
   },
   "signupIntro": {
@@ -253,7 +253,8 @@
     "genderFemale": "Female",
     "genderMale": "Male",
     "genderOther": "Other options",
-    "genderOtherHint": "Select ‘Other options’ to choose a different gender or if you’d prefer not to say."
+    "genderOtherHint": "Select ‘Other options’ to choose a different gender or if you’d prefer not to say.",
+    "underageFix": "Entered the wrong date? Tap “Back” to correct it."
   },
   "home": {
     "timeFilters": {
@@ -296,6 +297,13 @@
       "featured": "Not to be missed",
       "popular": "Popular events",
       "seeAll": "See all >"
+    },
+    "post": {
+      "like": "Like",
+      "comment": "Comment",
+      "comments_one": "{{count}} comment",
+      "comments_other": "{{count}} comments",
+      "share": "Share"
     }
   },
   "profile": {
@@ -528,5 +536,63 @@
     "birthDateRequiredTitle": "Date of birth required",
     "birthDateRequiredBody": "For security reasons, OUT RADAR requires your date of birth. Please enter it once in your profile to continue.",
     "birthDateRequiredCta": "Complete my profile"
+  },
+  "vlogs": {
+    "soundLabel": "Sound",
+    "muted": "Muted",
+    "soundOn": "Turn sound on",
+    "soundOff": "Mute sound",
+    "noSound": "No sound"
+  },
+  "common": {
+    "loadError": "Unable to load this content.",
+    "retry": "Try again"
+  },
+  "explorer": {
+    "loading": "Loading events…",
+    "emptyTitle": "No events available",
+    "emptyBody": "New events are posted regularly — check back soon!",
+    "noMatchTitle": "No results",
+    "noMatchBody": "Try another keyword or city."
+  },
+  "tickets": {
+    "myTicket": "My ticket",
+    "myTicketShort": "Ticket",
+    "close": "Close",
+    "loading": "Loading your ticket…",
+    "loadError": "We couldn’t display your ticket.",
+    "retry": "Try again",
+    "qrAlt": "Your ticket QR code",
+    "showAtEntrance": "Show this QR code at the entrance. Turn up your screen brightness if needed.",
+    "alreadyUsedOn": "Ticket used on {{date}} at {{time}}",
+    "singleUse": "Personal single-use ticket: valid for one entry only.",
+    "scanTickets": "Scan tickets",
+    "checkInTitle": "Ticket check-in",
+    "scanTitle": "Scan a ticket",
+    "scanTicket": "Scan a ticket",
+    "scanNext": "Scan next ticket",
+    "aimAtTicket": "Center the ticket’s QR code in the frame",
+    "cancel": "Cancel",
+    "back": "Back",
+    "checking": "Checking…",
+    "valid": "Valid ticket",
+    "validatedAt": "Entry validated at {{time}}",
+    "alreadyUsed": "Ticket already used",
+    "firstScanAt": "First scanned on {{date}} at {{time}}",
+    "by": "by {{name}}",
+    "notConfirmed": "Invalid ticket",
+    "wrongEvent": "Ticket for another event",
+    "notFound": "Unknown ticket",
+    "forbidden": "Only the organizer and co-organizers can check in tickets.",
+    "denyEntry": "Deny entry.",
+    "manualLabel": "Or enter the ticket code",
+    "check": "Check",
+    "networkError": "Can’t connect. Check your network and try again.",
+    "scanNativeOnly": "Camera scanning is available in the mobile app. Enter the code below.",
+    "cameraPermission": "Allow camera access to scan tickets.",
+    "settings": "Settings",
+    "scanStartError": "Couldn’t start the camera.",
+    "emailedAfterEmailAdded_one": "Your ticket has been sent to {{email}}.",
+    "emailedAfterEmailAdded_other": "Your {{count}} tickets have been sent to {{email}}."
   }
 }

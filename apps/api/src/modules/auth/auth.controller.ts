@@ -731,7 +731,10 @@ export class AuthController {
   }
 
   async googleSignIn(req: FastifyRequest, reply: FastifyReply) {
-    const { idToken, email } = req.body as { idToken?: string; email?: string }
+    const { idToken, email, intent } = req.body as { idToken?: string; email?: string; intent?: string }
+    // Intention explicite du bouton cliqué. Absente (anciennes versions de l'app) → traitée comme
+    // une CONNEXION stricte : aucun jeton d'inscription n'est jamais émis sans intent === 'signup'.
+    const isSignupIntent = intent === 'signup'
 
     if (!idToken) {
       return reply.code(400).send({ error: 'idToken est requis' })
@@ -758,6 +761,13 @@ export class AuthController {
     // they get a short-lived signupToken and must complete the intro flow
     // (birth date + gender, age checked server-side) via /auth/google/complete.
     const user: any = await this.service.findGoogleUser(decoded.email)
+    if (!user && !isSignupIntent) {
+      // « Se connecter avec Google » : on ne crée JAMAIS de compte et on ne bascule pas vers l'inscription
+      return reply.code(404).send({
+        error: 'Aucun compte associé à cette adresse Google. Veuillez d\'abord créer un compte.',
+        code: 'GOOGLE_ACCOUNT_NOT_FOUND',
+      })
+    }
     if (!user) {
       const fullName = (decoded.name || '').trim()
       const [firstName = '', ...rest] = fullName.split(/\s+/)

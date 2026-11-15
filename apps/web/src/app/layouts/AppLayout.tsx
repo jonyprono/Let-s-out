@@ -24,7 +24,10 @@ export function AppLayout() {
       id="app-layout-wrapper"
       className="h-[100dvh] w-full bg-gray-100 dark:bg-black flex items-center justify-center overflow-hidden"
     >
-      <div id="app-layout-inner" className="w-full h-full lg:max-w-[430px] lg:h-[100dvh] lg:max-h-[932px] bg-background text-foreground overflow-hidden relative flex flex-col shadow-2xl transition-colors">
+      {/* lg:will-change-transform : sur grand écran (cadre téléphone de 430 px), garde les écrans
+          `fixed` non portalisés DANS le cadre, comme avant. Sur téléphone, plus aucun ancêtre ne
+          capture les `fixed` (cause de la fiche commentaires invisible sur iOS). */}
+      <div id="app-layout-inner" className="w-full h-full lg:max-w-[430px] lg:h-[100dvh] lg:max-h-[932px] bg-background text-foreground overflow-hidden relative flex flex-col shadow-2xl transition-colors lg:will-change-transform">
         {/* Offline indicator — shown at the very top when no network */}
         <OfflineBanner />
         <main className="flex-1 flex flex-col overflow-hidden relative">

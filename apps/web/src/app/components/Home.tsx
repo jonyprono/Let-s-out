@@ -66,6 +66,11 @@ function FeaturedSkeleton() {
   );
 }
 
+// Média d'un post dans le fil : ~40 % de la hauteur visible (plafonné à l'ancienne taille)
+// pour que la carte entière, ligne d'actions comprise, tienne au-dessus de la barre du bas.
+const POST_MEDIA_MAX_HEIGHT = 'min(40dvh, 320px)';
+const POST_MEDIA_GRID_HEIGHT = 'min(40dvh, 280px)';
+
 function PagePostCard({
   post,
   onNavigate,
@@ -78,6 +83,7 @@ function PagePostCard({
   onPostDeleted?: (postId: string) => void;
 }) {
   const me = useAuthStore(s => (s as any).user);
+  const { t } = useTranslation();
   const confirm = useConfirm();
   const isCreator = me?.id === post.page.creatorId || post.isOwner;
   const [following, setFollowing] = useState(Boolean(post.isFollowing));
@@ -323,12 +329,13 @@ function PagePostCard({
             {isVideo ? (
               <FeedVideoPlayer
                 src={post.mediaUrls[0]}
-                maxHeight="320px"
+                maxHeight={POST_MEDIA_MAX_HEIGHT}
                 onExpand={() => onOpenVideo?.(post.id)}
               />
             ) : post.mediaUrls.length === 1 ? (
               <div
-                className="relative w-full max-h-[320px] flex items-center justify-center cursor-pointer group bg-black/5 dark:bg-black"
+                className="relative w-full flex items-center justify-center cursor-pointer group bg-black/5 dark:bg-black"
+                style={{ maxHeight: POST_MEDIA_MAX_HEIGHT }}
                 onClick={() => {
                   setLightboxIndex(0);
                   setLightboxOpen(true);
@@ -337,7 +344,8 @@ function PagePostCard({
                 <SafeImage
                   src={post.mediaUrls[0]}
                   alt="publication"
-                  className="w-full h-full object-cover max-h-[320px]"
+                  className="w-full h-full object-cover"
+                  style={{ maxHeight: POST_MEDIA_MAX_HEIGHT }}
                 />
                 <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                   <Maximize2 className="w-3.5 h-3.5" />
@@ -345,7 +353,7 @@ function PagePostCard({
               </div>
             ) : post.mediaUrls.length === 2 ? (
               /* Grille 2 photos côte à côte (style Twitter / X comme Image 2) */
-              <div className="grid grid-cols-2 gap-1 w-full bg-black h-[280px] sm:h-[340px] overflow-hidden">
+              <div className="grid grid-cols-2 gap-1 w-full bg-black overflow-hidden" style={{ height: POST_MEDIA_GRID_HEIGHT }}>
                 {post.mediaUrls.map((url: string, idx: number) => (
                   <div
                     key={idx}
@@ -368,7 +376,7 @@ function PagePostCard({
               </div>
             ) : (
               /* Multi-photo carousel with swipe (> 2 photos) */
-              <div className="relative w-full h-[280px] sm:h-[320px] bg-black group">
+              <div className="relative w-full bg-black group" style={{ height: POST_MEDIA_GRID_HEIGHT }}>
                 <Carousel setApi={setCarouselApi} className="w-full h-full">
                   <CarouselContent className="h-full">
                     {post.mediaUrls.map((url: string, idx: number) => (
@@ -426,16 +434,18 @@ function PagePostCard({
           </div>
         )}
 
-        {/* Footer 3 columns with vertical dividers */}
-        <div className="grid grid-cols-3 border-t border-gray-100 dark:border-gray-800 text-gray-500 py-3">
+        {/* Footer 3 columns with vertical dividers — libellés visibles : J'aime / n commentaires / Partager */}
+        <div className="grid grid-cols-[1fr_1.4fr_1fr] border-t border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 py-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setLiked(!liked);
             }}
-            className="flex items-center justify-center p-1 transition-colors hover:text-gray-900 dark:hover:text-white"
+            aria-pressed={liked}
+            className={`flex items-center justify-center gap-1.5 p-1 transition-colors hover:text-gray-900 dark:hover:text-white ${liked ? 'text-red-500' : ''}`}
           >
-            <Heart className={`w-4 h-4 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
+            <Heart className={`w-4 h-4 shrink-0 ${liked ? 'fill-red-500 text-red-500' : ''}`} aria-hidden="true" />
+            <span className="text-xs font-semibold truncate">{t('home.post.like')}</span>
           </button>
 
           <button
@@ -443,13 +453,13 @@ function PagePostCard({
               e.stopPropagation();
               setShowComments(true);
             }}
-            className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors gap-1.5"
+            className="flex items-center justify-center gap-1.5 p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors min-w-0"
             title="Commenter"
           >
-            <MessageCircle className="w-4 h-4" />
-            {commentsCount > 0 && (
-              <span className="text-xs font-semibold">{commentsCount}</span>
-            )}
+            <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span className="text-xs font-semibold truncate">
+              {commentsCount > 0 ? t('home.post.comments', { count: commentsCount }) : t('home.post.comment')}
+            </span>
           </button>
 
           <button
@@ -459,9 +469,10 @@ function PagePostCard({
                 navigator.share({ title: post.page.name, text: postContent || '' });
               }
             }}
-            className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center justify-center gap-1.5 p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span className="text-xs font-semibold truncate">{t('home.post.share')}</span>
           </button>
         </div>
       </div>
@@ -617,6 +628,22 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const [showPermissions, setShowPermissions] = useState(false);
   const [hasCheckedPermissions, setHasCheckedPermissions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // ── En-tête qui se replie au défilement ──────────────────────────────
+  const [headerCollapsed, setHeaderCollapsed] = useState(false);
+  const lastFeedScrollTop = useRef(0);
+  const isSearchCollapsed = headerCollapsed && !searchQuery;
+  const handleFeedScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.target as HTMLElement;
+    // Ignore les défilements horizontaux (bande OUT VLOGS, filtres…)
+    if (!(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight) return;
+    const y = el.scrollTop;
+    const delta = y - lastFeedScrollTop.current;
+    if (Math.abs(delta) < 12) return; // hystérésis : évite les clignotements
+    lastFeedScrollTop.current = y;
+    if (y < 40) setHeaderCollapsed(false);
+    else setHeaderCollapsed(delta > 0);
+  };
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null);
   const featuredScrollRef = useRef<HTMLDivElement>(null);
@@ -936,7 +963,14 @@ export function Home({ userData, onNavigate }: HomeProps) {
           </button>
         </div>
 
-        {/* Search bar + Filter chips */}
+        {/* Search bar + Filter chips — repliés quand on fait défiler vers le bas (plus de place pour le fil),
+            réaffichés dès qu'on remonte. Jamais repliés pendant une recherche. */}
+        <div
+          className="grid transition-[grid-template-rows] duration-200 ease-out"
+          style={{ gridTemplateRows: isSearchCollapsed ? '0fr' : '1fr' }}
+          aria-hidden={isSearchCollapsed || undefined}
+        >
+        <div className="min-h-0 overflow-hidden">
         <div className="px-4 pb-2">
           <div
             className="w-full flex items-center gap-3 px-4 bg-gray-100 dark:bg-[#1A1A1A] rounded-full text-left mb-2 transition-colors focus-within:ring-2 focus-within:ring-[#FF7A00]/50"
@@ -983,10 +1017,12 @@ export function Home({ userData, onNavigate }: HomeProps) {
             })}
           </div>
         </div>
+        </div>
+        </div>
       </div>
 
-      {/* ── Scrollable content ── */}
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+      {/* ── Scrollable content ── (le défilement réel a lieu dans un enfant : capture) */}
+      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }} onScrollCapture={handleFeedScroll}>
         <PullToRefresh onRefresh={handleRefresh} isPullable={!isOffline} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">{t('home.refreshing')}</div>}>
           <div className="pb-28">
 

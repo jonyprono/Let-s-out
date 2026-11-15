@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCcw, Download } from 'lucide-react';
 
 interface PhotoLightboxModalProps {
@@ -199,7 +200,8 @@ export function PhotoLightboxModal({
     }
   };
 
-  return (
+  // Portal sur <body> (iOS : un `fixed` rendu dans le fil est rogné par le défilement composité)
+  return createPortal(
     <div
       className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-md flex flex-col select-none touch-none animate-in fade-in duration-200"
       onClick={onClose}
@@ -351,6 +353,7 @@ export function PhotoLightboxModal({
           <p className="text-xs text-white/50">Double-cliquez pour zoomer</p>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

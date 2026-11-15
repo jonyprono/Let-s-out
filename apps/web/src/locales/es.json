@@ -151,7 +151,8 @@
     "errorBenin": "En Benín, el número debe tener 10 dígitos y empezar por 01.",
     "errorPhone": "El formato de tu número de teléfono es incorrecto.",
     "errorGoogle": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
-    "errorToken": "No se ha podido recuperar el token de autenticación."
+    "errorToken": "No se ha podido recuperar el token de autenticación.",
+    "googleNoAccount": "No hay ninguna cuenta asociada a esta dirección de Google. Crea primero una cuenta."
   },
   "signup": {
     "title": "Inscripción",
@@ -209,7 +210,6 @@
   "editProfile": {
     "birthDateLabel": "Fecha de nacimiento",
     "birthDateHint": "(obligatorio para OUT RADAR)",
-    "birthDateLocked": "Ya no es posible modificar tu fecha de nacimiento. Ponte en contacto con el servicio de asistencia si hay algún error.",
     "errorSaving": "Error al actualizar el perfil"
   },
   "signupIntro": {
@@ -253,7 +253,8 @@
     "genderFemale": "Femenino",
     "genderMale": "Masculino",
     "genderOther": "Otras opciones",
-    "genderOtherHint": "Selecciona «Otras opciones» para elegir otro género o si prefieres no indicar nada."
+    "genderOtherHint": "Selecciona «Otras opciones» para elegir otro género o si prefieres no indicar nada.",
+    "underageFix": "¿Te has equivocado de fecha? Pulsa «Volver» para corregirla."
   },
   "home": {
     "timeFilters": {
@@ -296,6 +297,13 @@
       "featured": "No te lo pierdas",
       "popular": "Eventos populares",
       "seeAll": "Ver todo >"
+    },
+    "post": {
+      "like": "Me gusta",
+      "comment": "Comentar",
+      "comments_one": "{{count}} comentario",
+      "comments_other": "{{count}} comentarios",
+      "share": "Compartir"
     }
   },
   "profile": {
@@ -528,5 +536,63 @@
     "birthDateRequiredTitle": "Se requiere la fecha de nacimiento",
     "birthDateRequiredBody": "Por motivos de seguridad, OUT RADAR necesita tu fecha de nacimiento. Introdúcela una vez en tu perfil para continuar.",
     "birthDateRequiredCta": "Completar mi perfil"
+  },
+  "vlogs": {
+    "soundLabel": "Sonido",
+    "muted": "Silenciado",
+    "soundOn": "Activar el sonido",
+    "soundOff": "Silenciar el sonido",
+    "noSound": "Sin sonido"
+  },
+  "common": {
+    "loadError": "No se puede cargar este contenido.",
+    "retry": "Inténtalo de nuevo"
+  },
+  "explorer": {
+    "loading": "Cargando eventos…",
+    "emptyTitle": "No hay eventos disponibles",
+    "emptyBody": "Se publican nuevos eventos con regularidad, ¡vuelve pronto!",
+    "noMatchTitle": "No se han encontrado resultados",
+    "noMatchBody": "Prueba con otra palabra clave o con otra ciudad."
+  },
+  "tickets": {
+    "myTicket": "Mi entrada",
+    "myTicketShort": "Entrada",
+    "close": "Cerrar",
+    "loading": "Cargando tu entrada…",
+    "loadError": "No se puede mostrar tu entrada.",
+    "retry": "Inténtalo de nuevo",
+    "qrAlt": "Código QR de tu entrada",
+    "showAtEntrance": "Muestra este código QR en el acceso. Sube el brillo de la pantalla si es necesario.",
+    "alreadyUsedOn": "Entrada utilizada el {{date}} a las {{time}}",
+    "singleUse": "Entrada personal de un solo uso: válida para un único acceso.",
+    "scanTickets": "Escanear entradas",
+    "checkInTitle": "Control de entradas",
+    "scanTitle": "Escanear una entrada",
+    "scanTicket": "Escanear una entrada",
+    "scanNext": "Escanear la siguiente entrada",
+    "aimAtTicket": "Coloca el código QR de la entrada en el centro del recuadro",
+    "cancel": "Cancelar",
+    "back": "Volver",
+    "checking": "Comprobando…",
+    "valid": "Entrada válida",
+    "validatedAt": "Acceso validado a las {{time}}",
+    "alreadyUsed": "Entrada ya validada",
+    "firstScanAt": "Primer escaneo el {{date}} a las {{time}}",
+    "by": "por {{name}}",
+    "notConfirmed": "Entrada no válida",
+    "wrongEvent": "Entrada de otro evento",
+    "notFound": "Entrada desconocida",
+    "forbidden": "Solo el organizador y los coorganizadores pueden validar las entradas.",
+    "denyEntry": "Denegar el acceso.",
+    "manualLabel": "O introduce el código de la entrada",
+    "check": "Comprobar",
+    "networkError": "No se puede conectar. Comprueba la red y vuelve a intentarlo.",
+    "scanNativeOnly": "El escaneo con cámara está disponible en la aplicación móvil. Introduce el código a continuación.",
+    "cameraPermission": "Permite el acceso a la cámara para escanear las entradas.",
+    "settings": "Ajustes",
+    "scanStartError": "No se puede iniciar la cámara.",
+    "emailedAfterEmailAdded_one": "Tu entrada se ha enviado a {{email}}.",
+    "emailedAfterEmailAdded_other": "Tus {{count}} entradas se han enviado a {{email}}."
   }
 }

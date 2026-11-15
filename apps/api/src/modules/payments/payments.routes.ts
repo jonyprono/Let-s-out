@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { createAndSendNotification } from '../notifications/notifications.routes'
 import { EmailService } from '../../services/email.service'
 import { eventGenderDenial } from '../../services/signup-policy.service'
+import { ensureTicketToken } from '../../services/ticket.service'
 export default async function paymentsRoutes(app: FastifyInstance) {
 
   // Initier une transaction FedaPay
@@ -646,6 +647,7 @@ async function handleConfirmedBooking(
         eventDate: fullEvent.startAt,
         location: fullEvent.address || fullEvent.city || 'Lieu non spécifié',
         bookingId: booking.id,
+        ticketToken: await ensureTicketToken(app.prisma, booking.id),
         price: amount,
         quantity: 1,
         coverImage: fullEvent.coverUrl || undefined,

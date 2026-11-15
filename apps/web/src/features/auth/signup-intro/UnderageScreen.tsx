@@ -40,6 +40,9 @@ export function UnderageScreen({ minAge }: UnderageScreenProps) {
       <p className="font-poppins text-[12px] leading-[18px] text-gray-500 dark:text-gray-400">
         {t('signupIntro.underageNotSaved')}
       </p>
+      <p className="font-poppins text-[13px] leading-[20px] font-medium text-gray-700 dark:text-gray-300">
+        {t('signupIntro.underageFix')}
+      </p>
     </div>
   )
 }

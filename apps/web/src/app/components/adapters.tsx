@@ -7,7 +7,6 @@ import { useCompleteGoogleSignup } from '@/features/auth/hooks/useAuth'
 import {
   useSignupIntroStore,
   hasCompletedSignupIntro,
-  isSignupBlockedForSession,
 } from '@/stores/signup-intro.store'
 
 // ── Page loader (shown between route transitions while lazy chunks download) ──
@@ -120,7 +119,7 @@ export function Signup() {
   const isGoogleContinuation = params.get('mode') === 'google'
   const introDone = hasCompletedSignupIntro({ firstName, lastName, birthDate, gender })
   const showIntro =
-    !isGoogleContinuation && (params.has('step') || !introDone || isSignupBlockedForSession())
+    !isGoogleContinuation && (params.has('step') || !introDone)
 
   if (completingGoogle) return <PageLoader />
 

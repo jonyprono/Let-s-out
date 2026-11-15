@@ -21,8 +21,8 @@ export function ErrorRetryState({ onRetry, message, className }: ErrorRetryState
         onClick={onRetry}
         className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#FF7A00] text-white text-sm font-semibold active:opacity-80"
       >
-        <RefreshCw className="w-4 h-4" />
-        {t('common.retry', 'Réessayer')}
+        <RefreshCw className="w-4 h-4" aria-hidden="true" />
+        <span>{t('common.retry', 'Réessayer')}</span>
       </button>
     </div>
   )

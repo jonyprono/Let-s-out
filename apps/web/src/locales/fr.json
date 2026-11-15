@@ -151,7 +151,8 @@
     "errorBenin": "Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.",
     "errorPhone": "Le format de votre numéro de téléphone est incorrect.",
     "errorGoogle": "Connexion Google échouée. Veuillez réessayer.",
-    "errorToken": "Impossible de récupérer le token d'authentification."
+    "errorToken": "Impossible de récupérer le token d'authentification.",
+    "googleNoAccount": "Aucun compte associé à cette adresse Google. Veuillez d’abord créer un compte."
   },
   "signup": {
     "title": "Inscription",
@@ -209,7 +210,6 @@
   "editProfile": {
     "birthDateLabel": "Date de naissance",
     "birthDateHint": "(requise pour OUT RADAR)",
-    "birthDateLocked": "Votre date de naissance ne peut plus être modifiée. Contactez le support en cas d'erreur.",
     "errorSaving": "Erreur lors de la mise à jour du profil"
   },
   "signupIntro": {
@@ -253,7 +253,8 @@
     "genderFemale": "Féminin",
     "genderMale": "Masculin",
     "genderOther": "Autres options",
-    "genderOtherHint": "Sélectionnez Autres options pour choisir un autre genre ou si vous préférez ne rien indiquer."
+    "genderOtherHint": "Sélectionnez Autres options pour choisir un autre genre ou si vous préférez ne rien indiquer.",
+    "underageFix": "Vous vous êtes trompé de date ? Appuyez sur « Retour » pour la corriger."
   },
   "home": {
     "timeFilters": {
@@ -296,6 +297,13 @@
       "featured": "À ne pas manquer",
       "popular": "Événements populaires",
       "seeAll": "Voir tout >"
+    },
+    "post": {
+      "like": "J’aime",
+      "comment": "Commenter",
+      "comments_one": "{{count}} commentaire",
+      "comments_other": "{{count}} commentaires",
+      "share": "Partager"
     }
   },
   "profile": {
@@ -528,5 +536,63 @@
     "birthDateRequiredTitle": "Date de naissance requise",
     "birthDateRequiredBody": "Pour des raisons de sécurité, OUT RADAR nécessite votre date de naissance. Renseignez-la une fois dans votre profil pour continuer.",
     "birthDateRequiredCta": "Compléter mon profil"
+  },
+  "vlogs": {
+    "soundLabel": "Son",
+    "muted": "Muet",
+    "soundOn": "Activer le son",
+    "soundOff": "Couper le son",
+    "noSound": "Pas de son"
+  },
+  "common": {
+    "loadError": "Impossible de charger ce contenu.",
+    "retry": "Réessayer"
+  },
+  "explorer": {
+    "loading": "Chargement des événements…",
+    "emptyTitle": "Aucun événement disponible",
+    "emptyBody": "De nouveaux événements sont publiés régulièrement, revenez bientôt !",
+    "noMatchTitle": "Aucun résultat",
+    "noMatchBody": "Essayez un autre mot-clé ou une autre ville."
+  },
+  "tickets": {
+    "myTicket": "Mon billet",
+    "myTicketShort": "Billet",
+    "close": "Fermer",
+    "loading": "Chargement du billet…",
+    "loadError": "Impossible d’afficher votre billet.",
+    "retry": "Réessayer",
+    "qrAlt": "QR code de votre billet",
+    "showAtEntrance": "Présentez ce QR code à l’entrée. Augmentez la luminosité de votre écran si besoin.",
+    "alreadyUsedOn": "Billet utilisé le {{date}} à {{time}}",
+    "singleUse": "Billet personnel à usage unique : il ne permet qu’une seule entrée.",
+    "scanTickets": "Scanner les billets",
+    "checkInTitle": "Contrôle des billets",
+    "scanTitle": "Scanner un billet",
+    "scanTicket": "Scanner un billet",
+    "scanNext": "Scanner le billet suivant",
+    "aimAtTicket": "Placez le QR code du billet au centre du cadre",
+    "cancel": "Annuler",
+    "back": "Retour",
+    "checking": "Vérification…",
+    "valid": "Billet valide",
+    "validatedAt": "Entrée validée à {{time}}",
+    "alreadyUsed": "Billet déjà validé",
+    "firstScanAt": "Premier scan le {{date}} à {{time}}",
+    "by": "par {{name}}",
+    "notConfirmed": "Billet non valable",
+    "wrongEvent": "Billet d’un autre événement",
+    "notFound": "Billet inconnu",
+    "forbidden": "Seuls l’organisateur et les co-organisateurs peuvent valider les billets.",
+    "denyEntry": "Refuser l’entrée.",
+    "manualLabel": "Ou saisir le code du billet",
+    "check": "Vérifier",
+    "networkError": "Connexion impossible. Vérifiez le réseau et réessayez.",
+    "scanNativeOnly": "Le scan par caméra est disponible dans l’application mobile. Saisissez le code ci-dessous.",
+    "cameraPermission": "Autorisez l’accès à la caméra pour scanner les billets.",
+    "settings": "Réglages",
+    "scanStartError": "Impossible de démarrer la caméra.",
+    "emailedAfterEmailAdded_one": "Votre billet a été envoyé à {{email}}.",
+    "emailedAfterEmailAdded_other": "Vos {{count}} billets ont été envoyés à {{email}}."
   }
 }

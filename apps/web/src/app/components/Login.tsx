@@ -103,7 +103,8 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
       // ── Étape 6 & 7 : Appel backend ──────────────────────────────────
       if (idToken && email) {
         googleAuthLogger.backendCallStart(email)
-        googleSignIn({ idToken, email }, {
+        // intent 'login' : connexion stricte — jamais de création ni de bascule vers l'inscription
+        googleSignIn({ idToken, email, intent: 'login' }, {
           onSuccess: (data: any) => googleAuthLogger.backendCallSuccess(data?.user?.id),
           onError: (err: unknown) => googleAuthLogger.backendCallError(err),
         })

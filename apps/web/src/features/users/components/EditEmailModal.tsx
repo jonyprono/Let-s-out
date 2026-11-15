@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { useSendOtp, useCheckOtp } from '@/features/auth/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   onClose: () => void;
@@ -13,6 +14,7 @@ export function EditEmailModal({ onClose }: Props) {
   const user = useAuthStore((s) => s.user);
   const refreshUser = useAuthStore((s) => s.refreshUser);
 
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState(user?.email || '');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -66,9 +68,14 @@ export function EditEmailModal({ onClose }: Props) {
         onSuccess: async () => {
           setIsPatching(true);
           try {
-            await apiClient.patch('/users/me/email', { email });
+            // Le code est revérifié (et consommé) par le serveur avant d'enregistrer l'adresse
+            const { data } = await apiClient.patch<{ ticketsToSend?: number }>('/users/me/email', { email, code: codeStr });
             await refreshUser();
             toast.success('Adresse e-mail mise à jour avec succès');
+            // Billets des événements à venir envoyés à la nouvelle adresse (tickets@letsout.app)
+            if (data?.ticketsToSend) {
+              toast.success(t('tickets.emailedAfterEmailAdded', { count: data.ticketsToSend, email }));
+            }
             onClose();
           } catch (err: any) {
             toast.error(err.response?.data?.error || 'Erreur lors de la mise à jour');

@@ -3,6 +3,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { Play } from 'lucide-react';
 import { videosApi } from '@/features/videos/api';
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal';
+import { getVideoPosterUrl } from '@/features/videos/utils/video-url';
 
 export function EventMediaFeed() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -73,19 +74,18 @@ export function EventMediaFeed() {
             className="relative w-[140px] aspect-square rounded-[18px] overflow-hidden shrink-0 snap-start bg-gray-900 cursor-pointer shadow-sm border border-gray-100 dark:border-white/10"
           >
             <>
-              <video 
-                src={media.url} 
-                poster={media.thumbnailUrl || media.event.coverUrl || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"}
-                className="w-full h-full object-cover opacity-90"
-                controls={false}
-                muted
-                loop
-                autoPlay
-                playsInline
-                disablePictureInPicture
-                webkit-playsinline="true"
-                x5-playsinline="true"
-              />
+              {/* Image fixe et non <video autoPlay> : chaque aperçu téléchargeait le vlog COMPLET
+                  en parallèle du lecteur, ce qui saturait le réseau et faisait saccader la lecture
+                  (mesuré : 2 s lues en 20 s depuis l'accueil, contre 19 s depuis /videos). */}
+              {getVideoPosterUrl(media) ? (
+                <img
+                  src={getVideoPosterUrl(media)}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover opacity-90"
+                />
+              ) : null}
               <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                 <Play className="w-8 h-8 text-white/80 drop-shadow-md" fill="currentColor" />
               </div>
