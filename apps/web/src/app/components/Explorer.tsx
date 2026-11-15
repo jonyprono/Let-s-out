@@ -16,7 +16,22 @@ import { sortFeaturedEvents, sortNearbyEvents } from '@/utils/event-ranking';
 import ExplorerMap from '@/app/components/ExplorerMap';
 import { useNotifications } from '@/features/notifications/api';
 import PullToRefresh from 'react-simple-pull-to-refresh';
-import { searchPlaces, GeoPlace } from '@/lib/geo';
+import { searchPlaces, GeoPlace, searchCitiesWorld, type CityPlace } from '@/lib/geo';
+import { getCachedPlace, cachePlace, resolvePlace, type CachedPlace } from '@/lib/city-geocache';
+import { currentLang } from '@/lib/locale';
+
+// ── Carte : centre par défaut (aucun lieu choisi), zoom et rayon selon le type de lieu ──
+const DEFAULT_MAP_CENTER: [number, number] = [6.36536, 2.41833]; // Cotonou
+const ZOOM_BY_KIND: Record<CachedPlace['kind'], number> = { city: 12, region: 8, country: 6 };
+const RADIUS_KM_BY_KIND: Record<CachedPlace['kind'], number> = { city: 30, region: 150, country: 0 };
+const normPlace = (s?: string | null) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+/** Distance à vol d'oiseau (formule de Haversine), en km */
+function distanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
 import i18n from '@/lib/i18n'
 
 interface ExplorerProps {
@@ -94,6 +109,66 @@ export function Explorer({ onNavigate }: ExplorerProps) {
   const [mapSearch, setMapSearch] = useState('');
   const [eventSearch, setEventSearch] = useState('');
 
+  // ── Lieu choisi (ville / région / pays, partout dans le monde) ─────────────
+  // Coordonnées issues du cache local ou du géocodage (Photon / Nominatim).
+  const [locationPlace, setLocationPlace] = useState<CachedPlace | null>(null);
+  const pendingLocationRef = useRef('');
+  const [worldResults, setWorldResults] = useState<CityPlace[]>([]);
+  const [worldLoading, setWorldLoading] = useState(false);
+
+  const selectLocation = (city: string, place?: CachedPlace | null, countryHint?: string) => {
+    saveRecentCity(city);
+    setCurrentLocation(city);
+    setMapSearch('');
+    closeSearch();
+    pendingLocationRef.current = city;
+    if (place) {
+      cachePlace(city, place);
+      setLocationPlace(place);
+      return;
+    }
+    // Cache instantané, sinon géocodage en arrière-plan
+    setLocationPlace(getCachedPlace(city) ?? null);
+    resolvePlace(city, currentLang(), countryHint).then((p) => {
+      if (p && pendingLocationRef.current === city) setLocationPlace(p);
+    });
+  };
+
+  // Recherche mondiale de villes / pays pendant la saisie (anti-rebond 400 ms)
+  useEffect(() => {
+    const q = mapSearch.trim();
+    if (screen !== 'search' || q.length < 2) { setWorldResults([]); setWorldLoading(false); return; }
+    setWorldLoading(true);
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      const res = await searchCitiesWorld(q, currentLang());
+      if (!cancelled) { setWorldResults(res); setWorldLoading(false); }
+    }, 400);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [mapSearch, screen]);
+
+  // Centre de la carte : lieu choisi, sinon Cotonou par défaut
+  const mapCenter: [number, number] = locationPlace ? [locationPlace.lat, locationPlace.lon] : DEFAULT_MAP_CENTER;
+  const flyTarget = locationPlace
+    ? { lat: locationPlace.lat, lon: locationPlace.lon, zoom: ZOOM_BY_KIND[locationPlace.kind], key: `${currentLocation}|${locationPlace.lat},${locationPlace.lon}` }
+    : null;
+
+  // Un événement appartient-il au lieu choisi ? (nom de ville, pays, ou proximité GPS)
+  const matchesLocation = (ev: any) => {
+    if (!currentLocation) return true;
+    const city = normPlace(ev?.city);
+    if (!city || city === normPlace(currentLocation)) return true;
+    if (!locationPlace) return false;
+    if (locationPlace.kind === 'country') {
+      const country = normPlace(ev?.country);
+      return !!country && (country === normPlace(locationPlace.name) || country === normPlace(currentLocation));
+    }
+    if (ev?.latitude && ev?.longitude) {
+      return distanceKm(locationPlace.lat, locationPlace.lon, ev.latitude, ev.longitude) <= RADIUS_KM_BY_KIND[locationPlace.kind];
+    }
+    return false;
+  };
+
   // Recherche de lieux et restaurants pour la carte
   useEffect(() => {
     if (viewMode !== 'map' || eventSearch.trim().length < 2) {
@@ -105,15 +180,15 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       try {
         const places = await searchPlaces(eventSearch.trim(), {
           cityContext: currentLocation,
-          lat: currentLocation === 'Abomey-Calavi' ? 6.4485 : 6.36536,
-          lon: currentLocation === 'Abomey-Calavi' ? 2.3556 : 2.41833,
+          lat: mapCenter[0],
+          lon: mapCenter[1],
         });
         setPlaceSuggestions(places);
       } catch {
         setPlaceSuggestions([]);
       }
     }, 350);
-  }, [eventSearch, viewMode, currentLocation]);
+  }, [eventSearch, viewMode, currentLocation, locationPlace]); // eslint-disable-line react-hooks/exhaustive-deps
   const { data: eventsPages, isPending: isEventsPending, isError: isEventsError, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ['events', 'explorer'],
     queryFn: async ({ pageParam = 0 }) => {
@@ -180,6 +255,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     const filteredCities = BENIN_CITIES.filter(c =>
       c.toLowerCase().includes(mapSearch.toLowerCase())
     );
+    // Résultats mondiaux, sans doublon avec la liste locale du Bénin
+    const localNames = new Set(filteredCities.map(normPlace));
+    const worldCities = worldResults.filter(p => !(normPlace(p.country) === 'benin' && localNames.has(normPlace(p.name))));
 
     return (
       <div className="fixed inset-0 z-50 bg-[#FAFAFA] dark:bg-[#0a0a0b] flex flex-col pt-safe-6">
@@ -235,7 +313,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   {recentCities.map((city, idx) => (
                     <button
                       key={idx}
-                      onClick={() => { saveRecentCity(city); setCurrentLocation(city); setMapSearch(''); closeSearch(); }}
+                      onClick={() => selectLocation(city, undefined, BENIN_CITIES.includes(city) ? 'Bénin' : undefined)}
                       style={{
                         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
                         gap: 12, padding: '14px 0', background: 'transparent', border: 'none',
@@ -256,7 +334,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               {filteredCities.map((city, idx) => (
                 <button
                   key={idx}
-                  onClick={() => { saveRecentCity(city); setCurrentLocation(city); setMapSearch(''); closeSearch(); }}
+                  onClick={() => selectLocation(city, undefined, 'Bénin')}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
                     gap: 12, padding: '14px 0', background: 'transparent', border: 'none',
@@ -268,7 +346,32 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   <span style={{ fontSize: 15, color: 'var(--color-text-primary)', fontFamily: 'Poppins, sans-serif' }}>{city}</span>
                 </button>
               ))}
-              {filteredCities.length === 0 && (
+              {/* Villes / pays du monde entier (géocodage) */}
+              {worldCities.length > 0 && (
+                <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontFamily: 'Poppins, sans-serif', fontWeight: 600, margin: '16px 0 4px' }}><span>{t('explorer.worldwide')}</span></p>
+              )}
+              {worldCities.map((p) => (
+                <button
+                  key={`${p.label}-${p.lat}`}
+                  onClick={() => selectLocation(p.name, { name: p.name, country: p.country, lat: p.lat, lon: p.lon, kind: p.kind })}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
+                    gap: 12, padding: '14px 0', background: 'transparent', border: 'none',
+                    borderBottom: '1px solid var(--border-default)',
+                    cursor: 'pointer', textAlign: 'left'
+                  }}
+                >
+                  <Location01Icon style={{ width: 20, height: 20, color: 'var(--color-icon-secondary)', flexShrink: 0 }} strokeWidth={1.5} />
+                  <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                    <span style={{ fontSize: 15, color: 'var(--color-text-primary)', fontFamily: 'Poppins, sans-serif' }}>{p.name}</span>
+                    <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontFamily: 'Poppins, sans-serif' }}>{p.kind === 'country' ? t('explorer.placeKindCountry') : p.country}</span>
+                  </span>
+                </button>
+              ))}
+              {worldLoading && (
+                <p style={{ width: '100%', textAlign: 'center', padding: '16px 0', color: 'var(--color-text-secondary)', fontSize: 13, fontFamily: 'Poppins, sans-serif' }}><span>{t('explorer.searchingPlaces')}</span></p>
+              )}
+              {filteredCities.length === 0 && worldCities.length === 0 && !worldLoading && (
                 <p style={{ width: '100%', textAlign: 'center', padding: '32px 0', color: 'var(--color-text-secondary)', fontSize: 15, fontFamily: 'Poppins, sans-serif' }}><span>{t('explorer.aucuneVilleTrouvee')}</span></p>
               )}
             </div>
@@ -359,9 +462,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       (ev.title?.toLowerCase() || '').includes(searchLower) ||
       (ev.city?.toLowerCase() || '').includes(searchLower) ||
       (ev.address?.toLowerCase() || '').includes(searchLower);
-    const cityMatch = currentLocation
-      ? (!ev.city || (ev.city || '').toLowerCase().trim() === currentLocation.toLowerCase().trim())
-      : true;
+    const cityMatch = matchesLocation(ev);
 
     // Filtre par onglet actif
     const tab = filterTabs.find(ft => ft.id === selectedCategory);
@@ -424,9 +525,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     const textMatch = !searchActive ||
       (ev.title?.toLowerCase() || '').includes(searchLower) ||
       (ev.city?.toLowerCase() || '').includes(searchLower);
-    const cityMatch = currentLocation
-      ? (!ev.city || (ev.city || '').toLowerCase().trim() === currentLocation.toLowerCase().trim())
-      : true;
+    const cityMatch = matchesLocation(ev);
     const categoryMatch = (!selectedIconCategory || ev.category === selectedIconCategory);
 
     return textMatch && (searchActive ? true : cityMatch) && categoryMatch;
@@ -440,8 +539,9 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     title: ev?.title,
     city: ev?.city || currentLocation,
     address: ev?.address || '',
-    latitude: ev?.latitude || 6.36536 + (i * 0.002),
-    longitude: ev?.longitude || 2.41833 + (i * 0.002),
+    // Sans coordonnées : placé autour du centre courant (et non plus toujours à Cotonou)
+    latitude: ev?.latitude || mapCenter[0] + (i * 0.002),
+    longitude: ev?.longitude || mapCenter[1] + (i * 0.002),
     startAt: ev?.startAt,
     currentAttendees: ev?.currentAttendees || 0,
     participationMode: ev?.price === 0 ? 'Gratuit' : 'Payant',
@@ -589,7 +689,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
         <div className="flex-1 relative z-0 w-full h-full">
           <ExplorerMap
             events={mapEvents}
-            mapCenter={currentLocation === 'Abomey-Calavi' ? [6.4485, 2.3556] : [6.36536, 2.41833]}
+            mapCenter={mapCenter}
+            flyTarget={flyTarget}
             onNavigate={onNavigate}
             onSwitchToList={() => setViewMode('list')}
             searchTarget={selectedPlaceTarget}

@@ -117,7 +117,7 @@ export function JoinEventBottomSheet({ event, isOpen, onClose, isApprovedButUnpa
               } else {
                 document.getElementById('fedapay-backdrop')?.remove()
                 try {
-                  await apiClient.post('/payments/sync-missed', { eventId: event.id })
+                  await apiClient.post('/payments/sync-missed', { eventId: event.id, transactionId: data.transactionId })
                 } catch (syncErr) {
                   if (data.isSandbox) {
                     console.warn('Sandbox: sync-missed failed, using dev/confirm as fallback')

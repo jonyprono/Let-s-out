@@ -683,7 +683,10 @@
     "tabAll": "Todo",
     "tabNow": "Ahora mismo",
     "tabWeekend": "Fin de semana",
-    "seeAll": "Ver todo >"
+    "seeAll": "Ver todo >",
+    "worldwide": "En el mundo",
+    "placeKindCountry": "País",
+    "searchingPlaces": "Buscando lugares…"
   },
   "tickets": {
     "myTicket": "Mi entrada",
@@ -2532,5 +2535,14 @@
     "wellness": "Bienestar",
     "games": "Juegos",
     "other": "Otros"
+  },
+  "explorerMap": {
+    "ongoing": "En curso",
+    "todayAt": "Hoy a las {{time}}",
+    "tomorrow": "Mañana",
+    "outsters_one": "{{count}} OUTSTER",
+    "outsters_other": "{{count}} OUTSTERS",
+    "eventsCount_one": "{{count}} evento",
+    "eventsCount_other": "{{count}} eventos"
   }
 }

@@ -3,7 +3,38 @@ import { createAndSendNotification } from '../notifications/notifications.routes
 import { EmailService } from '../../services/email.service'
 import { eventGenderDenial } from '../../services/signup-policy.service'
 import { ensureTicketToken } from '../../services/ticket.service'
+import {
+  FEDAPAY_APPROVED_STATUSES,
+  FedapayError,
+  fedapayBaseUrl,
+  getFedapayTransaction,
+  isFedapayLiveKey,
+  verifyFedapaySignature,
+  webhookTransactionId,
+} from '../../services/fedapay.service'
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    /** Corps JSON brut (texte exact reçu) — requis pour vérifier la signature FedaPay */
+    rawBody?: string
+  }
+}
+
 export default async function paymentsRoutes(app: FastifyInstance) {
+  // Analyseur JSON propre à ce module (contexte encapsulé) : conserve le texte brut
+  // pour la vérification HMAC du webhook, puis parse comme d'habitude.
+  app.removeContentTypeParser('application/json')
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (req, body, done) => {
+    const text = typeof body === 'string' ? body : body.toString('utf8')
+    req.rawBody = text
+    if (!text) return done(null, {})
+    try {
+      done(null, JSON.parse(text))
+    } catch (err: any) {
+      err.statusCode = 400
+      done(err, undefined)
+    }
+  })
 
   // Initier une transaction FedaPay
   app.post('/fedapay/initiate', { preHandler: [app.authenticate] }, async (req, reply) => {
@@ -77,8 +108,12 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     })
     if (!user) return reply.code(404).send({ error: 'Utilisateur introuvable' })
 
-    // MODE DEV : pas de clé configurée ou simulation demandée → simuler
-    if (!process.env.FEDAPAY_SECRET_KEY || process.env.MOCK_PAYMENTS === 'true') {
+    // MODE DEV : pas de clé configurée ou simulation demandée → simuler.
+    // Une clé LIVE désactive toute simulation (sinon paiement gratuit via /dev/confirm-booking).
+    if (isFedapayLiveKey() && process.env.MOCK_PAYMENTS === 'true') {
+      app.log.error('[FedaPay] MOCK_PAYMENTS=true ignoré : clé sk_live_ configurée (paiements réels)')
+    }
+    if (!process.env.FEDAPAY_SECRET_KEY || (process.env.MOCK_PAYMENTS === 'true' && !isFedapayLiveKey())) {
       app.log.info(`[FedaPay DEV] Événement: ${event.title}, Montant: ${finalAmount}, User: ${sub}`)
       return reply.send({
         devMode: true,
@@ -92,9 +127,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     }
 
     // MODE PROD / SANDBOX : appel API FedaPay
-    const baseUrl = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') 
-      ? 'https://sandbox-api.fedapay.com/v1' 
-      : 'https://api.fedapay.com/v1';
+    const baseUrl = fedapayBaseUrl()
 
     const txRes = await fetch(`${baseUrl}/transactions`, {
       method: 'POST',
@@ -150,105 +183,100 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     })
   })
 
-  // Webhook FedaPay : confirmer après paiement réel
+  // Webhook FedaPay : confirmer après paiement réel.
+  // 1) signature officielle vérifiée sur le corps BRUT (t=…,s=…, secret wh_…, anti-rejeu 5 min)
+  // 2) la transaction est relue chez FedaPay (le contenu du webhook n'est jamais cru tel quel)
+  // 3) handleConfirmedBooking est idempotent (providerTransactionId unique)
   app.post('/fedapay/callback', async (req, reply) => {
-    // ── Signature Verification (production security) ──────────────────────────
-    const secret = process.env.FEDAPAY_SECRET_KEY
-    const sigHeader = req.headers['x-fedapay-signature'] as string | undefined
-
-    if (secret && sigHeader) {
-      try {
-        const { createHmac } = await import('crypto')
-        const rawBody = JSON.stringify(req.body)
-        const expected = createHmac('sha256', secret).update(rawBody).digest('hex')
-        const provided = sigHeader.replace('sha256=', '')
-        // Use timing-safe comparison to prevent timing attacks
-        const { timingSafeEqual } = await import('crypto')
-        const valid = timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(provided, 'hex'))
-        if (!valid) {
-          app.log.warn('[FedaPay] Invalid webhook signature — request rejected')
-          return reply.code(400).send({ error: 'Invalid signature' })
-        }
-      } catch (e) {
-        app.log.warn(`[FedaPay] Signature check error: ${e}`)
-        if (process.env.NODE_ENV === 'production') {
-          return reply.code(400).send({ error: 'Signature verification failed' })
-        }
-      }
-    } else if (process.env.NODE_ENV === 'production' && !sigHeader) {
-      app.log.warn('[FedaPay] Missing X-Fedapay-Signature header in production')
-      return reply.code(400).send({ error: 'Missing signature' })
+    const secret = process.env.FEDAPAY_WEBHOOK_SECRET
+    if (!secret) {
+      app.log.error('[FedaPay webhook] FEDAPAY_WEBHOOK_SECRET non configuré — webhook refusé')
+      // 503 : FedaPay réessaiera une fois le secret configuré
+      return reply.code(503).send({ error: 'Webhook not configured' })
     }
-    // ─────────────────────────────────────────────────────────────────────────
+    const header = (req.headers['x-fedapay-signature'] as string | undefined)
+    const check = verifyFedapaySignature(req.rawBody ?? '', header, secret)
+    if (!check.ok) {
+      app.log.warn(`[FedaPay webhook] Signature refusée (${check.reason})`)
+      return reply.code(400).send({ error: 'Invalid signature' })
+    }
 
-    const body = req.body as any
-    const { transaction } = body
-    if (transaction?.status !== 'approved') return reply.send({ received: true })
+    const txId = webhookTransactionId(req.body)
+    if (!txId) return reply.send({ received: true })
 
-    let meta: { eventId?: string; userId?: string; poolValidationStatus?: string; delegatedToId?: string; isAnonymous?: boolean; isNonParticipantDonation?: boolean } = {}
+    let tx
     try {
-      // FedaPay sandbox may nest metadata differently
-      const rawMeta = transaction.metadata || transaction.custom_metadata || {}
-      meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
-    } catch {}
+      tx = await getFedapayTransaction(txId)
+    } catch (e: any) {
+      app.log.error({ err: e, txId }, '[FedaPay webhook] Lecture de la transaction impossible')
+      // 5xx → FedaPay renverra le webhook plus tard
+      return reply.code(e instanceof FedapayError && e.status === 404 ? 200 : 502).send({ received: false })
+    }
+    if (!FEDAPAY_APPROVED_STATUSES.includes(tx.status)) return reply.send({ received: true, status: tx.status })
 
-    const { eventId, userId, poolValidationStatus, delegatedToId, isAnonymous = false, isNonParticipantDonation = false } = meta
-    if (!eventId || !userId) {
-      app.log.warn({ meta }, '[FedaPay webhook] Missing eventId or userId in metadata')
+    const meta = tx.metadata
+    if (!meta.eventId || !meta.userId) {
+      app.log.warn({ txId }, '[FedaPay webhook] eventId ou userId absent des métadonnées')
       return reply.send({ received: true })
     }
 
     try {
-      await handleConfirmedBooking(app, { eventId, userId, amount: transaction.amount, poolValidationStatus, delegatedToId, isAnonymous, isNonParticipantDonation })
-    } catch (e) { app.log.error(e) }
-
-    return reply.send({ received: true })
+      const res = await handleConfirmedBooking(app, {
+        eventId: meta.eventId,
+        userId: meta.userId,
+        amount: tx.amount,
+        poolValidationStatus: meta.poolValidationStatus,
+        delegatedToId: meta.delegatedToId,
+        isAnonymous: !!meta.isAnonymous,
+        isNonParticipantDonation: !!meta.isNonParticipantDonation,
+        providerTransactionId: tx.id,
+      })
+      return reply.send({ received: true, alreadyProcessed: !!(res as any)?.alreadyProcessed })
+    } catch (e) {
+      app.log.error({ err: e, txId }, '[FedaPay webhook] Échec de la confirmation')
+      return reply.code(500).send({ received: false })
+    }
   })
-  // Sync missed FedaPay transactions (if webhook failed)
+
+  // Rattrapage si le webhook n'est pas (encore) arrivé : le client fournit l'identifiant
+  // de SA transaction ; elle est relue chez FedaPay et doit lui appartenir.
   app.post('/sync-missed', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { eventId } = req.body as { eventId: string }
-    
+    const { eventId, transactionId } = (req.body ?? {}) as { eventId?: string; transactionId?: string | number }
+    if (!eventId || transactionId === undefined || transactionId === null || String(transactionId).trim() === '') {
+      return reply.code(400).send({ error: 'eventId et transactionId requis' })
+    }
+
+    let tx
     try {
-      const baseUrl = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') 
-        ? 'https://sandbox-api.fedapay.com/v1' 
-        : 'https://api.fedapay.com/v1';
+      tx = await getFedapayTransaction(transactionId)
+    } catch (e: any) {
+      if (e instanceof FedapayError && e.status === 404) return reply.code(404).send({ error: 'Transaction introuvable' })
+      app.log.error({ err: e }, '[sync-missed] Lecture FedaPay impossible')
+      return reply.code(502).send({ error: 'Erreur de synchronisation' })
+    }
 
-      const txRes = await fetch(`${baseUrl}/transactions?limit=50`, {
-        headers: { Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}` }
-      })
-      const txData = (await txRes.json()) as any
-      const transactions = txData['v1/transactions'] || txData.data || txData.transactions || []
-      
-      // Log for debugging
-      app.log.info(`[sync-missed] Found ${transactions.length} transactions. Looking for userId=${sub} eventId=${eventId}`)
-      transactions.slice(0, 5).forEach((tx: any) => {
-        app.log.info(`[sync-missed] tx id=${tx.id} status=${tx.status} metadata=${JSON.stringify(tx.metadata)} custom_metadata=${JSON.stringify(tx.custom_metadata)}`)
-      })
+    const meta = tx.metadata
+    if (meta.userId !== sub || meta.eventId !== eventId) {
+      app.log.warn({ sub, eventId, txId: tx.id }, '[sync-missed] Transaction n’appartenant pas à cet utilisateur / événement')
+      return reply.code(403).send({ error: 'Transaction non autorisée' })
+    }
+    if (!FEDAPAY_APPROVED_STATUSES.includes(tx.status)) {
+      return reply.code(409).send({ error: 'Paiement non confirmé', status: tx.status })
+    }
 
-      // FedaPay uses various statuses: approved, captured, transferred
-      const APPROVED_STATUSES = ['approved', 'captured', 'transferred']
-      
-      const missedTx = transactions.find((tx: any) => {
-        if (!APPROVED_STATUSES.includes(tx.status)) return false
-        let meta: any = {}
-        try {
-          const rawMeta = tx.metadata || tx.custom_metadata || {}
-          meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
-        } catch {}
-        return meta?.userId === sub && meta?.eventId === eventId
+    try {
+      const res = await handleConfirmedBooking(app, {
+        eventId,
+        userId: sub,
+        amount: tx.amount,
+        poolValidationStatus: meta.poolValidationStatus,
+        delegatedToId: meta.delegatedToId,
+        isAnonymous: !!meta.isAnonymous,
+        isNonParticipantDonation: !!meta.isNonParticipantDonation,
+        providerTransactionId: tx.id,
       })
-      
-      if (missedTx) {
-        let meta: any = {}
-        try {
-          const rawMeta = missedTx.metadata || missedTx.custom_metadata || {}
-          meta = typeof rawMeta === 'string' ? JSON.parse(rawMeta) : rawMeta
-        } catch {}
-        await handleConfirmedBooking(app, { eventId, userId: sub, amount: missedTx.amount, poolValidationStatus: meta.poolValidationStatus, delegatedToId: meta.delegatedToId })
-        return reply.send({ success: true, message: 'Paiement synchronisé' })
-      }
-      return reply.code(404).send({ error: 'Aucune transaction approuvée trouvée' })
+      return reply.send({ success: true, alreadyProcessed: !!(res as any)?.alreadyProcessed, message: 'Paiement synchronisé' })
     } catch (e: any) {
       app.log.error(e)
       return reply.code(500).send({ error: 'Erreur de synchronisation' })
@@ -257,6 +285,9 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 
   // DEV / SANDBOX : confirmer manuellement (simule le webhook)
   app.post('/dev/confirm-booking', { preHandler: [app.authenticate] }, async (req, reply) => {
+    // Clé LIVE = argent réel : cette route (confirmation SANS paiement) n'existe pas,
+    // quels que soient NODE_ENV et MOCK_PAYMENTS.
+    if (isFedapayLiveKey()) return reply.code(404).send()
     const isSandboxKey = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_')
     // Block in production UNLESS using sandbox keys (testing mode)
     if (process.env.NODE_ENV === 'production' && !isSandboxKey && process.env.MOCK_PAYMENTS !== 'true') return reply.code(404).send()
@@ -349,7 +380,62 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 }
 
 // ── Shared helper: finalize a confirmed booking or direct donation ────────────
-async function handleConfirmedBooking(
+type ConfirmArgs = {
+  eventId: string;
+  userId: string;
+  amount: number;
+  poolValidationStatus?: string;
+  delegatedToId?: string;
+  isAnonymous?: boolean;
+  /** true = don sans inscription, pas de Booking créé */
+  isNonParticipantDonation?: boolean;
+  /** Identifiant de la transaction FedaPay : garantit qu'elle n'est comptée QU'UNE fois */
+  providerTransactionId?: string;
+}
+
+/**
+ * Point d'entrée unique (webhook, sync-missed, dev/sandbox).
+ * Avec un providerTransactionId, la ligne Payment est RÉSERVÉE avant tout comptage :
+ * la contrainte unique fait échouer le 2e appel (même concurrent) → aucun double comptage.
+ */
+export async function handleConfirmedBooking(app: FastifyInstance, args: ConfirmArgs) {
+  if (!args.providerTransactionId) return processConfirmedBooking(app, args, null)
+
+  let claimId: string
+  try {
+    const claim = await app.prisma.payment.create({
+      data: {
+        userId: args.userId,
+        eventId: args.eventId,
+        amount: args.amount,
+        currency: 'XOF',
+        status: 'PENDING',
+        isAnonymous: !!args.isAnonymous,
+        providerTransactionId: args.providerTransactionId,
+        metadata: { source: 'fedapay', claimedAt: new Date().toISOString() },
+      },
+    })
+    claimId = claim.id
+  } catch (e: any) {
+    if (e?.code === 'P2002') {
+      app.log.info(`[FedaPay] Transaction ${args.providerTransactionId} déjà traitée — ignorée`)
+      return { alreadyProcessed: true as const }
+    }
+    throw e
+  }
+
+  const state = { committed: false }
+  try {
+    return await processConfirmedBooking(app, args, claimId, state)
+  } catch (e) {
+    // Échec AVANT le comptage : on libère la réservation pour permettre un nouvel essai.
+    // Échec APRÈS : l'argent est compté, la réservation reste (sinon double comptage au retry).
+    if (!state.committed) await app.prisma.payment.delete({ where: { id: claimId } }).catch(() => {})
+    throw e
+  }
+}
+
+async function processConfirmedBooking(
   app: FastifyInstance,
   {
     eventId,
@@ -359,16 +445,9 @@ async function handleConfirmedBooking(
     delegatedToId,
     isAnonymous = false,
     isNonParticipantDonation = false,
-  }: {
-    eventId: string;
-    userId: string;
-    amount: number;
-    poolValidationStatus?: string;
-    delegatedToId?: string;
-    isAnonymous?: boolean;
-    /** true = don sans inscription, pas de Booking créé */
-    isNonParticipantDonation?: boolean;
-  },
+  }: ConfirmArgs,
+  claimedPaymentId: string | null,
+  state: { committed: boolean } = { committed: false },
 ) {
   const existingBooking = await app.prisma.booking.findUnique({
     where: { userId_eventId: { userId, eventId } },
@@ -386,18 +465,23 @@ async function handleConfirmedBooking(
   if (isNonParticipantDonation) {
     // Pas de Booking créé. Pas de droit de vote/délégation.
     // On enregistre uniquement le Payment avec eventId direct.
-    const directPayment = await app.prisma.payment.create({
-      data: {
-        userId,
-        eventId,
-        bookingId: null,
-        amount,
-        currency: 'XOF',
-        status: 'SUCCEEDED',
-        isAnonymous,
-        metadata: { source: 'direct_donation' },
-      }
-    })
+    const directPayment = claimedPaymentId
+      ? await app.prisma.payment.update({
+          where: { id: claimedPaymentId },
+          data: { bookingId: null, status: 'SUCCEEDED', isAnonymous, metadata: { source: 'direct_donation' } },
+        })
+      : await app.prisma.payment.create({
+          data: {
+            userId,
+            eventId,
+            bookingId: null,
+            amount,
+            currency: 'XOF',
+            status: 'SUCCEEDED',
+            isAnonymous,
+            metadata: { source: 'direct_donation' },
+          }
+        })
 
     // Incrémenter poolCollected sur l'événement
     if (isPoolContribution) {
@@ -406,6 +490,7 @@ async function handleConfirmedBooking(
         data: { poolCollected: { increment: amount } },
       })
     }
+    state.committed = true
 
     // Notification au donateur
     const event = await app.prisma.event.findUnique({ where: { id: eventId }, select: { title: true, creatorId: true } })
@@ -478,19 +563,27 @@ async function handleConfirmedBooking(
   ])
   // Le premier élément est toujours le booking (upsert)
   const booking = transactionResults[0] as Awaited<ReturnType<typeof app.prisma.booking.upsert>>
+  state.committed = true
 
   // Enregistrement du Payment avec eventId et isAnonymous (hors transaction pour éviter la self-référence)
-  await app.prisma.payment.create({
-    data: {
-      userId,
-      eventId,
-      bookingId: booking.id,
-      amount,
-      currency: 'XOF',
-      status: 'SUCCEEDED',
-      isAnonymous,
-    }
-  })
+  if (claimedPaymentId) {
+    await app.prisma.payment.update({
+      where: { id: claimedPaymentId },
+      data: { bookingId: booking.id, status: 'SUCCEEDED', isAnonymous },
+    })
+  } else {
+    await app.prisma.payment.create({
+      data: {
+        userId,
+        eventId,
+        bookingId: booking.id,
+        amount,
+        currency: 'XOF',
+        status: 'SUCCEEDED',
+        isAnonymous,
+      }
+    })
+  }
 
 
   // ── Badge logic after confirmed pool contribution ─────────────────────────

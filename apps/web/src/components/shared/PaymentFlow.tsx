@@ -43,7 +43,7 @@ export interface PaymentFlowProps {
     description?: string;
   }>;
   onDevConfirm: (amount: number) => Promise<void>;
-  onSuccess: (amount: number, isSandbox?: boolean) => void;
+  onSuccess: (amount: number, isSandbox?: boolean, transactionId?: string | number) => void;
   successScreen?: React.ReactNode;
   onBack?: () => void;
 }
@@ -179,7 +179,7 @@ export function PaymentFlow({
               } else {
                 // Wait for onSuccess to complete (which includes DB sync delays) before showing success screen
                 setStatus('loading')
-                Promise.resolve(onSuccess(finalAmount, data.isSandbox))
+                Promise.resolve(onSuccess(finalAmount, data.isSandbox, data.transactionId))
                   .then(() => setStatus('success'))
                   .catch(() => {
                     toast.error(t('payment.errors.syncRefresh'))

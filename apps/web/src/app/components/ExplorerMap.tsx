@@ -9,7 +9,8 @@ import { format } from 'date-fns'
 import { Geolocation } from '@capacitor/geolocation'
 import { useMap } from 'react-leaflet'
 
-import { dateLocale } from '@/lib/locale'
+import { dateLocale, currentLang } from '@/lib/locale'
+import i18n from '@/lib/i18n'
 // Composant utilitaire pour récupérer l'instance de la carte
 function MapAccessor({ onMap }: { onMap: (map: L.Map) => void }) {
   const map = useMap()
@@ -25,6 +26,8 @@ interface ExplorerMapProps {
   onNavigate: (screen: string, id?: string) => void
   onSwitchToList?: () => void
   searchTarget?: { lat: number; lon: number; label: string } | null
+  /** Lieu choisi dans « Où allez-vous ? » : la caméra s'y envole (flyTo) */
+  flyTarget?: { lat: number; lon: number; zoom: number; key: string } | null
 }
 
 /** Cluster events by proximity */
@@ -73,35 +76,38 @@ function clusterEvents(events: Event[], zoom: number): Array<{
   return clusters
 }
 
+/** « N OUTSTERS » — nom de marque, jamais traduit (seul l'accord varie) */
+const outsters = (n?: number) => i18n.t('explorerMap.outsters', { count: n || 0 })
+
 /** Format label sub-line based on event status & date */
 function getEventSubLabel(ev: Event): string {
   const now = new Date()
-  if (!ev.startAt) return `${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
+  if (!ev.startAt) return outsters(ev.currentAttendees)
 
   const start = new Date(ev.startAt)
   const end = (ev as any).endAt ? new Date((ev as any).endAt) : null
 
   // En cours
   if (start <= now && (!end || end >= now)) {
-    return `En cours • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
+    return `${i18n.t('explorerMap.ongoing')} • ${outsters(ev.currentAttendees)}`
   }
 
   // Today
   if (start.toDateString() === now.toDateString()) {
-    const time = format(start, "HH'h'mm", { locale: dateLocale() })
-    return `Aujourd'hui à ${time} • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
+    const time = format(start, currentLang() === 'fr' ? "HH'h'mm" : 'p', { locale: dateLocale() })
+    return `${i18n.t('explorerMap.todayAt', { time })} • ${outsters(ev.currentAttendees)}`
   }
 
   // Tomorrow
   const tomorrow = new Date(now)
   tomorrow.setDate(now.getDate() + 1)
   if (start.toDateString() === tomorrow.toDateString()) {
-    return `Demain • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
+    return `${i18n.t('explorerMap.tomorrow')} • ${outsters(ev.currentAttendees)}`
   }
 
   // Next monday or specific day
   const dayStr = format(start, 'dd MMM', { locale: dateLocale() })
-  return `${dayStr} • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
+  return `${dayStr} • ${outsters(ev.currentAttendees)}`
 }
 
 /** Custom orange pin icon with label bubble */
@@ -133,7 +139,7 @@ function makePinIcon(events: Event[], isSelected: boolean) {
             box-shadow: 0 2px 10px rgba(0,0,0,0.12);
             white-space: nowrap;
           ">
-            <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 12px; color: #111827;">${count} événements</span>
+            <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 12px; color: #111827;">${i18n.t('explorerMap.eventsCount', { count })}</span>
           </div>
           <svg width="23" height="32" viewBox="0 0 23 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <g clip-path="url(#clip0_889_3402)">
@@ -155,9 +161,10 @@ function makePinIcon(events: Event[], isSelected: boolean) {
 
   // Single event pin with label
   const ev = events[0]
-  const title = (ev.title || 'Événement').slice(0, 24) + (ev.title?.length > 24 ? '…' : '')
+  const title = (ev.title || i18n.t('common.event')).slice(0, 24) + (ev.title?.length > 24 ? '…' : '')
   const subLabel = getEventSubLabel(ev)
-  const isOngoing = subLabel.startsWith('En cours')
+  const ongoingLabel = i18n.t('explorerMap.ongoing')
+  const isOngoing = subLabel.startsWith(ongoingLabel)
 
   return L.divIcon({
     className: '',
@@ -181,7 +188,7 @@ function makePinIcon(events: Event[], isSelected: boolean) {
           border: ${isSelected ? '1.5px solid #FF7A00' : '1px solid rgba(0,0,0,0.06)'};
         ">
           <div style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${title}</div>
-          <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: ${isOngoing ? '#FF7A00' : '#6B7280'}; white-space: nowrap; margin-top: 1px;">${isOngoing ? '<span style="color:#FF7A00">En cours</span>' + subLabel.slice(8) : subLabel}</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 11px; color: ${isOngoing ? '#FF7A00' : '#6B7280'}; white-space: nowrap; margin-top: 1px;">${isOngoing ? `<span style="color:#FF7A00">{ongoingLabel}</span>` + subLabel.slice(ongoingLabel.length) : subLabel}</div>
         </div>
         <svg width="23" height="32" viewBox="0 0 23 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <g clip-path="url(#clip0_889_3402)">
@@ -231,6 +238,7 @@ export default function ExplorerMap({
   onNavigate,
   onSwitchToList,
   searchTarget,
+  flyTarget,
 }: ExplorerMapProps) {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [zoom, setZoom] = useState(13)
@@ -243,6 +251,13 @@ export default function ExplorerMap({
       mapRef.flyTo([searchTarget.lat, searchTarget.lon], 16, { duration: 0.8 })
     }
   }, [searchTarget, mapRef])
+
+  // Lieu choisi (ville / région / pays, partout dans le monde) : vol fluide de la caméra
+  useEffect(() => {
+    if (flyTarget && mapRef) {
+      mapRef.flyTo([flyTarget.lat, flyTarget.lon], flyTarget.zoom, { duration: 1.0 })
+    }
+  }, [flyTarget?.key, mapRef]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGeolocateReal = async () => {
     if (!mapRef) return
@@ -298,7 +313,6 @@ export default function ExplorerMap({
     <div className="absolute inset-0 z-0">
       {/* ── Map ── */}
       <MapContainer
-        key={`${mapCenter[0]}-${mapCenter[1]}`}
         center={mapCenter}
         zoom={zoom}
         style={{ width: '100%', height: '100%' }}

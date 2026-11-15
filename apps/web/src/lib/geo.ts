@@ -179,6 +179,80 @@ export async function searchPlaces(
   return results
 }
 
+// ---------- Recherche mondiale de villes / pays (sélecteur « Où allez-vous ? ») ----------
+export interface CityPlace {
+  /** Nom court (ville ou pays) */
+  name: string
+  country: string
+  /** « Abidjan, Côte d'Ivoire » */
+  label: string
+  lat: number
+  lon: number
+  kind: 'city' | 'region' | 'country'
+}
+
+/** Langue des résultats : Photon ne gère que fr/en/de/it (sinon noms locaux). */
+function geoLang(lang: string): string {
+  return ['fr', 'en', 'de', 'it'].includes(lang) ? lang : 'default'
+}
+
+async function _photonCities(q: string, lang: string, limit: number): Promise<CityPlace[]> {
+  const layers = ['city', 'state', 'country'].map((l) => `&layer=${l}`).join('')
+  const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=${limit}&lang=${geoLang(lang)}${layers}`)
+  const data = await r.json()
+  return ((data.features || []) as any[]).map((f) => {
+    const p = f.properties || {}
+    const type = p.type || ''
+    const kind: CityPlace['kind'] = type === 'country' ? 'country' : type === 'state' ? 'region' : 'city'
+    const name = p.name || p.city || ''
+    const country = kind === 'country' ? '' : (p.country || '')
+    return { name, country, label: [name, country].filter(Boolean).join(', '), lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], kind }
+  }).filter((x) => x.name)
+}
+
+async function _nominatimCities(q: string, lang: string, limit: number): Promise<CityPlace[]> {
+  const r = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=${limit}&addressdetails=1`,
+    { headers: { 'Accept-Language': `${lang},en` } },
+  )
+  const data = await r.json()
+  const CITY = ['city', 'town', 'village', 'municipality', 'hamlet', 'suburb']
+  return ((Array.isArray(data) ? data : []) as any[])
+    .filter((d) => CITY.includes(d.addresstype) || ['country', 'state', 'region'].includes(d.addresstype))
+    .map((d) => {
+      const a = d.address || {}
+      const kind: CityPlace['kind'] = d.addresstype === 'country' ? 'country' : CITY.includes(d.addresstype) ? 'city' : 'region'
+      const name = d.name || d.display_name.split(',')[0]
+      const country = kind === 'country' ? '' : (a.country || '')
+      return { name, country, label: [name, country].filter(Boolean).join(', '), lat: parseFloat(d.lat), lon: parseFloat(d.lon), kind }
+    })
+}
+
+/**
+ * Villes, régions et pays du monde entier (Photon, repli Nominatim).
+ * Ne lève jamais d'erreur : renvoie [] en cas d'échec réseau.
+ */
+export async function searchCitiesWorld(q: string, lang = 'fr', limit = 6): Promise<CityPlace[]> {
+  const query = q.trim()
+  if (query.length < 2) return []
+  const dedupe = (list: CityPlace[]) => {
+    const seen = new Set<string>()
+    return list.filter((p) => { const k = p.label.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true })
+  }
+  try {
+    const res = await _photonCities(query, lang, limit)
+    if (res.length) return dedupe(res)
+  } catch (e) {
+    console.warn('[geo] Photon cities error:', e)
+  }
+  try {
+    return dedupe(await _nominatimCities(query, lang, limit))
+  } catch (e) {
+    console.warn('[geo] Nominatim cities error:', e)
+    return []
+  }
+}
+
 /**
  * Search for city/town names specifically (for the city picker).
  */

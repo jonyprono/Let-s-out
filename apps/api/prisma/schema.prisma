@@ -490,6 +490,9 @@ model Payment {
   userId          String
   bookingId       String?
   stripePaymentId String?       @unique
+  /// Identifiant de la transaction chez le prestataire (FedaPay). Unique :
+  /// une transaction ne peut être comptée qu'une seule fois (webhook / sync-missed).
+  providerTransactionId String? @unique
   amount          Float
   currency        String        @default("EUR")
   status          PaymentStatus @default(PENDING)

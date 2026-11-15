@@ -86,7 +86,7 @@ export function PaymentPage() {
     await apiClient.post('/payments/dev/confirm-booking', payload)
   }
 
-  const handleSuccess = async (amount: number, isSandbox?: boolean) => {
+  const handleSuccess = async (amount: number, isSandbox?: boolean, transactionId?: string | number) => {
     setResolvedAmount(amount)
     // Apply optimistic update immediately so UI reflects change
     if (isContribution && eventId) {
@@ -105,7 +105,7 @@ export function PaymentPage() {
         }
       } else {
         try {
-          await apiClient.post('/payments/sync-missed', { eventId })
+          await apiClient.post('/payments/sync-missed', { eventId, transactionId })
         } catch (syncErr) {
           console.warn('sync-missed failed', syncErr)
           throw new Error(t('payment.errors.syncFailed'))
