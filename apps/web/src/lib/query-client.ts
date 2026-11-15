@@ -35,6 +35,19 @@ const CACHE_MAX_AGE_MS = 1000 * 60 * 60 * 24 // 24 hours
 const skipCacheKeys = ['auth', 'notifications', 'conversations', 'chat', 'wallet']
 const shouldPersist = (keyStr: string) => !skipCacheKeys.some(k => keyStr.includes(k))
 
+/**
+ * Listes paginées (useInfiniteQuery) : on ne persiste que la 1re page. Elle suffit
+ * pour un affichage instantané au redémarrage et évite de sérialiser tout le fil
+ * déjà parcouru (la cause principale des sauvegardes lourdes).
+ */
+function trimInfiniteData(data: unknown): unknown {
+  const d = data as { pages?: unknown[]; pageParams?: unknown[] } | null
+  if (d && Array.isArray(d.pages) && Array.isArray(d.pageParams) && d.pages.length > 1) {
+    return { pages: d.pages.slice(0, 1), pageParams: d.pageParams.slice(0, 1) }
+  }
+  return data
+}
+
 /** Save current query cache to localStorage (called on query success) */
 export function saveQueryCache() {
   try {
@@ -45,7 +58,7 @@ export function saveQueryCache() {
       })
       .map(q => ({
         queryKey: q.queryKey,
-        data: q.state.data,
+        data: trimInfiniteData(q.state.data),
         dataUpdatedAt: q.state.dataUpdatedAt,
       }))
 
@@ -93,15 +106,41 @@ export function restoreQueryCache() {
 }
 
 // ── Auto-save subscriber ───────────────────────────────────────────────────
-// Saves cache to localStorage 2s after any successful query, throttled.
+// La sérialisation + localStorage.setItem sont synchrones : lancées pendant un
+// défilement, elles provoquaient des micro-gels. On sauvegarde donc :
+//  - après une période calme (SAVE_DEBOUNCE_MS sans nouvelle requête réussie),
+//  - pendant un moment d'inactivité du navigateur (requestIdleCallback si dispo),
+//  - et immédiatement quand l'app passe en arrière-plan (rien n'est perdu).
+const SAVE_DEBOUNCE_MS = 5000
+const IDLE_TIMEOUT_MS = 3000
 let saveTimer: ReturnType<typeof setTimeout> | null = null
+let dirty = false
+
+type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number }
+
+function flushIfDirty() {
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null }
+  if (!dirty) return
+  dirty = false
+  saveQueryCache()
+}
+
+function scheduleSave() {
+  dirty = true
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    const w = window as IdleWindow
+    if (typeof w.requestIdleCallback === 'function') w.requestIdleCallback(flushIfDirty, { timeout: IDLE_TIMEOUT_MS })
+    else flushIfDirty()
+  }, SAVE_DEBOUNCE_MS)
+}
 
 queryClient.getQueryCache().subscribe((event) => {
-  if (event.type === 'updated' && event.query.state.status === 'success') {
-    if (saveTimer) clearTimeout(saveTimer)
-    saveTimer = setTimeout(() => {
-      saveQueryCache()
-      saveTimer = null
-    }, 2000)
-  }
+  if (event.type === 'updated' && event.query.state.status === 'success') scheduleSave()
 })
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushIfDirty() })
+  window.addEventListener('pagehide', flushIfDirty)
+}

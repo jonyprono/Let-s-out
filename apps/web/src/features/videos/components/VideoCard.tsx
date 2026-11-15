@@ -2,6 +2,7 @@ import { Play } from 'lucide-react'
 import { EventVideo, formatDuration } from '@/features/videos/api'
 import { useRef, useCallback } from 'react'
 import { getVideoPosterUrl } from '../utils/video-url'
+import { optimizeImageUrl } from '@/lib/cloudinary-image'
 
 interface VideoCardProps {
   video: EventVideo
@@ -61,8 +62,9 @@ export function VideoCard({ video, onClick, onLongPress, size = 'md' }: VideoCar
       <div className={`relative w-full ${isSmall ? 'h-[200px]' : 'aspect-video'}`}>
         {getVideoPosterUrl(video) ? (
           <img
-            src={getVideoPosterUrl(video)}
+            src={optimizeImageUrl(getVideoPosterUrl(video), isSmall ? 140 : 480)}
             alt={video.title}
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
@@ -100,8 +102,10 @@ export function VideoCard({ video, onClick, onLongPress, size = 'md' }: VideoCar
           <div className="flex items-center gap-2 mt-1.5">
             {video.user.profile?.avatarUrl ? (
               <img
-                src={video.user.profile.avatarUrl}
+                src={optimizeImageUrl(video.user.profile.avatarUrl, 16)}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="w-4 h-4 rounded-full object-cover"
               />
             ) : (

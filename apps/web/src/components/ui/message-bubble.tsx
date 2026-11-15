@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { optimizeImageUrl } from "@/lib/cloudinary-image"
 
 export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement> {
   content?: string;
@@ -105,8 +106,10 @@ export function MessageBubble({
           {showAvatar && (
             avatarUrl ? (
               <img
-                src={avatarUrl}
+                src={optimizeImageUrl(avatarUrl, 32)}
                 alt="avatar"
+                loading="lazy"
+                decoding="async"
                 className={cn("h-8 w-8 rounded-full object-cover", onAvatarClick && "cursor-pointer active:opacity-75")}
                 onClick={onAvatarClick}
               />
@@ -136,8 +139,10 @@ export function MessageBubble({
               </div>
             )}
             <img 
-              src={imageUrl} 
-              alt="attachment" 
+              src={optimizeImageUrl(imageUrl, 320)}
+              alt="attachment"
+              loading="lazy"
+              decoding="async"
               className={cn("max-h-[200px] w-auto object-cover transition-opacity", onImageClick && "cursor-pointer hover:opacity-90 active:opacity-75", status === 'sending' && "opacity-60 grayscale-[30%]")} 
               onClick={(e) => {
                 if (onImageClick) {
@@ -216,8 +221,10 @@ export function MessageBubble({
           {showAvatar && (
             avatarUrl ? (
               <img
-                src={avatarUrl}
+                src={optimizeImageUrl(avatarUrl, 32)}
                 alt="avatar"
+                loading="lazy"
+                decoding="async"
                 className={cn("h-8 w-8 rounded-full object-cover", onAvatarClick && "cursor-pointer active:opacity-75")}
                 onClick={onAvatarClick}
               />

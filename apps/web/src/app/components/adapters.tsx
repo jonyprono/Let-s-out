@@ -10,7 +10,7 @@ import {
 } from '@/stores/signup-intro.store'
 
 // ── Page loader (shown between route transitions while lazy chunks download) ──
-function PageLoader() {
+export function PageLoader() {
   return (
     <div
       className="w-full h-full flex flex-col items-center justify-center gap-3"

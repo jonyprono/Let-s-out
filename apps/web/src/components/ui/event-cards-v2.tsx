@@ -3,6 +3,7 @@ import { fr } from 'date-fns/locale'
 import { useState, useRef } from 'react'
 import { Share2, MessageCircle, Star, Heart } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { optimizeImageUrl } from '@/lib/cloudinary-image'
 import { Event } from '@/features/events/api'
 import { useFavoritesStore } from '@/stores/favorites.store'
 import { ShareModal } from '@/components/shared/ShareModal'
@@ -41,7 +42,7 @@ function AttendeesRow({ attendees, count, size = 24 }: {
             }}
           >
             {a.avatarUrl ? (
-              <img src={a.avatarUrl} alt={a.displayName || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={optimizeImageUrl(a.avatarUrl, size)} alt={a.displayName || ''} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               <div style={{ width: '100%', height: '100%', background: '#FF7A00', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: size * 0.38, fontWeight: 700 }}>
                 {(a.displayName || '?').charAt(0).toUpperCase()}
@@ -286,6 +287,7 @@ export function FeaturedEventCard({
       <SafeImage
         src={event.coverUrl ?? undefined}
         alt={event.title}
+        displayWidth={290}
         className="absolute inset-0 w-full h-full object-cover"
         fallback={
           <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
@@ -303,13 +305,13 @@ export function FeaturedEventCard({
         <div className="flex items-center gap-2 pointer-events-auto">
           <button
             onClick={e => { e.stopPropagation(); setShowShareModal(true); }}
-            className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full bg-black/55 flex items-center justify-center active:scale-95 transition-transform"
           >
             <Share2 className="w-4 h-4 text-white" />
           </button>
           <button
             onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
-            className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform"
+            className="w-8 h-8 rounded-full bg-black/55 flex items-center justify-center active:scale-95 transition-transform"
           >
             <Star className="w-4 h-4" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} />
           </button>
@@ -341,7 +343,7 @@ export function FeaturedEventCard({
             size={24}
           />
           {((event as any)._count?.comments ?? 0) > 0 && (
-            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-white/90 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 text-[12px] font-semibold text-white/90 bg-black/45 px-2 py-1 rounded-full">
               <MessageCircle className="w-3.5 h-3.5 text-white/90" />
               <span>{(event as any)._count?.comments}</span>
             </div>
@@ -409,13 +411,13 @@ export function SquareEventCard({
         <div className="flex items-center gap-1.5 pointer-events-auto">
           <button
             onClick={e => { e.stopPropagation(); setShowShareModal(true); }}
-            className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95"
+            className="w-7 h-7 rounded-full bg-black/55 flex items-center justify-center active:scale-95"
           >
             <Share2 className="w-3.5 h-3.5 text-white" />
           </button>
           <button
             onClick={e => { e.stopPropagation(); onSaveToggle?.(); }}
-            className="w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95"
+            className="w-7 h-7 rounded-full bg-black/55 flex items-center justify-center active:scale-95"
           >
             <Star className="w-4 h-4" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : 'white'} />
           </button>
@@ -441,7 +443,7 @@ export function SquareEventCard({
           <AttendeesRow attendees={attendeesList} count={event.currentAttendees} size={20} />
           <div className="flex items-center gap-2">
             {((event as any)._count?.comments ?? 0) > 0 && (
-              <div className="flex items-center gap-1 text-[10px] font-semibold text-white/90 bg-black/30 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+              <div className="flex items-center gap-1 text-[10px] font-semibold text-white/90 bg-black/45 px-1.5 py-0.5 rounded-full">
                 <MessageCircle className="w-3 h-3 text-white/90" />
                 <span>{(event as any)._count?.comments}</span>
               </div>
@@ -526,12 +528,12 @@ export function RowEventCard({
           {/* Bottom-left: Status Badge */}
           {!isCompact && (
             isUpcoming ? (
-              <div className="absolute bottom-3 left-2 right-2 bg-black/45 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
+              <div className="absolute bottom-3 left-2 right-2 bg-black/60 rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
                 <div className="w-2 h-2 rounded-full bg-[#FF7A00] shrink-0" />
                 <span className="text-white text-[9px] font-semibold tracking-wide truncate">Événement à venir</span>
               </div>
             ) : (
-              <div className="absolute bottom-3 left-2 right-2 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
+              <div className="absolute bottom-3 left-2 right-2 bg-black/70 rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
                 <div className="w-2 h-2 rounded-full bg-gray-400 shrink-0" />
                 <span className="text-gray-200 text-[9px] font-semibold tracking-wide truncate">Événement terminé</span>
               </div>

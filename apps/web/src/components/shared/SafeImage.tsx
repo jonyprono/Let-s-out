@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { optimizeImageUrl, cssWidthFromClassName } from '@/lib/cloudinary-image'
 
 const API_BASE = (() => {
   const envUrl = import.meta.env.VITE_API_URL as string | undefined
@@ -32,6 +33,11 @@ interface SafeImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>,
   priority?: boolean
   /** Appended as query param to bust cache after profile updates */
   cacheKey?: string | number | null
+  /**
+   * Largeur d'affichage en px CSS, pour demander à Cloudinary une image à la bonne taille.
+   * Si absente, déduite des classes Tailwind (w-10, w-[44px]…), sinon palier max.
+   */
+  displayWidth?: number
 }
 
 function resolveImageSrc(src: string): string {
@@ -49,7 +55,7 @@ function resolveImageSrc(src: string): string {
   return finalSrc
 }
 
-export function SafeImage({ src, alt, className, fallback, onError, onLoad, style, priority, cacheKey, ...rest }: SafeImageProps) {
+export function SafeImage({ src, alt, className, fallback, onError, onLoad, style, priority, cacheKey, displayWidth, ...rest }: SafeImageProps) {
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
@@ -84,7 +90,7 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
     )
   }
 
-  let resolvedSrc = resolveImageSrc(src)
+  let resolvedSrc = optimizeImageUrl(resolveImageSrc(src), displayWidth ?? cssWidthFromClassName(className))
   if (cacheKey != null && cacheKey !== '' && !resolvedSrc.includes('res.cloudinary.com')) {
     const sep = resolvedSrc.includes('?') ? '&' : '?'
     resolvedSrc = `${resolvedSrc}${sep}v=${cacheKey}`
@@ -108,8 +114,10 @@ export function SafeImage({ src, alt, className, fallback, onError, onLoad, styl
         src={resolvedSrc}
         alt={alt}
         className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-        loading={priority ? 'eager' : (rest.loading ?? 'eager')}
-        decoding={priority ? 'sync' : (rest.decoding ?? 'auto')}
+        // Chargement différé + décodage hors fil principal par défaut ; `priority`
+        // (images au-dessus de la ligne de flottaison) garde le chargement immédiat.
+        loading={priority ? 'eager' : (rest.loading ?? 'lazy')}
+        decoding={priority ? 'sync' : (rest.decoding ?? 'async')}
         fetchPriority={priority ? 'high' : 'auto'}
         onLoad={(e) => {
           setLoaded(true)

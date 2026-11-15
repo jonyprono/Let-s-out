@@ -10,6 +10,7 @@ import { useConversationMessages, useConversation, chatApi, useSendMessage, useC
 import { eventsApi } from '@/features/events/api'
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { optimizeImageUrl } from '@/lib/cloudinary-image'
 import { ShareModal } from '@/components/shared/ShareModal'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { apiClient } from '@/lib/api-client'
@@ -904,8 +905,10 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                       {/* Avatar */}
                       {eventSenderAvatar ? (
                         <img
-                          src={eventSenderAvatar}
+                          src={optimizeImageUrl(eventSenderAvatar, 28)}
                           alt={eventSenderName ?? ''}
+                          loading="lazy"
+                          decoding="async"
                           className="w-7 h-7 rounded-full object-cover flex-shrink-0 self-end"
                           onClick={() => eventSenderName && openProfile(msg.senderId, eventSenderName, eventSenderAvatar)}
                         />
@@ -935,7 +938,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                         >
                           {eventShare.coverUrl ? (
                             <div className="relative w-full h-32">
-                              <img src={eventShare.coverUrl} alt={eventShare.title} className="w-full h-full object-cover" />
+                              <img src={optimizeImageUrl(eventShare.coverUrl, 270)} alt={eventShare.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                               <div className="absolute bottom-2 left-3 right-3">
                                 <p className="text-white font-bold text-[14px] drop-shadow truncate">{eventShare.title}</p>

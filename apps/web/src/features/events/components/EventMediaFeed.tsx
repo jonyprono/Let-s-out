@@ -4,6 +4,7 @@ import { Play } from 'lucide-react';
 import { videosApi } from '@/features/videos/api';
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal';
 import { getVideoPosterUrl } from '@/features/videos/utils/video-url';
+import { optimizeImageUrl } from '@/lib/cloudinary-image';
 
 export function EventMediaFeed() {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -79,7 +80,7 @@ export function EventMediaFeed() {
                   (mesuré : 2 s lues en 20 s depuis l'accueil, contre 19 s depuis /videos). */}
               {getVideoPosterUrl(media) ? (
                 <img
-                  src={getVideoPosterUrl(media)}
+                  src={optimizeImageUrl(getVideoPosterUrl(media), 140)}
                   alt=""
                   loading="lazy"
                   decoding="async"
@@ -98,7 +99,7 @@ export function EventMediaFeed() {
             <div className="absolute bottom-2 left-2 right-2 flex items-center gap-1.5">
               <div className="w-6 h-6 rounded-full overflow-hidden border border-white/50 bg-gray-500 shrink-0">
                 {media.user.profile?.avatarUrl ? (
-                  <img src={media.user.profile.avatarUrl} alt="" className="w-full h-full object-cover" />
+                  <img src={optimizeImageUrl(media.user.profile.avatarUrl, 24)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-white">
                     {media.user.profile?.displayName?.[0]?.toUpperCase()}

@@ -61,13 +61,46 @@ import { queryClient } from '@/lib/query-client'
 import { useAuthStore } from '@/stores/auth.store'
 import { AppLayout } from '@/app/layouts/AppLayout'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
-import { PrivacyPolicy } from '@/app/components/PrivacyPolicy'
-import { TermsOfService } from '@/app/components/TermsOfService'
-import { LandingPage } from '@/app/components/LandingPage'
-import HelpSupport from './components/HelpSupport'
 import { SmartAppBanner } from '@/components/shared/SmartAppBanner'
-import { OutRadar } from '@/features/radar/components/OutRadar'
 import { initializePushNotifications } from '@/lib/push-notifications'
+import { lazyRoute } from '@/app/components/lazy-route'
+
+// ── Écrans chargés à la demande (hors bundle de démarrage) ──────────────────
+const PrivacyPolicy = lazyRoute(() => import('@/app/components/PrivacyPolicy').then(m => m.PrivacyPolicy))
+const TermsOfService = lazyRoute(() => import('@/app/components/TermsOfService').then(m => m.TermsOfService))
+const LandingPage = lazyRoute(() => import('@/app/components/LandingPage').then(m => m.LandingPage))
+const HelpSupport = lazyRoute(() => import('./components/HelpSupport').then(m => m.default))
+const OutRadar = lazyRoute(() => import('@/features/radar/components/OutRadar').then(m => m.OutRadar))
+const EventValidatorsVote = lazyRoute(() => import('@/app/pages/EventValidatorsVote').then(m => m.EventValidatorsVote))
+const TicketScanner = lazyRoute(() => import('@/features/events/components/TicketScanner').then(m => m.TicketScanner))
+const EventPoolValidation = lazyRoute(() => import('./components/EventPoolValidation').then(m => m.EventPoolValidation))
+const PayoutRequestScreen = lazyRoute(() => import('./components/PayoutRequestScreen').then(m => m.PayoutRequestScreen))
+const PayoutApprovalScreen = lazyRoute(() => import('./components/PayoutApprovalScreen').then(m => m.PayoutApprovalScreen))
+const EventCommentsPage = lazyRoute(() => import('@/app/pages/EventCommentsPage').then(m => m.EventCommentsPage))
+const VideosPage = lazyRoute(() => import('@/app/pages/VideosPage').then(m => m.VideosPage))
+// Pages
+const CreatePage = lazyRoute(() => import('@/features/pages/components/CreatePage').then(m => m.CreatePage))
+const PageView = lazyRoute(() => import('@/features/pages/components/PageView').then(m => m.PageView))
+const ManagePage = lazyRoute(() => import('@/features/pages/components/ManagePage').then(m => m.ManagePage))
+const PagesHub = lazyRoute(() => import('@/features/pages/components/PagesHub').then(m => m.PagesHub))
+const MyPagesHub = lazyRoute(() => import('@/features/pages/components/MyPagesHub').then(m => m.MyPagesHub))
+// Administration
+const AdminLayout = lazyRoute(() => import('@/app/layouts/AdminLayout').then(m => m.AdminLayout))
+const AdminLoginPage = lazyRoute(() => import('@/app/components/admin/AdminLoginPage').then(m => m.AdminLoginPage))
+const AdminResetPasswordPage = lazyRoute(() => import('@/app/components/admin/AdminResetPasswordPage').then(m => m.AdminResetPasswordPage))
+const AdminDashboardPage = lazyRoute(() => import('@/app/components/admin/AdminDashboardPage').then(m => m.AdminDashboardPage))
+const AdminKycListPage = lazyRoute(() => import('@/app/components/admin/AdminKycListPage').then(m => m.AdminKycListPage))
+const AdminKycDetailPage = lazyRoute(() => import('@/app/components/admin/AdminKycDetailPage').then(m => m.AdminKycDetailPage))
+const AdminAdminsPage = lazyRoute(() => import('@/app/components/admin/AdminAdminsPage').then(m => m.AdminAdminsPage))
+const AdminSupportChats = lazyRoute(() => import('./components/admin/AdminSupportChats').then(m => m.AdminSupportChats))
+const AdminBotPrompts = lazyRoute(() => import('./components/admin/AdminBotPrompts').then(m => m.AdminBotPrompts))
+const AdminAuditLogsPage = lazyRoute(() => import('./components/admin/AdminAuditLogsPage').then(m => m.AdminAuditLogsPage))
+const AdminPayoutsPage = lazyRoute(() => import('./components/admin/AdminPayoutsPage').then(m => m.AdminPayoutsPage))
+const AdminFeatureFlagsPage = lazyRoute(() => import('./components/admin/AdminFeatureFlagsPage').then(m => m.default))
+const AdminBadgesPage = lazyRoute(() => import('./components/admin/AdminBadgesPage').then(m => m.AdminBadgesPage))
+const AdminSettingsPage = lazyRoute(() => import('./components/admin/AdminSettingsPage').then(m => m.default))
+const AdminUsersPage = lazyRoute(() => import('./components/admin/AdminUsersPage').then(m => m.default))
+const AdminEventsPage = lazyRoute(() => import('./components/admin/AdminEventsPage').then(m => m.default))
 
 // All screens via adapter bridge (prop-based → React Router)
 import {
@@ -100,39 +133,11 @@ import {
   AccountMenu,
   BadgesPage,
 } from '@/app/components/adapters'
-import { EventValidatorsVote } from '@/app/pages/EventValidatorsVote'
-import { TicketScanner } from '@/features/events/components/TicketScanner'
 import { AppBootstrap } from '@/app/components/AppBootstrap'
 import { UserProfileProvider } from '@/features/users/UserProfileContext'
 import { ConfirmProvider } from '@/components/shared/ConfirmContext'
 import { CallOverlay } from '@/features/chat/components/CallOverlay'
-import { AdminLayout } from '@/app/layouts/AdminLayout'
 import { AdminRoute } from '@/app/components/admin/AdminRoute'
-import { AdminLoginPage } from '@/app/components/admin/AdminLoginPage'
-import { AdminDashboardPage } from '@/app/components/admin/AdminDashboardPage'
-import { AdminKycListPage } from '@/app/components/admin/AdminKycListPage'
-import { AdminKycDetailPage } from '@/app/components/admin/AdminKycDetailPage'
-import { AdminAdminsPage } from '@/app/components/admin/AdminAdminsPage'
-import { AdminSupportChats } from './components/admin/AdminSupportChats'
-import { AdminBotPrompts } from './components/admin/AdminBotPrompts'
-import { AdminAuditLogsPage } from './components/admin/AdminAuditLogsPage'
-import { AdminPayoutsPage } from './components/admin/AdminPayoutsPage'
-import { EventPoolValidation } from './components/EventPoolValidation';
-import { PayoutRequestScreen } from './components/PayoutRequestScreen';
-import { PayoutApprovalScreen } from './components/PayoutApprovalScreen';
-import { AdminResetPasswordPage } from '@/app/components/admin/AdminResetPasswordPage'
-import AdminFeatureFlagsPage from './components/admin/AdminFeatureFlagsPage'
-import { AdminBadgesPage } from './components/admin/AdminBadgesPage'
-import AdminSettingsPage from './components/admin/AdminSettingsPage'
-import AdminUsersPage from './components/admin/AdminUsersPage'
-import AdminEventsPage from './components/admin/AdminEventsPage'
-import { EventCommentsPage } from '@/app/pages/EventCommentsPage'
-import { VideosPage } from '@/app/pages/VideosPage'
-import { CreatePage } from '@/features/pages/components/CreatePage'
-import { PageView } from '@/features/pages/components/PageView'
-import { ManagePage } from '@/features/pages/components/ManagePage'
-import { PagesHub } from '@/features/pages/components/PagesHub'
-import { MyPagesHub } from '@/features/pages/components/MyPagesHub'
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)

@@ -54,6 +54,9 @@ export default defineConfig({
           'react-vendor': ['react', 'react-dom'],
           'router': ['react-router'],
           'ui-vendor': ['lucide-react', 'sonner'],
+          // Firebase (connexion Google / téléphone) : fichier séparé, téléchargé
+          // seulement par les écrans qui l'importent (Login, Signup, mot de passe…)
+          'firebase': ['firebase/app', 'firebase/auth', 'firebase/app-check'],
         },
       },
     },

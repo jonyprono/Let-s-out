@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import { Loader2, WifiOff, RefreshCw, Heart, MessageCircle, Share2, MoreVertical, Copy, Pencil, Trash2, X, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EventMediaFeed } from '@/features/events/components/EventMediaFeed';
@@ -21,6 +21,7 @@ import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/app
 import { PageVideoPlayerModal, PageVideoItem } from '@/features/pages/components/PageVideoPlayerModal';
 import { FeaturedEventCard, RowEventCard } from '@/components/ui/event-cards-v2';
 import { SafeImage } from '@/components/shared/SafeImage';
+import { optimizeImageUrl } from '@/lib/cloudinary-image';
 import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer';
 import { ErrorRetryState } from '@/components/shared/ErrorRetryState';
 import { sortFeaturedEvents, sortPopularEvents } from '@/utils/event-ranking';
@@ -71,7 +72,7 @@ function FeaturedSkeleton() {
 const POST_MEDIA_MAX_HEIGHT = 'min(40dvh, 320px)';
 const POST_MEDIA_GRID_HEIGHT = 'min(40dvh, 280px)';
 
-function PagePostCard({
+const PagePostCard = memo(function PagePostCard({
   post,
   onNavigate,
   onOpenVideo,
@@ -206,7 +207,7 @@ function PagePostCard({
           >
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-500 text-xs overflow-hidden shrink-0 border border-gray-100 dark:border-gray-800">
               {pageAvatarUrl ? (
-                <img src={pageAvatarUrl} alt={post.page.name} className="w-full h-full object-cover" />
+                <img src={optimizeImageUrl(pageAvatarUrl, 40)} alt={post.page.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <div
                   className="w-full h-full flex items-center justify-center bg-[#F3F4F6] dark:bg-[#262626]"
@@ -347,7 +348,7 @@ function PagePostCard({
                   className="w-full h-full object-cover"
                   style={{ maxHeight: POST_MEDIA_MAX_HEIGHT }}
                 />
-                <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-2.5 right-2.5 bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                   <Maximize2 className="w-3.5 h-3.5" />
                 </div>
               </div>
@@ -368,7 +369,7 @@ function PagePostCard({
                       alt={`Photo ${idx + 1}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute top-2.5 right-2.5 bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                       <Maximize2 className="w-3.5 h-3.5" />
                     </div>
                   </div>
@@ -401,7 +402,7 @@ function PagePostCard({
 
                 {/* Photo counter and Enlarge button */}
                 <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
-                  <span className="bg-black/65 backdrop-blur-sm text-white text-[11px] font-semibold px-2 py-0.5 rounded-full border border-white/10">
+                  <span className="bg-black/75 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full border border-white/10">
                     {currentSlide + 1} / {post.mediaUrls.length}
                   </span>
                   <button
@@ -411,7 +412,7 @@ function PagePostCard({
                       setLightboxIndex(currentSlide);
                       setLightboxOpen(true);
                     }}
-                    className="bg-black/65 backdrop-blur-sm text-white p-1.5 rounded-full border border-white/10 hover:bg-black/90 transition-colors"
+                    className="bg-black/75 text-white p-1.5 rounded-full border border-white/10 hover:bg-black/90 transition-colors"
                     title="Agrandir en plein écran"
                   >
                     <Maximize2 className="w-3 h-3" />
@@ -553,7 +554,7 @@ function PagePostCard({
       )}
     </>
   );
-}
+});
 
 // ── Stats Banner with real data ─────────────────────────────────────────────────
 function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
@@ -621,8 +622,104 @@ function StatsBanner({ eventsThisWeek, friendsCount, joinedCount, rating }: {
   );
 }
 
+// ── Carrousel « À ne pas manquer » ─────────────────────────────────────────────
+// Isolé de Home : l'index courant (points + défilement auto) ne re-rend plus tout le fil.
+// Défilement auto mis en pause pendant un toucher, hors écran ou app en arrière-plan.
+const FEATURED_AUTOPLAY_MS = 4500;
+const FEATURED_RESUME_AFTER_TOUCH_MS = 6000;
+
+const FeaturedCarousel = memo(function FeaturedCarousel({
+  events,
+  onOpen,
+}: {
+  events: AppEvent[];
+  onOpen: (id: string) => void;
+}) {
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const pausedUntil = useRef(0);
+  const inView = useRef(true);
+  const count = events.length;
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([entry]) => { inView.current = entry.isIntersecting; });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (count === 0) return;
+    const interval = setInterval(() => {
+      if (document.hidden || !inView.current || Date.now() < pausedUntil.current) return;
+      setFeaturedIndex(prev => {
+        const next = (prev + 1) % count;
+        const el = scrollRef.current;
+        if (el) {
+          // Dernier élément → retour au début ; sinon on avance d'une carte (~85 % de la largeur)
+          el.scrollTo({ left: next === 0 ? 0 : next * (el.offsetWidth * 0.85), behavior: 'smooth' });
+        }
+        return next;
+      });
+    }, FEATURED_AUTOPLAY_MS);
+    return () => clearInterval(interval);
+  }, [count]);
+
+  const pause = () => { pausedUntil.current = Date.now() + FEATURED_RESUME_AFTER_TOUCH_MS; };
+
+  return (
+    <>
+      <div
+        ref={scrollRef}
+        className="flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory after:content-[''] after:w-px after:shrink-0"
+        style={{ scrollbarWidth: 'none' }}
+        onTouchStart={pause}
+        onPointerDown={pause}
+        onScroll={(e) => {
+          const el = e.currentTarget;
+          const idx = Math.round(el.scrollLeft / (el.offsetWidth * 0.85));
+          setFeaturedIndex(idx);
+        }}
+      >
+        {events.map(event => (
+          <FeaturedCard key={event.id} event={event} onOpen={onOpen} />
+        ))}
+      </div>
+      {/* Pagination dots */}
+      <div className="flex justify-center gap-1.5 mt-2">
+        {events.map((_, i) => (
+          <div
+            key={i}
+            className={`rounded-full transition-all ${
+              i === featuredIndex
+                ? 'w-5 h-1.5 bg-[#FF7A00]'
+                : 'w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600'
+            }`}
+          />
+        ))}
+      </div>
+    </>
+  );
+});
+
+// Enveloppes mémoïsées : `onOpen` est stable (useCallback), donc une carte ne se
+// re-rend que si son événement change.
+const FeaturedCard = memo(function FeaturedCard({ event, onOpen }: { event: AppEvent; onOpen: (id: string) => void }) {
+  return <FeaturedEventCard event={event} onClick={() => onOpen(event.id)} />;
+});
+
+const RowCard = memo(function RowCard({ event, onOpen }: { event: AppEvent; onOpen: (id: string) => void }) {
+  return <RowEventCard event={event as any} onClick={() => onOpen(event.id)} />;
+});
+
 // ── Main Home component ─────────────────────────────────────────────────────────
 export function Home({ userData, onNavigate }: HomeProps) {
+  // Callbacks stables passés aux cartes mémoïsées (lisent toujours le dernier onNavigate)
+  const onNavigateRef = useRef(onNavigate);
+  onNavigateRef.current = onNavigate;
+  const navigateStable = useCallback((screen: string, id?: string) => onNavigateRef.current(screen, id), []);
+  const openEvent = useCallback((id: string) => onNavigateRef.current('event-details', id), []);
   const { t } = useTranslation();
   const [activeFilter, setActiveFilter] = useState('discover');
   const [showPermissions, setShowPermissions] = useState(false);
@@ -644,9 +741,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
     if (y < 40) setHeaderCollapsed(false);
     else setHeaderCollapsed(delta > 0);
   };
-  const [featuredIndex, setFeaturedIndex] = useState(0);
   const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null);
-  const featuredScrollRef = useRef<HTMLDivElement>(null);
   const qc = useQueryClient();
   const isOffline = !useIsOnline();
   const { user } = useAuthStore();
@@ -725,14 +820,16 @@ export function Home({ userData, onNavigate }: HomeProps) {
     return eventsData.pages.flatMap(p => p.data || []).filter(Boolean);
   }, [eventsData]);
 
-  let events = rawEvents;
   const query = searchQuery.trim().toLowerCase();
 
-  // Local filter layer to guarantee accuracy
-  if (query || (activeFilter && activeFilter !== 'discover')) {
+  // Local filter layer to guarantee accuracy — mémoïsé : même tableau tant que
+  // les données, la recherche et le filtre ne changent pas
+  const events = useMemo(() => {
+  if (!(query || (activeFilter && activeFilter !== 'discover'))) return rawEvents;
+  {
     const now = new Date();
-    
-    events = events.filter((ev: any) => {
+
+    return rawEvents.filter((ev: any) => {
       // 1. Text search
       if (query !== '') {
         const matchesTitle = ev?.title?.toLowerCase().includes(query);
@@ -769,35 +866,13 @@ export function Home({ userData, onNavigate }: HomeProps) {
       return true;
     });
   }
+  }, [rawEvents, query, activeFilter]);
 
-  // "À ne pas manquer" = top 6 by featured score
-  const featuredEvents = sortFeaturedEvents(events).slice(0, 6);
+  // "À ne pas manquer" = top 6 by featured score (défilement auto géré par FeaturedCarousel)
+  const featuredEvents = useMemo(() => sortFeaturedEvents(events).slice(0, 6), [events]);
 
-  // Auto-scroll pour "À ne pas manquer"
-  useEffect(() => {
-    if (!featuredScrollRef.current || featuredEvents.length === 0) return;
-    
-    const interval = setInterval(() => {
-      setFeaturedIndex(prev => {
-        const next = (prev + 1) % featuredEvents.length;
-        const el = featuredScrollRef.current;
-        if (el) {
-          // Si on est au dernier élément, on scrolle au début (0)
-          if (next === 0) {
-            el.scrollTo({ left: 0, behavior: 'smooth' });
-          } else {
-            // Sinon on avance d'une carte (environ 85% de la largeur)
-            el.scrollTo({ left: next * (el.offsetWidth * 0.85), behavior: 'smooth' });
-          }
-        }
-        return next;
-      });
-    }, 4500); // Défilement toutes les 4.5 secondes
-
-    return () => clearInterval(interval);
-  }, [featuredEvents.length]);
   // "Populaires" = sorted by attendee count (independent list, no deduplication)
-  const popularEvents = sortPopularEvents(events);
+  const popularEvents = useMemo(() => sortPopularEvents(events), [events]);
 
   // Mix feed items: popular events + page posts
   const mixedFeed: Array<{ type: 'event', data: AppEvent } | { type: 'post', data: PagePost & { page: any } }> = useMemo(() => {
@@ -925,7 +1000,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
         <div className="flex items-center gap-2.5 mb-2 px-4 pt-safe-3 pt-3">
           <button onClick={() => onNavigate('profile')} className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#FF7A00] shrink-0 active:opacity-70 transition-opacity">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={optimizeImageUrl(avatarUrl, 44)} alt="Avatar" decoding="async" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-[#FF7A00] to-[#E56A00] flex items-center justify-center text-white text-lg font-bold">
                 {displayName.charAt(0).toUpperCase()}
@@ -1076,39 +1151,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                       {[1, 2, 3].map(i => <FeaturedSkeleton key={i} />)}
                     </div>
                   ) : featuredEvents.length > 0 ? (
-                    <>
-                      <div
-                        ref={featuredScrollRef}
-                        className="flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory after:content-[''] after:w-px after:shrink-0"
-                        style={{ scrollbarWidth: 'none' }}
-                        onScroll={(e) => {
-                          const el = e.currentTarget;
-                          const idx = Math.round(el.scrollLeft / (el.offsetWidth * 0.85));
-                          setFeaturedIndex(idx);
-                        }}
-                      >
-                        {featuredEvents.map(event => (
-                          <FeaturedEventCard
-                            key={event.id}
-                            event={event}
-                            onClick={() => onNavigate('event-details', event.id)}
-                          />
-                        ))}
-                      </div>
-                      {/* Pagination dots */}
-                      <div className="flex justify-center gap-1.5 mt-2">
-                        {featuredEvents.map((_, i) => (
-                          <div
-                            key={i}
-                            className={`rounded-full transition-all ${
-                              i === featuredIndex
-                                ? 'w-5 h-1.5 bg-[#FF7A00]'
-                                : 'w-1.5 h-1.5 bg-gray-300 dark:bg-gray-600'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </>
+                    <FeaturedCarousel events={featuredEvents} onOpen={openEvent} />
                   ) : null}
                 </div>
 
@@ -1138,17 +1181,17 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     <div className="px-4 space-y-3">
                       {mixedFeed.map((item, idx) => (
                         item.type === 'event' ? (
-                          <RowEventCard
+                          <RowCard
                             key={`evt-${item.data.id}-${idx}`}
-                            event={item.data as any}
-                            onClick={() => onNavigate('event-details', item.data.id)}
+                            event={item.data as AppEvent}
+                            onOpen={openEvent}
                           />
                         ) : (
-                          <PagePostCard 
-                            key={`post-${item.data.id}-${idx}`} 
-                            post={item.data} 
-                            onNavigate={onNavigate}
-                            onOpenVideo={(postId) => setPlayingPageVideoId(postId)}
+                          <PagePostCard
+                            key={`post-${item.data.id}-${idx}`}
+                            post={item.data}
+                            onNavigate={navigateStable}
+                            onOpenVideo={setPlayingPageVideoId}
                           />
                         )
                       ))}

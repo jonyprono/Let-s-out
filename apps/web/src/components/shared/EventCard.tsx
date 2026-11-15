@@ -161,7 +161,7 @@ export const EventCard = memo(function EventCard({
         <div className="absolute top-3 right-3 flex gap-2 z-10">
           <button
             onClick={handleShare}
-            className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A]/80 backdrop-blur-md flex items-center justify-center active:scale-95 transition-transform"
+            className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A]/90 flex items-center justify-center active:scale-95 transition-transform"
           >
             <Share2 className="w-[18px] h-[18px] text-gray-600 dark:text-gray-300" strokeWidth={2} />
           </button>
@@ -173,13 +173,13 @@ export const EventCard = memo(function EventCard({
           event.creatorId === user?.id ? (
             <button
               onClick={(e) => { e.stopPropagation(); setShowQRModal(true); }}
-              className="absolute top-3 left-3 bg-gray-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-transform z-10"
+              className="absolute top-3 left-3 bg-gray-900/95 px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-md active:scale-95 transition-transform z-10"
             >
               <QrCode className="w-3.5 h-3.5 text-action-primary" />
               <span className="text-[11px] font-bold text-white tracking-wide">Événement privé</span>
             </button>
           ) : (
-            <div className="absolute top-3 left-3 bg-gray-900/85 backdrop-blur-md px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm z-10">
+            <div className="absolute top-3 left-3 bg-gray-900/92 px-2.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm z-10">
               <Lock className="w-3 h-3 text-action-primary" />
               <span className="text-[10px] font-bold text-white tracking-wide">Événement privé</span>
             </div>
