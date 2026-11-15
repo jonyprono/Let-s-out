@@ -5,6 +5,8 @@ import { Send, Loader2, MoreHorizontal, Heart, Image as ImageIcon, Smile, Chevro
 import { useAuthStore } from '@/stores/auth.store'
 import { useConfirm } from '@/components/shared/ConfirmContext'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 interface Comment {
   id: string
@@ -31,7 +33,7 @@ interface FeedCommentsModalProps {
 function getRelativeTime(dateString: string) {
   const diff = Date.now() - new Date(dateString).getTime()
   const m = Math.floor(diff / 60000)
-  if (m < 1) return "à l'instant"
+  if (m < 1) return i18n.t('feedCommentsModal.aLInstant')
   if (m < 60) return `il y a ${m} min`
   const h = Math.floor(m / 60)
   if (h < 24) return `il y a ${h}h`
@@ -40,6 +42,7 @@ function getRelativeTime(dateString: string) {
 }
 
 export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedCommentsModalProps) {
+  const { t } = useTranslation()
   const [content, setContent] = useState('')
   const qc = useQueryClient()
   const currentUser = useAuthStore(s => s.user)
@@ -102,7 +105,7 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
             Commentaires ({comments.length})
           </h2>
           <button className="flex items-center gap-1 text-[13px] font-medium text-gray-500 dark:text-gray-400">
-            Les plus récents <ChevronDown className="w-4 h-4" />
+            <span>{i18n.t('feedCommentsModal.mostRecent')}</span> <ChevronDown className="w-4 h-4" />
           </button>
         </div>
 
@@ -114,7 +117,7 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
             </div>
           ) : comments.length === 0 ? (
             <div className="text-center py-10 text-gray-400 text-[13px]">
-              Aucun commentaire pour l'instant. Soyez le premier !
+              <span>{t('feedCommentsModal.aucunCommentairePourLInstant')}</span>
             </div>
           ) : (
             comments.map(comment => {
@@ -144,7 +147,7 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
                         
                         {isOrganizer && (
                           <span className="bg-[#FFF1E5] text-[#FF7A00] text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
-                            Organisateur
+                            <span>{t('feedCommentsModal.organisateur')}</span>
                           </span>
                         )}
                         
@@ -158,16 +161,16 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
                         onClick={async () => {
                           if (isMe || currentUser?.id === organizerId) {
                             const ok = await confirm({
-                              title: 'Supprimer ce commentaire ?',
-                              description: 'Cette action est irréversible.',
-                              confirmText: 'Supprimer',
+                              title: t('feedCommentsModal.supprimerCeCommentaire'),
+                              description: t('feedCommentsModal.cetteActionEstIrreversible'),
+                              confirmText: t('feedCommentsModal.supprimer'),
                               variant: 'danger',
                             })
                             if (ok) {
                               deleteMutation.mutate(comment.id)
-                              toast.success('Commentaire supprimé')
+                              toast.success(t('feedCommentsModal.commentaireSupprime'))
                             } else {
-                              toast.info('Suppression annulée')
+                              toast.info(t('feedCommentsModal.suppressionAnnulee'))
                             }
                           }
                         }}
@@ -187,7 +190,7 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
                           <span className="text-[13px] font-medium">0</span>
                         </button>
                         <button className="text-[13px] font-bold text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                          Répondre
+                          <span>{t('feedCommentsModal.repondre')}</span>
                         </button>
                       </div>
                     </div>
@@ -224,7 +227,7 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
                   type="text"
                   value={content}
                   onChange={e => setContent(e.target.value)}
-                  placeholder="Écrire un commentaire..."
+                  placeholder={t('feedCommentsModal.ecrireUnCommentaire')}
                   className="w-full bg-transparent text-[14px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-500"
                 />
                 <button type="button" className="text-gray-400 hover:text-gray-600">
@@ -252,7 +255,7 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
                 <span className="font-bold">?</span>
               </div>
               <div className="flex-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full px-4 py-2.5 flex items-center justify-center">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400">Connectez-vous pour commenter</span>
+                <span className="text-[13px] text-gray-500 dark:text-gray-400"><span>{t('feedCommentsModal.connectezVousPourCommenter')}</span></span>
               </div>
             </div>
           )}

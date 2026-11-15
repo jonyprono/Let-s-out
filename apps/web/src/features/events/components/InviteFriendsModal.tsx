@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import i18n from '@/lib/i18n'
 import { X, Search, Check, Send, Calendar, MapPin, Users } from 'lucide-react'
 import { useFriends } from '@/features/users/api'
 import { useMutation } from '@tanstack/react-query'
@@ -6,7 +7,8 @@ import { eventsApi } from '@/features/events/api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { dateLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
 
 interface InviteFriendsModalProps {
   event: {
@@ -21,6 +23,7 @@ interface InviteFriendsModalProps {
 }
 
 export function InviteFriendsModal({ event, onClose }: InviteFriendsModalProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<string[]>([])
 
@@ -29,10 +32,10 @@ export function InviteFriendsModal({ event, onClose }: InviteFriendsModalProps) 
   const { mutate: sendInvites, isPending } = useMutation({
     mutationFn: () => eventsApi.inviteFriends(event.id, selected),
     onSuccess: () => {
-      toast.success(`${selected.length} invitation${selected.length > 1 ? 's' : ''} envoyée${selected.length > 1 ? 's' : ''} !`)
+      toast.success(t('inviteFriendsModal.invitationEnvoyee', { v0: selected.length, v1: selected.length > 1 ? 's' : '', v2: selected.length > 1 ? 's' : '' }))
       onClose()
     },
-    onError: () => toast.error("Erreur lors de l'envoi des invitations"),
+    onError: () => toast.error(t('inviteFriendsModal.erreurLorsDeLEnvoi')),
   })
 
   const filtered = useMemo(() =>
@@ -59,7 +62,7 @@ export function InviteFriendsModal({ event, onClose }: InviteFriendsModalProps) 
         >
           <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
         </button>
-        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Inviter des amis</h2>
+        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white"><span>{t('inviteFriendsModal.inviterDesAmis')}</span></h2>
         <div className="w-9" />
       </div>
 
@@ -75,7 +78,7 @@ export function InviteFriendsModal({ event, onClose }: InviteFriendsModalProps) 
         <div className="flex-1 min-w-0">
           <p className="text-[14px] font-bold text-gray-900 dark:text-white truncate">{event.title}</p>
           <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5">
-            {format(new Date(event.startAt), "EEE d MMM · HH'h'mm", { locale: fr })}
+            {format(new Date(event.startAt), "EEE d MMM · HH'h'mm", { locale: dateLocale() })}
           </p>
           {event.city && (
             <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1">
@@ -91,7 +94,7 @@ export function InviteFriendsModal({ event, onClose }: InviteFriendsModalProps) 
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Rechercher un ami..."
+            placeholder={t('inviteFriendsModal.rechercherUnAmi')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-[14px] text-gray-900 dark:text-white placeholder:text-gray-400 outline-none"
@@ -140,7 +143,7 @@ export function InviteFriendsModal({ event, onClose }: InviteFriendsModalProps) 
               <Users className="w-7 h-7 text-gray-400" />
             </div>
             <p className="text-[14px] text-gray-500 dark:text-gray-400 text-center">
-              {search ? 'Aucun ami trouvé' : 'Vous n\'avez pas encore d\'amis à inviter'}
+              {search ? t('inviteFriendsModal.aucunAmiTrouve') : t('inviteFriendsModal.vousNAvezPasEncore')}
             </p>
           </div>
         ) : (
@@ -191,7 +194,7 @@ export function InviteFriendsModal({ event, onClose }: InviteFriendsModalProps) 
           ) : (
             <>
               <Send className="w-5 h-5" />
-              Envoyer {selected.length > 0 ? `(${selected.length})` : ''} invitation{selected.length > 1 ? 's' : ''}
+              <span>{i18n.t('inviteFriendsModal.sendInvitations', { count: selected.length })}</span>
             </>
           )}
         </button>

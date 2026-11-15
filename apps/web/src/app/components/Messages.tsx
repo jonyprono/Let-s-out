@@ -1,4 +1,5 @@
 import { useState, useMemo, memo, useEffect, useCallback } from 'react';
+import i18n from '@/lib/i18n'
 import { Search, X, Pin, PinOff, Bell, BellOff, Circle, Trash2, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useQueryClient } from '@tanstack/react-query';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 
+import { intlLocale } from '@/lib/locale';
 interface MessagesProps {}
 
 
@@ -144,7 +146,7 @@ export function Messages(_props: MessagesProps) {
             try {
               const parsed = lastMessage.content ? JSON.parse(lastMessage.content) : null;
               if (parsed?._type === 'EVENT_SHARE') {
-                lastMsg = `📅 ${parsed.title || 'Un événement'}`;
+                lastMsg = `📅 ${parsed.title || i18n.t('messages.unEvenement')}`;
               }
             } catch {}
           } else if (conv.isGroup && lastMessage?.sender?.profile?.displayName) {
@@ -492,7 +494,7 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu, onPre
             {conv.name}
           </h3>
           <span className="font-inter font-normal text-[10px] leading-[16px] text-[#737373] flex-shrink-0 ml-2">
-            {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : ''}
+            {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' }) : ''}
           </span>
         </div>
         

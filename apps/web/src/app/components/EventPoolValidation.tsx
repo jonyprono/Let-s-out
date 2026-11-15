@@ -5,11 +5,14 @@ import { AlertTriangle, ShieldX } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth.store';
 import { Button } from '@/components/ui/button';
 import { SafeImage } from '@/components/shared/SafeImage';
 
+import { intlLocale } from '@/lib/locale';
 export function EventPoolValidation() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -40,10 +43,10 @@ export function EventPoolValidation() {
     mutationFn: async () => apiClient.post(`/events/${id}/pool/revoke-delegation`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['events', id] });
-      toast.success('Délégation annulée avec succès');
+      toast.success(t('poolValidation.toasts.revoked'));
       navigate(`/events/${id}`);
     },
-    onError: (err: any) => toast.error(err.response?.data?.error || "Erreur lors de l'annulation")
+    onError: (err: any) => toast.error(err.response?.data?.error || t('poolValidation.toasts.revokeError'))
   });
 
   const validateMut = useMutation({
@@ -53,10 +56,10 @@ export function EventPoolValidation() {
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['events', id] });
-      toast.success(mode === 'VALIDATE' ? 'Budget validé avec succès' : 'Validation déléguée');
+      toast.success(mode === 'VALIDATE' ? t('poolValidation.toasts.validated') : t('poolValidation.toasts.delegated'));
       navigate(`/events/${id}`);
     },
-    onError: (err: any) => toast.error(err.response?.data?.error || "Erreur lors de la validation")
+    onError: (err: any) => toast.error(err.response?.data?.error || t('poolValidation.toasts.validateError'))
   });
 
   if (isLoadingEvent || isLoadingAttendees) {
@@ -113,7 +116,7 @@ export function EventPoolValidation() {
         <button onClick={() => navigate(`/events/${id}`)} className="w-9 h-9 -ml-2 flex items-center justify-center bg-transparent active:scale-95 transition-transform">
           <ArrowLeft01Icon className="w-6 h-6 text-gray-900 dark:text-white" />
         </button>
-        <span className="ml-2 font-bold text-[16px] text-gray-900 dark:text-white">Validation du budget</span>
+        <span className="ml-2 font-bold text-[16px] text-gray-900 dark:text-white"><span>{t('poolValidation.title')}</span></span>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-28 px-4 font-poppins flex flex-col gap-6 relative z-10">
@@ -123,15 +126,15 @@ export function EventPoolValidation() {
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-2">
               <ShieldX className="w-8 h-8 text-gray-500" />
             </div>
-            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">Aucune validation requise</h3>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white"><span>{t('poolValidation.noneRequired')}</span></h3>
             <p className="text-[14px] text-gray-500">
-              La totalité de votre part a déjà été débloquée lors de précédents retraits. Vous n'avez plus de fonds en jeu à valider.
+              <span>{t('poolValidation.noneRequiredDesc')}</span>
             </p>
             <Button 
               onClick={() => navigate(`/events/${id}`)}
               className="mt-4 px-6 rounded-full bg-[#FF7A00] text-white hover:bg-[#FF7A00]/90"
             >
-              Retour à l'événement
+              <span>{t('payment.backToEvent')}</span>
             </Button>
           </div>
         ) : hasDelegated ? (
@@ -139,10 +142,10 @@ export function EventPoolValidation() {
             <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-2">
               <ShieldX className="w-8 h-8 text-[#FF7A00]" />
             </div>
-            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">Vous avez délégué votre voix</h3>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white"><span>{t('poolValidation.delegatedTitle')}</span></h3>
             <p className="text-[14px] text-gray-500">
-              Votre pouvoir de validation a été confié à un autre OUTSTER. 
-              Vous pouvez révoquer cette délégation pour reprendre la main sur la validation de votre part.
+              <span>{t('poolValidation.delegatedDesc1')}</span> 
+              <span>{t('poolValidation.delegatedDesc2')}</span>
             </p>
             
             <Button 
@@ -151,7 +154,7 @@ export function EventPoolValidation() {
               variant="outline"
               className="mt-4 w-full rounded-xl border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 h-14 font-semibold text-[15px]"
             >
-              {revokeMut.isPending ? 'Annulation...' : 'Annuler ma délégation'}
+              <span>{revokeMut.isPending ? t('poolValidation.revoking') : t('poolValidation.revoke')}</span>
             </Button>
           </div>
         ) : (
@@ -160,17 +163,17 @@ export function EventPoolValidation() {
         <div className="w-full bg-gradient-to-r from-[#FFF2D3] to-[#FFFBA6] rounded-[10px] p-4 flex flex-col gap-3 shadow-sm shrink-0 mt-2">
           <h3 className="font-medium text-[16px] text-[#1B1818] line-clamp-1">{event.title}</h3>
           <div className="flex justify-between items-center w-full mt-2">
-            <span className="text-[14px] text-[#737373]">Budget collecté</span>
-            <span className="text-[15px] font-bold text-[#FF7A00]">{collected.toLocaleString('fr-FR')} F</span>
+            <span className="text-[14px] text-[#737373]"><span>{t('poolValidation.collectedBudget')}</span></span>
+            <span className="text-[15px] font-bold text-[#FF7A00]">{collected.toLocaleString(intlLocale())} F</span>
           </div>
           <p className="text-[12px] text-gray-700 mt-2">
-            L'organisateur souhaite débloquer le budget. En tant qu'OUTSTER, vous devez valider l'utilisation des fonds.
+            <span>{t('poolValidation.intro')}</span>
           </p>
         </div>
 
         {/* Action Selection */}
         <div className="flex flex-col gap-3 mt-2">
-          <h4 className="text-[15px] font-semibold text-gray-900 dark:text-white">Que souhaitez-vous faire ?</h4>
+          <h4 className="text-[15px] font-semibold text-gray-900 dark:text-white"><span>{t('poolValidation.whatToDo')}</span></h4>
           
           <div 
             onClick={() => setMode('VALIDATE')}
@@ -184,11 +187,11 @@ export function EventPoolValidation() {
                 {(() => {
                   const myDelegatesCount = attendees.filter((b: any) => b.delegatedToId === me.id && b.poolValidationStatus === 'DELEGATED').length;
                   return myDelegatesCount > 0 
-                    ? `Je valide pour moi et mes délégués (${myDelegatesCount + 1} parts)`
-                    : "Je valide ma part";
+                    ? t('poolValidation.validateWithDelegates', { count: myDelegatesCount + 1 })
+                    : t('poolValidation.validateMine');
                 })()}
               </p>
-              <p className="text-[12px] text-gray-500 mt-1">Vous acceptez que l'organisateur utilise la contribution.</p>
+              <p className="text-[12px] text-gray-500 mt-1"><span>{t('poolValidation.validateDesc')}</span></p>
             </div>
           </div>
 
@@ -200,8 +203,8 @@ export function EventPoolValidation() {
               {mode === 'DELEGATE' && <div className="w-2.5 h-2.5 rounded-full bg-[#FF7A00]" />}
             </div>
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white text-[14px]">Je délègue ma validation</p>
-              <p className="text-[12px] text-gray-500 mt-1">Vous confiez le droit de valider à un autre OUTSTER.</p>
+              <p className="font-semibold text-gray-900 dark:text-white text-[14px]"><span>{t('poolValidation.delegate')}</span></p>
+              <p className="text-[12px] text-gray-500 mt-1"><span>{t('poolValidation.delegateDesc')}</span></p>
             </div>
           </div>
         </div>
@@ -209,18 +212,18 @@ export function EventPoolValidation() {
         {/* Delegate Selection */}
         {mode === 'DELEGATE' && (
           <div className="flex flex-col gap-3 mt-4">
-            <h4 className="text-[14px] font-semibold text-gray-900 dark:text-white">Choisir un délégataire</h4>
+            <h4 className="text-[14px] font-semibold text-gray-900 dark:text-white"><span>{t('poolValidation.chooseDelegate')}</span></h4>
             {selectedDelegatee && computeDelegateePower(selectedDelegatee) > 0.5 && (
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl flex gap-3 animate-in fade-in">
                 <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
                 <p className="text-[13px] text-yellow-800 leading-snug">
-                  <strong>Attention à la concentration :</strong> Cet OUTSTER représentera plus de 50% de la cagnotte si vous lui confiez votre voix.
+                  <strong>{t('poolValidation.concentrationTitle')}</strong> <span>{t('poolValidation.concentrationDesc')}</span>
                 </p>
               </div>
             )}
             <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
               {sortedAttendees.length === 0 ? (
-                <p className="text-[13px] text-gray-500 italic">Aucun autre OUTSTER disponible.</p>
+                <p className="text-[13px] text-gray-500 italic"><span>{t('poolValidation.noOther')}</span></p>
               ) : (
                 sortedAttendees.map(user => (
                   <div 
@@ -232,7 +235,7 @@ export function EventPoolValidation() {
                     <div className="flex flex-col">
                       <span className="text-[14px] font-medium text-gray-900 dark:text-white">{user.profile?.displayName || user.username}</span>
                       {event.validatorIds?.includes(user.id) && (
-                        <span className="text-[11px] text-[#FF7A00] font-semibold mt-0.5">⭐ Validateur désigné</span>
+                        <span className="text-[11px] text-[#FF7A00] font-semibold mt-0.5"><span>{`⭐ ${t('poolValidation.appointedValidator')}`}</span></span>
                       )}
                     </div>
                     {selectedDelegatee === user.id && (
@@ -257,7 +260,7 @@ export function EventPoolValidation() {
             disabled={validateMut.isPending || (mode === 'DELEGATE' && !selectedDelegatee)}
             className="w-full h-14 rounded-full bg-[#FF7A00] hover:bg-[#FF7A00]/90 text-white font-semibold text-[16px] shadow-sm active:scale-[0.98] transition-transform disabled:opacity-50"
           >
-            {validateMut.isPending ? 'Enregistrement...' : 'Confirmer mon choix'}
+            <span>{validateMut.isPending ? t('common.saving') : t('poolValidation.confirmChoice')}</span>
           </Button>
         </div>
       )}

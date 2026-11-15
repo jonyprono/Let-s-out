@@ -4,6 +4,7 @@ import { ChevronLeft, Loader2 } from 'lucide-react';
 import { App } from '@capacitor/app';
 import { EventVideo } from '../api';
 import { VideoPlayerItem } from './VideoPlayerItem';
+import { useTranslation } from 'react-i18next'
 
 interface Props {
   videos: EventVideo[];
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached, isLoadingMore }: Props) {
+  const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null);
   const isReadyRef = useRef(false);
   
@@ -109,7 +111,7 @@ export function VideoPlayerModal({ videos, initialVideoId, onClose, onEndReached
         onClick={onClose}
         className="absolute top-10 left-4 z-50 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center border border-white/10 active:scale-95 transition-transform"
         style={{ top: 'calc(env(safe-area-inset-top, 0px) + 40px)' }}
-        aria-label="Fermer"
+        aria-label={t('videoPlayerModal.fermer')}
       >
         <ChevronLeft className="w-7 h-7 text-white" strokeWidth={2.5} />
       </button>

@@ -6,8 +6,9 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth.store'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 
+import { dateLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
 interface ShareViaChatModalProps {
   event: {
     id: string
@@ -25,6 +26,7 @@ interface ShareViaChatModalProps {
 }
 
 export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null)
   const { user } = useAuthStore()
@@ -50,10 +52,10 @@ export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
       await chatApi.sendMessage(selectedConvId, { content: cardPayload, type: 'SYSTEM' })
     },
     onSuccess: () => {
-      toast.success('Événement partagé dans la conversation !')
+      toast.success(t('shareViaChatModal.evenementPartageDansLaConversation'))
       onClose()
     },
-    onError: () => toast.error("Erreur lors du partage"),
+    onError: () => toast.error(t('shareViaChatModal.erreurLorsDuPartage')),
   })
 
   // Get conversation display name and avatar from the perspective of the current user
@@ -94,13 +96,13 @@ export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
         >
           <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
         </button>
-        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Envoyer dans une discussion</h2>
+        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white"><span>{t('shareViaChatModal.envoyerDansUneDiscussion')}</span></h2>
         <div className="w-9" />
       </div>
 
       {/* Event card preview — what the receiver will see */}
       <div className="mx-4 mt-4 mb-3">
-        <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Aperçu de la carte</p>
+        <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2"><span>{t('shareViaChatModal.apercuDeLaCarte')}</span></p>
         <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#1E1E1E]">
           {event.coverUrl && (
             <div className="relative w-full h-28">
@@ -117,7 +119,7 @@ export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
             )}
             <div className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
               <Calendar className="w-3.5 h-3.5 shrink-0 text-[#FF7A00]" />
-              {format(new Date(event.startAt), "EEE d MMM · HH'h'mm", { locale: fr })}
+              {format(new Date(event.startAt), "EEE d MMM · HH'h'mm", { locale: dateLocale() })}
             </div>
             {event.city && (
               <div className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
@@ -126,7 +128,7 @@ export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
               </div>
             )}
             <div className="mt-1 py-2 rounded-xl bg-[#FF7A00]/10 text-[#FF7A00] text-[12px] font-semibold text-center">
-              Voir l'événement →
+              <span>{t('shareViaChatModal.voirLEvenement')}</span>
             </div>
           </div>
         </div>
@@ -138,7 +140,7 @@ export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Rechercher une conversation..."
+            placeholder={t('shareViaChatModal.rechercherUneConversation')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-[14px] text-gray-900 dark:text-white placeholder:text-gray-400 outline-none"
@@ -166,7 +168,7 @@ export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
               <MessageCircle className="w-7 h-7 text-gray-400" />
             </div>
             <p className="text-[14px] text-gray-500 dark:text-gray-400 text-center">
-              {search ? 'Aucune conversation trouvée' : 'Aucune conversation disponible'}
+              {search ? t('shareViaChatModal.aucuneConversationTrouvee') : t('shareViaChatModal.aucuneConversationDisponible')}
             </p>
           </div>
         ) : (
@@ -222,7 +224,7 @@ export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
           ) : (
             <>
               <Send className="w-5 h-5" />
-              Envoyer dans la discussion
+              <span>{t('shareViaChatModal.envoyerDansLaDiscussion')}</span>
             </>
           )}
         </button>

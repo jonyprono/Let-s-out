@@ -155,7 +155,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
         setHasLiked(context.wasLiked);
         setLikesCount((prev) => (context.wasLiked ? prev + 1 : prev - 1));
       }
-      toast.error('Erreur lors de la réaction');
+      toast.error(t('videoPlayerItem.erreurLorsDeLaReaction'));
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['videos'] });
@@ -172,7 +172,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
       qc.invalidateQueries({ queryKey: ['feed', 'videos'] });
     },
     onError: () => {
-      toast.error('Erreur lors de l\'envoi du commentaire');
+      toast.error(t('videoPlayerItem.erreurLorsDeL'));
     }
   });
 
@@ -181,7 +181,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['videos', video.id, 'comments'] });
     },
-    onError: () => toast.error('Erreur lors de la suppression du commentaire')
+    onError: () => toast.error(t('videoPlayerItem.erreurLorsDeLaSuppression'))
   });
 
   const videoLink = `https://letsout.app/videos/${video.id}`;
@@ -191,9 +191,9 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
       const { Share } = await import('@capacitor/share');
       await Share.share({
         title: video.title,
-        text: `Découvre "${video.title}" de l'événement "${video.event.title}" sur Let's Out !`,
+        text: t('videoPlayerItem.decouvreDeLEvenementSur', { v0: video.title, v1: video.event.title }),
         url: videoLink,
-        dialogTitle: 'Partager cette vidéo',
+        dialogTitle: t('videoPlayerItem.partagerCetteVideo'),
       });
     } catch {
       if (navigator.share) {
@@ -222,9 +222,9 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
         document.execCommand('copy');
         document.body.removeChild(el);
       }
-      toast.success('Lien copié !');
+      toast.success(t('videoPlayerItem.lienCopie'));
     } catch {
-      toast.error('Impossible de copier');
+      toast.error(t('videoPlayerItem.impossibleDeCopier'));
     }
   };
 
@@ -320,7 +320,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
       {hasPlaybackError && isActive && (
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
           <div className="px-4 py-2.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 text-white text-[13px] text-center">
-            Vidéo illisible sur cet appareil
+            <span>{t('videoPlayerItem.videoIllisibleSurCetAppareil')}</span>
           </div>
         </div>
       )}
@@ -419,21 +419,21 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
               <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center">
                 <Share2 className="w-6 h-6 text-white" />
               </div>
-              <span className="text-white text-[12px] font-medium drop-shadow-md">Partager</span>
+              <span className="text-white text-[12px] font-medium drop-shadow-md"><span>{t('videoPlayerItem.partager')}</span></span>
             </button>
 
             {/* Delete button — author or event organizer */}
             {user && (video.userId === user.id || (video.event as any)?.creatorId === user.id || ((video.event as any)?.coHostIds || []).includes(user.id)) && (
               <button 
                 onClick={async () => {
-                  if (!confirm('Supprimer cette vidéo ?')) return;
+                  if (!confirm(t('videoPlayerItem.supprimerCetteVideo'))) return;
                   try {
                     await videosApi.delete(video.id);
-                    toast.success('Vidéo supprimée');
+                    toast.success(t('videoPlayerItem.videoSupprimee'));
                     qc.invalidateQueries({ queryKey: ['videos'] });
                     qc.invalidateQueries({ queryKey: ['feed', 'videos'] });
                   } catch {
-                    toast.error('Erreur lors de la suppression');
+                    toast.error(t('videoPlayerItem.erreurLorsDeLaSuppression2'));
                   }
                 }}
                 className="flex flex-col items-center gap-1"
@@ -441,7 +441,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
                 <div className="w-12 h-12 rounded-full bg-red-500/20 backdrop-blur-md flex items-center justify-center">
                   <Trash2 className="w-5 h-5 text-red-400" />
                 </div>
-                <span className="text-red-400 text-[12px] font-medium drop-shadow-md">Supprimer</span>
+                <span className="text-red-400 text-[12px] font-medium drop-shadow-md"><span>{t('videoPlayerItem.supprimer')}</span></span>
               </button>
             )}
           </div>
@@ -457,7 +457,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
             className="w-full py-2.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-white font-medium text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg"
           >
             <CalendarPlus className="w-5 h-5" />
-            Créer un événement similaire
+            <span>{t('videoPlayerItem.creerUnEvenementSimilaire')}</span>
           </button>
         </div>
         
@@ -479,7 +479,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           />
           <div className="absolute bottom-0 left-0 right-0 h-[60vh] bg-white dark:bg-[#1A1A1A] z-30 rounded-t-3xl flex flex-col animate-in slide-in-from-bottom duration-300 pointer-events-auto">
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/10">
-              <h3 className="font-bold text-[16px]">Commentaires ({video._count?.comments || 0})</h3>
+              <h3 className="font-bold text-[16px]"><span>{t('videoPlayerItem.commentaires', { v0: video._count?.comments || 0 })}</span></h3>
               <button onClick={() => setShowComments(false)} className="p-2">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -492,7 +492,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
                 </div>
               ) : comments.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
-                  Aucun commentaire. Soyez le premier !
+                  <span>{t('videoPlayerItem.aucunCommentaireSoyezLePremier')}</span>
                 </div>
               ) : (
                 comments.map((comment: any) => (
@@ -538,7 +538,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
             >
               <input
                 type="text"
-                placeholder="Ajouter un commentaire..."
+                placeholder={t('videoPlayerItem.ajouterUnCommentaire')}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 className="flex-1 h-10 bg-gray-100 dark:bg-white/10 rounded-full px-4 text-[14px] outline-none border border-transparent focus:border-orange-500/50 min-w-0"
@@ -588,7 +588,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
                   <Share2 className="w-5 h-5 text-orange-500" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-[15px] text-gray-900 dark:text-white">Partager en dehors</p>
+                  <p className="font-semibold text-[15px] text-gray-900 dark:text-white"><span>{t('videoPlayerItem.partagerEnDehors')}</span></p>
                   <p className="text-[12px] text-gray-500">WhatsApp, Instagram, SMS…</p>
                 </div>
               </button>
@@ -600,8 +600,8 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
                   <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-[15px] text-gray-900 dark:text-white">Copier le lien</p>
-                  <p className="text-[12px] text-gray-500">Copiez l'adresse de la vidéo</p>
+                  <p className="font-semibold text-[15px] text-gray-900 dark:text-white"><span>{t('videoPlayerItem.copierLeLien')}</span></p>
+                  <p className="text-[12px] text-gray-500"><span>{t('videoPlayerItem.copiezLAdresseDeLa')}</span></p>
                 </div>
               </button>
             </div>

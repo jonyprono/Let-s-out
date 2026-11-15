@@ -1,21 +1,14 @@
-// 15 Catégories (12 existantes + 3 nouvelles) — source unique pour la création, la gestion et « Mes pages »
-export const PAGE_CATEGORIES = [
-  { label: 'Art et culture',               value: 'CULTURE'   },
-  { label: 'Comédie',                      value: 'GAMING'    },
-  { label: 'Sport',                        value: 'SPORT'     },
-  { label: 'Santé et bien-être',           value: 'WELLNESS'  },
-  { label: 'Cuisine et gastronomie',       value: 'FOOD'      },
-  { label: 'Boissons',                     value: 'LIFESTYLE' },
-  { label: 'Réseautage professionnel',     value: 'SOCIAL'    },
-  { label: 'Fêtes',                        value: 'NIGHTLIFE' },
-  { label: 'Religion',                     value: 'OTHER'     },
-  { label: 'Shopping',                     value: 'TECH'      },
-  { label: 'Musique et son',               value: 'MUSIC'     },
-  { label: 'Télévision et cinéma',         value: 'ART'       },
-  { label: 'Jeux vidéos & jeux de société', value: 'GAMING'    },
-  { label: 'Concerts & festivals',         value: 'CONCERTS'  },
-  { label: 'Voyages et découverte',        value: 'TRAVEL'    },
-]
+import i18n from '@/lib/i18n'
+import { EVENT_CATEGORIES, eventCategoryLabel } from '@/lib/event-categories'
 
-export const pageCategoryLabel = (value: string) =>
-  PAGE_CATEGORIES.find((c) => c.value === value)?.label ?? value
+/**
+ * Catégories des pages = source unique des catégories d'événements
+ * (lib/event-categories.ts). Le libellé est un getter : il est traduit au moment
+ * du rendu, dans la langue choisie.
+ */
+export const PAGE_CATEGORIES: { value: string; readonly label: string }[] = EVENT_CATEGORIES.map((c) => ({
+  value: c.id,
+  get label() { return eventCategoryLabel(i18n.t.bind(i18n), c.id) },
+}))
+
+export const pageCategoryLabel = (value: string) => eventCategoryLabel(i18n.t.bind(i18n), value)

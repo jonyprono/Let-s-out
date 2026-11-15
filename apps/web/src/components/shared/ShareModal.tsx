@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import i18n from '@/lib/i18n'
 import { createPortal } from 'react-dom';
 import { Copy, Share2, Download, Check, Lock } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,6 +8,7 @@ import { eventsApi } from '@/features/events/api';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth.store';
 import { QRCodeSVG } from 'qrcode.react';
+import { useTranslation } from 'react-i18next'
 
 interface ShareModalProps {
   eventId: string;
@@ -15,6 +17,7 @@ interface ShareModalProps {
 }
 
 export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
+  const { t } = useTranslation()
   const { user } = useAuthStore();
   const [codeCopied, setCodeCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -75,12 +78,12 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
       setTimeout(() => setCopied(false), 2000);
       toast.success(successMsg);
     } catch {
-      toast.error('Impossible de copier');
+      toast.error(t('shareModal.impossibleDeCopier'));
     }
   };
 
-  const copyCode = () => copyText(joinCode, setCodeCopied, 'Code copié !');
-  const copyLink = () => copyText(eventLink, setLinkCopied, 'Lien copié !');
+  const copyCode = () => copyText(joinCode, setCodeCopied, t('shareModal.codeCopie'));
+  const copyLink = () => copyText(eventLink, setLinkCopied, t('shareModal.lienCopie'));
 
   const shareNative = async () => {
     try {
@@ -88,9 +91,9 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
       const { Share } = await import('@capacitor/share');
       await Share.share({
         title: eventTitle,
-        text: `Rejoignez "${eventTitle}" sur Let's Out !`,
+        text: i18n.t('shareModal.joinOnLetsOut', { title: eventTitle }),
         url: eventLink,
-        dialogTitle: 'Partager avec',
+        dialogTitle: t('shareModal.partagerAvec'),
       });
     } catch (err) {
       // Fallback to web navigator.share or copyLink if it fails (e.g., cancelled or unsupported)
@@ -98,7 +101,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
         try {
           await navigator.share({
             title: eventTitle,
-            text: `Rejoignez "${eventTitle}" sur Let's Out !`,
+            text: i18n.t('shareModal.joinOnLetsOut', { title: eventTitle }),
             url: eventLink,
           });
         } catch {
@@ -156,9 +159,9 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
         const { Share } = await import('@capacitor/share');
         await Share.share({
           title: `QR Code – ${eventTitle}`,
-          text: `QR Code pour "${eventTitle}"`,
+          text: t('shareModal.qrCodePour', { v0: eventTitle }),
           url: writeResult.uri,
-          dialogTitle: 'Enregistrer le QR Code dans la galerie',
+          dialogTitle: t('shareModal.enregistrerLeQrCodeDans'),
         });
         return;
       }
@@ -173,7 +176,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    toast.success('QR Code téléchargé !');
+    toast.success(t('shareModal.qrCodeTelecharge'));
   };
 
   if (eventData && !canShare) {
@@ -192,11 +195,11 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
             <p className="text-[14px] text-gray-600 dark:text-gray-300 max-w-xs mb-6 leading-relaxed">
               {isPrivate
                 ? (!isJoined
-                    ? "Cet événement est privé. Vous devez d'abord avoir rejoint l'événement pour pouvoir le partager."
-                    : "L'organisateur de cet événement privé n'a pas autorisé les participants à le partager.")
+                    ? t('shareModal.cetEvenementEstPriveVous')
+                    : t('shareModal.lOrganisateurDeCetEvenement'))
                 : (!isJoined
-                    ? "Cet événement nécessite la validation de l'organisateur. Vous devez être accepté avant de pouvoir le partager."
-                    : "L'organisateur n'a pas autorisé le partage de cet événement.")}
+                    ? t('shareModal.cetEvenementNecessiteLaValidation')
+                    : t('shareModal.lOrganisateurNAPas'))}
             </p>
             <button
               onClick={onClose}
@@ -224,14 +227,14 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
 
         {/* Header */}
         <div className="px-5 pt-2 pb-4 flex items-center justify-center flex-shrink-0 border-b border-gray-100 dark:border-white/10">
-          <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">Partager</h3>
+          <h3 className="text-[17px] font-bold text-gray-900 dark:text-white"><span>{t('shareModal.partager')}</span></h3>
         </div>
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8" style={{ scrollbarWidth: 'none' }}>
           
           <p className="text-[13px] text-gray-800 dark:text-gray-200 text-center mb-6 leading-relaxed px-2">
-            Partagez le code événement, le QR Code ou le lien avec vos amis afin de les inviter à rejoindre l'événement.
+            <span>{t('shareModal.partagezLeCodeEvenementLe')}</span>
           </p>
 
           <div className="space-y-4">
@@ -244,7 +247,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
                 onClick={copyCode}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-gray-800 dark:text-gray-200 active:scale-95 transition-transform shadow-sm"
               >
-                {codeCopied ? 'Code copié !' : 'Copier le code'}
+                {codeCopied ? t('shareModal.codeCopie') : t('shareModal.copierLeCode')}
                 {codeCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />}
               </button>
             </div>
@@ -263,7 +266,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
                 onClick={downloadQR}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-gray-800 dark:text-gray-200 active:scale-95 transition-transform shadow-sm"
               >
-                Télécharger le QR code
+                <span>{t('shareModal.telechargerLeQrCode')}</span>
                 <Download className="w-4 h-4 text-gray-500 dark:text-gray-400" strokeWidth={2} />
               </button>
             </div>
@@ -278,14 +281,14 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
                   onClick={copyLink}
                   className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-gray-800 dark:text-gray-200 active:scale-95 transition-transform shadow-sm flex-1"
                 >
-                  {linkCopied ? 'Copié !' : 'Copier'}
+                  {linkCopied ? t('shareModal.copie') : i18n.t('shareModal.copy')}
                   {linkCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />}
                 </button>
                 <button
                   onClick={shareNative}
                   className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-gray-800 dark:text-gray-200 active:scale-95 transition-transform shadow-sm flex-1"
                 >
-                  Partager
+                  <span>{t('shareModal.partager')}</span>
                   <Share2 className="w-4 h-4 text-gray-500 dark:text-gray-400" strokeWidth={2} />
                 </button>
               </div>

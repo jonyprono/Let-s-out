@@ -6,6 +6,8 @@ import { useAuthStore } from '@/stores/auth.store'
 import { pagesApi, PagePostComment } from '../api'
 import { useConfirm } from '@/components/shared/ConfirmContext'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 interface PagePostCommentsModalProps {
   pageId: string
@@ -45,7 +47,7 @@ function useKeyboardInset(active: boolean) {
 function getRelativeTime(dateString: string) {
   const diff = Date.now() - new Date(dateString).getTime()
   const m = Math.floor(diff / 60000)
-  if (m < 1) return "à l'instant"
+  if (m < 1) return i18n.t('pagePostCommentsModal.aLInstant')
   if (m < 60) return `il y a ${m} min`
   const h = Math.floor(m / 60)
   if (h < 24) return `il y a ${h}h`
@@ -62,6 +64,7 @@ export function PagePostCommentsModal({
   onClose,
   onCommentAdded,
 }: PagePostCommentsModalProps) {
+  const { t } = useTranslation()
   const [content, setContent] = useState('')
   const qc = useQueryClient()
   const currentUser = useAuthStore((s) => s.user)
@@ -166,7 +169,7 @@ export function PagePostCommentsModal({
             </div>
           ) : comments.length === 0 ? (
             <div className="text-center py-14 text-gray-400 text-sm">
-              Aucun commentaire pour l'instant. Soyez le premier !
+              <span>{t('pagePostCommentsModal.aucunCommentairePourLInstant')}</span>
             </div>
           ) : (
             comments.map((comment) => {
@@ -210,19 +213,19 @@ export function PagePostCommentsModal({
                       {(isMe || currentUser?.id === pageCreatorId) && (
                         <button
                           className="text-gray-400 hover:text-red-500 p-1 transition-colors"
-                          title="Supprimer le commentaire"
+                          title={t('pagePostCommentsModal.supprimerLeCommentaire')}
                           onClick={async () => {
                             const ok = await confirm({
-                              title: 'Supprimer ce commentaire ?',
-                              description: 'Cette action est irréversible.',
-                              confirmText: 'Supprimer',
+                              title: t('pagePostCommentsModal.supprimerCeCommentaire'),
+                              description: t('pagePostCommentsModal.cetteActionEstIrreversible'),
+                              confirmText: t('pagePostCommentsModal.supprimer'),
                               variant: 'danger',
                             })
                             if (ok) {
                               deleteMutation.mutate(comment.id)
-                              toast.success('Commentaire supprimé')
+                              toast.success(t('pagePostCommentsModal.commentaireSupprime'))
                             } else {
-                              toast.info('Suppression annulée')
+                              toast.info(t('pagePostCommentsModal.suppressionAnnulee'))
                             }
                           }}
                         >
@@ -271,7 +274,7 @@ export function PagePostCommentsModal({
                   enterKeyHint="send"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="Écrire un commentaire..."
+                  placeholder={t('pagePostCommentsModal.ecrireUnCommentaire')}
                   className="w-full bg-transparent text-[14px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-400"
                 />
               </div>
@@ -294,7 +297,7 @@ export function PagePostCommentsModal({
                 <span className="font-bold text-xs">?</span>
               </div>
               <div className="flex-1 bg-gray-100 dark:bg-[#2A2A2A] rounded-full px-4 py-2 flex items-center justify-center">
-                <span className="text-xs text-gray-500 dark:text-gray-400">Connectez-vous pour commenter</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400"><span>{t('pagePostCommentsModal.connectezVousPourCommenter')}</span></span>
               </div>
             </div>
           )}

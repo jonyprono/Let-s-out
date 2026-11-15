@@ -3,11 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { eventsApi } from '@/features/events/api'
 import { chatApi } from '@/features/chat/api'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 
+import { dateLocale, intlLocale } from '@/lib/locale'
 export function EventSuccessScreen() {
+  const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
@@ -39,11 +41,11 @@ export function EventSuccessScreen() {
     } catch (err: any) {
       const status = err?.response?.status
       if (status === 403) {
-        toast.info("Rejoignez l'événement pour accéder à la discussion.")
+        toast.info(t('eventDetails.toasts.joinToChat'))
       } else if (status === 404) {
-        toast.info("Aucune discussion trouvée pour cet événement.")
+        toast.info(t('eventDetails.toasts.noChat'))
       } else {
-        toast.error("Impossible de démarrer la conversation")
+        toast.error(t('eventDetails.toasts.chatStartError'))
       }
     } finally {
       setIsJoiningChat(false)
@@ -65,8 +67,8 @@ export function EventSuccessScreen() {
   let formattedDate = '--'
   let formattedHour = '--'
   try {
-    formattedDate = format(startDate, "d MMMM yyyy", { locale: fr })
-    formattedHour = format(startDate, "HH'h'", { locale: fr })
+    formattedDate = format(startDate, "d MMMM yyyy", { locale: dateLocale() })
+    formattedHour = format(startDate, "HH'h'", { locale: dateLocale() })
   } catch {}
 
 
@@ -85,9 +87,9 @@ export function EventSuccessScreen() {
         </div>
 
         {/* Title */}
-        <h1 className="text-[20px] font-semibold text-[#22C55E] mb-[12px] text-center">Participation validée !</h1>
+        <h1 className="text-[20px] font-semibold text-[#22C55E] mb-[12px] text-center"><span>{t('payment.joined.title')}</span></h1>
         <p className="text-[12px] font-normal font-inter text-[#6B6B6B] dark:text-[#A0A0A0] text-center mb-[32px] leading-relaxed max-w-[300px]">
-          Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres OUTSTERS.
+          <span>{t('payment.joined.desc')}</span>
         </p>
 
         {/* Summary card */}
@@ -95,25 +97,25 @@ export function EventSuccessScreen() {
           <h2 className="text-[14px] font-semibold text-[#1B1818] dark:text-white mb-[16px]">{event.title}</h2>
           <div className="flex flex-col gap-[14px]">
             <div className="flex items-start justify-between gap-4">
-              <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]">Date</span>
+              <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]"><span>{t('common.date')}</span></span>
               <span className="text-[13px] font-inter font-medium text-[#1B1818] dark:text-white text-right">
                 {formattedDate}, {formattedHour}
               </span>
             </div>
             <div className="w-full h-px bg-gray-100 dark:bg-white/5" />
             <div className="flex items-start justify-between gap-4">
-              <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]">Lieu</span>
+              <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]"><span>{t('common.place')}</span></span>
               <span className="text-[13px] font-inter font-medium text-[#1B1818] dark:text-white text-right">
-                {event.address ? `${event.address}` : ''}{event.city ? ` (${event.city})` : event.address ? '' : 'Lieu non précisé'}
+                {event.address ? `${event.address}` : ''}{event.city ? ` (${event.city})` : event.address ? '' : t('eventDetails.placeUnknown')}
               </span>
             </div>
             {amountPaid > 0 && (
               <>
                 <div className="w-full h-px bg-gray-100 dark:bg-white/5" />
                 <div className="flex items-start justify-between gap-4">
-                  <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]">Votre participation</span>
+                  <span className="text-[13px] font-inter text-[#6B6B6B] dark:text-[#A0A0A0]"><span>{t('payment.yourParticipation')}</span></span>
                   <span className="text-[13px] font-inter font-semibold text-[#FF9500] text-right">
-                    {amountPaid.toLocaleString('fr-FR')} F
+                    {amountPaid.toLocaleString(intlLocale())} F
                   </span>
                 </div>
               </>
@@ -131,13 +133,13 @@ export function EventSuccessScreen() {
           className="w-full h-[48px] rounded-[1000px] text-white font-semibold text-[14px] active:scale-95 transition-transform flex items-center justify-center disabled:opacity-70"
           style={{ background: isJoiningChat ? '#FF9500aa' : '#FF9500' }}
         >
-          {isJoiningChat ? 'Chargement...' : 'Rejoindre le groupe'}
+          <span>{isJoiningChat ? t('common.loading') : t('payment.joinGroup')}</span>
         </button>
         <button
           onClick={() => navigate(`/events/${id}`)}
           className="w-full h-[44px] rounded-[1000px] text-[#1B1818] dark:text-white font-medium text-[14px] active:scale-95 transition-transform bg-transparent border border-gray-200 dark:border-white/20"
         >
-          Retour à l'événement
+          <span>{t('payment.backToEvent')}</span>
         </button>
       </div>
     </div>

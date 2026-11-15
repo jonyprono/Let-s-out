@@ -1,10 +1,13 @@
 import { useState, useRef } from 'react';
+import { interestLabel } from '@/lib/interests'
+import i18n from '@/lib/i18n'
 import { ChevronLeft, MapPin, Loader2, User, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { COUNTRIES } from '@/lib/countries';
 import { useAuthStore } from '@/stores/auth.store';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next'
 
 async function reverseGeocode(lat: number, lon: number) {
   const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`, { headers: { 'Accept-Language': 'fr' } });
@@ -27,6 +30,7 @@ const interests = [
 ];
 
 export function Onboarding({ onComplete }: OnboardingProps) {
+  const { t } = useTranslation()
   const accessToken = useAuthStore((s) => s.accessToken);
   const [step, setStep] = useState(1);
   const [firstName, setFirstName] = useState('');
@@ -44,7 +48,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
   const handleLocate = () => {
     if (!navigator.geolocation) {
-      toast.error("La géolocalisation n'est pas supportée par votre navigateur.");
+      toast.error(t('profileSetup.laGeolocalisationNEstPas'));
       return;
     }
     setIsLocating(true);
@@ -57,14 +61,14 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           // Si le pays n'est pas dans la liste par défaut, on peut l'ajouter ou juste le set
           setCountry(co);
         }
-        toast.success("Localisation réussie !");
+        toast.success(t('profileSetup.localisationReussie'));
       } catch (err) {
-        toast.error("Impossible de récupérer l'adresse.");
+        toast.error(t('profileSetup.impossibleDeRecupererLAdresse'));
       } finally {
         setIsLocating(false);
       }
     }, () => {
-      toast.error("Impossible d'accéder à la géolocalisation.");
+      toast.error(t('profileSetup.impossibleDAccederALa'));
       setIsLocating(false);
     }, { timeout: 10000 });
   };
@@ -73,7 +77,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
     if (!file) return;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Format non supporté. Utilisez JPG, PNG ou WebP.');
+      toast.error(t('profileSetup.formatNonSupporteUtilisezJpg'));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
@@ -109,9 +113,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       if (!res.ok) throw new Error(data.error || 'Upload failed');
       // Store relative path — SafeImage resolves against API base on any device
       setProfilePicture(data.url);
-      toast.success('Photo ajoutée !');
+      toast.success(t('profileSetup.photoAjoutee'));
     } catch (e: any) {
-      toast.error(e.message || 'Erreur lors de l\'upload');
+      toast.error(e.message || t('profileSetup.erreurLorsDeLUpload'));
     } finally {
       setIsUploadingPhoto(false);
     }
@@ -174,12 +178,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm text-text-secondary mb-2 block">Prénom</label>
+                <label className="text-sm text-text-secondary mb-2 block"><span>{t('profileSetup.prenom')}</span></label>
                 <Input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Entrez votre prénom"
+                  placeholder={t('profileSetup.entrezVotrePrenom')}
                 />
               </div>
 
@@ -189,7 +193,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Entrez votre nom"
+                  placeholder={t('profileSetup.entrezVotreNom')}
                 />
               </div>
 
@@ -200,7 +204,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   onChange={(e) => setGender(e.target.value)}
                   className="app-input"
                 >
-                  <option value="">Sélectionner</option>
+                  <option value=""><span>{t('profileSetup.selectionner')}</span></option>
                   <option value="homme">Homme</option>
                   <option value="femme">Femme</option>
                   <option value="autre">Autre</option>
@@ -208,7 +212,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
 
               <div>
-                <label className="text-sm text-text-secondary mb-2 block">Date de naissance</label>
+                <label className="text-sm text-text-secondary mb-2 block"><span>{i18n.t('verifyProfile.birthDate')}</span></label>
                 <Input
                   type="date"
                   value={birthDate}
@@ -223,7 +227,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {step === 2 && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl">Où habitez-vous ?</h2>
+              <h2 className="text-xl"><span>{t('profileSetup.ouHabitezVous')}</span></h2>
               <button 
                 onClick={handleLocate}
                 disabled={isLocating}
@@ -267,7 +271,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                   type="text"
                   value={district}
                   onChange={(e) => setDistrict(e.target.value)}
-                  placeholder="Nom du quartier"
+                  placeholder={t('profileSetup.nomDuQuartier')}
                 />
               </div>
             </div>
@@ -277,9 +281,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {/* Step 3: Interests */}
         {step === 3 && (
           <div>
-            <h2 className="text-xl mb-2">Vos centres d'intérêt</h2>
+            <h2 className="text-xl mb-2"><span>{t('profileSetup.vosCentresDInteret')}</span></h2>
             <p className="text-sm text-text-secondary mb-6">
-              Sélectionnez au moins 3 centres d'intérêt
+              <span>{t('profileSetup.selectionnezAuMoins3Centres')}</span>
             </p>
 
             <div className="flex flex-wrap gap-2">
@@ -293,7 +297,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                       : 'border-border-primary text-text-secondary hover:border-text-secondary/30'
                   }`}
                 >
-                  {interest}
+                  <span>{interestLabel(t, interest)}</span>
                 </button>
               ))}
             </div>
@@ -303,9 +307,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         {/* Step 4: Profile Picture */}
         {step === 4 && (
           <div>
-            <h2 className="text-xl mb-2">Photo de profil</h2>
+            <h2 className="text-xl mb-2"><span>{t('profileSetup.photoDeProfil')}</span></h2>
             <p className="text-sm text-text-secondary mb-6">
-              Ajoutez une photo pour que les autres vous reconnaissent
+              <span>{t('profileSetup.ajoutezUnePhotoPourQue')}</span>
             </p>
 
             <div className="flex flex-col items-center">
@@ -348,10 +352,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 disabled={isUploadingPhoto}
                 className="text-action-primary text-sm font-semibold bg-action-primary/10 px-4 py-2 rounded-full active:scale-95 transition-transform disabled:opacity-50"
               >
-                {isUploadingPhoto ? 'Upload en cours...' : profilePicture ? 'Changer la photo' : 'Choisir une photo'}
+                {isUploadingPhoto ? 'Upload en cours...' : profilePicture ? t('profileSetup.changerLaPhoto') : t('profileSetup.choisirUnePhoto')}
               </button>
               <p className="text-xs text-gray-400 mt-2">
-                {profilePicture ? 'Appuyez pour modifier' : 'Vous pourrez la modifier plus tard'}
+                {profilePicture ? t('profileSetup.appuyezPourModifier') : t('profileSetup.vousPourrezLaModifierPlus')}
               </p>
             </div>
           </div>
@@ -368,7 +372,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           }
           className="w-full"
         >
-          {step === 4 ? 'Terminer' : 'Suivant'}
+          <span>{step === 4 ? i18n.t('profileSetup.finish') : i18n.t('createEvent.actions.next')}</span>
         </Button>
       </div>
 

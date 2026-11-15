@@ -9,6 +9,9 @@ import { toast } from 'sonner'
 import { getEventParticipationMode } from '@/lib/utils'
 import { useAuthStore } from '@/stores/auth.store'
 import { clearCreateEventDraft } from './CreateEvent'
+import { useTranslation } from 'react-i18next'
+import { eventCategoryLabel } from '@/lib/event-categories'
+import { intlLocale } from '@/lib/locale'
 
 interface ManageEventViewProps {
   event: any
@@ -20,19 +23,12 @@ interface ManageEventViewProps {
   onBack: () => void
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  SPORT: 'Sport', CULTURE: 'Culture & Art', FOOD: 'Gastronomie',
-  NIGHTLIFE: 'Soirées', TRAVEL: 'Voyages', GAMING: 'Gaming',
-  WELLNESS: 'Bien-être', MUSIC: 'Musique', OTHER: 'Autre',
-  SOCIAL: 'Social', TECH: 'Technologie', SCIENCE: 'Science & Education',
-  LIFESTYLE: 'Lifestyle', TOURISM: 'Tourisme', ART: 'Art',
-}
-
 // ── Pill badge for categories ─────────────────────────────────────────────────
 function CategoryPill({ cat }: { cat: string }) {
+  const { t } = useTranslation()
   return (
     <span className="text-[12px] font-bold text-[#3B82F6] bg-[#EFF6FF] px-3 py-1 rounded-full">
-      {CATEGORY_LABELS[cat] || cat}
+      <span>{eventCategoryLabel(t, cat)}</span>
     </span>
   )
 }
@@ -41,15 +37,16 @@ function CategoryPill({ cat }: { cat: string }) {
 function SectionCard({
   title, onEdit, children
 }: { title: string; onEdit: () => void; children: React.ReactNode }) {
+  const { t } = useTranslation()
   return (
     <div className="bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-white/10 rounded-[16px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-bold text-gray-900 dark:text-white text-[15px]">{title}</h3>
+        <h3 className="font-bold text-gray-900 dark:text-white text-[15px]"><span>{title}</span></h3>
         <button
           onClick={onEdit}
           className="text-[11px] text-gray-600 dark:text-gray-300 flex items-center gap-1.5 px-3 py-1 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-full font-bold active:scale-95 transition-transform"
         >
-          <Edit3 className="w-3.5 h-3.5" /> Modifier
+          <Edit3 className="w-3.5 h-3.5" /> <span>{t('common.edit')}</span>
         </button>
       </div>
       {children}
@@ -61,7 +58,7 @@ function SectionCard({
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex justify-between items-center mb-3 last:mb-0">
-      <span className="text-[14px] text-gray-500 dark:text-gray-400">{label}</span>
+      <span className="text-[14px] text-gray-500 dark:text-gray-400"><span>{label}</span></span>
       <span className="text-[14px] font-medium text-gray-900 dark:text-white text-right max-w-[200px] truncate">{value}</span>
     </div>
   )
@@ -70,6 +67,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
 export function ManageEventView({
   event, organizerName, organizerAvatar, formattedDate, formattedStart, formattedEnd, onBack
 }: ManageEventViewProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const qc = useQueryClient()
@@ -84,7 +82,7 @@ export function ManageEventView({
     const needsVerification = (event.price && event.price > 0) || (event.poolTarget && event.poolTarget > 0)
     const isVerified = (user as any)?.isVerified || (user as any)?.profile?.isVerified
     if (needsVerification && !isVerified) {
-      toast.error("Votre compte doit être vérifié pour publier un événement payant ou avec cagnotte.")
+      toast.error(t('eventView.kycRequired'))
       navigate('/verify-profile')
       return
     }
@@ -93,12 +91,12 @@ export function ManageEventView({
     try {
       await apiClient.put(`/events/${event.id}/publish`)
       clearCreateEventDraft()
-      toast.success('🎉 Événement publié avec succès !')
+      toast.success(t('createEvent.toasts.published'))
       qc.invalidateQueries({ queryKey: ['events'] })
       qc.invalidateQueries({ queryKey: ['events', event.id] })
       qc.invalidateQueries({ queryKey: ['users', 'activity'] })
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || 'Erreur lors de la publication')
+      toast.error(err?.response?.data?.error || t('createEvent.toasts.publishError'))
     } finally {
       setPublishing(false)
     }
@@ -120,7 +118,7 @@ export function ManageEventView({
         >
           <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
         </button>
-        <span className="text-[15px] font-bold text-gray-900 dark:text-white">Détails événement</span>
+        <span className="text-[15px] font-bold text-gray-900 dark:text-white"><span>{t('eventDetails.title')}</span></span>
         <div className="w-10 h-10" /> {/* Spacer for centering */}
       </div>
 
@@ -131,15 +129,15 @@ export function ManageEventView({
         {/* Info banner */}
         <div className="bg-[#EBF5FF] mb-6 p-4 rounded-[12px]">
           <p className="text-gray-600 dark:text-gray-300 text-[12px] leading-relaxed">
-            Cet événement n'est pas encore visible sur Let's Out.<br />
-            Publiez-le pour le rendre accessible publiquement.<br />
-            Ou ajoutez une cagnotte pour partager les frais.
+            <span>{t('eventView.notVisible1')}</span><br />
+            <span>{t('eventView.notVisible2')}</span><br />
+            <span>{t('eventView.notVisible3')}</span>
           </p>
         </div>
 
         <div className="space-y-4">
           {/* Organisateurs */}
-          <SectionCard title="Organisateurs" onEdit={() => handleEdit(5)}>
+          <SectionCard title={t('common.organizers')} onEdit={() => handleEdit(5)}>
             <div className="space-y-3">
               {/* Main organizer */}
               <div className="flex items-center gap-3">
@@ -172,7 +170,7 @@ export function ManageEventView({
                     />
                     <span className="text-[13px] text-gray-600 dark:text-gray-300 font-medium flex items-center gap-1.5">
                       {name}
-                      <span className="text-[9px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-bold">Co-hôte</span>
+                      <span className="text-[9px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full font-bold">{t('eventView.coHost')}</span>
                     </span>
                   </div>
                 )
@@ -190,50 +188,50 @@ export function ManageEventView({
           </SectionCard>
 
           {/* Informations */}
-          <SectionCard title="Informations" onEdit={() => handleEdit(1)}>
-            <InfoRow label="Nom" value={event.title} />
+          <SectionCard title={t('eventView.information')} onEdit={() => handleEdit(1)}>
+            <InfoRow label={t('eventView.name')} value={event.title} />
             <div className="flex justify-between items-center">
-              <span className="text-[14px] text-gray-500 dark:text-gray-400">Catégories</span>
+              <span className="text-[14px] text-gray-500 dark:text-gray-400"><span>{t('eventView.categories')}</span></span>
               <div className="flex flex-wrap gap-1.5 justify-end">
                 {categories.map(cat => <CategoryPill key={cat} cat={cat} />)}
-                {categories.length === 0 && <span className="text-[14px] text-gray-400">Non spécifié</span>}
+                {categories.length === 0 && <span className="text-[14px] text-gray-400"><span>{t('eventView.notSpecified')}</span></span>}
               </div>
             </div>
           </SectionCard>
 
           {/* Date & lieu */}
-          <SectionCard title="Date & lieu" onEdit={() => handleEdit(2)}>
-            <InfoRow label="Date" value={formattedDate} />
-            <InfoRow label="Heure" value={`${formattedStart} – ${formattedEnd} (GMT)`} />
-            <InfoRow label="Ville" value={event.city || 'Non spécifiée'} />
-            <InfoRow label="Localisation" value={event.address || 'Non spécifiée'} />
+          <SectionCard title={t('eventView.dateAndPlace')} onEdit={() => handleEdit(2)}>
+            <InfoRow label={t('common.date')} value={formattedDate} />
+            <InfoRow label={t('common.time')} value={`${formattedStart} – ${formattedEnd} (GMT)`} />
+            <InfoRow label={t('eventView.city')} value={event.city || t('eventView.notSpecifiedF')} />
+            <InfoRow label={t('eventView.location')} value={event.address || t('eventView.notSpecifiedF')} />
           </SectionCard>
 
           {/* Participation */}
-          <SectionCard title="Participation" onEdit={() => handleEdit(3)}>
-            <InfoRow label="Places" value={event.maxAttendees ? String(event.maxAttendees) : 'Illimitées'} />
-            <InfoRow label="Participation" value={event.price > 0 ? `${Number(event.price).toLocaleString()} F CFA` : getEventParticipationMode(event)} />
-            <InfoRow label="Confidentialité" value={event.isPrivate ? 'Privée' : 'Publique'} />
+          <SectionCard title={t('eventView.participation')} onEdit={() => handleEdit(3)}>
+            <InfoRow label={t('eventView.spots')} value={event.maxAttendees ? String(event.maxAttendees) : t('eventView.unlimited')} />
+            <InfoRow label={t('eventView.participation')} value={event.price > 0 ? `${Number(event.price).toLocaleString(intlLocale())} F CFA` : t(`common.participationMode.${getEventParticipationMode(event)}`)} />
+            <InfoRow label={t('createEvent.fields.privacy')} value={event.isPrivate ? t('eventView.private') : t('eventView.public')} />
           </SectionCard>
 
           {/* Description */}
-          <SectionCard title="Description" onEdit={() => handleEdit(4)}>
-            <p className="text-[13px] text-gray-600 dark:text-gray-300 line-clamp-3">{event.description || 'Aucune description'}</p>
+          <SectionCard title={t('eventView.description')} onEdit={() => handleEdit(4)}>
+            <p className="text-[13px] text-gray-600 dark:text-gray-300 line-clamp-3"><span>{event.description || t('eventView.noDescription')}</span></p>
             {event.description && event.description.length > 100 && (
-              <span className="text-[13px] text-gray-400 underline mt-1 block cursor-pointer">Voir plus</span>
+              <span className="text-[13px] text-gray-400 underline mt-1 block cursor-pointer"><span>{t('common.seeMore')}</span></span>
             )}
           </SectionCard>
 
           {/* Bannière */}
-          <SectionCard title="Bannière" onEdit={() => handleEdit(4)}>
+          <SectionCard title={t('createEvent.photos.banner')} onEdit={() => handleEdit(4)}>
             {event.coverUrl ? (
               <div className="w-full h-40 rounded-[12px] overflow-hidden">
-                <SafeImage src={event.coverUrl} alt="Bannière" className="w-full h-full object-cover" />
+                <SafeImage src={event.coverUrl} alt={t('createEvent.photos.banner')} className="w-full h-full object-cover" />
               </div>
             ) : (
               <div className="w-full h-40 rounded-[12px] bg-gray-100 dark:bg-[#2a2a2a] flex flex-col items-center justify-center gap-2">
                 <span className="text-3xl">🖼</span>
-                <span className="text-[13px] text-gray-400">Aucune image</span>
+                <span className="text-[13px] text-gray-400"><span>{t('eventView.noImage')}</span></span>
               </div>
             )}
           </SectionCard>
@@ -248,7 +246,7 @@ export function ManageEventView({
           className="w-full py-[14px] rounded-full border border-action-primary text-action-primary font-bold text-[14px] bg-white dark:bg-[#1A1A1A] flex items-center justify-center gap-2 active:scale-95 transition-transform"
         >
           <PiggyBank className="w-4 h-4" />
-          {event.poolTarget ? 'Modifier la cagnotte' : 'Ajouter cagnotte'}
+          <span>{event.poolTarget ? t('eventView.editPool') : t('eventView.addPool')}</span>
         </button>
         {/* Publier l'événement */}
         <button
@@ -263,7 +261,7 @@ export function ManageEventView({
           ) : (
             <Megaphone className="w-4 h-4" />
           )}
-          {publishing ? 'Publication...' : 'Publier l\'événement'}
+          <span>{publishing ? t('createEvent.done.publishing') : t('createEvent.done.publish')}</span>
         </button>
       </div>
     </div>

@@ -1,5 +1,4 @@
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { useState, useRef } from 'react'
 import { Share2, MessageCircle, Star, Heart } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
@@ -12,6 +11,7 @@ import { apiClient } from '@/lib/api-client'
 import { useAuthStore } from '@/stores/auth.store'
 import { useNavigate } from 'react-router'
 
+import { dateLocale } from '@/lib/locale'
 // ─── Shared: Attendee Avatars Row ────────────────────────────────────────────
 function AttendeesRow({ attendees, count, size = 24 }: {
   attendees?: { avatarUrl?: string | null; displayName?: string }[]
@@ -269,7 +269,7 @@ export function FeaturedEventCard({
   }
 
   const startDate = new Date(event.startAt)
-  const dateStr = format(startDate, "EEE. d MMM yyyy • HH:mm 'GMT'", { locale: fr })
+  const dateStr = format(startDate, "EEE. d MMM yyyy • HH:mm 'GMT'", { locale: dateLocale() })
   const location = [event.city, event.country].filter(Boolean).join(', ') || 'Lieu à définir'
 
   const attendeesList = attendees || ((event as any).bookings || []).map((b: any) => ({
@@ -380,7 +380,7 @@ export function SquareEventCard({
   }
 
   const startDate = new Date(event.startAt)
-  const dateStr = format(startDate, 'd MMM yyyy • HH:mm', { locale: fr })
+  const dateStr = format(startDate, 'd MMM yyyy • HH:mm', { locale: dateLocale() })
   const location = [event.city, event.country].filter(Boolean).join(', ') || 'Lieu à définir'
   const isPast = startDate < new Date()
 
@@ -485,8 +485,8 @@ export function RowEventCard({
 
   const startDate = new Date(event.startAt)
   const day = format(startDate, 'dd')
-  const month = format(startDate, 'MMM', { locale: fr }).toUpperCase().replace('.', '')
-  const fullDate = format(startDate, "EEE. d MMM yyyy • HH:mm 'GMT'", { locale: fr })
+  const month = format(startDate, 'MMM', { locale: dateLocale() }).toUpperCase().replace('.', '')
+  const fullDate = format(startDate, "EEE. d MMM yyyy • HH:mm 'GMT'", { locale: dateLocale() })
   const location = [event.city, event.country].filter(Boolean).join(', ') || 'Lieu à définir'
   const hasCagnotte = (event.poolTarget ?? 0) > 0
 

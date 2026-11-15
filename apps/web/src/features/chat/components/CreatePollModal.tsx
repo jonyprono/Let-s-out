@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import i18n from '@/lib/i18n'
 import { X, Plus, Trash2, Loader2, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { chatApi, Message } from '../api'
+import { useTranslation } from 'react-i18next'
 
 interface CreatePollModalProps {
   conversationId: string
@@ -23,6 +25,7 @@ export function CreatePollModal({
   onClose,
   onCreated,
 }: CreatePollModalProps) {
+  const { t } = useTranslation()
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState<string[]>(['', ''])
   const [durationDays, setDurationDays] = useState<number>(7)
@@ -32,7 +35,7 @@ export function CreatePollModal({
 
   const handleAddOption = () => {
     if (options.length >= 20) {
-      toast.info('Maximum 20 options par sondage.')
+      toast.info(i18n.t('createPollModal.maxOptions', { count: 20 }))
       return
     }
     setOptions((prev) => [...prev, ''])
@@ -59,13 +62,13 @@ export function CreatePollModal({
 
     const trimmedQuestion = question.trim()
     if (!trimmedQuestion) {
-      toast.error('Veuillez saisir une question pour votre sondage.')
+      toast.error(t('createPollModal.veuillezSaisirUneQuestionPour'))
       return
     }
 
     const cleanOptions = options.map((o) => o.trim()).filter(Boolean)
     if (cleanOptions.length < 2) {
-      toast.error('Veuillez remplir au moins 2 options de réponse.')
+      toast.error(t('createPollModal.veuillezRemplirAuMoins2'))
       return
     }
 
@@ -77,7 +80,7 @@ export function CreatePollModal({
         allowMultiple: false,
         durationDays: durationDays > 0 ? durationDays : null,
       })
-      toast.success('Sondage créé !')
+      toast.success(t('createPollModal.sondageCree'))
       onCreated?.(newMsg)
       onClose()
       // Reset form
@@ -85,7 +88,7 @@ export function CreatePollModal({
       setOptions(['', ''])
       setDurationDays(7)
     } catch (err: any) {
-      const msg = err?.response?.data?.error || err.message || 'Erreur lors de la création du sondage'
+      const msg = err?.response?.data?.error || err.message || t('createPollModal.erreurLorsDeLaCreation')
       toast.error(msg)
     } finally {
       setIsSubmitting(false)
@@ -104,7 +107,7 @@ export function CreatePollModal({
             <div className="w-8 h-8 rounded-full bg-[#FF7A00]/15 flex items-center justify-center text-[#FF7A00]">
               📊
             </div>
-            <h3 className="font-bold text-base text-gray-900 dark:text-white">Créer un sondage</h3>
+            <h3 className="font-bold text-base text-gray-900 dark:text-white"><span>{t('createPollModal.creerUnSondage')}</span></h3>
           </div>
           <button
             type="button"
@@ -120,13 +123,13 @@ export function CreatePollModal({
           {/* Question */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-              Posez une question
+              <span>{t('createPollModal.posezUneQuestion')}</span>
             </label>
             <input
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ex : Quelle date vous convient le mieux ?"
+              placeholder={t('createPollModal.exQuelleDateVousConvient')}
               maxLength={200}
               className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF7A00] transition-colors"
             />
@@ -175,7 +178,7 @@ export function CreatePollModal({
                 className="mt-2 w-full py-2.5 px-3 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-[#FF7A00] text-gray-600 dark:text-gray-400 hover:text-[#FF7A00] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
               >
                 <Plus className="w-4 h-4" />
-                <span>Ajouter une option</span>
+                <span><span>{t('createPollModal.ajouterUneOption')}</span></span>
               </button>
             )}
           </div>
@@ -186,7 +189,7 @@ export function CreatePollModal({
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
                 <Clock className="w-3.5 h-3.5 text-[#FF7A00]" />
-                <span>Durée du sondage</span>
+                <span><span>{t('createPollModal.dureeDuSondage')}</span></span>
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {DURATION_OPTIONS.map((opt) => (
@@ -217,10 +220,10 @@ export function CreatePollModal({
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Création en cours...</span>
+                  <span><span>{t('createPollModal.creationEnCours')}</span></span>
                 </>
               ) : (
-                <span>Créer le sondage</span>
+                <span><span>{t('createPollModal.creerLeSondage')}</span></span>
               )}
             </button>
           </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import i18n from '@/lib/i18n'
 import { useNavigate } from 'react-router';
 import { useAuthStore } from '@/stores/auth.store';
 import { chatApi } from '@/features/chat/api';
@@ -11,8 +12,10 @@ import {
   Message01Icon,
   ArrowRight01Icon,
 } from 'hugeicons-react';
+import { useTranslation } from 'react-i18next'
 
 export default function HelpSupport() {
+  const { t } = useTranslation()
   const navigate = useNavigate();
   const user = useAuthStore((s: any) => s.user);
   const displayName = user?.profile?.displayName?.split(' ')[0] || 'Utilisateur';
@@ -24,7 +27,7 @@ export default function HelpSupport() {
     { id: 'bot_armand', name: 'Armand', role: 'Support Client', rating: '4.8', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Armand&backgroundColor=b6e3f4' },
     { id: 'bot_estelle', name: 'Estelle', role: 'Support Technique', rating: '4.9', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Estelle&backgroundColor=ffdfbf' },
     { id: 'bot_brice', name: 'Brice', role: 'Support Paiements', rating: '4.7', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Brice&backgroundColor=c0aede' },
-    { id: 'bot_aicha', name: 'Aïcha', role: 'Support Général', rating: '4.8', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aicha&backgroundColor=ffb8b8' },
+    { id: 'bot_aicha', name: 'Aïcha', role: t('helpSupport.supportGeneral'), rating: '4.8', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Aicha&backgroundColor=ffb8b8' },
   ];
 
   const handleStartChat = async (botId: string) => {
@@ -33,7 +36,7 @@ export default function HelpSupport() {
       const conversation = await chatApi.createDM(botId);
       navigate(`/chat/${conversation.id}`);
     } catch (e) {
-      toast.error('Erreur lors de la création de la discussion');
+      toast.error(t('helpSupport.erreurLorsDeLaCreation'));
     } finally {
       setIsStartingChat(false);
     }
@@ -42,23 +45,23 @@ export default function HelpSupport() {
   const faqs = [
     {
       id: 1,
-      question: "Comment retirer mes fonds d'un événement ?",
-      answer: "Rendez-vous dans la section Portefeuille de votre compte, sélectionnez l'événement terminé et cliquez sur 'Retirer les fonds'. Assurez-vous d'avoir validé votre profil KYC au préalable."
+      question: t('helpSupport.commentRetirerMesFondsD'),
+      answer: t('helpSupport.rendezVousDansLaSection')
     },
     {
       id: 2,
-      question: "Quels sont les moyens de retrait disponibles ?",
-      answer: "Nous prenons en charge les transferts via Mobile Money (MoMo, Flooz, Wave, Orange Money) et les virements bancaires locaux selon votre pays."
+      question: t('helpSupport.quelsSontLesMoyensDe'),
+      answer: t('helpSupport.nousPrenonsEnChargeLes')
     },
     {
       id: 3,
-      question: "Comment créer un événement ?",
-      answer: "Cliquez sur l'icône '+' au milieu de la barre de navigation en bas de l'écran. Laissez-vous guider par les étapes de création de l'événement."
+      question: t('helpSupport.commentCreerUnEvenement'),
+      answer: t('helpSupport.cliquezSurLIconeAu')
     },
     {
       id: 4,
-      question: "Comment inviter mes amis à un événement ?",
-      answer: "Sur la page de l'événement, utilisez le bouton 'Partager' pour envoyer le lien de l'événement ou le QR code à vos amis."
+      question: t('helpSupport.commentInviterMesAmisA'),
+      answer: t('helpSupport.surLaPageDeL')
     }
   ];
 
@@ -82,7 +85,7 @@ export default function HelpSupport() {
               Aide & Support
             </h1>
             <p className="text-[12px] text-gray-500 font-medium">
-              Nous sommes là pour vous aider 👋
+              <span>{t('helpSupport.nousSommesLaPourVous')}</span>
             </p>
           </div>
         </div>
@@ -98,7 +101,7 @@ export default function HelpSupport() {
                 Bonjour {displayName} !
               </h2>
               <p className="text-[13px] text-gray-600 dark:text-gray-300 font-medium leading-snug pr-4">
-                Comment pouvons-nous vous aider aujourd'hui ?
+                <span>{t('helpSupport.commentPouvonsNousVousAider')}</span>
               </p>
             </div>
             {/* 3D Agent Illustration */}
@@ -122,7 +125,7 @@ export default function HelpSupport() {
               </div>
               <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap">Centre d'aide</span>
               <span className="text-[8px] text-center text-gray-500 dark:text-gray-400 font-medium leading-[1.1]">
-                Trouvez des<br/>réponses
+                <span>{i18n.t('helpSupport.findLine1')}</span><br/><span>{i18n.t('helpSupport.findLine2')}</span>
               </span>
             </button>
             {/* Card 2 */}
@@ -130,9 +133,9 @@ export default function HelpSupport() {
               <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
                 <Message01Icon size={18} className="text-[#FF7A00]" strokeWidth={2} />
               </div>
-              <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap">Nous écrire</span>
+              <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap"><span>{t('helpSupport.nousEcrire')}</span></span>
               <span className="text-[8px] text-center text-gray-500 dark:text-gray-400 font-medium leading-[1.1]">
-                Démarrez une<br/>conversation
+                <span>{i18n.t('helpSupport.startLine1')}</span><br/><span>{i18n.t('helpSupport.startLine2')}</span>
               </span>
             </button>
             {/* Card 3 */}
@@ -150,9 +153,9 @@ export default function HelpSupport() {
               <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-[#FF7A00]/10 flex items-center justify-center mb-2">
                 <Alert01Icon size={18} className="text-[#FF7A00]" strokeWidth={2} />
               </div>
-              <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap">Signaler bug</span>
+              <span className="text-[11px] font-bold text-gray-900 dark:text-white mb-0.5 whitespace-nowrap"><span>{t('helpSupport.signalerBug')}</span></span>
               <span className="text-[8px] text-center text-gray-500 dark:text-gray-400 font-medium leading-[1.1]">
-                Signalez un bug<br/>ou problème
+                <span>{i18n.t('helpSupport.reportLine1')}</span><br/><span>{i18n.t('helpSupport.reportLine2')}</span>
               </span>
             </button>
           </div>
@@ -163,10 +166,10 @@ export default function HelpSupport() {
           <div className="flex items-center justify-between px-4 mb-4">
             <div>
               <h3 className="text-[16px] font-bold text-gray-900 dark:text-white">
-                Discussion avec l'assistance
+                <span>{t('helpSupport.discussionAvecLAssistance')}</span>
               </h3>
               <p className="text-[12px] text-gray-500 dark:text-gray-400 font-medium mt-0.5">
-                Nos agents sont prêts à vous aider
+                <span>{t('helpSupport.nosAgentsSontPretsA')}</span>
               </p>
             </div>
             <div className="flex items-center gap-1.5">
@@ -205,7 +208,7 @@ export default function HelpSupport() {
           <div className="px-4">
             <div className="w-full bg-orange-50 dark:bg-[#FF7A00]/10 rounded-xl py-3 flex items-center justify-center gap-2">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#FF7A00]"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <span className="text-[12px] font-bold text-[#FF7A00]">Délai de réponse moyen : 2 minutes</span>
+              <span className="text-[12px] font-bold text-[#FF7A00]"><span>{t('helpSupport.delaiDeReponseMoyen2')}</span></span>
             </div>
           </div>
         </div>
@@ -213,8 +216,8 @@ export default function HelpSupport() {
         {/* ── Questions Fréquentes ── */}
         <div className="px-4 pb-[120px]">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[16px] font-bold text-gray-900 dark:text-white">Questions fréquentes</h3>
-            <button className="text-[12px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
+            <h3 className="text-[16px] font-bold text-gray-900 dark:text-white"><span>{t('helpSupport.questionsFrequentes')}</span></h3>
+            <button className="text-[12px] font-semibold text-[#FF7A00]"><span>{i18n.t('explorer.seeAll')}</span></button>
           </div>
 
           <div className="flex flex-col">

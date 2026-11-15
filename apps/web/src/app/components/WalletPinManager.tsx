@@ -132,7 +132,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
     },
     onSuccess: async (data, variables) => {
       if (variables.channel === 'whatsapp') {
-        toast.success(data.message || 'Code envoyé')
+        toast.success(data.message || t('walletPinManager.codeEnvoye'))
         setStep('RESET_OTP')
         setError(null)
       } else {

@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Loader2, ChevronLeft, XCircle, ChevronDown, Check } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
+import { intlLocale } from '@/lib/locale'
 
 import { Button } from '@/components/ui/button'
 import { PhoneInputField } from '@/components/shared/PhoneInputField'
@@ -51,13 +54,13 @@ export function PaymentFlow({
   minAmount = 0,
   defaultAmount = '',
   formSubmitText,
-  summaryTitle = 'Résumé de la transaction',
+  summaryTitle = i18n.t('payment.summaryTitle'),
   summaryItemTitle,
   summaryItemSubtitle,
   summaryItemDetails,
   summarySubmitText,
   transactionFee,
-  amountLabel = 'Participation',
+  amountLabel = i18n.t('payment.amountLabel.participation'),
   extraFormContent,
   anonymousBadge = false,
   onInitiate,
@@ -66,6 +69,7 @@ export function PaymentFlow({
   successScreen,
   onBack,
 }: PaymentFlowProps) {
+  const { t } = useTranslation()
   const [status, setStatus] = useState<'form' | 'loading' | 'summary' | 'success' | 'error'>('form')
   const [participationAmount, setParticipationAmount] = useState(defaultAmount)
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
@@ -111,15 +115,15 @@ export function PaymentFlow({
 
   const handleOpenSummary = () => {
     if (!finalAmount || finalAmount <= 0) {
-      toast.error('Veuillez entrer un montant valide')
+      toast.error(t('payment.errors.invalidAmount'))
       return
     }
     if (minAmount > 0 && finalAmount < minAmount) {
-      toast.error(`Montant minimum : ${minAmount.toLocaleString()} F`)
+      toast.error(t('payment.errors.minAmount', { amount: minAmount.toLocaleString(intlLocale()) }))
       return
     }
     if (!phoneNumber.trim()) {
-      toast.error('Veuillez saisir votre numéro de téléphone')
+      toast.error(t('payment.errors.phoneRequired'))
       return
     }
     setStatus('summary')
@@ -171,14 +175,14 @@ export function PaymentFlow({
               cleanFedaPayDOM()
               if (resp.reason === FedaPay.DIALOG_DISMISSED) {
                 setStatus('error')
-                toast.error('Paiement annulé')
+                toast.error(t('payment.toasts.cancelled'))
               } else {
                 // Wait for onSuccess to complete (which includes DB sync delays) before showing success screen
                 setStatus('loading')
                 Promise.resolve(onSuccess(finalAmount, data.isSandbox))
                   .then(() => setStatus('success'))
                   .catch(() => {
-                    toast.error('Erreur de synchronisation, veuillez rafraîchir')
+                    toast.error(t('payment.errors.syncRefresh'))
                     setStatus('error')
                   })
               }
@@ -240,7 +244,7 @@ export function PaymentFlow({
       }
     } catch (err: any) {
       setStatus('error')
-      toast.error(err.response?.data?.error || 'Erreur lors du paiement')
+      toast.error(err.response?.data?.error || t('payment.errors.generic'))
     }
   }
 
@@ -251,7 +255,7 @@ export function PaymentFlow({
       onSuccess(amount, true) // devMode is always sandbox-like
     } catch (err: any) {
       setStatus('error')
-      toast.error(err.response?.data?.error || 'Erreur')
+      toast.error(err.response?.data?.error || t('common.error'))
     }
   }
 
@@ -269,10 +273,10 @@ export function PaymentFlow({
         </div>
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
           <XCircle className="w-20 h-20 text-red-400" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Paiement impossible</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">Vérifiez le montant ou réessayez.</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white"><span>{t('payment.failed.title')}</span></h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-4"><span>{t('payment.failed.desc')}</span></p>
           <button onClick={() => setStatus('form')} className="w-full bg-gray-900 text-white py-4 rounded-full font-bold">
-            Réessayer
+            <span>{t('common.retry')}</span>
           </button>
         </div>
       </div>
@@ -283,7 +287,7 @@ export function PaymentFlow({
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-white dark:bg-[#1A1A1A] gap-4 font-poppins">
         <Loader2 className="w-10 h-10 text-[#FF7A00] animate-spin" />
-        <p className="text-gray-500 dark:text-gray-400 text-[14px]">Traitement en cours...</p>
+        <p className="text-gray-500 dark:text-gray-400 text-[14px]"><span>{t('payment.processing')}</span></p>
       </div>
     )
   }
@@ -307,7 +311,7 @@ export function PaymentFlow({
         {/* ── Amount field ── */}
         <div className="mb-4">
           <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">
-            Montant de votre participation
+            <span>{t('payment.amountField')}</span>
           </label>
           <div className="flex items-center border border-[#DFDFDF] rounded-[10px] bg-white dark:bg-[#1A1A1A] overflow-hidden h-[52px] focus-within:border-2 focus-within:border-[var(--border-brand-primary)] transition-all duration-150">
             <input
@@ -320,13 +324,13 @@ export function PaymentFlow({
             <span className="pr-4 text-[13px] font-semibold text-[#8D8D8D]">F CFA</span>
           </div>
           {minAmount > 0 && (
-            <p className="text-[11px] text-[#8D8D8D] mt-1 ml-0.5">Minimum {minAmount.toLocaleString()}F</p>
+            <p className="text-[11px] text-[#8D8D8D] mt-1 ml-0.5"><span>{t('pool.minimumAmount', { amount: minAmount.toLocaleString(intlLocale()) })}</span></p>
           )}
         </div>
 
         {/* ── Payment method ── */}
         <div className="mb-4">
-          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Méthode de paiement</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2"><span>{t('payment.method')}</span></label>
           <div className="flex flex-row items-center p-[10px] gap-[4px] w-full h-[44px] bg-white dark:bg-[#1A1A1A] border border-[#E0E0E0] rounded-[6px]">
             <img src="/logos/mobile-money.png" alt="Mobile money" className="w-6 h-6 object-contain shrink-0" />
             <span className="flex-1 text-[14px] text-gray-900 dark:text-white text-left">Mobile money</span>
@@ -336,7 +340,7 @@ export function PaymentFlow({
 
         {/* ── Operator (real dropdown) ── */}
         <div className="mb-4" ref={operatorRef}>
-          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Opérateur</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2"><span>{t('payment.operator')}</span></label>
           <div className="relative">
             <button
               type="button"
@@ -380,7 +384,7 @@ export function PaymentFlow({
 
         {/* ── Phone number ── */}
         <div className="mb-8">
-          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2">Numéro de téléphone</label>
+          <label className="block text-[13px] font-medium text-gray-900 dark:text-white mb-2"><span>{t('payment.phone')}</span></label>
           <div className="w-full">
             <PhoneInputField
               country={country}
@@ -401,7 +405,7 @@ export function PaymentFlow({
         </Button>
         <div className="flex flex-col items-center justify-center gap-[4px] pt-[0.25rem] w-full text-center">
           <div className="flex items-center justify-center gap-[6px] font-medium text-gray-900 dark:text-white text-[clamp(12px,3.5vw,14px)]">
-            Sécurisé PCI DSS 
+            <span>{t('payment.securePci')}</span> 
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M1.34844 0C0.990808 0 0.647828 0.142067 0.394948 0.394948C0.142067 0.647828 0 0.990808 0 1.34844V5.3061C0 11.5255 5.28169 13.5833 6.30877 13.9253C6.58912 14.0249 6.89525 14.0249 7.17559 13.9253C8.20267 13.5833 13.4844 11.5255 13.4844 5.3061V1.34844C13.4844 0.99081 13.3423 0.64783 13.0894 0.394948C12.8365 0.142067 12.4936 0 12.1359 0H1.34844Z" fill="#14CD7F"/>
               <path d="M9.50648 4.04541L6.04353 7.34908L4.315 5.69724" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
@@ -433,7 +437,7 @@ export function PaymentFlow({
                 <img src={selectedOperator.logo} alt={selectedOperator.label} className="w-6 h-6 object-contain shrink-0" />
                 <span className="text-[14px] font-semibold text-gray-900 dark:text-white flex-1">{selectedOperator.label} • {country.code.replace('+', '')} {phoneDisplay}</span>
               </div>
-              <p className="text-[11px] text-[#8D8D8D] mb-5 text-center">Moyen sécurisé de paiement</p>
+              <p className="text-[11px] text-[#8D8D8D] mb-5 text-center"><span>{t('payment.secureMethod')}</span></p>
 
               {/* Badge anonymat */}
               {anonymousBadge && (
@@ -442,8 +446,8 @@ export function PaymentFlow({
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     <line x1="1" y1="1" x2="23" y2="23" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  <span className="text-[12px] font-semibold text-[#FF7A00]">Contribution anonyme</span>
-                  <span className="text-[11px] text-[#FF7A00]/70 ml-auto">Votre nom ne sera pas affiché</span>
+                  <span className="text-[12px] font-semibold text-[#FF7A00]"><span>{t('payment.anonymous.badge')}</span></span>
+                  <span className="text-[11px] text-[#FF7A00]/70 ml-auto"><span>{t('payment.anonymous.nameHidden')}</span></span>
                 </div>
               )}
 
@@ -454,11 +458,11 @@ export function PaymentFlow({
                   <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{finalAmount.toLocaleString()}F</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-[13px] text-gray-500">Frais de transaction</span>
+                  <span className="text-[13px] text-gray-500"><span>{t('payment.fees')}</span></span>
                   <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{computedFee.toLocaleString()} F</span>
                 </div>
                 <div className="border-t border-[#F0F0F0] pt-3 flex items-center justify-between">
-                  <span className="text-[14px] font-bold text-gray-900 dark:text-white">Net à payer</span>
+                  <span className="text-[14px] font-bold text-gray-900 dark:text-white"><span>{t('payment.netToPay')}</span></span>
                   <span className="text-[15px] font-bold text-gray-900 dark:text-white">{netToPay.toLocaleString()} F</span>
                 </div>
               </div>

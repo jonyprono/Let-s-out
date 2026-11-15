@@ -17,6 +17,7 @@ import ExplorerMap from '@/app/components/ExplorerMap';
 import { useNotifications } from '@/features/notifications/api';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { searchPlaces, GeoPlace } from '@/lib/geo';
+import i18n from '@/lib/i18n'
 
 interface ExplorerProps {
   onNavigate: (screen: string, id?: string) => void;
@@ -24,43 +25,15 @@ interface ExplorerProps {
 
 // Filtres supprimés
 
-import { 
-  PaintBoardIcon, 
-  MaskTheater01Icon, 
-  FootballIcon, 
-  HealthIcon, 
-  KitchenUtensilsIcon, 
-  DrinkIcon, 
-  MoleculesIcon, 
-  PartyIcon, 
-  HandPrayerIcon, 
-  ShoppingBag02Icon, 
-  MusicNote03Icon, 
-  CameraVideoIcon 
-} from 'hugeicons-react';
-
-const CATEGORY_LABELS = [
-  { id: 'CULTURE',    label: 'Art et culture',            icon: PaintBoardIcon },
-  { id: 'GAMING',     label: 'Comédie',                   icon: MaskTheater01Icon },
-  { id: 'SPORT',      label: 'Sport',                     icon: FootballIcon },
-  { id: 'WELLNESS',   label: 'Santé et bien-être',        icon: HealthIcon },
-  { id: 'FOOD',       label: 'Cuisine et gastronomie',    icon: KitchenUtensilsIcon },
-  { id: 'LIFESTYLE',  label: 'Boissons',                  icon: DrinkIcon },
-  { id: 'SOCIAL',     label: 'Réseautage professionnel',  icon: MoleculesIcon },
-  { id: 'NIGHTLIFE',  label: 'Fêtes',                     icon: PartyIcon },
-  { id: 'OTHER',      label: 'Religion',                  icon: HandPrayerIcon },
-  { id: 'TECH',       label: 'Shopping',                  icon: ShoppingBag02Icon },
-  { id: 'MUSIC',      label: 'Musique et son',            icon: MusicNote03Icon },
-  { id: 'ART',        label: 'Télévision et cinéma',      icon: CameraVideoIcon },
-];
+import { EVENT_CATEGORIES, eventCategoryLabel } from '@/lib/event-categories';
 
 // Filter tabs — pill style with border
 const filterTabs = [
-  { id: 'tout',          label: 'Tout',         filter: null },
-  { id: 'pour-vous',     label: 'Pour vous',    filter: 'recommended' },
-  { id: 'en-ce-moment',  label: 'En ce moment', filter: 'ongoing' },
-  { id: 'ce-soir',       label: 'Ce soir',      filter: 'tonight' },
-  { id: 'ce-week-end',   label: 'Week-end',     filter: 'weekend' },
+  { id: 'tout',          get label() { return i18n.t('explorer.tabAll') },         filter: null },
+  { id: 'pour-vous',     get label() { return i18n.t('explorer.pourVous') },    filter: 'recommended' },
+  { id: 'en-ce-moment',  get label() { return i18n.t('explorer.tabNow') }, filter: 'ongoing' },
+  { id: 'ce-soir',       get label() { return i18n.t('explorer.ceSoir') },      filter: 'tonight' },
+  { id: 'ce-week-end',   get label() { return i18n.t('explorer.tabWeekend') },     filter: 'weekend' },
 ];
 
 type Screen = 'list' | 'filter' | 'search' | 'join';
@@ -220,7 +193,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               autoFocus
               value={mapSearch}
               onChange={(e) => setMapSearch(e.target.value)}
-              placeholder="Rechercher une ville..."
+              placeholder={t('explorer.rechercherUneVille')}
               className="flex-1 text-[15px] outline-none bg-transparent text-[var(--color-text-primary)] font-poppins min-w-0"
             />
             {mapSearch.length > 0 ? (
@@ -258,7 +231,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
 
               {recentCities.length > 0 && (
                 <div style={{ width: '100%' }}>
-                  <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontFamily: 'Poppins, sans-serif', fontWeight: 600, marginBottom: 8 }}>Récents</p>
+                  <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontFamily: 'Poppins, sans-serif', fontWeight: 600, marginBottom: 8 }}><span>{t('explorer.recents')}</span></p>
                   {recentCities.map((city, idx) => (
                     <button
                       key={idx}
@@ -296,7 +269,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 </button>
               ))}
               {filteredCities.length === 0 && (
-                <p style={{ width: '100%', textAlign: 'center', padding: '32px 0', color: 'var(--color-text-secondary)', fontSize: 15, fontFamily: 'Poppins, sans-serif' }}>Aucune ville trouvée</p>
+                <p style={{ width: '100%', textAlign: 'center', padding: '32px 0', color: 'var(--color-text-secondary)', fontSize: 15, fontFamily: 'Poppins, sans-serif' }}><span>{t('explorer.aucuneVilleTrouvee')}</span></p>
               )}
             </div>
           )}
@@ -313,20 +286,20 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <button onClick={() => setScreen('list')} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform shadow-sm">
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Rejoindre</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white"><span>{t('explorer.rejoindre')}</span></h2>
         </div>
 
         <div className="flex-1 px-4 pt-8 flex flex-col items-center">
           <div className="w-16 h-16 bg-brand-orange-50 rounded-full flex items-center justify-center mb-6 shadow-sm">
             <Lock className="w-8 h-8 text-action-primary" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center">Événement Privé</h3>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 text-center"><span>{t('explorer.evenementPrive')}</span></h3>
           <p className="text-text-secondary text-center mb-10 text-[15px] leading-relaxed max-w-[280px]">
-            Entrez le code d'accès partagé par l'organisateur pour rejoindre cet événement.
+            <span>{t('explorer.entrezLeCodeDAcces')}</span>
           </p>
 
           <div className="w-full bg-background-white rounded-3xl p-6 shadow-sm border border-gray-100 dark:border-white/10 mb-6">
-            <label className="block text-sm font-bold text-gray-700 mb-150">Code d'accès</label>
+            <label className="block text-sm font-bold text-gray-700 mb-150"><span>{t('explorer.codeDAcces')}</span></label>
             <input
               type="text"
               placeholder="Ex: a1b2c3d4"
@@ -347,7 +320,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 setJoinCode('');
                 onNavigate('event-details', data.event?.id || data.eventId || data.id);
               } catch (e: any) {
-                alert(e?.response?.data?.error || e?.response?.data?.message || 'Code invalide ou événement introuvable.');
+                alert(e?.response?.data?.error || e?.response?.data?.message || t('explorer.codeInvalideOuEvenementIntrouvable'));
               } finally {
                 setIsJoining(false);
               }
@@ -356,7 +329,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
             className="w-full py-200 rounded-full font-bold text-white shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
             style={{ background: 'linear-gradient(135deg, var(--action-primary), var(--action-primary))' }}
           >
-            {isJoining ? <Loader2 className="w-6 h-6 animate-spin" /> : "Rejoindre l'événement"}
+            {isJoining ? <Loader2 className="w-6 h-6 animate-spin" /> : t('explorer.rejoindreLEvenement')}
           </button>
         </div>
       </div>
@@ -391,7 +364,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       : true;
 
     // Filtre par onglet actif
-    const tab = filterTabs.find(t => t.id === selectedCategory);
+    const tab = filterTabs.find(ft => ft.id === selectedCategory);
     const tabFilter = tab?.filter;
     let tabMatch = true;
     if (tabFilter === 'ongoing') {
@@ -484,8 +457,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
     const title = viewAll === 'featured'
       ? 'En vedette'
       : viewAll === 'nearby'
-      ? 'Près de vous'
-      : 'Récemment passés';
+      ? t('explorer.presDeVous')
+      : t('explorer.recemmentPasses');
     
     return (
       <div className="w-full h-full flex flex-col bg-white dark:bg-black">
@@ -547,7 +520,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               <Search01Icon className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.5} />
               <input
                 type="text"
-                placeholder="Rechercher des événements, artistes, lieux..."
+                placeholder={t('explorer.rechercherDesEvenementsArtistesLieux')}
                 value={eventSearch}
                 onChange={e => setEventSearch(e.target.value)}
                 onFocus={() => setEventSearchFocused(true)}
@@ -583,7 +556,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onClick={() => {
                     setSelectedPlaceTarget({ lat: place.lat, lon: place.lon, label: place.label });
                     setPlaceSuggestions([]);
-                    toast.success(`Positionné sur : ${place.name || place.label.split(',')[0]}`);
+                    toast.success(t('explorer.positionneSur', { v0: place.name || place.label.split(',')[0] }));
                   }}
                   className="w-full text-left px-3.5 py-2.5 flex items-center gap-2.5 hover:bg-gray-50 dark:hover:bg-white/5 active:bg-orange-50 transition-colors"
                 >
@@ -604,7 +577,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
           <button onClick={openSearch} className="flex items-center gap-1 mb-2 active:opacity-70 transition-opacity">
             <Location01Icon className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
             <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
-              {currentLocation || 'Où allez-vous ?'}
+              {currentLocation || t('explorer.ouAllezVous')}
             </span>
             <ArrowDown01Icon className="w-4 h-4 text-gray-500" strokeWidth={2} />
           </button>
@@ -635,7 +608,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   Explorer <span className="text-[#FF7A00]">✦</span>
                 </h1>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
-                  Découvrez des expériences uniques autour de vous
+                  <span>{t('explorer.decouvrezDesExperiencesUniquesAutour')}</span>
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -652,7 +625,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 <Search01Icon className="w-4 h-4 text-gray-400 shrink-0" strokeWidth={1.5} />
                 <input
                   type="text"
-                  placeholder="Rechercher des événements, artistes, lieux..."
+                  placeholder={t('explorer.rechercherDesEvenementsArtistesLieux')}
                   value={eventSearch}
                   onChange={e => setEventSearch(e.target.value)}
                   onFocus={() => setEventSearchFocused(true)}
@@ -666,7 +639,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 )}
                 <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-0.5" />
                 <button
-                  onClick={() => toast('Filtres avancés bientôt disponibles', { icon: '🚧' })}
+                  onClick={() => toast(t('explorer.filtresAvancesBientotDisponibles'), { icon: '🚧' })}
                   className="w-7 h-7 flex items-center justify-center active:scale-95 transition-transform"
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -687,14 +660,14 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   <path d="M9 3L4 5.5v15L9 18l6 3 5-2.5V3.5L15 6 9 3z" stroke="#6B7280" strokeWidth="1.8" strokeLinejoin="round"/>
                   <path d="M9 3v15M15 6v15" stroke="#6B7280" strokeWidth="1.8" strokeLinecap="round"/>
                 </svg>
-                <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">Carte</span>
+                <span className="text-[13px] font-semibold text-gray-700 dark:text-gray-200">{i18n.t('createEvent.location.tabMap')}</span>
               </button>
             </div>
 
             <button onClick={openSearch} className="flex items-center gap-1 mb-1.5 active:opacity-70 transition-opacity">
               <Location01Icon className="w-4 h-4 text-gray-500" strokeWidth={1.8} />
               <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
-                {currentLocation || 'Où allez-vous ?'}
+                {currentLocation || t('explorer.ouAllezVous')}
               </span>
               <ArrowDown01Icon className="w-4 h-4 text-gray-500" strokeWidth={2} />
             </button>
@@ -712,7 +685,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         : 'bg-white dark:bg-transparent text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'
                     }`}
                   >
-                    {tab.label}
+                    <span>{tab.label}</span>
                   </button>
                 );
               })}
@@ -726,7 +699,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               
               {/* Category Icons Row (Scrolls away) */}
               <div className="flex gap-3 px-4 pt-1 pb-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              {CATEGORY_LABELS.map((cat) => {
+              {EVENT_CATEGORIES.map((cat) => {
                 const isActive = selectedIconCategory === cat.id;
                 return (
                   <button
@@ -739,11 +712,11 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         ? 'bg-orange-50 dark:bg-[#FF7A00]/10 border-orange-200 dark:border-[#FF7A00]/30'
                         : 'bg-orange-50/60 dark:bg-[#FF7A00]/5 border-orange-100 dark:border-[#FF7A00]/10'
                     }`}>
-                      <cat.icon size={20} className="text-[#FF7A00]" strokeWidth={1.8} />
+                      <cat.Icon size={20} className="text-[#FF7A00]" strokeWidth={1.8} />
                     </div>
                     <span className={`text-[10px] text-center font-medium leading-tight ${
                       isActive ? 'text-[#FF7A00] font-semibold' : 'text-gray-600 dark:text-gray-400'
-                    }`}>{cat.label}</span>
+                    }`}>{eventCategoryLabel(t, cat.id)}</span>
                   </button>
                 );
               })}
@@ -764,7 +737,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">
                           En vedette <span>🔥</span>
                         </h2>
-                        <button onClick={() => setViewAll('featured')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
+                        <button onClick={() => setViewAll('featured')} className="text-[13px] font-semibold text-[#FF7A00]"><span>{i18n.t('explorer.seeAll')}</span></button>
                       </div>
                       <div 
                         ref={featuredScrollRef}
@@ -781,7 +754,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                             key={ev.id}
                             event={ev}
                             onClick={() => onNavigate('event-details', ev.id)}
-                            badge={idx === 0 ? 'À LA UNE' : idx === 1 ? 'POPULAIRE' : 'NOUVEAU'}
+                            badge={idx === 0 ? t('explorer.aLaUne') : idx === 1 ? 'POPULAIRE' : 'NOUVEAU'}
                           />
                         ))}
                       </div>
@@ -805,8 +778,8 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   {filteredEvents.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Événements près de vous</h2>
-                        <button onClick={() => setViewAll('nearby')} className="text-[13px] font-semibold text-[#FF7A00]">Voir tout &gt;</button>
+                        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white"><span>{t('explorer.evenementsPresDeVous')}</span></h2>
+                        <button onClick={() => setViewAll('nearby')} className="text-[13px] font-semibold text-[#FF7A00]"><span>{i18n.t('explorer.seeAll')}</span></button>
                       </div>
                       <div className="space-y-3">
                         {sortNearbyEvents(filteredEvents).map(ev => (
@@ -827,7 +800,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                             {isFetchingNextPage ? (
                               <svg className="animate-spin w-4 h-4 text-[#FF7A00]" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                             ) : null}
-                            {isFetchingNextPage ? 'Chargement...' : 'Voir plus d\'événements'}
+                            {isFetchingNextPage ? 'Chargement...' : t('explorer.voirPlusDEvenements')}
                           </button>
                         </div>
                       )}
@@ -840,7 +813,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">
-                            Événements récemment passés
+                            <span>{t('explorer.evenementsRecemmentPasses')}</span>
                           </h2>
                           <span className="text-[10px] bg-orange-50 dark:bg-orange-500/10 text-[#FF7A00] font-semibold px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/20">
                             7 jours
@@ -848,12 +821,12 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                         </div>
                         {filteredRecentlyEnded.length > 3 && (
                           <button onClick={() => setViewAll('recent')} className="text-[13px] font-semibold text-[#FF7A00]">
-                            Voir tout &gt;
+                            <span>{i18n.t('explorer.seeAll')}</span>
                           </button>
                         )}
                       </div>
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-3">
-                        Ces événements sont terminés depuis moins de 7 jours. Retrouvez les souvenirs et les avis.
+                        <span>{t('explorer.cesEvenementsSontTerminesDepuis')}</span>
                       </p>
                       <div className="space-y-3">
                         {filteredRecentlyEnded.slice(0, 4).map(ev => (

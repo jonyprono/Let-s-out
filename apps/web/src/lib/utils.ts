@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { toast } from 'sonner'
 
+import { intlLocale } from '@/lib/locale'
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -9,12 +10,12 @@ export function cn(...inputs: ClassValue[]) {
 export function formatDate(date: string | Date, format = 'short') {
   const d = new Date(date)
   if (format === 'short') {
-    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    return d.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' })
   }
   if (format === 'time') {
-    return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    return d.toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' })
   }
-  return d.toLocaleDateString('fr-FR', {
+  return d.toLocaleDateString(intlLocale(), {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -24,7 +25,7 @@ export function formatDate(date: string | Date, format = 'short') {
 
 export function formatPrice(amount: number, currency = 'EUR') {
   if (amount === 0) return 'Gratuit'
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount)
+  return new Intl.NumberFormat(intlLocale(), { style: 'currency', currency }).format(amount)
 }
 
 export function getEventParticipationMode(event: { price?: number | null, poolTarget?: number | null, participationMode?: string | null }) {

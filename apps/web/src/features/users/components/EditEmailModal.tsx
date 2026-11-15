@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import i18n from '@/lib/i18n'
 import { X, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiClient } from '@/lib/api-client';
@@ -33,12 +34,12 @@ export function EditEmailModal({ onClose }: Props) {
 
   const handleSendCode = () => {
     if (!email || !email.includes('@')) {
-      toast.error('Veuillez entrer une adresse e-mail valide.');
+      toast.error(t('editEmailModal.veuillezEntrerUneAdresseE'));
       return;
     }
 
     if (email === user?.email) {
-      toast.success('Adresse e-mail à jour');
+      toast.success(t('editEmailModal.adresseEMailAJour'));
       onClose();
       return;
     }
@@ -52,7 +53,7 @@ export function EditEmailModal({ onClose }: Props) {
           setTimeout(() => otpRefs.current[0]?.focus(), 100);
         },
         onError: (e: any) => {
-          toast.error(e?.response?.data?.message || "Erreur lors de l'envoi du code");
+          toast.error(e?.response?.data?.message || t('editEmailModal.erreurLorsDeLEnvoi'));
         },
       }
     );
@@ -71,19 +72,19 @@ export function EditEmailModal({ onClose }: Props) {
             // Le code est revérifié (et consommé) par le serveur avant d'enregistrer l'adresse
             const { data } = await apiClient.patch<{ ticketsToSend?: number }>('/users/me/email', { email, code: codeStr });
             await refreshUser();
-            toast.success('Adresse e-mail mise à jour avec succès');
+            toast.success(t('editEmailModal.adresseEMailMiseA'));
             // Billets des événements à venir envoyés à la nouvelle adresse (tickets@letsout.app)
             if (data?.ticketsToSend) {
               toast.success(t('tickets.emailedAfterEmailAdded', { count: data.ticketsToSend, email }));
             }
             onClose();
           } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Erreur lors de la mise à jour');
+            toast.error(err.response?.data?.error || t('editEmailModal.erreurLorsDeLaMise'));
           } finally {
             setIsPatching(false);
           }
         },
-        onError: () => toast.error('Code invalide ou expiré.'),
+        onError: () => toast.error(t('editEmailModal.codeInvalideOuExpire')),
       }
     );
   };
@@ -96,10 +97,10 @@ export function EditEmailModal({ onClose }: Props) {
       {
         onSuccess: () => {
           setCountdown(59);
-          toast.success('Code renvoyé');
+          toast.success(t('editEmailModal.codeRenvoye'));
           setTimeout(() => otpRefs.current[0]?.focus(), 100);
         },
-        onError: () => toast.error('Impossible de renvoyer le code'),
+        onError: () => toast.error(t('editEmailModal.impossibleDeRenvoyerLeCode')),
       }
     );
   };
@@ -123,7 +124,7 @@ export function EditEmailModal({ onClose }: Props) {
       <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl sm:rounded-3xl p-5 shadow-xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-[#FFFFFF]">
-            {step === 1 ? (user?.email ? 'Modifier l\'e-mail' : 'Ajouter un e-mail') : 'Vérification'}
+            {step === 1 ? (user?.email ? t('editEmailModal.modifierLEMail') : t('editEmailModal.ajouterUnEMail')) : t('editEmailModal.verification')}
           </h2>
           <button
             onClick={onClose}
@@ -146,7 +147,7 @@ export function EditEmailModal({ onClose }: Props) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-12 py-4 text-[15px] outline-none focus:border-2 focus:border-[var(--brand-orange-500)] focus:bg-white dark:bg-[#1A1A1A] transition-all"
-                    placeholder="votre@email.com"
+                    placeholder={t('editEmailModal.votreEmailCom')}
                   />
                   <Mail
                     className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
@@ -162,14 +163,14 @@ export function EditEmailModal({ onClose }: Props) {
               className="w-full py-4 flex items-center justify-center text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #FF7A00 0%, #FF7A00 100%)' }}
             >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Suivant'}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : i18n.t('createEvent.actions.next')}
             </button>
           </>
         ) : (
           <>
             <div className="text-center mb-8">
               <p className="text-[14px] text-gray-500 dark:text-gray-400">
-                Code à 6 chiffres envoyé à <strong className="text-gray-900 dark:text-white">{email}</strong>
+                <span>{i18n.t('editEmailModal.codeSentTo')}</span> <strong className="text-gray-900 dark:text-white">{email}</strong>
               </p>
             </div>
 
@@ -204,7 +205,7 @@ export function EditEmailModal({ onClose }: Props) {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Renvoyer le code
+              <span>{t('editEmailModal.renvoyerLeCode')}</span>
               {countdown > 0 && (
                 <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
                   {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
@@ -218,7 +219,7 @@ export function EditEmailModal({ onClose }: Props) {
               className="w-full py-4 flex items-center justify-center text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #FF7A00 0%, #FF7A00 100%)' }}
             >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Vérifier et Sauvegarder'}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('editEmailModal.verifierEtSauvegarder')}
             </button>
           </>
         )}

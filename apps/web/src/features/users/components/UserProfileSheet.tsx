@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { usersApi } from '../api'
 import { chatApi } from '@/features/chat/api'
 import { ReportModal } from '@/components/shared/ReportModal'
+import { useTranslation } from 'react-i18next'
 
 interface PublicProfile {
   id: string
@@ -29,6 +30,7 @@ interface UserProfileSheetProps {
 }
 
 export function UserProfileSheet({ userId, username, preview, commonGroup, onClose }: UserProfileSheetProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const me = useAuthStore((s) => s.user)
@@ -67,10 +69,10 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
       await usersApi.reportUser(targetUserId, reason)
     },
     onSuccess: () => {
-      toast.success('Utilisateur signalé')
+      toast.success(t('userProfileSheet.utilisateurSignale'))
       setIsReportModalOpen(false)
     },
-    onError: () => toast.error('Erreur lors du signalement')
+    onError: () => toast.error(t('userProfileSheet.erreurLorsDuSignalement'))
   })
 
   const blockMut = useMutation({
@@ -82,10 +84,10 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
       qc.invalidateQueries({ queryKey: ['user-profile'] })
       qc.invalidateQueries({ queryKey: ['chat', 'conversation'] })
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
-      toast.success('Utilisateur bloqué')
+      toast.success(t('userProfileSheet.utilisateurBloque'))
       onClose()
     },
-    onError: () => toast.error('Erreur lors du blocage')
+    onError: () => toast.error(t('userProfileSheet.erreurLorsDuBlocage'))
   })
 
   const unblockMut = useMutation({
@@ -97,22 +99,22 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
       qc.invalidateQueries({ queryKey: ['user-profile'] })
       qc.invalidateQueries({ queryKey: ['chat', 'conversation'] })
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
-      toast.success('Utilisateur débloqué')
+      toast.success(t('userProfileSheet.utilisateurDebloque'))
     },
-    onError: () => toast.error('Erreur lors du déblocage')
+    onError: () => toast.error(t('userProfileSheet.erreurLorsDuDeblocage'))
   })
 
   const sendFriendMutation = useMutation({
     mutationFn: () => apiClient.post(`/users/${targetUserId}/friend-request`, {}),
     onSuccess: () => {
-      toast.success('Demande d\'ami envoyée !')
+      toast.success(t('userProfileSheet.demandeD'))
       qc.invalidateQueries({ queryKey: ['user-profile', userId ?? username] })
       qc.invalidateQueries({ queryKey: ['users', 'friends'] })
     },
     onError: (e: any) => {
       const msg = e?.response?.data?.error
       if (msg === 'Request already exists') {
-        toast.info('Demande déjà envoyée')
+        toast.info(t('userProfileSheet.demandeDejaEnvoyee'))
         qc.invalidateQueries({ queryKey: ['user-profile', userId ?? username] })
       } else {
         toast.error(msg || 'Erreur')
@@ -208,7 +210,7 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
             className="flex flex-row justify-center items-center px-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#E5E5E5] rounded-[8px] active:scale-95 transition-transform mt-1"
           >
             <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252]">
-              Voir le profil
+              <span>{t('userProfileSheet.voirLeProfil')}</span>
             </span>
           </button>
         </div>
@@ -262,7 +264,7 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
                 <div className="flex items-center justify-center">
                   <AlertTriangle className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
-                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
+                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left"><span>{t('userProfileSheet.signaler')}</span></span>
               </button>
 
               {friendStatus === 'blocked' ? (
@@ -274,7 +276,7 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
                   <div className="flex items-center justify-center">
                     {unblockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-green-500" /> : <Ban className="w-[18px] h-[18px] text-green-500" strokeWidth={1.5} />}
                   </div>
-                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-green-600 text-left">Débloquer</span>
+                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-green-600 text-left"><span>{t('userProfileSheet.debloquer')}</span></span>
                 </button>
               ) : (
                 <button 
@@ -285,7 +287,7 @@ export function UserProfileSheet({ userId, username, preview, commonGroup, onClo
                   <div className="flex items-center justify-center">
                     {blockMut.isPending ? <Loader2 className="w-[18px] h-[18px] animate-spin text-red-500" /> : <Ban className="w-[18px] h-[18px] text-red-500" strokeWidth={1.5} />}
                   </div>
-                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-red-500 text-left">Bloquer</span>
+                  <span className="font-poppins font-medium text-[14px] leading-[20px] text-red-500 text-left"><span>{t('userProfileSheet.bloquer')}</span></span>
                 </button>
               )}
             </div>

@@ -1,27 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import i18n from '@/lib/i18n'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { X, Upload, Loader2, CheckCircle2, AlertCircle, Film, ChevronDown, Images, Music, Trash2, Plus } from 'lucide-react'
 import { apiClient } from '@/lib/api-client'
 import { videosApi } from '@/features/videos/api'
 import { toast } from 'sonner'
 
-const CATEGORY_LABELS: Record<string, string> = {
-  MUSIC: '🎵 Musique',
-  NIGHTLIFE: '🎉 Soirées',
-  SPORT: '⚽ Sport',
-  CULTURE: '🎭 Culture',
-  FOOD: '🍽️ Gastronomie',
-  ART: '🎨 Art',
-  TECH: '💻 Tech',
-  GAMING: '🎮 Gaming',
-  WELLNESS: '🧘 Bien-être',
-  TRAVEL: '✈️ Voyage',
-  SOCIAL: '👥 Social',
-  SCIENCE: '🔬 Science',
-  LIFESTYLE: '🌟 Lifestyle',
-  TOURISM: '🗺️ Tourisme',
-  OTHER: '📌 Autre',
-}
+import { useTranslation } from 'react-i18next'
+import { EVENT_CATEGORIES, getEventCategory, eventCategoryShortLabel } from '@/lib/event-categories'
 
 interface UploadVideoModalProps {
   eventId?: string
@@ -32,6 +18,7 @@ interface UploadVideoModalProps {
 }
 
 export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCategory, onClose, onSuccess }: UploadVideoModalProps) {
+  const { t } = useTranslation()
   const videoFileRef = useRef<HTMLInputElement>(null)
   const photoFileRef = useRef<HTMLInputElement>(null)
   const audioFileRef = useRef<HTMLInputElement>(null)
@@ -99,11 +86,11 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
   // ───────────────────────────────── VIDEO MODE ─────────────────────────────────
   const handleFileSelect = async (file: File) => {
     if (!file.type.startsWith('video/')) {
-      setUploadError('Seuls les fichiers vidéo sont acceptés.')
+      setUploadError(t('uploadVideoModal.seulsLesFichiersVideoSont'))
       return
     }
     if (file.size > 200 * 1024 * 1024) {
-      setUploadError('La vidéo est trop volumineuse (max 200 Mo).')
+      setUploadError(t('uploadVideoModal.laVideoEstTropVolumineuse'))
       return
     }
 
@@ -118,7 +105,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
       videoEl.onloadedmetadata = () => {
         const d = Math.round(videoEl.duration)
         if (d > 30) {
-          toast.error('La vidéo ne doit pas dépasser 30 secondes.')
+          toast.error(t('uploadVideoModal.laVideoNeDoitPas'))
           resolve(false)
         } else {
           setDuration(d)
@@ -160,7 +147,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             setUploadProgress(100)
             resolve()
           } else {
-            let errorMessage = 'Échec de l\'envoi vers Cloudinary'
+            let errorMessage = t('uploadVideoModal.echecDeLEnvoiVers')
             try {
               const result = JSON.parse(xhr.responseText)
               if (result.error?.message) errorMessage = result.error.message
@@ -168,12 +155,12 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             reject(new Error(errorMessage))
           }
         }
-        xhr.onerror = () => reject(new Error('Erreur réseau lors de l\'upload'))
+        xhr.onerror = () => reject(new Error(t('uploadVideoModal.erreurReseauLorsDeL')))
         xhr.send(formData)
       })
     } catch (err: any) {
       setUploadProgress(null)
-      setUploadError(err.message ?? 'Échec de l\'upload. Réessayez sans quitter ce formulaire.')
+      setUploadError(err.message ?? t('uploadVideoModal.echecDeLUploadReessayez'))
     }
   }
 
@@ -195,7 +182,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
   // Generate slideshow video using Canvas + MediaRecorder
   const generateSlideshow = useCallback(async (): Promise<File | null> => {
     if (slidePhotos.length === 0) {
-      toast.error('Ajoutez au moins une photo.')
+      toast.error(t('uploadVideoModal.ajoutezAuMoinsUnePhoto'))
       return null
     }
 
@@ -312,8 +299,8 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
   }, [slidePhotos, slideAudioFile, slideDurationPerPhoto])
 
   const handleSlideshowUpload = async () => {
-    if (!title.trim()) { toast.error('Ajoutez un titre.'); return }
-    if (!(selectedEventId || presetEventId)) { toast.error('Choisissez un événement.'); return }
+    if (!title.trim()) { toast.error(t('uploadVideoModal.ajoutezUnTitre')); return }
+    if (!(selectedEventId || presetEventId)) { toast.error(t('uploadVideoModal.choisissezUnEvenement')); return }
 
     const videoFile = await generateSlideshow()
     if (!videoFile) return
@@ -336,9 +323,9 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
       const result = await new Promise<any>((resolve, reject) => {
         xhr.onload = () => {
           if (xhr.status === 200) resolve(JSON.parse(xhr.responseText))
-          else reject(new Error('Échec de l\'upload Cloudinary'))
+          else reject(new Error(t('uploadVideoModal.echecDeLUploadCloudinary')))
         }
-        xhr.onerror = () => reject(new Error('Erreur réseau'))
+        xhr.onerror = () => reject(new Error(t('uploadVideoModal.erreurReseau')))
         xhr.send(formData)
       })
       setSlideUploadProgress(100)
@@ -352,11 +339,11 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
         duration: Math.min(slidePhotos.length * slideDurationPerPhoto, 30),
         privacy,
       })
-      toast.success('Diaporama publié avec succès 🎬')
+      toast.success(t('uploadVideoModal.diaporamaPublieAvecSucces'))
       onSuccess()
       onClose()
     } catch (err: any) {
-      toast.error(err.message ?? 'Erreur lors de la publication du diaporama.')
+      toast.error(err.message ?? t('uploadVideoModal.erreurLorsDeLaPublication'))
       setSlideUploadProgress(null)
     }
   }
@@ -371,12 +358,12 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
       privacy,
     }),
     onSuccess: () => {
-      toast.success('Moments forts publiés avec succès 🎬')
+      toast.success(t('uploadVideoModal.momentsFortsPubliesAvecSucces'))
       onSuccess()
       onClose()
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.error ?? 'Erreur lors de la publication.')
+      toast.error(err?.response?.data?.error ?? t('uploadVideoModal.erreurLorsDeLaPublication2'))
     },
   })
 
@@ -398,8 +385,8 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 <Film className="w-5 h-5 text-[#FF7A00]" />
               </div>
               <div>
-                <h2 className="font-bold text-[16px] text-gray-900 dark:text-white">Ajouter des moments forts</h2>
-                <p className="text-[12px] text-gray-400">Partagez vos meilleurs souvenirs</p>
+                <h2 className="font-bold text-[16px] text-gray-900 dark:text-white"><span>{t('uploadVideoModal.ajouterDesMomentsForts')}</span></h2>
+                <p className="text-[12px] text-gray-400"><span>{t('uploadVideoModal.partagezVosMeilleursSouvenirs')}</span></p>
               </div>
             </div>
             <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center">
@@ -414,7 +401,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-semibold transition-all ${mode === 'video' ? 'bg-white dark:bg-[#222] text-[#FF7A00] shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
             >
               <Film className="w-4 h-4" />
-              Vidéo
+              <span>{t('uploadVideoModal.video')}</span>
             </button>
             <button
               onClick={() => setMode('slideshow')}
@@ -429,11 +416,11 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             {/* Event selector */}
             {!presetEventId && (
               <div>
-                <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Événement *</label>
+                <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('uploadVideoModal.evenement')}</span></label>
                 {isLoadingEvents ? (
-                  <div className="flex items-center gap-2 text-gray-400 text-[13px]"><Loader2 className="w-4 h-4 animate-spin" /> Chargement...</div>
+                  <div className="flex items-center gap-2 text-gray-400 text-[13px]"><Loader2 className="w-4 h-4 animate-spin" /> <span>{t('uploadVideoModal.chargement')}</span></div>
                 ) : pastEvents.length === 0 ? (
-                  <p className="text-[12px] text-gray-400 italic">Aucun événement passé disponible.</p>
+                  <p className="text-[12px] text-gray-400 italic"><span>{t('uploadVideoModal.aucunEvenementPasseDisponible')}</span></p>
                 ) : (
                   <div className="relative">
                     <select
@@ -445,7 +432,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                       }}
                       className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] text-gray-800 dark:text-white pr-10"
                     >
-                      <option value="">Choisir un événement...</option>
+                      <option value=""><span>{t('uploadVideoModal.choisirUnEvenement')}</span></option>
                       {pastEvents.map((ev: any) => (
                         <option key={ev.id} value={ev.id}>{ev.title}</option>
                       ))}
@@ -458,7 +445,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
 
             {presetEventId && eventTitle && (
               <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-100 dark:border-orange-500/20 rounded-xl px-4 py-3">
-                <p className="text-[11px] font-medium text-[#FF7A00] uppercase tracking-wide">Événement</p>
+                <p className="text-[11px] font-medium text-[#FF7A00] uppercase tracking-wide"><span>{t('uploadVideoModal.evenement2')}</span></p>
                 <p className="text-[14px] font-semibold text-gray-900 dark:text-white mt-0.5">{eventTitle}</p>
               </div>
             )}
@@ -466,7 +453,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             {/* Title */}
             <div>
               <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                {mode === 'video' ? 'Titre de la vidéo *' : 'Titre du diaporama *'}
+                {mode === 'video' ? t('uploadVideoModal.titreDeLaVideo') : t('uploadVideoModal.titreDuDiaporama')}
               </label>
               <input
                 type="text"
@@ -480,16 +467,17 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
 
             {/* Category */}
             <div>
-              <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Catégorie *</label>
+              <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('uploadVideoModal.categorie')}</span></label>
               <div className="relative">
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value)}
                   className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] text-gray-800 dark:text-white pr-10"
                 >
-                  <option value="">Choisir une catégorie...</option>
-                  {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                    <option key={key} value={key}>{label}</option>
+                  <option value="">{t('categories.choose')}</option>
+                  {/* Catégories proposées + valeur historique éventuelle de l'événement */}
+                  {[...EVENT_CATEGORIES, ...(category && !EVENT_CATEGORIES.some(c => c.id === category) && getEventCategory(category) ? [getEventCategory(category)!] : [])].map(c => (
+                    <option key={c.id} value={c.id}>{`${c.emoji} ${eventCategoryShortLabel(t, c.id)}`}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -498,9 +486,9 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
 
             {/* Privacy */}
             <div>
-              <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Confidentialité</label>
+              <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('uploadVideoModal.confidentialite')}</span></label>
               <div className="flex gap-2">
-                {[{ v: 'PUBLIC', label: '🌍 Public', desc: 'Tout le monde' }, { v: 'PARTICIPANTS', label: '🎟️ OUTSTERS', desc: 'OUTSTERS uniquement' }, { v: 'PRIVATE', label: '🔒 Privé', desc: 'Seulement moi' }].map(opt => (
+                {[{ v: 'PUBLIC', label: '🌍 Public', desc: t('uploadVideoModal.toutLeMonde') }, { v: 'PARTICIPANTS', label: '🎟️ OUTSTERS', desc: 'OUTSTERS uniquement' }, { v: 'PRIVATE', label: t('uploadVideoModal.prive'), desc: 'Seulement moi' }].map(opt => (
                   <button
                     key={opt.v}
                     type="button"
@@ -522,7 +510,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             {mode === 'video' && (
               <div>
                 <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Vidéo * <span className="font-normal text-gray-400">(max 30s, formats mp4/mov/webm)</span>
+                  <span>{i18n.t('uploadVideoModal.videoLabel')}</span> <span className="font-normal text-gray-400"><span>{i18n.t('uploadVideoModal.videoHint')}</span></span>
                 </label>
 
                 {/* Success */}
@@ -530,7 +518,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                   <div className="flex items-center gap-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-500/20 rounded-xl px-4 py-3 mb-2">
                     <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium text-green-800 dark:text-green-300">Upload réussi !</p>
+                      <p className="text-[13px] font-medium text-green-800 dark:text-green-300"><span>{t('uploadVideoModal.uploadReussi')}</span></p>
                       <p className="text-[11px] text-green-600 dark:text-green-400 truncate">{fileName}</p>
                     </div>
                   </div>
@@ -548,7 +536,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 {uploadProgress !== null && (
                   <div className="mb-3">
                     <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                      <span className="font-medium">{uploadProgress < 100 ? 'Envoi en cours...' : 'Envoi terminé ✓'}</span>
+                      <span className="font-medium">{uploadProgress < 100 ? 'Envoi en cours...' : t('uploadVideoModal.envoiTermine')}</span>
                       <span className="font-bold text-[#FF7A00]">{uploadProgress}%</span>
                     </div>
                     <div className="h-3 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
@@ -584,7 +572,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                     <Upload className="w-7 h-7" />
                   )}
                   <span className="text-[13px] font-medium">
-                    {uploadedUrl ? 'Remplacer la vidéo' : isUploading ? 'Envoi en cours...' : 'Choisir une vidéo'}
+                    {uploadedUrl ? t('uploadVideoModal.remplacerLaVideo') : isUploading ? 'Envoi en cours...' : t('uploadVideoModal.choisirUneVideo')}
                   </span>
                 </button>
               </div>
@@ -600,7 +588,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                       Photos * <span className="font-normal text-gray-400">({slidePhotos.length}/12)</span>
                     </label>
                     {slidePhotos.length > 0 && (
-                      <span className="text-[11px] text-gray-400">Appui long pour réordonner</span>
+                      <span className="text-[11px] text-gray-400"><span>{t('uploadVideoModal.appuiLongPourReordonner')}</span></span>
                     )}
                   </div>
                   <div className="grid grid-cols-4 gap-2">
@@ -640,7 +628,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 {/* Duration per photo */}
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                    Durée par photo : <span className="text-[#FF7A00]">{slideDurationPerPhoto}s</span>
+                    <span>{i18n.t('uploadVideoModal.durationPerPhoto')}</span> <span className="text-[#FF7A00]">{slideDurationPerPhoto}s</span>
                     <span className="ml-2 font-normal text-gray-400">(total : {Math.min(slidePhotos.length * slideDurationPerPhoto, 30)}s)</span>
                   </label>
                   <input
@@ -686,7 +674,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                       className="w-full border-2 border-dashed border-gray-200 dark:border-white/10 rounded-xl py-4 flex items-center justify-center gap-2 text-gray-400 hover:border-[#FF7A00]/50 hover:text-[#FF7A00] transition-colors"
                     >
                       <Music className="w-5 h-5" />
-                      <span className="text-[13px] font-medium">Ajouter une musique</span>
+                      <span className="text-[13px] font-medium"><span>{t('uploadVideoModal.ajouterUneMusique')}</span></span>
                     </button>
                   )}
                 </div>
@@ -695,7 +683,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 {isGenerating && (
                   <div>
                     <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                      <span className="font-medium">Génération du diaporama...</span>
+                      <span className="font-medium"><span>{t('uploadVideoModal.generationDuDiaporama')}</span></span>
                       <span className="font-bold text-[#FF7A00]">{generationProgress}%</span>
                     </div>
                     <div className="h-3 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
@@ -704,7 +692,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                         style={{ width: `${Math.max(generationProgress, 3)}%`, background: 'linear-gradient(90deg, #9747FF, #FF7A00)' }}
                       />
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-1 text-center">Veuillez patienter, ne fermez pas cette fenêtre</p>
+                    <p className="text-[11px] text-gray-400 mt-1 text-center"><span>{t('uploadVideoModal.veuillezPatienterNeFermezPas')}</span></p>
                   </div>
                 )}
 
@@ -712,7 +700,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 {!isGenerating && slideUploadProgress !== null && (
                   <div>
                     <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                      <span className="font-medium">{slideUploadProgress < 100 ? 'Envoi en cours...' : 'Envoi terminé ✓'}</span>
+                      <span className="font-medium">{slideUploadProgress < 100 ? 'Envoi en cours...' : t('uploadVideoModal.envoiTermine')}</span>
                       <span className="font-bold text-[#FF7A00]">{slideUploadProgress}%</span>
                     </div>
                     <div className="h-3 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
@@ -745,9 +733,9 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
               className="w-full py-4 bg-gradient-to-r from-[#FF7A00] to-[#FFA755] text-white font-bold rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-opacity"
             >
               {submitMutation.isPending ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Publication...</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> <span>{t('uploadVideoModal.publication')}</span></>
               ) : (
-                '🎬 Publier les moments forts'
+                t('uploadVideoModal.publierLesMomentsForts')
               )}
             </button>
           ) : (
@@ -757,9 +745,9 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
               className="w-full py-4 bg-gradient-to-r from-[#9747FF] to-[#FF7A00] text-white font-bold rounded-2xl disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-opacity"
             >
               {isGenerating || slideUploadProgress !== null ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> {isGenerating ? 'Génération...' : 'Publication...'}</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {isGenerating ? t('uploadVideoModal.generation') : 'Publication...'}</>
               ) : (
-                '🖼️ Créer et publier le diaporama'
+                t('uploadVideoModal.creerEtPublierLeDiaporama')
               )}
             </button>
           )}

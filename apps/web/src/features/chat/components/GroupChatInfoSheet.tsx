@@ -1,6 +1,5 @@
 import { ChevronLeft, MapPin, CalendarDays, Wallet, BellOff, Bell, AlertTriangle, LogOut, UserPlus, Loader2, Camera } from 'lucide-react'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { useNavigate } from 'react-router'
 import { useState, useRef } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -15,6 +14,8 @@ import { usersApi } from '@/features/users/api'
 import { ReportModal } from '@/components/shared/ReportModal'
 import { apiClient } from '@/lib/api-client'
 
+import { dateLocale, intlLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
 interface GroupChatInfoSheetProps {
   conversation: Conversation
   event: any // Adjust type if you have an Event interface
@@ -24,6 +25,7 @@ interface GroupChatInfoSheetProps {
 }
 
 export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onContribute }: GroupChatInfoSheetProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const user = useAuthStore(s => s.user)
@@ -37,9 +39,9 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] })
       queryClient.invalidateQueries({ queryKey: ['chat', 'conversations', conversation.id] })
-      toast.success(isMuted ? 'Conversation réactivée' : 'Conversation mise en sourdine')
+      toast.success(isMuted ? t('groupChatInfoSheet.conversationReactivee') : 'Conversation mise en sourdine')
     },
-    onError: () => toast.error('Une erreur est survenue')
+    onError: () => toast.error(t('groupChatInfoSheet.uneErreurEstSurvenue'))
   })
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
@@ -50,7 +52,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
 
   const handleAvatarClick = () => {
     if (event?.creatorId && !isOrganizer) {
-      toast.info("Seul l'organisateur peut modifier la photo de l'événement.")
+      toast.info(t('groupChatInfoSheet.seulLOrganisateurPeutModifier'))
       return
     }
     fileInputRef.current?.click()
@@ -85,9 +87,9 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
       if (conversation?.id) {
         queryClient.invalidateQueries({ queryKey: ['chat', 'conversations', conversation.id] })
       }
-      toast.success('Photo mise à jour avec succès')
+      toast.success(t('groupChatInfoSheet.photoMiseAJourAvec'))
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || err.message || "Erreur lors de l'upload de la photo")
+      toast.error(err?.response?.data?.error || err.message || t('groupChatInfoSheet.erreurLorsDeLUpload'))
     } finally {
       setIsUploadingPhoto(false)
       if (e.target) e.target.value = ''
@@ -100,10 +102,10 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
       await usersApi.reportUser(event.creatorId, reason)
     },
     onSuccess: () => {
-      toast.success('Signalement envoyé')
+      toast.success(t('groupChatInfoSheet.signalementEnvoye'))
       setIsReportModalOpen(false)
     },
-    onError: () => toast.error('Erreur lors du signalement')
+    onError: () => toast.error(t('groupChatInfoSheet.erreurLorsDuSignalement'))
   })
 
   const leaveMut = useMutation({
@@ -117,11 +119,11 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
       queryClient.invalidateQueries({ queryKey: ['chat'] })
-      toast.success('Vous avez quitté le groupe')
+      toast.success(t('groupChatInfoSheet.vousAvezQuitteLeGroupe'))
       navigate('/chat')
       onClose()
     },
-    onError: () => toast.error('Erreur lors du départ')
+    onError: () => toast.error(t('groupChatInfoSheet.erreurLorsDuDepart'))
   })
 
   // SVGs for fallbacks
@@ -177,7 +179,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
             <div
               onClick={handleAvatarClick}
               className="relative w-[64px] h-[64px] rounded-full overflow-hidden bg-[#F5F5F5] flex-shrink-0 cursor-pointer group shadow-sm border border-gray-100 dark:border-gray-800"
-              title="Modifier la photo"
+              title={t('groupChatInfoSheet.modifierLaPhoto')}
             >
               <SafeImage
                 src={event?.coverUrl || conversation?.avatarUrl}
@@ -200,7 +202,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <button
                 onClick={handleAvatarClick}
                 className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#FF7A00] flex items-center justify-center border-2 border-white dark:border-[#1A1A1A] shadow-sm active:scale-95 transition-transform"
-                title="Choisir une photo"
+                title={t('groupChatInfoSheet.choisirUnePhoto')}
               >
                 <Camera className="w-3 h-3 text-white" />
               </button>
@@ -226,10 +228,10 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
             {/* Header */}
             <div className="flex flex-row justify-between items-center w-full h-[20px]">
               <span className="font-['Mochiy_Pop_One'] font-normal text-[14px] leading-[20px] text-[#FF7A00]">
-                Cagnotte
+                <span>{t('groupChatInfoSheet.cagnotte')}</span>
               </span>
               <span className="font-poppins font-semibold text-[14px] leading-[20px] text-[#22C55E]">
-                {event.poolTarget ? `${event.poolTarget.toLocaleString('fr-FR')} F CFA` : 'Sans limite'}
+                {event.poolTarget ? `${event.poolTarget.toLocaleString(intlLocale())} F CFA` : 'Sans limite'}
               </span>
             </div>
             
@@ -247,7 +249,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               {/* Details */}
               <div className="flex flex-row justify-between items-center w-full h-[22px]">
                 <span className="font-poppins font-semibold text-[14px] leading-[20px] text-[#FF7A00]">
-                  {poolStats.collected.toLocaleString('fr-FR')} F CFA
+                  {poolStats.collected.toLocaleString(intlLocale())} F CFA
                 </span>
                 {event.poolTarget && event.poolTarget > 0 && (
                   <div className="flex items-center justify-center px-[3px] py-[1px] h-[22px] bg-[#FF7A00] rounded-[4px]">
@@ -278,7 +280,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <MapPin className="w-6 h-6 text-[#BDBDBD] flex-shrink-0" strokeWidth={1.5} />
               <div className="flex flex-col justify-center flex-1">
                 <span className="font-['Inter_Display'] font-normal text-[14px] leading-[20px] text-[#1B1818]">
-                  {event.address || event.city || 'Lieu non précisé'}
+                  {event.address || event.city || t('groupChatInfoSheet.lieuNonPrecise')}
                 </span>
               </div>
             </div>
@@ -287,7 +289,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <CalendarDays className="w-6 h-6 text-[#BDBDBD] flex-shrink-0" strokeWidth={1.5} />
               <div className="flex flex-col justify-center flex-1">
                 <span className="font-['Inter_Display'] font-normal text-[14px] leading-[20px] text-[#1B1818]">
-                  {format(new Date(event.startAt), 'EEE, dd MMM yyyy, HH:mm', { locale: fr })}
+                  {format(new Date(event.startAt), 'EEE, dd MMM yyyy, HH:mm', { locale: dateLocale() })}
                 </span>
               </div>
             </div>
@@ -343,7 +345,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                 <div className="flex items-center justify-center">
                   <CalendarDays className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
-                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Voir l'événement</span>
+                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left"><span>{t('groupChatInfoSheet.voirLEvenement')}</span></span>
               </button>
             )}
             
@@ -351,7 +353,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <div className="flex items-center justify-center">
                 <UserPlus className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
-              <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Inviter des amis</span>
+              <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left"><span>{t('groupChatInfoSheet.inviterDesAmis')}</span></span>
             </button>
 
             {poolStats && (
@@ -359,7 +361,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                 <div className="flex items-center justify-center">
                   <Wallet className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
-                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Voir la cagnotte</span>
+                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left"><span>{t('groupChatInfoSheet.voirLaCagnotte')}</span></span>
               </button>
             )}
           </div>
@@ -380,7 +382,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                 {isMuted ? <Bell className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} /> : <BellOff className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />}
               </div>
               <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">
-                {isMuted ? 'Activer le son' : 'Mettre en sourdine'}
+                {isMuted ? t('groupChatInfoSheet.activerLeSon') : 'Mettre en sourdine'}
               </span>
               {muteMut.isPending && <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto" />}
             </button>
@@ -392,7 +394,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <div className="flex items-center justify-center">
                 <AlertTriangle className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
               </div>
-              <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Signaler</span>
+              <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left"><span>{t('groupChatInfoSheet.signaler')}</span></span>
             </button>
 
             {(!event || event.creatorId !== user?.id) && (
@@ -404,7 +406,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                 <div className="flex items-center justify-center">
                   <LogOut className="w-[18px] h-[18px] text-[#737373]" strokeWidth={1.5} />
                 </div>
-                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left">Quitter le groupe</span>
+                <span className="font-poppins font-medium text-[14px] leading-[20px] text-[#525252] text-left"><span>{t('groupChatInfoSheet.quitterLeGroupe')}</span></span>
                 {leaveMut.isPending && <Loader2 className="w-4 h-4 animate-spin text-gray-400 ml-auto" />}
               </button>
             )}
@@ -426,10 +428,10 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
               <LogOut className="w-7 h-7" />
             </div>
             <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">
-              Quitter le groupe ?
+              <span>{t('groupChatInfoSheet.quitterLeGroupe2')}</span>
             </h3>
             <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
-              Voulez-vous vraiment quitter ce groupe ? Vous ne recevrez plus les messages de cette discussion.
+              <span>{t('groupChatInfoSheet.voulezVousVraimentQuitterCe')}</span>
             </p>
             <div className="flex gap-3 w-full">
               <button
@@ -438,7 +440,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                 disabled={leaveMut.isPending}
                 className="flex-1 py-3 px-4 rounded-xl border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 font-medium text-[14px] active:scale-95 transition-transform"
               >
-                Non
+                <span>{t('groupChatInfoSheet.non')}</span>
               </button>
               <button
                 type="button"
@@ -446,7 +448,7 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
                 disabled={leaveMut.isPending}
                 className="flex-1 py-3 px-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium text-[14px] flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-md"
               >
-                {leaveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Oui, quitter'}
+                {leaveMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('groupChatInfoSheet.ouiQuitter')}
               </button>
             </div>
           </div>

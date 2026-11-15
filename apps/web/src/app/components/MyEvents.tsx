@@ -5,10 +5,12 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { RowEventCard } from '@/components/ui/event-cards-v2';
 import { useFavoritesStore } from '@/stores/favorites.store';
+import { useTranslation } from 'react-i18next'
 
 
 // ── MyEvents Page ────────────────────────────────────────────────────────────
 export function MyEvents() {
+  const { t } = useTranslation()
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -89,7 +91,7 @@ export function MyEvents() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-black dark:text-white active:opacity-50">
           <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
         </button>
-        <h1 className="text-[17px] font-bold text-black dark:text-white tracking-tight">Mes Événements</h1>
+        <h1 className="text-[17px] font-bold text-black dark:text-white tracking-tight"><span>{t('myEvents.mesEvenements')}</span></h1>
         <div className="w-10"></div>
       </div>
 
@@ -101,7 +103,7 @@ export function MyEvents() {
               onClick={() => handleMainTabSwitch('created')}
               className={`flex-1 py-2 text-[14px] font-semibold rounded-lg transition-all ${mainTab === 'created' ? 'bg-white dark:bg-[#333] shadow-sm text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
             >
-              Créés
+              <span>{t('myEvents.crees')}</span>
             </button>
             <button
               onClick={() => handleMainTabSwitch('joined')}
@@ -130,7 +132,7 @@ export function MyEvents() {
                 onClick={() => handleSubTabSwitch('past')}
                 className={`px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${subTab === 'past' ? 'bg-[#FF7A00] text-white' : 'bg-white dark:bg-[#222] text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#333]'}`}
               >
-                Passés
+                <span>{t('myEvents.passes')}</span>
               </button>
               {mainTab === 'created' && (
                 <button
@@ -153,9 +155,9 @@ export function MyEvents() {
               <div className="w-16 h-16 bg-gray-100 dark:bg-[#222] rounded-full flex items-center justify-center mb-4">
                 <span className="text-2xl">📅</span>
               </div>
-              <h3 className="text-[16px] font-bold text-gray-900 dark:text-white mb-2">Aucun événement</h3>
+              <h3 className="text-[16px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('myEvents.aucunEvenement')}</span></h3>
               <p className="text-[14px] text-gray-500 dark:text-gray-400">
-                Vous n'avez aucun événement dans cette catégorie pour le moment.
+                <span>{t('myEvents.vousNAvezAucunEvenement')}</span>
               </p>
             </div>
           ) : (

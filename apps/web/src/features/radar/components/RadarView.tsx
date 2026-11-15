@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
+import i18n from '@/lib/i18n'
 import { Send, Ban, Flag, X, MessageCircle } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import type { RadarSearchResult } from '../api'
+import { useTranslation } from 'react-i18next'
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -96,6 +98,7 @@ export function RadarView({
   onWidenRadius,
   listRef,
 }: RadarViewProps) {
+  const { t } = useTranslation()
   const wrapRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState(280)
 
@@ -144,7 +147,7 @@ export function RadarView({
   }, [isSearching])
 
   const OUTING_LABELS: Record<string, string> = {
-    SPONTANEOUS: 'Sortie spontanée',
+    SPONTANEOUS: t('radarView.sortieSpontanee'),
     RESTAURANT_BAR: 'Restaurant ou bar',
     SPECIFIC_EVENT: 'Evenement precis',
     GROUP_ACTIVITY: 'Activite de groupe',
@@ -215,7 +218,7 @@ export function RadarView({
                   transform: show ? 'scale(1)' : 'scale(0.2)',
                   transition: 'opacity 0.22s ease, transform 0.22s cubic-bezier(0.34,1.56,0.64,1)',
                 }}
-                aria-label={`Profil de ${result.displayName}`}
+                aria-label={t('radarView.profilDe', { v0: result.displayName })}
               >
                 <div className={`relative w-full h-full rounded-full overflow-hidden shadow-md border-2 transition-all duration-200 ${sel ? 'border-[#FF7A00] scale-110 shadow-[#FF7A00]/40' : 'border-white dark:border-gray-600 group-hover:border-[#FF7A00]/70 group-hover:scale-110'}`}>
                   {result.avatarUrl ? (
@@ -241,7 +244,7 @@ export function RadarView({
               onClick={() => listRef?.current?.scrollIntoView({ behavior: 'smooth' })}
               className="absolute z-20 flex items-center justify-center rounded-full bg-[#FF7A00] text-white font-bold border-2 border-white dark:border-[#0f0f0f] shadow-lg active:scale-95 transition-transform"
               style={{ width: 36, height: 36, left: cx + RING_FRACS[3] * radius - 18, top: cy - 18, fontSize: 10 }}
-              aria-label={`Voir ${overflowCount} autres Outsters`}
+              aria-label={t('radarView.voirAutresOutsters', { v0: overflowCount })}
             >
               +{overflowCount}
             </button>
@@ -251,7 +254,7 @@ export function RadarView({
           {isSearching && (
             <div className="absolute bottom-1 left-0 right-0 flex flex-col items-center pointer-events-none">
               <p className="text-[11px] font-semibold text-[#FF7A00] tracking-wide animate-pulse">
-                Recherche d'Outsters à proximité...
+                <span>{t('radarView.rechercheDOutstersAProximite')}</span>
               </p>
               {typeof searchCountdown === 'number' && searchCountdown > 0 && (
                 <div className="mt-1 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF7A00]/15 dark:bg-[#FF7A00]/20 border border-[#FF7A00]/30 backdrop-blur-xs">
@@ -270,7 +273,7 @@ export function RadarView({
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-900/80 dark:bg-black/90 backdrop-blur-md border border-white/10 shadow-md">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                 <span className="text-[11px] font-bold text-white tracking-tight">
-                  0 Outster détecté
+                  <span>{t('radarView.n0OutsterDetecte')}</span>
                 </span>
               </div>
             </div>
@@ -321,7 +324,7 @@ export function RadarView({
             <div className="flex items-center gap-2 pt-1">
               {selectedProfile.inviteStatus === 'PENDING' ? (
                 <span className="flex-1 text-center text-xs font-semibold text-orange-500 bg-orange-50 dark:bg-orange-950/30 px-3 py-2 rounded-full">
-                  Demande envoyee
+                  <span>{t('radarView.demandeEnvoyee')}</span>
                 </span>
               ) : selectedProfile.inviteStatus === 'ACCEPTED' ? (
                 <button className="flex-1 py-2 rounded-full bg-green-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow">
@@ -334,20 +337,20 @@ export function RadarView({
                   className="flex-1 py-2 rounded-full bg-[#FF7A00] text-white text-xs font-bold hover:bg-[#E06C00] active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-md shadow-[#FF7A00]/25"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  Envoyer une invitation
+                  <span>{t('radarView.envoyerUneInvitation')}</span>
                 </button>
               ) : <div className="flex-1" />}
 
               <button
                 onClick={() => { setSelectedProfile(null); onBlockUser(selectedProfile.id, selectedProfile.displayName) }}
                 className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-red-500 hover:bg-red-100 active:scale-95 transition-all"
-                aria-label={`Bloquer ${selectedProfile.displayName}`}>
+                aria-label={t('radarView.bloquer', { v0: selectedProfile.displayName })}>
                 <Ban className="w-4 h-4" />
               </button>
               <button
                 onClick={() => { setSelectedProfile(null); onReportUser(selectedProfile.id) }}
                 className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:bg-gray-200 active:scale-95 transition-all"
-                aria-label={`Signaler ${selectedProfile.displayName}`}>
+                aria-label={t('radarView.signaler', { v0: selectedProfile.displayName })}>
                 <Flag className="w-4 h-4" />
               </button>
             </div>
@@ -359,7 +362,7 @@ export function RadarView({
       {hasResults && (
         <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
           <span className="text-[#FF7A00] font-bold">{allResults.length}</span>{' '}
-          {allResults.length === 1 ? 'Outster' : 'Outsters'} a proximite · clique sur un avatar
+          <span>{i18n.t('radarView.nearbyHint', { count: allResults.length })}</span>
         </p>
       )}
 
@@ -371,13 +374,13 @@ export function RadarView({
           </div>
           <div>
             <div className="inline-block px-3 py-1 rounded-full bg-[#FF7A00]/10 text-[#FF7A00] font-bold text-xs mb-1.5">
-              Résultat du scan : 0 Outster
+              <span>{t('radarView.resultatDuScan0Outster')}</span>
             </div>
             <p className="text-sm font-bold text-gray-900 dark:text-white">
-              Aucun Outster à proximité pour le moment
+              <span>{t('radarView.aucunOutsterAProximitePour')}</span>
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-sm mx-auto leading-relaxed">
-              Le radar n'a détecté aucun utilisateur actif dans votre rayon de recherche. Vous pouvez élargir le rayon ou modifier vos filtres.
+              <span>{t('radarView.leRadarNADetecte')}</span>
             </p>
           </div>
           <div className="flex gap-2.5 justify-center flex-wrap pt-1">
@@ -385,13 +388,13 @@ export function RadarView({
               onClick={onWidenRadius}
               className="px-5 py-2.5 rounded-full bg-[#FF7A00] text-white text-xs font-semibold hover:bg-[#E06C00] active:scale-95 transition-all shadow-md shadow-[#FF7A00]/25"
             >
-              Élargir le rayon
+              <span>{t('radarView.elargirLeRayon')}</span>
             </button>
             <button
               onClick={onModifyFilters}
               className="px-4 py-2.5 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all"
             >
-              Modifier les filtres
+              <span>{t('radarView.modifierLesFiltres')}</span>
             </button>
           </div>
         </div>

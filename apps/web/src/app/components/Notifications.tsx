@@ -16,59 +16,62 @@ import {
 import { TopBar } from '@/components/ui/TopBar';
 import { Tag } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
+import { dateLocale } from '@/lib/locale';
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 interface NotificationsProps {
   onBack: () => void;
 }
 
 const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string; bg: string }> = {
   EVENT_INVITE:        { icon: UserAdd01Icon,      label: 'Invitation',                 color: 'text-violet-500', bg: 'bg-violet-50 dark:bg-violet-900/20' },
-  EVENT_UPDATE:        { icon: Notification01Icon,  label: 'Mise à jour',                color: 'text-blue-500',   bg: 'bg-blue-50 dark:bg-blue-900/20' },
-  EVENT_CANCELLED:     { icon: Notification01Icon,  label: 'Événement annulé',           color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20' },
-  JOIN_REQUEST:        { icon: UserMultiple02Icon,  label: 'Demande de participation',   color: 'text-sky-500',    bg: 'bg-sky-50 dark:bg-sky-900/20' },
-  JOIN_ACCEPTED:       { icon: TickDouble01Icon,    label: 'Participation acceptée',     color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
-  JOIN_APPROVED:       { icon: TickDouble01Icon,    label: 'Demande approuvée',          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
-  JOIN_REJECTED:       { icon: Notification01Icon,  label: 'Demande refusée',            color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20' },
-  JOIN_CONFIRMED:      { icon: TickDouble01Icon,    label: 'Participation confirmée',    color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
-  NEW_MESSAGE:         { icon: Notification01Icon,  label: 'Nouveau message',            color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
-  FRIEND_REQUEST:      { icon: UserAdd01Icon,       label: "Demande d'ami",              color: 'text-pink-500',   bg: 'bg-pink-50 dark:bg-pink-900/20' },
-  FRIEND_ACCEPTED:     { icon: TickDouble01Icon,    label: 'Ami accepté',                color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
-  PAYMENT_SUCCESS:     { icon: WalletDone02Icon,    label: 'Paiement réussi',            color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
-  PAYMENT_FAILED:      { icon: Notification01Icon,  label: 'Paiement échoué',            color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20' },
+  EVENT_UPDATE:        { icon: Notification01Icon,  get label() { return i18n.t('notifications.miseAJour') },                color: 'text-blue-500',   bg: 'bg-blue-50 dark:bg-blue-900/20' },
+  EVENT_CANCELLED:     { icon: Notification01Icon,  get label() { return i18n.t('notifications.evenementAnnule') },           color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20' },
+  JOIN_REQUEST:        { icon: UserMultiple02Icon,  get label() { return i18n.t('notifications.demandeDeParticipation') },   color: 'text-sky-500',    bg: 'bg-sky-50 dark:bg-sky-900/20' },
+  JOIN_ACCEPTED:       { icon: TickDouble01Icon,    get label() { return i18n.t('notifications.participationAcceptee') },     color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  JOIN_APPROVED:       { icon: TickDouble01Icon,    get label() { return i18n.t('notifications.demandeApprouvee') },          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  JOIN_REJECTED:       { icon: Notification01Icon,  get label() { return i18n.t('notifications.demandeRefusee') },            color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20' },
+  JOIN_CONFIRMED:      { icon: TickDouble01Icon,    get label() { return i18n.t('notifications.participationConfirmee') },    color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  NEW_MESSAGE:         { icon: Notification01Icon,  get label() { return i18n.t('notifications.nouveauMessage') },            color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
+  FRIEND_REQUEST:      { icon: UserAdd01Icon,       get label() { return i18n.t('notifications.demandeDAmi') },              color: 'text-pink-500',   bg: 'bg-pink-50 dark:bg-pink-900/20' },
+  FRIEND_ACCEPTED:     { icon: TickDouble01Icon,    get label() { return i18n.t('notifications.amiAccepte') },                color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  PAYMENT_SUCCESS:     { icon: WalletDone02Icon,    get label() { return i18n.t('notifications.paiementReussi') },            color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  PAYMENT_FAILED:      { icon: Notification01Icon,  get label() { return i18n.t('notifications.paiementEchoue') },            color: 'text-red-500',    bg: 'bg-red-50 dark:bg-red-900/20' },
   POOL_UNLOCK_REQUEST: { icon: WalletDone02Icon,    label: 'Validation requise',         color: 'text-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/20' },
-  POOL_NEW:            { icon: WalletAdd01Icon,     label: 'Nouvelle cagnotte',          color: 'text-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/20' },
-  POOL_UNLOCK_APPROVED:{ icon: TickDouble01Icon,    label: 'Déblocage approuvé',         color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  POOL_NEW:            { icon: WalletAdd01Icon,     get label() { return i18n.t('notifications.nouvelleCagnotte') },          color: 'text-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/20' },
+  POOL_UNLOCK_APPROVED:{ icon: TickDouble01Icon,    get label() { return i18n.t('notifications.deblocageApprouve') },         color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
   POOL_VOTE_STARTED:   { icon: Settings03Icon,      label: 'Vote en cours',              color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20' },
-  SYSTEM:              { icon: Notification01Icon,  label: 'Système',                    color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
-  EVENT_REVIEW_REQUEST:{ icon: Notification01Icon,  label: 'Avis demandé',               color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
-  PAGE_POST:           { icon: Notification01Icon,  label: 'Nouvelle publication',       color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
+  SYSTEM:              { icon: Notification01Icon,  get label() { return i18n.t('notifications.systeme') },                    color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
+  EVENT_REVIEW_REQUEST:{ icon: Notification01Icon,  get label() { return i18n.t('notifications.avisDemande') },               color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
+  PAGE_POST:           { icon: Notification01Icon,  get label() { return i18n.t('notifications.nouvellePublication') },       color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
   RADAR_INVITE:        { icon: Location01Icon,      label: 'OUT RADAR',                  color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
-  RADAR_INVITE_ACCEPTED:{ icon: TickDouble01Icon,   label: 'OUT RADAR Accepté',          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  RADAR_INVITE_ACCEPTED:{ icon: TickDouble01Icon,   get label() { return i18n.t('notifications.outRadarAccepte') },          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
   default:             { icon: Notification01Icon,  label: 'Notification',               color: 'text-gray-400',   bg: 'bg-gray-50 dark:bg-gray-800' },
 };
 
 function getActionLabel(type: string) {
   switch (type) {
-    case 'EVENT_INVITE':        return "Voir l'événement";
-    case 'POOL_UNLOCK_REQUEST': return 'Voir la demande';
-    case 'POOL_VOTE_STARTED':   return 'Ouvrir le vote';
-    case 'NEW_MESSAGE':         return 'Ouvrir le chat';
-    case 'FRIEND_REQUEST':      return 'Voir la demande';
-    case 'POOL_NEW':            return 'Consulter la cagnotte';
-    case 'POOL_UNLOCK_APPROVED':return 'Voir mon Wallet';
-    case 'EVENT_REVIEW_REQUEST':return 'Laisser un avis';
-    case 'JOIN_APPROVED':       return 'Rejoindre maintenant';
-    case 'JOIN_REJECTED':       return 'Voir l\'événement';
-    case 'JOIN_REQUEST':        return 'Gérer la demande';
-    case 'PAGE_POST':           return 'Voir la publication';
+    case 'EVENT_INVITE':        return i18n.t('notifications.voirLEvenement');
+    case 'POOL_UNLOCK_REQUEST': return i18n.t('notifications.voirLaDemande');
+    case 'POOL_VOTE_STARTED':   return i18n.t('notifications.ouvrirLeVote');
+    case 'NEW_MESSAGE':         return i18n.t('notifications.ouvrirLeChat');
+    case 'FRIEND_REQUEST':      return i18n.t('notifications.voirLaDemande');
+    case 'POOL_NEW':            return i18n.t('notifications.consulterLaCagnotte');
+    case 'POOL_UNLOCK_APPROVED':return i18n.t('notifications.voirMonWallet');
+    case 'EVENT_REVIEW_REQUEST':return i18n.t('notifications.laisserUnAvis');
+    case 'JOIN_APPROVED':       return i18n.t('notifications.rejoindreMaintenant');
+    case 'JOIN_REJECTED':       return i18n.t('notifications.voirLEvenement');
+    case 'JOIN_REQUEST':        return i18n.t('notifications.gererLaDemande');
+    case 'PAGE_POST':           return i18n.t('notifications.voirLaPublication');
     case 'RADAR_INVITE':
-    case 'RADAR_INVITE_ACCEPTED':return 'Voir les invitations OUT RADAR';
-    default:                    return 'Voir les détails';
+    case 'RADAR_INVITE_ACCEPTED':return i18n.t('notifications.voirLesInvitationsOutRadar');
+    default:                    return i18n.t('notifications.voirLesDetails');
   }
 }
 
 export function Notifications({ onBack }: NotificationsProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
@@ -178,7 +181,7 @@ export function Notifications({ onBack }: NotificationsProps) {
     const cfg = TYPE_CONFIG[selectedNotification.type] ?? TYPE_CONFIG.default;
     const Icon = cfg.icon;
     const isPoolUnlock = selectedNotification.type === 'POOL_UNLOCK_REQUEST' || selectedNotification.type === 'POOL_UNLOCK_APPROVED';
-    const timeAgo = formatDistanceToNow(new Date(selectedNotification.createdAt), { addSuffix: true, locale: fr });
+    const timeAgo = formatDistanceToNow(new Date(selectedNotification.createdAt), { addSuffix: true, locale: dateLocale() });
 
     return (
       <div className="fixed inset-0 z-50 bg-[#F9F9F9] dark:bg-[#09090b] flex flex-col animate-in slide-in-from-right-8 duration-200">
@@ -214,7 +217,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                 <Tag className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5">Motif du déblocage</p>
+                <p className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-0.5"><span>{t('notifications.motifDuDeblocage')}</span></p>
                 <p className="text-[14px] font-semibold text-gray-900 dark:text-white">{selectedNotification.data.reason}</p>
               </div>
             </div>
@@ -241,7 +244,7 @@ export function Notifications({ onBack }: NotificationsProps) {
   return (
     <div className="w-full h-full flex flex-col bg-white dark:bg-[#111111]">
       <TopBar
-        title="Notifications"
+        title={t('notifications.notifications')}
         onBack={onBack}
         containerClassName="pt-safe-4"
         rightAction={
@@ -250,7 +253,7 @@ export function Notifications({ onBack }: NotificationsProps) {
               onClick={() => markAllReadMutation.mutate()}
               className="text-[12px] text-[#FF7A00] font-semibold"
             >
-              Tout lire
+              <span>{t('notifications.toutLire')}</span>
             </button>
           ) : undefined
         }
@@ -268,7 +271,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                 : 'bg-transparent text-[#A3A3A3]'
             }`}
           >
-            {tab === 'all' ? 'Toutes' : `Non lues${activeUnreadCount > 0 ? ` (${String(activeUnreadCount).padStart(2, '0')})` : ''}`}
+            <span>{tab === 'all' ? t('notifications.toutes') : activeUnreadCount > 0 ? t('notifications.nonLuesCount', { count: String(activeUnreadCount).padStart(2, '0') }) : t('notifications.nonLuesLabel')}</span>
           </button>
         ))}
       </div>
@@ -291,8 +294,8 @@ export function Notifications({ onBack }: NotificationsProps) {
             <div className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
               <Notification01Icon className="w-8 h-8 text-gray-400" />
             </div>
-            <h3 className="font-bold text-[16px] text-gray-900 dark:text-white mb-2">Aucune notification</h3>
-            <p className="text-[13px] text-gray-400">Vos notifications apparaîtront ici.</p>
+            <h3 className="font-bold text-[16px] text-gray-900 dark:text-white mb-2"><span>{t('notifications.aucuneNotification')}</span></h3>
+            <p className="text-[13px] text-gray-400"><span>{t('notifications.vosNotificationsApparaitrontIci')}</span></p>
           </div>
         ) : (
           <div className="w-full flex flex-col pt-2">
@@ -300,7 +303,7 @@ export function Notifications({ onBack }: NotificationsProps) {
               const cfg = TYPE_CONFIG[notif.type] ?? TYPE_CONFIG.default;
               const Icon = cfg.icon;
               const timeAgo = notif.createdAt
-                ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: fr })
+                ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: dateLocale() })
                 : '';
               return (
                 <div key={notif.id} className="w-full flex flex-col">

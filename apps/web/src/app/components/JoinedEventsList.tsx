@@ -6,8 +6,10 @@ import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { useParams } from 'react-router';
+import { useTranslation } from 'react-i18next'
 
 export function JoinedEventsList() {
+  const { t } = useTranslation()
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
   const user = useAuthStore((s) => s.user);
@@ -54,7 +56,7 @@ export function JoinedEventsList() {
         
         {/* Top Navbar */}
         <TopBar 
-          title="Evénements rejoints"
+          title={t('joinedEventsList.evenementsRejoints')}
           onBack={() => navigate(-1)}
           containerClassName="pt-12 pb-4 bg-transparent"
         />
@@ -66,7 +68,7 @@ export function JoinedEventsList() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             </div>
             <span className="text-[16px] font-bold text-gray-900 dark:text-white">{totalEvents}</span>
-            <span className="text-[10px] text-gray-500 font-medium">Evénements</span>
+            <span className="text-[10px] text-gray-500 font-medium"><span>{t('joinedEventsList.evenements')}</span></span>
           </div>
 
           <div className="flex flex-col items-center flex-1">
@@ -88,7 +90,7 @@ export function JoinedEventsList() {
           }`}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'events' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <span className="font-poppins font-medium text-[12px] leading-[16px]">Evénements</span>
+          <span className="font-poppins font-medium text-[12px] leading-[16px]"><span>{t('joinedEventsList.evenements')}</span></span>
         </button>
 
         {isOwnProfile && (
@@ -110,7 +112,7 @@ export function JoinedEventsList() {
           <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3">A venir</h2>
           <div className="flex flex-col gap-3 mb-6">
             {upcomingEvents.length === 0 ? (
-              <p className="text-[13px] text-gray-400">Aucun événement à venir.</p>
+              <p className="text-[13px] text-gray-400"><span>{t('joinedEventsList.aucunEvenementAVenir')}</span></p>
             ) : (
               upcomingEvents.map((ev: any) => (
                 <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage`)} />
@@ -118,10 +120,10 @@ export function JoinedEventsList() {
             )}
           </div>
 
-          <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6">Passés</h2>
+          <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6"><span>{t('joinedEventsList.passes')}</span></h2>
           <div className="flex flex-col gap-3">
             {pastEvents.length === 0 ? (
-              <p className="text-[13px] text-gray-400">Aucun événement passé.</p>
+              <p className="text-[13px] text-gray-400"><span>{t('joinedEventsList.aucunEvenementPasse')}</span></p>
             ) : (
               pastEvents.map((ev: any) => (
                 <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage`)} />
@@ -131,10 +133,10 @@ export function JoinedEventsList() {
         </div>
       ) : (
         <div className="px-4 pb-20">
-          <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3">Mes participations</h2>
+          <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3"><span>{t('joinedEventsList.mesParticipations')}</span></h2>
           <div className="flex flex-col gap-3">
             {cagnottes.length === 0 ? (
-              <p className="text-[13px] text-gray-400">Vous n'avez participé à aucune cagnotte.</p>
+              <p className="text-[13px] text-gray-400"><span>{t('joinedEventsList.vousNAvezParticipeA')}</span></p>
             ) : (
               cagnottes.map((ev: any) => (
                 <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/${ev.id}/manage?tab=cagnotte`)} />

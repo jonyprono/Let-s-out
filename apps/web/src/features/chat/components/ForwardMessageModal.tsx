@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react'
+import i18n from '@/lib/i18n'
 import { X, Search, Send } from 'lucide-react'
 import { useConversations, chatApi } from '@/features/chat/api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 interface ForwardMessageModalProps {
   onClose: () => void
@@ -12,6 +14,7 @@ interface ForwardMessageModalProps {
 }
 
 export function ForwardMessageModal({ onClose, messageContent, messageType }: ForwardMessageModalProps) {
+  const { t } = useTranslation()
   const { data: conversations } = useConversations()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedConvs, setSelectedConvs] = useState<string[]>([])
@@ -61,7 +64,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
       }
     }
     
-    toast.success('Message transféré')
+    toast.success(t('forwardMessageModal.messageTransfere'))
     onClose()
   }
 
@@ -71,7 +74,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
         
         {/* Header */}
         <div className="px-5 py-4 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-white dark:bg-[#1A1A1A]">
-          <h2 className="text-[18px] font-bold text-gray-900 dark:text-white font-poppins">Transférer à...</h2>
+          <h2 className="text-[18px] font-bold text-gray-900 dark:text-white font-poppins"><span>{t('forwardMessageModal.transfererA')}</span></h2>
           <button onClick={onClose} className="p-2 -mr-2 bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 text-gray-600 dark:text-gray-300 rounded-full transition-colors active:scale-95">
             <X className="w-5 h-5" />
           </button>
@@ -83,7 +86,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
             <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Rechercher une discussion..."
+              placeholder={t('forwardMessageModal.rechercherUneDiscussion')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:text-gray-400 rounded-full py-3 pl-11 pr-4 font-inter text-[15px] outline-none focus:ring-2 focus:ring-[var(--color-action-primary)] transition-shadow"
@@ -96,7 +99,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-3">
               <Search className="w-10 h-10 opacity-20" />
-              <p className="font-poppins text-[14px]">Aucun résultat</p>
+              <p className="font-poppins text-[14px]"><span>{t('forwardMessageModal.aucunResultat')}</span></p>
             </div>
           ) : (
             filtered.map(conv => (
@@ -168,7 +171,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
               ) : (
                 <>
                   <Send className="w-5 h-5" />
-                  Transférer ({selectedConvs.length})
+                  <span>{i18n.t('forwardMessageModal.forwardCount', { count: selectedConvs.length })}</span>
                 </>
               )}
             </button>

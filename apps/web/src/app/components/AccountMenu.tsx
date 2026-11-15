@@ -20,8 +20,10 @@ import { usersApi } from '@/features/users/api';
 import { apiClient } from '@/lib/api-client';
 import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
+import { useTranslation } from 'react-i18next'
 
 export function AccountMenu() {
+  const { t } = useTranslation()
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { isEnabled } = useFeatureFlags();
@@ -73,49 +75,49 @@ export function AccountMenu() {
   const menuItems = [
     {
       label: 'Profil',
-      subtitle: 'Gérez vos informations personnelles',
+      subtitle: t('accountMenu.gerezVosInformationsPersonnelles'),
       icon: UserCircle02Icon,
       path: '/profile',
       badge: null,
     },
     {
       label: 'Pages',
-      subtitle: 'Découvrir, suivre et créer des pages',
+      subtitle: t('accountMenu.decouvrirSuivreEtCreerDes'),
       icon: Book01Icon,
       path: '/pages',
       badge: null,
     },
     {
-      label: 'Mes événements',
-      subtitle: 'Événements créés et rejoints',
+      label: t('accountMenu.mesEvenements'),
+      subtitle: t('accountMenu.evenementsCreesEtRejoints'),
       icon: Calendar01Icon,
       path: '/my-events',
       badge: null,
     },
     {
-      label: 'Mes amis',
-      subtitle: 'Voir et gérer vos amis',
+      label: t('accountMenu.mesAmis'),
+      subtitle: t('accountMenu.voirEtGererVosAmis'),
       icon: UserMultiple02Icon,
       path: '/friends',
       badge: friendsCount > 0 ? String(friendsCount) : null,
     },
     {
       label: "Demandes d'amis",
-      subtitle: 'Voir vos demandes reçues et envoyées',
+      subtitle: t('accountMenu.voirVosDemandesRecuesEt'),
       icon: UserAdd01Icon,
       path: '/friend-requests',
       badge: pendingRequests > 0 ? String(pendingRequests) : null,
     },
     {
       label: 'Portefeuille',
-      subtitle: 'Gérez vos paiements et transactions',
+      subtitle: t('accountMenu.gerezVosPaiementsEtTransactions'),
       icon: Wallet01Icon,
       path: '/wallet',
       badge: null,
     },
     {
-      label: 'Badges & Récompenses',
-      subtitle: 'Découvrez vos badges et niveaux',
+      label: t('accountMenu.badgesRecompenses'),
+      subtitle: t('accountMenu.decouvrezVosBadgesEtNiveaux'),
       icon: Medal01Icon,
       path: '/badges',
       badge: null,
@@ -163,7 +165,7 @@ export function AccountMenu() {
               </div>
               <span className="text-[13px] text-gray-500 dark:text-gray-400 font-medium truncate w-full">{username}</span>
               <span className="mt-1 inline-block bg-[#FF7A00] text-white text-[10px] font-bold px-2 py-0.5 rounded-md self-start shrink-0">
-                Membre actif
+                <span>{t('accountMenu.membreActif')}</span>
               </span>
             </div>
           </div>
@@ -189,12 +191,12 @@ export function AccountMenu() {
         <div className="flex items-center justify-between py-3 border-t border-b border-gray-100 dark:border-gray-800 mb-4">
           <div className="flex flex-col items-center flex-1">
             <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">{eventsCount}</span>
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">Événements</span>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1"><span>{t('accountMenu.evenements')}</span></span>
           </div>
           <div className="w-px h-8 bg-gray-100 dark:bg-gray-800" />
           <div className="flex flex-col items-center flex-1">
             <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">{friendsCount}</span>
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">Amis</span>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1"><span>{t('accountMenu.amis')}</span></span>
           </div>
           <div className="w-px h-8 bg-gray-100 dark:bg-gray-800" />
           <div className="flex flex-col items-center flex-1">
@@ -207,7 +209,7 @@ export function AccountMenu() {
               <span className="text-[14px]">⭐</span>
               <span className="text-[18px] font-bold text-gray-900 dark:text-white leading-none">{rating}</span>
             </div>
-            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1">Note</span>
+            <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium mt-1"><span>{t('accountMenu.note')}</span></span>
           </div>
         </div>
 
@@ -222,7 +224,7 @@ export function AccountMenu() {
               <span className="text-white/85 text-[12px] font-medium">Plus d'avantages exclusifs</span>
             </div>
             <button className="flex items-center gap-1 bg-white/20 rounded-full px-3 py-1.5 active:scale-95 transition-transform">
-              <span className="text-white text-[11px] font-semibold whitespace-nowrap">Voir mes avantages</span>
+              <span className="text-white text-[11px] font-semibold whitespace-nowrap"><span>{t('accountMenu.voirMesAvantages')}</span></span>
               <ArrowRight01Icon size={14} className="text-white" strokeWidth={2.5} />
             </button>
           </div>
@@ -274,7 +276,7 @@ export function AccountMenu() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
               </svg>
-              <span className="text-[15px] font-semibold text-red-500">Se déconnecter</span>
+              <span className="text-[15px] font-semibold text-red-500"><span>{t('accountMenu.seDeconnecter')}</span></span>
             </button>
           </div>
         </div>
@@ -297,10 +299,10 @@ export function AccountMenu() {
                 </svg>
               </div>
               <h2 className="text-[20px] font-bold text-gray-900 dark:text-white">
-                Voulez-vous vous déconnecter ?
+                <span>{t('accountMenu.voulezVousVousDeconnecter')}</span>
               </h2>
               <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                Vous devrez vous reconnecter pour accéder à vos événements et messages.
+                <span>{t('accountMenu.vousDevrezVousReconnecterPour')}</span>
               </p>
             </div>
 
@@ -314,7 +316,7 @@ export function AccountMenu() {
                 }}
                 className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-[#FF7A00] text-white hover:bg-[#E06C00] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/20"
               >
-                Oui, me déconnecter
+                <span>{t('accountMenu.ouiMeDeconnecter')}</span>
               </button>
 
               <button
@@ -322,7 +324,7 @@ export function AccountMenu() {
                 onClick={() => setShowLogoutModal(false)}
                 className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#303030] active:scale-[0.98] transition-all"
               >
-                Non, annuler
+                <span>{t('accountMenu.nonAnnuler')}</span>
               </button>
             </div>
           </div>

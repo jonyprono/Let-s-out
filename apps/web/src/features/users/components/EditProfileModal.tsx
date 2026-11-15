@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react'
+import { interestLabel } from '@/lib/interests'
+import i18n from '@/lib/i18n'
 import { useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, Loader2, Camera, User, Eye, X, ShieldCheck, Calendar } from 'lucide-react'
 import { usersApi } from '@/features/users/api'
@@ -82,10 +84,10 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
       await usersApi.updateProfile({ avatarUrl: url })
       await refreshUser()
       invalidateAvatarQueries(qc)
-      toast.success('Photo de profil mise à jour !')
+      toast.success(t('editProfileModal.photoDeProfilMiseA'))
     } catch (error) {
       setAvatarPreview(avatarUrl) // revert on error
-      toast.error("Erreur lors de l'envoi de la photo de profil.")
+      toast.error(t('editProfileModal.erreurLorsDeLEnvoi'))
     } finally {
       setIsUploadingAvatar(false)
     }
@@ -107,10 +109,10 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
       await refreshUser()
       qc.invalidateQueries({ queryKey: ['me'] })
       qc.invalidateQueries({ queryKey: ['public-profile'] })
-      toast.success('Bannière mise à jour !')
+      toast.success(t('editProfileModal.banniereMiseAJour'))
     } catch (error) {
       setCoverPreview(coverUrl) // revert on error
-      toast.error("Erreur lors de l'envoi de la bannière.")
+      toast.error(t('editProfileModal.erreurLorsDeLEnvoi2'))
     } finally {
       setIsUploadingCover(false)
     }
@@ -140,7 +142,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
       await refreshUser()
       invalidateAvatarQueries(qc)
       qc.invalidateQueries({ queryKey: ['me'] })
-      toast.success('Profil mis à jour avec succès')
+      toast.success(t('editProfileModal.profilMisAJourAvec'))
       onClose()
     } catch (e: any) {
       console.error(e)
@@ -182,8 +184,8 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
             <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
           </button>
           <div className="flex flex-col">
-            <h2 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight">Modifier mon profil</h2>
-            <p className="text-[12px] text-gray-500 dark:text-gray-400">Mettez à jour vos informations</p>
+            <h2 className="text-[17px] font-bold text-gray-900 dark:text-white leading-tight"><span>{t('editProfileModal.modifierMonProfil')}</span></h2>
+            <p className="text-[12px] text-gray-500 dark:text-gray-400"><span>{t('editProfileModal.mettezAJourVosInformations')}</span></p>
           </div>
         </div>
         <button
@@ -194,7 +196,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
           className="flex items-center gap-1.5 px-3.5 py-2 bg-orange-50 dark:bg-orange-500/10 rounded-full text-[13px] font-semibold text-[#FF7A00] transition-colors"
         >
           <Eye className="w-4 h-4" />
-          Aperçu
+          <span>{t('editProfileModal.apercu')}</span>
         </button>
       </div>
 
@@ -220,7 +222,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                   className="flex items-center gap-2 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full text-white text-[12px] font-medium border border-white/20 active:scale-95 transition-transform"
                 >
                   {isUploadingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
-                  Changer la bannière
+                  <span>{t('editProfileModal.changerLaBanniere')}</span>
                 </button>
               </div>
               <input type="file" ref={coverInputRef} accept="image/*" className="hidden" onChange={handleCoverChange} />
@@ -259,7 +261,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                 </button>
                 <input type="file" ref={avatarInputRef} accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
-              <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2">Touchez pour modifier votre photo de profil</p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500 mt-2"><span>{t('editProfileModal.touchezPourModifierVotrePhoto')}</span></p>
             </div>
           </div>
 
@@ -336,13 +338,13 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
               </div>
               <div className="flex-1">
-                <label className="text-[12px] font-bold text-gray-800 dark:text-gray-200 block mb-1.5 ml-1">À propos de moi</label>
+                <label className="text-[12px] font-bold text-gray-800 dark:text-gray-200 block mb-1.5 ml-1"><span>{t('editProfileModal.aProposDeMoi')}</span></label>
                 <div className="relative">
                   <textarea
                     value={bio}
                     onChange={(e) => setBio(e.target.value.slice(0, 150))}
                     rows={4}
-                    placeholder="Parlez-nous de vous..."
+                    placeholder={t('editProfileModal.parlezNousDeVous')}
                     className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[14px] leading-relaxed font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors resize-none pb-8"
                   />
                   <span className="absolute right-4 bottom-3 text-[12px] text-gray-400 font-medium">
@@ -359,10 +361,10 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
           {/* Centres d'intérêt */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-[15px] font-bold text-gray-900 dark:text-white">Centres d'intérêt</h3>
-              <span className="text-[12px] font-medium text-[#FF7A00]">{selectedInterests.length} sélectionné{selectedInterests.length > 1 ? 's' : ''}</span>
+              <h3 className="text-[15px] font-bold text-gray-900 dark:text-white"><span>{t('editProfileModal.centresDInteret')}</span></h3>
+              <span className="text-[12px] font-medium text-[#FF7A00]"><span>{i18n.t('editProfileModal.selectedCount', { count: selectedInterests.length })}</span></span>
             </div>
-            <p className="text-[13px] text-gray-500 dark:text-gray-400 -mt-2">Choisissez vos centres d'intérêt</p>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 -mt-2"><span>{t('editProfileModal.choisissezVosCentresDInteret')}</span></p>
             
             <div className="flex flex-wrap gap-2.5 pt-2">
               {AVAILABLE_INTERESTS.map(interest => {
@@ -380,7 +382,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                     }`}
                   >
                     <span className="text-[14px]">{icon}</span>
-                    <span>{interest}</span>
+                    <span>{interestLabel(t, interest)}</span>
                     {isSelected && (
                       <div className="ml-1 w-4 h-4 rounded-full bg-white/20 flex items-center justify-center">
                         <X className="w-3 h-3 text-white" />
@@ -402,12 +404,12 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
           disabled={isSaving}
           className="w-full h-[54px] bg-[#FF7A00] text-white rounded-full font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-md disabled:opacity-60"
         >
-          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Enregistrer les modifications'}
+          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : t('editProfileModal.enregistrerLesModifications')}
         </button>
         <div className="flex items-center justify-center gap-1.5 mt-3 opacity-70">
           <ShieldCheck className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">
-            Vos données sont sécurisées et confidentielles.
+            <span>{t('editProfileModal.vosDonneesSontSecuriseesEt')}</span>
           </span>
         </div>
       </div>

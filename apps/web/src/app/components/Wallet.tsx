@@ -19,6 +19,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { useTranslation } from 'react-i18next'
 
+import { intlLocale } from '@/lib/locale'
 const OPERATORS = [
   { id: 'mtn', label: 'MTN Momo', logo: '/logos/mtn.png', prefix: '97' },
   { id: 'moov', label: 'MOOV', logo: '/logos/moov.png', prefix: '96' },
@@ -206,7 +207,7 @@ export function Wallet() {
             <div className="flex justify-between items-center">
               <span className="text-[14px] text-gray-500">{t('wallet.availableBalance')}</span>
               <span className="text-[16px] font-bold text-[#FF7A00]">
-                {selectedWithdrawEvent ? selectedWithdrawEvent.amount.toLocaleString('fr-FR') : (wallet?.balance?.toLocaleString('fr-FR') || 0)} F CFA
+                {selectedWithdrawEvent ? selectedWithdrawEvent.amount.toLocaleString(intlLocale()) : (wallet?.balance?.toLocaleString(intlLocale()) || 0)} F CFA
               </span>
             </div>
           </div>
@@ -313,7 +314,7 @@ export function Wallet() {
             
             <div className="flex flex-col gap-1 items-center mb-2">
               <span className="text-[14px] text-gray-500 font-medium">{t('wallet.amount')}</span>
-              <span className="text-[32px] font-bold text-gray-900 dark:text-white leading-none">{Number(withdrawData.amount).toLocaleString('fr-FR')} F</span>
+              <span className="text-[32px] font-bold text-gray-900 dark:text-white leading-none">{Number(withdrawData.amount).toLocaleString(intlLocale())} F</span>
             </div>
 
             <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] rounded-[16px] p-4 flex flex-col gap-3">
@@ -398,7 +399,7 @@ export function Wallet() {
               ) : (
                 <>
                   <span className="text-[38px] font-extrabold text-white tracking-tight leading-none">
-                    {wallet?.balance?.toLocaleString('fr-FR') || 0}
+                    {wallet?.balance?.toLocaleString(intlLocale()) || 0}
                   </span>
                   <span className="text-[17px] font-bold text-white/90 ml-1 mb-0.5">F CFA</span>
                 </>
@@ -498,7 +499,7 @@ export function Wallet() {
                 </div>
                 <span className="text-[11px] font-semibold text-gray-500">{t('wallet.stats.totalEarned')}</span>
                 <span className="text-[13px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">
-                  {isLoadingStats ? '...' : (stats?.totalEarned?.toLocaleString('fr-FR') || 0)} F CFA
+                  {isLoadingStats ? '...' : (stats?.totalEarned?.toLocaleString(intlLocale()) || 0)} F CFA
                 </span>
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[1px] h-10 bg-gray-100 dark:bg-gray-800" />
               </div>
@@ -509,7 +510,7 @@ export function Wallet() {
                 </div>
                 <span className="text-[11px] font-semibold text-gray-500">{t('wallet.stats.totalWithdrawn')}</span>
                 <span className="text-[13px] font-extrabold text-gray-900 dark:text-white whitespace-nowrap">
-                  {isLoadingStats ? '...' : (stats?.totalWithdrawn?.toLocaleString('fr-FR') || 0)} F CFA
+                  {isLoadingStats ? '...' : (stats?.totalWithdrawn?.toLocaleString(intlLocale()) || 0)} F CFA
                 </span>
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[1px] h-10 bg-gray-100 dark:bg-gray-800" />
               </div>
@@ -555,7 +556,7 @@ export function Wallet() {
                       <div className="flex items-center gap-1.5 mt-1 text-gray-500">
                         <Calendar className="w-3.5 h-3.5" />
                         <span className="text-[11px] font-medium">
-                          {new Date(evt.startAt).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
+                          {new Date(evt.startAt).toLocaleDateString(intlLocale(), { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
@@ -568,7 +569,7 @@ export function Wallet() {
                       <div className="flex items-start justify-between w-full">
                         <div className="flex flex-col items-end w-full">
                           <span className="text-[10px] font-semibold text-gray-500">{t('wallet.availableBalance')}</span>
-                          <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
+                          <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString(intlLocale())} F</span>
                         </div>
                       </div>
                       <button 
@@ -625,7 +626,7 @@ export function Wallet() {
                     <div className="flex flex-col flex-1 justify-center">
                       <span className="font-bold text-[14px] text-gray-900 dark:text-white line-clamp-1">{tx.description}</span>
                       <span className="text-[12px] font-medium text-gray-500 flex items-center">
-                        {new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' •')}
+                        {new Date(tx.createdAt).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', ' •')}
                       </span>
                     </div>
 
@@ -633,7 +634,7 @@ export function Wallet() {
                       <span className={`font-extrabold text-[15px] ${
                         ['DEPOSIT', 'POOL_PAYOUT', 'REFUND'].includes(tx.type) ? 'text-[#4CAF50]' : 'text-gray-900 dark:text-white'
                       }`}>
-                        {['DEPOSIT', 'POOL_PAYOUT', 'REFUND'].includes(tx.type) ? '+' : '- '} {tx.amount.toLocaleString('fr-FR')} F
+                        {['DEPOSIT', 'POOL_PAYOUT', 'REFUND'].includes(tx.type) ? '+' : '- '} {tx.amount.toLocaleString(intlLocale())} F
                       </span>
                       {/* Badge statut: la WalletTransaction n'a pas de champ status en BDD,
                           on déduit l'état depuis la description qui est mise à jour par le backend */}
@@ -703,7 +704,7 @@ export function Wallet() {
                     <div className="flex items-center gap-1.5 mt-1 text-gray-500">
                       <Calendar className="w-3.5 h-3.5" />
                       <span className="text-[11px] font-medium">
-                        {new Date(evt.startAt).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
+                        {new Date(evt.startAt).toLocaleDateString(intlLocale(), { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
@@ -716,7 +717,7 @@ export function Wallet() {
                     <div className="flex items-start justify-between w-full">
                       <div className="flex flex-col items-end w-full">
                         <span className="text-[10px] font-semibold text-gray-500">{t('wallet.availableBalance')}</span>
-                        <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
+                        <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString(intlLocale())} F</span>
                       </div>
                     </div>
                     <button 
@@ -750,7 +751,7 @@ export function Wallet() {
                 {selectedTx.type === 'DEPOSIT' ? <ArrowDownLeft size={32} /> : <ArrowUpRight size={32} />}
               </div>
               <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mt-2">
-                {selectedTx.type === 'DEPOSIT' ? '+' : '-'} {selectedTx.amount.toLocaleString('fr-FR')} F CFA
+                {selectedTx.type === 'DEPOSIT' ? '+' : '-'} {selectedTx.amount.toLocaleString(intlLocale())} F CFA
               </h2>
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                 (selectedTx.status || 'COMPLETED') === 'COMPLETED' ? 'bg-[#E8F5E9] dark:bg-green-900/30 text-[#4CAF50]' :
@@ -772,7 +773,7 @@ export function Wallet() {
               <div className="flex justify-between items-center">
                 <span className="text-[14px] font-medium text-gray-500">{t('wallet.txDetails.date')}</span>
                 <span className="text-[14px] font-bold text-gray-900 dark:text-white">
-                  {new Date(selectedTx.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {new Date(selectedTx.createdAt).toLocaleString(intlLocale(), { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               <div className="h-[1px] bg-gray-200 dark:bg-gray-800 w-full" />
@@ -824,7 +825,7 @@ export function Wallet() {
                   <div className="flex items-center gap-1.5 mt-1 text-gray-500">
                     <Calendar className="w-3.5 h-3.5" />
                     <span className="text-[11px] font-medium">
-                      {new Date(evt.startAt).toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
+                      {new Date(evt.startAt).toLocaleDateString(intlLocale(), { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '')}
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-0.5 text-gray-500">
@@ -837,7 +838,7 @@ export function Wallet() {
                   <div className="flex items-start justify-between w-full">
                     <div className="flex flex-col items-end w-full">
                       <span className="text-[10px] font-semibold text-gray-500">{t('wallet.availableBalance')}</span>
-                      <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString('fr-FR')} F</span>
+                      <span className="text-[13px] font-extrabold text-gray-900 dark:text-white">{evt.available.toLocaleString(intlLocale())} F</span>
                     </div>
                   </div>
                   <button 
@@ -871,7 +872,7 @@ export function Wallet() {
             >
               <div className="flex flex-col items-start flex-1 pr-3">
                 <span className="font-bold text-[14px] text-gray-900 dark:text-white">{t('wallet.globalWallet')}</span>
-                <span className="text-[12px] text-gray-500 font-medium mt-0.5">{t('wallet.totalBalance', { amount: wallet?.balance?.toLocaleString('fr-FR') || 0 })}</span>
+                <span className="text-[12px] text-gray-500 font-medium mt-0.5">{t('wallet.totalBalance', { amount: wallet?.balance?.toLocaleString(intlLocale()) || 0 })}</span>
               </div>
               <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400 shrink-0">
                 <Landmark size={16} strokeWidth={2.5} />

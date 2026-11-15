@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import i18n from '@/lib/i18n'
 import { X, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -55,12 +56,12 @@ export function EditPhoneModal({ onClose }: Props) {
 
   const handleSendCode = async () => {
     if (!phone || phone.replace(/\s+/g, '').length < 6) {
-      toast.error('Veuillez entrer un numéro de téléphone valide.');
+      toast.error(t('editPhoneModal.veuillezEntrerUnNumeroDe'));
       return;
     }
 
     if (fullPhone === user?.phone) {
-      toast.success(t('editPhoneModal.success') || 'Numéro à jour');
+      toast.success(t('editPhoneModal.success') || t('editPhoneModal.numeroAJour'));
       onClose();
       return;
     }
@@ -77,7 +78,7 @@ export function EditPhoneModal({ onClose }: Props) {
         },
         onError: (e: any) => {
           setIsFirebaseSending(false);
-          toast.error(e?.response?.data?.message || "Erreur lors de l'envoi du code");
+          toast.error(e?.response?.data?.message || t('editPhoneModal.erreurLorsDeLEnvoi'));
         }
       });
       return;
@@ -125,8 +126,8 @@ export function EditPhoneModal({ onClose }: Props) {
           setTimeout(() => otpRefs.current[0]?.focus(), 100);
         },
         onError: (e: any) => {
-          if (e?.response?.status === 429) toast.error('Trop de tentatives. Attendez avant de réessayer.');
-          else toast.error(e?.response?.data?.message || "Erreur lors de l'envoi du code");
+          if (e?.response?.status === 429) toast.error(t('editPhoneModal.tropDeTentativesAttendezAvant'));
+          else toast.error(e?.response?.data?.message || t('editPhoneModal.erreurLorsDeLEnvoi'));
         }
       });
     } finally {
@@ -154,13 +155,13 @@ export function EditPhoneModal({ onClose }: Props) {
         setIsPatching(true);
         await apiClient.patch('/users/me/phone', { phone: fullPhone });
         await refreshUser();
-        toast.success(t('editPhoneModal.success') || 'Numéro mis à jour');
+        toast.success(t('editPhoneModal.success') || t('editPhoneModal.success'));
         onClose();
       } catch (err: any) {
         if (err.response?.data?.error) {
           toast.error(err.response.data.error);
         } else {
-          toast.error('Code invalide ou expiré');
+          toast.error(t('editPhoneModal.codeInvalideOuExpire'));
         }
       } finally {
         setIsFirebaseVerifying(false);
@@ -174,15 +175,15 @@ export function EditPhoneModal({ onClose }: Props) {
           try {
             await apiClient.patch('/users/me/phone', { phone: fullPhone });
             await refreshUser();
-            toast.success(t('editPhoneModal.success') || 'Numéro mis à jour');
+            toast.success(t('editPhoneModal.success') || t('editPhoneModal.success'));
             onClose();
           } catch (err: any) {
-            toast.error(err.response?.data?.error || 'Erreur lors de la mise à jour');
+            toast.error(err.response?.data?.error || t('editPhoneModal.erreurLorsDeLaMise'));
           } finally {
             setIsPatching(false);
           }
         },
-        onError: () => toast.error('Code invalide ou expiré.'),
+        onError: () => toast.error(t('editPhoneModal.codeInvalideOuExpire2')),
       });
     }
   };
@@ -204,7 +205,7 @@ export function EditPhoneModal({ onClose }: Props) {
         await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone });
         setTimeout(() => listener.remove(), 60000);
         setCountdown(59);
-        toast.success('Code renvoyé par SMS');
+        toast.success(t('editPhoneModal.codeRenvoyeParSms'));
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       } else {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-phone-edit', { size: 'invisible' });
@@ -212,7 +213,7 @@ export function EditPhoneModal({ onClose }: Props) {
         setConfirmationResult(confirmation);
         setLastCodeVia('firebase');
         setCountdown(59);
-        toast.success('Code renvoyé par SMS');
+        toast.success(t('editPhoneModal.codeRenvoyeParSms'));
         setTimeout(() => otpRefs.current[0]?.focus(), 100);
       }
     } catch {
@@ -221,8 +222,8 @@ export function EditPhoneModal({ onClose }: Props) {
       setNativeVerificationId('');
       setLastCodeVia('backend');
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
-        onSuccess: () => { setCountdown(59); toast.success('Code renvoyé'); setTimeout(() => otpRefs.current[0]?.focus(), 100); },
-        onError: () => toast.error('Impossible de renvoyer le code'),
+        onSuccess: () => { setCountdown(59); toast.success(t('editPhoneModal.codeRenvoye')); setTimeout(() => otpRefs.current[0]?.focus(), 100); },
+        onError: () => toast.error(t('editPhoneModal.impossibleDeRenvoyerLeCode')),
       });
     } finally {
       setIsFirebaseSending(false);
@@ -249,7 +250,7 @@ export function EditPhoneModal({ onClose }: Props) {
       <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-t-3xl sm:rounded-3xl p-5 shadow-xl animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {step === 1 ? (user?.phone ? 'Modifier le numéro' : 'Ajouter un numéro') : 'Vérification'}
+            {step === 1 ? (user?.phone ? t('editPhoneModal.modifierLeNumero') : t('editPhoneModal.ajouterUnNumero')) : t('editPhoneModal.verification')}
           </h2>
           <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-[#2A2A2A] rounded-full hover:bg-gray-200 dark:hover:bg-[#333333]">
             <X size={20} />
@@ -261,7 +262,7 @@ export function EditPhoneModal({ onClose }: Props) {
             <div className="space-y-5 mb-8">
               <div>
                 <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
-                  {t('editPhoneModal.number') || 'Nouveau numéro'}
+                  {t('editPhoneModal.number') || t('editPhoneModal.nouveauNumero')}
                 </label>
                 <PhoneInputField
                   country={country}
@@ -274,7 +275,7 @@ export function EditPhoneModal({ onClose }: Props) {
 
               <div>
                 <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-3 block">
-                  Moyen de réception
+                  <span>{t('editPhoneModal.moyenDeReception')}</span>
                 </label>
                 <div className="flex gap-3">
                   {/* TODO: réactiver le bouton WhatsApp quand prêt */}
@@ -315,14 +316,14 @@ export function EditPhoneModal({ onClose }: Props) {
               className="w-full py-4 flex items-center justify-center text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform disabled:opacity-50"
               style={{ background: 'linear-gradient(135deg, #FF7A00 0%, #FF7A00 100%)' }}
             >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Envoyer le code'}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('editPhoneModal.envoyerLeCode')}
             </button>
           </>
         ) : (
           <>
             <div className="mb-8">
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                Code à 6 chiffres envoyé par SMS au <strong className="text-gray-900 dark:text-white">{fullPhone}</strong>
+                <span>{i18n.t('editPhoneModal.codeSentBySms')}</span> <strong className="text-gray-900 dark:text-white">{fullPhone}</strong>
               </p>
 
               <div
@@ -357,7 +358,7 @@ export function EditPhoneModal({ onClose }: Props) {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Renvoyer le code
+                <span>{t('editPhoneModal.renvoyerLeCode')}</span>
                 {countdown > 0 && (
                   <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
                     {String(Math.floor(countdown / 60)).padStart(2, '0')}:{String(countdown % 60).padStart(2, '0')}
@@ -371,7 +372,7 @@ export function EditPhoneModal({ onClose }: Props) {
                 onClick={() => setStep(1)}
                 className="py-4 px-6 text-gray-500 dark:text-gray-400 font-bold rounded-2xl bg-gray-100 dark:bg-[#2a2a2a] hover:bg-gray-200 active:scale-[0.98] transition-transform"
               >
-                Retour
+                <span>{t('editPhoneModal.retour')}</span>
               </button>
               <button
                 onClick={handleVerifyOtp}
@@ -379,7 +380,7 @@ export function EditPhoneModal({ onClose }: Props) {
                 className="flex-1 py-4 flex items-center justify-center text-white font-bold rounded-2xl shadow-lg shadow-orange-400/20 active:scale-[0.98] transition-transform disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, #FF7A00 0%, #FF7A00 100%)' }}
               >
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Vérifier'}
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('editPhoneModal.verifier')}
               </button>
             </div>
           </>

@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, Send, Play, MapPin, Calendar, Users, Share2, X, MoreVertical, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { useAuthStore } from '@/stores/auth.store'
 import { useConversationMessages, useConversation, chatApi, useSendMessage, useConversationPresence } from '@/features/chat/api'
 import { eventsApi } from '@/features/events/api'
@@ -28,6 +27,8 @@ import { ForwardMessageModal } from './ForwardMessageModal'
 import { CreatePollModal } from './CreatePollModal'
 import { PollCard } from './PollCard'
 
+import { dateLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
 // Swipe to reply row component — must be top-level for React hooks
 interface SwipeReplyRowProps {
   msgId: string
@@ -179,6 +180,7 @@ function AudioMessage({ src }: { src: string }) {
 }
 
 function VideoMessage({ src }: { src: string, isMe: boolean }) {
+  const { t } = useTranslation()
   const [isFullscreen, setIsFullscreen] = useState(false)
   
   return (
@@ -212,7 +214,7 @@ function VideoMessage({ src }: { src: string, isMe: boolean }) {
           onClick={(e) => e.stopPropagation()}
         >
            <div className="flex justify-between items-center p-4 pt-safe-4 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent">
-             <span className="text-white/80 text-sm font-medium">Vidéo</span>
+             <span className="text-white/80 text-sm font-medium"><span>{t('chatDetails.video')}</span></span>
              <button onClick={() => setIsFullscreen(false)} className="w-10 h-10 rounded-full bg-white dark:bg-[#1A1A1A]/20 flex items-center justify-center text-white backdrop-blur-md active:scale-95 transition-transform">
                <X className="w-6 h-6" />
              </button>
@@ -251,6 +253,7 @@ export interface ChatDetailsProps {
 }
 
 export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }: ChatDetailsProps = {}) {
+  const { t } = useTranslation()
   const { id: paramId } = useParams<{ id: string }>()
   const id = propConvId || paramId
   const navigate = useNavigate()
@@ -405,7 +408,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
   useEffect(() => {
     const handler = (e: CustomEvent) => {
       if (e.detail?.conversationId !== id) return
-      setTypingUser(e.detail.displayName ?? 'Quelqu\'un')
+      setTypingUser(e.detail.displayName ?? t('chatDetails.quelquUn'))
       clearTimeout(typingTimeoutRef.current)
       typingTimeoutRef.current = setTimeout(() => setTypingUser(null), 3000)
     }
@@ -473,7 +476,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
       }
       sendMsg(payload)
     } catch {
-      toast.error("Erreur lors de l'envoi du fichier.")
+      toast.error(t('chatDetails.erreurLorsDeLEnvoi'))
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
@@ -507,7 +510,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
       }
       sendMsg(payload)
     } catch {
-      toast.error("Erreur lors de l'envoi de l'image.")
+      toast.error(t('chatDetails.erreurLorsDeLEnvoi2'))
     }
   }
 
@@ -561,7 +564,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
             const url = await chatApi.uploadMedia(file)
             sendMsg({ content: url, type: 'AUDIO' })
           } catch (e) {
-            toast.error("Erreur d'envoi de la note vocale")
+            toast.error(t('chatDetails.erreurDEnvoiDeLa'))
           } finally {
             qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => old.filter(m => m.id !== tempId))
           }
@@ -576,7 +579,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
       }, 1000)
     } catch (e: any) {
       if (e?.name === 'NotAllowedError' || e?.name === 'PermissionDeniedError') {
-        toast.error("Accès au microphone refusé. Ouverture des paramètres...")
+        toast.error(t('chatDetails.accesAuMicrophoneRefuseOuverture'))
         setTimeout(() => {
           import('capacitor-native-settings').then(({ NativeSettings, AndroidSettings, IOSSettings }) => {
             NativeSettings.open({
@@ -586,7 +589,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
           }).catch(err => console.error(err))
         }, 1500)
       } else {
-        toast.error("Impossible d'accéder au microphone.")
+        toast.error(t('chatDetails.impossibleDAccederAuMicrophone'))
       }
     }
   }
@@ -653,9 +656,9 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
     closeContextMenu()
     try {
       await navigator.clipboard.writeText(text)
-      toast.success('Message copié')
+      toast.success(t('chatDetails.messageCopie'))
     } catch {
-      toast.error('Erreur lors de la copie')
+      toast.error(t('chatDetails.erreurLorsDeLaCopie'))
     }
   }, [closeContextMenu])
 
@@ -671,7 +674,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
     )
     chatApi.deleteMessage(msgId).catch(() => {
       qc.invalidateQueries({ queryKey: ['chat', 'messages', id] })
-      toast.error('Erreur lors de la suppression')
+      toast.error(t('chatDetails.erreurLorsDeLaSuppression'))
     })
   }, [closeContextMenu, qc, id])
 
@@ -745,7 +748,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                 )}
               </div>
               {typingUser ? (
-                <p className="text-[13px] text-action-primary font-medium animate-pulse mt-0.5">{typingUser} écrit...</p>
+                <p className="text-[13px] text-action-primary font-medium animate-pulse mt-0.5"><span>{t('chatDetails.ecrit', { v0: typingUser })}</span></p>
               ) : isGroup ? (
                 <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">
                   {memberCount} OUTSTER{memberCount !== 1 ? 'S' : ''}
@@ -778,7 +781,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
         {event && hasActivePool(event) && (
           <div className="flex items-center justify-between px-4 pb-4">
             <div className="flex-1 mr-4">
-              <p className="text-[13px] font-bold text-gray-900 dark:text-[#FFFFFF] mb-1.5">Cagnotte en cours</p>
+              <p className="text-[13px] font-bold text-gray-900 dark:text-[#FFFFFF] mb-1.5"><span>{t('chatDetails.cagnotteEnCours')}</span></p>
               <div className="flex items-center gap-2">
                 <div className="flex-1 h-2.5 bg-gray-200 dark:bg-[#444] rounded-full overflow-hidden">
                   <div
@@ -817,8 +820,8 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                     <span className="text-lg">📊</span>
                   </div>
                   <div>
-                    <p className="text-[13px] font-bold text-[#CC6600] dark:text-[#FFB366]">Vote des validateurs en cours</p>
-                    <p className="text-[11px] text-[#CC6600]/80 dark:text-[#FFB366]/80">Votre avis est requis pour débloquer les fonds</p>
+                    <p className="text-[13px] font-bold text-[#CC6600] dark:text-[#FFB366]"><span>{t('chatDetails.voteDesValidateursEnCours')}</span></p>
+                    <p className="text-[11px] text-[#CC6600]/80 dark:text-[#FFB366]/80"><span>{t('chatDetails.votreAvisEstRequisPour')}</span></p>
                   </div>
                 </div>
                 <button className="text-[12px] font-bold text-white bg-[#FF7A00] hover:bg-[#E66E00] px-3 py-1.5 rounded-full shadow-sm active:scale-95 transition-transform">
@@ -850,8 +853,8 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
         ) : !messages || messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2">
             <div className="w-14 h-14 rounded-full bg-orange-50 dark:bg-orange-50/20 flex items-center justify-center text-2xl">💬</div>
-            <p className="text-sm text-gray-400 dark:text-gray-400">Aucun message pour le moment</p>
-            <p className="text-xs text-gray-300 dark:text-gray-400">Soyez le premier à écrire !</p>
+            <p className="text-sm text-gray-400 dark:text-gray-400"><span>{t('chatDetails.aucunMessagePourLeMoment')}</span></p>
+            <p className="text-xs text-gray-300 dark:text-gray-400"><span>{t('chatDetails.soyezLePremierAEcrire')}</span></p>
           </div>
         ) : (
           (() => {
@@ -895,7 +898,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                       <div className="flex items-center gap-3 my-4">
                         <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
                         <span className="text-xs text-gray-400 font-medium capitalize px-2">
-                          {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
+                          {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: dateLocale() })}
                         </span>
                         <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
                       </div>
@@ -954,13 +957,13 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                               <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">{eventShare.title}</p>
                             )}
                             <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                              📅 {format(new Date(eventShare.startAt), "EEE d MMM · HH'h'mm", { locale: fr })}
+                              📅 {format(new Date(eventShare.startAt), "EEE d MMM · HH'h'mm", { locale: dateLocale() })}
                             </p>
                             {eventShare.city && (
                               <p className="text-[11px] text-gray-500 dark:text-gray-400">📍 {eventShare.city}</p>
                             )}
                             <div className="mt-2 py-1.5 rounded-lg bg-[#FF7A00]/10 text-[#FF7A00] text-[12px] font-semibold text-center">
-                              <span>Voir l'événement →</span>
+                              <span><span>{t('chatDetails.voirLEvenement')}</span></span>
                             </div>
                           </div>
                         </button>
@@ -980,7 +983,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                     <div className="flex items-center gap-3 my-4">
                       <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
                       <span className="text-xs text-gray-400 dark:text-gray-400 font-medium capitalize px-2">
-                        {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
+                        {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: dateLocale() })}
                       </span>
                       <div className="flex-1 h-px bg-gray-200 dark:bg-[#333333]" />
                     </div>
@@ -999,7 +1002,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                 {showDateSep && (
                   <div className="flex justify-center my-4">
                     <span className="text-[12px] bg-[#F2F2F2] dark:bg-[#2A2A2A] text-[#8D8D8D] dark:text-[#A3A3A3] font-medium px-3 py-1 rounded-full">
-                      {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: fr })}
+                      {format(new Date(msg.createdAt), 'EEEE d MMMM', { locale: dateLocale() })}
                     </span>
                   </div>
                 )}
@@ -1034,7 +1037,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                   <div className={`transition-all duration-300 ease-out ${selectedMsgId === msg.id ? 'scale-[1.03] origin-bottom' : 'scale-100'}`}>
                     <MessageBubble
                       isSender={isMe}
-                    time={format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                    time={format(new Date(msg.createdAt), 'HH:mm', { locale: dateLocale() })}
                     status={getMessageStatus(msg)}
                     showAvatar={showSenderInfo && isFirstInGroup}
                     senderName={senderName}
@@ -1054,9 +1057,9 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                     {msg.isDeleted ? (
                       <div className="flex items-center gap-2 italic text-[#FF7A00]">
                         <Trash2 className="w-4 h-4 opacity-70" />
-                        <span className="text-[14px]">Ce message a été supprimé</span>
+                        <span className="text-[14px]"><span>{t('chatDetails.ceMessageAEteSupprime')}</span></span>
                         <span className="text-[10px] text-[var(--color-text-secondary)] opacity-70 align-bottom leading-none ml-2">
-                          {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                          {format(new Date(msg.createdAt), 'HH:mm', { locale: dateLocale() })}
                         </span>
                       </div>
                     ) : msg.type === 'POLL' ? (
@@ -1076,8 +1079,8 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                               <span className="text-lg">📊</span>
                             </div>
                             <div>
-                              <p className="text-[13px] font-bold" style={{ color: 'currentColor' }}>Vote des validateurs</p>
-                              <p className="text-[11px]" style={{ color: 'color-mix(in srgb, currentColor 80%, transparent)' }}>Votre avis est requis pour débloquer les fonds</p>
+                              <p className="text-[13px] font-bold" style={{ color: 'currentColor' }}><span>{t('chatDetails.voteDesValidateurs')}</span></p>
+                              <p className="text-[11px]" style={{ color: 'color-mix(in srgb, currentColor 80%, transparent)' }}><span>{t('chatDetails.votreAvisEstRequisPour')}</span></p>
                             </div>
                           </div>
                           <button 
@@ -1085,7 +1088,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                             className="w-full py-2 rounded-lg font-bold text-sm transition-transform active:scale-95"
                             style={{ backgroundColor: 'color-mix(in srgb, currentColor 10%, transparent)', color: 'currentColor' }}
                           >
-                            {(event as any)?.validatorVoteStatus === 'CLOSED' ? 'Voir les résultats' : 'Voter'}
+                            {(event as any)?.validatorVoteStatus === 'CLOSED' ? t('chatDetails.voirLesResultats') : 'Voter'}
                           </button>
                         </div>
                       )
@@ -1095,7 +1098,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                         <div className="absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-0.5 rounded-full">
                           <div className="flex items-center gap-1 justify-end">
                             <span className="text-[9px] font-medium text-white">
-                              {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                              {format(new Date(msg.createdAt), 'HH:mm', { locale: dateLocale() })}
                             </span>
                             {isMe && <MessageStatusIcon status={getMessageStatus(msg)} color="white" />}
                           </div>
@@ -1106,7 +1109,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                         <AudioMessage src={(msg.mediaUrl || msg.content) as string} />
                         <div className="flex items-center justify-end gap-1 mt-1 -mb-1 pr-2">
                           <span className="text-[10px] font-medium opacity-70" style={{ color: isMe ? '#1B1818' : 'var(--color-text-secondary)' }}>
-                            {format(new Date(msg.createdAt), 'HH:mm', { locale: fr })}
+                            {format(new Date(msg.createdAt), 'HH:mm', { locale: dateLocale() })}
                           </span>
                           {isMe && <MessageStatusIcon status={getMessageStatus(msg)} color={isMe ? '#1B1818' : 'var(--color-text-secondary)'} />}
                         </div>
@@ -1149,7 +1152,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
               <div className="flex flex-col min-w-0">
                 <span className="text-[11px] font-semibold text-[#FF7A00] truncate">{replyToMsg.senderName}</span>
                 <span className="text-[12px] text-gray-500 dark:text-gray-400 truncate">
-                  {replyToMsg.type === 'IMAGE' ? '📷 Photo' : replyToMsg.type === 'VIDEO' ? '🎥 Vidéo' : replyToMsg.content}
+                  {replyToMsg.type === 'IMAGE' ? t('chatDetails.photo') : replyToMsg.type === 'VIDEO' ? t('chatDetails.video2') : replyToMsg.content}
                 </span>
               </div>
             </div>
@@ -1171,7 +1174,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
             </svg>
             <span className="text-[13px] text-gray-400 dark:text-gray-500">
-              {blockStatus === 'i_blocked' ? 'Vous avez bloqué cet utilisateur' : 'Vous ne pouvez pas répondre à cette conversation'}
+              {blockStatus === 'i_blocked' ? t('chatDetails.vousAvezBloqueCetUtilisateur') : t('chatDetails.vousNePouvezPasRepondre')}
             </span>
           </div>
         ) : isRecording ? (
@@ -1244,7 +1247,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
             <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[32px] p-6 pb-10 shadow-2xl relative animate-in slide-in-from-bottom-full duration-300">
               <div className="w-12 h-1.5 bg-gray-300 dark:bg-[#333333] rounded-full mx-auto mb-6" />
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-[17px] font-bold text-gray-900 dark:text-[#FFFFFF]">À propos</h2>
+                <h2 className="text-[17px] font-bold text-gray-900 dark:text-[#FFFFFF]"><span>{t('chatDetails.aPropos')}</span></h2>
                 <button onClick={() => setShowEventInfo(false)} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center">
                   <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </button>
@@ -1256,12 +1259,12 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                   <div className="flex items-center gap-3">
                     <Calendar className="w-4 h-4 text-red-500 flex-shrink-0" />
                     <span className="text-[14px] text-gray-600 dark:text-gray-300">
-                      {format(new Date(event.startAt), 'EEE, dd MMM yyyy • HH:mm', { locale: fr })} GMT
+                      {format(new Date(event.startAt), 'EEE, dd MMM yyyy • HH:mm', { locale: dateLocale() })} GMT
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin className="w-4 h-4 text-red-500 flex-shrink-0" />
-                    <span className="text-[14px] text-gray-600 dark:text-gray-300">{event.address || event.city || 'Lieu non précisé'}</span>
+                    <span className="text-[14px] text-gray-600 dark:text-gray-300">{event.address || event.city || t('chatDetails.lieuNonPrecise')}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Users className="w-4 h-4 text-orange-500 flex-shrink-0" />
@@ -1278,7 +1281,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
                 >
                   <Calendar className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-                  Voir l'événement
+                  <span>{t('chatDetails.voirLEvenement2')}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -1288,7 +1291,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full border border-gray-200 dark:border-[#333333] bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 font-bold text-[14px] active:scale-95 transition-transform shadow-sm"
                 >
                   <Share2 className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-                  Inviter des amis
+                  <span>{t('chatDetails.inviterDesAmis')}</span>
                 </button>
               </div>
             </div>
@@ -1329,9 +1332,9 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
           if (!msg) return null
           const isMe = msg.senderId === user?.id
           const msgPreview = msg.isDeleted
-            ? 'Ce message a été supprimé'
-            : msg.type === 'IMAGE' ? '📷 Photo'
-            : msg.type === 'VIDEO' ? '🎥 Vidéo'
+            ? t('chatDetails.ceMessageAEteSupprime')
+            : msg.type === 'IMAGE' ? t('chatDetails.photo')
+            : msg.type === 'VIDEO' ? t('chatDetails.video2')
             : msg.type === 'AUDIO' ? '🎤 Message vocal'
             : msg.content ?? ''
 
@@ -1377,7 +1380,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                     <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center flex-shrink-0">
                       <svg className="w-[18px] h-[18px] text-gray-600 dark:text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
                     </div>
-                    Répondre
+                    <span>{t('chatDetails.repondre')}</span>
                   </button>
                 )}
 
@@ -1389,7 +1392,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                     <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center flex-shrink-0">
                       <svg className="w-[18px] h-[18px] text-gray-600 dark:text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     </div>
-                    Copier
+                    <span>{t('chatDetails.copier')}</span>
                   </button>
                 )}
 
@@ -1401,7 +1404,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                     <div className="w-9 h-9 rounded-full bg-gray-100 dark:bg-[#2A2A2A] flex items-center justify-center flex-shrink-0">
                       <svg className="w-[18px] h-[18px] text-gray-600 dark:text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
                     </div>
-                    Transférer
+                    <span>{t('chatDetails.transferer')}</span>
                   </button>
                 )}
 
@@ -1414,7 +1417,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                   <div className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
                     <Trash2 className="w-[18px] h-[18px] text-red-500" />
                   </div>
-                  Supprimer pour moi
+                  <span>{t('chatDetails.supprimerPourMoi')}</span>
                 </button>
 
                 {isMe && !msg.isDeleted && (
@@ -1425,7 +1428,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                     <div className="w-9 h-9 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center flex-shrink-0">
                       <Trash2 className="w-[18px] h-[18px] text-red-500" />
                     </div>
-                    Supprimer pour tous
+                    <span>{t('chatDetails.supprimerPourTous')}</span>
                   </button>
                 )}
               </div>
@@ -1445,7 +1448,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
             >
               <X className="w-5 h-5 text-white" />
             </button>
-            <span className="text-white font-semibold text-[15px]">Envoyer une image</span>
+            <span className="text-white font-semibold text-[15px]"><span>{t('chatDetails.envoyerUneImage')}</span></span>
             <div className="w-10" />
           </div>
 
@@ -1453,7 +1456,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
           <div className="flex-1 flex items-center justify-center px-4 overflow-hidden">
             <img
               src={pendingFile.localUrl}
-              alt="Aperçu"
+              alt={t('chatDetails.apercu')}
               className="max-w-full max-h-full rounded-2xl object-contain shadow-xl"
             />
           </div>
@@ -1464,7 +1467,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
               <textarea
                 rows={1}
                 autoFocus
-                placeholder="Ajouter une légende..."
+                placeholder={t('chatDetails.ajouterUneLegende')}
                 id="caption-input"
                 className="flex-1 bg-transparent py-3 text-[14px] text-white placeholder:text-white/50 focus:outline-none resize-none no-scrollbar"
                 style={{ maxHeight: '96px' }}
@@ -1491,7 +1494,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
       <BottomSheet open={showAttachSheet} onClose={() => setShowAttachSheet(false)}>
         <div className="p-4 space-y-3 pb-8">
           <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-[#444] mx-auto mb-2" />
-          <h4 className="text-sm font-bold text-gray-900 dark:text-white px-2">Partager dans la discussion</h4>
+          <h4 className="text-sm font-bold text-gray-900 dark:text-white px-2"><span>{t('chatDetails.partagerDansLaDiscussion')}</span></h4>
           <div className="grid grid-cols-2 gap-3 pt-2">
             <button
               type="button"
@@ -1504,7 +1507,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
               <div className="w-12 h-12 rounded-full bg-blue-500/15 text-blue-500 flex items-center justify-center text-xl">
                 🖼️
               </div>
-              <span className="text-xs font-bold">Photo / Vidéo</span>
+              <span className="text-xs font-bold"><span>{t('chatDetails.photoVideo')}</span></span>
             </button>
 
             <button
@@ -1518,7 +1521,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
               <div className="w-12 h-12 rounded-full bg-[#FF7A00]/15 text-[#FF7A00] flex items-center justify-center text-xl">
                 📊
               </div>
-              <span className="text-xs font-bold">Sondage</span>
+              <span className="text-xs font-bold"><span>{t('chatDetails.sondage')}</span></span>
             </button>
           </div>
         </div>

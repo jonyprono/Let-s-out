@@ -4,11 +4,11 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { Loader2, Film, EyeOff, Ticket, ScanLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { eventCategoryLabel } from '@/lib/event-categories';
 import { MyTicketModal } from '@/features/events/components/MyTicketModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
@@ -24,6 +24,7 @@ import { ShareViaChatModal } from '@/features/events/components/ShareViaChatModa
 import { eventsApi } from '@/features/events/api';
 import { Carousel, CarouselContent, CarouselItem } from '@/app/components/ui/carousel';
 
+import { dateLocale, intlLocale, currentLang } from '@/lib/locale';
 export function ManageEvent() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ export function ManageEvent() {
       
       if (!isOrganizer && !isConfirmedParticipant) {
         navigate(`/events/${id}`, { replace: true });
-        toast.error("Vous devez payer et confirmer votre participation pour accéder à cet espace.");
+        toast.error(t('manageEvent.toasts.mustPay'));
       }
     }
   }, [isLoading, isLoadingAttendees, isLoadingBooking, event, user, attendeesData, myBookingData, navigate, id]);
@@ -115,7 +116,7 @@ export function ManageEvent() {
   }
 
   if (!event) {
-    return <div className="w-full h-full flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]">Événement introuvable</div>;
+    return <div className="w-full h-full flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]"><span>{t('eventDetails.notFound')}</span></div>;
   }
 
   const hasPot = Boolean(event.poolTarget && event.poolTarget > 0);
@@ -159,7 +160,7 @@ export function ManageEvent() {
             className="bg-white/80 dark:bg-black/50 backdrop-blur shadow-sm" 
           />
           <span className="font-semibold text-gray-900 dark:text-white drop-shadow-md">
-            {(user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)) ? "Gestion événement" : "Détails événement"}
+            {(user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)) ? t('manageEvent.title') : t('eventDetails.title')}
           </span>
         </div>
       </div>
@@ -171,10 +172,10 @@ export function ManageEvent() {
           {(() => {
             try {
               const d = event.startAt ? new Date(event.startAt) : new Date();
-              if (isNaN(d.getTime())) return 'Date non précisée';
-              return format(d, "EEEE d MMMM yyyy, HH'h'mm", { locale: fr }).replace(/^\w/, (c) => c.toUpperCase());
+              if (isNaN(d.getTime())) return t('common.dateUnknown');
+              return format(d, currentLang() === 'fr' ? "EEEE d MMMM yyyy, HH'h'mm" : 'EEEE d MMMM yyyy, p', { locale: dateLocale() }).replace(/^\w/, (c) => c.toUpperCase());
             } catch (e) {
-              return 'Date non précisée';
+              return t('common.dateUnknown');
             }
           })()}
         </p>
@@ -222,7 +223,7 @@ export function ManageEvent() {
             onClick={() => setActiveTab(tab)}
             className={`flex-1 py-3 text-[13px] font-semibold text-center relative ${activeTab === tab ? 'text-[#FF7A00]' : 'text-gray-500'}`}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            <span>{t(`manageEvent.tabs.${tab}`)}</span>
             {tab === 'participants' && pendingRequests && pendingRequests.length > 0 && (
               <span className="absolute top-2.5 right-1/4 flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -250,6 +251,7 @@ export function ManageEvent() {
 // TAB: DETAILS
 // ----------------------------------------------------------------------
 function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { openUserProfile } = useUserProfile();
   const [showSearchModal, setShowSearchModal] = useState(false);
@@ -274,7 +276,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
       await apiClient.patch(`/events/${event.id}`, { coHostIds: newCoHostIds });
     },
     onSuccess: () => {
-      toast.success('Co-organisateur ajouté');
+      toast.success(t('manageEvent.toasts.coHostAdded'));
       qc.invalidateQueries({ queryKey: ['events', event.id] });
       setShowSearchModal(false);
       setSearchQuery('');
@@ -285,30 +287,30 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
     <div className="flex flex-col gap-4">
       {/* Informations */}
       <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
-        <h3 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3">Informations</h3>
+        <h3 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3"><span>{t('eventView.information')}</span></h3>
         <div className="flex flex-col gap-2 text-[13px]">
           <div className="flex justify-between border-b border-gray-50 dark:border-gray-800 pb-2">
-            <span className="text-gray-500">Catégorie</span>
-            <span className="text-gray-900 dark:text-white font-medium">{event.category}</span>
+            <span className="text-gray-500"><span>{t('createEvent.fields.category')}</span></span>
+            <span className="text-gray-900 dark:text-white font-medium"><span>{eventCategoryLabel(t, event.category)}</span></span>
           </div>
           <div className="flex justify-between border-b border-gray-50 dark:border-gray-800 py-2">
-            <span className="text-gray-500">Date</span>
+            <span className="text-gray-500"><span>{t('common.date')}</span></span>
             <span className="text-gray-900 dark:text-white font-medium">
               {(() => {
                 try {
                   const d = event.startAt ? new Date(event.startAt) : new Date();
-                  if (isNaN(d.getTime())) return 'Date non précisée';
-                  return format(d, 'EEEE d MMMM yyyy', { locale: fr }).replace(/^\w/, (c) => c.toUpperCase());
-                } catch(e) { return 'Date non précisée'; }
+                  if (isNaN(d.getTime())) return t('common.dateUnknown');
+                  return format(d, 'EEEE d MMMM yyyy', { locale: dateLocale() }).replace(/^\w/, (c) => c.toUpperCase());
+                } catch(e) { return t('common.dateUnknown'); }
               })()}
             </span>
           </div>
           <div className="flex justify-between border-b border-gray-50 dark:border-gray-800 py-2">
-            <span className="text-gray-500">Lieu</span>
+            <span className="text-gray-500"><span>{t('common.place')}</span></span>
             <span className="text-gray-900 dark:text-white font-medium text-right max-w-[60%]">{event.address || event.city || 'En ligne'}</span>
           </div>
           <div className="flex justify-between pt-2">
-            <span className="text-gray-500">Heure</span>
+            <span className="text-gray-500"><span>{t('common.time')}</span></span>
             <span className="text-gray-900 dark:text-white font-medium">
               {(() => {
                 try {
@@ -324,13 +326,13 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
 
       {/* A propos */}
       <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
-        <h3 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-2">À propos</h3>
+        <h3 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-2"><span>{t('common.about')}</span></h3>
         <p className="text-[13px] text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words break-all">{event.description}</p>
       </div>
 
       {/* Organisateurs */}
       <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 mb-3">
-        <h3 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3">Organisateur(s)</h3>
+        <h3 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3"><span>{t('manageEvent.organizers')}</span></h3>
         
         <div
           className="flex items-center gap-3 mb-3 cursor-pointer active:opacity-70"
@@ -356,7 +358,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
             onClick={() => setShowSearchModal(true)}
             className="w-full py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-[13px] font-semibold text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
           >
-            Ajouter un co-organisateur
+            <span>{t('manageEvent.addCoHost')}</span>
           </button>
         )}
       </div>
@@ -368,7 +370,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
           className="w-full py-3.5 mb-3 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF7A00] to-[#FFA755] text-[14px] font-semibold text-white active:scale-95 transition-transform shadow-sm"
         >
           <Film className="w-4 h-4" />
-          Ajouter des moments forts
+          <span>{t('manageEvent.addHighlights')}</span>
         </button>
       )}
 
@@ -379,7 +381,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
             const conv = await chatApi.getEventConversation(event.id);
             navigate(`/chat/${conv.id}`);
           } catch {
-            toast.error('Impossible d\'accéder au chat de cet événement.');
+            toast.error(t('manageEvent.toasts.chatError'));
           }
         }}
         className="w-full py-3.5 mb-6 flex items-center justify-center gap-2 rounded-xl bg-[#FFF9EC] border border-[#FF7A00]/20 text-[14px] font-semibold text-[#FF7A00] active:scale-95 transition-transform"
@@ -387,7 +389,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M5.208 5.625h7.5M5.208 8.958h4.584M0.625 7.292c0-.643.011-1.27.032-1.875.07-1.978.105-2.967.91-3.777.804-.811 1.82-.854 3.854-.941C6.538.65 7.726.625 8.958.625c1.233 0 2.421.025 3.537.073 2.033.087 3.05.13 3.854.941.805.81.84 1.8.91 3.777.021.605.032 1.232.032 1.875 0 .642-.011 1.27-.032 1.875-.07 1.977-.105 2.967-.91 3.777-.804.81-1.82.854-3.854.941-.612.027-1.246.046-1.896.058-.618.012-.927.018-1.198.121-.272.103-.5.299-.956.69l-1.817 1.558a.458.458 0 01-.765-.308V13.893c-.068-.003-.136-.005-.203-.008-2.034-.087-3.05-.13-3.854-.941-.805-.81-.84-1.8-.91-3.777A34.67 34.67 0 01.625 7.292z" stroke="#FF7A00" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-        Rejoindre le chat de l'événement
+        <span>{t('manageEvent.joinChat')}</span>
       </button>
 
       {showUploadModal && (
@@ -404,15 +406,15 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end justify-center">
           <div className="bg-white dark:bg-[#1A1A1A] w-full max-w-md h-[80vh] rounded-t-3xl flex flex-col relative">
              <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-               <h3 className="font-bold">Ajouter un co-organisateur</h3>
+               <h3 className="font-bold"><span>{t('manageEvent.addCoHost')}</span></h3>
                <button onClick={() => { setShowSearchModal(false); setSearchQuery(''); }} className="w-8 h-8 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-full">✕</button>
              </div>
              <div className="p-4 overflow-y-auto flex-1">
-                <p className="text-[13px] text-gray-500 mb-4">Recherchez un utilisateur pour l'ajouter comme co-organisateur.</p>
+                <p className="text-[13px] text-gray-500 mb-4"><span>{t('manageEvent.addCoHostDesc')}</span></p>
                 <div className="mb-4">
                   <input
                     type="text"
-                    placeholder="Rechercher par nom..."
+                    placeholder={t('manageEvent.searchByName')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:border-[#FF7A00]"
@@ -433,12 +435,12 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
                           disabled={event.coHostIds?.includes(friend.userId) || addCoHostMut.isPending}
                           className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold ${event.coHostIds?.includes(friend.userId) ? 'bg-gray-100 text-gray-400' : 'bg-[#FFF9EC] text-[#FF7A00]'}`}
                         >
-                          {event.coHostIds?.includes(friend.userId) ? 'Ajouté' : 'Ajouter'}
+                          <span>{event.coHostIds?.includes(friend.userId) ? t('common.added') : t('common.add')}</span>
                         </button>
                       </div>
                     ))
                   ) : (
-                    <p className="text-[13px] text-center text-gray-500 mt-4">Aucun utilisateur trouvé avec ce nom.</p>
+                    <p className="text-[13px] text-center text-gray-500 mt-4"><span>{t('manageEvent.noUserFound')}</span></p>
                   )}
                 </div>
              </div>
@@ -461,7 +463,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
-          {isEventEnded ? 'Événement terminé' : "Modifier l'événement"}
+          <span>{isEventEnded ? t('eventDetails.ended') : t('manageEvent.editEvent')}</span>
         </button>
       )}
 
@@ -473,6 +475,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
 // TAB: PARTICIPANTS
 // ----------------------------------------------------------------------
 function TabParticipants({ event, attendees, pendingRequests, isCreator }: { event: any, attendees: any[], pendingRequests?: any[], isCreator?: boolean }) {
+  const { t } = useTranslation();
   const { openUserProfile } = useUserProfile();
   const [showInviteOptions, setShowInviteOptions] = useState(false);
   const [showInviteFriends, setShowInviteFriends] = useState(false);
@@ -486,10 +489,10 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
       await apiClient.patch(`/events/${event.id}/validators/candidates`, { action, candidateId });
     },
     onSuccess: () => {
-      toast.success('Liste des candidats mise à jour');
+      toast.success(t('manageEvent.toasts.candidatesUpdated'));
       qc.invalidateQueries({ queryKey: ['events', event.id] });
     },
-    onError: () => toast.error('Erreur lors de la mise à jour')
+    onError: () => toast.error(t('manageEvent.toasts.updateError'))
   });
 
   // Attendees endpoint already returns confirmed participants
@@ -510,7 +513,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
       {/* Pending requests */}
       {pendingRequests && pendingRequests.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-[16px] font-bold text-gray-900 dark:text-white mb-3">Demandes en attente ({pendingRequests.length})</h2>
+          <h2 className="text-[16px] font-bold text-gray-900 dark:text-white mb-3"><span>{t('manageEvent.pendingCount', { count: pendingRequests.length })}</span></h2>
           <div className="flex flex-col gap-3">
             {pendingRequests.map(req => (
               <div key={req.id} className="flex items-center justify-between p-3 bg-white dark:bg-[#1A1A1A] rounded-[12px] border border-[var(--border-default)]">
@@ -518,7 +521,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                   <div onClick={() => openUserProfile(
                       req.user.id,
                       { displayName: req.user.profile?.displayName || req.user.profile?.username || 'Utilisateur', avatarUrl: req.user.profile?.avatarUrl },
-                      { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                      { title: event?.title || t('common.event'), coverUrl: event?.coverUrl }
                     )}
                     className="cursor-pointer shrink-0"
                   >
@@ -532,7 +535,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                     <span className="text-[14px] font-semibold text-gray-900 dark:text-white leading-none mb-1">
                       {req.user.profile?.displayName || req.user.profile?.username || 'Utilisateur'}
                     </span>
-                    <span className="text-[12px] text-gray-500 leading-none">Demande envoyée</span>
+                    <span className="text-[12px] text-gray-500 leading-none"><span>{t('manageEvent.requestSent')}</span></span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -545,12 +548,12 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                       })
                       try {
                         await eventsApi.rejectBooking(event.id, req.id)
-                        toast.success('Demande refusée')
+                        toast.success(t('manageEvent.toasts.declined'))
                         qc.invalidateQueries({ queryKey: ['events', event.id] })
                         qc.invalidateQueries({ queryKey: ['events', event.id, 'pending-requests'] })
                       } catch (e: any) {
                         qc.setQueryData(['events', event.id, 'pending-requests'], prevData)
-                        toast.error(e?.response?.data?.message || 'Erreur lors du refus')
+                        toast.error(e?.response?.data?.message || t('manageEvent.toasts.declineError'))
                       }
                     }}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 active:scale-95 transition-transform"
@@ -566,7 +569,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                       })
                       try {
                         await eventsApi.approveBooking(event.id, req.id)
-                        toast.success('Demande acceptée')
+                        toast.success(t('manageEvent.toasts.accepted'))
                         qc.invalidateQueries({ queryKey: ['events', event.id] })
                         qc.invalidateQueries({ queryKey: ['events', event.id, 'attendees'] })
                         qc.invalidateQueries({ queryKey: ['events', event.id, 'pending-requests'] })
@@ -589,13 +592,13 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
       {/* Count header */}
       <div className="bg-[#FFF9EC] rounded-xl p-3 flex items-center gap-3 mb-2">
         <UserAvatarIcon size={22} />
-        <span className="text-[14px] font-semibold text-gray-700">{participants.length} OUTSTER{participants.length > 1 || participants.length === 0 ? 'S' : ''} validé{participants.length > 1 ? 's' : ''}</span>
+        <span className="text-[14px] font-semibold text-gray-700"><span>{t('manageEvent.validatedCount', { count: participants.length })}</span></span>
       </div>
 
       {/* List */}
       <div className="flex flex-col pb-24">
         {participants.length === 0 ? (
-          <p className="text-[13px] text-gray-400 text-center py-10">Aucun OUTSTER pour le moment.</p>
+          <p className="text-[13px] text-gray-400 text-center py-10"><span>{t('eventDetails.noOutsters')}</span></p>
 
         ) : (
           participants.map((user: any) => {
@@ -609,7 +612,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                 <div onClick={() => openUserProfile(
                     user.id,
                     { displayName: user.profile?.displayName || user.profile?.username || 'Utilisateur', avatarUrl: user.profile?.avatarUrl },
-                    { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                    { title: event?.title || t('common.event'), coverUrl: event?.coverUrl }
                   )}
                   className="cursor-pointer shrink-0"
                 >
@@ -628,11 +631,11 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                   onClick={() => openUserProfile(
                     user.id,
                     { displayName: user.profile?.displayName || user.profile?.username || 'Utilisateur', avatarUrl: user.profile?.avatarUrl },
-                    { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                    { title: event?.title || t('common.event'), coverUrl: event?.coverUrl }
                   )}
                 >
                   {(user as any)._isOrganizer && (
-                    <span className="text-[10px] font-bold text-[#FF7A00] uppercase tracking-wide">Organisateur</span>
+                    <span className="text-[10px] font-bold text-[#FF7A00] uppercase tracking-wide">{t('common.organizer')}</span>
                   )}
                   <span className="text-[14px] font-medium text-gray-900 dark:text-white truncate block">
                     {user.profile?.displayName || user.profile?.username || 'Utilisateur'}
@@ -681,7 +684,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
               <line x1="20" y1="14" x2="28" y2="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <defs><clipPath id="uai-clip-invite"><rect width="26" height="32" rx="13" fill="white" /></clipPath></defs>
             </svg>
-            Inviter des OUTSTERS
+            <span>{t('manageEvent.inviteOutsters')}</span>
           </button>
         </div>
       )}
@@ -689,7 +692,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
       {/* Invite Options BottomSheet */}
       <BottomSheet open={showInviteOptions} onClose={() => setShowInviteOptions(false)}>
         <div className="w-full flex flex-col pt-2 pb-8 px-5 gap-3">
-          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4 text-center">Inviter des OUTSTERS</h3>
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-4 text-center"><span>{t('manageEvent.inviteOutsters')}</span></h3>
           {/* Inviter des amis Let's Out */}
           <button
             onClick={() => { setShowInviteOptions(false); setShowInviteFriends(true); }}
@@ -704,8 +707,8 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
               </svg>
             </div>
             <div className="flex-1 text-left">
-              <p className="text-[15px] font-bold text-gray-900 dark:text-white">Inviter des amis Let's Out</p>
-              <p className="text-[12px] text-gray-400 dark:text-gray-500">Ils reçoivent une notification</p>
+              <p className="text-[15px] font-bold text-gray-900 dark:text-white"><span>{t('manageEvent.inviteFriends')}</span></p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500"><span>{t('manageEvent.inviteFriendsDesc')}</span></p>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M9 18l6-6-6-6"/></svg>
           </button>
@@ -719,8 +722,8 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div className="flex-1 text-left">
-              <p className="text-[15px] font-bold text-gray-900 dark:text-white">Envoyer via le chat</p>
-              <p className="text-[12px] text-gray-400 dark:text-gray-500">Partager une carte dans une conversation</p>
+              <p className="text-[15px] font-bold text-gray-900 dark:text-white"><span>{t('manageEvent.sendViaChat')}</span></p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500"><span>{t('manageEvent.sendViaChatDesc')}</span></p>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M9 18l6-6-6-6"/></svg>
           </button>
@@ -734,8 +737,8 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             </div>
             <div className="flex-1 text-left">
-              <p className="text-[15px] font-bold text-gray-900 dark:text-white">Partager via lien ou QR</p>
-              <p className="text-[12px] text-gray-400 dark:text-gray-500">Copier le lien ou générer un QR code</p>
+              <p className="text-[15px] font-bold text-gray-900 dark:text-white"><span>{t('manageEvent.shareLink')}</span></p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500"><span>{t('manageEvent.shareLinkDesc')}</span></p>
             </div>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><path d="M9 18l6-6-6-6"/></svg>
           </button>
@@ -792,6 +795,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
 // TAB: CAGNOTTE INLINE
 // ----------------------------------------------------------------------
 function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, attendees: any[], setCagnotteStep: (s: any) => void }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const hasPot = Boolean(event.poolTarget && event.poolTarget > 0);
@@ -911,9 +915,9 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
         </div>
         {isCreator || isCoHost ? (
           <>
-            <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center">Aucune cagnotte ajoutée</h2>
+            <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center"><span>{t('manageEvent.noPoolAdded')}</span></h2>
             <p className="text-[14px] text-[#737373] text-center mb-8 max-w-[280px] leading-relaxed">
-              Ajoutez une cagnotte à l'événement pour mutualiser les frais.
+              <span>{t('manageEvent.noPoolAddedDesc')}</span>
             </p>
             <button
               onClick={() => setCagnotteStep('setup')}
@@ -925,14 +929,14 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                 <path d="M7.33325 16.336C9.28458 16.336 11.0381 14.741 11.2623 13.0901M23.8338 12.8359C23.8338 14.8756 25.5988 16.805 27.3333 16.805M27.3333 22.336C25.4342 22.336 23.5934 23.6462 23.4353 25.4343M11.3337 25.8321C11.3337 23.6229 9.54288 21.8321 7.33374 21.8321" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M14.8333 10.8359C14.8333 10.8359 16.6331 8.33594 17.3333 8.33594M17.3333 8.33594C18.0335 8.33594 19.8333 10.8359 19.8333 10.8359M17.3333 8.33594V13.8359" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Ajouter une cagnotte
+              <span>{t('manageEvent.addPool')}</span>
             </button>
           </>
         ) : (
           <>
-            <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center">Aucune cagnotte</h2>
+            <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center"><span>{t('manageEvent.noPool')}</span></h2>
             <p className="text-[14px] text-[#737373] text-center mb-8 max-w-[280px] leading-relaxed">
-              L'organisateur n'a pas encore activé de cagnotte pour cet événement.
+              <span>{t('manageEvent.noPoolDesc')}</span>
             </p>
           </>
         )}
@@ -968,14 +972,14 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
     <div className="flex flex-col gap-4">
       {/* ── Carte solde principal ── */}
       <div className={`rounded-[12px] p-4 shadow-sm border ${isGoalReached ? 'bg-[#F4F9F7] dark:bg-[#101F18] border-green-50 dark:border-green-900/30' : 'bg-[#FFF9EC] dark:bg-[#2A1F13] border-[#FFE8B3] dark:border-[#FF7A00]/30'}`}>
-        <p className="text-[13px] text-gray-600 dark:text-gray-400 font-medium mb-2">Cagnotte</p>
+        <p className="text-[13px] text-gray-600 dark:text-gray-400 font-medium mb-2"><span>{t('common.pool')}</span></p>
         <p className="text-[24px] font-bold text-gray-900 dark:text-white leading-tight">
-          {totalCollected.toLocaleString('fr-FR')} F CFA
+          {totalCollected.toLocaleString(intlLocale())} F CFA
         </p>
         {event.poolTarget ? (
-          <p className="text-[12px] text-gray-500 mb-4 mt-1">sur {event.poolTarget.toLocaleString('fr-FR')} F CFA</p>
+          <p className="text-[12px] text-gray-500 mb-4 mt-1"><span>{t('manageEvent.ofTarget', { amount: event.poolTarget.toLocaleString(intlLocale()) })}</span></p>
         ) : (
-          <p className="text-[12px] text-gray-500 mb-4 mt-1">Objectif non défini</p>
+          <p className="text-[12px] text-gray-500 mb-4 mt-1"><span>{t('manageEvent.noTarget')}</span></p>
         )}
 
         <div className="flex items-center gap-3">
@@ -987,19 +991,19 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
 
         <div className={`mt-4 pt-4 border-t flex justify-between ${isGoalReached ? 'border-green-200/50 dark:border-green-800/30' : 'border-[#FFE8B3]/50 dark:border-[#FF7A00]/20'}`}>
           <div className="flex flex-col">
-            <span className="text-[11px] text-gray-500 uppercase tracking-wide">Collecté</span>
-            <span className="font-semibold text-gray-900 dark:text-white">{totalCollected.toLocaleString('fr-FR')} F</span>
+            <span className="text-[11px] text-gray-500 uppercase tracking-wide">{t('common.collected')}</span>
+            <span className="font-semibold text-gray-900 dark:text-white">{totalCollected.toLocaleString(intlLocale())} F</span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="text-[11px] text-gray-500 uppercase tracking-wide">Débloqué</span>
-            <span className={`font-semibold ${isGoalReached ? 'text-green-600' : 'text-[#FF7A00]'}`}>{totalWithdrawn.toLocaleString('fr-FR')} F</span>
+            <span className="text-[11px] text-gray-500 uppercase tracking-wide">{t('manageEvent.released')}</span>
+            <span className={`font-semibold ${isGoalReached ? 'text-green-600' : 'text-[#FF7A00]'}`}>{totalWithdrawn.toLocaleString(intlLocale())} F</span>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-[11px] text-gray-500 uppercase tracking-wide">Disponible</span>
+            <span className="text-[11px] text-gray-500 uppercase tracking-wide">{t('manageEvent.available')}</span>
             {maxAvailableNow > 0 ? (
-              <span className="font-semibold text-[#FF7A00]">{maxAvailableNow.toLocaleString('fr-FR')} F</span>
+              <span className="font-semibold text-[#FF7A00]">{maxAvailableNow.toLocaleString(intlLocale())} F</span>
             ) : statusData?.pendingCount > 0 ? (
-              <span className="text-[10px] text-gray-500 italic mt-0.5">En attente des validations</span>
+              <span className="text-[10px] text-gray-500 italic mt-0.5"><span>{t('manageEvent.awaitingValidations')}</span></span>
             ) : (
               <span className="font-semibold text-[#FF7A00]">0 F</span>
             )}
@@ -1009,7 +1013,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
         {poolClosedAt && (
           <div className="mt-4 px-3 py-2 rounded-[8px] bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 flex items-start gap-2">
             <span className="text-[14px] mt-0.5">🔒</span>
-            <p className="text-[12px] font-bold text-amber-700 dark:text-amber-400">La cagnotte est fermée aux nouveaux versements.</p>
+            <p className="text-[12px] font-bold text-amber-700 dark:text-amber-400"><span>{t('manageEvent.poolClosed')}</span></p>
           </div>
         )}
       </div>
@@ -1027,7 +1031,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
             <path d="M7.33325 16.336C9.28458 16.336 11.0381 14.741 11.2623 13.0901M23.8338 12.8359C23.8338 14.8756 25.5988 16.805 27.3333 16.805M27.3333 22.336C25.4342 22.336 23.5934 23.6462 23.4353 25.4343M11.3337 25.8321C11.3337 23.6229 9.54288 21.8321 7.33374 21.8321" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M14.8333 10.8359C14.8333 10.8359 16.6331 8.33594 17.3333 8.33594M17.3333 8.33594C18.0335 8.33594 19.8333 10.8359 19.8333 10.8359M17.3333 8.33594V13.8359" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-          <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Déposer une contribution</span>
+          <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200"><span>{t('manageEvent.depositContribution')}</span></span>
         </button>
 
         { (isCreator || isCoHost) && (
@@ -1041,7 +1045,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                 <path d="M21.6416 9.71792C21.0506 9.71792 20.755 9.71792 20.4858 9.61803C20.4484 9.60415 20.4116 9.58889 20.3753 9.57226C20.1143 9.45253 19.9054 9.24357 19.4874 8.82565C18.5255 7.86375 18.0446 7.3828 17.4528 7.33845C17.3733 7.33249 17.2933 7.33249 17.2138 7.33845C16.622 7.3828 16.141 7.86375 15.1791 8.82564C14.7612 9.24357 14.5522 9.45253 14.2912 9.57226C14.255 9.58889 14.2181 9.60415 14.1807 9.61803C13.9115 9.71792 13.616 9.71792 13.025 9.71792H12.9159C11.408 9.71792 10.6541 9.71792 10.1856 10.1864C9.71719 10.6548 9.71719 11.4088 9.71719 12.9167V13.0257C9.71719 13.6167 9.71719 13.9122 9.6173 14.1815C9.60342 14.2188 9.58816 14.2557 9.57153 14.292C9.4518 14.553 9.24284 14.7619 8.82491 15.1798C7.86302 16.1417 7.38207 16.6227 7.33772 17.2145C7.33176 17.294 7.33176 17.374 7.33772 17.4535C7.38207 18.0453 7.86302 18.5262 8.82491 19.4881C9.24284 19.9061 9.4518 20.115 9.57153 20.376C9.58816 20.4123 9.60342 20.4491 9.6173 20.4865C9.71719 20.7557 9.71719 21.0513 9.71719 21.6423V21.7513C9.71719 23.2592 9.71719 24.0132 10.1856 24.4816C10.6541 24.9501 11.408 24.9501 12.9159 24.9501H13.025C13.616 24.9501 13.9115 24.9501 14.1807 25.0499C14.2181 25.0638 14.255 25.0791 14.2912 25.0957C14.5522 25.2155 14.7612 25.4244 15.1791 25.8423C16.141 26.8042 16.622 27.2852 17.2138 27.3295C17.2933 27.3355 17.3733 27.3355 17.4528 27.3295C18.0446 27.2852 18.5255 26.8042 19.4874 25.8423C19.9054 25.4244 20.1143 25.2155 20.3753 25.0957C20.4116 25.0791 20.4484 25.0638 20.4858 25.0499C20.755 24.9501 21.0506 24.9501 21.6416 24.9501H21.7505C23.2584 24.9501 24.0125 24.9501 24.4809 24.4816C24.9494 24.0132 24.9494 23.2592 24.9494 21.7513V21.6423C24.9494 21.0513 24.9494 20.7557 25.0492 20.4865C25.0631 20.4491 25.0783 20.4123 25.0949 20.376C25.2147 20.115 25.4237 19.9061 25.8416 19.4881C26.8035 18.5262 27.2845 18.0453 27.3288 17.4535C27.3348 17.374 27.3348 17.294 27.3288 17.2145C27.2845 16.6227 26.8035 16.1417 25.8416 15.1798C25.4237 14.7619 25.2147 14.553 25.0949 14.292C25.0783 14.2557 25.0631 14.2188 25.0492 14.1815C24.9494 13.9122 24.9494 13.6167 24.9494 13.0257V12.9167C24.9494 11.4088 24.9494 10.6548 24.4809 10.1864C24.0125 9.71792 23.2584 9.71792 21.7505 9.71792H21.6416Z" stroke="#737373" strokeWidth="1.5"/>
                 <path d="M13.8333 21.832C14.5319 20.6243 15.8377 19.8117 17.3333 19.8117C18.8289 19.8117 20.1347 20.6243 20.8333 21.832M19.3333 15.332C19.3333 16.4366 18.4379 17.332 17.3333 17.332C16.2288 17.332 15.3333 16.4366 15.3333 15.332C15.3333 14.2275 16.2288 13.332 17.3333 13.332C18.4379 13.332 19.3333 14.2275 19.3333 15.332Z" stroke="#737373" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
-              <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Lancer le vote des validateurs</span>
+              <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200"><span>{t('manageEvent.startValidatorVote')}</span></span>
             </button>
 
             {/* Débloquer les fonds */}
@@ -1054,7 +1058,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                 <path d="M13.3333 13.2247C12.2139 13.2194 10.893 13.0933 9.21123 12.7596C8.25404 12.5696 7.33325 13.2813 7.33325 14.2571V24.2742C7.33325 24.9625 7.8059 25.567 8.47805 25.7152C15.4429 27.2511 16.5824 25.4454 21.3333 25.4454C22.844 25.4454 24.0694 25.588 25.0095 25.7655C26.1052 25.9725 27.3333 25.1334 27.3333 24.0183V14.2435C27.3333 13.6753 27.0089 13.161 26.4662 12.9928C25.6561 12.7417 24.2785 12.4226 22.3333 12.3379" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M7.33325 16.336C9.28458 16.336 11.0381 14.741 11.2623 13.0901M23.8338 12.8359C23.8338 14.8756 25.5988 16.805 27.3333 16.805M27.3333 22.336C25.4342 22.336 23.5934 23.6462 23.4353 25.4343M11.3337 25.8321C11.3337 23.6229 9.54288 21.8321 7.33374 21.8321" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Débloquer les fonds</span>
+              <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200"><span>{t('eventDetails.releaseFunds')}</span></span>
             </button>
 
             {/* Clôturer la cagnotte */}
@@ -1067,7 +1071,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                 <path d="M13.5 16.1667V13.4167C13.5 12.2006 13.9829 11.0337 14.8424 10.1742C15.7019 9.31473 16.8688 8.83337 18.0848 8.83337C19.3009 8.83337 20.4677 9.31473 21.3272 10.1742C22.1868 11.0337 22.6681 12.2006 22.6681 13.4167V16.1667" stroke="#737373" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <circle cx="17.5" cy="21.5" r="1.5" fill="#737373"/>
               </svg>
-              <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200">Clôturer la cagnotte</span>
+              <span className="font-medium text-[12px] text-[#1B1818] dark:text-gray-200"><span>{t('manageEvent.closePool')}</span></span>
             </button>
           </>
         )}
@@ -1091,12 +1095,12 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                   <path d="M17.3332 19.834C13.5833 19.834 11.3333 21.9769 11.3333 24.1197C11.3333 25.0665 12.0048 25.834 12.8333 25.834H21.8332C22.6616 25.834 23.3332 25.0665 23.3332 24.1197C23.3332 21.9769 21.0832 19.834 17.3332 19.834Z" stroke="#FF7A00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                </svg>
             </div>
-            <span className="font-medium text-[16px] text-[#404040] dark:text-white flex-1">Participations</span>
+            <span className="font-medium text-[16px] text-[#404040] dark:text-white flex-1"><span>{t('manageEvent.contributions')}</span></span>
           </div>
           {expandedSection === 'participations' && (
             <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800">
               <button onClick={() => navigate(`/events/${event.id}/pay?type=contribution`)} className="w-full h-9 mb-4 mt-4 border border-[#FF7A00] text-[#FF7A00] rounded-lg text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                Contribuer à nouveau
+                <span>{t('eventDetails.contributeAgain')}</span>
               </button>
               <div className="flex flex-col gap-3">
                 {contributions.slice(0, 5).map(c => (
@@ -1115,20 +1119,20 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                         {c.isAnonymous ? 'Contribution anonyme' : (c.user?.profile?.displayName || 'Anonyme')}
                       </span>
                     </div>
-                    <span className="font-semibold text-[#FF7A00]">{c.totalPaid.toLocaleString('fr-FR')} F</span>
+                    <span className="font-semibold text-[#FF7A00]">{c.totalPaid.toLocaleString(intlLocale())} F</span>
                   </div>
                 ))}
                 {contributions.length === 0 && <p className="text-[13px] text-gray-500 text-center py-2">Aucune participation.</p>}
                 {contributions.length > 5 && (
-                  <button className="text-[13px] text-[#FF7A00] font-semibold mt-2">Voir tout ({contributions.length})</button>
+                  <button className="text-[13px] text-[#FF7A00] font-semibold mt-2"><span>{t('manageEvent.seeAll', { count: contributions.length })}</span></button>
                 )}
               </div>
               {/* Mes validations (historique) */}
               <div className="mt-5 pt-4 border-t border-dashed border-gray-200 dark:border-gray-800">
-                <h5 className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-3">Mes validations</h5>
+                <h5 className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-3"><span>{t('manageEvent.myValidations')}</span></h5>
                 {user && attendees.find(a => a.userId === user.id)?.poolValidationStatus === 'DELEGATED' ? (
                   <div className="text-[13px] text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-[#222] p-3 rounded-lg">
-                    Vous avez délégué votre part à {attendees.find(x => x.userId === attendees.find(a => a.userId === user.id)?.delegatedToId)?.user?.profile?.displayName || 'un validateur'}
+                    <span>{t('manageEvent.delegatedTo', { name: attendees.find(x => x.userId === attendees.find(a => a.userId === user.id)?.delegatedToId)?.user?.profile?.displayName || t('manageEvent.aValidator') })}</span>
                   </div>
                 ) : (
                   <p className="text-[13px] text-gray-500">Aucun historique de validation.</p>
@@ -1150,7 +1154,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                   <path d="M13.8333 21.832C14.5319 20.6243 15.8377 19.8117 17.3333 19.8117C18.8289 19.8117 20.1347 20.6243 20.8333 21.832M19.3333 15.332C19.3333 16.4366 18.4379 17.332 17.3333 17.332C16.2288 17.332 15.3333 16.4366 15.3333 15.332C15.3333 14.2275 16.2288 13.332 17.3333 13.332C18.4379 13.332 19.3333 14.2275 19.3333 15.332Z" stroke="#FF7A00" strokeWidth="1.5" strokeLinecap="round"/>
                </svg>
             </div>
-            <span className="font-medium text-[16px] text-[#404040] dark:text-white flex-1">Validateurs</span>
+            <span className="font-medium text-[16px] text-[#404040] dark:text-white flex-1"><span>{t('manageEvent.validators')}</span></span>
           </div>
           {expandedSection === 'validators' && (
             <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-4">
@@ -1165,10 +1169,10 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                       )}
                       <span className="text-gray-800 dark:text-gray-200">{v.user.profile?.displayName}</span>
                     </div>
-                    <span className="text-gray-500">{v.delegatedCount} délégation(s)</span>
+                    <span className="text-gray-500"><span>{t('manageEvent.delegations', { count: v.delegatedCount })}</span></span>
                   </div>
                 ))}
-                {validatorsList.length === 0 && <p className="text-[13px] text-gray-500 text-center py-2">Aucun validateur désigné.</p>}
+                {validatorsList.length === 0 && <p className="text-[13px] text-gray-500 text-center py-2"><span>{t('manageEvent.noValidators')}</span></p>}
               </div>
             </div>
           )}
@@ -1188,7 +1192,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                   <path d="M14.8333 10.8359C14.8333 10.8359 16.6331 8.33594 17.3333 8.33594M17.3333 8.33594C18.0335 8.33594 19.8333 10.8359 19.8333 10.8359M17.3333 8.33594V13.8359" stroke="#FF7A00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                </svg>
             </div>
-            <span className="font-medium text-[16px] text-[#404040] dark:text-white flex-1">Retraits</span>
+            <span className="font-medium text-[16px] text-[#404040] dark:text-white flex-1"><span>{t('manageEvent.withdrawals')}</span></span>
           </div>
           {expandedSection === 'payouts' && (
             <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-4">
@@ -1196,29 +1200,29 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
                 {(statusData?.requests || []).map((req: any) => (
                   <div key={req.id} className="text-[13px] flex flex-col gap-2 bg-gray-50 dark:bg-[#222] p-3 rounded-lg border border-gray-100 dark:border-gray-800">
                     <div className="flex justify-between items-start">
-                      <span className="font-semibold text-gray-800 dark:text-gray-200">Demande de {req.amount?.toLocaleString('fr-FR')} F</span>
-                      {req.status === 'COMPLETED' && <span className="text-green-600 font-medium text-[11px] uppercase bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">Terminé</span>}
-                      {req.status === 'PARTIAL_COMPLETED' && <span className="text-orange-600 font-medium text-[11px] uppercase bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded">Terminé (Partiel)</span>}
-                      {req.status === 'REJECTED' && <span className="text-red-600 font-medium text-[11px] uppercase bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">Refusé</span>}
-                      {req.status === 'PENDING' && <span className="text-gray-600 font-medium text-[11px] uppercase bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">En attente</span>}
+                      <span className="font-semibold text-gray-800 dark:text-gray-200"><span>{t('manageEvent.withdrawalRequest', { amount: req.amount?.toLocaleString(intlLocale()) })}</span></span>
+                      {req.status === 'COMPLETED' && <span className="text-green-600 font-medium text-[11px] uppercase bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">{t('manageEvent.status.COMPLETED')}</span>}
+                      {req.status === 'PARTIAL_COMPLETED' && <span className="text-orange-600 font-medium text-[11px] uppercase bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded">{t('manageEvent.status.PARTIAL_COMPLETED')}</span>}
+                      {req.status === 'REJECTED' && <span className="text-red-600 font-medium text-[11px] uppercase bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded">{t('manageEvent.status.REJECTED')}</span>}
+                      {req.status === 'PENDING' && <span className="text-gray-600 font-medium text-[11px] uppercase bg-gray-200 dark:bg-gray-800 px-2 py-0.5 rounded">{t('manageEvent.status.PENDING')}</span>}
                       {req.status === 'PARTIAL' && <span className="text-blue-600 font-medium text-[11px] uppercase bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">Partiel (En cours)</span>}
                     </div>
                     
                     {req.status === 'PARTIAL_COMPLETED' && (
                       <div className="flex flex-col gap-1 mt-1 bg-white dark:bg-[#1A1A1A] p-2 rounded border border-gray-100 dark:border-gray-800">
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Montant débloqué :</span>
-                          <span className="text-green-600 font-semibold">{req.releasedAmount?.toLocaleString('fr-FR')} F</span>
+                          <span className="text-gray-500"><span>{t('manageEvent.releasedAmount')}</span></span>
+                          <span className="text-green-600 font-semibold">{req.releasedAmount?.toLocaleString(intlLocale())} F</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-500">Montant refusé :</span>
-                          <span className="text-red-600 font-semibold">{req.rejectedAmount?.toLocaleString('fr-FR')} F</span>
+                          <span className="text-gray-500"><span>{t('manageEvent.rejectedAmount')}</span></span>
+                          <span className="text-red-600 font-semibold">{req.rejectedAmount?.toLocaleString(intlLocale())} F</span>
                         </div>
-                        <span className="text-[10px] text-gray-400 mt-1 italic">Le montant refusé est de nouveau disponible dans la cagnotte.</span>
+                        <span className="text-[10px] text-gray-400 mt-1 italic"><span>{t('manageEvent.rejectedAmountInfo')}</span></span>
                       </div>
                     )}
                     
-                    <span className="text-gray-500 text-[11px]">{format(new Date(req.createdAt), "dd MMM yyyy HH:mm")}</span>
+                    <span className="text-gray-500 text-[11px]"><span>{format(new Date(req.createdAt), "dd MMM yyyy HH:mm", { locale: dateLocale() })}</span></span>
                   </div>
                 ))}
                 {(statusData?.requests || []).length === 0 && <p className="text-[13px] text-gray-500 text-center py-2">Aucun retrait.</p>}
@@ -1234,6 +1238,7 @@ function TabCagnotteInline({ event, attendees, setCagnotteStep }: { event: any, 
 
 // ----------------------------------------------------------------------
 function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
+  const { t } = useTranslation();
   const [potName, setPotName] = useState('');
   const [target, setTarget] = useState('');
   const [desc, setDesc] = useState('');
@@ -1257,13 +1262,13 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
       setStep('success');
     },
     onError: (err: any) => {
-      const msg = err?.response?.data?.error || err?.message || 'Erreur lors de la création';
+      const msg = err?.response?.data?.error || err?.message || t('createEvent.toasts.createError');
       toast.error(msg);
     },
   });
 
   const fmtDate = (d: string) =>
-    format(new Date(d), "EEEE d MMMM yyyy, HH'h'mm", { locale: fr }).replace(/^\w/, (c) => c.toUpperCase());
+    format(new Date(d), currentLang() === 'fr' ? "EEEE d MMMM yyyy, HH'h'mm" : 'EEEE d MMMM yyyy, p', { locale: dateLocale() }).replace(/^\w/, (c) => c.toUpperCase());
 
   if (step === 'success') {
     return (
@@ -1274,12 +1279,12 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </div>
           <div className="text-center">
-            <h2 className="text-[24px] font-bold text-gray-900 dark:text-white mb-2">Votre cagnotte est créée !</h2>
-            <p className="text-[15px] text-gray-500 leading-relaxed max-w-[280px]">Les OUTSTERS ont été notifiés. Vous pouvez maintenant suivre les contributions.</p>
+            <h2 className="text-[24px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('manageEvent.poolCreated')}</span></h2>
+            <p className="text-[15px] text-gray-500 leading-relaxed max-w-[280px]"><span>{t('manageEvent.poolCreatedDesc')}</span></p>
           </div>
           <div className="w-full mt-6">
             <PrimaryButton onClick={() => { setStep('empty'); qc.invalidateQueries({ queryKey: ['events', event.id] }); }}>
-              Voir la cagnotte
+              <span>{t('manageEvent.viewPool')}</span>
             </PrimaryButton>
           </div>
         </div>
@@ -1294,7 +1299,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
       {/* Header */}
       <div className="px-4 py-4 flex items-center sticky top-0 bg-[#F9F9F9] dark:bg-[#0a0a0b] z-10 pt-10">
         <BackButton onClick={onBack} className="mr-3 shrink-0" />
-        <span className="text-[16px] font-bold text-gray-900 dark:text-white">Ajouter une cagnotte</span>
+        <span className="text-[16px] font-bold text-gray-900 dark:text-white"><span>{t('manageEvent.addPool')}</span></span>
       </div>
 
       <div className="flex-1 px-4 pb-8 flex flex-col gap-6 mt-2">
@@ -1309,18 +1314,18 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
 
         {/* Nom */}
         <div className="flex flex-col">
-          <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nom</p>
+          <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('eventView.name')}</span></p>
           <input
             value={potName} onChange={e => setPotName(e.target.value)}
-            placeholder="Nom de la cagnotte"
+            placeholder={t('manageEvent.poolName')}
             className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
           />
-          <p className="text-[11px] text-gray-400 mt-1.5 ml-1">Optionnel</p>
+          <p className="text-[11px] text-gray-400 mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
         </div>
 
         {/* Montant cible */}
         <div className="flex flex-col">
-          <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Montant cible</p>
+          <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('createEvent.fields.poolTarget')}</span></p>
           <div className="relative flex items-center">
             <input
               type="number" min={1} value={target} onChange={e => setTarget(e.target.value)}
@@ -1329,15 +1334,15 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             />
             <span className="absolute right-4 text-[13px] font-medium text-gray-500 pointer-events-none">F CFA</span>
           </div>
-          <p className="text-[11px] text-gray-400 mt-1.5 ml-1">Montant estimé des dépenses</p>
+          <p className="text-[11px] text-gray-400 mt-1.5 ml-1"><span>{t('createEvent.fields.poolTargetHint')}</span></p>
         </div>
 
         {/* Détails */}
         <div className="flex flex-col">
-          <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Détails</p>
+          <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('createEvent.fields.details')}</span></p>
           <textarea
             value={desc} onChange={e => setDesc(e.target.value)}
-            placeholder="Quelles sont les dépenses prévues ?"
+            placeholder={t('createEvent.fields.poolDetailsPlaceholder')}
             rows={4}
             className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00] resize-none"
           />
@@ -1345,7 +1350,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
 
         {/* Participation minimale */}
         <div className="flex flex-col">
-          <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Participation minimale</p>
+          <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('createEvent.fields.poolMin')}</span></p>
           <div className="relative flex items-center">
             <input
               type="number" min={1} value={poolMinAmount} onChange={e => setPoolMinAmount(e.target.value)}
@@ -1354,18 +1359,18 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             />
             <span className="absolute right-4 text-[13px] font-medium text-gray-500 pointer-events-none">F CFA</span>
           </div>
-          <p className="text-[11px] text-gray-400 mt-1.5 ml-1">Optionnel</p>
+          <p className="text-[11px] text-gray-400 mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
         </div>
 
         {/* Date limite */}
         {!showDeadlineInput ? (
           <button onClick={() => setShowDeadlineInput(true)} className="flex items-center gap-2 text-[13px] font-medium text-gray-400 mt-1 self-start">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Ajouter une date limite de contribution
+            <span>{t('manageEvent.addContributionDeadline')}</span>
           </button>
         ) : (
           <div className="flex flex-col">
-            <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date et heure limite de contribution</p>
+            <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('manageEvent.contributionDeadline')}</span></p>
             <input
               type="datetime-local"
               value={deadline}
@@ -1377,14 +1382,14 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
 
         <div className="mt-4 mb-4">
           <PrimaryButton disabled={!isValid} onClick={() => setStep('summary')}>
-            Valider
+            <span>{t('common.validate')}</span>
           </PrimaryButton>
         </div>
       </div>
 
       <BottomSheet open={step === 'summary'} onClose={() => setStep('form')}>
         <div className="px-5 pt-2 pb-8 flex flex-col gap-4">
-          <h3 className="text-center text-[16px] font-bold text-gray-900 dark:text-white mb-2">Résumé de la cagnotte</h3>
+          <h3 className="text-center text-[16px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('manageEvent.poolSummary')}</span></h3>
           
           <div>
             <p className="text-[17px] font-bold text-gray-900 dark:text-white">{event.title}</p>
@@ -1396,29 +1401,29 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
           <div className="flex flex-col gap-5 text-[15px]">
             {potName && (
               <div className="flex flex-col gap-1">
-                <span className="text-[14px] text-gray-500">Nom de la cagnotte</span>
+                <span className="text-[14px] text-gray-500"><span>{t('manageEvent.poolName')}</span></span>
                 <span className="font-semibold text-gray-900 dark:text-white">{potName}</span>
               </div>
             )}
             <div className="flex flex-col gap-1">
-              <span className="text-[14px] text-gray-500">Objectif</span>
-              <span className="font-semibold text-gray-900 dark:text-white">{Number(target).toLocaleString('fr-FR')} F</span>
+              <span className="text-[14px] text-gray-500"><span>{t('manageEvent.target')}</span></span>
+              <span className="font-semibold text-gray-900 dark:text-white">{Number(target).toLocaleString(intlLocale())} F</span>
             </div>
             {poolMinAmount && (
               <div className="flex flex-col gap-1">
-                <span className="text-[14px] text-gray-500">Participation minimale</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{Number(poolMinAmount).toLocaleString('fr-FR')} F</span>
+                <span className="text-[14px] text-gray-500"><span>{t('createEvent.fields.poolMin')}</span></span>
+                <span className="font-semibold text-gray-900 dark:text-white">{Number(poolMinAmount).toLocaleString(intlLocale())} F</span>
               </div>
             )}
             {deadline && (
               <div className="flex flex-col gap-1">
-                <span className="text-[14px] text-gray-500">Date limite</span>
+                <span className="text-[14px] text-gray-500"><span>{t('createEvent.sheets.regDate')}</span></span>
                 <span className="font-semibold text-gray-900 dark:text-white">{fmtDate(deadline)}</span>
               </div>
             )}
             {desc && (
               <div className="flex flex-col gap-1">
-                <span className="text-[14px] text-gray-500">Détails</span>
+                <span className="text-[14px] text-gray-500"><span>{t('createEvent.fields.details')}</span></span>
                 <span className="font-semibold text-gray-900 dark:text-white leading-relaxed break-words break-all">{desc}</span>
               </div>
             )}
@@ -1426,7 +1431,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
 
           <div className="mt-6 w-full">
             <PrimaryButton onClick={() => submitMut.mutate()} loading={submitMut.isPending}>
-              Confirmer
+              <span>{t('common.confirm')}</span>
             </PrimaryButton>
           </div>
         </div>

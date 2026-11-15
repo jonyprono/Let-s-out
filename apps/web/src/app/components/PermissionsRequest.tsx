@@ -1,16 +1,19 @@
 import { useState } from 'react'
+import i18n from '@/lib/i18n'
 import { Bell, MapPin } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { PushNotifications } from '@capacitor/push-notifications'
 import { Geolocation } from '@capacitor/geolocation'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/api-client'
+import { useTranslation } from 'react-i18next'
 
 interface PermissionsRequestProps {
   onComplete: () => void
 }
 
 export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<1 | 2>(1)
   const [loading, setLoading] = useState(false)
 
@@ -20,7 +23,7 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
     setLoading(true)
     try {
       if (!isNative) {
-        toast.info('Notifications non supportées sur le web.')
+        toast.info(t('permissionsRequest.notificationsNonSupporteesSurLe'))
         setStep(2)
         return
       }
@@ -53,8 +56,8 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
         if (Capacitor.getPlatform() === 'android') {
           PushNotifications.createChannel({
             id: 'default',
-            name: 'Notifications générales',
-            description: "Toutes les notifications importantes de Let's Out",
+            name: i18n.t('permissionsRequest.generalNotifications'),
+            description: t('permissionsRequest.toutesLesNotificationsImportantesDe'),
             importance: 5,
             visibility: 1,
           }).catch(() => {})
@@ -63,7 +66,7 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
         // Always register for push notifications. The capacitor plugin uses google-services.json, not VITE_ variables.
         await PushNotifications.register();
       } else {
-        toast.error('Vous devez autoriser les notifications pour recevoir des alertes.')
+        toast.error(t('permissionsRequest.vousDevezAutoriserLesNotifications'))
       }
     } catch (e) {
       console.error('Push request error', e)
@@ -113,9 +116,9 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
             <div className="w-16 h-16 bg-[#F3E8FF] rounded-full flex items-center justify-center mb-4">
               <Bell className="w-8 h-8 text-action-primary" />
             </div>
-            <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2">Restez informé</h2>
+            <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('permissionsRequest.restezInforme')}</span></h2>
             <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
-              Autorisez les notifications pour ne rater aucune invitation, message ou mise à jour de vos événements.
+              <span>{t('permissionsRequest.autorisezLesNotificationsPourNe')}</span>
             </p>
             <button
               onClick={requestPush}
@@ -123,7 +126,7 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
               style={{ backgroundColor: '#FF7F50', color: 'white', minHeight: '56px' }}
               className="w-full mt-4 bg-action-primary text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform shadow-lg"
             >
-              {loading ? 'Activation...' : 'Activer les notifications'}
+              {loading ? 'Activation...' : t('permissionsRequest.activerLesNotifications')}
             </button>
           </div>
         ) : (
@@ -131,9 +134,9 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
             <div className="w-16 h-16 bg-[#FFF4E5] rounded-full flex items-center justify-center mb-4">
               <MapPin className="w-8 h-8 text-action-primary" />
             </div>
-            <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2">Autour de vous</h2>
+            <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('permissionsRequest.autourDeVous')}</span></h2>
             <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
-              Activez la localisation pour découvrir les événements proches et calculer les itinéraires.
+              <span>{t('permissionsRequest.activezLaLocalisationPourDecouvrir')}</span>
             </p>
             <button
               onClick={requestGeo}
@@ -141,7 +144,7 @@ export function PermissionsRequest({ onComplete }: PermissionsRequestProps) {
               style={{ backgroundColor: '#FF7F50', color: 'white', minHeight: '56px' }}
               className="w-full mt-4 bg-action-primary text-white py-4 rounded-xl font-bold text-[16px] active:scale-[0.98] transition-transform shadow-lg"
             >
-              {loading ? 'Activation...' : 'Activer la localisation'}
+              {loading ? 'Activation...' : t('permissionsRequest.activerLaLocalisation')}
             </button>
           </div>
         )}

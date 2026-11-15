@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
+import i18n from '@/lib/i18n'
 import { Loader2, WifiOff, RefreshCw, Heart, MessageCircle, Share2, MoreVertical, Copy, Pencil, Trash2, X, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EventMediaFeed } from '@/features/events/components/EventMediaFeed';
@@ -156,7 +157,7 @@ const PagePostCard = memo(function PagePostCard({
     e.stopPropagation();
     if (postContent) {
       navigator.clipboard?.writeText(postContent);
-      toast.success('Texte copié dans le presse-papier');
+      toast.success(t('home.texteCopieDansLePresse'));
     }
     setShowMenu(false);
   };
@@ -166,10 +167,10 @@ const PagePostCard = memo(function PagePostCard({
     try {
       await pagesApi.updatePost(post.page.id, post.id, { content: editInput });
       setPostContent(editInput);
-      toast.success('Publication modifiée avec succès');
+      toast.success(t('home.publicationModifieeAvecSucces'));
       setShowEditModal(false);
     } catch {
-      toast.error('Erreur lors de la modification');
+      toast.error(t('home.erreurLorsDeLaModification'));
     } finally {
       setIsSavingEdit(false);
     }
@@ -179,20 +180,20 @@ const PagePostCard = memo(function PagePostCard({
     e.stopPropagation();
     setShowMenu(false);
     const confirmed = await confirm({
-      title: 'Supprimer cette publication ?',
-      description: 'Voulez-vous vraiment supprimer cette publication définitivement ?',
-      confirmText: 'Oui, supprimer',
-      cancelText: 'Non, annuler',
-      cancelMessage: 'Suppression annulée',
+      title: t('home.supprimerCettePublication'),
+      description: t('home.voulezVousVraimentSupprimerCette'),
+      confirmText: t('home.ouiSupprimer'),
+      cancelText: t('home.nonAnnuler'),
+      cancelMessage: t('home.suppressionAnnulee'),
     });
     if (!confirmed) return;
     try {
       await pagesApi.deletePost(post.page.id, post.id);
       setIsDeleted(true);
-      toast.success('Publication supprimée avec succès');
+      toast.success(t('home.publicationSupprimeeAvecSucces'));
       onPostDeleted?.(post.id);
     } catch {
-      toast.error('Erreur lors de la suppression');
+      toast.error(t('home.erreurLorsDeLaSuppression'));
     }
   };
 
@@ -235,7 +236,7 @@ const PagePostCard = memo(function PagePostCard({
               </button>
             ) : (
               <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#262626] px-2.5 py-1 rounded-full shrink-0">
-                Ma page
+                <span>{t('home.maPage')}</span>
               </span>
             )}
 
@@ -268,7 +269,7 @@ const PagePostCard = memo(function PagePostCard({
                         onClick={handleCopyText}
                         className="w-full text-left px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/60 flex items-center gap-2.5 transition-colors"
                       >
-                        <Copy className="w-3.5 h-3.5 text-gray-500" /> Copier le texte
+                        <Copy className="w-3.5 h-3.5 text-gray-500" /> <span>{t('home.copierLeTexte')}</span>
                       </button>
                     )}
                     {isCreator && (
@@ -281,7 +282,7 @@ const PagePostCard = memo(function PagePostCard({
                         }}
                         className="w-full text-left px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/60 flex items-center gap-2.5 transition-colors"
                       >
-                        <Pencil className="w-3.5 h-3.5 text-gray-500" /> Modifier
+                        <Pencil className="w-3.5 h-3.5 text-gray-500" /> <span>{t('home.modifier')}</span>
                       </button>
                     )}
                     {isCreator && (
@@ -289,19 +290,19 @@ const PagePostCard = memo(function PagePostCard({
                         onClick={handleDelete}
                         className="w-full text-left px-3.5 py-2.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 flex items-center gap-2.5 transition-colors"
                       >
-                        <Trash2 className="w-3.5 h-3.5 text-red-500" /> Supprimer
+                        <Trash2 className="w-3.5 h-3.5 text-red-500" /> <span>{t('home.supprimer')}</span>
                       </button>
                     )}
                     {!isCreator && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          toast.success('Publication signalée');
+                          toast.success(t('home.publicationSignalee'));
                           setShowMenu(false);
                         }}
                         className="w-full text-left px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/60 flex items-center gap-2.5 transition-colors"
                       >
-                        Signaler
+                        <span>{t('home.signaler')}</span>
                       </button>
                     )}
                   </div>
@@ -316,7 +317,7 @@ const PagePostCard = memo(function PagePostCard({
           <div
             className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-white/5 active:opacity-80 transition-all"
             onClick={() => setShowDetailModal(true)}
-            title="Afficher la publication"
+            title={t('home.afficherLaPublication')}
           >
             <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed select-text">
               {postContent}
@@ -366,7 +367,7 @@ const PagePostCard = memo(function PagePostCard({
                   >
                     <SafeImage
                       src={url}
-                      alt={`Photo ${idx + 1}`}
+                      alt={t('home.photo', { v0: idx + 1 })}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-2.5 right-2.5 bg-black/70 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
@@ -391,7 +392,7 @@ const PagePostCard = memo(function PagePostCard({
                         >
                           <SafeImage
                             src={url}
-                            alt={`Photo ${idx + 1}`}
+                            alt={t('home.photo', { v0: idx + 1 })}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -413,7 +414,7 @@ const PagePostCard = memo(function PagePostCard({
                       setLightboxOpen(true);
                     }}
                     className="bg-black/75 text-white p-1.5 rounded-full border border-white/10 hover:bg-black/90 transition-colors"
-                    title="Agrandir en plein écran"
+                    title={t('home.agrandirEnPleinEcran')}
                   >
                     <Maximize2 className="w-3 h-3" />
                   </button>
@@ -513,7 +514,7 @@ const PagePostCard = memo(function PagePostCard({
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 shadow-2xl border border-gray-100 dark:border-gray-800">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800 mb-4">
-              <h3 className="font-bold text-base text-gray-900 dark:text-white">Modifier la publication</h3>
+              <h3 className="font-bold text-base text-gray-900 dark:text-white"><span>{t('home.modifierLaPublication')}</span></h3>
               <button
                 onClick={() => setShowEditModal(false)}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -526,7 +527,7 @@ const PagePostCard = memo(function PagePostCard({
               value={editInput}
               onChange={(e) => setEditInput(e.target.value)}
               rows={5}
-              placeholder="Texte de votre publication..."
+              placeholder={t('home.texteDeVotrePublication')}
               className="w-full p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7A00] resize-none"
             />
 
@@ -537,7 +538,7 @@ const PagePostCard = memo(function PagePostCard({
                 disabled={isSavingEdit}
                 className="px-4 py-2 rounded-full text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                Annuler
+                <span>{t('home.annuler')}</span>
               </button>
               <button
                 type="button"
@@ -546,7 +547,7 @@ const PagePostCard = memo(function PagePostCard({
                 className="px-5 py-2 rounded-full text-xs font-semibold bg-[#FF7A00] hover:bg-[#E06C00] text-white shadow-md shadow-[#FF7A00]/20 active:scale-95 transition-all flex items-center gap-1.5"
               >
                 {isSavingEdit && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Enregistrer
+                <span>{t('home.enregistrer')}</span>
               </button>
             </div>
           </div>
@@ -948,7 +949,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
   const displayName = user?.profile?.displayName?.split(' ')[0]
     || userData?.firstName?.split(' ')[0]
-    || 'vous';
+    || i18n.t('home.you');
   const avatarUrl = user?.profile?.avatarUrl;
   const [viewAll, setViewAll] = useState<'featured' | 'popular' | null>(null);
 

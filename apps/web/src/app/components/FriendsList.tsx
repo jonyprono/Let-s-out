@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import i18n from '@/lib/i18n'
 import { useNavigate, useParams } from 'react-router'
 import { ChevronLeft, Users, MessageCircle, Search, UserPlus, UserMinus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -9,10 +10,12 @@ import { toast } from 'sonner'
 import { useDebounce } from 'use-debounce'
 import { useAuthStore } from '@/stores/auth.store'
 import { apiClient } from '@/lib/api-client'
+import { useTranslation } from 'react-i18next'
 
 type TabType = 'friends' | 'global' | 'followers' | 'following'
 
 export function FriendsList() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { openUserProfile } = useUserProfile()
   const qc = useQueryClient()
@@ -53,17 +56,17 @@ export function FriendsList() {
     onSuccess: (res) => {
       navigate(`/chat/${res.id}`)
     },
-    onError: () => toast.error('Impossible de démarrer la conversation')
+    onError: () => toast.error(t('friendsList.impossibleDeDemarrerLaConversation'))
   })
 
   const friendRequestMut = useMutation({
     mutationFn: (userId: string) => usersApi.sendFriendRequest(userId),
     onSuccess: () => {
-      toast.success('Demande d\'ami envoyée !')
+      toast.success(t('friendsList.demandeD'))
       qc.invalidateQueries({ queryKey: ['users', 'search'] })
       qc.invalidateQueries({ queryKey: ['public-profile'] })
     },
-    onError: () => toast.error('Impossible d\'envoyer la demande')
+    onError: () => toast.error(t('friendsList.impossibleD'))
   })
 
   const followMut = useMutation({
@@ -79,7 +82,7 @@ export function FriendsList() {
     },
     onError: (_err, _uid, ctx) => {
       if (ctx?.prev) qc.setQueryData(['users', 'followers', targetUserId], ctx.prev)
-      toast.error('Erreur lors de l\'abonnement')
+      toast.error(t('friendsList.erreurLorsDeL'))
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['users', 'followers', targetUserId] })
@@ -100,7 +103,7 @@ export function FriendsList() {
     },
     onError: (_err, _uid, ctx) => {
       if (ctx?.prev) qc.setQueryData(['users', 'following', targetUserId], ctx.prev)
-      toast.error('Erreur lors du désabonnement')
+      toast.error(t('friendsList.erreurLorsDuDesabonnement'))
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['users', 'followers', targetUserId] })
@@ -160,7 +163,7 @@ export function FriendsList() {
           <ChevronLeft className="w-5 h-5 text-gray-700" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Réseau</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white"><span>{t('friendsList.reseau')}</span></h1>
         </div>
       </div>
 
@@ -170,7 +173,7 @@ export function FriendsList() {
           <Search className="w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder={activeTab === 'global' ? "Rechercher de nouveaux utilisateurs..." : "Rechercher..."}
+            placeholder={activeTab === 'global' ? t('friendsList.rechercherDeNouveauxUtilisateurs') : "Rechercher..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-white text-[15px] placeholder-gray-400"
@@ -180,10 +183,10 @@ export function FriendsList() {
         {/* Toggle Tabs */}
         <div className="flex gap-2 mt-3 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {[
-            { id: 'friends', label: isPublicMode ? 'Amis' : 'Mes amis' },
-            { id: 'followers', label: 'Abonnés' },
+            { id: 'friends', label: isPublicMode ? 'Amis' : t('friendsList.mesAmis') },
+            { id: 'followers', label: t('friendsList.abonnes') },
             { id: 'following', label: 'Abonnements' },
-            ...(isPublicMode ? [] : [{ id: 'global', label: 'Découvrir' }])
+            ...(isPublicMode ? [] : [{ id: 'global', label: t('friendsList.decouvrir') }])
           ].map(tab => (
             <button 
               key={tab.id}
@@ -215,11 +218,11 @@ export function FriendsList() {
           <div className="p-4 space-y-3">
             {debouncedQuery.trim() === '' ? (
               <div className="text-center py-20 text-gray-400 text-[14px]">
-                Tapez un nom ou un pseudo pour rechercher des utilisateurs
+                <span>{t('friendsList.tapezUnNomOuUn')}</span>
               </div>
             ) : !globalUsers || globalUsers.length === 0 ? (
               <div className="text-center py-20 text-gray-400 text-[14px]">
-                Aucun utilisateur trouvé pour "{debouncedQuery}"
+                <span>{i18n.t('friendsList.noUserFor', { query: debouncedQuery })}</span>
               </div>
             ) : (
               globalUsers.map(user => {
@@ -282,11 +285,11 @@ export function FriendsList() {
                 >
                   <Users className="w-10 h-10" style={{ color: '#FF7A00' }} />
                 </div>
-                <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2">Aucun résultat</h3>
+                <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('friendsList.aucunResultat')}</span></h3>
                 <p className="text-[13px] text-gray-400 leading-relaxed max-w-xs">
-                  {activeTab === 'friends' && "Vous n'avez pas encore d'amis correspondant à cette recherche."}
-                  {activeTab === 'followers' && "Vous n'avez pas encore d'abonnés correspondant à cette recherche."}
-                  {activeTab === 'following' && "Vous n'êtes abonné à personne correspondant à cette recherche."}
+                  {activeTab === 'friends' && t('friendsList.vousNAvezPasEncore')}
+                  {activeTab === 'followers' && t('friendsList.vousNAvezPasEncore2')}
+                  {activeTab === 'following' && t('friendsList.vousNEtesAbonneA')}
                 </p>
               </div>
             ) : (
@@ -372,7 +375,7 @@ export function FriendsList() {
                         }}
                         disabled={unfollowMut.isPending}
                         className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
-                        title="Se désabonner"
+                        title={t('friendsList.seDesabonner')}
                       >
                         <UserMinus className="w-5 h-5" />
                       </button>
@@ -388,14 +391,14 @@ export function FriendsList() {
                             )
                             await apiClient.post(`/pages/${uid}/follow`)
                             qc.invalidateQueries({ queryKey: ['users', 'following', targetUserId] })
-                            toast.success('Désabonné de la page')
+                            toast.success(t('friendsList.desabonneDeLaPage'))
                           } catch {
                             qc.invalidateQueries({ queryKey: ['users', 'following', targetUserId] })
-                            toast.error('Erreur lors du désabonnement')
+                            toast.error(t('friendsList.erreurLorsDuDesabonnement'))
                           }
                         }}
                         className="w-10 h-10 rounded-full flex items-center justify-center transition-all bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white"
-                        title="Se désabonner de la page"
+                        title={t('friendsList.seDesabonnerDeLaPage')}
                       >
                         <UserMinus className="w-5 h-5" />
                       </button>

@@ -3,6 +3,7 @@ import { Star } from 'lucide-react';
 import { PrimaryButton } from '@/components/shared/PrimaryButton';
 import { eventsApi } from '@/features/events/api';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next'
 
 interface PendingEvaluationModalProps {
   event: any;
@@ -33,6 +34,7 @@ function RatingRow({ label, value, onChange, icon }: { label: string, value: num
 }
 
 export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEvaluationModalProps) {
+  const { t } = useTranslation()
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [punctualityRating, setPunctualityRating] = useState(0);
@@ -43,7 +45,7 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast.error('Veuillez donner une note globale');
+      toast.error(t('pendingEvaluationModal.veuillezDonnerUneNoteGlobale'));
       return;
     }
 
@@ -56,10 +58,10 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
         reliabilityRating: reliabilityRating || undefined,
         comment,
       });
-      toast.success('Merci pour votre évaluation !');
+      toast.success(t('pendingEvaluationModal.merciPourVotreEvaluation'));
       onSubmit();
     } catch (err) {
-      toast.error("Erreur lors de l'envoi de l'évaluation");
+      toast.error(t('pendingEvaluationModal.erreurLorsDeLEnvoi'));
     } finally {
       setIsSubmitting(false);
     }
@@ -76,15 +78,15 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
         {/* Header */}
         <div className="px-5 pt-2 pb-3 text-center flex-shrink-0">
           <div className="w-14 h-14 mx-auto bg-orange-100 dark:bg-orange-900/30 text-orange-500 rounded-full flex items-center justify-center mb-3 text-2xl">⭐</div>
-          <h2 className="text-[20px] font-black text-gray-900 dark:text-white mb-1">Comment s'est passé ?</h2>
+          <h2 className="text-[20px] font-black text-gray-900 dark:text-white mb-1"><span>{t('pendingEvaluationModal.commentSEstPasse')}</span></h2>
           <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold">{event.title}</p>
-          <p className="text-[12px] text-gray-400 mt-1">Votre avis aide la communauté à identifier les organisateurs de confiance !</p>
+          <p className="text-[12px] text-gray-400 mt-1"><span>{t('pendingEvaluationModal.votreAvisAideLaCommunaute')}</span></p>
         </div>
 
         <div className="px-5 pb-8 flex flex-col gap-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
           {/* Global Rating */}
           <div className="flex flex-col items-center gap-2">
-            <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">Note globale</p>
+            <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300"><span>{t('pendingEvaluationModal.noteGlobale')}</span></p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map(star => (
                 <button
@@ -109,11 +111,11 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
           {/* Detailed Ratings for badges */}
           <div className="flex flex-col gap-3">
             <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 text-center">
-              Aidez l'organisateur à obtenir des badges :
+              <span>{t('pendingEvaluationModal.aidezLOrganisateurAObtenir')}</span>
             </p>
             <RatingRow label="Accueillant et souriant" value={attitudeRating} onChange={setAttitudeRating} icon="🤝" />
-            <RatingRow label="Ponctuel (À l'heure prévue)" value={punctualityRating} onChange={setPunctualityRating} icon="⏱️" />
-            <RatingRow label="Fiable (Lieu et détails conformes)" value={reliabilityRating} onChange={setReliabilityRating} icon="✅" />
+            <RatingRow label={t('pendingEvaluationModal.ponctuelALHeurePrevue')} value={punctualityRating} onChange={setPunctualityRating} icon="⏱️" />
+            <RatingRow label={t('pendingEvaluationModal.fiableLieuEtDetailsConformes')} value={reliabilityRating} onChange={setReliabilityRating} icon="✅" />
           </div>
 
           {/* Comment */}
@@ -133,13 +135,13 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
             disabled={rating === 0 || isSubmitting}
             loading={isSubmitting}
           >
-            Envoyer mon avis
+            <span>{t('pendingEvaluationModal.envoyerMonAvis')}</span>
           </PrimaryButton>
           <button
             onClick={onClose}
             className="w-full mt-3 text-gray-400 font-semibold text-sm hover:text-gray-600 dark:text-gray-300 transition-colors text-center pb-2"
           >
-            Évaluer plus tard
+            <span>{t('pendingEvaluationModal.evaluerPlusTard')}</span>
           </button>
         </div>
       </div>

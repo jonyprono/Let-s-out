@@ -4,12 +4,14 @@ import { useSearchUsers, useSendFriendRequest } from '@/features/users/api'
 import { toast } from 'sonner'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { useTranslation } from 'react-i18next'
 
 interface AddFriendsModalProps {
   onClose: () => void
 }
 
 export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const { data: users, isLoading } = useSearchUsers(search)
   const { mutate: sendRequest, isPending: isSending } = useSendFriendRequest()
@@ -22,10 +24,10 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
     sendRequest(userId, {
       onSuccess: () => {
         setSentRequests(prev => [...prev, userId])
-        toast.success("Demande d'ami envoyée !")
+        toast.success(t('addFriendsModal.demandeDAmiEnvoyee'))
       },
       onError: (err: any) => {
-        toast.error(err.response?.data?.error || "Impossible d'envoyer la demande")
+        toast.error(err.response?.data?.error || t('addFriendsModal.impossibleDEnvoyerLaDemande'))
       }
     })
   }
@@ -53,7 +55,7 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
         <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
           <X className="w-5 h-5 text-gray-900 dark:text-white" />
         </button>
-        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Ajouter des amis</h2>
+        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white"><span>{t('addFriendsModal.ajouterDesAmis')}</span></h2>
         <div className="w-9" /> {/* Spacer for centering */}
       </div>
 
@@ -63,7 +65,7 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
           <Search className="w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Rechercher par pseudo ou nom..."
+            placeholder={t('addFriendsModal.rechercherParPseudoOuNom')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="flex-1 bg-transparent text-[15px] outline-none placeholder-gray-500"
@@ -78,14 +80,14 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
             <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-[#222222] flex items-center justify-center mb-4">
               <Search className="w-8 h-8 text-gray-300" />
             </div>
-            <p className="text-[15px] text-gray-500 dark:text-gray-400 font-medium">Recherchez vos amis</p>
-            <p className="text-[13px] text-gray-400 mt-1">Saisissez au moins 2 caractères.</p>
+            <p className="text-[15px] text-gray-500 dark:text-gray-400 font-medium"><span>{t('addFriendsModal.recherchezVosAmis')}</span></p>
+            <p className="text-[13px] text-gray-400 mt-1"><span>{t('addFriendsModal.saisissezAuMoins2Caracteres')}</span></p>
           </div>
         ) : isLoading ? (
           <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
         ) : users?.length === 0 ? (
           <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-[14px]">
-            Aucun utilisateur trouvé.
+            <span>{t('addFriendsModal.aucunUtilisateurTrouve')}</span>
           </div>
         ) : (
           <div className="space-y-4 pt-2">
@@ -124,12 +126,12 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
                     {isSent ? (
                       <>
                         <Check className="w-4 h-4" />
-                        Envoyée
+                        <span>{t('addFriendsModal.envoyee')}</span>
                       </>
                     ) : (
                       <>
                         <UserPlus className="w-4 h-4" />
-                        Ajouter
+                        <span>{t('addFriendsModal.ajouter')}</span>
                       </>
                     )}
                   </button>

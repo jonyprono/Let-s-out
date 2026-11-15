@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import i18n from '@/lib/i18n'
 import { useParams, useNavigate, useLocation } from 'react-router'
 import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page, PagePost } from '../api'
@@ -15,7 +16,10 @@ import { PAGE_CATEGORIES } from '../categories'
 import { PageStatsPanel } from './PageStatsPanel'
 import { PageFollowersPanel } from './PageFollowersPanel'
 
+import { intlLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
 export function ManagePage() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const me = useAuthStore(s => (s as any).user)
@@ -67,7 +71,7 @@ export function ManagePage() {
       })
       .catch((error: any) => {
         console.error("Erreur de chargement de la page (ManagePage):", error)
-        toast.error('Erreur de chargement de la page. Veuillez réessayer.')
+        toast.error(t('managePage.erreurDeChargementDeLa'))
         navigate('/explorer')
       })
       .finally(() => setLoading(false))
@@ -89,10 +93,10 @@ export function ManagePage() {
       toast.success(`${type === 'avatar' ? 'Photo de profil' : 'Bannière'} mise à jour !`)
     } catch (err: any) {
       const apiMsg = err?.response?.data?.error || err?.response?.data?.message
-      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || "Erreur lors de l'upload")
+      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || t('managePage.erreurLorsDeLUpload'))
       toast.error(
         String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')
-          ? 'Erreur de connexion au serveur. Vérifiez votre connexion.'
+          ? t('managePage.erreurDeConnexionAuServeur')
           : errorStr
       )
     } finally {
@@ -110,13 +114,13 @@ export function ManagePage() {
         description: description.trim() || undefined,
       })
       setPage(updated)
-      toast.success('Page mise à jour !')
+      toast.success(t('managePage.pageMiseAJour'))
     } catch (err: any) {
       const apiMsg = err?.response?.data?.error || err?.response?.data?.message
-      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || 'Erreur lors de la sauvegarde')
+      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || t('managePage.erreurLorsDeLaSauvegarde'))
       toast.error(
         String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')
-          ? 'Erreur de connexion au serveur. Vérifiez votre connexion.'
+          ? t('managePage.erreurDeConnexionAuServeur')
           : errorStr
       )
     } finally {
@@ -127,25 +131,25 @@ export function ManagePage() {
   const handleDelete = async () => {
     if (!id) return
     const confirmed = await confirm({
-      title: 'Supprimer cette page ?',
-      description: `Voulez-vous vraiment supprimer la page "${page?.name || ''}" ? Cette action est irréversible et supprimera définitivement tous les contenus, publications et images associés.`,
-      confirmText: 'Oui, supprimer définitivement',
-      cancelText: 'Non, annuler',
-      cancelMessage: 'Suppression de la page annulée',
+      title: t('managePage.supprimerCettePage'),
+      description: t('managePage.voulezVousVraimentSupprimerLa', { v0: page?.name || '' }),
+      confirmText: t('managePage.ouiSupprimerDefinitivement'),
+      cancelText: t('managePage.nonAnnuler'),
+      cancelMessage: t('managePage.suppressionDeLaPageAnnulee'),
     })
     if (!confirmed) return
 
     setDeleting(true)
     try {
       await pagesApi.deletePage(id)
-      toast.success('Page supprimée définitivement')
+      toast.success(t('managePage.pageSupprimeeDefinitivement'))
       navigate('/settings', { replace: true })
     } catch (err: any) {
       const apiMsg = err?.response?.data?.error || err?.response?.data?.message
-      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || 'Erreur lors de la suppression')
+      const errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || t('managePage.erreurLorsDeLaSuppression'))
       toast.error(
         String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')
-          ? 'Erreur de connexion au serveur. Vérifiez votre connexion.'
+          ? t('managePage.erreurDeConnexionAuServeur')
           : errorStr
       )
     } finally {
@@ -164,11 +168,11 @@ export function ManagePage() {
   if (!page) return null
 
   const sectionTitle: Record<string, string> = {
-    menu: 'Gérer la page',
-    settings: 'Paramètres',
+    menu: t('managePage.gererLaPage'),
+    settings: t('managePage.parametres'),
     stats: 'Statistiques',
     posts: 'Publications',
-    followers: 'Abonnés',
+    followers: t('managePage.abonnes'),
   }
 
   // --- Sub-section views (no page header) ---
@@ -180,7 +184,7 @@ export function ManagePage() {
           const data = await pagesApi.getPosts(id!)
           setPosts(data)
         } catch {
-          toast.error('Erreur lors du chargement des publications')
+          toast.error(t('managePage.erreurLorsDuChargementDes'))
         } finally {
           setLoadingPosts(false)
         }
@@ -191,11 +195,11 @@ export function ManagePage() {
     const handleDeletePost = async (postId: string) => {
       if (!id) return
       const confirmed = await confirm({
-        title: 'Supprimer cette publication ?',
-        description: 'Voulez-vous vraiment supprimer cette publication définitivement ? Toutes les images et commentaires associés seront supprimés.',
-        confirmText: 'Oui, supprimer',
-        cancelText: 'Non, annuler',
-        cancelMessage: 'Suppression annulée',
+        title: t('managePage.supprimerCettePublication'),
+        description: t('managePage.voulezVousVraimentSupprimerCette'),
+        confirmText: t('managePage.ouiSupprimer'),
+        cancelText: t('managePage.nonAnnuler'),
+        cancelMessage: t('managePage.suppressionAnnulee'),
       })
       if (!confirmed) return
 
@@ -204,9 +208,9 @@ export function ManagePage() {
         await pagesApi.deletePost(id, postId)
         setPosts(prev => prev.filter(p => p.id !== postId))
         setPage(prev => prev ? { ...prev, _count: { ...prev._count!, posts: (prev._count?.posts || 1) - 1 } } : null)
-        toast.success('Publication supprimée avec succès')
+        toast.success(t('managePage.publicationSupprimeeAvecSucces'))
       } catch {
-        toast.error('Erreur lors de la suppression')
+        toast.error(t('managePage.erreurLorsDeLaSuppression'))
       } finally {
         setDeletingPostId(null)
       }
@@ -226,7 +230,7 @@ export function ManagePage() {
           {currentSection === 'settings' && (
             <div className="space-y-4 pb-6">
               <div>
-                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Nom de la page</label>
+                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('managePage.nomDeLaPage')}</span></label>
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
@@ -234,16 +238,16 @@ export function ManagePage() {
                 />
               </div>
               <div>
-                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Catégorie</label>
+                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('managePage.categorie')}</span></label>
                 <div
                   onClick={() => setShowCategorySheet(true)}
                   className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] cursor-pointer"
                 >
-                  {category || <span className="text-[var(--color-text-muted)]">Sélectionnez une catégorie...</span>}
+                  {category || <span className="text-[var(--color-text-muted)]"><span>{t('managePage.selectionnezUneCategorie')}</span></span>}
                 </div>
               </div>
               <div>
-                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Description</label>
+                <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{i18n.t('eventView.description')}</span></label>
                 <textarea
                   value={description}
                   onChange={e => setDescription(e.target.value)}
@@ -257,7 +261,7 @@ export function ManagePage() {
                 loading={saving}
                 className="w-full"
               >
-                Enregistrer les modifications
+                <span>{t('managePage.enregistrerLesModifications')}</span>
               </PrimaryButton>
               <div className="pt-4 border-t border-[var(--border-tertiary)]">
                 {!showDeleteConfirm ? (
@@ -266,25 +270,25 @@ export function ManagePage() {
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-red-200 dark:border-red-900/50 text-red-500 text-[14px] font-semibold active:scale-95 transition-transform"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Supprimer la page
+                    <span>{t('managePage.supprimerLaPage')}</span>
                   </button>
                 ) : (
                   <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/50">
-                    <p className="text-[14px] font-semibold text-red-600 mb-1">Confirmer la suppression ?</p>
-                    <p className="text-[12px] text-red-400 mb-4">Cette action est irréversible. Toutes les publications seront supprimées.</p>
+                    <p className="text-[14px] font-semibold text-red-600 mb-1"><span>{t('managePage.confirmerLaSuppression')}</span></p>
+                    <p className="text-[12px] text-red-400 mb-4"><span>{t('managePage.cetteActionEstIrreversibleToutes')}</span></p>
                     <div className="flex gap-3">
                       <button
                         onClick={() => setShowDeleteConfirm(false)}
                         className="flex-1 py-2 rounded-xl border border-[var(--border-default)] text-[13px] font-semibold text-[var(--color-text-primary)]"
                       >
-                        Annuler
+                        <span>{t('managePage.annuler')}</span>
                       </button>
                       <button
                         onClick={handleDelete}
                         disabled={deleting}
                         className="flex-1 py-2 rounded-xl bg-red-500 text-white text-[13px] font-bold flex items-center justify-center gap-1.5"
                       >
-                        {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> Supprimer</>}
+                        {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Trash2 className="w-4 h-4" /> <span>{t('managePage.supprimer')}</span></>}
                       </button>
                     </div>
                   </div>
@@ -308,8 +312,8 @@ export function ManagePage() {
                   <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
                     <FileText className="w-8 h-8 text-orange-500" />
                   </div>
-                  <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Aucune publication</h3>
-                  <p className="text-[14px] text-[var(--color-text-muted)]">Publiez votre premier contenu depuis la page.</p>
+                  <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2"><span>{t('managePage.aucunePublication')}</span></h3>
+                  <p className="text-[14px] text-[var(--color-text-muted)]"><span>{t('managePage.publiezVotrePremierContenuDepuis')}</span></p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -317,7 +321,7 @@ export function ManagePage() {
                     <div key={post.id} className="bg-[var(--color-background-secondary)] rounded-2xl p-4">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <p className="text-[13px] text-[var(--color-text-muted)]">
-                          {new Date(post.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          {new Date(post.createdAt).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long', year: 'numeric' })}
                         </p>
                         <button
                           onClick={() => handleDeletePost(post.id)}
@@ -366,7 +370,7 @@ export function ManagePage() {
           {currentSection === 'followers' && id && <PageFollowersPanel pageId={id} total={page?._count?.followers} />}
         </div>
 
-        <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
+        <BottomSheet title={t('managePage.selectionnerUneCategorie')} open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
           <div className="divide-y divide-[var(--border-tertiary)]">
             {PAGE_CATEGORIES.map(cat => (
               <button
@@ -405,7 +409,7 @@ export function ManagePage() {
     <div className="w-full h-full bg-[var(--color-background-primary)] flex flex-col font-poppins">
       <div className="pt-safe-6">
         <TopBar
-          title="Gérer la page"
+          title={t('managePage.gererLaPage')}
           onBack={() => navigate(-1)}
         />
       </div>
@@ -414,7 +418,7 @@ export function ManagePage() {
         {/* Cover Photo */}
         <div className="relative h-36 bg-gradient-to-r from-orange-400 to-orange-600">
           {coverPreview && (
-            <SafeImage src={coverPreview} alt="Bannière" className="w-full h-full object-cover" />
+            <SafeImage src={coverPreview} alt={t('managePage.banniere')} className="w-full h-full object-cover" />
           )}
           {uploadingCover && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -426,7 +430,7 @@ export function ManagePage() {
             onClick={() => coverInputRef.current?.click()}
           >
             <Camera className="w-3.5 h-3.5 pointer-events-none" />
-            <span className="pointer-events-none">Modifier</span>
+            <span className="pointer-events-none"><span>{t('managePage.modifier')}</span></span>
             <input
               ref={coverInputRef}
               type="file"
@@ -483,12 +487,12 @@ export function ManagePage() {
         <div className="mx-5 mb-5 p-4 rounded-2xl bg-[var(--color-background-secondary)] flex items-center justify-around">
           <div className="text-center">
             <p className="text-[22px] font-bold text-[var(--color-text-primary)]">{page._count?.followers || 0}</p>
-            <p className="text-[11px] text-[var(--color-text-muted)]">Abonnés</p>
+            <p className="text-[11px] text-[var(--color-text-muted)]"><span>{t('managePage.abonnes')}</span></p>
           </div>
           <div className="w-px h-8 bg-[var(--border-default)]" />
           <div className="text-center">
             <p className="text-[22px] font-bold text-[var(--color-text-primary)]">{page._count?.posts || 0}</p>
-            <p className="text-[11px] text-[var(--color-text-muted)]">Publications</p>
+            <p className="text-[11px] text-[var(--color-text-muted)]"><span>{t('managePage.publications')}</span></p>
           </div>
         </div>
 
@@ -516,8 +520,8 @@ export function ManagePage() {
                 <FileText className="w-5 h-5 text-orange-500" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">Publications</p>
-                <p className="text-[12px] text-[var(--color-text-muted)]">Gérer vos posts et vidéos</p>
+                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]"><span>{t('managePage.publications')}</span></p>
+                <p className="text-[12px] text-[var(--color-text-muted)]"><span>{t('managePage.gererVosPostsEtVideos')}</span></p>
               </div>
               <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
             </button>
@@ -530,8 +534,8 @@ export function ManagePage() {
                 <Users className="w-5 h-5 text-green-500" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">Abonnés</p>
-                <p className="text-[12px] text-[var(--color-text-muted)]">Liste de votre communauté</p>
+                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]"><span>{t('managePage.abonnes')}</span></p>
+                <p className="text-[12px] text-[var(--color-text-muted)]"><span>{t('managePage.listeDeVotreCommunaute')}</span></p>
               </div>
               <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
             </button>
@@ -544,8 +548,8 @@ export function ManagePage() {
                 <Settings className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]">Paramètres de la page</p>
-                <p className="text-[12px] text-[var(--color-text-muted)]">Modifier les infos, supprimer la page</p>
+                <p className="text-[15px] font-semibold text-[var(--color-text-primary)]"><span>{t('managePage.parametresDeLaPage')}</span></p>
+                <p className="text-[12px] text-[var(--color-text-muted)]"><span>{t('managePage.modifierLesInfosSupprimerLa')}</span></p>
               </div>
               <ChevronRight className="w-5 h-5 text-[var(--color-text-muted)]" />
             </button>
@@ -554,7 +558,7 @@ export function ManagePage() {
 
       </div>
 
-      <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
+      <BottomSheet title={t('managePage.selectionnerUneCategorie')} open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
         <div className="divide-y divide-[var(--border-tertiary)]">
           {PAGE_CATEGORIES.map(cat => (
             <button

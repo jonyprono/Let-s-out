@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
+import { useTranslation } from 'react-i18next'
 
 interface RateEventModalProps {
   event: any
@@ -34,6 +35,7 @@ function RatingRow({ label, value, onChange, icon }: { label: string, value: num
 }
 
 export function RateEventModal({ event, onClose }: RateEventModalProps) {
+  const { t } = useTranslation()
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [punctualityRating, setPunctualityRating] = useState(0)
@@ -51,13 +53,13 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
       comment,
     }),
     onSuccess: () => {
-      toast.success('Merci pour votre avis !')
+      toast.success(t('rateEventModal.merciPourVotreAvis'))
       qc.invalidateQueries({ queryKey: ['users', 'activity'] })
       qc.invalidateQueries({ queryKey: ['events', event.id, 'reviews'] })
       onClose()
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.error || 'Erreur lors de l\'envoi')
+      toast.error(err.response?.data?.error || t('rateEventModal.erreurLorsDeLEnvoi'))
     }
   })
 
@@ -71,7 +73,7 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
 
         {/* Header */}
         <div className="px-5 py-3 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">Noter l'événement</h3>
+          <h3 className="text-[18px] font-bold text-gray-900 dark:text-white"><span>{t('rateEventModal.noterLEvenement')}</span></h3>
           <button onClick={onClose} className="w-8 h-8 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center">
             <span className="text-gray-500 dark:text-gray-400 font-bold leading-none">✕</span>
           </button>
@@ -85,13 +87,13 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
             </div>
             <div>
               <p className="text-[15px] font-bold text-gray-900 dark:text-white">{event.title}</p>
-              <p className="text-[12px] text-gray-500 dark:text-gray-400">Comment avez-vous trouvé cet événement ?</p>
+              <p className="text-[12px] text-gray-500 dark:text-gray-400"><span>{t('rateEventModal.commentAvezVousTrouveCet')}</span></p>
             </div>
           </div>
 
           {/* Global Rating */}
           <div className="flex flex-col items-center gap-2">
-            <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">Note globale</p>
+            <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300"><span>{t('rateEventModal.noteGlobale')}</span></p>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map(star => (
                 <button
@@ -116,11 +118,11 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
           {/* Detailed ratings */}
           <div className="flex flex-col gap-3">
             <p className="text-[13px] font-semibold text-gray-700 dark:text-gray-300 text-center">
-              Aidez l'organisateur à obtenir des badges :
+              <span>{t('rateEventModal.aidezLOrganisateurAObtenir')}</span>
             </p>
             <RatingRow label="Accueillant et souriant" value={attitudeRating} onChange={setAttitudeRating} icon="🤝" />
-            <RatingRow label="Ponctuel (À l'heure prévue)" value={punctualityRating} onChange={setPunctualityRating} icon="⏱️" />
-            <RatingRow label="Fiable (Lieu et détails conformes)" value={reliabilityRating} onChange={setReliabilityRating} icon="✅" />
+            <RatingRow label={t('rateEventModal.ponctuelALHeurePrevue')} value={punctualityRating} onChange={setPunctualityRating} icon="⏱️" />
+            <RatingRow label={t('rateEventModal.fiableLieuEtDetailsConformes')} value={reliabilityRating} onChange={setReliabilityRating} icon="✅" />
           </div>
 
           {/* Comment */}
@@ -138,7 +140,7 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
             disabled={rating === 0 || submitMutation.isPending}
             loading={submitMutation.isPending}
           >
-            Envoyer mon avis
+            <span>{t('rateEventModal.envoyerMonAvis')}</span>
           </PrimaryButton>
         </div>
       </div>

@@ -1,6 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query'
 import type { Event } from '@/features/events/api'
 
+import { intlLocale } from '@/lib/locale'
+import i18n from '@/lib/i18n'
 export type PoolMode = 'libre' | 'minimum' | 'fixe'
 
 export function getPoolMode(event: { poolMode?: string | null }): PoolMode {
@@ -19,15 +21,15 @@ export function validateContributionAmount(
   amount: number,
 ): { valid: true } | { valid: false; error: string } {
   if (!Number.isFinite(amount) || amount <= 0) {
-    return { valid: false, error: 'Veuillez entrer un montant valide (supérieur à 0)' }
+    return { valid: false, error: i18n.t('pool.errors.invalidAmount') }
   }
   const mode = getPoolMode(event)
   const min = event.poolMinAmount ?? 0
   if (mode === 'fixe' && min > 0 && amount !== min) {
-    return { valid: false, error: `Le montant fixe est de ${Number(min).toLocaleString('fr-FR')} F CFA` }
+    return { valid: false, error: i18n.t('pool.errors.fixedIs', { amount: Number(min).toLocaleString(intlLocale()) }) }
   }
   if (mode === 'minimum' && min > 0 && amount < min) {
-    return { valid: false, error: `Le montant minimum est de ${Number(min).toLocaleString('fr-FR')} F CFA` }
+    return { valid: false, error: i18n.t('pool.errors.minimumIs', { amount: Number(min).toLocaleString(intlLocale()) }) }
   }
   return { valid: true }
 }
@@ -40,11 +42,11 @@ export function resolveContributionAmount(
   const mode = getPoolMode(event)
   if (mode === 'fixe') {
     const fixed = getFixedContributionAmount(event)
-    if (!fixed) return { error: 'Montant fixe non configuré pour cette cagnotte' }
+    if (!fixed) return { error: i18n.t('pool.errors.fixedNotSet') }
     return { amount: fixed }
   }
   if (input === undefined || !Number.isFinite(input)) {
-    return { error: 'Montant requis' }
+    return { error: i18n.t('pool.errors.amountRequired') }
   }
   const check = validateContributionAmount(event, input)
   if (!check.valid) return { error: check.error }
@@ -102,7 +104,7 @@ export function applyPoolContributionOptimistic(
 }
 
 export const POOL_MODE_LABELS: Record<PoolMode, string> = {
-  libre: 'Montant libre',
-  minimum: 'Montant minimum',
-  fixe: 'Montant fixe',
+  get libre() { return i18n.t('pool.mode.libre') },
+  get minimum() { return i18n.t('pool.mode.minimum') },
+  get fixe() { return i18n.t('pool.mode.fixe') },
 }

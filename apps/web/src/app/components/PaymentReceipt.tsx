@@ -4,8 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { chatApi } from '@/features/chat/api'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 
+import { dateLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
 interface BookingReceipt {
   id: string
   status: string
@@ -30,6 +31,7 @@ interface BookingReceipt {
 }
 
 export function PaymentReceipt() {
+  const { t } = useTranslation()
   const { bookingId } = useParams<{ bookingId: string }>()
   const navigate = useNavigate()
 
@@ -57,13 +59,13 @@ export function PaymentReceipt() {
         <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
           <span className="text-3xl">❌</span>
         </div>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Reçu introuvable</h2>
-        <p className="text-sm text-gray-400 mb-6">Ce reçu n'existe pas ou vous n'y avez pas accès.</p>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2"><span>{t('payment.receipt.notFound')}</span></h2>
+        <p className="text-sm text-gray-400 mb-6"><span>{t('payment.receipt.notFoundDesc')}</span></p>
         <button
           onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')}
           className="px-6 py-3 bg-action-primary text-white rounded-full font-semibold"
         >
-          Retour
+          <span>{t('common.back')}</span>
         </button>
       </div>
     )
@@ -71,7 +73,7 @@ export function PaymentReceipt() {
 
   const event = booking.event
   const startDate = new Date(event.startAt)
-  const formattedTime = format(startDate, "HH:mm", { locale: fr })
+  const formattedTime = format(startDate, "HH:mm", { locale: dateLocale() })
 
   const goToChat = async () => {
     if (!event) return
@@ -122,9 +124,9 @@ export function PaymentReceipt() {
           </svg>
         </div>
 
-        <h1 className="text-[22px] font-bold text-gray-900 dark:text-white mb-2">Participation confirmée !</h1>
+        <h1 className="text-[22px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('payment.receipt.confirmed')}</span></h1>
         <p className="text-[14px] text-gray-500 dark:text-gray-400">
-          Vous avez rejoint l'événement avec succès.
+          <span>{t('payment.receipt.joinedDesc')}</span>
         </p>
       </div>
 
@@ -132,7 +134,7 @@ export function PaymentReceipt() {
       <div className="bg-white dark:bg-[#1A1A1A] rounded-[20px] border border-gray-200 dark:border-white/10 px-5 py-5 flex flex-col items-center text-center mb-8">
         <h2 className="font-bold text-[18px] text-gray-900 dark:text-white mb-2 leading-snug">{event.title}</h2>
         <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-1">
-          {format(new Date(event.startAt), "EEE, dd MMM yyyy", { locale: fr })} • {formattedTime} GMT
+          {format(new Date(event.startAt), "EEE, dd MMM yyyy", { locale: dateLocale() })} • {formattedTime} GMT
         </p>
         {(event.address || event.city) && (
           <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-5">
@@ -153,13 +155,13 @@ export function PaymentReceipt() {
           onClick={() => navigate(`/events/${event.id}`)}
           className="flex-1 py-[14px] rounded-full border border-gray-300 bg-white dark:bg-[#1A1A1A] text-gray-800 dark:text-gray-200 font-semibold text-[14px] active:scale-95 transition-transform"
         >
-          Retour à l'événement
+          <span>{t('payment.backToEvent')}</span>
         </button>
         <button
           onClick={goToChat}
           className="flex-1 py-[14px] rounded-full bg-action-primary text-white font-bold text-[14px] active:scale-95 transition-transform"
         >
-          Accéder au chat
+          <span>{t('eventDetails.openChat')}</span>
         </button>
       </div>
 

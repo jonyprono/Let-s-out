@@ -6,18 +6,6 @@ import {
   Calendar01Icon as HugeCalendar,
   Clock01Icon as HugeClock,
   UserIcon,
-  PaintBoardIcon,
-  MaskTheater01Icon,
-  FootballIcon,
-  HealthIcon,
-  KitchenUtensilsIcon,
-  DrinkIcon,
-  MoleculesIcon,
-  PartyIcon,
-  HandPrayerIcon,
-  ShoppingBag02Icon,
-  MusicNote03Icon,
-  CameraVideoIcon,
   PencilEdit01Icon,
   Delete01Icon,
   Search01Icon,
@@ -59,8 +47,10 @@ const customOrangeMarker = L.divIcon({
 });
 
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 
+import { dateLocale, currentLang } from '@/lib/locale';
+import { useTranslation } from 'react-i18next'
+import { EVENT_CATEGORIES, getEventCategory, eventCategoryLabel } from '@/lib/event-categories'
 interface CreateEventProps { onBack: () => void }
 
 let sessionDraft: any = null;
@@ -69,34 +59,9 @@ export function clearCreateEventDraft() {
   sessionDraft = null;
 }
 
-// ── Categories (fidèles aux maquettes) ──────────────────────────────────────
-// IMPORTANT : chaque `value` doit être UNIQUE — deux catégories avec la même
-// value font que find() retourne toujours la première, causant des bugs de
-// sélection et d'affichage (ex : "Fêtes" → "Boissons", "Comédie" par défaut).
-const CATEGORIES = [
-  { label: 'Art et culture', value: 'CULTURE', Icon: PaintBoardIcon },
-  { label: 'Comédie', value: 'GAMING', Icon: MaskTheater01Icon },
-  { label: 'Sport', value: 'SPORT', Icon: FootballIcon },
-  { label: 'Santé et bien-être', value: 'WELLNESS', Icon: HealthIcon },
-  { label: 'Cuisine et gastronomie', value: 'FOOD', Icon: KitchenUtensilsIcon },
-  { label: 'Boissons', value: 'LIFESTYLE', Icon: DrinkIcon },
-  { label: 'Réseautage professionnel', value: 'SOCIAL', Icon: MoleculesIcon },
-  { label: 'Fêtes', value: 'NIGHTLIFE', Icon: PartyIcon },
-  { label: 'Religion', value: 'OTHER', Icon: HandPrayerIcon },
-  { label: 'Shopping', value: 'TECH', Icon: ShoppingBag02Icon },
-  { label: 'Musique et son', value: 'MUSIC', Icon: MusicNote03Icon },
-  { label: 'Télévision et cinéma', value: 'ART', Icon: CameraVideoIcon },
-  { label: 'Jeux vidéos & jeux de société', value: 'GAMING', Icon: MaskTheater01Icon },
-  { label: 'Concerts & festivals', value: 'CONCERTS', Icon: MusicNote03Icon },
-  { label: 'Voyages et découverte', value: 'TRAVEL', Icon: PaintBoardIcon },
-]
-
-// ── Participation modes ──────────────────────────────────────────────────────
-const PARTICIPATION_MODES = [
-  { value: 'free', label: 'Gratuit', desc: 'Entrée ouverte à tous sans paiement', emoji: '🔓' },
-  { value: 'ticket', label: 'Sur ticket', desc: "Accès sur achat de tickets d'entrée", emoji: '🎫' },
-  { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Accès sur contribution à une cagnotte partagée', emoji: '💰' },
-]
+// Catégories : source unique (lib/event-categories.ts), identifiants uniques.
+// Modes de participation : libellés traduits via createEvent.participation.<value>
+const PARTICIPATION_MODES = ['free', 'ticket', 'cagnotte'] as const
 
 // ── Main Component ──────────────────────────────────────────────────────────
 const CustomClockIcon = ({ className }: { className?: string }) => (
@@ -139,14 +104,14 @@ const CustomUserIcon = ({ className }: { className?: string }) => (
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function formatDateFr(iso: string) {
-  try { return format(new Date(iso + 'T00:00:00'), 'dd MMMM yyyy', { locale: fr }) }
+  try { return format(new Date(iso + 'T00:00:00'), 'dd MMMM yyyy', { locale: dateLocale() }) }
   catch { return iso }
 }
 
 function formatDateTime(date: string, time: string) {
   if (!date || !time) return ''
   try {
-    return format(new Date(`${date}T${time}`), "EEEE d MMMM yyyy HH:mm", { locale: fr })
+    return format(new Date(`${date}T${time}`), "EEEE d MMMM yyyy HH:mm", { locale: dateLocale() })
       .replace(/^\w/, c => c.toUpperCase())
   } catch { return `${date} ${time}` }
 }
@@ -164,7 +129,7 @@ function InputField({
 }) {
   return (
     <div className="mb-3">
-      <p className="text-[length:var(--font-size-body-small)] font-semibold text-[var(--color-text-primary)] mb-1">{label}</p>
+      <p className="text-[length:var(--font-size-body-small)] font-semibold text-[var(--color-text-primary)] mb-1"><span>{label}</span></p>
       <div className="relative" onClick={onClick}>
         <input
           value={value || ''}
@@ -186,7 +151,14 @@ function InputField({
 
 
 export function CreateEvent({ onBack }: CreateEventProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
+  // Heure affichée : « 20h00 » en français, format local (« 8:00 PM »…) sinon
+  const fmtTime = (hhmm: string) => {
+    if (!hhmm) return ''
+    if (currentLang() === 'fr') return hhmm.replace(':', 'h')
+    try { return format(new Date(`2000-01-01T${hhmm}`), 'p', { locale: dateLocale() }) } catch { return hhmm }
+  }
   const location = useLocation()
   const me = useAuthStore((state: any) => state.user)
   // isVerified on User model = phone/email OTP verified (always true after signup)
@@ -267,8 +239,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const isEdit = Boolean(location.state?.editEventId || createdEventId)
 
   const displayOrganizerName = isEdit && eventCreator
-    ? (eventCreator.profile?.displayName || eventCreator.profile?.username || (eventCreator.firstName ? `${eventCreator.firstName} ${eventCreator.lastName || ''}`.trim() : 'Organisateur'))
-    : (me?.profile?.displayName || (me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : 'Organisateur'))
+    ? (eventCreator.profile?.displayName || eventCreator.profile?.username || (eventCreator.firstName ? `${eventCreator.firstName} ${eventCreator.lastName || ''}`.trim() : t('createEvent.organizer.fallbackName')))
+    : (me?.profile?.displayName || (me?.firstName ? `${me.firstName} ${me.lastName || ''}`.trim() : t('createEvent.organizer.fallbackName')))
   const displayOrganizerAvatar = isEdit && eventCreator
     ? eventCreator.profile?.avatarUrl
     : me?.profile?.avatarUrl
@@ -348,7 +320,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     setLon(result.lon)
     setShowLocationSearch(false)
     setIsReverseGeocoding(false)
-    toast.success('Emplacement validé !')
+    toast.success(t('createEvent.location.validated'))
   }
 
   // ── Cover image (up to 4) ────────────────────────────────────────────────
@@ -430,7 +402,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       if (d.coHosts && Array.isArray(d.coHosts)) {
         setSelectedCoOrgs(d.coHosts.map((c: any) => ({
           id: c.id,
-          name: c.profile?.displayName || c.profile?.username || (c.firstName ? `${c.firstName} ${c.lastName || ''}`.trim() : 'Co-organisateur'),
+          name: c.profile?.displayName || c.profile?.username || (c.firstName ? `${c.firstName} ${c.lastName || ''}`.trim() : t('createEvent.organizer.coOrganizer')),
           avatarUrl: c.profile?.avatarUrl
         })))
       }
@@ -462,11 +434,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
   const handleSubmit = async () => {
     if (formStep === 1) {
-      if (!canGoToStep2) { toast.error('Remplissez les champs obligatoires.'); return }
+      if (!canGoToStep2) { toast.error(t('createEvent.toasts.fillRequired')); return }
       setFormStep(2)
       return
     }
-    if (!canSubmit) { toast.error('Remplissez le mode de participation.'); return }
+    if (!canSubmit) { toast.error(t('createEvent.toasts.fillParticipation')); return }
     setLoading(true)
     const editEventId = location.state?.editEventId || createdEventId
     let imageUploadedBeforePatch = false
@@ -485,7 +457,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           imageUploadedBeforePatch = true
         } catch (uploadErr) {
           console.warn('Cover upload failed, proceeding without cover:', uploadErr)
-          toast.warning("Les images n'ont pas pu être téléchargées, mais l'événement sera sauvegardé.")
+          toast.warning(t('createEvent.toasts.imagesFailed'))
         }
       } else if (!coverExplicitlyCleared && coverPreviews.length > 0 && !coverPreviews[0].startsWith('blob:')) {
         // Hosted URLs from edit mode (not cleared by user)
@@ -506,7 +478,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       // Bug-2 guard: cagnotte or paid events require verified KYC
       const isPaidOrCagnotte = (enablePool && poolTarget && parseFloat(poolTarget) > 0) || (amount && parseFloat(amount) > 0)
       if (isPaidOrCagnotte && !isKycVerified) {
-        toast.error('Votre compte doit être vérifié (KYC) pour créer un événement avec cagnotte ou payant.')
+        toast.error(t('createEvent.toasts.kycRequired'))
         setLoading(false)
         return
       }
@@ -516,7 +488,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         const target = parseFloat(poolTarget)
         const minAmt = parseFloat(poolMinAmount)
         if (!isNaN(target) && !isNaN(minAmt) && minAmt >= target) {
-          toast.error('Le montant minimum doit être inférieur à l’objectif de la cagnotte.')
+          toast.error(t('createEvent.toasts.poolMinTooHigh'))
           setLoading(false)
           return
         }
@@ -614,7 +586,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       const eventId = editEventId || res.data?.id
       setCreatedEventId(eventId)
       if (isEdit) {
-        toast.success('Événement mis à jour avec succès !')
+        toast.success(t('createEvent.toasts.updated'))
         qc.invalidateQueries({ queryKey: ['events', eventId] })
         qc.invalidateQueries({ queryKey: ['events'] })
         qc.invalidateQueries({ queryKey: ['my-events'] })
@@ -624,7 +596,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         }
         setStep('done')
       } else {
-        toast.success('🎉 Événement créé et publié avec succès !')
+        toast.success(t('createEvent.toasts.createdPublished'))
         setStep('published')
       }
     } catch (err: any) {
@@ -636,11 +608,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       let errorStr: string
       if (isRawEvent || String(err).includes('ProgressEvent') || String(err?.message).includes('ProgressEvent')) {
         errorStr = imageUploadedBeforePatch
-          ? "L'image a bien été mise à jour, mais les autres modifications n'ont pas pu être enregistrées. Vérifiez votre connexion et réessayez."
-          : 'Erreur de connexion au serveur. Vérifiez votre connexion et réessayez.'
+          ? t('createEvent.toasts.imageSavedOthersFailed')
+          : t('createEvent.toasts.connectionError')
       } else {
-        errorStr = typeof msg === 'string' ? msg : (err?.message || 'Erreur lors de la création')
-        if (String(errorStr).includes('ProgressEvent')) errorStr = 'Erreur de connexion au serveur'
+        errorStr = typeof msg === 'string' ? msg : (err?.message || t('createEvent.toasts.createError'))
+        if (String(errorStr).includes('ProgressEvent')) errorStr = t('createEvent.toasts.serverError')
       }
       toast.error(errorStr)
     } finally { setLoading(false) }
@@ -708,7 +680,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       await apiClient.put(`/events/${eventId}/publish`)
       clearCreateEventDraft()
-      toast.success('🎉 Événement publié avec succès !')
+      toast.success(t('createEvent.toasts.published'))
       qc.invalidateQueries({ queryKey: ['users', 'activity'] })
       // Invalidate after a short delay so ManageEvent first renders with optimistic data
       setTimeout(() => {
@@ -720,16 +692,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     } catch (err: any) {
       console.error('Publish Error:', err)
       const apiMsg = err?.response?.data?.error || err?.response?.data?.message
-      let errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || 'Erreur lors de la publication')
-      if (String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')) errorStr = 'Erreur de connexion au serveur'
+      let errorStr = typeof apiMsg === 'string' ? apiMsg : (err?.message || t('createEvent.toasts.publishError'))
+      if (String(errorStr).includes('ProgressEvent') || String(err).includes('ProgressEvent')) errorStr = t('createEvent.toasts.serverError')
       toast.error(String(errorStr))
     } finally { setPublishing(false) }
   }
 
   // ── Derived labels ───────────────────────────────────────────────────────
-  const catLabel = CATEGORIES.find(c => c.value === category)
-  const privacyLabel = privacy === 'PUBLIC' ? 'Public' : privacy === 'PRIVATE' ? 'Privé' : null
-  const participationLabel = PARTICIPATION_MODES.find(p => p.value === participationMode)?.label ?? null
+  const catLabel = getEventCategory(category) ? eventCategoryLabel(t, category) : null
+  const privacyLabel = privacy ? t(`createEvent.privacy.${privacy}`) : null
+  const participationLabel = participationMode && (PARTICIPATION_MODES as readonly string[]).includes(participationMode)
+    ? t(`createEvent.participation.${participationMode}`) : null
   const startDateLabel = startDate && startTime ? formatDateTime(startDate, startTime) : null
   const endDateLabel = endDate && endTime ? formatDateTime(endDate, endTime) : null
 
@@ -783,39 +756,41 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     }
                 }
               >
-                {isPublished ? 'Publié !' : 'Terminé !'}
+                <span>{isPublished ? t('createEvent.done.published') : t('createEvent.done.finished')}</span>
               </h1>
               <p className="text-[14px] text-[var(--color-text-secondary)] text-center max-w-[300px] leading-[1.6]" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                {isPublished
-                  ? "Votre événement a été publié avec succès. Vous pouvez maintenant le partager ou voir les détails."
-                  : "Votre événement a été bien créé. Publiez-le pour le rendre visible ou invitez vos amis à participer."}
+                <span>{isPublished ? t('createEvent.done.publishedDesc') : t('createEvent.done.createdDesc')}</span>
               </p>
             </div>
 
             {/* Summary Card */}
             <div className="w-full bg-[var(--color-background-primary)] rounded-[8px] p-4 shadow-sm border border-[var(--border-tertiary)]">
-              <h3 className="font-bold text-[15px] text-[var(--color-text-primary)] mb-4 truncate">{title || 'Votre événement'}</h3>
+              <h3 className="font-bold text-[15px] text-[var(--color-text-primary)] mb-4 truncate"><span>{title || t('createEvent.done.fallbackTitle')}</span></h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[var(--color-text-secondary)]">Date</span>
+                  <span className="text-[13px] text-[var(--color-text-secondary)]">{t('createEvent.done.date')}</span>
                   <span className="text-[13px] font-medium text-[var(--color-text-primary)] text-right truncate max-w-[200px]">
-                    {startDate ? `${formatDateFr(startDate)}, ${startTime.replace(':', 'h')}${endTime ? ` à ${endTime.replace(':', 'h')}` : ''}` : '-'}
+                    <span>{startDate
+                      ? (endTime
+                        ? t('createEvent.done.dateRange', { date: formatDateFr(startDate), start: fmtTime(startTime), end: fmtTime(endTime) })
+                        : t('createEvent.done.dateValue', { date: formatDateFr(startDate), start: fmtTime(startTime) }))
+                      : '-'}</span>
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[var(--color-text-secondary)]">Lieu</span>
+                  <span className="text-[13px] text-[var(--color-text-secondary)]">{t('createEvent.done.place')}</span>
                   <span className="text-[13px] font-medium text-[var(--color-text-primary)] text-right truncate max-w-[200px]">{address || city || '-'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[13px] text-[var(--color-text-secondary)]">Participation</span>
+                  <span className="text-[13px] text-[var(--color-text-secondary)]">{t('createEvent.done.participation')}</span>
                   {participationMode === 'free' ? (
                     <div className="px-2.5 py-1 rounded-[6px] text-[12px] font-bold bg-[var(--functional-green-500)] text-[var(--color-text-inverse)]">
-                      Gratuite
+                      <span>{t('createEvent.done.free')}</span>
                     </div>
                   ) : (
                     <div className="px-[3px] py-[1px] rounded-[4px] w-[64px] flex items-center justify-center bg-[var(--color-cagnotte)]">
                       <span className="text-[14px] font-medium text-white" style={{ fontFamily: 'Inter Display, sans-serif', lineHeight: '20px' }}>
-                        Cagnotte
+                        {t('createEvent.done.cagnotte')}
                       </span>
                     </div>
                   )}
@@ -828,7 +803,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <div className="w-full max-w-[358px] bg-[var(--color-alert-info-bg)] rounded-[8px] p-4 flex gap-3 items-start box-border">
                 <AlertDiamondIcon className="w-[20px] h-[20px] shrink-0 text-[var(--color-cagnotte)] mt-[1px]" strokeWidth={1.25} />
                 <p className="text-[12px] font-medium text-[#404040] leading-[1.33]" style={{ fontFamily: 'Inter Display, sans-serif' }}>
-                  Votre événement contient une cagnotte ou est payant. Vérifiez votre compte pour pouvoir le publier.
+                  <span>{t('createEvent.done.kycAlert')}</span>
                 </p>
               </div>
             )}
@@ -843,19 +818,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 if (navigator.share) {
                   try {
                     await navigator.share({
-                      title: title || 'Mon événement',
-                      text: "Rejoignez-moi pour cet événement sur Let's Out !",
+                      title: title || t('createEvent.done.shareTitleFallback'),
+                      text: t('createEvent.done.shareText'),
                       url: window.location.origin + `/events/${createdEventId}`
                     })
                   } catch (err) { console.log('Partage annulé ou échoué', err) }
                 } else {
                   navigator.clipboard.writeText(window.location.origin + `/events/${createdEventId}`)
-                  toast.success('Lien copié dans le presse-papiers !')
+                  toast.success(t('createEvent.done.linkCopied'))
                 }
               }}
               className="w-full py-[15px] rounded-[100px] bg-[var(--color-action-primary)] font-semibold text-[15px] text-[var(--color-text-inverse)] active:scale-[0.98] transition-transform"
             >
-              Partager l'événement
+              <span>{t('createEvent.done.share')}</span>
             </button>
           )}
 
@@ -866,14 +841,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 className="w-full h-[36px] rounded-[9999px] bg-[#FF991C] font-medium text-[14px] text-white flex items-center justify-center active:scale-[0.98] transition-transform"
                 style={{ fontFamily: 'Poppins, sans-serif' }}
               >
-                Vérifier mon compte
+                <span>{t('createEvent.done.verify')}</span>
               </button>
               <button
                 onClick={() => navigate(createdEventId ? `/events/${createdEventId}/manage` : '/profile')}
                 className="w-full h-[36px] rounded-[9999px] border border-[#D4D4D4] bg-white dark:bg-[#1A1A1A] text-[#404040] font-medium text-[14px] flex items-center justify-center active:scale-[0.98] transition-transform box-border"
                 style={{ fontFamily: 'Poppins, sans-serif' }}
               >
-                Voir l'événement
+                <span>{t('createEvent.done.view')}</span>
               </button>
             </div>
           )}
@@ -885,7 +860,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               className={`w-full py-[15px] rounded-[100px] font-semibold text-[15px] flex items-center justify-center gap-2 active:scale-[0.98] transition-all ${publishing ? 'bg-[var(--brand-orange-100)] text-[var(--brand-orange-400)]' : 'bg-[var(--color-action-primary)] text-[var(--color-text-inverse)]'}`}
             >
               {publishing ? <div className="w-5 h-5 border-2 border-[var(--brand-orange-400)] border-t-transparent rounded-full animate-spin" /> : null}
-              {publishing ? 'Publication...' : "Publier l'événement"}
+              <span>{publishing ? t('createEvent.done.publishing') : t('createEvent.done.publish')}</span>
             </button>
           )}
 
@@ -894,7 +869,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               onClick={() => navigate(createdEventId ? `/events/${createdEventId}/manage` : '/profile')}
               className="w-full py-[15px] rounded-[100px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[var(--color-text-primary)] font-semibold text-[15px] active:scale-[0.98] transition-transform"
             >
-              Voir l'événement
+              <span>{t('createEvent.done.view')}</span>
             </button>
           )}
         </div>
@@ -920,7 +895,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 autoFocus
                 value={coOrgSearch}
                 onChange={e => setCoOrgSearch(e.target.value)}
-                placeholder="Rechercher un organisateur"
+                placeholder={t('createEvent.organizer.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2.5 border border-[var(--border-default)] rounded-full text-[14px] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
               />
             </div>
@@ -928,7 +903,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
         <div className="flex-1 overflow-y-auto px-5 pt-3" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
           {friends.filter(f => !selectedCoOrgs.find(o => o.id === (f.userId || f.id))).map((f: any) => {
-            const name = f.displayName || f.username || 'Utilisateur'
+            const name = f.displayName || f.username || t('createEvent.organizer.unknownUser')
             const uid = f.userId || f.id
             const colors = ['var(--brand-orange-500)', 'var(--functional-green-500)', 'var(--brand-blue-500)', 'var(--brand-pink-500)', 'var(--functional-red-500)']
             const color = colors[name.charCodeAt(0) % colors.length]
@@ -956,7 +931,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     setShowOrganizerSearch(false)
                   }}
                   className="text-[13px] font-semibold text-[var(--color-action-primary)] active:scale-95 transition-transform px-3 py-1 rounded-full border border-[var(--color-action-primary)]">
-                  Ajouter
+                  <span>{t('createEvent.organizer.addButton')}</span>
                 </button>
               </div>
             )
@@ -964,8 +939,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {friends.length === 0 && (
             <div className="flex flex-col items-center justify-center pt-16 text-center">
               <UserIcon className="w-12 h-12 text-[var(--color-icon-muted)] mb-3" strokeWidth={1.5} />
-              <p className="text-[14px] text-[var(--color-text-secondary)]">Aucun utilisateur trouvé</p>
-              <p className="text-[12px] text-[var(--color-text-muted)] mt-1">Essayez un autre nom</p>
+              <p className="text-[14px] text-[var(--color-text-secondary)]"><span>{t('createEvent.organizer.noResults')}</span></p>
+              <p className="text-[12px] text-[var(--color-text-muted)] mt-1"><span>{t('createEvent.organizer.tryAnother')}</span></p>
             </div>
           )}
         </div>
@@ -993,7 +968,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <Cancel01Icon className="w-4 h-4 text-[var(--color-icon-primary)]" />
           </button>
           <span className="text-[length:var(--font-size-title-xsmall)] font-semibold text-[var(--color-text-primary)]">
-            {isEdit ? "Modifier l'événement, la sortie" : "Créer un événement, une sortie"}
+            <span>{isEdit ? t('createEvent.header.edit') : t('createEvent.header.create')}</span>
           </span>
         </div>
       </div>
@@ -1017,7 +992,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 mb-3">
               {coverPreviews.map((src, idx) => (
                 <div key={idx} className="relative shrink-0 w-[160px] h-[110px] rounded-[10px] overflow-hidden border border-[var(--border-primary)] bg-black/20">
-                  <SafeImage src={src} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                  <SafeImage src={src} alt={t('createEvent.photos.alt', { n: idx + 1 })} className="w-full h-full object-cover" />
                   <button
                     onClick={e => { e.stopPropagation(); removeCoverImage(idx) }}
                     className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center"
@@ -1026,7 +1001,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   </button>
                   {idx === 0 && (
                     <span className="absolute bottom-1.5 left-1.5 text-[10px] font-semibold bg-[var(--brand-orange-500)] text-white px-1.5 py-0.5 rounded-full">
-                      Bannière
+                      {t('createEvent.photos.banner')}
                     </span>
                   )}
                 </div>
@@ -1043,7 +1018,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               >
                 <Image01Icon className="w-4 h-4 text-[var(--color-text-muted)]" strokeWidth={1.5} />
                 <span className="font-[Poppins] font-medium text-[13px] text-[var(--color-text-muted)]">
-                  {coverPreviews.length === 0 ? 'Ajouter des photos' : `Ajouter (${coverPreviews.length}/4)`}
+                  {coverPreviews.length === 0 ? t('createEvent.photos.add') : t('createEvent.photos.addCount', { count: coverPreviews.length })}
                 </span>
               </button>
               <input
@@ -1060,7 +1035,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {/* Count indicator */}
           {coverPreviews.length > 0 && (
             <p className="text-[12px] text-[var(--color-text-muted)] mt-1.5">
-              {coverPreviews.length}/4 photo{coverPreviews.length > 1 ? 's' : ''} · La première est la bannière principale
+              <span>{t('createEvent.photos.counter', { count: coverPreviews.length })}</span>
             </p>
           )}
         </div>
@@ -1082,7 +1057,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               <p className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] truncate">
                 {displayOrganizerName}
               </p>
-              <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate">Organisateur de l'événement</p>
+              <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate"><span>{t('createEvent.organizer.role')}</span></p>
             </div>
           </div>
           {/* Co-organizers */}
@@ -1099,9 +1074,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               )}
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] truncate">
-                  {org.name} {org.id === me?.id ? "(Vous)" : ""}
+                  <span>{org.id === me?.id ? `${org.name} ${t('createEvent.organizer.you')}` : org.name}</span>
                 </p>
-                <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate">Co-organisateur</p>
+                <p className="text-[length:var(--font-size-body-small)] text-[var(--color-text-muted)] truncate"><span>{t('createEvent.organizer.coOrganizer')}</span></p>
               </div>
               <button onClick={() => setSelectedCoOrgs(p => p.filter(o => o.id !== org.id))}
                 className="w-7 h-7 rounded-full bg-[var(--functional-red-50)] flex items-center justify-center active:scale-95">
@@ -1114,7 +1089,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             onClick={() => setShowOrganizerSearch(true)}
             className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start mt-1">
             <CustomUserIcon />
-            Ajouter un organisateur
+            <span>{t('createEvent.organizer.add')}</span>
           </button>
         </div>
 
@@ -1125,17 +1100,17 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             <div className="animate-in slide-in-from-right-2">
               {/* Nom */}
               <InputField
-                label="Nom de l'événement, sortie"
+                label={t('createEvent.fields.title')}
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                placeholder="Nom de l'événement, sortie..."
+                placeholder={t('createEvent.fields.titlePlaceholder')}
               />
 
               {/* Date et heure de début */}
               <InputField
-                label="Date et heure de début"
+                label={t('createEvent.fields.start')}
                 value={startDateLabel ?? undefined}
-                placeholder="Sélectionnez une date et heure"
+                placeholder={t('createEvent.fields.selectDateTime')}
                 readOnly
                 onClick={() => { setTempStartDate(startDate); setTempStartTime(startTime || '10:00'); setShowStartDateSheet(true) }}
               />
@@ -1148,14 +1123,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-background-secondary)] border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-small)] font-medium text-[var(--color-text-secondary)] active:opacity-70 transition-opacity self-start"
                   >
                     <CustomClockIcon />
-                    Ajouter une heure de fin
+                    <span>{t('createEvent.fields.addEndTime')}</span>
                   </button>
                 ) : (
                   <div>
                     <InputField
-                      label="Date et heure de fin"
+                      label={t('createEvent.fields.end')}
                       value={endDateLabel ?? undefined}
-                      placeholder="Sélectionnez une date et heure"
+                      placeholder={t('createEvent.fields.selectDateTime')}
                       readOnly
                       onClick={() => { setTempEndDate(endDate || startDate); setTempEndTime(endTime || '12:00'); setShowEndDateSheet(true) }}
                       rightIcons={endDate ? (
@@ -1168,7 +1143,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     {endDate && endTime && (
                       <div className="flex items-center gap-1.5 mt-[-6px] mb-4">
                         <CustomClockIcon className="w-[14px] h-[14px]" />
-                        <span className="text-[12px] text-[var(--color-text-muted)]">Heure de fin ajoutée</span>
+                        <span className="text-[12px] text-[var(--color-text-muted)]">{t('createEvent.fields.endTimeAdded')}</span>
                       </div>
                     )}
                   </div>
@@ -1177,18 +1152,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
               {/* Lieu de l'événement */}
               <InputField
-                label="Lieu de l'événement"
+                label={t('createEvent.fields.location')}
                 value={address || city || undefined}
-                placeholder="Où aura lieu l'événement ?"
+                placeholder={t('createEvent.fields.locationPlaceholder')}
                 readOnly
                 onClick={() => setShowLocationSearch(true)}
               />
 
               {/* Confidentialité */}
               <InputField
-                label="Confidentialité"
+                label={t('createEvent.fields.privacy')}
                 value={privacyLabel ?? undefined}
-                placeholder="Qui peut le voir ?"
+                placeholder={t('createEvent.fields.privacyPlaceholder')}
                 readOnly
                 onClick={() => setShowPrivacySheet(true)}
               />
@@ -1196,14 +1171,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               {/* Options visibles pour les événements PRIVÉS */}
               {privacy === 'PRIVATE' && (
                 <div className="rounded-[12px] border border-[var(--border-default)] bg-[var(--color-background-secondary,#FAFAFA)] dark:bg-[#1A1A1A] px-4 py-3 space-y-3 animate-in slide-in-from-top-1">
-                  <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Options de l'événement privé</p>
+                  <p className="text-[11px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider"><span>{t('createEvent.privateOptions.title')}</span></p>
 
                   {/* Visible dans le fil d'actualité */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
-                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]">Visible dans le fil d'actualité</p>
+                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]"><span>{t('createEvent.privateOptions.inFeed')}</span></p>
                       <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-tight">
-                        S'affiche avec la mention «&nbsp;Privé&nbsp;». Pour rejoindre, les utilisateurs devront passer par le code ou lien d'invitation.
+                        <span>{t('createEvent.privateOptions.inFeedDesc')}</span>
                       </p>
                     </div>
                     <SettingsToggle checked={showInFeed} onChange={setShowInFeed} />
@@ -1212,9 +1187,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   {/* Autoriser les invitations entre OUTSTERS */}
                   <div className="flex items-center justify-between gap-3 pt-2 border-t border-[var(--border-tertiary)]">
                     <div className="flex-1">
-                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]">Invitations entre OUTSTERS</p>
+                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]"><span>{t('createEvent.privateOptions.invites')}</span></p>
                       <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-tight">
-                        Les participants peuvent inviter d'autres OUTSTERS
+                        <span>{t('createEvent.privateOptions.invitesDesc')}</span>
                       </p>
                     </div>
                     <SettingsToggle checked={allowGuestInvites} onChange={setAllowGuestInvites} />
@@ -1223,9 +1198,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   {/* Profils des participants visibles */}
                   <div className="flex items-center justify-between gap-3 pt-2 border-t border-[var(--border-tertiary)]">
                     <div className="flex-1">
-                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]">Profils des participants visibles</p>
+                      <p className="text-[13px] font-medium text-[var(--color-text-primary)]"><span>{t('createEvent.privateOptions.participants')}</span></p>
                       <p className="text-[11px] text-[var(--color-text-muted)] mt-0.5 leading-tight">
-                        Si non, seul l'organisateur sera visible
+                        <span>{t('createEvent.privateOptions.participantsDesc')}</span>
                       </p>
                     </div>
                     <SettingsToggle checked={showParticipants} onChange={setShowParticipants} />
@@ -1235,18 +1210,18 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
               {/* Restriction de genre */}
               <InputField
-                label="Restriction de genre"
-                value={genderRestriction === 'MALE' ? 'Réservé aux hommes' : genderRestriction === 'FEMALE' ? 'Réservé aux femmes' : 'Tout le monde (Mixte)'}
-                placeholder="Qui peut participer ?"
+                label={t('createEvent.fields.gender')}
+                value={t(`createEvent.gender.${genderRestriction}`)}
+                placeholder={t('createEvent.fields.genderPlaceholder')}
                 readOnly
                 onClick={() => setShowGenderSheet(true)}
               />
 
               {/* Mode d'adhésion */}
               <InputField
-                label="Mode d'adhésion"
-                value={requiresApproval ? "Demande d'approbation requise" : "Rejoindre directement"}
-                placeholder="Comment les gens rejoignent ?"
+                label={t('createEvent.fields.joinMode')}
+                value={requiresApproval ? t('createEvent.joinMode.approval') : t('createEvent.joinMode.direct')}
+                placeholder={t('createEvent.fields.joinModePlaceholder')}
                 readOnly
                 onClick={() => setShowJoinModeSheet(true)}
               />
@@ -1255,11 +1230,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
               {privacy && (
                 <div className="animate-in slide-in-from-top-2">
                   <div className="mb-3">
-                    <p className="text-[length:var(--font-size-body-small)] font-semibold text-[var(--color-text-primary)] mb-1">Détails</p>
+                    <p className="text-[length:var(--font-size-body-small)] font-semibold text-[var(--color-text-primary)] mb-1"><span>{t('createEvent.fields.details')}</span></p>
                     <textarea
                       value={description}
                       onChange={e => setDescription(e.target.value)}
-                      placeholder="Quels sont les détails ?"
+                      placeholder={t('createEvent.fields.detailsPlaceholder')}
                       rows={4}
                       className="w-full px-4 py-3 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
                     />
@@ -1267,13 +1242,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
                   <div className="mb-3">
                     <InputField
-                      label="Catégorie"
-                      value={catLabel ? catLabel.label : undefined}
-                      placeholder="Facultatif"
+                      label={t('createEvent.fields.category')}
+                      value={catLabel ?? undefined}
+                      placeholder={t('createEvent.fields.optional')}
                       readOnly
                       onClick={() => setShowCategorySheet(true)}
                     />
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
                   </div>
                 </div>
               )}
@@ -1283,7 +1258,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           {formStep === 2 && (
             <div className="animate-in slide-in-from-right-2">
               <div className="mb-4">
-                <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Nombre maximum d'OUTSTERS</p>
+                <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5"><span>{t('createEvent.fields.maxAttendees')}</span></p>
                 <input
                   value={maxPlaces}
                   onChange={e => setMaxPlaces(e.target.value)}
@@ -1292,13 +1267,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   placeholder="0"
                   className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]"
                 />
-                <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
+                <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
               </div>
 
               <InputField
-                label="Participation"
+                label={t('createEvent.fields.participation')}
                 value={participationLabel ?? undefined}
-                placeholder="Comment participer ?"
+                placeholder={t('createEvent.fields.participationPlaceholder')}
                 readOnly
                 onClick={() => setShowParticipationSheet(true)}
               />
@@ -1309,7 +1284,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
                   {/* Montant cible */}
                   <div className="mb-4">
-                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Montant cible</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5"><span>{t('createEvent.fields.poolTarget')}</span></p>
                     <div className="relative flex items-center">
                       <input
                         type="number" min={1} value={poolTarget}
@@ -1319,16 +1294,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       />
                       <span className="absolute right-4 text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] pointer-events-none">F CFA</span>
                     </div>
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Montant estimé des dépenses</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.poolTargetHint')}</span></p>
                   </div>
 
                   {/* Détails */}
                   <div className="mb-4">
-                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Détails</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5"><span>{t('createEvent.fields.details')}</span></p>
                     <textarea
                       value={poolDescription}
                       onChange={e => setPoolDescription(e.target.value)}
-                      placeholder="Quels sont les détails des dépenses prévues ?"
+                      placeholder={t('createEvent.fields.poolDetailsPlaceholder')}
                       rows={4}
                       className="w-full px-4 py-3.5 border border-[var(--border-default)] rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)] resize-none"
                     />
@@ -1337,7 +1312,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
                   {/* Participation minimale */}
                   <div className="mb-2">
-                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5">Participation minimale</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5"><span>{t('createEvent.fields.poolMin')}</span></p>
                     <div className="relative flex items-center">
                       <input
                         type="number" min={1} value={poolMinAmount}
@@ -1347,7 +1322,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                       />
                       <span className="absolute right-4 text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-secondary)] pointer-events-none">F CFA</span>
                     </div>
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
                   </div>
 
                 </div>
@@ -1365,15 +1340,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                         <path d="M2 6C2 4.89543 2.89543 4 4 4H12C13.1046 4 14 4.89543 14 6V6.5H2V6Z" fill="var(--functional-red-500)" />
                         <path d="M4.5 3V5M11.5 3V5" stroke="var(--color-text-secondary)" strokeLinecap="round" />
                       </svg>
-                      Ajouter une date limite d'inscription
+                      <span>{t('createEvent.fields.addRegDeadline')}</span>
                     </button>
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1">Facultatif</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
                   </div>
                 ) : (
                   <InputField
-                    label="Date limite d'inscription"
-                    value={`${formatDateFr(regEndDate)} à ${regEndTime.replace(':', 'h')}`}
-                    placeholder="Facultatif"
+                    label={t('createEvent.fields.regDeadline')}
+                    value={t('createEvent.fields.regDeadlineValue', { date: formatDateFr(regEndDate), time: fmtTime(regEndTime) })}
+                    placeholder={t('createEvent.fields.optional')}
                     readOnly
                     onClick={() => { setTempRegEndDate(regEndDate || startDate); setTempRegEndTime(regEndTime || '12:00'); setShowRegEndDateSheet(true) }}
                   />
@@ -1395,7 +1370,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             onClick={() => setFormStep(2)}
             disabled={!canGoToStep2}
           >
-            Suivant
+            <span>{t('createEvent.actions.next')}</span>
           </PrimaryButton>
         ) : (
           <PrimaryButton
@@ -1403,7 +1378,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             disabled={!canSubmit}
             loading={loading}
           >
-            {isEdit ? "Enregistrer les modifications" : "Créer l'événement"}
+            <span>{isEdit ? t('createEvent.actions.save') : t('createEvent.actions.create')}</span>
           </PrimaryButton>
         )}
       </div>
@@ -1413,10 +1388,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       {/* ══════════════════════════════════════════════════════════════════ */}
 
       {/* ── Start Date Sheet ─────────────────────────────────────────────── */}
-      <BottomSheet title="Date et heure de début" open={showStartDateSheet} onClose={() => setShowStartDateSheet(false)}>
+      <BottomSheet title={t('createEvent.sheets.startTitle')} open={showStartDateSheet} onClose={() => setShowStartDateSheet(false)}>
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Date de début</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('createEvent.sheets.startDate')}</span></label>
             <div className="relative">
               <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
@@ -1432,7 +1407,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             )}
           </div>
           <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Heure de début</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('createEvent.sheets.startTime')}</span></label>
             <div className="relative">
               <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
@@ -1447,16 +1422,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             onClick={() => { setStartDate(tempStartDate); setStartTime(tempStartTime); setShowStartDateSheet(false) }}
             disabled={!tempStartDate || !tempStartTime}
             className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
-            Terminé
+            <span>{t('createEvent.sheets.done')}</span>
           </button>
         </div>
       </BottomSheet>
 
       {/* ── End Date Sheet ───────────────────────────────────────────────── */}
-      <BottomSheet title="Date et heure de fin" open={showEndDateSheet} onClose={() => setShowEndDateSheet(false)}>
+      <BottomSheet title={t('createEvent.sheets.endTitle')} open={showEndDateSheet} onClose={() => setShowEndDateSheet(false)}>
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Date de fin</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('createEvent.sheets.endDate')}</span></label>
             <div className="relative">
               <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
@@ -1472,7 +1447,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             )}
           </div>
           <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Heure de fin</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('createEvent.sheets.endTime')}</span></label>
             <div className="relative">
               <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
@@ -1487,25 +1462,21 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             onClick={() => { setEndDate(tempEndDate); setEndTime(tempEndTime); setShowEndDateSheet(false) }}
             disabled={!tempEndDate || !tempEndTime}
             className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-2">
-            Terminé
+            <span>{t('createEvent.sheets.done')}</span>
           </button>
         </div>
       </BottomSheet>
 
       {/* ── Gender Restriction Sheet ─────────────────────────────────────── */}
-      <BottomSheet title="Restriction de genre" open={showGenderSheet} onClose={() => setShowGenderSheet(false)}>
+      <BottomSheet title={t('createEvent.fields.gender')} open={showGenderSheet} onClose={() => setShowGenderSheet(false)}>
         <div className="space-y-2 pb-4">
-          {[
-            { id: 'ANY', label: 'Tout le monde (Mixte)' },
-            { id: 'FEMALE', label: 'Réservé aux femmes' },
-            { id: 'MALE', label: 'Réservé aux hommes' },
-          ].map(opt => (
+          {(['ANY', 'FEMALE', 'MALE'] as const).map(id => ({ id, label: t(`createEvent.gender.${id}`) })).map(opt => (
             <button
               key={opt.id}
               onClick={() => { setGenderRestriction(opt.id as any); setShowGenderSheet(false) }}
               className="w-full flex items-center justify-between p-4 bg-[var(--color-background-secondary)] rounded-[12px] active:scale-[0.98] transition-all"
             >
-              <span className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)]">{opt.label}</span>
+              <span className="font-semibold text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)]"><span>{opt.label}</span></span>
               {genderRestriction === opt.id && <CheckCircle2 className="w-5 h-5 text-[var(--color-action-primary)]" />}
             </button>
           ))}
@@ -1513,10 +1484,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </BottomSheet>
 
       {/* ── Registration End Date Sheet ───────────────────────────────────── */}
-      <BottomSheet title="Date limite d'inscription" open={showRegEndDateSheet} onClose={() => setShowRegEndDateSheet(false)}>
+      <BottomSheet title={t('createEvent.sheets.regTitle')} open={showRegEndDateSheet} onClose={() => setShowRegEndDateSheet(false)}>
         <div className="space-y-4">
           <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Date limite</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('createEvent.sheets.regDate')}</span></label>
             <div className="relative">
               <HugeCalendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
@@ -1531,7 +1502,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             )}
           </div>
           <div>
-            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block">Heure limite</label>
+            <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('createEvent.sheets.regTime')}</span></label>
             <div className="relative">
               <HugeClock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-icon-muted)]" strokeWidth={1.5} />
               <input
@@ -1548,7 +1519,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           disabled={!tempRegEndDate || !tempRegEndTime}
           className="w-full py-4 rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] active:scale-[0.98] disabled:opacity-50 transition-all mt-4"
         >
-          Confirmer
+          <span>{t('createEvent.sheets.confirm')}</span>
         </button>
       </BottomSheet>
       <BottomSheet open={showLocationSearch} onClose={() => setShowLocationSearch(false)}>
@@ -1558,7 +1529,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
             {(['liste', 'carte'] as const).map(tab => (
               <button key={tab} onClick={() => setLocationTab(tab)}
                 className={`flex-1 py-2.5 text-[14px] font-semibold border-b-2 transition-colors ${locationTab === tab ? 'border-[var(--brand-orange-500)] text-[var(--brand-orange-500)]' : 'border-transparent text-[var(--color-text-secondary)]'}`}>
-                {tab === 'liste' ? 'Lieu' : 'Carte'}
+                <span>{tab === 'liste' ? t('createEvent.location.tabList') : t('createEvent.location.tabMap')}</span>
               </button>
             ))}
           </div>
@@ -1571,7 +1542,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   autoFocus
                   value={locationQuery}
                   onChange={e => handleLocationSearch(e.target.value)}
-                  placeholder="Rechercher un lieu"
+                  placeholder={t('createEvent.location.searchPlaceholder')}
                   className="w-full pl-11 pr-4 py-3 border border-[var(--border-default)] rounded-full text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)]"
                 />
               </div>
@@ -1591,10 +1562,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-bold text-[#FF7A00] truncate">
-                        Utiliser « {locationQuery.trim()} »
+                        <span>{t('createEvent.location.useCustom', { place: locationQuery.trim() })}</span>
                       </p>
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
-                        Définir ce lieu et ajuster sur la carte
+                        <span>{t('createEvent.location.useCustomDesc')}</span>
                       </p>
                     </div>
                   </button>
@@ -1615,8 +1586,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 {locationSuggestions.length === 0 && locationQuery.length >= 2 && (
                   <div className="flex flex-col items-center justify-center pt-8 pb-4">
                     <HugeMapPin className="w-8 h-8 text-[var(--color-icon-muted)] mb-2" strokeWidth={1.5} />
-                    <p className="text-[13px] text-[var(--color-text-secondary)]">Aucun lieu répertorié trouvé</p>
-                    <p className="text-[11px] text-gray-400 mt-1">Vous pouvez utiliser l'option ci-dessus pour définir ce lieu.</p>
+                    <p className="text-[13px] text-[var(--color-text-secondary)]"><span>{t('createEvent.location.noResults')}</span></p>
+                    <p className="text-[11px] text-gray-400 mt-1"><span>{t('createEvent.location.noResultsHint')}</span></p>
                   </div>
                 )}
               </div>
@@ -1641,34 +1612,34 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </MapContainer>
               </div>
               <div className="bg-white dark:bg-[#1A1A1A] border-t border-[var(--border-tertiary)] px-5 py-4 pb-6 z-[110]">
-                <div className="text-[14px] font-bold text-[var(--color-text-primary)] mb-3">Sélectionner une adresse</div>
+                <div className="text-[14px] font-bold text-[var(--color-text-primary)] mb-3"><span>{t('createEvent.location.selectAddress')}</span></div>
                 <div className="flex items-center gap-3 p-3 mb-4 bg-[var(--color-background-secondary)] rounded-[12px]">
                   <div className="w-8 h-8 bg-white dark:bg-[#1A1A1A] rounded-full flex items-center justify-center shrink-0 shadow-sm">
                     <HugeMapPin className="w-4 h-4 text-[var(--color-icon-secondary)]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)] truncate">{address?.split(',')[0] || 'Lieu sélectionné'}</p>
+                    <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)] truncate"><span>{address?.split(',')[0] || t('createEvent.location.selectedPlace')}</span></p>
                     <p className="text-[12px] text-[var(--color-text-secondary)] truncate">{city || '...'}</p>
                   </div>
                 </div>
                 <button onClick={confirmMapLocation} disabled={isReverseGeocoding}
                   className="w-full py-[15px] rounded-full bg-[var(--color-action-primary)] font-bold text-[length:var(--font-size-body-medium)] text-[var(--color-text-inverse)] flex items-center justify-center gap-2 active:scale-95 transition-all">
                   {isReverseGeocoding ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : null}
-                  {isReverseGeocoding ? "Traduction de l'adresse..." : 'Confirmer la sélection'}
+                  <span>{isReverseGeocoding ? t('createEvent.location.resolving') : t('createEvent.location.confirm')}</span>
                 </button>
               </div>
             </div>
           )}
         </div>
       </BottomSheet>
-      <BottomSheet title="Confidentialité de l'événement" open={showPrivacySheet} onClose={() => setShowPrivacySheet(false)}>
+      <BottomSheet title={t('createEvent.privacy.sheetTitle')} open={showPrivacySheet} onClose={() => setShowPrivacySheet(false)}>
         <p className="text-[14px] text-[var(--color-text-secondary)] mb-6 leading-[1.6]">
-          Choisissez qui peut voir cet événement et y participer.<br />Vous pourrez envoyer des invitations plus tard.
+          <span>{t('createEvent.privacy.intro1')}</span><br /><span>{t('createEvent.privacy.intro2')}</span>
         </p>
         <div className="flex flex-col">
           {[
-            { value: 'PUBLIC' as const, label: 'Public', desc: `Tout le monde sur ou en dehors de Let's Out`, Icon: EarthIcon },
-            { value: 'PRIVATE' as const, label: 'Privé', desc: 'Uniquement les personnes invitées', Icon: SquareLock01Icon },
+            { value: 'PUBLIC' as const, label: t('createEvent.privacy.PUBLIC'), desc: t('createEvent.privacy.publicDesc'), Icon: EarthIcon },
+            { value: 'PRIVATE' as const, label: t('createEvent.privacy.PRIVATE'), desc: t('createEvent.privacy.privateDesc'), Icon: SquareLock01Icon },
           ].map(opt => (
             <div key={opt.value} className="flex flex-col w-full py-4 border-b border-[var(--border-tertiary)] last:border-0">
               <button
@@ -1689,8 +1660,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </div>
                 {/* Text */}
                 <div className="flex-1">
-                  <p className="text-[length:var(--font-size-body-medium)] font-bold text-[var(--color-text-primary)]">{opt.label}</p>
-                  <p className="text-[12px] text-[var(--color-text-secondary)] mt-0.5">{opt.desc}</p>
+                  <p className="text-[length:var(--font-size-body-medium)] font-bold text-[var(--color-text-primary)]"><span>{opt.label}</span></p>
+                  <p className="text-[12px] text-[var(--color-text-secondary)] mt-0.5"><span>{opt.desc}</span></p>
                 </div>
                 {/* Radio */}
                 <div className={`w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors ${privacy === opt.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'}`}>
@@ -1703,22 +1674,22 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 <div className="ml-[48px] mt-3 space-y-0">
                   {/* Autoriser les invitations entre OUTSTERS */}
                   <div className="flex items-center justify-between py-2.5">
-                    <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight">Autoriser les OUTSTERS à inviter d'autres OUTSTERS</span>
+                    <span className="text-[12px] text-[var(--color-text-secondary)] mr-4 leading-tight"><span>{t('createEvent.privacy.allowInvites')}</span></span>
                     <SettingsToggle checked={allowGuestInvites} onChange={setAllowGuestInvites} />
                   </div>
                   {/* Visible dans le fil d'actualité */}
                   <div className="flex items-start justify-between py-2.5 border-t border-[var(--border-tertiary)]">
                     <div className="flex-1 mr-4">
-                      <span className="text-[12px] font-medium text-[var(--color-text-secondary)] leading-tight block">Visible dans le fil d'actualité</span>
-                      <span className="text-[11px] text-[var(--color-text-muted)] leading-tight block mt-0.5">S'affiche avec la mention «&nbsp;Privé&nbsp;». Rejoindre uniquement sur invitation.</span>
+                      <span className="text-[12px] font-medium text-[var(--color-text-secondary)] leading-tight block"><span>{t('createEvent.privateOptions.inFeed')}</span></span>
+                      <span className="text-[11px] text-[var(--color-text-muted)] leading-tight block mt-0.5"><span>{t('createEvent.privacy.inFeedDescShort')}</span></span>
                     </div>
                     <SettingsToggle checked={showInFeed} onChange={setShowInFeed} />
                   </div>
                   {/* Profils des participants visibles */}
                   <div className="flex items-start justify-between py-2.5 border-t border-[var(--border-tertiary)]">
                     <div className="flex-1 mr-4">
-                      <span className="text-[12px] font-medium text-[var(--color-text-secondary)] leading-tight block">Profils des participants visibles</span>
-                      <span className="text-[11px] text-[var(--color-text-muted)] leading-tight block mt-0.5">Si non, seul l'organisateur sera visible. Le nombre de participants restera affiché.</span>
+                      <span className="text-[12px] font-medium text-[var(--color-text-secondary)] leading-tight block"><span>{t('createEvent.privateOptions.participants')}</span></span>
+                      <span className="text-[11px] text-[var(--color-text-muted)] leading-tight block mt-0.5"><span>{t('createEvent.privacy.participantsDescLong')}</span></span>
                     </div>
                     <SettingsToggle checked={showParticipants} onChange={setShowParticipants} />
                   </div>
@@ -1731,14 +1702,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
 
       {/* ── Join Mode Sheet ──────────────────────────────────────────────── */}
-      <BottomSheet title="Mode d'adhésion" open={showJoinModeSheet} onClose={() => setShowJoinModeSheet(false)}>
+      <BottomSheet title={t('createEvent.fields.joinMode')} open={showJoinModeSheet} onClose={() => setShowJoinModeSheet(false)}>
         <p className="text-[14px] text-[var(--color-text-secondary)] mb-6 leading-[1.6]">
-          Comment souhaitez-vous que les utilisateurs rejoignent cet événement ?
+          <span>{t('createEvent.joinMode.intro')}</span>
         </p>
         <div className="flex flex-col">
           {[
-            { value: false, label: 'Rejoindre directement', desc: "Accès immédiat après clic", Icon: SquareUnlock01Icon },
-            { value: true, label: "Demande d'approbation requise", desc: "Vous devez valider chaque demande", Icon: SquareLock01Icon },
+            { value: false, label: t('createEvent.joinMode.direct'), desc: t('createEvent.joinMode.directDesc'), Icon: SquareUnlock01Icon },
+            { value: true, label: t('createEvent.joinMode.approval'), desc: t('createEvent.joinMode.approvalDesc'), Icon: SquareLock01Icon },
           ].map(opt => (
             <div key={opt.value ? 'true' : 'false'} className="flex flex-col w-full py-4 border-b border-[var(--border-tertiary)] last:border-0">
               <button
@@ -1751,8 +1722,8 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 </div>
                 {/* Text */}
                 <div className="flex-1">
-                  <p className="text-[length:var(--font-size-body-medium)] font-bold text-[var(--color-text-primary)]">{opt.label}</p>
-                  <p className="text-[12px] text-[var(--color-text-secondary)] mt-0.5">{opt.desc}</p>
+                  <p className="text-[length:var(--font-size-body-medium)] font-bold text-[var(--color-text-primary)]"><span>{opt.label}</span></p>
+                  <p className="text-[12px] text-[var(--color-text-secondary)] mt-0.5"><span>{opt.desc}</span></p>
                 </div>
                 {/* Radio */}
                 <div className={`w-[20px] h-[20px] rounded-full border-[2px] flex items-center justify-center shrink-0 transition-colors ${requiresApproval === opt.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'}`}>
@@ -1765,34 +1736,34 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </BottomSheet>
 
       {/* ── Category Sheet ───────────────────────────────────────────────── */}
-      <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
+      <BottomSheet title={t('createEvent.sheets.categoryTitle')} open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
         <div className="divide-y divide-[var(--border-tertiary)]">
-          {CATEGORIES.map(cat => (
+          {EVENT_CATEGORIES.map(cat => (
             <button
-              key={cat.value}
-              onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
+              key={cat.id}
+              onClick={() => { setCategory(cat.id); setShowCategorySheet(false) }}
               className="w-full flex items-center gap-4 py-[13px] text-left active:bg-[var(--color-background-secondary)] transition-colors"
             >
               {/* Icon Frame - DIRECT ON WHITE AS REQUESTED */}
               <cat.Icon className="w-[24px] h-[24px] text-[var(--color-icon-primary)] shrink-0" strokeWidth={1.5} />
               {/* Label */}
-              <span className="flex-1 text-[length:var(--font-size-body-medium)] font-medium text-[var(--color-text-primary)] text-left">{cat.label}</span>
+              <span className="flex-1 text-[length:var(--font-size-body-medium)] font-medium text-[var(--color-text-primary)] text-left"><span>{eventCategoryLabel(t, cat.id)}</span></span>
               {/* Radio */}
-              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${category === cat.value ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
+              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${category === cat.id ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
                 }`}>
-                {category === cat.value && <div className="w-[11px] h-[11px] rounded-full bg-[var(--brand-orange-500)]" />}
+                {category === cat.id && <div className="w-[11px] h-[11px] rounded-full bg-[var(--brand-orange-500)]" />}
               </div>
             </button>
           ))}
         </div>
       </BottomSheet>
 
-      <BottomSheet title="Mode de participation" open={showParticipationSheet} onClose={() => setShowParticipationSheet(false)}>
-        <p className="text-[13px] text-[var(--color-text-secondary)] mb-5">Comment participer à cet événement.</p>
+      <BottomSheet title={t('createEvent.participation.sheetTitle')} open={showParticipationSheet} onClose={() => setShowParticipationSheet(false)}>
+        <p className="text-[13px] text-[var(--color-text-secondary)] mb-5"><span>{t('createEvent.participation.intro')}</span></p>
         <div className="flex flex-col">
           {[
-            { value: 'free', label: 'Gratuitement', desc: 'Entrée ouverte à tous sans paiement', Icon: SquareUnlock01Icon, requiresKyc: false },
-            { value: 'cagnotte', label: 'Sur cagnotte', desc: 'Créez une cagnotte pour partager les frais', Icon: Coins01Icon, requiresKyc: true },
+            { value: 'free', label: t('createEvent.participation.freeOption'), desc: t('createEvent.participation.freeDesc'), Icon: SquareUnlock01Icon, requiresKyc: false },
+            { value: 'cagnotte', label: t('createEvent.participation.cagnotte'), desc: t('createEvent.participation.cagnotteDesc'), Icon: Coins01Icon, requiresKyc: true },
           ].map(mode => {
             const isSelected = participationMode === mode.value
             const isLocked = mode.requiresKyc && !isKycVerified
@@ -1801,7 +1772,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 key={mode.value}
                 onClick={() => {
                   if (isLocked) {
-                    toast.error('Votre compte doit être vérifié (KYC) pour activer la cagnotte.')
+                    toast.error(t('createEvent.toasts.kycPool'))
                     return
                   }
                   setParticipationMode(mode.value);
@@ -1814,9 +1785,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   <mode.Icon className="w-[20px] h-[20px] text-[#737373]" strokeWidth={1.25} />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)]">{mode.label}</p>
+                  <p className="text-[length:var(--font-size-body-medium)] font-semibold text-[var(--color-text-primary)]"><span>{mode.label}</span></p>
                   <p className="text-[12px] text-[var(--color-text-secondary)]">
-                    {isLocked ? '🔒 Compte vérifié requis pour activer cette option' : mode.desc}
+                    <span>{isLocked ? t('createEvent.participation.kycRequired') : mode.desc}</span>
                   </p>
                 </div>
                 <div

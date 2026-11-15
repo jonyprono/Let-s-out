@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import i18n from '@/lib/i18n'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Send, Loader2, MessageCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from 'react-i18next'
 
 interface Comment {
   id: string;
@@ -19,6 +21,7 @@ interface Comment {
 }
 
 export function EventComments({ eventId, organizerId }: { eventId: string, organizerId?: string }) {
+  const { t } = useTranslation()
   const [content, setContent] = useState('');
   const queryClient = useQueryClient();
   const currentUser = useAuthStore(s => s.user);
@@ -67,13 +70,13 @@ export function EventComments({ eventId, organizerId }: { eventId: string, organ
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 dark:border-white/5">
         <MessageCircle className="w-5 h-5 text-gray-500" />
-        <h3 className="font-semibold text-[15px]">Commentaires ({comments.length})</h3>
+        <h3 className="font-semibold text-[15px]"><span>{t('eventComments.commentaires', { v0: comments.length })}</span></h3>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {comments.length === 0 ? (
           <div className="text-center py-8 text-gray-400 text-sm">
-            Aucun commentaire pour l'instant. Soyez le premier !
+            <span>{t('eventComments.aucunCommentairePourLInstant')}</span>
           </div>
         ) : (
           comments.map((comment) => (
@@ -103,14 +106,14 @@ export function EventComments({ eventId, organizerId }: { eventId: string, organ
                       onClick={() => deleteMutation.mutate(comment.id)}
                       className="text-[11px] text-red-500 font-medium hover:underline"
                     >
-                      Supprimer
+                      <span>{t('eventComments.supprimer')}</span>
                     </button>
                   ) : (
                     <button 
-                      onClick={() => alert("Signalement envoyé (fonctionnalité à connecter à l'API)")}
+                      onClick={() => alert(i18n.t('eventComments.reportSent'))}
                       className="text-[11px] text-gray-500 font-medium hover:underline"
                     >
-                      Signaler
+                      <span>{t('eventComments.signaler')}</span>
                     </button>
                   )}
                 </div>
@@ -126,7 +129,7 @@ export function EventComments({ eventId, organizerId }: { eventId: string, organ
             type="text"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Ajouter un commentaire..."
+            placeholder={t('eventComments.ajouterUnCommentaire')}
             className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 rounded-full px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
           />
           <button

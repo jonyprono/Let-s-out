@@ -6,8 +6,10 @@ import { useQuery } from '@tanstack/react-query';
 import { usersApi } from '@/features/users/api';
 import { useAuthStore } from '@/stores/auth.store';
 import { useParams } from 'react-router';
+import { useTranslation } from 'react-i18next'
 
 export function CreatedEventsList() {
+  const { t } = useTranslation()
   const navigate = useNavigate();
   const { userId } = useParams<{ userId?: string }>();
   const user = useAuthStore((s) => s.user);
@@ -63,7 +65,7 @@ export function CreatedEventsList() {
         
         {/* Top Navbar */}
         <TopBar 
-          title="Evénements créés"
+          title={t('createdEventsList.evenementsCrees')}
           onBack={() => navigate(-1)}
           containerClassName="pt-12 pb-4 bg-transparent"
         />
@@ -75,7 +77,7 @@ export function CreatedEventsList() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF7A00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
             </div>
             <span className="text-[16px] font-bold text-gray-900 dark:text-white">{totalEvents}</span>
-            <span className="text-[10px] text-gray-500 font-medium">Evénements</span>
+            <span className="text-[10px] text-gray-500 font-medium"><span>{t('createdEventsList.evenements')}</span></span>
           </div>
 
           <div className="flex flex-col items-center flex-1 border-r border-gray-100 dark:border-gray-800">
@@ -105,7 +107,7 @@ export function CreatedEventsList() {
           }`}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'events' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <span className="font-poppins font-medium text-[12px] leading-[16px]">Evénements</span>
+          <span className="font-poppins font-medium text-[12px] leading-[16px]"><span>{t('createdEventsList.evenements')}</span></span>
         </button>
 
         {isOwnProfile && (
@@ -127,7 +129,7 @@ export function CreatedEventsList() {
           <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3">A venir</h2>
           <div className="flex flex-col gap-3 mb-6">
             {upcomingEvents.length === 0 ? (
-              <p className="text-[13px] text-gray-400">Aucun événement à venir.</p>
+              <p className="text-[13px] text-gray-400"><span>{t('createdEventsList.aucunEvenementAVenir')}</span></p>
             ) : (
               upcomingEvents.map((ev: any) => (
                 <div key={ev.id} className="relative">
@@ -140,10 +142,10 @@ export function CreatedEventsList() {
             )}
           </div>
 
-          <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6">Passés</h2>
+          <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6"><span>{t('createdEventsList.passes')}</span></h2>
           <div className="flex flex-col gap-3">
             {pastEvents.length === 0 ? (
-              <p className="text-[13px] text-gray-400">Aucun événement passé.</p>
+              <p className="text-[13px] text-gray-400"><span>{t('createdEventsList.aucunEvenementPasse')}</span></p>
             ) : (
               pastEvents.map((ev: any) => (
                 <div key={ev.id} className="relative">
@@ -158,7 +160,7 @@ export function CreatedEventsList() {
 
           {isOwnProfile && drafts.length > 0 && (
             <>
-              <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6">Non publiés (Brouillons)</h2>
+              <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6"><span>{t('createdEventsList.nonPubliesBrouillons')}</span></h2>
               <div className="flex flex-col gap-3">
                 {drafts.map((ev: any) => (
                   <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/create`, { state: { editEventId: ev.id, eventData: ev } })} />
@@ -171,7 +173,7 @@ export function CreatedEventsList() {
         <div className="px-4 pb-20">
           {cagnottes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <p className="text-[13px] text-gray-500">Aucune cagnotte pour le moment.</p>
+              <p className="text-[13px] text-gray-500"><span>{t('createdEventsList.aucuneCagnottePourLeMoment')}</span></p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -187,6 +189,7 @@ export function CreatedEventsList() {
 }
 
 function CagnotteRowCard({ event, onClick }: { event: any; onClick: () => void }) {
+  const { t } = useTranslation()
   const target = event.poolTarget || 0;
   const collected = event.poolCollected || 0;
   const remaining = Math.max(0, target - collected);
@@ -198,7 +201,7 @@ function CagnotteRowCard({ event, onClick }: { event: any; onClick: () => void }
       className="w-full bg-white dark:bg-[#1A1A1A] rounded-[16px] border border-gray-100 dark:border-gray-800 p-4 flex flex-col gap-3 cursor-pointer active:scale-95 transition-transform shadow-sm"
     >
       <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-800 border-dashed">
-        <h3 className="text-[16px] font-bold text-[#FF7A00]">Cagnotte</h3>
+        <h3 className="text-[16px] font-bold text-[#FF7A00]"><span>{t('createdEventsList.cagnotte')}</span></h3>
         <span className="text-[12px] text-gray-500 font-medium truncate max-w-[150px]">{event.title}</span>
       </div>
 
@@ -208,7 +211,7 @@ function CagnotteRowCard({ event, onClick }: { event: any; onClick: () => void }
           <span className="text-[13px] font-bold text-[#2878E8]">{target.toLocaleString()} F CFA</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-[13px] text-gray-500 font-medium">Collecté</span>
+          <span className="text-[13px] text-gray-500 font-medium"><span>{t('createdEventsList.collecte')}</span></span>
           <span className="text-[13px] font-bold text-[#4CAF50]">{collected.toLocaleString()} F</span>
         </div>
         <div className="flex justify-between items-center">

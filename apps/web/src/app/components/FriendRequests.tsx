@@ -6,9 +6,11 @@ import { apiClient } from '@/lib/api-client'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { SafeImage } from '@/components/shared/SafeImage'
 
+import { dateLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 interface FriendRequest {
   id: string
   initiatorId: string
@@ -29,14 +31,15 @@ interface FriendRequest {
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
   const min = Math.floor(diff / 60000)
-  if (min < 1) return "À l'instant"
+  if (min < 1) return i18n.t('friendRequests.aLInstant')
   if (min < 60) return `Il y a ${min} min`
   const h = Math.floor(min / 60)
   if (h < 24) return `Il y a ${h}h`
-  return format(new Date(dateStr), 'd MMM', { locale: fr })
+  return format(new Date(dateStr), 'd MMM', { locale: dateLocale() })
 }
 
 export function FriendRequests() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { openUserProfile } = useUserProfile()
@@ -57,12 +60,12 @@ export function FriendRequests() {
     mutationFn: (friendshipId: string) =>
       apiClient.patch(`/users/friend-requests/${friendshipId}/accept`),
     onSuccess: () => {
-      toast.success('Demande acceptée ! Vous êtes maintenant amis 🎉')
+      toast.success(t('friendRequests.demandeAccepteeVousEtesMaintenant'))
       qc.invalidateQueries({ queryKey: ['friend-requests'] })
       qc.invalidateQueries({ queryKey: ['notifications'] })
       qc.invalidateQueries({ queryKey: ['users', 'friends'] })
     },
-    onError: () => toast.error("Impossible d'accepter la demande."),
+    onError: () => toast.error(t('friendRequests.impossibleDAccepterLaDemande')),
     onSettled: () => setProcessingId(null),
   })
 
@@ -97,7 +100,7 @@ export function FriendRequests() {
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Demandes d'amis</h1>
           {requests.length > 0 && (
-            <p className="text-xs text-gray-400">{requests.length} demande{requests.length > 1 ? 's' : ''} en attente</p>
+            <p className="text-xs text-gray-400"><span>{i18n.t('friendRequests.pendingCount', { count: requests.length })}</span></p>
           )}
         </div>
       </div>
@@ -109,7 +112,7 @@ export function FriendRequests() {
             <Search className="w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Rechercher une demande..."
+              placeholder={t('friendRequests.rechercherUneDemande')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-white text-[15px] placeholder-gray-400"
@@ -144,14 +147,14 @@ export function FriendRequests() {
             >
               <Users className="w-10 h-10" style={{ color: '#FF7A00' }} />
             </div>
-            <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2">Aucune demande en attente</h3>
+            <h3 className="text-[17px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('friendRequests.aucuneDemandeEnAttente')}</span></h3>
             <p className="text-[13px] text-gray-400 leading-relaxed max-w-xs">
-              Lorsqu'un utilisateur vous envoie une demande d'ami, elle apparaîtra ici.
+              <span>{t('friendRequests.lorsquUnUtilisateurVousEnvoie')}</span>
             </p>
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="text-center py-20 text-gray-400 text-[14px]">
-            Aucune demande trouvée pour "{searchQuery}"
+            <span>{i18n.t('friendRequests.noneFor', { query: searchQuery })}</span>
           </div>
         ) : (
           <div className="p-4 space-y-3">
@@ -216,7 +219,7 @@ export function FriendRequests() {
                       onClick={(e) => {
                         e.stopPropagation()
                         // Refuse logic
-                        toast.info("Demande ignorée")
+                        toast.info(t('friendRequests.demandeIgnoree'))
                         qc.setQueryData<FriendRequest[]>(['friend-requests'], old =>
                           old ? old.filter(r => r.id !== req.id) : []
                         )

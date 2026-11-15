@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft01Icon } from 'hugeicons-react';
 import { Search } from 'lucide-react';
 
+import { intlLocale } from '@/lib/locale';
 export function ValidatorVoteForm({ event, attendees, onBack }: any) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<'select' | 'selected' | 'confirm' | 'success'>('select');
   const [selectedCandidates, setSelectedCandidates] = useState<string[]>([]);
   const [search, setSearch] = useState('');
@@ -24,7 +27,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
       qc.invalidateQueries({ queryKey: ['events', event.id] });
       setStep('success');
     },
-    onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur lors du lancement du vote'),
+    onError: (err: any) => toast.error(err.response?.data?.error || t('validatorVote.toasts.startError')),
   });
 
   const toggleCandidate = (id: string) => {
@@ -51,15 +54,15 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
             </svg>
           </div>
         </div>
-        <h2 className="text-[24px] font-bold text-[#14C93F] mb-4">Vote lancé !</h2>
+        <h2 className="text-[24px] font-bold text-[#14C93F] mb-4"><span>{t('validatorVote.startedTitle')}</span></h2>
         <p className="text-center text-gray-500 text-[14px] leading-relaxed mb-8 max-w-[280px]">
-          Les OUTSTERS ont été notifiés et pourront choisir leur validateur depuis le chat.
+          <span>{t('validatorVote.startedDesc')}</span>
         </p>
         <button
           onClick={onBack}
           className="w-full max-w-[320px] h-[48px] bg-[#FF7A00] text-white font-bold rounded-full transition-transform active:scale-95 shadow-sm"
         >
-          Retour à la cagnotte
+          <span>{t('payout.backToPool')}</span>
         </button>
       </div>
     );
@@ -81,34 +84,34 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
             <button onClick={() => setStep('selected')} className="text-gray-400">
               <ArrowLeft01Icon className="w-6 h-6" />
             </button>
-            <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">Lancer le vote des validateurs</h3>
+            <h3 className="font-bold text-[16px] text-gray-900 dark:text-white"><span>{t('manageEvent.startValidatorVote')}</span></h3>
             <div className="w-6"></div>
           </div>
 
           <div className="mb-6">
             <h4 className="text-[18px] font-bold text-gray-900 dark:text-white">{event.title}</h4>
-            <p className="text-[14px] text-gray-500 mt-1">Lancement du vote de sélection des validateurs de la cagnotte.</p>
+            <p className="text-[14px] text-gray-500 mt-1"><span>{t('validatorVote.summaryDesc')}</span></p>
           </div>
 
           <div className="border-t border-dashed border-gray-200 dark:border-gray-800 my-6"></div>
 
           <div className="flex flex-col gap-4 mb-8">
             <div className="flex justify-between">
-              <span className="text-[14px] text-gray-500">Candidats sélectionnés :</span>
+              <span className="text-[14px] text-gray-500"><span>{t('validatorVote.selectedLabel')}</span></span>
               <span className="text-[14px] font-bold dark:text-white">{selectedCandidates.length}</span>
             </div>
             {voteDeadline && (
               <div className="flex justify-between">
-                <span className="text-[14px] text-gray-500">Date limite :</span>
+                <span className="text-[14px] text-gray-500"><span>{t('validatorVote.deadlineLabel')}</span></span>
                 <span className="text-[14px] font-bold dark:text-white">
-                  {new Date(voteDeadline).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  {new Date(voteDeadline).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
             )}
           </div>
           
           <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-8 leading-relaxed text-center">
-            Les OUTSTERS recevront une notification et pourront voter directement dans le chat de l'événement.
+            <span>{t('validatorVote.notifyInfo')}</span>
           </p>
 
           <button
@@ -116,7 +119,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
             disabled={startVoteMut.isPending}
             className="w-full h-[52px] bg-[#FF7A00] text-white font-bold rounded-full transition-transform active:scale-95 text-[15px] shadow-sm flex items-center justify-center"
           >
-            {startVoteMut.isPending ? "Lancement..." : "Confirmer"}
+            <span>{startVoteMut.isPending ? t('validatorVote.starting') : t('common.confirm')}</span>
           </button>
         </div>
       </div>
@@ -132,7 +135,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
             <button onClick={() => setStep('select')} className="w-9 h-9 flex items-center justify-center bg-white dark:bg-black rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
               <ArrowLeft01Icon className="w-5 h-5 text-gray-700 dark:text-white" />
             </button>
-            <span className="ml-3 font-semibold text-gray-900 dark:text-white">Candidats sélectionnés</span>
+            <span className="ml-3 font-semibold text-gray-900 dark:text-white"><span>{t('validatorVote.selected')}</span></span>
           </div>
         </div>
 
@@ -165,11 +168,11 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
                   <line x1="8" y1="2" x2="8" y2="6"></line>
                   <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
-                Ajouter une date limite de vote
+                <span>{t('validatorVote.addDeadline')}</span>
               </button>
             ) : (
               <div className="flex flex-col">
-                <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date et heure limite de vote</p>
+                <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('validatorVote.deadline')}</span></p>
                 <input
                   type="datetime-local"
                   value={voteDeadline}
@@ -186,7 +189,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
             onClick={() => setStep('confirm')}
             className="w-full h-12 bg-[#FF7A00] text-white font-semibold rounded-lg hover:bg-[#E66E00] transition-colors active:scale-95"
           >
-            Lancer le vote
+            <span>{t('validatorVote.start')}</span>
           </button>
         </div>
       </div>
@@ -201,19 +204,19 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
           <button onClick={onBack} className="w-9 h-9 flex items-center justify-center bg-white dark:bg-black rounded-lg shadow-sm border border-gray-100 dark:border-gray-800">
             <ArrowLeft01Icon className="w-5 h-5 text-gray-700 dark:text-white" />
           </button>
-          <span className="ml-3 font-semibold text-gray-900 dark:text-white">Lancer le vote des validateurs</span>
+          <span className="ml-3 font-semibold text-gray-900 dark:text-white"><span>{t('manageEvent.startValidatorVote')}</span></span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-6 pb-24">
         <div className="bg-white dark:bg-[#1A1A1A] p-4 rounded-xl border border-gray-100 dark:border-gray-800">
-          <p className="text-gray-500 text-[13px] mb-4">Choisissez les candidats éligibles à la validation du déblocage des fonds. Un vote sera soumis à tous les OUTSTERS.</p>
+          <p className="text-gray-500 text-[13px] mb-4"><span>{t('validatorVote.chooseDesc')}</span></p>
           
           <div className="relative mb-4">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
               type="text"
-              placeholder="Rechercher un OUTSTER..."
+              placeholder={t('validatorVote.searchPlaceholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full h-10 pl-9 pr-4 rounded-lg bg-gray-50 dark:bg-[#2A2A2A] text-sm border-none focus:ring-1 focus:ring-[#FF7A00] outline-none dark:text-white placeholder-gray-400"
@@ -221,7 +224,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
           </div>
 
           <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto">
-            {filteredAttendees.length === 0 && <p className="text-center text-sm text-gray-500 py-4">Aucun OUTSTER trouvé.</p>}
+            {filteredAttendees.length === 0 && <p className="text-center text-sm text-gray-500 py-4"><span>{t('validatorVote.noneFound')}</span></p>}
             {filteredAttendees.map((att: any) => {
               const isSelected = selectedCandidates.includes(att.userId);
               return (
@@ -244,12 +247,12 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-[#0a0a0b] border-t border-gray-100 dark:border-gray-800">
         <button
           onClick={() => {
-            if (selectedCandidates.length === 0) return toast.error("Sélectionnez au moins un candidat");
+            if (selectedCandidates.length === 0) return toast.error(t('validatorVote.toasts.selectOne'));
             setStep('selected');
           }}
           className="w-full h-12 bg-[#FF7A00] text-white font-semibold rounded-lg hover:bg-[#E66E00] transition-colors active:scale-95 disabled:opacity-50 disabled:active:scale-100"
         >
-          Suivant
+          <span>{t('createEvent.actions.next')}</span>
         </button>
       </div>
     </div>

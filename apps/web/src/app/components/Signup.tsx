@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { interestLabel } from '@/lib/interests'
 import { useNavigate, useLocation } from 'react-router'
 import {
   ViewIcon,
@@ -265,8 +266,8 @@ export function Signup({ onBack }: SignupProps) {
 
   useEffect(() => {
     if (countdown <= 0) return
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000)
+    return () => clearTimeout(timer)
   }, [countdown])
 
   /* ── City autocomplete — Nominatim ── */
@@ -940,7 +941,7 @@ export function Signup({ onBack }: SignupProps) {
               {INTERESTS_LIST.map((interest) => (
                 <CategoryChip
                   key={interest}
-                  label={interest}
+                  label={interestLabel(t, interest)}
                   showIcon={false}
                   selected={interests.includes(interest)}
                   onClick={() => toggleInterest(interest)}

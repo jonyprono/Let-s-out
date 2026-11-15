@@ -4,6 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/api-client'
 import { ChevronLeft, X, Lock } from 'lucide-react'
 
+import { intlLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type Rule = { field: string; operator: 'EQ' | 'GT' | 'GTE' | 'LT' | 'LTE'; value: number }
@@ -42,14 +45,14 @@ const categoryColors: Record<string, string> = {
 }
 
 const METRIC_LABELS: Record<string, string> = {
-  eventsCreated: 'événements créés',
-  eventsJoined: 'événements rejoints',
+  get eventsCreated() { return i18n.t('badgesPage.evenementsCrees') },
+  get eventsJoined() { return i18n.t('badgesPage.evenementsRejoints') },
   friendsCount: 'amis',
-  rating: 'étoiles de note',
-  accountAgeDays: 'jours d\'ancienneté',
-  votesParticipated: 'votes auxquels vous avez participé',
-  timesAppointedValidator: 'fois désigné validateur',
-  validationsPerformed: 'validations effectuées',
+  get rating() { return i18n.t('badgesPage.etoilesDeNote') },
+  get accountAgeDays() { return i18n.t('badgesPage.joursDAnciennete') },
+  get votesParticipated() { return i18n.t('badgesPage.votesAuxquelsVousAvezParticipe') },
+  get timesAppointedValidator() { return i18n.t('badgesPage.foisDesigneValidateur') },
+  get validationsPerformed() { return i18n.t('badgesPage.validationsEffectuees') },
 }
 
 function getProgress(badge: BadgeData, stats: UserStats): { current: number; target: number; label: string } | null {
@@ -87,6 +90,7 @@ function BadgeDetailModal({
   isOwnProfile: boolean
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const color = categoryColors[badge.category] || '#3B82F6'
   const prog = isOwnProfile && stats ? getProgress(badge, stats) : null
   const pct = prog ? Math.min(100, Math.round((prog.current / prog.target) * 100)) : 0
@@ -141,7 +145,7 @@ function BadgeDetailModal({
           {badge.xpReward > 0 && (
             <div className="flex items-center gap-2 bg-[#FFF8F3] border border-orange-100 rounded-xl px-4 py-2 mb-5">
               <span className="text-lg">⭐</span>
-              <span className="text-[13px] font-bold text-[#FF7A00]">+{badge.xpReward} XP à l'obtention</span>
+              <span className="text-[13px] font-bold text-[#FF7A00]"><span>{t('badgesPage.xpALObtention', { v0: badge.xpReward })}</span></span>
             </div>
           )}
 
@@ -155,7 +159,7 @@ function BadgeDetailModal({
                     <p className="text-[13px] font-bold text-green-700">Badge obtenu !</p>
                     {badge.earnedAt && (
                       <p className="text-[11px] text-green-600">
-                        Le {new Date(badge.earnedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        Le {new Date(badge.earnedAt).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
                     )}
                   </div>
@@ -174,12 +178,12 @@ function BadgeDetailModal({
                       style={{ width: `${pct}%`, backgroundColor: color }}
                     />
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-2 text-right">{pct}% complété</p>
+                  <p className="text-[11px] text-gray-400 mt-2 text-right"><span>{t('badgesPage.complete', { v0: pct })}</span></p>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
                   <Lock className="w-4 h-4 text-gray-400" />
-                  <p className="text-[13px] text-gray-500">Attribution manuelle par l'équipe</p>
+                  <p className="text-[13px] text-gray-500"><span>{t('badgesPage.attributionManuelleParLEquipe')}</span></p>
                 </div>
               )}
             </div>
@@ -231,7 +235,7 @@ function BadgeCard({
         </div>
       ) : badge.isEarned && badge.earnedAt ? (
         <span className="text-[8px] text-gray-400 font-medium mt-auto">
-          {new Date(badge.earnedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+          {new Date(badge.earnedAt).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' })}
         </span>
       ) : (
         <span className="text-[8px] text-gray-300 mt-auto">En attente</span>
@@ -243,6 +247,7 @@ function BadgeCard({
 // ── BadgesPage ─────────────────────────────────────────────────────────────────
 
 export function BadgesPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'tous' | 'en_cours' | 'obtenus'>('tous')
@@ -307,7 +312,7 @@ export function BadgesPage() {
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-black active:opacity-50">
           <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
         </button>
-        <h1 className="text-[17px] font-bold text-black tracking-tight">Mes Badges & Récompenses</h1>
+        <h1 className="text-[17px] font-bold text-black tracking-tight"><span>{i18n.t('badgesPage.title')}</span></h1>
         <div className="w-10" />
       </div>
 
@@ -366,14 +371,14 @@ export function BadgesPage() {
           <div className="flex flex-col items-center py-1">
             <span className="text-lg mb-1">👑</span>
             <span className="text-[16px] font-bold text-black">{legendaryBadges.length}</span>
-            <span className="text-[10px] text-gray-500 font-medium leading-tight px-1">Légendaires</span>
+            <span className="text-[10px] text-gray-500 font-medium leading-tight px-1"><span>{t('badgesPage.legendaires')}</span></span>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="flex bg-gray-100/80 p-1 rounded-2xl mb-6">
           {[
-            { id: 'tous', label: 'Tous les badges' },
+            { id: 'tous', label: t('badgesPage.tousLesBadges') },
             { id: 'en_cours', label: 'En cours' },
             { id: 'obtenus', label: 'Obtenus' },
           ].map(tab => (
@@ -397,10 +402,10 @@ export function BadgesPage() {
           <div className="flex flex-col items-center py-12 text-center">
             <span className="text-4xl mb-3">🏅</span>
             <p className="text-[15px] font-semibold text-gray-700 mb-1">
-              {activeTab === 'obtenus' ? 'Aucun badge obtenu' : 'Tous les badges sont obtenus !'}
+              {activeTab === 'obtenus' ? t('badgesPage.aucunBadgeObtenu') : t('badgesPage.tousLesBadgesSontObtenus')}
             </p>
             <p className="text-[13px] text-gray-400">
-              {activeTab === 'obtenus' ? 'Continuez à être actif pour en gagner.' : ''}
+              {activeTab === 'obtenus' ? t('badgesPage.continuezAEtreActifPour') : ''}
             </p>
           </div>
         ) : (
@@ -422,7 +427,7 @@ export function BadgesPage() {
             <div className="bg-[#FFF8F3] border border-orange-100 rounded-[16px] p-4 flex gap-3 items-center">
               <span className="text-xl shrink-0">🏆</span>
               <p className="text-[11px] text-gray-600 font-medium leading-relaxed">
-                Continuez ainsi ! Plus vous êtes actif, plus vous gagnez des récompenses exclusives.
+                <span>{t('badgesPage.continuezAinsiPlusVousEtes')}</span>
               </p>
             </div>
           </div>

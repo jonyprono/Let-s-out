@@ -12,6 +12,7 @@ import { getEventParticipationMode } from '@/lib/utils';
 import { ShareModal } from '@/components/shared/ShareModal';
 import { SaveEventButton } from '@/components/ui/save-event-button';
 
+import { intlLocale } from '@/lib/locale';
 interface EventCardProps {
   // Propriétés explicites exigées par la maquette
   name?: string;
@@ -31,13 +32,13 @@ interface EventCardProps {
 
 function formatEventDate(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('fr-FR', {
+  return date.toLocaleDateString(intlLocale(), {
     weekday: 'long',
     day: '2-digit',
     month: 'long',
     year: 'numeric',
   }).replace(/^\w/, c => c.toUpperCase()) + ' • ' +
-    date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) + ' GMT';
+    date.toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' }) + ' GMT';
 }
 
 function formatPrice(event: any): string {
@@ -47,7 +48,7 @@ function formatPrice(event: any): string {
   
   // Devise : FCFA par défaut si non spécifiée
   const cur = event.currency || 'XOF';
-  if (cur === 'XOF' || cur === 'CFA' || cur === 'FCFA') return `${Number(event.price).toLocaleString('fr-FR')} F CFA`;
+  if (cur === 'XOF' || cur === 'CFA' || cur === 'FCFA') return `${Number(event.price).toLocaleString(intlLocale())} F CFA`;
   if (cur === 'EUR') return `${event.price} €`;
   return `${event.price} ${cur}`;
 }

@@ -6,6 +6,9 @@ import { apiClient } from '@/lib/api-client'
 import { eventsApi } from '@/features/events/api'
 import { chatApi } from '@/features/chat/api'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
+import { format } from 'date-fns'
+import { dateLocale, intlLocale, currentLang } from '@/lib/locale'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +25,7 @@ const parseSafeDate = (dateStr: any): Date => {
 }
 
 export function PaymentPage() {
+  const { t } = useTranslation()
   const { id: eventId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -97,14 +101,14 @@ export function PaymentPage() {
           })
         } catch (confirmErr) {
           console.warn('Dev confirm failed', confirmErr)
-          throw new Error("Impossible de valider le paiement Sandbox. Assurez-vous d'avoir déployé le backend.")
+          throw new Error(t('payment.errors.sandbox'))
         }
       } else {
         try {
           await apiClient.post('/payments/sync-missed', { eventId })
         } catch (syncErr) {
           console.warn('sync-missed failed', syncErr)
-          throw new Error('La synchronisation du paiement a échoué. Le webhook prendra le relais.')
+          throw new Error(t('payment.errors.syncFailed'))
         }
       }
     }
@@ -115,10 +119,10 @@ export function PaymentPage() {
     qc.invalidateQueries({ queryKey: ['events'] })
     toast.success(
       isNonParticipantDonation
-        ? 'Don enregistré avec succès ! Merci pour votre générosité.'
+        ? t('payment.toasts.donationDone')
         : isContribution
-          ? 'Contribution enregistrée avec succès !'
-          : "Paiement réussi ! Vous participez à l'événement",
+          ? t('payment.toasts.contributionDone')
+          : t('payment.toasts.paymentDone'),
     )
   }
 
@@ -128,7 +132,7 @@ export function PaymentPage() {
       const conv = await chatApi.getEventConversation(eventId)
       navigate(`/chat/${conv.id}`)
     } catch (err) {
-      toast.error('Impossible de charger le chat. Réessayez.')
+      toast.error(t('payment.toasts.chatError'))
       navigate(`/events/${eventId}`)
     }
   }
@@ -148,13 +152,13 @@ export function PaymentPage() {
       <h1 className="text-[16px] font-semibold text-gray-900 dark:text-white mb-3">{event?.title}</h1>
       <div className="border-t border-dashed border-gray-200 dark:border-gray-700 w-full mb-3" />
       <div className="flex items-center justify-between">
-        <span className="text-[13px] text-gray-600 dark:text-gray-400">Contribution</span>
+        <span className="text-[13px] text-gray-600 dark:text-gray-400">{t('payment.contribution')}</span>
         <span className="text-[13px] font-semibold text-[#007AFF]">
           {event?.poolMode === 'fixe'
-            ? 'Montant fixe'
+            ? t('pool.mode.fixe')
             : event?.poolMode === 'minimum'
-            ? 'Montant minimum'
-            : 'Montant libre'}
+            ? t('pool.mode.minimum')
+            : t('pool.mode.libre')}
         </span>
       </div>
     </div>
@@ -162,9 +166,9 @@ export function PaymentPage() {
     <>
       <h1 className="text-[20px] font-bold text-gray-900 dark:text-white mt-2 mb-2">{event?.title}</h1>
       <div className="flex items-center justify-between py-3 border-b border-[#F0F0F0] mb-5">
-        <span className="text-[13px] text-[#8D8D8D]">Participation</span>
+        <span className="text-[13px] text-[#8D8D8D]">{t('createEvent.fields.participation')}</span>
         <span className="text-[13px] font-semibold text-[#FF7A00]">
-          A partir de {minAmount > 0 ? `${minAmount.toLocaleString()}F` : 'Gratuit'}
+          <span>{minAmount > 0 ? t('payment.fromAmount', { amount: `${minAmount.toLocaleString(intlLocale())}F` }) : t('createEvent.participation.free')}</span>
         </span>
       </div>
     </>
@@ -173,10 +177,10 @@ export function PaymentPage() {
   // ── Summary subtitle rendered inside PaymentFlow ─────────────
   const summarySubtitle = event?.startAt ? (() => {
     const d = parseSafeDate(event.startAt)
-    const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+    // Date dans la langue choisie (date-fns)
+    const day = format(d, 'EEE, d MMM yyyy, HH:mm', { locale: dateLocale() })
     const endD = event.endAt ? parseSafeDate(event.endAt) : null
-    return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}${endD ? ` - ${String(endD.getHours()).padStart(2, '0')}:${String(endD.getMinutes()).padStart(2, '0')}` : ''}`
+    return `${day}${endD ? ` - ${format(endD, 'HH:mm')}` : ''}`
   })() : undefined
 
   // ── Bloc anonymat (rendu dans le formulaire de PaymentFlow) ──────────────
@@ -199,11 +203,11 @@ export function PaymentPage() {
         </div>
         <div className="flex-1">
           <p className="text-[13px] font-semibold text-gray-900 dark:text-white leading-snug">
-            Contribuer anonymement
+            <span>{t('payment.anonymous.title')}</span>
           </p>
           <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed mt-0.5">
-            Votre nom ne sera pas affiché publiquement.
-            L'administration de Let's Out conserve votre identité conformément aux CGU.
+            <span>{t('payment.anonymous.desc1')}</span>
+            <span>{t('payment.anonymous.desc2')}</span>
           </p>
         </div>
         <div
@@ -243,11 +247,11 @@ export function PaymentPage() {
         </div>
         <div className="flex-1">
           <p className="text-[13px] font-semibold text-gray-900 dark:text-white leading-snug">
-            Donner sans rejoindre l'événement
+            <span>{t('payment.donateOnly.title')}</span>
           </p>
           <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-relaxed mt-0.5">
-            Votre don est inclus dans la cagnotte mais vous ne devenez pas participant.
-            Aucun droit de vote ou de validation.
+            <span>{t('payment.donateOnly.desc1')}</span>
+            <span>{t('payment.donateOnly.desc2')}</span>
           </p>
         </div>
         <div
@@ -274,7 +278,7 @@ export function PaymentPage() {
           <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
         </button>
         <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">
-          Don envoyé
+          <span>{t('payment.donation.sentTitle')}</span>
         </span>
       </div>
 
@@ -293,26 +297,26 @@ export function PaymentPage() {
           </div>
         </div>
 
-        <h1 className="text-[20px] font-bold text-[#007AFF] mb-2 text-center">Merci pour votre don !</h1>
+        <h1 className="text-[20px] font-bold text-[#007AFF] mb-2 text-center"><span>{t('payment.donation.thanks')}</span></h1>
         <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-8 px-4 leading-relaxed max-w-[300px]">
           {isAnonymous
-            ? 'Votre contribution anonyme a bien été reçue. Votre identité reste confidentielle.'
-            : 'Votre don a été ajouté à la cagnotte. La communauté vous remercie !'}
+            ? t('payment.donation.anonymousReceived')
+            : t('payment.donation.added')}
         </p>
 
         <div className="w-full rounded-[16px] border border-gray-100 dark:border-white/5 bg-[#FAFAFA] dark:bg-[#222] p-5 shadow-sm max-w-[358px] space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] text-gray-500">Montant donné</span>
+            <span className="text-[13px] text-gray-500"><span>{t('payment.donation.amountGiven')}</span></span>
             <span className="text-[14px] font-bold text-[#007AFF]">{resolvedAmount?.toLocaleString()} F CFA</span>
           </div>
           {isAnonymous && (
             <div className="flex items-center gap-2 bg-[#FF7A00]/8 rounded-[10px] px-3 py-2">
               <EyeOff className="w-4 h-4 text-[#FF7A00] shrink-0" />
-              <span className="text-[12px] text-[#FF7A00] font-medium">Contribution anonyme</span>
+              <span className="text-[12px] text-[#FF7A00] font-medium"><span>{t('payment.anonymous.badge')}</span></span>
             </div>
           )}
           <div className="flex items-center justify-between border-t border-dashed border-gray-200 dark:border-gray-700 pt-3">
-            <span className="text-[13px] text-gray-500">Événement</span>
+            <span className="text-[13px] text-gray-500"><span>{t('common.event')}</span></span>
             <span className="text-[13px] font-medium text-gray-900 dark:text-white text-right max-w-[180px] truncate">{event?.title}</span>
           </div>
         </div>
@@ -327,13 +331,13 @@ export function PaymentPage() {
           className="w-full font-semibold h-[52px]"
           style={{ background: 'linear-gradient(135deg, #007AFF, #5AC8FA)' }}
         >
-          Faire un autre don
+          <span>{t('payment.donation.another')}</span>
         </Button>
         <button
           onClick={() => navigate(`/events/${eventId}`)}
           className="w-full h-[52px] flex items-center justify-center gap-2 rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
         >
-          Voir l'événement
+          <span>{t('createEvent.done.view')}</span>
         </button>
       </div>
     </div>
@@ -353,7 +357,7 @@ export function PaymentPage() {
             <ChevronLeft className="w-5 h-5 text-gray-900 dark:text-white" strokeWidth={2} />
           </button>
           <span className="flex-1 text-center text-[16px] font-semibold text-gray-900 dark:text-white -ml-9">
-            Contribuer à la cagnotte
+            <span>{t('payment.contributeToPool')}</span>
           </span>
         </div>
 
@@ -366,14 +370,14 @@ export function PaymentPage() {
             </div>
           </div>
 
-          <h1 className="text-[20px] font-bold text-[#22C55E] mb-2 text-center">Contribution envoyée !</h1>
+          <h1 className="text-[20px] font-bold text-[#22C55E] mb-2 text-center"><span>{t('payment.contributionSent.title')}</span></h1>
           <p className="text-[13px] text-gray-500 dark:text-gray-400 text-center mb-8 px-4 leading-relaxed max-w-[300px]">
-            Top! Votre contribution a été bien envoyée. La cagnotte a progressé de {Math.round(addedProgress)}%. 🎉
+            <span>{t('payment.contributionSent.desc', { progress: Math.round(addedProgress) })}</span>
           </p>
 
           <div className="w-full rounded-[16px] border border-gray-100 dark:border-white/5 bg-white dark:bg-[#1A1A1A] p-5 shadow-sm max-w-[358px]">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[16px] font-bold text-[#FF7A00]">Cagnotte</span>
+              <span className="text-[16px] font-bold text-[#FF7A00]">{t('common.pool')}</span>
               <span className="text-[14px] font-bold text-[#22C55E]">
                 {target > 0 ? target.toLocaleString() : totalCollected.toLocaleString()} F CFA
               </span>
@@ -384,11 +388,11 @@ export function PaymentPage() {
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400">Votre contribution</span>
+                <span className="text-[13px] text-gray-500 dark:text-gray-400"><span>{t('payment.yourContribution')}</span></span>
                 <span className="text-[13px] font-semibold text-[#FF7A00]">{resolvedAmount?.toLocaleString()} F</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400">Total collecté</span>
+                <span className="text-[13px] text-gray-500 dark:text-gray-400"><span>{t('payment.totalCollected')}</span></span>
                 <span className="text-[13px] font-semibold text-[#22C55E]">{totalCollected.toLocaleString()} F</span>
               </div>
               <div className="flex items-center justify-between">
@@ -404,14 +408,14 @@ export function PaymentPage() {
             onClick={handleReset}
             className="w-full font-semibold h-[52px]"
           >
-            Contribuer à nouveau
+            <span>{t('eventDetails.contributeAgain')}</span>
           </Button>
           <button
             onClick={() => navigate(`/events/${eventId}/manage?tab=cagnotte`)}
             className="w-full h-[52px] flex items-center justify-center gap-2 rounded-full font-semibold text-[15px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform"
           >
             <ChevronLeft className="w-5 h-5" />
-            Retour à l'événement
+            <span>{t('payment.backToEvent')}</span>
           </button>
         </div>
       </div>
@@ -432,30 +436,30 @@ export function PaymentPage() {
             </div>
           </div>
 
-          <h1 className="text-[20px] font-bold text-[#22C55E] mb-3 text-center">Participation validée !</h1>
+          <h1 className="text-[20px] font-bold text-[#22C55E] mb-3 text-center"><span>{t('payment.joined.title')}</span></h1>
           <p className="text-[13px] text-gray-600 dark:text-gray-400 text-center mb-8 px-2 max-w-[300px] leading-relaxed font-inter">
-            Votre participation est confirmée pour cet événement. Rejoignez le groupe de discussion et découvrez les autres OUTSTERS.
+            <span>{t('payment.joined.desc')}</span>
           </p>
 
           <div className="w-full rounded-[12px] border border-gray-100 dark:border-white/10 bg-white dark:bg-[#1A1A1A] shadow-sm p-4 space-y-4 max-w-[340px]">
             <h2 className="text-[15px] font-semibold text-gray-900 dark:text-white">{event?.title}</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter">Date</span>
+                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter"><span>{t('common.date')}</span></span>
                 <span className="text-[13px] font-medium text-gray-900 dark:text-white font-inter text-right">
-                  {event?.startAt ? `${startDate.getDate()} ${['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][startDate.getMonth()]} ${startDate.getFullYear()}, ${String(startDate.getHours()).padStart(2,'0')}h` : '--'}
+                  <span>{event?.startAt ? format(startDate, currentLang() === 'fr' ? "d MMM yyyy, HH'h'" : 'd MMM yyyy, p', { locale: dateLocale() }) : '--'}</span>
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter shrink-0">Lieu</span>
+                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter shrink-0"><span>{t('common.place')}</span></span>
                 <span className="text-[13px] font-medium text-gray-900 dark:text-white font-inter text-right">
-                  {event?.city ? `${event.address ? event.address + ' ' : ''}(${event.city})` : 'Lieu non précisé'}
+                  {event?.city ? `${event.address ? event.address + ' ' : ''}(${event.city})` : t('eventDetails.placeUnknown')}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter">Votre participation</span>
+                <span className="text-[13px] text-gray-500 dark:text-gray-400 font-inter"><span>{t('payment.yourParticipation')}</span></span>
                 <span className="text-[13px] font-medium text-gray-900 dark:text-white font-inter text-right">
-                  {resolvedAmount ? `${resolvedAmount.toLocaleString()} F` : event?.price ? `${event.price.toLocaleString()} F` : 'Gratuit'}
+                  {resolvedAmount ? `${resolvedAmount.toLocaleString()} F` : event?.price ? `${event.price.toLocaleString()} F` : t('createEvent.participation.free')}
                 </span>
               </div>
             </div>
@@ -464,10 +468,10 @@ export function PaymentPage() {
 
         <div className="absolute bottom-0 left-0 right-0 bg-[#FAFAFA] dark:bg-[#1A1A1A] px-5 pt-3 pb-8 flex flex-col gap-3">
           <Button onClick={handleOpenChat} className="w-full font-medium h-[48px] text-[14px]">
-            Rejoindre le groupe
+            <span>{t('payment.joinGroup')}</span>
           </Button>
           <button onClick={() => navigate(`/events/${eventId}`)} className="w-full h-[48px] rounded-full font-medium text-[14px] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1A1A1A] active:scale-[0.98] transition-transform">
-            Retour à l'événement
+            <span>{t('payment.backToEvent')}</span>
           </button>
         </div>
       </div>
@@ -480,21 +484,21 @@ export function PaymentPage() {
       key={paymentKey}
       headerTitle={
         isNonParticipantDonation
-          ? 'Faire un don'
+          ? t('eventDetails.donate')
           : isContribution
-            ? 'Contribuer à la cagnotte'
-            : "Rejoindre l'événement"
+            ? t('payment.contributeToPool')
+            : t('eventDetails.joinEvent')
       }
       headerCard={headerCard}
       minAmount={minAmount}
       defaultAmount={defaultAmount}
-      formSubmitText={isNonParticipantDonation ? 'Donner' : isContribution ? 'Envoyer' : 'Rejoindre'}
-      summaryTitle="Résumé de la transaction"
+      formSubmitText={isNonParticipantDonation ? t('payment.submit.donate') : isContribution ? t('payment.submit.send') : t('eventDetails.join')}
+      summaryTitle={t('payment.summaryTitle')}
       summaryItemTitle={event?.title}
       summaryItemSubtitle={summarySubtitle}
       summaryItemDetails={event?.city ? `${event.address ? event.address + ', ' : ''}${event.city}` : undefined}
-      summarySubmitText={isNonParticipantDonation ? 'Confirmer le don' : isContribution ? 'Payer la contribution' : 'Payer'}
-      amountLabel={isNonParticipantDonation ? 'Don' : isContribution ? 'Contribution' : 'Participation'}
+      summarySubmitText={isNonParticipantDonation ? t('payment.submit.confirmDonation') : isContribution ? t('payment.submit.payContribution') : t('payment.submit.pay')}
+      amountLabel={isNonParticipantDonation ? t('payment.amountLabel.donation') : isContribution ? t('payment.amountLabel.contribution') : t('payment.amountLabel.participation')}
       extraFormContent={anonymityBlock}
       anonymousBadge={isAnonymous}
       onInitiate={handleInitiate}

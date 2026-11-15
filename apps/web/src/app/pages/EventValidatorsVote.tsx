@@ -7,6 +7,7 @@ import { ArrowLeft01Icon } from 'hugeicons-react';
 import { useAuthStore } from '@/stores/auth.store';
 
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next'
 
 const VoteBoxIcon = () => (
   <svg width="77" height="128" viewBox="0 0 77 128" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[77px] h-[128px]">
@@ -42,6 +43,7 @@ const VoteBoxIcon = () => (
 );
 
 export function EventValidatorsVote() {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -91,14 +93,14 @@ export function EventValidatorsVote() {
     setIsSubmitting(true);
     try {
       await apiClient.post(`/events/${id}/pool/validate`, { mode: 'DELEGATE', delegatedToId: selectedCandidate });
-      toast.success('Choix enregistré');
+      toast.success(t('eventValidatorsVote.choixEnregistre'));
       qc.invalidateQueries({ queryKey: ['events', id] });
       qc.invalidateQueries({ queryKey: ['events', id, 'attendees'] });
-      setSuccessMessage(`Votre choix a été bien enregistré.\nL'organisateur sera notifié de votre décision.`);
+      setSuccessMessage(t('eventValidatorsVote.votreChoixAEteBien'));
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 2500); // Hide success screen after a bit to show the list again
     } catch (err: any) {
-      toast.error('Erreur lors de la soumission de votre choix');
+      toast.error(t('eventValidatorsVote.erreurLorsDeLaSoumission'));
     } finally {
       setIsSubmitting(false);
     }
@@ -112,7 +114,7 @@ export function EventValidatorsVote() {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b] p-4 pt-[env(safe-area-inset-top)]">
         <h2 className="text-xl font-bold dark:text-white mb-2">Vote inexistant</h2>
-        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-[#FF7A00] text-white rounded-lg">Retour</button>
+        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-[#FF7A00] text-white rounded-lg"><span>{t('eventValidatorsVote.retour')}</span></button>
       </div>
     );
   }
@@ -132,7 +134,7 @@ export function EventValidatorsVote() {
         <button onClick={() => navigate(-1)} className="w-9 h-9 -ml-2 flex items-center justify-center bg-transparent">
           <ArrowLeft01Icon className="w-6 h-6 text-gray-900 dark:text-white" />
         </button>
-        <span className="ml-2 font-bold text-[16px] text-gray-900 dark:text-white">Sélection des validateurs</span>
+        <span className="ml-2 font-bold text-[16px] text-gray-900 dark:text-white"><span>{t('eventValidatorsVote.selectionDesValidateurs')}</span></span>
       </div>
 
       <div className="flex-1 overflow-y-auto pb-28 px-4 font-poppins flex flex-col gap-5 relative z-10">
@@ -141,8 +143,8 @@ export function EventValidatorsVote() {
         <div className="w-full h-[80px] bg-gradient-to-r from-[#FFF2D3] to-[#FFFBA6] rounded-[10px] p-4 flex flex-col gap-1 shadow-sm shrink-0">
           <h3 className="font-medium text-[16px] text-[#1B1818] line-clamp-1">{event.title}</h3>
           <div className="flex justify-between items-center w-full mt-auto">
-            <span className="text-[14px] text-[#737373]">Cagnotte</span>
-            <span className="text-[14px] font-bold text-[#FF7A00]">Frais généraux</span>
+            <span className="text-[14px] text-[#737373]"><span>{t('eventValidatorsVote.cagnotte')}</span></span>
+            <span className="text-[14px] font-bold text-[#FF7A00]"><span>{t('eventValidatorsVote.fraisGeneraux')}</span></span>
           </div>
         </div>
 
@@ -151,15 +153,15 @@ export function EventValidatorsVote() {
             <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-2">
               <span className="text-2xl">🛡️</span>
             </div>
-            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white">Aucune délégation requise</h3>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white"><span>{t('eventValidatorsVote.aucuneDelegationRequise')}</span></h3>
             <p className="text-[14px] text-gray-500 max-w-[280px]">
-              La totalité de votre part a déjà été débloquée lors de précédents retraits. Vous n'avez plus de fonds en jeu à déléguer.
+              <span>{t('eventValidatorsVote.laTotaliteDeVotrePart')}</span>
             </p>
             <button 
               onClick={() => navigate(-1)}
               className="mt-4 px-6 py-2 rounded-full bg-[#FF7A00] text-white hover:bg-[#FF7A00]/90"
             >
-              Retour
+              <span>{t('eventValidatorsVote.retour')}</span>
             </button>
           </div>
         ) : showSuccess ? (
@@ -172,7 +174,7 @@ export function EventValidatorsVote() {
         ) : (
           <>
             <p className="text-[12px] text-[#404040] dark:text-gray-400 font-inter leading-relaxed">
-              Choisissez l'OUTSTER à qui vous souhaitez déléguer la validation du déblocage des fonds de la cagnotte. Vous pouvez modifier votre choix à tout moment.
+              <span>{t('eventValidatorsVote.choisissezLOutsterAQui')}</span>
             </p>
 
             <div className="flex flex-col gap-1">
@@ -213,7 +215,7 @@ export function EventValidatorsVote() {
             disabled={isSubmitting || !selectedCandidate || !hasChangedSelection}
             className="w-full h-14 rounded-full bg-[#FF7A00] hover:bg-[#FF7A00]/90 text-white font-semibold text-[16px] shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
           >
-            {isSubmitting ? 'Enregistrement...' : hasChangedSelection ? 'Valider mon choix' : 'Choix actuel'}
+            {isSubmitting ? 'Enregistrement...' : hasChangedSelection ? t('eventValidatorsVote.validerMonChoix') : 'Choix actuel'}
           </Button>
         </div>
       )}

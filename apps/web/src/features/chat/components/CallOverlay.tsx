@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, Volume2 } from 'lucide-react'
 import { useWebRTC } from '../hooks/useWebRTC'
 import { SafeImage } from '@/components/shared/SafeImage'
+import { useTranslation } from 'react-i18next'
 
 function useRingtone(callStatus: string) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -27,6 +28,7 @@ function useRingtone(callStatus: string) {
 }
 
 function RemoteVideoPlayer({ stream, mediaType, userName }: { stream: MediaStream, mediaType: 'audio'|'video', userName?: string }) {
+  const { t } = useTranslation()
   const mediaElementRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [needsUserTap, setNeedsUserTap] = useState(false)
@@ -81,7 +83,7 @@ function RemoteVideoPlayer({ stream, mediaType, userName }: { stream: MediaStrea
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60" onClick={() => mediaElementRef.current?.play().then(()=>setNeedsUserTap(false))}>
           <div className="flex flex-col items-center gap-2">
             <Volume2 className="w-10 h-10 text-white animate-pulse" />
-            <span className="text-white/80 text-sm font-bold">Toucher pour activer le son</span>
+            <span className="text-white/80 text-sm font-bold"><span>{t('callOverlay.toucherPourActiverLeSon')}</span></span>
           </div>
         </div>
       )}
@@ -98,6 +100,7 @@ function RemoteVideoPlayer({ stream, mediaType, userName }: { stream: MediaStrea
 }
 
 export function CallOverlay() {
+  const { t } = useTranslation()
   const {
     callStatus,
     incomingCall,
@@ -142,9 +145,9 @@ export function CallOverlay() {
   if (callStatus === 'IDLE') return null
 
   if (callStatus === 'RINGING' && incomingCall) {
-    const callerName = incomingCall.callerName || 'Appel entrant'
+    const callerName = incomingCall.callerName || t('callOverlay.appelEntrant')
     const callerAvatar = incomingCall.callerAvatar || null
-    const mediaLabel = incomingCall.mediaType === 'video' ? 'Appel vidéo' : 'Appel audio'
+    const mediaLabel = incomingCall.mediaType === 'video' ? t('callOverlay.appelVideo') : t('callOverlay.appelAudio')
     return (
       <div
         className="fixed inset-0 z-[100] flex flex-col items-center justify-between animate-in fade-in duration-300"
@@ -180,7 +183,7 @@ export function CallOverlay() {
             >
               <PhoneOff className="w-9 h-9 text-white" />
             </button>
-            <span className="text-white/60 text-sm font-medium">Refuser</span>
+            <span className="text-white/60 text-sm font-medium"><span>{t('callOverlay.refuser')}</span></span>
           </div>
           <div className="flex flex-col items-center gap-3">
             <button
@@ -190,7 +193,7 @@ export function CallOverlay() {
             >
               {incomingCall.mediaType === 'video' ? <Video className="w-9 h-9 text-white" /> : <Phone className="w-9 h-9 text-white" />}
             </button>
-            <span className="text-white/60 text-sm font-medium">Accepter</span>
+            <span className="text-white/60 text-sm font-medium"><span>{t('callOverlay.accepter')}</span></span>
           </div>
         </div>
       </div>
@@ -212,7 +215,7 @@ export function CallOverlay() {
                 <Phone className="w-10 h-10 text-white/50" />
              </div>
              <h2 className="text-2xl font-bold text-white mb-2">{callerName}</h2>
-             <p className="text-white/60">Appel en cours...</p>
+             <p className="text-white/60"><span>{t('callOverlay.appelEnCours')}</span></p>
            </div>
          )}
          

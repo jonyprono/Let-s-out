@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import i18n from '@/lib/i18n'
 import { useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { TopBar } from '@/components/ui/TopBar'
@@ -9,8 +10,10 @@ import { ChevronDown, Loader2, Camera, X } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 
 import { PAGE_CATEGORIES } from '../categories'
+import { useTranslation } from 'react-i18next'
 
 export function CreatePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
 
@@ -65,7 +68,7 @@ export function CreatePage() {
           const upRes = await pagesApi.uploadImage(pageId, avatarFile, 'avatar')
           uploadedAvatarUrl = upRes?.url
         } catch {
-          toast.error("Erreur lors de l'upload de la photo de profil, vous pourrez la modifier plus tard")
+          toast.error(t('createPage.erreurLorsDeLUpload'))
         }
       }
 
@@ -76,7 +79,7 @@ export function CreatePage() {
           const upRes = await pagesApi.uploadImage(pageId, coverFile, 'cover')
           uploadedCoverUrl = upRes?.url
         } catch {
-          toast.error("Erreur lors de l'upload de la bannière, vous pourrez la modifier plus tard")
+          toast.error(t('createPage.erreurLorsDeLUpload2'))
         }
       }
 
@@ -92,7 +95,7 @@ export function CreatePage() {
         }
       }
 
-      toast.success('Page créée avec succès !')
+      toast.success(t('createPage.pageCreeeAvecSucces'))
       qc.invalidateQueries({ queryKey: ['pages'] })
       navigate(`/pages/${pageId}`, { replace: true })
     } catch (err: any) {
@@ -100,19 +103,19 @@ export function CreatePage() {
 
       // Normalize all possible error shapes into a user-friendly message
       const normalize = (e: any): string => {
-        if (!e) return 'Erreur lors de la création de la page'
+        if (!e) return t('createPage.erreurLorsDeLaCreation')
         // ProgressEvent from XHR (network loss, CORS, etc.)
         if (typeof e === 'object' && (e instanceof ProgressEvent || e?.type === 'error' || String(e) === '[object ProgressEvent]')) {
-          return 'Erreur de connexion au serveur. Vérifiez votre connexion et réessayez.'
+          return t('createPage.erreurDeConnexionAuServeur')
         }
         const apiMsg = e?.response?.data?.error || e?.response?.data?.message
         const msg = Array.isArray(apiMsg) ? apiMsg[0] : apiMsg
         if (typeof msg === 'string' && msg.length > 0 && !msg.includes('ProgressEvent')) return msg
         if (typeof e?.message === 'string' && e.message.length > 0 && !e.message.includes('ProgressEvent')) return e.message
         if (String(e).includes('Network Error') || String(e).includes('timeout')) {
-          return 'Erreur de connexion au serveur. Vérifiez votre connexion et réessayez.'
+          return t('createPage.erreurDeConnexionAuServeur')
         }
-        return 'Erreur lors de la création de la page'
+        return t('createPage.erreurLorsDeLaCreation')
       }
 
       toast.error(normalize(err))
@@ -125,7 +128,7 @@ export function CreatePage() {
     <div className="w-full h-full flex flex-col bg-white dark:bg-black text-gray-900 dark:text-white overflow-hidden">
       {/* Top Header */}
       <TopBar
-        title="Créer une page"
+        title={t('createPage.creerUnePage')}
         onBack={() => navigate(-1)}
         containerClassName="pt-safe-4 pt-4 shrink-0 border-b border-gray-100 dark:border-gray-800"
       />
@@ -136,7 +139,7 @@ export function CreatePage() {
         {/* ── Bannière ── */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Bannière</label>
+            <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300"><span>{t('createPage.banniere')}</span></label>
             <span className="text-[11px] text-gray-400">Facultatif</span>
           </div>
           <label
@@ -144,7 +147,7 @@ export function CreatePage() {
           >
             {coverPreview ? (
               <>
-                <SafeImage src={coverPreview} alt="Bannière" className="w-full h-full object-cover" />
+                <SafeImage src={coverPreview} alt={t('createPage.banniere')} className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCoverFile(null); setCoverPreview(null) }}
@@ -154,7 +157,7 @@ export function CreatePage() {
                 </button>
                 <div className="absolute bottom-2 right-2 flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-[11px] font-medium">
                   <Camera className="w-3 h-3" />
-                  Modifier
+                  <span>{t('createPage.modifier')}</span>
                 </div>
               </>
             ) : (
@@ -162,7 +165,7 @@ export function CreatePage() {
                 <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
                   <Camera className="w-5 h-5" />
                 </div>
-                <span className="text-[12px] font-medium">Ajouter une bannière</span>
+                <span className="text-[12px] font-medium"><span>{t('createPage.ajouterUneBanniere')}</span></span>
               </div>
             )}
             <input
@@ -177,7 +180,7 @@ export function CreatePage() {
         {/* ── Photo de profil ── */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Photo de profil de la page</label>
+            <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300"><span>{t('createPage.photoDeProfilDeLa')}</span></label>
             <span className="text-[11px] text-gray-400">Facultatif</span>
           </div>
           <div className="flex items-center gap-4">
@@ -186,7 +189,7 @@ export function CreatePage() {
             >
               {avatarPreview ? (
                 <>
-                  <SafeImage src={avatarPreview} alt="Photo de profil" className="w-full h-full object-cover" />
+                  <SafeImage src={avatarPreview} alt={t('createPage.photoDeProfil')} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                     <Camera className="w-5 h-5 text-white" />
                   </div>
@@ -205,12 +208,12 @@ export function CreatePage() {
             </label>
             <div className="flex flex-col gap-1">
               <p className="text-[13px] text-gray-600 dark:text-gray-400">
-                {avatarPreview ? 'Photo sélectionnée ✓' : 'Aucune photo sélectionnée'}
+                {avatarPreview ? t('createPage.photoSelectionnee') : t('createPage.aucunePhotoSelectionnee')}
               </p>
               <label
                 className="text-[12px] text-[#FF7A00] font-semibold text-left cursor-pointer"
               >
-                {avatarPreview ? 'Changer la photo' : 'Choisir une photo'}
+                {avatarPreview ? t('createPage.changerLaPhoto') : t('createPage.choisirUnePhoto')}
                 <input
                   type="file"
                   accept="image/*"
@@ -224,7 +227,7 @@ export function CreatePage() {
                   onClick={() => { setAvatarFile(null); setAvatarPreview(null) }}
                   className="text-[12px] text-red-500 font-medium text-left"
                 >
-                  Supprimer
+                  <span>{t('createPage.supprimer')}</span>
                 </button>
               )}
             </div>
@@ -236,26 +239,26 @@ export function CreatePage() {
 
         {/* Field: Nom */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Nom de la page</label>
+          <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300"><span>{t('createPage.nomDeLaPage')}</span></label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nom de la page"
+            placeholder={t('createPage.nomDeLaPage')}
             className="w-full h-12 px-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-[#FF7A00] transition-colors"
           />
         </div>
 
         {/* Field: Catégorie */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Catégorie</label>
+          <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300"><span>{t('createPage.categorie')}</span></label>
           <button
             type="button"
             onClick={() => setShowCategorySheet(true)}
             className="w-full h-12 px-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#141414] text-sm flex items-center justify-between text-left focus:outline-none focus:border-[#FF7A00] transition-colors"
           >
             <span className={selectedCat ? 'text-gray-900 dark:text-white' : 'text-gray-400'}>
-              {selectedCat ? selectedCat.label : 'Sélectionnez une catégorie...'}
+              {selectedCat ? selectedCat.label : t('createPage.selectionnezUneCategorie')}
             </span>
             <ChevronDown className="w-4 h-4 text-gray-400 shrink-0" />
           </button>
@@ -264,7 +267,7 @@ export function CreatePage() {
         {/* Field: Description */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300">Description</label>
+            <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300"><span>{i18n.t('eventView.description')}</span></label>
             <span className="text-[11px] text-gray-400">Facultatif</span>
           </div>
           <textarea
@@ -291,16 +294,16 @@ export function CreatePage() {
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Création en cours...</span>
+                <span><span>{t('createPage.creationEnCours')}</span></span>
               </>
-            ) : 'Créer la page'}
+            ) : t('createPage.creerLaPage')}
           </button>
         </div>
       </div>
 
       {/* Category BottomSheet */}
       <BottomSheet
-        title="Sélectionner une catégorie"
+        title={t('createPage.selectionnerUneCategorie')}
         open={showCategorySheet}
         onClose={() => setShowCategorySheet(false)}
       >

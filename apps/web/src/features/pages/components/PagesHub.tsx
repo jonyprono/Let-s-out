@@ -1,14 +1,17 @@
 import { useState } from 'react'
+import i18n from '@/lib/i18n'
 import { useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { Loader2, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 type TabType = 'decouvrir' | 'invitations' | 'suivies'
 
 export function PagesHub() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabType>('decouvrir')
 
@@ -33,7 +36,7 @@ export function PagesHub() {
       id: p.id,
       name: p.name,
       avatarUrl: p.avatarUrl,
-      subtitle: p.category ? `${p.category} · ${p._count?.followers || 0} abonnés` : `${p._count?.followers || 0} abonnés`,
+      subtitle: p.category ? t('pagesHub.abonnes', { v0: p.category, v1: p._count?.followers || 0 }) : t('pagesHub.abonnes2', { v0: p._count?.followers || 0 }),
     }))
 
   const [invitations, setInvitations] = useState([
@@ -41,21 +44,21 @@ export function PagesHub() {
       id: 'inv-1',
       inviter: 'Patrick',
       pageName: "Let's Out",
-      subtitle: 'John, Léa et 8 autres amis suivent cette page',
+      subtitle: t('pagesHub.johnLeaEt8Autres'),
       status: 'pending' as 'pending' | 'accepted' | 'declined',
     },
     {
       id: 'inv-2',
       inviter: 'Patrick',
       pageName: 'Unchill',
-      subtitle: 'Suivie par 1200 autres personnes',
+      get subtitle() { return i18n.t('pagesHub.followedBy', { count: 1200 }) },
       status: 'pending' as 'pending' | 'accepted' | 'declined',
     },
     {
       id: 'inv-3',
       inviter: 'Patrick',
       pageName: 'FestiVibes',
-      subtitle: 'John, Léa et 8 autres amis suivent cette page',
+      subtitle: t('pagesHub.johnLeaEt8Autres'),
       status: 'pending' as 'pending' | 'accepted' | 'declined',
     },
   ])
@@ -107,7 +110,7 @@ export function PagesHub() {
             onClick={() => navigate('/pages/create')}
             className="bg-[#FF7A00] hover:bg-[#E06C00] active:scale-95 text-white text-xs font-semibold px-4 py-1.5 rounded-full transition-all shrink-0 shadow-sm shadow-[#FF7A00]/20"
           >
-            Créer
+            <span>{t('pagesHub.creer')}</span>
           </button>
         }
       />
@@ -122,7 +125,7 @@ export function PagesHub() {
               : 'text-gray-500 hover:text-gray-900 dark:text-gray-400'
           }`}
         >
-          Découvrir
+          <span>{t('pagesHub.decouvrir')}</span>
         </button>
         <button
           onClick={() => setActiveTab('invitations')}
@@ -182,12 +185,12 @@ export function PagesHub() {
                 </div>
               ) : (
                 <div className="p-4 rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 text-center">
-                  <p className="text-xs text-gray-500 mb-2">Vous n'avez pas encore créé de page</p>
+                  <p className="text-xs text-gray-500 mb-2"><span>{t('pagesHub.vousNAvezPasEncore')}</span></p>
                   <button
                     onClick={() => navigate('/pages/create')}
                     className="inline-flex items-center gap-1 text-xs text-[#FF7A00] font-semibold"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Créer une page
+                    <Plus className="w-3.5 h-3.5" /> <span>{t('pagesHub.creerUnePage')}</span>
                   </button>
                 </div>
               )}
@@ -195,7 +198,7 @@ export function PagesHub() {
 
             {/* Pages suggérées */}
             <div>
-              <h2 className="text-xs font-bold text-gray-900 dark:text-white mb-3">Pages suggérées</h2>
+              <h2 className="text-xs font-bold text-gray-900 dark:text-white mb-3"><span>{t('pagesHub.pagesSuggerees')}</span></h2>
               <div className="flex flex-col gap-3">
                 {suggestedPages.map((sug) => (
                   <div
@@ -244,7 +247,7 @@ export function PagesHub() {
 
                 {suggestedPages.length === 0 && (
                   <p className="text-xs text-gray-400 text-center py-4">
-                    Aucune autre suggestion pour le moment.
+                    <span>{t('pagesHub.aucuneAutreSuggestionPourLe')}</span>
                   </p>
                 )}
               </div>
@@ -267,7 +270,7 @@ export function PagesHub() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-700 dark:text-gray-300 leading-snug">
-                      <span className="font-semibold text-gray-900 dark:text-white">{inv.inviter}</span> vous invite à suivre{' '}
+                      <span className="font-semibold text-gray-900 dark:text-white">{inv.inviter}</span> <span>{i18n.t('pagesHub.invitesYouToFollow')}</span>{' '}
                       <span className="font-bold text-gray-900 dark:text-white">{inv.pageName}</span>
                     </p>
                     <p className="text-[11px] text-gray-400 mt-1 line-clamp-1">{inv.subtitle}</p>
@@ -285,7 +288,7 @@ export function PagesHub() {
                             onClick={() => handleDeclineInvitation(inv.id)}
                             className="flex-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium py-1.5 rounded-full active:scale-95 transition-all"
                           >
-                            Décliner
+                            <span>{t('pagesHub.decliner')}</span>
                           </button>
                         </div>
                       )}
@@ -298,7 +301,7 @@ export function PagesHub() {
 
                       {inv.status === 'declined' && (
                         <p className="text-[11px] text-gray-400 italic">
-                          Vous avez décliné cette invitation
+                          <span>{t('pagesHub.vousAvezDeclineCetteInvitation')}</span>
                         </p>
                       )}
                     </div>

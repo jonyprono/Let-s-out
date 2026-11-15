@@ -29,14 +29,15 @@ import { apiClient } from '@/lib/api-client'
 import { radarApi, RadarSearchResult } from '../api'
 import { RadarView } from './RadarView'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
+import i18n from '@/lib/i18n'
 
 // Types de sortie avec libellés et icônes
 const OUTING_TYPES = [
   { value: 'ALL', label: 'Tous types' },
-  { value: 'SPONTANEOUS', label: 'Sortie spontanée' },
+  { value: 'SPONTANEOUS', get label() { return i18n.t('outRadar.sortieSpontanee') } },
   { value: 'RESTAURANT_BAR', label: 'Restaurant ou bar' },
-  { value: 'SPECIFIC_EVENT', label: 'Événement précis' },
-  { value: 'GROUP_ACTIVITY', label: 'Activité de groupe' },
+  { value: 'SPECIFIC_EVENT', get label() { return i18n.t('outRadar.evenementPrecis') } },
+  { value: 'GROUP_ACTIVITY', get label() { return i18n.t('outRadar.activiteDeGroupe') } },
 ]
 
 /** Rayons proposés (km) — doivent correspondre à RADAR_ALLOWED_RADII_KM (apps/api radar.routes.ts) */
@@ -209,7 +210,7 @@ export function OutRadar() {
         if (requested.location !== 'granted') {
           setRequestingGeo(false)
           setGeoError(
-            'La recherche ne peut pas fonctionner sans autorisation de localisation. Activez-la dans les réglages de l\'app.'
+            t('outRadar.laRechercheNePeutPas')
           )
           return null
         }
@@ -227,7 +228,7 @@ export function OutRadar() {
       setRequestingGeo(false)
       console.warn('Geolocation error:', err)
       setGeoError(
-        'Impossible d\'obtenir votre position (délai dépassé ou permission refusée). Vérifiez les réglages de localisation.'
+        t('outRadar.impossibleDObtenirVotrePosition')
       )
       return null
     }
@@ -277,9 +278,9 @@ export function OutRadar() {
           outingTypeFilter,
         ])
         if (!cached || cached.length === 0) {
-          toast.info('Recherche terminée : aucun Outster détecté à proximité pour le moment.')
+          toast.info(t('outRadar.rechercheTermineeAucunOutsterDetecte'))
         } else {
-          toast.success(`Recherche terminée : ${cached.length} Outster${cached.length > 1 ? 's' : ''} détecté${cached.length > 1 ? 's' : ''} !`)
+          toast.success(t('outRadar.rechercheTermineeOutsterDetecte', { v0: cached.length, v1: cached.length > 1 ? 's' : '', v2: cached.length > 1 ? 's' : '' }))
         }
       }
     }, 250)
@@ -305,9 +306,9 @@ export function OutRadar() {
       queryClient.setQueryData(['radar', 'status'], data)
       setShowVisibilityModal(false)
       if (data.isVisible) {
-        toast.success(`Vous êtes maintenant visible pour ${data.durationMinutes} minutes.`)
+        toast.success(t('outRadar.vousEtesMaintenantVisiblePour', { v0: data.durationMinutes }))
       } else {
-        toast.success('Vous êtes maintenant invisible. Vos coordonnées ont été effacées.')
+        toast.success(t('outRadar.vousEtesMaintenantInvisibleVos'))
       }
     },
     onError: (err: any) => {
@@ -316,7 +317,7 @@ export function OutRadar() {
         setShowBirthDateModal(true)
         return
       }
-      const msg = err?.response?.data?.error || 'Erreur lors du changement de visibilité.'
+      const msg = err?.response?.data?.error || t('outRadar.erreurLorsDuChangementDe')
       toast.error(msg)
     },
   })
@@ -340,7 +341,7 @@ export function OutRadar() {
     if (!currentCoords) {
       currentCoords = await requestLocation()
       if (!currentCoords) {
-        toast.error('La position GPS est requise pour activer la visibilité.')
+        toast.error(t('outRadar.laPositionGpsEstRequise'))
         return
       }
     }
@@ -364,13 +365,13 @@ export function OutRadar() {
         outingType: inviteTarget.outingType || undefined,
         message: inviteMessage.trim() || undefined,
       })
-      toast.success(`Invitation envoyée à ${inviteTarget.displayName} !`)
+      toast.success(t('outRadar.invitationEnvoyeeA', { v0: inviteTarget.displayName }))
       setInviteTarget(null)
       setInviteMessage('')
       queryClient.invalidateQueries({ queryKey: ['radar', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['radar', 'invites'] })
     } catch (err: any) {
-      const msg = err?.response?.data?.error || "Erreur lors de l'envoi de l'invitation."
+      const msg = err?.response?.data?.error || t('outRadar.erreurLorsDeLEnvoi')
       toast.error(msg)
     } finally {
       setSendingInvite(false)
@@ -385,30 +386,30 @@ export function OutRadar() {
       queryClient.invalidateQueries({ queryKey: ['radar', 'invites'] })
       queryClient.invalidateQueries({ queryKey: ['radar', 'search'] })
       if (vars.action === 'ACCEPT') {
-        toast.success('Invitation acceptée !')
+        toast.success(t('outRadar.invitationAcceptee'))
         if (res.conversationId) {
           navigate(`/chat/${res.conversationId}`)
         }
       } else {
-        toast.info('Invitation refusée.')
+        toast.info(t('outRadar.invitationRefusee'))
       }
     },
     onError: (err: any) => {
-      const msg = err?.response?.data?.error || 'Erreur lors de la réponse.'
+      const msg = err?.response?.data?.error || t('outRadar.erreurLorsDeLaReponse')
       toast.error(msg)
     },
   })
 
   // ── 9. Bloquer / Signaler un profil ─────────────────────────────────────────
   const handleBlockUser = async (targetId: string, name: string) => {
-    if (!confirm(`Voulez-vous vraiment bloquer ${name} ? Vous ne vous verrez plus jamais sur OUT RADAR.`)) return
+    if (!confirm(t('outRadar.voulezVousVraimentBloquerVous', { v0: name }))) return
     try {
       await apiClient.post(`/users/${targetId}/block`)
-      toast.success(`${name} a été bloqué.`)
+      toast.success(t('outRadar.aEteBloque', { v0: name }))
       setActionMenuProfileId(null)
       queryClient.invalidateQueries({ queryKey: ['radar', 'search'] })
     } catch {
-      toast.error('Erreur lors du blocage.')
+      toast.error(t('outRadar.erreurLorsDuBlocage'))
     }
   }
 
@@ -438,7 +439,7 @@ export function OutRadar() {
             <button
               onClick={() => navigate(-1)}
               className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center active:scale-95 transition-transform"
-              aria-label="Retour"
+              aria-label={t('outRadar.retour')}
             >
               <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
             </button>
@@ -480,12 +481,12 @@ export function OutRadar() {
           /* ── ONGLET : MES INVITATIONS ─────────────────────────────────────── */
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold">Mes invitations OUT RADAR</h2>
+              <h2 className="text-base font-bold"><span>{t('outRadar.mesInvitationsOutRadar')}</span></h2>
               <button
                 onClick={() => setActiveTab('radar')}
                 className="text-xs font-semibold text-[#FF7A00] hover:underline"
               >
-                Retour au radar
+                <span>{t('outRadar.retourAuRadar')}</span>
               </button>
             </div>
 
@@ -498,9 +499,9 @@ export function OutRadar() {
                 <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3 text-xl">
                   📬
                 </div>
-                <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">Aucune invitation pour le moment</p>
+                <p className="font-semibold text-sm text-gray-800 dark:text-gray-200"><span>{t('outRadar.aucuneInvitationPourLeMoment')}</span></p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Les demandes que vous recevez ou envoyez apparaîtront ici.
+                  <span>{t('outRadar.lesDemandesQueVousRecevez')}</span>
                 </p>
               </div>
             ) : (
@@ -558,10 +559,10 @@ export function OutRadar() {
                           {inv.status === 'PENDING'
                             ? 'En attente'
                             : inv.status === 'ACCEPTED'
-                            ? 'Acceptée'
+                            ? t('outRadar.acceptee')
                             : inv.status === 'DECLINED'
-                            ? 'Refusée'
-                            : 'Expirée'}
+                            ? t('outRadar.refusee')
+                            : t('outRadar.expiree')}
                         </span>
                       </div>
 
@@ -569,7 +570,7 @@ export function OutRadar() {
                         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl px-3 py-1.5 text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
                           <Compass className="w-3.5 h-3.5 text-[#FF7A00]" />
                           <span>
-                            {OUTING_TYPES.find((t) => t.value === inv.outingType)?.label || inv.outingType}
+                            {OUTING_TYPES.find((ot) => ot.value === inv.outingType)?.label || inv.outingType}
                           </span>
                         </div>
                       )}
@@ -589,7 +590,7 @@ export function OutRadar() {
                             className="flex-1 py-2 rounded-full bg-[#FF7A00] text-white text-xs font-semibold hover:bg-[#E06C00] active:scale-95 transition-all flex items-center justify-center gap-1"
                           >
                             <Check className="w-3.5 h-3.5" />
-                            Accepter
+                            <span>{t('outRadar.accepter')}</span>
                           </button>
                           <button
                             onClick={() => respondInviteMutation.mutate({ id: inv.id, action: 'DECLINE' })}
@@ -597,7 +598,7 @@ export function OutRadar() {
                             className="py-2 px-4 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-semibold hover:bg-gray-200 active:scale-95 transition-all flex items-center justify-center gap-1"
                           >
                             <X className="w-3.5 h-3.5" />
-                            Refuser
+                            <span>{t('outRadar.refuser')}</span>
                           </button>
                         </div>
                       )}
@@ -608,13 +609,13 @@ export function OutRadar() {
                             if (inv.conversationId) {
                               navigate(`/chat/${inv.conversationId}`)
                             } else {
-                              toast.info('Ouverture de la discussion OUT RADAR...')
+                              toast.info(t('outRadar.ouvertureDeLaDiscussionOut'))
                             }
                           }}
                           className="w-full py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-xs font-semibold hover:bg-gray-200 active:scale-95 transition-all flex items-center justify-center gap-1.5"
                         >
                           <MessageCircle className="w-3.5 h-3.5 text-[#FF7A00]" />
-                          Ouvrir la discussion
+                          <span>{t('outRadar.ouvrirLaDiscussion')}</span>
                         </button>
                       )}
                     </div>
@@ -631,7 +632,7 @@ export function OutRadar() {
               <div>
                 <h2 className="text-base font-bold text-gray-900 dark:text-white">OUT RADAR</h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
-                  Découvre les Outsters disponibles autour de toi pour partager une sortie ou une activité.
+                  <span>{t('outRadar.decouvreLesOutstersDisponiblesAutour')}</span>
                 </p>
               </div>
 
@@ -650,7 +651,7 @@ export function OutRadar() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {isVisible ? 'Vous êtes Visible' : 'Vous êtes Invisible'}
+                        {isVisible ? t('outRadar.vousEtesVisible') : t('outRadar.vousEtesInvisible')}
                       </p>
                       {isVisible && remainingSec > 0 && (
                         <span className="text-[11px] font-bold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -661,8 +662,8 @@ export function OutRadar() {
                     </div>
                     <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                       {isVisible
-                        ? 'Détectable par les Outsters dans le rayon choisi'
-                        : 'Votre profil n’apparaît dans aucun résultat'}
+                        ? t('outRadar.detectableParLesOutstersDans')
+                        : t('outRadar.votreProfilNApparaitDans')}
                     </p>
                   </div>
                 </div>
@@ -753,7 +754,7 @@ export function OutRadar() {
                 ) : (
                   <>
                     <Radio className="w-4 h-4" />
-                    <span>Rechercher les Outsters</span>
+                    <span><span>{t('outRadar.rechercherLesOutsters')}</span></span>
                   </>
                 )}
               </button>
@@ -784,7 +785,7 @@ export function OutRadar() {
               <div ref={listRef} className="space-y-3">
                 <div className="flex items-center justify-between px-1">
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white">
-                    {searchResults.length} Outster{searchResults.length > 1 ? 's' : ''} à proximité
+                    <span>{i18n.t('outRadar.nearbyCount', { count: searchResults.length })}</span>
                   </h3>
                   <span className="text-[11px] text-gray-400">Rayon : {radiusKm < 1 ? '500 m' : `${radiusKm} km`}</span>
                 </div>
@@ -822,7 +823,7 @@ export function OutRadar() {
                           <p className="text-xs text-[#FF7A00] font-medium mt-0.5">{profile.proximity}</p>
                           {profile.outingType && (
                             <span className="inline-block mt-1 text-[11px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full">
-                              {OUTING_TYPES.find((t) => t.value === profile.outingType)?.label || profile.outingType}
+                              {OUTING_TYPES.find((ot) => ot.value === profile.outingType)?.label || profile.outingType}
                             </span>
                           )}
                         </div>
@@ -843,14 +844,14 @@ export function OutRadar() {
                               className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-red-600"
                             >
                               <Ban className="w-3.5 h-3.5" />
-                              Bloquer
+                              <span>{t('outRadar.bloquer')}</span>
                             </button>
                             <button
                               onClick={() => handleReportUser(profile.id)}
                               className="w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
                             >
                               <Flag className="w-3.5 h-3.5" />
-                              Signaler
+                              <span>{t('outRadar.signaler')}</span>
                             </button>
                           </div>
                         )}
@@ -860,7 +861,7 @@ export function OutRadar() {
                     {/* Bouton invitation */}
                     <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end">
                       {profile.inviteStatus === 'PENDING' ? (
-                        <span className="text-xs font-semibold text-orange-500 bg-orange-50 dark:bg-orange-950/30 px-3 py-1.5 rounded-full">Demande envoyée</span>
+                        <span className="text-xs font-semibold text-orange-500 bg-orange-50 dark:bg-orange-950/30 px-3 py-1.5 rounded-full"><span>{t('outRadar.demandeEnvoyee')}</span></span>
                       ) : profile.inviteStatus === 'ACCEPTED' ? (
                         <button
                           onClick={() => navigate('/messages')}
@@ -870,14 +871,14 @@ export function OutRadar() {
                           Discuter
                         </button>
                       ) : profile.inviteStatus === 'DECLINED' ? (
-                        <span className="text-xs font-semibold text-gray-400 px-3 py-1.5">Invitation déclinée</span>
+                        <span className="text-xs font-semibold text-gray-400 px-3 py-1.5"><span>{t('outRadar.invitationDeclinee')}</span></span>
                       ) : (
                         <button
                           onClick={() => setInviteTarget(profile)}
                           className="px-4 py-1.5 rounded-full bg-[#FF7A00] text-white text-xs font-semibold hover:bg-[#E06C00] active:scale-95 transition-all flex items-center gap-1.5 shadow-xs"
                         >
                           <Send className="w-3.5 h-3.5" />
-                          Envoyer une invitation
+                          <span>{t('outRadar.envoyerUneInvitation')}</span>
                         </button>
                       )}
                     </div>
@@ -894,7 +895,7 @@ export function OutRadar() {
         <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 border border-gray-100 dark:border-gray-800 space-y-4 max-h-[85dvh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-base text-gray-900 dark:text-white">Activer ma visibilité</h3>
+              <h3 className="font-bold text-base text-gray-900 dark:text-white"><span>{t('outRadar.activerMaVisibilite')}</span></h3>
               <button
                 onClick={() => setShowVisibilityModal(false)}
                 className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -904,13 +905,13 @@ export function OutRadar() {
             </div>
 
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Votre profil sera temporairement détectable par les Outsters à proximité. À la fin du délai, vous repasserez automatiquement en invisible.
+              <span>{t('outRadar.votreProfilSeraTemporairementDetectable')}</span>
             </p>
 
             {/* Durée obligatoire (30, 60 ou 180 minutes) */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                Durée de visibilité
+                <span>{t('outRadar.dureeDeVisibilite')}</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
@@ -937,16 +938,16 @@ export function OutRadar() {
             {/* Type de sortie recherché */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                Type de sortie recherché
+                <span>{t('outRadar.typeDeSortieRecherche')}</span>
               </label>
               <select
                 value={visibilityOutingType}
                 onChange={(e) => setVisibilityOutingType(e.target.value)}
                 className="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-xs font-medium outline-none text-gray-900 dark:text-white"
               >
-                {OUTING_TYPES.filter((t) => t.value !== 'ALL').map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {OUTING_TYPES.filter((ot) => ot.value !== 'ALL').map((ot) => (
+                  <option key={ot.value} value={ot.value}>
+                    {ot.label}
                   </option>
                 ))}
               </select>
@@ -960,7 +961,7 @@ export function OutRadar() {
               {visibilityMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                'Confirmer et devenir visible'
+                t('outRadar.confirmerEtDevenirVisible')
               )}
             </button>
           </div>
@@ -1050,8 +1051,8 @@ export function OutRadar() {
             {/* Filtre Vérification KYC */}
             <div className="flex items-center justify-between py-1">
               <div>
-                <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Profils vérifiés uniquement</p>
-                <p className="text-[11px] text-gray-400">Afficher uniquement les comptes certifiés KYC</p>
+                <p className="text-xs font-semibold text-gray-800 dark:text-gray-200"><span>{t('outRadar.profilsVerifiesUniquement')}</span></p>
+                <p className="text-[11px] text-gray-400"><span>{t('outRadar.afficherUniquementLesComptesCertifies')}</span></p>
               </div>
               <input
                 type="checkbox"
@@ -1071,9 +1072,9 @@ export function OutRadar() {
                 onChange={(e) => setOutingTypeFilter(e.target.value)}
                 className="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-xs font-medium outline-none text-gray-900 dark:text-white"
               >
-                {OUTING_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
+                {OUTING_TYPES.map((ot) => (
+                  <option key={ot.value} value={ot.value}>
+                    {ot.label}
                   </option>
                 ))}
               </select>
@@ -1089,7 +1090,7 @@ export function OutRadar() {
                 }}
                 className="py-2.5 px-4 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-200"
               >
-                Réinitialiser
+                <span>{t('outRadar.reinitialiser')}</span>
               </button>
               <button
                 type="button"
@@ -1099,7 +1100,7 @@ export function OutRadar() {
                 }}
                 className="flex-1 py-2.5 rounded-full bg-[#FF7A00] text-white text-xs font-bold hover:bg-[#E06C00] shadow-md shadow-[#FF7A00]/25"
               >
-                Appliquer les filtres
+                <span>{t('outRadar.appliquerLesFiltres')}</span>
               </button>
             </div>
           </div>
@@ -1111,7 +1112,7 @@ export function OutRadar() {
         <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-5 border border-gray-100 dark:border-gray-800 space-y-4 max-h-[85dvh] overflow-y-auto shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-base text-gray-900 dark:text-white">Inviter {inviteTarget.displayName}</h3>
+              <h3 className="font-bold text-base text-gray-900 dark:text-white"><span>{t('outRadar.inviter', { v0: inviteTarget.displayName })}</span></h3>
               <button
                 onClick={() => setInviteTarget(null)}
                 className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -1121,11 +1122,11 @@ export function OutRadar() {
             </div>
 
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Une notification sera envoyée à {inviteTarget.displayName}. Si elle accepte, vous pourrez discuter ensemble pour organiser la sortie.
+              <span>{i18n.t('outRadar.inviteInfo', { name: inviteTarget.displayName })}</span>
             </p>
 
             <textarea
-              placeholder="Ajouter un mot sympa (optionnel)... Ex: Hello ! Partant pour boire un verre ?"
+              placeholder={t('outRadar.ajouterUnMotSympaOptionnel')}
               value={inviteMessage}
               onChange={(e) => setInviteMessage(e.target.value)}
               maxLength={200}
@@ -1143,7 +1144,7 @@ export function OutRadar() {
               ) : (
                 <>
                   <Send className="w-3.5 h-3.5" />
-                  <span>Envoyer l'invitation</span>
+                  <span><span>{t('outRadar.envoyerLInvitation')}</span></span>
                 </>
               )}
             </button>

@@ -7,8 +7,10 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslation } from 'react-i18next'
 
 export function JoinPrivateEvent() {
+  const { t } = useTranslation()
   const navigate = useNavigate();
   const { code: urlCode } = useParams<{ code?: string }>();
   const [code, setCode] = useState(urlCode ? urlCode.toUpperCase() : '');
@@ -60,7 +62,7 @@ export function JoinPrivateEvent() {
 
   const startScan = async () => {
     if (!Capacitor.isNativePlatform()) {
-      toast.info('Le scanner de QR code est uniquement disponible sur l\'application mobile. Veuillez entrer le code manuellement.');
+      toast.info(t('joinPrivateEvent.leScannerDeQrCode'));
       return;
     }
 
@@ -69,7 +71,7 @@ export function JoinPrivateEvent() {
       try {
         const { available } = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
         if (!available) {
-          toast.loading('Téléchargement du module de scan en cours...', { duration: 3000 });
+          toast.loading(t('joinPrivateEvent.telechargementDuModuleDeScan'), { duration: 3000 });
           await BarcodeScanner.installGoogleBarcodeScannerModule();
         }
       } catch (e) {
@@ -79,9 +81,9 @@ export function JoinPrivateEvent() {
 
     const granted = await requestCameraPermission();
     if (!granted) {
-      toast.error('Permission caméra requise pour scanner le QR code.', {
+      toast.error(t('joinPrivateEvent.permissionCameraRequisePourScanner'), {
         action: {
-          label: 'Paramètres',
+          label: t('joinPrivateEvent.parametres'),
           onClick: () => {
             BarcodeScanner.openSettings().catch(() => {});
           },
@@ -113,7 +115,7 @@ export function JoinPrivateEvent() {
       await BarcodeScanner.startScan();
     } catch (e) {
       console.error('Erreur démarrage scanner:', e);
-      toast.error('Erreur lors du démarrage du scanner');
+      toast.error(t('joinPrivateEvent.erreurLorsDuDemarrageDu'));
       stopScan();
     }
   };
@@ -139,7 +141,7 @@ export function JoinPrivateEvent() {
     }
     
     if (!finalCode) {
-      toast.error('Veuillez entrer un code');
+      toast.error(t('joinPrivateEvent.veuillezEntrerUnCode'));
       return;
     }
 
@@ -148,17 +150,17 @@ export function JoinPrivateEvent() {
       const { data } = await apiClient.post(`/events/join-by-code/${finalCode}`, {});
       
       if (data.requiresPayment) {
-        toast.info('Cet événement est payant.');
+        toast.info(t('joinPrivateEvent.cetEvenementEstPayant'));
         navigate(`/events/${data.event.id}/pay`);
       } else if (data.alreadyJoined) {
         if (data.isOrganizer) {
-          toast.info('Vous êtes l\'organisateur de cet événement.');
+          toast.info(t('joinPrivateEvent.vousEtesL'));
         } else {
-          toast.success('Vous participez déjà à cet événement.');
+          toast.success(t('joinPrivateEvent.vousParticipezDejaACet'));
         }
         navigate(`/events/${data.event.id}`);
       } else {
-        toast.success('Vous avez rejoint l\'événement privé ! 🎉');
+        toast.success(t('joinPrivateEvent.vousAvezRejointLEvenement'));
         navigate(`/events/${data.event.id}`);
       }
     } catch (err: any) {
@@ -175,7 +177,7 @@ export function JoinPrivateEvent() {
           <button onClick={stopScan} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#222222] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
             <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
           </button>
-          <span className="text-white font-bold">Scanner le code QR</span>
+          <span className="text-white font-bold"><span>{t('joinPrivateEvent.scannerLeCodeQr')}</span></span>
           <div className="w-10" />
         </div>
         
@@ -193,9 +195,9 @@ export function JoinPrivateEvent() {
         </div>
 
         <div className="p-8 text-center bg-black/80 pb-12 z-10">
-          <p className="text-white text-sm mb-6">Placez le QR code au centre du cadre</p>
+          <p className="text-white text-sm mb-6"><span>{t('joinPrivateEvent.placezLeQrCodeAu')}</span></p>
           <button onClick={stopScan} className="px-6 py-3 bg-white dark:bg-[#1A1A1A]/20 rounded-full text-white font-bold">
-            Annuler
+            <span>{t('joinPrivateEvent.annuler')}</span>
           </button>
         </div>
       </div>
@@ -217,7 +219,7 @@ export function JoinPrivateEvent() {
         >
           <ChevronLeft className="w-5 h-5 text-gray-700 dark:text-gray-300" />
         </button>
-        <h1 className="text-[17px] font-bold text-[#1A1A1A] dark:text-white">Rejoindre via code</h1>
+        <h1 className="text-[17px] font-bold text-[#1A1A1A] dark:text-white"><span>{t('joinPrivateEvent.rejoindreViaCode')}</span></h1>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 text-center -mt-10">
@@ -225,9 +227,9 @@ export function JoinPrivateEvent() {
           <QrCode className="w-10 h-10 text-action-primary" />
         </div>
         
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Rejoindre via code</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2"><span>{t('joinPrivateEvent.rejoindreViaCode')}</span></h2>
         <p className="text-gray-500 dark:text-gray-400 mb-8 text-sm">
-          Entrez le code unique à 10 caractères ou scannez le QR code de l'événement.
+          <span>{t('joinPrivateEvent.entrezLeCodeUniqueA')}</span>
         </p>
 
         <div className="w-full max-w-sm space-y-4">
@@ -244,7 +246,7 @@ export function JoinPrivateEvent() {
             disabled={isLoading || !code.trim()}
             className="w-full"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Rejoindre l'événement"}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('joinPrivateEvent.rejoindreLEvenement')}
           </Button>
 
           <div className="relative py-4">
@@ -258,7 +260,7 @@ export function JoinPrivateEvent() {
             className="w-full flex items-center justify-center gap-2"
           >
             <Camera className="w-5 h-5" />
-            Scanner le QR code
+            <span>{t('joinPrivateEvent.scannerLeQrCode')}</span>
           </Button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { EventVideo, formatDuration } from '@/features/videos/api'
 import { useRef, useCallback } from 'react'
 import { getVideoPosterUrl } from '../utils/video-url'
 import { optimizeImageUrl } from '@/lib/cloudinary-image'
+import { useTranslation } from 'react-i18next'
 
 interface VideoCardProps {
   video: EventVideo
@@ -141,6 +142,7 @@ interface VideoCarouselProps {
 }
 
 export function VideoCarousel({ videos, onVideoClick, onSeeAll }: VideoCarouselProps) {
+  const { t } = useTranslation()
   if (videos.length === 0) return null
 
   return (
@@ -153,7 +155,7 @@ export function VideoCarousel({ videos, onVideoClick, onSeeAll }: VideoCarouselP
           onClick={onSeeAll}
           className="text-[13px] font-medium text-[#FF7A00]"
         >
-          Voir tout
+          <span>{t('videoCard.voirTout')}</span>
         </button>
       </div>
       <div className="flex gap-3 overflow-x-auto hide-scrollbar px-4 pb-2">

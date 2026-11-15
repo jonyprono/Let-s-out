@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Button } from '@/components/ui/button'
 import { CarouselIndicators } from '@/components/ui/progress-bar'
+import i18n from '@/lib/i18n'
 
 /* ─────────────────────────────────────────────────────────────────
    Données des écrans onboarding
@@ -13,25 +14,25 @@ const onboardingScreens = [
   {
     id: 1,
     type: 'slide' as const,
-    title1: 'Partagez pour mieux',
+    get title1() { return i18n.t('splashscreen.partagezPourMieux') },
     title2: 'profiter',
-    description: 'Financez vos sorties en groupe via des cagnottes partagées et mutualisez les frais pour mieux en profiter ensemble',
+    get description() { return i18n.t('splashscreen.financezVosSortiesEnGroupe') },
     image: '/splash3.png',
   },
   {
     id: 2,
     type: 'slide' as const,
     title1: 'Rencontrez de',
-    title2: 'nouveaux amis intéressants',
-    description: "Faites de nouvelles rencontres inoubliables et de nouveaux amis autour d'intérêts communs",
+    get title2() { return i18n.t('splashscreen.nouveauxAmisInteressants') },
+    get description() { return i18n.t('splashscreen.faitesDeNouvellesRencontresInoubliables') },
     image: '/splash2.png',
   },
   {
     id: 3,
     type: 'slide' as const,
-    title1: 'Découvrez des',
-    title2: 'événements près de vous',
-    description: 'Créez ou rejoignez des événements, sorties, ou activités intéressantes près de vous',
+    get title1() { return i18n.t('splashscreen.decouvrezDes') },
+    get title2() { return i18n.t('splashscreen.evenementsPresDeVous') },
+    get description() { return i18n.t('splashscreen.creezOuRejoignezDesEvenements') },
     image: '/splash1.png',
   },
 ]
@@ -242,7 +243,7 @@ export function Splashscreen({ onComplete }: SplashscreenProps) {
             onClick={handleNext}
             className="w-full h-[40px] bg-[#FF991C] hover:bg-[#e68a19] text-white font-poppins text-[14px] font-medium leading-[20px] rounded-full px-[14px] py-[10px]"
           >
-            {currentIndex === onboardingScreens.length - 1 ? 'Commencer' : 'Suivant'}
+            <span>{currentIndex === onboardingScreens.length - 1 ? i18n.t('splashscreen.start') : i18n.t('createEvent.actions.next')}</span>
           </Button>
         </div>
       )}

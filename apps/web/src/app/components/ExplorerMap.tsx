@@ -6,10 +6,10 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
 import type { Event } from '@/features/events/api'
 import { RowEventCard } from '@/components/ui/event-cards-v2'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { Geolocation } from '@capacitor/geolocation'
 import { useMap } from 'react-leaflet'
 
+import { dateLocale } from '@/lib/locale'
 // Composant utilitaire pour récupérer l'instance de la carte
 function MapAccessor({ onMap }: { onMap: (map: L.Map) => void }) {
   const map = useMap()
@@ -88,7 +88,7 @@ function getEventSubLabel(ev: Event): string {
 
   // Today
   if (start.toDateString() === now.toDateString()) {
-    const time = format(start, "HH'h'mm", { locale: fr })
+    const time = format(start, "HH'h'mm", { locale: dateLocale() })
     return `Aujourd'hui à ${time} • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
   }
 
@@ -100,7 +100,7 @@ function getEventSubLabel(ev: Event): string {
   }
 
   // Next monday or specific day
-  const dayStr = format(start, 'dd MMM', { locale: fr })
+  const dayStr = format(start, 'dd MMM', { locale: dateLocale() })
   return `${dayStr} • ${ev.currentAttendees || 0} OUTSTER${ev.currentAttendees > 1 || !ev.currentAttendees ? 'S' : ''}`
 }
 

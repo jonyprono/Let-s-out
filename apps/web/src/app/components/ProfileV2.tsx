@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { interestLabel } from '@/lib/interests'
+import i18n from '@/lib/i18n'
 import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban, FileText, Camera, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
@@ -15,6 +17,8 @@ import { pagesApi, Page } from '@/features/pages/api';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
 
+import { intlLocale } from '@/lib/locale';
+import { useTranslation } from 'react-i18next'
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
 }
@@ -22,6 +26,7 @@ interface ProfileProps {
 type Tab = 'profil' | 'pages' | 'events' | 'friends' | 'following';
 
 export function ProfileV2({ onNavigate }: ProfileProps) {
+  const { t } = useTranslation()
   const user = useAuthStore((s) => s.user);
   const profile = user?.profile;
   const navigate = useNavigate();
@@ -111,7 +116,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   const effectiveFriendStatus = localFriendStatus ?? friendshipStatus;
 
   const displayName = isOwnProfile
-    ? (profile?.displayName || 'Mon Profil')
+    ? (profile?.displayName || t('profileV2.monProfil'))
     : (displayProfile?.displayName || displayProfile?.username || username || 'Utilisateur');
   const city = displayProfile?.city || '';
   // Real bio only — no fallback placeholder
@@ -134,7 +139,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     onMutate: () => setIsFollowing(!effectiveIsFollowing),
     onError: () => {
       setIsFollowing(effectiveIsFollowing);
-      toast.error('Erreur lors de l\'action.');
+      toast.error(t('profileV2.erreurLorsDeL'));
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] }),
   });
@@ -145,10 +150,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     onMutate: () => setLocalFriendStatus('pending_sent'),
     onError: () => {
       setLocalFriendStatus(null);
-      toast.error('Erreur lors de la demande.');
+      toast.error(t('profileV2.erreurLorsDeLaDemande'));
     },
     onSuccess: () => {
-      toast.success('Demande d\'ami envoyée !');
+      toast.success(t('profileV2.demandeD'));
       qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] });
     },
   });
@@ -166,10 +171,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
     },
     onMutate: () => setShowBlockModal(false),
     onSuccess: () => {
-      toast.success(effectiveFriendStatus === 'blocked' ? 'Utilisateur débloqué.' : 'Utilisateur bloqué.');
+      toast.success(effectiveFriendStatus === 'blocked' ? t('profileV2.utilisateurDebloque') : t('profileV2.utilisateurBloque2'));
       qc.invalidateQueries({ queryKey: ['public-profile', targetUsername] });
     },
-    onError: () => toast.error('Erreur lors de l\'action.')
+    onError: () => toast.error(t('profileV2.erreurLorsDeL'))
   });
 
   // Mute mutation (mirrors UserProfileSheet)
@@ -183,7 +188,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       qc.invalidateQueries({ queryKey: ['chat', 'conversations'] });
       setTimeout(() => {
         setShowActionsSheet(false);
-        toast.success(nowMuted ? 'Utilisateur mis en sourdine' : 'Notifications réactivées');
+        toast.success(nowMuted ? 'Utilisateur mis en sourdine' : t('profileV2.notificationsReactivees'));
       }, 400); // Short delay for better UX
     },
     onError: (err: any) => toast.error(err.response?.data?.error || 'Erreur')
@@ -196,10 +201,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       await usersApi.reportUser(targetUserId, reason);
     },
     onSuccess: () => {
-      toast.success('Utilisateur signalé');
+      toast.success(t('profileV2.utilisateurSignale'));
       setShowReportModal(false);
     },
-    onError: () => toast.error('Erreur lors du signalement')
+    onError: () => toast.error(t('profileV2.erreurLorsDuSignalement'))
   });
 
   // Navigate to chat
@@ -208,7 +213,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
       const conv = await chatApi.createDM(targetUserId!);
       onNavigate('chat', conv.id);
     } catch (e) {
-      toast.error('Impossible d\'ouvrir la discussion');
+      toast.error(t('profileV2.impossibleD'));
     }
   };
 
@@ -228,8 +233,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
             </svg>
           </div>
-          <h2 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">Profil indisponible</h2>
-          <p className="text-[14px] text-gray-500">{(profileError as any)?.response?.data?.error || "Vous ne pouvez pas voir ce profil ou il n'existe pas."}</p>
+          <h2 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('profileV2.profilIndisponible')}</span></h2>
+          <p className="text-[14px] text-gray-500">{(profileError as any)?.response?.data?.error || i18n.t('profileV2.cannotView')}</p>
         </div>
       </div>
     );
@@ -257,7 +262,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         style={{ borderBottom: '1px solid #D4D4D4' }}
         onClick={() => {
           if (coverUrl) {
-            setFullscreenMedia({ url: coverUrl, title: 'Bannière', type: 'cover' });
+            setFullscreenMedia({ url: coverUrl, title: t('profileV2.banniere'), type: 'cover' });
           } else if (isOwnProfile) {
             setShowEditModal(true);
           }
@@ -311,7 +316,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           <div 
             onClick={() => {
               if (displayProfile?.avatarUrl) {
-                setFullscreenMedia({ url: displayProfile.avatarUrl, title: 'Photo de profil', type: 'avatar' });
+                setFullscreenMedia({ url: displayProfile.avatarUrl, title: t('profileV2.photoDeProfil'), type: 'avatar' });
               } else if (isOwnProfile) {
                 setShowEditModal(true);
               }
@@ -341,7 +346,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             <div className="flex items-center gap-1 mt-0.5">
               {city && <span className="text-[12px] text-gray-500 font-medium font-inter">{city} · </span>}
               <span className="text-[12px] text-gray-500 font-medium font-inter">
-                Membre depuis {new Date(displayProfile?.createdAt || displayProfile?.user?.createdAt || Date.now()).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                Membre depuis {new Date(displayProfile?.createdAt || displayProfile?.user?.createdAt || Date.now()).toLocaleDateString(intlLocale(), { month: 'long', year: 'numeric' })}
               </span>
             </div>
           </div>
@@ -351,7 +356,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         {bio ? (
           <p className="text-[13px] text-gray-600 dark:text-gray-300 w-full mb-3">{bio}</p>
         ) : isOwnProfile ? (
-          <p className="text-[13px] text-gray-400 italic w-full mb-3">Aucune description. Modifiez votre profil pour en ajouter une.</p>
+          <p className="text-[13px] text-gray-400 italic w-full mb-3"><span>{t('profileV2.aucuneDescriptionModifiezVotreProfil')}</span></p>
         ) : null}
 
         {/* Public Profile Actions */}
@@ -368,7 +373,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               }`}
             >
               {followMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : effectiveIsFollowing ? <Check className="w-3.5 h-3.5" /> : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>}
-              {effectiveIsFollowing ? 'Abonné' : 'S\'abonner'}
+              {effectiveIsFollowing ? t('profileV2.abonne') : 'S\'abonner'}
             </button>
 
             {/* Message Button */}
@@ -377,7 +382,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               className="flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-1.5 border border-gray-200 bg-white text-gray-700 active:scale-95 transition-all"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              Écrire
+              <span>{t('profileV2.ecrire')}</span>
             </button>
 
             {/* Add Friend Button */}
@@ -401,8 +406,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   : <UserPlus className="w-3.5 h-3.5" />
                 }
                 {effectiveFriendStatus === 'friend' ? 'Amis'
-                  : effectiveFriendStatus === 'pending_sent' ? 'Ajouté'
-                  : 'Ajouter'
+                  : effectiveFriendStatus === 'pending_sent' ? t('profileV2.ajoute')
+                  : i18n.t('common.add')
                 }
               </button>
             )}
@@ -411,7 +416,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 disabled
                 className="flex-1 rounded-full h-9 text-[13px] font-semibold flex items-center justify-center gap-1.5 border border-red-200 bg-red-50 text-red-500"
               >
-                Utilisateur bloqué
+                <span>{t('profileV2.utilisateurBloque')}</span>
               </button>
             )}
           </div>
@@ -427,7 +432,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
             <div className="text-center">
               <p className="font-poppins font-medium text-[15px] text-gray-700 dark:text-gray-200 leading-tight">{createdEvents.length}</p>
-              <p className="font-inter text-[10px] text-gray-500">Créés</p>
+              <p className="font-inter text-[10px] text-gray-500"><span>{t('profileV2.crees')}</span></p>
             </div>
           </div>
           <div className="flex flex-col items-center gap-1 border-r border-[#F5F5F4] dark:border-gray-800">
@@ -445,7 +450,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
             <div className="text-center">
               <p className="font-poppins font-medium text-[15px] text-gray-700 dark:text-gray-200 leading-tight">{friends.length}</p>
-              <p className="font-inter text-[10px] text-gray-500">Amis</p>
+              <p className="font-inter text-[10px] text-gray-500"><span>{t('profileV2.amis')}</span></p>
             </div>
           </div>
           <div className="flex flex-col items-center gap-1">
@@ -454,7 +459,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
             <div className="text-center">
               <p className="font-poppins font-medium text-[15px] text-gray-700 dark:text-gray-200 leading-tight">{rating ?? '–'}</p>
-              <p className="font-inter text-[10px] text-gray-500">Note</p>
+              <p className="font-inter text-[10px] text-gray-500"><span>{t('profileV2.note')}</span></p>
             </div>
           </div>
         </div>
@@ -470,7 +475,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             }`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'profil' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span className="font-poppins font-medium text-[12px] leading-[16px]">Profil</span>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]"><span>{t('profileV2.profil')}</span></span>
           </button>
 
           <button 
@@ -490,7 +495,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             }`}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={activeTab === 'events' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span className="font-poppins font-medium text-[12px] leading-[16px]">Evénements</span>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]"><span>{t('profileV2.evenements')}</span></span>
           </button>
 
           <button 
@@ -500,7 +505,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             }`}
           >
             <Users className={`w-[18px] h-[18px] ${activeTab === 'friends' ? 'text-[#FF7A00]' : 'text-[#A3A3A3]'}`} />
-            <span className="font-poppins font-medium text-[12px] leading-[16px]">Amis</span>
+            <span className="font-poppins font-medium text-[12px] leading-[16px]"><span>{t('profileV2.amis')}</span></span>
           </button>
 
           <button 
@@ -528,14 +533,14 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   <Calendar className="w-4 h-4" />
                 </div>
                 <p className="text-[13px] font-medium text-gray-800 dark:text-gray-200">
-                  {String(commonEventsCount).padStart(2, '0')} Événement{commonEventsCount > 1 ? 's' : ''} en commun
+                  <span>{i18n.t('profileV2.commonEvents', { count: commonEventsCount, n: String(commonEventsCount).padStart(2, '0') })}</span>
                 </p>
               </div>
             )}
 
             {/* Interests */}
             <div>
-              <h3 className="font-inter text-[15px] font-medium text-gray-600 mb-3">{isOwnProfile ? 'Mes intérêts' : "Centres d'intérêt"}</h3>
+              <h3 className="font-inter text-[15px] font-medium text-gray-600 mb-3">{isOwnProfile ? t('profileV2.mesInterets') : t('profileV2.centresDInteret')}</h3>
               <div className="flex flex-wrap gap-2">
                 {interests.length > 0 ? interests.map((i: string) => {
                   let icon = '📌';
@@ -560,18 +565,18 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   return (
                     <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FAFAFA] dark:bg-[#1A1A1A] border border-[#F5F5F4] dark:border-[#333] rounded-full text-[13px] font-medium text-gray-700 dark:text-gray-300">
                       <span>{icon}</span>
-                      <span>{i}</span>
+                      <span>{interestLabel(t, i)}</span>
                     </div>
                   );
                 }) : (
-                  <p className="text-[12px] text-gray-400 italic">Aucun centre d'intérêt renseigné.</p>
+                  <p className="text-[12px] text-gray-400 italic"><span>{t('profileV2.aucunCentreDInteretRenseigne')}</span></p>
                 )}
                 {isOwnProfile && (
                   <button
                     onClick={() => setShowEditModal(true)}
                     className="flex items-center gap-1.5 px-4 py-1.5 bg-white dark:bg-[#222] border border-dashed border-[#D4D4D4] dark:border-[#555] rounded-full text-[13px] font-medium text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
                   >
-                    <span className="text-gray-400 text-[16px] leading-[0]">+</span> Ajouter
+                    <span className="text-gray-400 text-[16px] leading-[0]">+</span> <span>{i18n.t('common.add')}</span>
                   </button>
                 )}
               </div>
@@ -588,8 +593,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                         🏅
                       </div>
                       <div>
-                        <h4 className="text-[14px] font-bold text-black leading-tight">Badges & Récompenses</h4>
-                        <p className="text-[12px] text-gray-500 font-medium">Consultez votre progression !</p>
+                        <h4 className="text-[14px] font-bold text-black leading-tight"><span>{i18n.t('accountMenu.badgesRecompenses')}</span></h4>
+                        <p className="text-[12px] text-gray-500 font-medium"><span>{t('profileV2.consultezVotreProgression')}</span></p>
                       </div>
                     </div>
                     <ChevronLeft className="w-5 h-5 text-gray-400 rotate-180" />
@@ -606,7 +611,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                       </div>
                     ))
                   ) : (
-                    <p className="text-[12px] text-gray-400 italic">Aucun badge obtenu.</p>
+                    <p className="text-[12px] text-gray-400 italic"><span>{t('profileV2.aucunBadgeObtenu')}</span></p>
                   )
                 )}
               </div>
@@ -616,8 +621,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             {upcomingEvents.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-inter text-[14px] font-medium text-gray-500">Prochains événements</h3>
-                  <button className="text-[13px] text-gray-500 font-medium">Voir tout</button>
+                  <h3 className="font-inter text-[14px] font-medium text-gray-500"><span>{t('profileV2.prochainsEvenements')}</span></h3>
+                  <button className="text-[13px] text-gray-500 font-medium"><span>{t('profileV2.voirTout')}</span></button>
                 </div>
                 <div className="flex overflow-x-auto hide-scrollbar pb-4 pl-1">
                   {upcomingEvents.map((event: any) => (
@@ -639,14 +644,14 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-gray-900 dark:text-white">
-                {isOwnProfile ? 'Vos pages' : `Pages créées par ${displayName}`}
+                {isOwnProfile ? 'Vos pages' : t('profileV2.pagesCreeesPar', { v0: displayName })}
               </h3>
               {isOwnProfile && (
                 <button
                   onClick={() => navigate('/pages/create')}
                   className="text-xs text-[#FF7A00] font-semibold flex items-center gap-1 active:scale-95"
                 >
-                  + Créer une page
+                  <span>{t('profileV2.creerUnePage')}</span>
                 </button>
               )}
             </div>
@@ -675,7 +680,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                         <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{p.name}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.category || 'Page'}</p>
                         <p className="text-[11px] text-gray-400 mt-0.5">
-                          {p._count?.followers || 0} abonné{(p._count?.followers || 0) > 1 ? 's' : ''} · {p._count?.posts || 0} publication{(p._count?.posts || 0) > 1 ? 's' : ''}
+                          <span>{`${i18n.t('myPages.followersCount', { count: p._count?.followers || 0, formatted: p._count?.followers || 0 })} · ${i18n.t('myPages.postsCount', { count: p._count?.posts || 0, formatted: p._count?.posts || 0 })}`}</span>
                         </p>
                       </div>
                     </div>
@@ -689,19 +694,19 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   <FileText className="w-8 h-8 text-[#FF7A00]" />
                 </div>
                 <h4 className="text-sm font-bold text-gray-900 dark:text-white">
-                  {isOwnProfile ? "Vous n'avez pas encore créé de page" : "Aucune page créée"}
+                  {isOwnProfile ? t('profileV2.vousNAvezPasEncore') : t('profileV2.aucunePageCreee')}
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs">
                   {isOwnProfile
-                    ? "Créez une page pour partager vos événements et vos publications avec vos abonnés."
-                    : `${displayName} n'a pas encore créé de page publique.`}
+                    ? t('profileV2.creezUnePagePourPartager')
+                    : t('profileV2.nAPasEncoreCree', { v0: displayName })}
                 </p>
                 {isOwnProfile && (
                   <button
                     onClick={() => navigate('/pages/create')}
                     className="mt-4 px-5 py-2.5 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-semibold shadow-md shadow-[#FF7A00]/25 active:scale-95 transition-all"
                   >
-                    Créer ma première page
+                    <span>{t('profileV2.creerMaPremierePage')}</span>
                   </button>
                 )}
               </div>
@@ -715,13 +720,13 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-[#FF7A00]" />
               </div>
-              <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 text-center">Événements<br/>créés</p>
+              <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 text-center"><span>{t('profileV2.evenements2')}</span><br/><span>{t('profileV2.crees2')}</span></p>
             </div>
             <div onClick={() => navigate(isOwnProfile ? '/profile/events-joined' : `/profile/${targetUserId}/events-joined`)} className="w-full bg-[#FAFAFA] dark:bg-[#111] border border-[#F5F5F4] dark:border-[#222] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
               <div className="w-10 h-10 rounded-full bg-[#FFF9EC] flex items-center justify-center">
                 <Activity className="w-5 h-5 text-[#FF7A00]" />
               </div>
-              <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 text-center">Événements<br/>rejoints</p>
+              <p className="text-[13px] font-medium text-gray-700 dark:text-gray-300 text-center"><span>{t('profileV2.evenements2')}</span><br/>rejoints</p>
             </div>
           </div>
         )}
@@ -759,10 +764,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 </div>
                 <div className={muteMut.isPending ? "opacity-50" : ""}>
                   <p className="text-[15px] font-semibold text-gray-900 dark:text-white">
-                    {isMuted ? 'Réactiver les notifications' : 'Mettre en sourdine'}
+                    {isMuted ? t('profileV2.reactiverLesNotifications') : 'Mettre en sourdine'}
                   </p>
                   <p className="text-[12px] text-gray-400">
-                    {isMuted ? 'Recevoir à nouveau ses notifications' : 'Ne plus recevoir ses notifications'}
+                    {isMuted ? t('profileV2.recevoirANouveauSesNotifications') : 'Ne plus recevoir ses notifications'}
                   </p>
                 </div>
               </button>
@@ -780,7 +785,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                   <AlertTriangle className="w-5 h-5 text-amber-500" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <p className="text-[15px] font-semibold text-gray-900 dark:text-white">Signaler cet utilisateur</p>
+                  <p className="text-[15px] font-semibold text-gray-900 dark:text-white"><span>{t('profileV2.signalerCetUtilisateur')}</span></p>
                   <p className="text-[12px] text-gray-400">Contenu abusif, spam, faux profil…</p>
                 </div>
               </button>
@@ -799,10 +804,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 </div>
                 <div>
                   <p className="text-[15px] font-semibold text-red-500">
-                    {effectiveFriendStatus === 'blocked' ? 'Débloquer cet utilisateur' : 'Bloquer cet utilisateur'}
+                    {effectiveFriendStatus === 'blocked' ? t('profileV2.debloquerCetUtilisateur') : t('profileV2.bloquerCetUtilisateur')}
                   </p>
                   <p className="text-[12px] text-gray-400">
-                    {effectiveFriendStatus === 'blocked' ? 'Rétablir le contact' : 'Empêcher toute interaction'}
+                    {effectiveFriendStatus === 'blocked' ? t('profileV2.retablirLeContact') : t('profileV2.empecherTouteInteraction')}
                   </p>
                 </div>
               </button>
@@ -831,26 +836,26 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <Ban className="w-6 h-6 text-red-500" />
             </div>
             <h3 className="text-[18px] font-bold text-center text-gray-900 dark:text-white mb-2">
-              {effectiveFriendStatus === 'blocked' ? 'Débloquer' : 'Bloquer'} cet utilisateur ?
+              {effectiveFriendStatus === 'blocked' ? t('profileV2.debloquer') : 'Bloquer'} cet utilisateur ?
             </h3>
             <p className="text-[14px] text-center text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
               {effectiveFriendStatus === 'blocked'
-                ? "L'utilisateur pourra de nouveau interagir avec vous et voir votre profil."
-                : "L'utilisateur ne pourra plus vous envoyer de messages, voir votre profil complet ni interagir avec vous."}
+                ? t('profileV2.lUtilisateurPourraDeNouveau')
+                : t('profileV2.lUtilisateurNePourraPlus')}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowBlockModal(false)}
                 className="flex-1 py-3.5 bg-gray-100 dark:bg-gray-800 rounded-2xl font-semibold text-gray-800 dark:text-gray-200 text-[15px]"
               >
-                Annuler
+                <span>{t('profileV2.annuler')}</span>
               </button>
               <button
                 onClick={() => blockMut.mutate()}
                 disabled={blockMut.isPending}
                 className="flex-1 py-3.5 bg-red-500 text-white rounded-2xl font-semibold text-[15px] flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                {blockMut.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : effectiveFriendStatus === 'blocked' ? 'Débloquer' : 'Bloquer'}
+                {blockMut.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : effectiveFriendStatus === 'blocked' ? t('profileV2.debloquer') : 'Bloquer'}
               </button>
             </div>
           </div>
@@ -882,7 +887,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <button
                 onClick={() => setFullscreenMedia(null)}
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white transition-all"
-                aria-label="Fermer"
+                aria-label={t('profileV2.fermer')}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -901,7 +906,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-semibold text-white transition-all border border-white/20"
               >
                 <Camera className="w-3.5 h-3.5" />
-                Modifier
+                <span>{t('profileV2.modifier')}</span>
               </button>
             )}
           </div>
@@ -926,7 +931,7 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             className="w-full text-center pb-8 pt-4 text-xs text-white/50"
             onClick={(e) => e.stopPropagation()}
           >
-            Appuyez n'importe où pour fermer
+            <span>{t('profileV2.appuyezNImporteOuPour')}</span>
           </div>
         </div>
       )}

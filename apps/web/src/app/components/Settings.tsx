@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import i18n from '@/lib/i18n'
 
 import {
   ChevronLeft, ChevronRight, Globe, Lock, Bell, Shield, HelpCircle,
@@ -146,8 +147,8 @@ export function Settings({ onBack }: SettingsProps) {
       }
       return
     }
-    const t = setTimeout(() => setVersionTapCount(0), 2000)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setVersionTapCount(0), 2000)
+    return () => clearTimeout(timer)
   }, [versionTapCount, isEnabled]);
 
   // Fetch KYC status
@@ -184,13 +185,13 @@ export function Settings({ onBack }: SettingsProps) {
     try {
       await navigator.share({
         title: "Let's Out",
-        text: "Rejoins-moi sur Let's Out !",
+        text: i18n.t('settings.shareText'),
         url: 'https://letsout.app',
       });
     } catch {
       try {
         await navigator.clipboard.writeText('https://letsout.app');
-        toast.success('Lien copié !');
+        toast.success(t('settings.lienCopie'));
       } catch {
         toast.info('https://letsout.app');
       }
@@ -221,7 +222,7 @@ export function Settings({ onBack }: SettingsProps) {
                 {t('settings.title')}
               </h1>
               <p className="text-[11px] text-gray-400 leading-snug">
-                Gérez votre compte, votre sécurité<br />et vos préférences
+                <span>{i18n.t('settings.headerLine1')}</span><br /><span>{i18n.t('settings.headerLine2')}</span>
               </p>
             </div>
           </div>
@@ -274,7 +275,7 @@ export function Settings({ onBack }: SettingsProps) {
               onClick={() => setShowEditModal(true)}
               className="flex items-center gap-0.5 px-3 py-1.5 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full text-[12px] font-semibold text-gray-700 dark:text-gray-300 active:scale-95 transition-transform flex-shrink-0"
             >
-              Modifier
+              <span>{t('settings.modifier')}</span>
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>
@@ -285,7 +286,7 @@ export function Settings({ onBack }: SettingsProps) {
               <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
                 style={{ background: 'linear-gradient(90deg, #FFD700, #FF9500)', color: 'white' }}>
                 <Star className="w-3 h-3 fill-white" />
-                <span>Note {rating}</span>
+                <span>{i18n.t('settings.rating', { rating })}</span>
               </div>
             )}
             {hasEarlyAdopter && (
@@ -314,10 +315,10 @@ export function Settings({ onBack }: SettingsProps) {
               <p className="text-white/80 text-[12px]">Profitez d'avantages exclusifs</p>
             </div>
             <button
-              onClick={() => toast.info('Bientôt disponible !')}
+              onClick={() => toast.info(t('settings.bientotDisponible'))}
               className="flex items-center gap-0.5 px-3 py-1.5 bg-white rounded-full text-[12px] font-semibold text-[#FF7A00] active:scale-95 transition-transform flex-shrink-0 whitespace-nowrap"
             >
-              Découvrir <ChevronRight className="w-3 h-3" />
+              <span>{i18n.t('settings.discover')}</span> <ChevronRight className="w-3 h-3" />
             </button>
           </div>
         )}
@@ -400,11 +401,11 @@ export function Settings({ onBack }: SettingsProps) {
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-sm tracking-wide">OUT RADAR</span>
                 <span className="bg-white/25 text-[9.5px] font-extrabold uppercase px-2 py-0.5 rounded-full tracking-wider">
-                  Nouveau
+                  <span>{t('settings.nouveau')}</span>
                 </span>
               </div>
               <p className="text-[11.5px] text-white/90 truncate mt-0.5">
-                Découvre les Outsters disponibles autour de toi
+                <span>{t('settings.decouvreLesOutstersDisponiblesAutour')}</span>
               </p>
             </div>
           </div>
@@ -416,14 +417,14 @@ export function Settings({ onBack }: SettingsProps) {
 
         {/* ── COORDONNÉES ───────────────────────────────────────────────────── */}
         <div>
-          <SectionLabel>Coordonnées</SectionLabel>
+          <SectionLabel><span>{t('settings.coordonnees')}</span></SectionLabel>
           <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl overflow-hidden shadow-sm">
             <SettingsRow
               icon={<Phone className="w-4 h-4" />}
               iconBg="bg-green-50 dark:bg-green-500/10"
               iconColor="text-green-500"
-              title={t('settings.rows.phone') || 'Numéro de téléphone'}
-              subtitle={user?.phone ?? (t('settings.rows.phoneDesc') || 'Aucun numéro')}
+              title={t('settings.rows.phone') || t('settings.rows.phone')}
+              subtitle={user?.phone ?? (t('settings.rows.phoneDesc') || t('settings.aucunNumero'))}
               onClick={() => setShowPhoneModal(true)}
             />
             <SettingsRow
@@ -431,7 +432,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconBg="bg-blue-50 dark:bg-blue-500/10"
               iconColor="text-blue-500"
               title={t('settings.rows.email') || 'Adresse e-mail'}
-              subtitle={user?.email ?? (t('settings.rows.emailDesc') || 'Aucun e-mail')}
+              subtitle={user?.email ?? (t('settings.rows.emailDesc') || t('settings.aucunEMail'))}
               onClick={() => setShowEmailModal(true)}
               isLast
             />
@@ -487,7 +488,7 @@ export function Settings({ onBack }: SettingsProps) {
               iconBg="bg-orange-50 dark:bg-orange-500/10"
               iconColor="text-[#FF7A00]"
               title="OUT RADAR"
-              subtitle="Découvre les Outsters disponibles autour de toi"
+              subtitle={t('settings.decouvreLesOutstersDisponiblesAutour')}
               onClick={() => navigate('/radar')}
               isLast
             />
@@ -852,10 +853,10 @@ export function Settings({ onBack }: SettingsProps) {
                 <LogOut className="w-8 h-8" />
               </div>
               <h2 className="text-[20px] font-bold text-gray-900 dark:text-white">
-                Voulez-vous vous déconnecter ?
+                <span>{t('settings.voulezVousVousDeconnecter')}</span>
               </h2>
               <p className="text-[13px] text-gray-500 dark:text-gray-400">
-                Vous devrez vous reconnecter pour accéder à vos événements et messages.
+                <span>{t('settings.vousDevrezVousReconnecterPour')}</span>
               </p>
             </div>
 
@@ -870,7 +871,7 @@ export function Settings({ onBack }: SettingsProps) {
                 className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-[#FF7A00] text-white hover:bg-[#E06C00] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/20 disabled:opacity-50"
               >
                 {loggingOut ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                Oui, me déconnecter
+                <span>{t('settings.ouiMeDeconnecter')}</span>
               </button>
 
               <button
@@ -879,7 +880,7 @@ export function Settings({ onBack }: SettingsProps) {
                 onClick={() => setShowLogoutModal(false)}
                 className="w-full py-3.5 rounded-2xl font-semibold text-sm bg-gray-100 dark:bg-[#252525] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#303030] active:scale-[0.98] transition-all"
               >
-                Non, annuler
+                <span>{t('settings.nonAnnuler')}</span>
               </button>
             </div>
           </div>

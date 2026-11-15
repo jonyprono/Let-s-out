@@ -9,23 +9,18 @@ import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 import { useConfirm } from '@/components/shared/ConfirmContext'
+import { useTranslation } from 'react-i18next'
+import { getEventCategory, eventCategoryShortLabel } from '@/lib/event-categories'
 
-const CATEGORIES = [
-  { key: '', label: 'Tout' },
-  { key: 'MUSIC', label: '🎵 Musique' },
-  { key: 'NIGHTLIFE', label: '🎉 Soirées' },
-  { key: 'SPORT', label: '⚽ Sport' },
-  { key: 'CULTURE', label: '🎭 Culture' },
-  { key: 'ART', label: '🎨 Art' },
-  { key: 'TECH', label: '💻 Tech' },
-  { key: 'OTHER', label: '📌 Autre' },
-]
+// Filtres des vlogs : identifiants de la source unique des catégories ('' = tout)
+const VLOG_FILTER_IDS = ['', 'MUSIC', 'NIGHTLIFE', 'SPORT', 'CULTURE', 'ART', 'TECH', 'OTHER'] as const
 
 export function VideosPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const currentUser = useAuthStore(s => s.user)
   const confirm = useConfirm()
+  const { t } = useTranslation()
   const [activeCategory, setActiveCategory] = useState('')
   const [showUpload, setShowUpload] = useState(false)
   const [playingVideoId, setPlayingVideoId] = useState<string | null>(null)
@@ -46,10 +41,10 @@ export function VideosPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => videosApi.delete(id),
     onSuccess: () => {
-      toast.success('Vidéo supprimée')
+      toast.success(t('videosPage.videoSupprimee'))
       qc.invalidateQueries({ queryKey: ['videos'] })
     },
-    onError: () => toast.error('Erreur lors de la suppression'),
+    onError: () => toast.error(t('videosPage.erreurLorsDeLaSuppression')),
   })
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -73,7 +68,7 @@ export function VideosPage() {
         </button>
         <div className="flex-1">
           <h1 className="font-bold text-[17px] text-gray-900 dark:text-white">Moments Forts</h1>
-          <p className="text-[12px] text-gray-400">Vidéos de vos événements</p>
+          <p className="text-[12px] text-gray-400"><span>{t('videosPage.videosDeVosEvenements')}</span></p>
         </div>
         <button
           onClick={() => setShowUpload(true)}
@@ -86,17 +81,17 @@ export function VideosPage() {
 
       {/* Filtres catégorie */}
       <div className="flex gap-2 px-4 py-3 overflow-x-auto hide-scrollbar flex-shrink-0 border-b border-gray-100 dark:border-white/5">
-        {CATEGORIES.map(cat => (
+        {VLOG_FILTER_IDS.map(id => (
           <button
-            key={cat.key}
-            onClick={() => setActiveCategory(cat.key)}
+            key={id}
+            onClick={() => setActiveCategory(id)}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-[13px] font-medium transition-colors ${
-              activeCategory === cat.key
+              activeCategory === id
                 ? 'bg-[#FF7A00] text-white'
                 : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'
             }`}
           >
-            {cat.label}
+            <span>{id ? `${getEventCategory(id)?.emoji ?? ''} ${eventCategoryShortLabel(t, id)}` : t('categories.all')}</span>
           </button>
         ))}
       </div>
@@ -112,15 +107,15 @@ export function VideosPage() {
             <div className="w-20 h-20 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center mb-4">
               <Film className="w-9 h-9 text-[#FF7A00]" />
             </div>
-            <p className="font-bold text-[16px] text-gray-800 dark:text-white">Aucune vidéo</p>
+            <p className="font-bold text-[16px] text-gray-800 dark:text-white"><span>{t('videosPage.aucuneVideo')}</span></p>
             <p className="text-[13px] text-gray-400 mt-1 max-w-[240px]">
-              Publiez vos moments forts depuis vos événements passés !
+              <span>{t('videosPage.publiezVosMomentsFortsDepuis')}</span>
             </p>
             <button
               onClick={() => setShowUpload(true)}
               className="mt-6 px-6 py-3 bg-[#FF7A00] text-white font-semibold rounded-2xl"
             >
-              Publier ma première vidéo
+              <span>{t('videosPage.publierMaPremiereVideo')}</span>
             </button>
           </div>
         ) : (
@@ -132,11 +127,11 @@ export function VideosPage() {
                   <button
                     onClick={async () => {
                       const ok = await confirm({
-                        title: 'Supprimer cette vidéo ?',
-                        description: 'Voulez-vous vraiment supprimer cette vidéo définitivement ?',
-                        confirmText: 'Oui, supprimer',
-                        cancelText: 'Non, annuler',
-                        cancelMessage: 'Suppression annulée',
+                        title: t('videosPage.supprimerCetteVideo'),
+                        description: t('videosPage.voulezVousVraimentSupprimerCette'),
+                        confirmText: t('videosPage.ouiSupprimer'),
+                        cancelText: t('videosPage.nonAnnuler'),
+                        cancelMessage: t('videosPage.suppressionAnnulee'),
                       })
                       if (ok) deleteMutation.mutate(v.id)
                     }}

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, UIEvent, useMemo } from 'react'
+import i18n from '@/lib/i18n'
 import { createPortal } from 'react-dom'
 import { ChevronLeft, Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Sparkles } from 'lucide-react'
 import { App } from '@capacitor/app'
@@ -8,6 +9,7 @@ import { videosApi, EventVideo } from '@/features/videos/api'
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal'
 import { useVideoFit, FIT_CLASS } from '@/features/videos/utils/video-fit'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 export interface PageVideoItem {
   id: string // post ID
@@ -37,6 +39,7 @@ interface PageVideoPlayerModalProps {
 }
 
 export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVideoPlayerModalProps) {
+  const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
   const [commentPost, setCommentPost] = useState<PageVideoItem | null>(null)
   const [outVlogs, setOutVlogs] = useState<EventVideo[]>([])
@@ -157,7 +160,7 @@ export function PageVideoPlayerModal({ videos, initialVideoId, onClose }: PageVi
         <button
           onClick={onClose}
           className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/15 text-white active:scale-95 transition-transform pointer-events-auto shadow-lg"
-          aria-label="Retour"
+          aria-label={t('pageVideoPlayerModal.retour')}
         >
           <ChevronLeft className="w-6 h-6" strokeWidth={2.5} />
         </button>
@@ -228,6 +231,7 @@ function OutVlogsProposalCard({
   outVlogs: EventVideo[]
   onOpenOutVlogs: (vlogId?: string) => void
 }) {
+  const { t } = useTranslation()
   const previewVlogs = outVlogs.slice(0, 4)
   const firstVlog = outVlogs[0]
 
@@ -260,12 +264,12 @@ function OutVlogsProposalCard({
 
         {/* Title */}
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight mb-2 font-poppins">
-          Découvrez les <span className="bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 bg-clip-text text-transparent">OUT VLOGS</span>
+          <span>{i18n.t('pageVideoPlayerModal.discoverThe')}</span> <span className="bg-gradient-to-r from-orange-400 via-amber-300 to-orange-500 bg-clip-text text-transparent">OUT VLOGS</span>
         </h2>
 
         {/* Subtitle */}
         <p className="text-xs sm:text-sm text-white/80 leading-relaxed mb-5 max-w-xs">
-          Vibrez au rythme des événements récents et revivez les meilleurs moments filmés et partagés par la communauté !
+          <span>{t('pageVideoPlayerModal.vibrezAuRythmeDesEvenements')}</span>
         </p>
 
         {/* Mini Preview Grid of Out Vlogs */}
@@ -304,7 +308,7 @@ function OutVlogsProposalCard({
           className="w-full py-3.5 px-6 rounded-full bg-gradient-to-r from-[#FF7A00] to-[#FF9E40] text-white font-bold text-sm shadow-xl shadow-orange-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
         >
           <Play className="w-4 h-4 fill-white" />
-          Visionner les Out Vlogs
+          <span>{t('pageVideoPlayerModal.visionnerLesOutVlogs')}</span>
         </button>
       </div>
 
@@ -314,7 +318,7 @@ function OutVlogsProposalCard({
         style={{ paddingBottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem))' }}
       >
         <p className="text-xs text-white/50">
-          ↓ Défilez pour continuer les publications de pages
+          <span>{i18n.t('pageVideoPlayerModal.scrollForMore')}</span>
         </p>
       </div>
     </div>
@@ -332,6 +336,7 @@ function PageVideoPlayerItem({
   onOpenComments: () => void
   onCloseParent: () => void
 }) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const { fit, onLoadedMetadata: onFitMetadata } = useVideoFit()
@@ -396,12 +401,12 @@ function PageVideoPlayerItem({
     if (navigator.share) {
       navigator.share({
         title: item.page.name,
-        text: item.content || `Vidéo publiée par ${item.page.name}`,
+        text: item.content || t('pageVideoPlayerModal.videoPublieePar', { v0: item.page.name }),
         url: window.location.href,
       }).catch(() => {})
     } else {
       navigator.clipboard?.writeText(window.location.href)
-      toast.success('Lien copié dans le presse-papier')
+      toast.success(t('pageVideoPlayerModal.lienCopieDansLePresse'))
     }
   }
 
@@ -499,7 +504,7 @@ function PageVideoPlayerItem({
             ) : (
               <div className="bg-black/40 backdrop-blur-sm rounded-xl px-3 py-1.5 border border-white/5 inline-block">
                 <p className="text-xs text-white/80 italic">
-                  Vidéo publiée par {item.page.name}
+                  <span>{i18n.t('pageVideoPlayerModal.videoPublieePar', { v0: item.page.name })}</span>
                 </p>
               </div>
             )}
@@ -511,7 +516,7 @@ function PageVideoPlayerItem({
             <button
               onClick={toggleMute}
               className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center text-white active:scale-95 transition-transform shadow-md"
-              title={isMuted ? 'Activer le son' : 'Couper le son'}
+              title={isMuted ? t('pageVideoPlayerModal.activerLeSon') : t('pageVideoPlayerModal.couperLeSon')}
             >
               {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5 text-white" />}
             </button>
@@ -558,7 +563,7 @@ function PageVideoPlayerItem({
                 <Share2 className="w-5 h-5" />
               </div>
               <span className="text-white text-[11px] font-medium drop-shadow">
-                Partager
+                <span>{t('pageVideoPlayerModal.partager')}</span>
               </span>
             </button>
           </div>

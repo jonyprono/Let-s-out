@@ -6,6 +6,8 @@ import { ArrowLeft, Send, Loader2, MoreHorizontal, Heart, ChevronDown, MessageCi
 import { useAuthStore } from '@/stores/auth.store'
 import { useConfirm } from '@/components/shared/ConfirmContext'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/lib/i18n'
 
 interface Comment {
   id: string
@@ -24,7 +26,7 @@ interface Comment {
 function getRelativeTime(dateString: string) {
   const diff = Date.now() - new Date(dateString).getTime()
   const m = Math.floor(diff / 60000)
-  if (m < 1) return "à l'instant"
+  if (m < 1) return i18n.t('eventCommentsPage.aLInstant')
   if (m < 60) return `il y a ${m} min`
   const h = Math.floor(m / 60)
   if (h < 24) return `il y a ${h}h`
@@ -33,6 +35,7 @@ function getRelativeTime(dateString: string) {
 }
 
 export function EventCommentsPage() {
+  const { t } = useTranslation()
   const { id: eventId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -153,7 +156,7 @@ export function EventCommentsPage() {
           <div className="flex-1 min-w-0">
             <p className={`text-[11px] font-medium uppercase tracking-wide ${
               coverUrl ? 'text-white/70' : 'text-gray-400'
-            }`}>Commentaires</p>
+            }`}><span>{t('eventCommentsPage.commentaires')}</span></p>
             {resolvedTitle && (
               <h1 className={`font-bold text-[15px] leading-tight truncate ${
                 coverUrl ? 'text-white' : 'text-gray-900 dark:text-white'
@@ -165,7 +168,7 @@ export function EventCommentsPage() {
           <button className={`flex items-center gap-1 text-[12px] font-medium flex-shrink-0 ${
             coverUrl ? 'text-white/80' : 'text-gray-500'
           }`}>
-            Les plus récents <ChevronDown className="w-3.5 h-3.5" />
+            <span>{i18n.t('feedCommentsModal.mostRecent')}</span> <ChevronDown className="w-3.5 h-3.5" />
           </button>
         </div>
 
@@ -201,8 +204,8 @@ export function EventCommentsPage() {
             <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4">
               <span className="text-3xl">💬</span>
             </div>
-            <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400">Aucun commentaire</p>
-            <p className="text-[13px] text-gray-400 mt-1">Soyez le premier à commenter !</p>
+            <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400"><span>{t('eventCommentsPage.aucunCommentaire')}</span></p>
+            <p className="text-[13px] text-gray-400 mt-1"><span>{t('eventCommentsPage.soyezLePremierACommenter')}</span></p>
           </div>
         ) : (
           comments.map(comment => {
@@ -235,7 +238,7 @@ export function EventCommentsPage() {
                       </span>
                       {isOrganizer && (
                         <span className="bg-[#FFF1E5] dark:bg-orange-900/30 text-[#FF7A00] text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
-                          Organisateur
+                          <span>{t('eventCommentsPage.organisateur')}</span>
                         </span>
                       )}
                       <span className="text-[12px] text-gray-400">
@@ -247,16 +250,16 @@ export function EventCommentsPage() {
                       onClick={async () => {
                         if (isMe || currentUser?.id === organizerId) {
                           const ok = await confirm({
-                            title: 'Supprimer ce commentaire ?',
-                            description: 'Cette action est irréversible.',
-                            confirmText: 'Supprimer',
+                            title: t('eventCommentsPage.supprimerCeCommentaire'),
+                            description: t('eventCommentsPage.cetteActionEstIrreversible'),
+                            confirmText: t('eventCommentsPage.supprimer'),
                             variant: 'danger',
                           })
                           if (ok) {
                             deleteMutation.mutate(comment.id)
-                            toast.success('Commentaire supprimé')
+                            toast.success(t('eventCommentsPage.commentaireSupprime'))
                           } else {
-                            toast.info('Suppression annulée')
+                            toast.info(t('eventCommentsPage.suppressionAnnulee'))
                           }
                         }
                       }}
@@ -284,7 +287,7 @@ export function EventCommentsPage() {
                       onClick={() => handleReply(comment)}
                       className="text-[13px] font-bold text-gray-500 hover:text-[#FF7A00] dark:hover:text-[#FF7A00] transition-colors"
                     >
-                      Répondre
+                      <span>{t('eventCommentsPage.repondre')}</span>
                     </button>
                   </div>
                 </div>
@@ -300,13 +303,13 @@ export function EventCommentsPage() {
         {replyTo && (
           <div className="flex items-center justify-between px-4 py-2 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-100 dark:border-orange-900/30">
             <span className="text-[12px] text-[#FF7A00] font-medium">
-              En réponse à <strong>{replyTo.name}</strong>
+              <span>{i18n.t('eventCommentsPage.replyingTo')}</span> <strong>{replyTo.name}</strong>
             </span>
             <button
               onClick={() => setReplyTo(null)}
               className="text-[11px] text-gray-400 hover:text-gray-600 font-medium"
             >
-              Annuler
+              <span>{t('eventCommentsPage.annuler')}</span>
             </button>
           </div>
         )}
@@ -329,7 +332,7 @@ export function EventCommentsPage() {
                 type="text"
                 value={content}
                 onChange={e => setContent(e.target.value)}
-                placeholder={replyTo ? `Répondre à ${replyTo.name}...` : 'Ajouter un commentaire...'}
+                placeholder={replyTo ? t('eventCommentsPage.repondreA', { v0: replyTo.name }) : t('eventCommentsPage.ajouterUnCommentaire')}
                 className="w-full bg-transparent text-[14px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-500"
               />
             </div>
@@ -348,7 +351,7 @@ export function EventCommentsPage() {
         ) : (
           <div className="px-4 py-3 flex items-center gap-3">
             <div className="flex-1 bg-[#F5F5F5] dark:bg-[#222] rounded-3xl px-4 py-2.5 text-center">
-              <span className="text-[13px] text-gray-500 dark:text-gray-400">Connectez-vous pour commenter</span>
+              <span className="text-[13px] text-gray-500 dark:text-gray-400"><span>{t('eventCommentsPage.connectezVousPourCommenter')}</span></span>
             </div>
           </div>
         )}

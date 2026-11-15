@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid'
 const CreateEventSchema = z.object({
   title: z.string().min(3).max(100),
   description: z.string().min(3).max(5000),
-  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM']).nullable().optional().transform(v => v || 'OTHER'),
+  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY']).nullable().optional().transform(v => v || 'OTHER'),
   maxAttendees: z.number().int().positive().optional(),
   price: z.number().min(0).default(0),
   currency: z.string().length(3).default('XOF'),
@@ -47,7 +47,7 @@ const CreateEventSchema = z.object({
 const UpdateEventSchema = z.object({
   title: z.string().min(3).max(100).optional(),
   description: z.string().min(3).max(5000).optional(),
-  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM']).nullable().optional(),
+  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY']).nullable().optional(),
   maxAttendees: z.number().int().positive().nullable().optional(),
   price: z.number().min(0).optional(),
   currency: z.string().length(3).optional(),
@@ -162,7 +162,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const interests = userProfile?.interests || []
 
-    const validEnums = ['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM'];
+    const validEnums = ['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY'];
     const mappedCategories = interests.map((i: string) => {
       const upper = i.toUpperCase();
       if (upper === 'MUSIQUE') return 'MUSIC';

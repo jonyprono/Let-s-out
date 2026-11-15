@@ -8,12 +8,14 @@ import { toast } from 'sonner'
 import { useConversations } from '@/features/chat/api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
 
 interface NewConversationModalProps {
   onClose: () => void
 }
 
 export function NewConversationModal({ onClose }: NewConversationModalProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [selectedFriends, setSelectedFriends] = useState<string[]>([])
   const [groupName, setGroupName] = useState('')
@@ -53,7 +55,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
         navigate(`/chat/${conv.id}`)
       } else {
         if (!groupName.trim()) {
-          toast.error("Veuillez entrer un nom de groupe")
+          toast.error(t('newConversationModal.veuillezEntrerUnNomDe'))
           return
         }
         const conv = await createGroup({ name: groupName.trim(), memberIds: selectedFriends } as any)
@@ -61,7 +63,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
         navigate(`/chat/${conv.id}`)
       }
     } catch (err) {
-      toast.error("Erreur lors de la création de la discussion")
+      toast.error(t('newConversationModal.erreurLorsDeLaCreation'))
     }
   }
 
@@ -94,7 +96,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
         <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:bg-[#2a2a2a]">
           <X className="w-5 h-5 text-gray-900 dark:text-white" />
         </button>
-        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white">Nouvelle discussion</h2>
+        <h2 className="text-[17px] font-bold text-gray-900 dark:text-white"><span>{t('newConversationModal.nouvelleDiscussion')}</span></h2>
         <div className="w-9" />
       </div>
 
@@ -106,7 +108,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
           </div>
           <input
             type="text"
-            placeholder="Nom du groupe..."
+            placeholder={t('newConversationModal.nomDuGroupe')}
             value={groupName}
             onChange={e => setGroupName(e.target.value)}
             className="flex-1 text-[15px] outline-none placeholder-gray-400 font-medium"
@@ -120,7 +122,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
           <Search className="w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Rechercher un ami..."
+            placeholder={t('newConversationModal.rechercherUnAmi')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="flex-1 bg-transparent text-[14px] outline-none placeholder-gray-500"
@@ -160,7 +162,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
           <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
         ) : filteredFriends.length === 0 ? (
           <div className="text-center py-10 text-gray-500 dark:text-gray-400 text-[14px]">
-            {search ? 'Aucun ami trouvé' : "Vous n'avez pas encore ajouté d'amis."}
+            {search ? t('newConversationModal.aucunAmiTrouve') : t('newConversationModal.vousNAvezPasEncore')}
           </div>
         ) : (
           <div className="space-y-4">
@@ -201,7 +203,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
             disabled={isCreatingDM || isCreatingGroup}
             className="w-full text-[16px] font-bold py-[14px]"
           >
-            {(isCreatingDM || isCreatingGroup) ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Démarrer la discussion'}
+            {(isCreatingDM || isCreatingGroup) ? <Loader2 className="w-5 h-5 animate-spin" /> : t('newConversationModal.demarrerLaDiscussion')}
           </Button>
         </div>
       )}

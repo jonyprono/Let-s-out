@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { interestLabel } from '@/lib/interests'
 import { Settings, LogOut, MapPin, UserCheck, UserPlus, Calendar, Users, Medal, Activity, User, X, Camera } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
@@ -19,6 +20,7 @@ import { getEventParticipationMode } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 
 
+import { intlLocale } from '@/lib/locale';
 interface ProfileProps {
   onNavigate?: (screen: string, params?: any) => void;
 }
@@ -212,7 +214,7 @@ export function Profile({ onNavigate }: ProfileProps) {
               <div 
                 onClick={() => {
                   if (displayProfile?.avatarUrl) {
-                    setFullscreenMedia({ url: displayProfile.avatarUrl, title: 'Photo de profil', type: 'avatar' });
+                    setFullscreenMedia({ url: displayProfile.avatarUrl, title: t('profile.photoDeProfil'), type: 'avatar' });
                   } else if (isOwnProfile) {
                     setShowEditModal(true);
                   }
@@ -249,7 +251,7 @@ export function Profile({ onNavigate }: ProfileProps) {
               ))}
               {displayProfile?.interests?.slice(0, 3).map((i: string) => (
                 <div key={i} className="px-3 py-1 bg-orange-50 text-orange-600 text-[11px] font-bold rounded-full border border-orange-100/50">
-                  {i}
+                  <span>{interestLabel(t, i)}</span>
                 </div>
               ))}
             </div>
@@ -304,7 +306,7 @@ export function Profile({ onNavigate }: ProfileProps) {
           <div className="w-full overflow-x-auto hide-scrollbar border-b border-gray-200 dark:border-white/10 sticky top-0 bg-gray-50 dark:bg-[#0a0a0b]/95 backdrop-blur-md z-10">
             <div className="flex px-4 py-2 w-max gap-2">
               <ToggleButton
-                options={TABS.map(t => ({ label: `${t.label} ${t.count > 0 ? `(${t.count})` : ''}`, value: t.key }))}
+                options={TABS.map(tab => ({ label: `${tab.label} ${tab.count > 0 ? `(${tab.count})` : ''}`, value: tab.key }))}
                 value={activeTab}
                 onChange={(val) => setActiveTab(val as Tab)}
                 className="bg-transparent"
@@ -455,7 +457,7 @@ export function Profile({ onNavigate }: ProfileProps) {
               <button
                 onClick={() => setFullscreenMedia(null)}
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-white transition-all"
-                aria-label="Fermer"
+                aria-label={t('profile.fermer')}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -474,7 +476,7 @@ export function Profile({ onNavigate }: ProfileProps) {
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-xs font-semibold text-white transition-all border border-white/20"
               >
                 <Camera className="w-3.5 h-3.5" />
-                Modifier
+                <span>{t('profile.modifier')}</span>
               </button>
             )}
           </div>
@@ -499,7 +501,7 @@ export function Profile({ onNavigate }: ProfileProps) {
             className="w-full text-center pb-8 pt-4 text-xs text-white/50"
             onClick={(e) => e.stopPropagation()}
           >
-            Appuyez n'importe où pour fermer
+            <span>{t('profile.appuyezNImporteOuPour')}</span>
           </div>
         </div>
       )}
@@ -516,7 +518,7 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
   let dateStr = t('profile.noDate');
   if (event?.startAt) {
     const d = new Date(event.startAt);
-    const day = d.toLocaleDateString('fr-FR', { weekday: 'long' });
+    const day = d.toLocaleDateString(intlLocale(), { weekday: 'long' });
     const hour = d.getHours();
     dateStr = `${day.charAt(0).toUpperCase() + day.slice(1)} ${hour}h`;
   }
@@ -532,16 +534,16 @@ function CompactEventCard({ event, onNavigate, isDraft }: { event: any; onNaviga
   if (mode === 'Cagnotte') {
     priceType = t('profile.pool');
     if (event?.price > 0) {
-      priceStr = `${event.price.toLocaleString('fr-FR')} ${curSymbol}`;
+      priceStr = `${event.price.toLocaleString(intlLocale())} ${curSymbol}`;
     } else if (event?.poolTarget > 0) {
-      priceStr = `${event.poolTarget.toLocaleString('fr-FR')} ${curSymbol}`;
+      priceStr = `${event.poolTarget.toLocaleString(intlLocale())} ${curSymbol}`;
     } else {
       priceStr = t('profile.flexible');
     }
   } else if (mode === 'Tickets') {
     priceType = t('profile.ticket');
     if (event?.price > 0) {
-      priceStr = `${event.price.toLocaleString('fr-FR')} ${curSymbol}`;
+      priceStr = `${event.price.toLocaleString(intlLocale())} ${curSymbol}`;
     }
   } else {
     // Gratuit

@@ -24,7 +24,7 @@ export function PrivacyModal({ onClose }: Props) {
       toast.success(t('changePasswordModal.success')); // Or generic success
       onClose();
     } catch (err: any) {
-      toast.error('Erreur');
+      toast.error(t('privacyModal.erreur'));
     } finally {
       setIsLoading(false);
     }

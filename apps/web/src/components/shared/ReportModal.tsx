@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 interface ReportModalProps {
   open: boolean
@@ -11,15 +12,16 @@ interface ReportModalProps {
 }
 
 export function ReportModal({ open, onClose, onConfirm, isPending, type = 'USER' }: ReportModalProps) {
+  const { t } = useTranslation()
   const [selectedReason, setSelectedReason] = useState<string>('')
 
   if (!open) return null
 
   const allReasons = [
-    { value: 'SPAM', label: 'Spam ou publicité non sollicitée', types: ['USER', 'GROUP_OR_CHAT'] },
-    { value: 'INAPPROPRIATE', label: 'Contenu inapproprié ou offensant', types: ['USER', 'GROUP_OR_CHAT'] },
-    { value: 'FAKE', label: "Faux profil ou usurpation d'identité", types: ['USER'] },
-    { value: 'HARASSMENT', label: 'Harcèlement ou intimidation', types: ['USER', 'GROUP_OR_CHAT'] },
+    { value: 'SPAM', label: t('reportModal.spamOuPubliciteNonSollicitee'), types: ['USER', 'GROUP_OR_CHAT'] },
+    { value: 'INAPPROPRIATE', label: t('reportModal.contenuInapproprieOuOffensant'), types: ['USER', 'GROUP_OR_CHAT'] },
+    { value: 'FAKE', label: t('reportModal.fauxProfilOuUsurpationD'), types: ['USER'] },
+    { value: 'HARASSMENT', label: t('reportModal.harcelementOuIntimidation'), types: ['USER', 'GROUP_OR_CHAT'] },
     { value: 'SCAM', label: 'Arnaque ou escroquerie', types: ['USER', 'GROUP_OR_CHAT'] },
     { value: 'HATE_SPEECH', label: 'Discours de haine', types: ['USER', 'GROUP_OR_CHAT'] },
     { value: 'OTHER', label: 'Autre raison', types: ['USER', 'GROUP_OR_CHAT'] }
@@ -28,7 +30,7 @@ export function ReportModal({ open, onClose, onConfirm, isPending, type = 'USER'
   const reasons = allReasons.filter(r => r.types.includes(type))
 
   const handleCancel = () => {
-    toast.info('Signalement annulé')
+    toast.info(t('reportModal.signalementAnnule'))
     onClose()
   }
 
@@ -52,9 +54,9 @@ export function ReportModal({ open, onClose, onConfirm, isPending, type = 'USER'
           <div className="w-12 h-12 rounded-2xl bg-red-100 dark:bg-red-950/40 text-red-600 flex items-center justify-center mb-2 shadow-sm">
             <AlertTriangle className="w-6 h-6" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Signaler</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white"><span>{t('reportModal.signaler')}</span></h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
-            Aidez-nous à garder Let's Out sûr en nous indiquant ce qui ne va pas.
+            <span>{t('reportModal.aidezNousAGarderLet')}</span>
           </p>
         </div>
 
@@ -91,7 +93,7 @@ export function ReportModal({ open, onClose, onConfirm, isPending, type = 'USER'
             disabled={isPending}
             className="flex-1 h-12 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold text-xs transition-all active:scale-95 disabled:opacity-50"
           >
-            Non, annuler
+            <span>{t('reportModal.nonAnnuler')}</span>
           </button>
           <button
             type="button"
@@ -99,7 +101,7 @@ export function ReportModal({ open, onClose, onConfirm, isPending, type = 'USER'
             disabled={!selectedReason || isPending}
             className="flex-1 h-12 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold text-xs shadow-md shadow-red-500/20 active:scale-95 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
           >
-            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Oui, signaler'}
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('reportModal.ouiSignaler')}
           </button>
         </div>
       </div>

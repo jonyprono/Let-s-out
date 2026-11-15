@@ -1,18 +1,21 @@
 import { useState } from 'react'
+import i18n from '@/lib/i18n'
 import { formatDistanceToNow, isPast } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { useAuthStore } from '@/stores/auth.store'
 import { chatApi, Poll, Message } from '../api'
 
+import { dateLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
 interface PollCardProps {
   message: Message
   onPollUpdated?: (poll: Poll) => void
 }
 
 export function PollCard({ message, onPollUpdated }: PollCardProps) {
+  const { t } = useTranslation()
   const currentUserId = useAuthStore((s: any) => s.user?.id)
   const [votingOptionId, setVotingOptionId] = useState<string | null>(null)
 
@@ -27,17 +30,17 @@ export function PollCard({ message, onPollUpdated }: PollCardProps) {
   // Date relative d'expiration
   let remainingTimeStr = ''
   if (isExpired) {
-    remainingTimeStr = 'Sondage terminé'
+    remainingTimeStr = t('pollCard.sondageTermine')
   } else if (poll.expiresAt) {
     remainingTimeStr = formatDistanceToNow(new Date(poll.expiresAt), {
       addSuffix: false,
-      locale: fr,
+      locale: dateLocale(),
     }) + ' restant' + (poll.expiresAt ? 's' : '')
   }
 
   const handleVote = async (optionId: string) => {
     if (isExpired) {
-      toast.info('Ce sondage est déjà clôturé.')
+      toast.info(t('pollCard.ceSondageEstDejaCloture'))
       return
     }
 
@@ -46,7 +49,7 @@ export function PollCard({ message, onPollUpdated }: PollCardProps) {
       const updated = await chatApi.votePoll(poll.id, optionId)
       onPollUpdated?.(updated)
     } catch (err: any) {
-      const msg = err?.response?.data?.error || err.message || 'Erreur lors du vote'
+      const msg = err?.response?.data?.error || err.message || t('pollCard.erreurLorsDuVote')
       toast.error(msg)
     } finally {
       setVotingOptionId(null)
@@ -77,7 +80,7 @@ export function PollCard({ message, onPollUpdated }: PollCardProps) {
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold truncate text-gray-800 dark:text-gray-200">
               {senderProfile?.displayName || 'Membre'}{' '}
-              <span className="text-[11px] font-normal text-gray-400">· {isCreator ? 'Vous' : 'Créateur'}</span>
+              <span className="text-[11px] font-normal text-gray-400">· {isCreator ? 'Vous' : t('pollCard.createur')}</span>
             </p>
           </div>
         </div>
@@ -165,7 +168,7 @@ export function PollCard({ message, onPollUpdated }: PollCardProps) {
           {remainingTimeStr ? ` · ${remainingTimeStr}` : ''}
         </span>
         <span className="text-[10px] text-gray-400 font-medium">
-          1 choix par personne
+          <span>{i18n.t('pollCard.oneChoice')}</span>
         </span>
       </div>
     </div>

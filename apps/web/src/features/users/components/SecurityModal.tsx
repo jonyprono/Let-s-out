@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import i18n from '@/lib/i18n'
 import { X, ShieldCheck, KeyRound, MonitorSmartphone, Loader2, AlertCircle, Trash2, ArrowRight } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { ChangePasswordModal } from './ChangePasswordModal';
 import { useNavigate } from 'react-router';
 
+import { intlLocale } from '@/lib/locale';
+import { useTranslation } from 'react-i18next'
 interface Session {
   id: string;
   userAgent: string;
@@ -35,10 +38,11 @@ function parseUserAgent(ua: string) {
   else if (ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
   else if (ua.includes('Linux')) os = 'Linux';
   
-  return `${browser} sur ${os}`;
+  return i18n.t('securityModal.browserOn', { browser, os });
 }
 
 export function SecurityModal({ onClose, kycStatus }: Props) {
+  const { t } = useTranslation()
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -80,7 +84,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
             <div className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-blue-500" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Sécurité</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white"><span>{t('securityModal.securite')}</span></h2>
           </div>
           <button onClick={onClose} className="p-2 text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-[#2A2A2A] rounded-full hover:bg-gray-200 dark:hover:bg-[#333333] transition-colors">
             <X size={20} />
@@ -90,7 +94,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
         <div className="space-y-6">
           {/* Section 1: Mot de passe */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Mot de passe</h3>
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3"><span>{t('securityModal.motDePasse')}</span></h3>
             <button
               onClick={() => setShowPasswordModal(true)}
               className="w-full bg-gray-50 dark:bg-[#222222] hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-2xl p-4 flex items-center justify-between transition-colors border border-gray-100 dark:border-[#333333]"
@@ -100,8 +104,8 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
                   <KeyRound className="w-5 h-5 text-[#FF7A00]" />
                 </div>
                 <div className="text-left">
-                  <p className="font-semibold text-gray-900 dark:text-white">Modifier le mot de passe</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Sécurisez votre compte</p>
+                  <p className="font-semibold text-gray-900 dark:text-white"><span>{t('securityModal.modifierLeMotDePasse')}</span></p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400"><span>{t('securityModal.securisezVotreCompte')}</span></p>
                 </div>
               </div>
               <ArrowRight className="w-5 h-5 text-gray-400" />
@@ -110,7 +114,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
 
           {/* Section 2: KYC */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Vérification de profil</h3>
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3"><span>{t('securityModal.verificationDeProfil')}</span></h3>
             <div className="bg-gray-50 dark:bg-[#222222] rounded-2xl p-4 border border-gray-100 dark:border-[#333333]">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
@@ -123,12 +127,12 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
                     {kycStatus === 'verified' ? <ShieldCheck className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">Statut KYC</p>
+                    <p className="font-semibold text-gray-900 dark:text-white"><span>{t('securityModal.statutKyc')}</span></p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {kycStatus === 'verified' && 'Profil vérifié'}
+                      {kycStatus === 'verified' && t('securityModal.profilVerifie')}
                       {kycStatus === 'pending' && 'En cours d\'examen'}
-                      {kycStatus === 'rejected' && 'Vérification rejetée'}
-                      {!kycStatus && 'Non soumis'}
+                      {kycStatus === 'rejected' && t('securityModal.verificationRejetee')}
+                      {!kycStatus && t('securityModal.nonSoumis')}
                     </p>
                   </div>
                 </div>
@@ -136,7 +140,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
 
               {kycStatus === 'rejected' && (
                 <p className="text-sm text-red-500 bg-red-50 dark:bg-red-500/10 p-3 rounded-xl mb-3">
-                  Votre document a été refusé. Veuillez réessayer.
+                  <span>{t('securityModal.votreDocumentAEteRefuse')}</span>
                 </p>
               )}
 
@@ -145,7 +149,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
                   onClick={() => { onClose(); navigate('/verify-profile'); }}
                   className="w-full py-3 bg-[#FF7A00] text-white rounded-xl font-semibold text-sm hover:bg-[#E66E00] transition-colors"
                 >
-                  Lancer la vérification
+                  <span>{t('securityModal.lancerLaVerification')}</span>
                 </button>
               )}
             </div>
@@ -161,7 +165,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
                   disabled={revokingAll}
                   className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
                 >
-                  {revokingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Tout déconnecter'}
+                  {revokingAll ? <Loader2 className="w-3 h-3 animate-spin" /> : t('securityModal.toutDeconnecter')}
                 </button>
               )}
             </div>
@@ -170,7 +174,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
               {loadingSessions ? (
                 <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>
               ) : sessions?.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-4">Aucune session active</p>
+                <p className="text-sm text-gray-500 text-center py-4"><span>{t('securityModal.aucuneSessionActive')}</span></p>
               ) : (
                 sessions?.map((session) => (
                   <div key={session.id} className="bg-gray-50 dark:bg-[#222222] rounded-2xl p-4 border border-gray-100 dark:border-[#333333] flex items-center justify-between">
@@ -190,7 +194,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
                           )}
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Connecté le {new Date(session.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                          Connecté le {new Date(session.createdAt).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short' })}
                         </p>
                       </div>
                     </div>
@@ -200,7 +204,7 @@ export function SecurityModal({ onClose, kycStatus }: Props) {
                         onClick={() => revokeSession(session.id)}
                         disabled={revokingId}
                         className="p-2 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors"
-                        title="Déconnecter"
+                        title={t('securityModal.deconnecter')}
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>

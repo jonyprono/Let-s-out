@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import i18n from '@/lib/i18n'
 import { ViewIcon, ViewOffSlashIcon, Tick01Icon, RefreshIcon } from 'hugeicons-react'
 import { BackButton } from '@/components/ui/BackButton';
 import { useSendOtp, useCheckTarget, useCheckOtp, useResetPassword } from '@/features/auth/hooks/useAuth'
@@ -12,6 +13,7 @@ import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import { Input } from '@/components/ui/input'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
+import { useTranslation } from 'react-i18next'
 
 declare global {
   interface Window { recaptchaVerifier: any }
@@ -39,6 +41,7 @@ function validatePhone(code: string, phone: string) {
 }
 
 export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
+  const { t } = useTranslation()
   // step: 1=phone, 2=otp(6 digits), 3=new password
   const [step, setStep] = useState(1)
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
@@ -70,24 +73,24 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   // ── Countdown ────────────────────────────────────────────────
   useEffect(() => {
     if (countdown <= 0) return
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(timer)
   }, [countdown])
 
   // ── Navigation ──────────────────────────────────────────────
   const handleNext = async () => {
     if (step === 1) {
       if (!phone.trim()) return
-      if (!currentChannel) { toast.error('Veuillez sélectionner SMS ou Whatsapp.'); return }
+      if (!currentChannel) { toast.error(t('forgotPassword.veuillezSelectionnerSmsOuWhatsapp')); return }
       if (!validatePhone(country.code, phone)) {
         return toast.error(country.code === '+229'
-          ? 'Au Bénin, le numéro doit faire 10 chiffres et commencer par 01.'
-          : 'Le format de votre numéro de téléphone est incorrect.')
+          ? t('forgotPassword.auBeninLeNumeroDoit')
+          : t('forgotPassword.leFormatDeVotreNumero'))
       }
       checkTarget({ target: fullPhone }, {
         onSuccess: async ({ data }) => {
           if (!data.exists) {
-            toast.error("Ce numéro n'est lié à aucun compte.")
+            toast.error(t('forgotPassword.ceNumeroNEstLie'))
           } else {
             if (currentChannel === 'sms') {
               try {
@@ -117,19 +120,19 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                 setLastCodeVia('backend')
                 sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
                   onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-                  onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi du code"),
+                  onError: (e: any) => toast.error(e.response?.data?.message || t('forgotPassword.erreurDEnvoiDuCode')),
                 })
               } finally { setIsFirebaseSending(false) }
             } else {
               setLastCodeVia('backend')
               sendOtp({ target: fullPhone, type: 'phone', channel: 'whatsapp' }, {
                 onSuccess: () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-                onError: (e: any) => toast.error(e.response?.data?.message || "Erreur d'envoi"),
+                onError: (e: any) => toast.error(e.response?.data?.message || t('forgotPassword.erreurDEnvoi')),
               })
             }
           }
         },
-        onError: () => toast.error('Erreur de vérification du numéro'),
+        onError: () => toast.error(t('forgotPassword.erreurDeVerificationDuNumero')),
       })
     } else if (step === 2) {
       const codeStr = otp.join('')
@@ -153,12 +156,12 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             const token = await result.user.getIdToken()
             setIdToken(token); setStep(3)
           }
-        } catch { toast.error('Code SMS invalide ou expiré') }
+        } catch { toast.error(t('forgotPassword.codeSmsInvalideOuExpire')) }
         finally { setIsFirebaseVerifying(false) }
       } else {
         checkOtp({ target: fullPhone, code: codeStr }, {
           onSuccess: () => setStep(3),
-          onError: () => toast.error('Code invalide ou expiré. Vérifiez et réessayez.'),
+          onError: () => toast.error(t('forgotPassword.codeInvalideOuExpireVerifiez')),
         })
       }
     } else if (step === 3) {
@@ -169,8 +172,8 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         idToken: isFirebaseFlow ? idToken : undefined,
         newPassword: password,
       }, {
-        onSuccess: () => { toast.success('Mot de passe réinitialisé avec succès !'); onComplete() },
-        onError: (e: any) => toast.error(e.response?.data?.error || 'Erreur lors de la réinitialisation'),
+        onSuccess: () => { toast.success(t('forgotPassword.motDePasseReinitialiseAvec')); onComplete() },
+        onError: (e: any) => toast.error(e.response?.data?.error || t('forgotPassword.erreurLorsDeLaReinitialisation')),
       })
     }
   }
@@ -209,12 +212,12 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: fullPhone })
         setTimeout(() => listener.remove(), 60000)
         setCountdown(59)
-        toast.success('Code renvoyé par SMS'); setTimeout(() => otpRefs.current[0]?.focus(), 100)
+        toast.success(t('forgotPassword.codeRenvoyeParSms')); setTimeout(() => otpRefs.current[0]?.focus(), 100)
       } else {
         if (!window.recaptchaVerifier) window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container-fp', { size: 'invisible' })
         const confirmation = await signInWithPhoneNumber(auth, fullPhone, window.recaptchaVerifier)
         setConfirmationResult(confirmation); setCountdown(59)
-        toast.success('Code renvoyé par SMS'); setTimeout(() => otpRefs.current[0]?.focus(), 100)
+        toast.success(t('forgotPassword.codeRenvoyeParSms')); setTimeout(() => otpRefs.current[0]?.focus(), 100)
       }
     } catch {
       if (!Capacitor.isNativePlatform() && window.recaptchaVerifier) { try { window.recaptchaVerifier.clear() } catch {} window.recaptchaVerifier = undefined }
@@ -223,8 +226,8 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
       setNativeVerificationId('')
       setLastCodeVia('backend')
       sendOtp({ target: fullPhone, type: 'phone', channel: 'sms' }, {
-        onSuccess: () => { setCountdown(59); toast.success('Code renvoyé'); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
-        onError: () => toast.error('Impossible de renvoyer le code'),
+        onSuccess: () => { setCountdown(59); toast.success(t('forgotPassword.codeRenvoye')); setTimeout(() => otpRefs.current[0]?.focus(), 100) },
+        onError: () => toast.error(t('forgotPassword.impossibleDeRenvoyerLeCode')),
       })
     } finally { setIsFirebaseSending(false) }
   }
@@ -255,11 +258,11 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         <div className="flex items-center justify-center relative mb-3">
           <BackButton
             onClick={handlePrev}
-            aria-label="Retour"
+            aria-label={t('forgotPassword.retour')}
             className="absolute left-0 shrink-0"
           />
           <span className="font-poppins text-[15px] font-semibold text-gray-900 dark:text-white">
-            Réinitialiser votre mot de passe
+            <span>{t('forgotPassword.reinitialiserVotreMotDePasse')}</span>
           </span>
         </div>
         {/* Barre de progression fine */}
@@ -278,14 +281,14 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {step === 1 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Entrez votre numéro de téléphone
+              <span>{t('forgotPassword.entrezVotreNumeroDeTelephone')}</span>
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              Entrez le numéro de téléphone lié à votre compte pour recevoir un code et réinitialiser votre mot de passe.
+              <span>{t('forgotPassword.entrezLeNumeroDeTelephone')}</span>
             </p>
 
             <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
-              Numéro de téléphone
+              <span>{t('forgotPassword.numeroDeTelephone')}</span>
             </label>
             <div className="mb-8">
               <PhoneInputField
@@ -297,7 +300,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             </div>
 
             <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-3 block">
-              Recevoir le code par
+              <span>{t('forgotPassword.recevoirLeCodePar')}</span>
             </label>
             <div className="flex gap-3">
               {/* TODO: réactiver le bouton WhatsApp quand prêt 
@@ -338,10 +341,10 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {step === 2 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Quel est le code reçu&nbsp;?
+              <span>{i18n.t('forgotPassword.whichCode')}</span>
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              Code à {OTP_LENGTH} chiffres envoyé par{' '}
+              <span>{i18n.t('forgotPassword.codeSentBy', { count: OTP_LENGTH })}</span>{' '}
               <strong className="text-gray-900 dark:text-white">
                 {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}
               </strong>{' '}au
@@ -385,7 +388,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                 className="flex items-center gap-1.5 font-poppins text-[13px] text-gray-500 dark:text-gray-400 disabled:opacity-50 transition-opacity"
               >
                 <RefreshIcon className="w-4 h-4" strokeWidth={2} />
-                Renvoyer le code
+                <span>{t('forgotPassword.renvoyerLeCode')}</span>
               </button>
               {countdown > 0 && (
                 <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
@@ -402,17 +405,17 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {step === 3 && (
           <div>
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              Nouveau mot de passe
+              <span>{t('forgotPassword.nouveauMotDePasse')}</span>
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-7">
-              Définissez un nouveau mot de passe robuste et sécurisé pour protéger votre compte
+              <span>{t('forgotPassword.definissezUnNouveauMotDe')}</span>
             </p>
 
             <div className="flex flex-col gap-5 mb-5">
               {/* Mot de passe */}
               <div>
                 <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
-                  Mot de passe
+                  <span>{t('forgotPassword.motDePasse')}</span>
                 </label>
                 <Input
                   type={showPassword ? 'text' : 'password'}
@@ -436,7 +439,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               {/* Confirmer mot de passe */}
               <div>
                 <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
-                  Confirmer mot de passe
+                  <span>{t('forgotPassword.confirmerMotDePasse')}</span>
                 </label>
                 <Input
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -461,7 +464,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             {/* Critères de validation */}
             <div className="space-y-2 mb-2">
               {[
-                { ok: pwdLength, label: 'Au moins 6 caractères numériques' },
+                { ok: pwdLength, label: t('forgotPassword.auMoins6CaracteresNumeriques') },
                 { ok: hasLower && hasUpper, label: 'Au moins 1 majuscule et 1 minuscule' },
                 { ok: pwdNumber, label: 'Au moins 1 chiffre' },
               ].map(({ ok, label }) => (
@@ -497,7 +500,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
           disabled={isNextDisabled()}
           loading={isLoading}
         >
-          {step === 3 ? 'Réinitialiser' : 'Suivant'}
+          {step === 3 ? t('forgotPassword.reinitialiser') : i18n.t('createEvent.actions.next')}
         </PrimaryButton>
       </div>
     </div>

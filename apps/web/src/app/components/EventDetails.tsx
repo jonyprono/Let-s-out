@@ -33,7 +33,6 @@ import { useUserProfile } from '@/features/users/UserProfileContext'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { fr } from 'date-fns/locale'
 import { usersApi } from '@/features/users/api'
 
 import { QRCodeSVG } from 'qrcode.react'
@@ -56,6 +55,9 @@ import { Carousel, CarouselContent, CarouselItem } from '@/app/components/ui/car
 import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
 import { JoinPendingScreen } from '@/app/components/JoinPendingScreen'
 
+import { dateLocale } from '@/lib/locale'
+import { useTranslation } from 'react-i18next'
+import { eventCategoryLabel } from '@/lib/event-categories'
 const CustomShareIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M10.8333 7.0835H11.25V3.91379C11.25 3.5933 11.5098 3.3335 11.8302 3.3335C11.9917 3.3335 12.1457 3.40068 12.2555 3.51893L17.2165 8.8615C17.3987 9.05775 17.5 9.31566 17.5 9.5835C17.5 9.85133 17.3987 10.1092 17.2165 10.3055L12.2555 15.6481C12.1457 15.7663 11.9917 15.8335 11.8302 15.8335C11.5098 15.8335 11.25 15.5737 11.25 15.2532V12.0835C6.62129 12.0835 4.1224 15.4303 3.49332 16.4041C3.38948 16.5648 3.21428 16.6668 3.02292 16.6668C2.73412 16.6668 2.5 16.4327 2.5 16.1439V15.4168C2.5 10.8145 6.23096 7.0835 10.8333 7.0835Z" stroke="#56514F" strokeWidth="1.25" strokeLinejoin="round"/>
@@ -147,6 +149,7 @@ function EventDetailsSkeleton() {
 }
 
 export function EventDetails({ onBack }: EventDetailsProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const handleBack = () => {
     if (onBack) return onBack();
@@ -270,9 +273,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       })
       qc.invalidateQueries({ queryKey: ['events'] })
       qc.invalidateQueries({ queryKey: ['events', event.id] })
-      toast.success('Photo ajoutée avec succès !')
+      toast.success(t('eventDetails.toasts.photoAdded'))
     } catch (err: any) {
-      toast.error(err?.response?.data?.error || err.message || "Erreur lors de l'upload de la photo")
+      toast.error(err?.response?.data?.error || err.message || t('eventDetails.toasts.photoError'))
     } finally {
       setIsUploadingCover(false)
       if (e.target) e.target.value = ''
@@ -312,7 +315,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
       if (event?.requiresApproval) {
         setShowJoinModal(false)
-        toast.success('Votre demande a bien été envoyée.')
+        toast.success(t('eventDetails.toasts.requestSent'))
       } else {
         navigate(`/events/${id}/success`)
       }
@@ -321,11 +324,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       const errCode = err?.response?.data?.error
       if (errCode === 'Already joined') {
         qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
-        toast.info('Vous participez déjà à cet événement.')
+        toast.info(t('eventDetails.toasts.alreadyJoined'))
       } else if (errCode === 'PAYMENT_REQUIRED') {
         navigate(`/events/${id}/pay`)
       } else {
-        toast.error(err?.response?.data?.message || "Impossible de rejoindre l'événement.")
+        toast.error(err?.response?.data?.message || t('eventDetails.toasts.joinError'))
       }
     },
   })
@@ -337,10 +340,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       qc.invalidateQueries({ queryKey: ['events', id] })
       qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
       setShowRefundModal(false)
-      toast.success('Demande de remboursement envoyée.')
+      toast.success(t('eventDetails.toasts.refundSent'))
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.error || "Erreur lors de la demande de remboursement.")
+      toast.error(err?.response?.data?.error || t('eventDetails.toasts.refundError'))
     }
   })
 
@@ -348,11 +351,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     mutationFn: () => eventsApi.releasePool(id!),
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ['events', id] })
-      toast.success(res.data?.message || 'Demande de déblocage envoyée !')
+      toast.success(res.data?.message || t('eventDetails.toasts.releaseRequested'))
       setShowReleaseModal(false)
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.error || "Impossible de débloquer les fonds.")
+      toast.error(err?.response?.data?.error || t('eventDetails.toasts.releaseError'))
     }
   })
 
@@ -360,18 +363,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     mutationFn: () => eventsApi.approvePayout(id!),
     onSuccess: (res: any) => {
       qc.invalidateQueries({ queryKey: ['events', id] })
-      toast.success(res.data?.message || 'Approbation enregistrée !')
+      toast.success(res.data?.message || t('eventDetails.toasts.approvalSaved'))
       setShowPoolManagementModal(false)
     },
     onError: (err: any) => {
-      toast.error(err?.response?.data?.error || "Impossible d'approuver le déblocage.")
+      toast.error(err?.response?.data?.error || t('eventDetails.toasts.approvalError'))
     }
   })
 
   const handleJoin = async () => {
     hapticFeedback.impact()
     if (!user) {
-      toast.error('Connectez-vous pour participer.')
+      toast.error(t('eventDetails.toasts.loginToJoin'))
       navigate('/login')
       return
     }
@@ -416,9 +419,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 403) {
-        toast.info("Rejoignez l'événement pour accéder à la discussion.");
+        toast.info(t('eventDetails.toasts.joinToChat'));
       } else if (status === 404) {
-        toast.info("Aucune discussion trouvée pour cet événement.");
+        toast.info(t('eventDetails.toasts.noChat'));
       } else {
         navigate('/messages');
       }
@@ -442,8 +445,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     const requiresApproval = Boolean(event.requiresApproval);
     if ((event.isPrivate || requiresApproval) && !hasJoined && !isOrganizer) {
       toast.info(requiresApproval
-        ? "Cet événement nécessite la validation de l'organisateur avant de pouvoir le partager."
-        : "Vous devez rejoindre l'événement pour pouvoir le partager.");
+        ? t('eventDetails.toasts.shareNeedsApproval')
+        : t('eventDetails.toasts.shareNeedsJoin'));
       return;
     }
     setShowInviteModal(true);
@@ -454,10 +457,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     hapticFeedback.impact();
     if (favorite) {
       removeFavorite(event.id);
-      toast.success('Retiré des favoris');
+      toast.success(t('eventDetails.toasts.favRemoved'));
     } else {
       addFavorite(event);
-      toast.success('Ajouté aux favoris');
+      toast.success(t('eventDetails.toasts.favAdded'));
     }
   };
 
@@ -495,12 +498,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   if (error || !event) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-background-white px-8 text-center">
-        <p className="text-text-secondary mb-200">Événement introuvable.</p>
+        <p className="text-text-secondary mb-200"><span>{t('eventDetails.notFound')}</span></p>
         <button
           onClick={onBack}
           className="px-5 py-2.5 bg-action-primary active:bg-action-primary-hover text-white rounded-full text-sm font-semibold"
         >
-          Retour
+          <span>{t('common.back')}</span>
         </button>
       </div>
     )
@@ -523,17 +526,17 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const startDate = parseSafeDate(event.startAt)
   const endDate = parseSafeDate(event.endAt)
 
-  let formattedDate = "Date non précisée"
+  let formattedDate = t('common.dateUnknown')
   let formattedStart = "--:--"
   let formattedEnd = "--:--"
 
   try {
     if (event.startAt) {
-      formattedDate = format(startDate, "EEE, d MMMM yyyy", { locale: fr })
-      formattedStart = format(startDate, "HH:mm", { locale: fr })
+      formattedDate = format(startDate, "EEE, d MMMM yyyy", { locale: dateLocale() })
+      formattedStart = format(startDate, "HH:mm", { locale: dateLocale() })
     }
     if (event.endAt) {
-      formattedEnd = format(endDate, "HH:mm", { locale: fr })
+      formattedEnd = format(endDate, "HH:mm", { locale: dateLocale() })
     }
   } catch (err) {
     console.error("Error formatting date in EventDetails:", err)
@@ -547,7 +550,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const deadline = event?.registrationDeadline || event?.startAt || event?.date
   const isPastDeadline = deadline ? parseSafeDate(deadline) < new Date() : false
 
-  const organizerName = event.creator?.profile?.displayName || 'Organisateur'
+  const organizerName = event.creator?.profile?.displayName || t('common.organizer')
   const organizerAvatar = event.creator?.profile?.avatarUrl
 
   const coverUrl = event.coverUrl || null
@@ -590,7 +593,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
         {/* Header */}
         <TopBar
-          title="Détails événement"
+          title={t('eventDetails.title')}
           onBack={handleBack}
           containerClassName="flex-shrink-0 bg-[var(--color-background-primary)] z-10 pt-safe-4 pt-4 shadow-sm"
           rightAction={
@@ -636,7 +639,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   className={`flex flex-col items-center justify-center text-[var(--color-icon-muted)] w-full h-full ${
                     isOrganizer ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors' : ''
                   }`}
-                  title={isOrganizer ? 'Ajouter une photo' : undefined}
+                  title={isOrganizer ? t('eventDetails.addPhoto') : undefined}
                 >
                   <input
                     ref={coverInputRef}
@@ -652,7 +655,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                       {isOrganizer && (
                         <span className="text-[12px] font-medium text-[var(--brand-orange-500)] mt-2">
-                          + Ajouter une photo
+                          <span>{`+ ${t('eventDetails.addPhoto')}`}</span>
                         </span>
                       )}
                     </>
@@ -673,7 +676,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                        event.category.toLowerCase().includes('gastro') || event.category.toLowerCase().includes('food') ? '🍽️' :
                        '✨'}
                     </span>
-                    {event.category === 'NIGHTLIFE' ? 'Fêtes' : event.category === 'FOOD' ? 'Cuisine et gastronomie' : event.category}
+                    <span>{eventCategoryLabel(t, event.category)}</span>
                   </span>
                 </div>
               )}
@@ -687,18 +690,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="flex flex-wrap gap-2 mb-4">
                 {event.genderRestriction === 'FEMALE' && (
                   <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-pink-100 text-pink-700">
-                    ♀️ Réservé aux femmes
+                    <span>{`♀️ ${t('createEvent.gender.FEMALE')}`}</span>
                   </span>
                 )}
                 {event.genderRestriction === 'MALE' && (
                   <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700">
-                    ♂️ Réservé aux hommes
+                    <span>{`♂️ ${t('createEvent.gender.MALE')}`}</span>
                   </span>
                 )}
                 {event.isPrivate && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm">
                     <Lock className="w-3 h-3 text-[var(--brand-orange-500)]" />
-                    Événement privé • Sur invitation uniquement
+                    <span>{t('eventDetails.privateBadge')}</span>
                   </span>
                 )}
               </div>
@@ -709,13 +712,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="flex items-start gap-3">
                 <MapPin className="w-[18px] h-[18px] text-[var(--color-text-secondary)] shrink-0 mt-0.5" />
                 <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] leading-snug">
-                  {event.address ? <>{event.address}<br/>{event.city}</> : (event.city || 'Lieu non précisé')}
+                  {event.address ? <>{event.address}<br/>{event.city}</> : (event.city || t('eventDetails.placeUnknown'))}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <Calendar className="w-[18px] h-[18px] text-[var(--color-text-secondary)] shrink-0" />
                 <p className="text-[14px] font-normal font-inter text-[var(--color-text-secondary)] capitalize leading-snug">
-                  {formattedDate}, {formattedStart} à {formattedEnd}
+                  <span>{t('eventDetails.dateRange', { date: formattedDate, start: formattedStart, end: formattedEnd })}</span>
                 </p>
               </div>
             </div>
@@ -733,7 +736,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               const lng = event.longitude as number;
 
               const openNavigation = () => {
-                const label = encodeURIComponent(event.title || 'Événement');
+                const label = encodeURIComponent(event.title || t('common.event'));
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
                 if (isIOS) {
                   // Essayer Apple Maps, puis fallback Google Maps
@@ -752,7 +755,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--brand-orange-500)] text-white text-[12px] font-semibold active:scale-95 transition-transform shadow-sm"
                     >
                       <Navigation className="w-3.5 h-3.5" />
-                      Itinéraire
+                      <span>{t('eventDetails.directions')}</span>
                     </button>
                   </div>
                   <div className="rounded-[14px] overflow-hidden border border-[var(--border-default)] h-[160px] relative">
@@ -787,7 +790,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {/* À propos */}
             {event.description && (
               <div>
-                <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">À propos</h2>
+                <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]"><span>{t('common.about')}</span></h2>
                 <p className="selectable-text text-[14px] font-normal font-inter text-[var(--color-text-secondary)] leading-relaxed break-words whitespace-pre-wrap">
                   {isDescriptionExpanded
                     ? event.description
@@ -799,7 +802,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
                       className="text-[var(--color-text-primary)] font-semibold cursor-pointer"
                     >
-                      {isDescriptionExpanded ? ' Voir moins' : '... Voir plus'}
+                      <span>{isDescriptionExpanded ? ` ${t('common.seeLess')}` : `... ${t('common.seeMore')}`}</span>
                     </span>
                   )}
                 </p>
@@ -809,7 +812,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             {/* Organisateurs */}
             <div>
               <h2 className="text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] mb-[8px]">
-                {event.coHosts && event.coHosts.length > 0 ? 'Organisateurs' : 'Organisateur'}
+                <span>{event.coHosts && event.coHosts.length > 0 ? t('common.organizers') : t('common.organizer')}</span>
               </h2>
               <div className="flex flex-col gap-[16px]">
                 {[event.creator, ...(event.coHosts || [])].filter(Boolean).map((org: any) => (
@@ -833,7 +836,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           <div className="w-[32px] h-[32px] rounded-full bg-gray-100 dark:bg-[#252525] border border-gray-300 dark:border-gray-700 flex items-center justify-center text-gray-500">
                             <Lock className="w-4 h-4" />
                           </div>
-                          <span className="text-[12px] text-gray-500 italic">Profils masqués par l'organisateur</span>
+                          <span className="text-[12px] text-gray-500 italic"><span>{t('eventDetails.profilesHidden')}</span></span>
                         </div>
                       ) : (
                         <div className="flex items-center -space-x-[8px]">
@@ -859,7 +862,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         onClick={() => setShowParticipantsModal(true)}
                         className="px-[12px] py-[6px] rounded-[8px] border border-[var(--border-default)] bg-[var(--color-background-primary)] text-[12px] font-medium text-[var(--color-text-secondary)] active:scale-95 transition-transform"
                       >
-                        Voir la liste
+                        <span>{t('eventDetails.seeList')}</span>
                       </button>
                     )}
                   </div>
@@ -880,13 +883,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 /* ── CAGNOTTE BLOCK ── */
                 <div className="space-y-[16px] bg-[var(--color-background-alt)] p-[16px] rounded-[12px] border border-[var(--border-default)]">
                   <div className="flex items-center justify-between border-b border-[var(--border-default)] border-dashed pb-[12px]">
-                    <span className="text-[18px] font-normal text-[#FF7A00]" style={{ fontFamily: "'Mochiy Pop One', sans-serif" }}>Cagnotte</span>
+                    <span className="text-[18px] font-normal text-[#FF7A00]" style={{ fontFamily: "'Mochiy Pop One', sans-serif" }}>{t('common.pool')}</span>
                     {(hasJoined || isCreator) && (
                       <button
                         onClick={() => setShowContributionsModal(true)}
                         className="px-[12px] py-[6px] rounded-[8px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[12px] font-medium text-[var(--color-text-primary)] active:scale-95 transition-transform"
                       >
-                        Voir les contributions
+                        <span>{t('eventDetails.seeContributions')}</span>
                       </button>
                     )}
                   </div>
@@ -898,7 +901,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       <span className="text-[14px] font-semibold font-inter text-[#007BFF] dark:text-[#3B82F6]">{cagnoteBudget.toLocaleString()} F CFA</span>
                     </div>
                     <div className="flex items-center justify-between pb-[12px]">
-                      <span className="text-[14px] font-normal font-poppins text-[#404040] dark:text-gray-300">Collecté</span>
+                      <span className="text-[14px] font-normal font-poppins text-[#404040] dark:text-gray-300">{t('common.collected')}</span>
                       <span className="text-[14px] font-bold font-inter text-[#00A35F] dark:text-[#10B981]">{cagnoteCollected.toLocaleString()} F</span>
                     </div>
                     <div className="flex items-center justify-between pb-[12px]">
@@ -929,11 +932,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         </svg>
                       </div>
                       <div className="flex-1 font-inter font-medium text-[12px] leading-[16px] text-[#404040] dark:text-gray-300">
-                        Date limite d'inscription: <span className="text-[#FF7A00]">
+                        <span>{t('eventDetails.regDeadline')}: </span><span className="text-[#FF7A00]">
                           {(() => {
                             try {
-                              return format(parseSafeDate(event.registrationDeadline), "dd MMMM yyyy", { locale: fr });
-                            } catch(e) { return "Date non précisée" }
+                              return format(parseSafeDate(event.registrationDeadline), "dd MMMM yyyy", { locale: dateLocale() });
+                            } catch(e) { return t('common.dateUnknown') }
                           })()}
                         </span>
                       </div>
@@ -946,16 +949,16 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       className="w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-[#CED1D3] dark:border-[#444] bg-orange-50 dark:bg-orange-500/10 text-[14px] font-medium text-[#FF7A00] active:scale-95 transition-transform"
                     >
                       <Briefcase className="w-4 h-4" />
-                      Gérer la cagnotte
+                      <span>{t('eventDetails.managePool')}</span>
                     </button>
                   )}
 
                   {/* Bouton de contribution à la cagnotte (accessible à TOUS avec option anonyme) */}
                   <button
                     onClick={() => {
-                      if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
+                      if (isPastDeadline) return toast.info(t('eventDetails.toasts.regClosed'));
                       if (!user) {
-                        toast.error('Connectez-vous pour contribuer.');
+                        toast.error(t('eventDetails.toasts.loginToContribute'));
                         navigate('/login');
                         return;
                       }
@@ -966,7 +969,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   >
                     <div className="flex items-center gap-2">
                       <EyeOff className="w-4 h-4 text-[#FF7A00] shrink-0" />
-                      <span>{hasJoined ? 'Contribuer à nouveau' : 'Participer à la cagnotte'}</span>
+                      <span>{hasJoined ? t('eventDetails.contributeAgain') : t('eventDetails.joinPool')}</span>
                     </div>
                     <span className="text-[11px] font-medium bg-[#FF7A00]/15 px-2 py-0.5 rounded-full text-[#FF7A00]">
                       Don anonyme possible
@@ -978,14 +981,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                       onClick={() => setShowRefundModal(true)}
                       className={`w-full flex items-center justify-center gap-2 py-[12px] rounded-[8px] border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/10 text-[14px] font-medium text-red-600 dark:text-red-400 mt-[8px] active:scale-95 transition-transform`}
                     >
-                      Demander un remboursement
+                      <span>{t('eventDetails.requestRefund')}</span>
                     </button>
                   )}
                 </div>
               ) : (
                 /* ── STANDARD PARTICIPATION BLOCK ── */
                 <div className="rounded-[14px] bg-gray-50 dark:bg-[#222222] p-4 flex items-center justify-between">
-                  <span className="text-[14px] text-gray-900 dark:text-white font-medium">Montant</span>
+                  <span className="text-[14px] text-gray-900 dark:text-white font-medium">{t('common.amount')}</span>
                   <span className="text-[14px] font-bold text-[#007AFF]">
                     {amountToPay > 0 ? `${amountToPay.toLocaleString()} F CFA` : getEventParticipationMode(event)}
                   </span>
@@ -998,13 +1001,13 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="mt-4 p-4 rounded-xl border border-[#10B981] bg-[#F0FDF4] dark:bg-[#10B981]/10 dark:border-[#10B981]/30">
                 <h3 className="text-[15px] font-bold text-[#047857] dark:text-[#34D399] mb-1">Validation requise</h3>
                 <p className="text-[13px] text-[#065F46] dark:text-[#A7F3D0] mb-3 leading-tight">
-                  L'organisateur a demandé le déblocage des fonds. Veuillez valider votre part ou la déléguer pour autoriser le transfert.
+                  <span>{t('eventDetails.releaseRequestedInfo')}</span>
                 </p>
                 <button
                   onClick={() => navigate(`/events/${event.id}/pool-validation`)}
                   className="w-full flex items-center justify-center py-[10px] bg-[#10B981] text-white text-[14px] font-bold rounded-[8px] active:scale-95 transition-transform"
                 >
-                  Valider ma part
+                  <span>{t('eventDetails.validateMyShare')}</span>
                 </button>
               </div>
             )}
@@ -1026,7 +1029,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 className="flex-[0.45] flex items-center justify-center gap-2 rounded-full font-semibold border-[var(--border-default)] text-[var(--color-text-primary)]"
               >
                 <CustomShareIcon />
-                Partager
+                <span>{t('common.share')}</span>
               </Button>
               {event?.status === 'PUBLISHED' && (
                 <Button
@@ -1035,7 +1038,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   className="flex-[0.55] flex items-center justify-center gap-2 rounded-full font-semibold bg-[var(--brand-orange-500)] text-white hover:opacity-90 disabled:opacity-70"
                 >
                   {goingToChat ? <Loader2 className="w-4 h-4 animate-spin" /> : <CustomChatIcon />}
-                  Accéder au chat
+                  <span>{t('eventDetails.openChat')}</span>
                 </Button>
               )}
             </>
@@ -1049,7 +1052,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 eventsApi.leave(id!).then(() => {
                   qc.invalidateQueries({ queryKey: ['events', id] })
                   qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
-                  toast.success("Demande annulée")
+                  toast.success(t('eventDetails.toasts.requestCancelled'))
                 })
               }}
             />
@@ -1059,15 +1062,15 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-2xl px-4 py-2">
                 <span className="text-lg">✅</span>
                 <div className="flex-1">
-                  <p className="text-[13px] font-semibold text-green-800 dark:text-green-300">Demande approuvée !</p>
-                  <p className="text-[11px] text-green-600 dark:text-green-400">Finalisez votre inscription en effectuant le paiement.</p>
+                  <p className="text-[13px] font-semibold text-green-800 dark:text-green-300"><span>{t('eventDetails.approvedTitle')}</span></p>
+                  <p className="text-[11px] text-green-600 dark:text-green-400"><span>{t('eventDetails.approvedDesc')}</span></p>
                 </div>
               </div>
               <Button
                 onClick={() => navigate(`/events/${id}/pay?amount=${event.price}&type=participation`)}
                 className="flex-1 rounded-full font-medium text-[14px] font-poppins"
               >
-                💳 Payer ma participation ({event.price} €)
+                <span>{t('eventDetails.payParticipation', { price: event.price })}</span>
               </Button>
             </div>
           ) : hasPool ? (
@@ -1076,7 +1079,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 variant="outline"
                 onClick={() => {
                   if (!user) {
-                    toast.error('Connectez-vous pour faire un don.');
+                    toast.error(t('eventDetails.toasts.loginToDonate'));
                     navigate('/login');
                     return;
                   }
@@ -1085,12 +1088,12 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 className="flex-[0.4] rounded-full font-medium text-[13px] font-poppins border-[#FF7A00] text-[#FF7A00] flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
               >
                 <EyeOff className="w-4 h-4 text-[#FF7A00]" />
-                Faire un don
+                <span>{t('eventDetails.donate')}</span>
               </Button>
               <Button
                 onClick={() => {
-                  if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
-                  if (isEventEnded) return toast.info("Cet événement est terminé.");
+                  if (isPastDeadline) return toast.info(t('eventDetails.toasts.regClosed'));
+                  if (isEventEnded) return toast.info(t('eventDetails.toasts.eventEnded'));
                   handleJoin();
                 }}
                 disabled={joinMutation.isPending || isFull || isPastDeadline || isEventEnded || bookingLoading}
@@ -1099,15 +1102,15 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 {joinMutation.isPending || bookingLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : isEventEnded ? (
-                  'Événement terminé'
+                  t('eventDetails.ended')
                 ) : isFull ? (
-                  'Complet'
+                  t('eventDetails.full')
                 ) : isPastDeadline ? (
-                  'Clôturé'
+                  t('eventDetails.closed')
                 ) : event?.requiresApproval ? (
-                  'Demander à rejoindre'
+                  t('eventDetails.requestToJoin')
                 ) : (
-                  'Rejoindre'
+                  t('eventDetails.join')
                 )}
               </Button>
             </div>
@@ -1118,21 +1121,21 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 className="w-full rounded-full font-medium text-[14px] font-poppins bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Lock className="w-4 h-4" />
-                Uniquement sur invitation
+                <span>{t('eventDetails.inviteOnly')}</span>
               </Button>
               <button
                 type="button"
                 onClick={() => navigate('/scan-qr')}
                 className="text-[12px] text-[var(--brand-orange-500)] font-medium hover:underline py-0.5"
               >
-                Vous avez un code ? Rejoindre avec le code
+                <span>{t('eventDetails.haveCode')}</span>
               </button>
             </div>
           ) : (
             <Button
               onClick={() => {
-                if (isPastDeadline) return toast.info("La date limite d'inscription est dépassée.");
-                if (isEventEnded) return toast.info("Cet événement est terminé.");
+                if (isPastDeadline) return toast.info(t('eventDetails.toasts.regClosed'));
+                if (isEventEnded) return toast.info(t('eventDetails.toasts.eventEnded'));
                 handleJoin();
               }}
               disabled={joinMutation.isPending || isFull || isPastDeadline || isEventEnded || bookingLoading}
@@ -1141,15 +1144,15 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               {joinMutation.isPending || bookingLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : isEventEnded ? (
-                'Événement terminé'
+                t('eventDetails.ended')
               ) : isFull ? (
-                'Complet'
+                t('eventDetails.full')
               ) : isPastDeadline ? (
-                'Clôturé'
+                t('eventDetails.closed')
               ) : event?.requiresApproval ? (
-                'Demander à rejoindre'
+                t('eventDetails.requestToJoin')
               ) : (
-                "Rejoindre l'événement"
+                t('eventDetails.joinEvent')
               )}
             </Button>
           )}
@@ -1198,8 +1201,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="w-12 h-12 bg-orange-50 text-action-primary rounded-full flex items-center justify-center mx-auto mb-3">
                 <Lock className="w-6 h-6" />
               </div>
-              <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-1">Événement privé</h3>
-              <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-tight">Scannez ce QR code pour rejoindre ou utilisez le code.</p>
+              <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-1"><span>{t('eventDetails.privateEvent')}</span></h3>
+              <p className="text-[14px] text-gray-500 dark:text-gray-400 leading-tight"><span>{t('eventDetails.scanQr')}</span></p>
             </div>
             <div className="bg-gray-50 dark:bg-[#222222] p-6 rounded-2xl flex flex-col items-center justify-center border border-gray-100 dark:border-white/10 mb-6">
               <div className="bg-white dark:bg-[#1A1A1A] p-3 rounded-xl shadow-sm mb-4">
@@ -1228,7 +1231,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               </div>
             </div>
             <button onClick={() => setShowQRModal(false)} className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-[15px]">
-              Fermer
+              <span>{t('common.close')}</span>
             </button>
           </div>
         </div>
@@ -1238,11 +1241,11 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       {showRefundModal && (
         <div className="absolute inset-0 z-50 bg-black/40 flex items-end justify-center">
           <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[20px] shadow-2xl p-5 pb-[calc(1rem+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom duration-300">
-            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">Demander un remboursement</h3>
-            <p className="text-[14px] text-gray-500 mb-4">Veuillez indiquer la raison de votre désistement. Votre demande sera soumise à l'organisateur.</p>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('eventDetails.requestRefund')}</span></h3>
+            <p className="text-[14px] text-gray-500 mb-4"><span>{t('eventDetails.refundIntro')}</span></p>
             <textarea
               className="w-full h-24 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#222] text-[14px] mb-4 focus:outline-none focus:border-red-500"
-              placeholder="Raison du remboursement..."
+              placeholder={t('eventDetails.refundPlaceholder')}
               value={refundReason}
               onChange={(e) => setRefundReason(e.target.value)}
             />
@@ -1252,14 +1255,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 className="flex-1 rounded-full h-12"
                 onClick={() => { setShowRefundModal(false); setRefundReason(''); }}
               >
-                Annuler
+                <span>{t('common.cancel')}</span>
               </Button>
               <Button
                 className="flex-1 rounded-full h-12 bg-red-500 hover:bg-red-600 text-white"
                 disabled={!refundReason.trim() || refundMutation.isPending}
                 onClick={() => refundMutation.mutate(refundReason)}
               >
-                {refundMutation.isPending ? 'Envoi...' : 'Confirmer'}
+                <span>{refundMutation.isPending ? t('common.sending') : t('common.confirm')}</span>
               </Button>
             </div>
           </div>
@@ -1274,14 +1277,14 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
             <div className="flex items-center justify-between px-5 py-3">
-              <span className="text-[15px] font-semibold text-gray-900 dark:text-white">Débloquer les fonds</span>
+              <span className="text-[15px] font-semibold text-gray-900 dark:text-white"><span>{t('eventDetails.releaseFunds')}</span></span>
               <button onClick={() => setShowReleaseModal(false)} className="w-7 h-7 rounded-full bg-gray-100 dark:bg-[#2a2a2a] flex items-center justify-center">
                 <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
             <div className="px-5 pb-8">
               <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-5 leading-relaxed">
-                Vous êtes sur le point de débloquer la somme de <strong className="text-gray-900 dark:text-white">{cagnoteCollected.toLocaleString()} F CFA</strong> vers votre portefeuille. Cette action est définitive.
+                <span>{t('eventDetails.releaseConfirm1')}</span> <strong className="text-gray-900 dark:text-white">{cagnoteCollected.toLocaleString()} F CFA</strong> <span>{t('eventDetails.releaseConfirm2')}</span>
               </p>
               <button
                 onClick={() => releasePoolMutation.mutate()}
@@ -1289,7 +1292,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 className="w-full bg-[#10B981] text-white py-4 rounded-full font-bold text-[16px] active:scale-[0.98] transition-transform disabled:opacity-50 flex justify-center items-center gap-2"
               >
                 {releasePoolMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Briefcase className="w-5 h-5" />}
-                Confirmer le transfert
+                <span>{t('eventDetails.confirmTransfer')}</span>
               </button>
             </div>
           </div>
@@ -1327,7 +1330,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                               openUserProfile(
                                 booking.user.id, 
                                 { displayName: name, avatarUrl: avatar },
-                                { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                                { title: event?.title || t('common.event'), coverUrl: event?.coverUrl }
                               )
                             }
                           }}
@@ -1362,7 +1365,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                         </button>
                         {delegationsMap[booking.user.id] && delegationsMap[booking.user.id].length > 0 && (
                           <div className="px-5 pb-3 pt-1">
-                            <p className="text-[12px] text-gray-500 dark:text-gray-400 mb-2">A reçu les délégations de :</p>
+                            <p className="text-[12px] text-gray-500 dark:text-gray-400 mb-2"><span>{t('eventDetails.delegationsFrom')}</span></p>
                             <div className="flex flex-wrap gap-2">
                               {delegationsMap[booking.user.id].map((delBooking: any) => (
                                 <div key={delBooking.id} className="flex items-center gap-1.5 bg-gray-100 dark:bg-[#333] px-2 py-1 rounded-full">
@@ -1370,7 +1373,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                                     <img src={delBooking.user?.profile?.avatarUrl || ''} className="w-full h-full object-cover" />
                                   </div>
                                   <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300">
-                                    {delBooking.user?.profile?.displayName || 'Anonyme'}
+                                    {delBooking.user?.profile?.displayName || t('common.anonymous')}
                                   </span>
                                 </div>
                               ))}
@@ -1387,7 +1390,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     <Users className="w-8 h-8 text-gray-400" />
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 text-[15px] font-medium text-center">
-                    Aucun OUTSTER pour le moment.
+                    <span>{t('eventDetails.noOutsters')}</span>
                   </p>
                 </div>
               )}
@@ -1443,7 +1446,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                               openUserProfile(
                                 booking.user.id, 
                                 { displayName: name, avatarUrl: avatar },
-                                { title: event?.title || 'Événement', coverUrl: event?.coverUrl }
+                                { title: event?.title || t('common.event'), coverUrl: event?.coverUrl }
                               )
                             }
                           }}
@@ -1471,7 +1474,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                             {isVerified && <VerifiedBadge size={16} />}
                             {isAnon && (
                               <span className="text-[10px] bg-[#FF7A00]/10 text-[#FF7A00] font-medium px-2 py-0.5 rounded-full">
-                                Anonyme
+                                {t('common.anonymous')}
                               </span>
                             )}
                           </div>
@@ -1484,7 +1487,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                   })()}
                 </div>
               ) : (
-                <div className="text-center py-10 text-gray-400 text-[14px]">Aucune contribution pour le moment.</div>
+                <div className="text-center py-10 text-gray-400 text-[14px]"><span>{t('eventDetails.noContributions')}</span></div>
               )}
             </div>
           </div>
@@ -1508,7 +1511,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
             <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100 dark:border-white/10 flex-shrink-0">
-              <h3 className="text-[17px] font-bold text-gray-900 dark:text-white">Demandes en attente</h3>
+              <h3 className="text-[17px] font-bold text-gray-900 dark:text-white"><span>{t('eventDetails.pendingRequests')}</span></h3>
               <button onClick={() => setShowPendingModal(false)} className="w-8 h-8 bg-gray-100 dark:bg-[#2a2a2a] rounded-full flex items-center justify-center">
                 <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </button>
@@ -1516,7 +1519,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <div className="flex-1 overflow-y-auto px-5 py-4 pb-10" style={{ scrollbarWidth: 'none' }}>
               {!pendingBookingsData?.data || pendingBookingsData.data.length === 0 ? (
                 <div className="text-center py-10">
-                  <p className="text-gray-400 text-[14px]">Aucune demande en attente.</p>
+                  <p className="text-gray-400 text-[14px]"><span>{t('eventDetails.noPending')}</span></p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1537,7 +1540,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           onClick={async () => {
                             try {
                               await eventsApi.approveBooking(id!, booking.id)
-                              toast.success('Participation acceptée !')
+                              toast.success(t('eventDetails.toasts.requestAccepted'))
                               refetchPending()
                               qc.invalidateQueries({ queryKey: ['events', id] })
                             } catch { toast.error('Erreur') }
@@ -1548,7 +1551,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                           onClick={async () => {
                             try {
                               await eventsApi.rejectBooking(id!, booking.id)
-                              toast.success('Demande refusée.')
+                              toast.success(t('eventDetails.toasts.requestDeclined'))
                               refetchPending()
                               qc.invalidateQueries({ queryKey: ['events', id] })
                             } catch { toast.error('Erreur') }
@@ -1570,6 +1573,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 }
 
 function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, currentUserId: string | undefined, onOpenProfile: any }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
@@ -1581,7 +1585,7 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
     enabled: !!org.id,
   });
 
-  const orgName = org.profile?.displayName || orgProfile?.displayName || 'Organisateur';
+  const orgName = org.profile?.displayName || orgProfile?.displayName || t('common.organizer');
   const orgAvatar = org.profile?.avatarUrl || orgProfile?.avatarUrl;
   const orgFollowers = orgProfile?.followersCount || org.profile?.followersCount || 0;
   const orgEvents = orgProfile?.detailedStats?.eventsCount || orgProfile?.eventsCount || org.detailedStats?.eventsCount || org.profile?.eventsCount || 0;
@@ -1604,7 +1608,7 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
       const conv = await chatApi.createDM(org.id);
       navigate(`/chat/${conv.id}`);
     } catch {
-      toast.error("Impossible de démarrer la conversation");
+      toast.error(t('eventDetails.toasts.chatStartError'));
       setDmPending(false);
     }
   };
@@ -1654,7 +1658,7 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
             <BadgeCheck className="w-[14px] h-[14px] text-[#007AFF]" />
           </div>
           <p className="text-[12px] font-normal font-inter text-[var(--color-text-secondary)]">
-            {orgFollowers} followers • {orgEvents} événements {orgRating && <span>• {orgRating} <span className="text-[#FF2E93]">★</span></span>}
+            <span>{t('eventDetails.orgStats', { followers: orgFollowers, events: orgEvents })}</span> {orgRating && <span>• {orgRating} <span className="text-[#FF2E93]">★</span></span>}
           </p>
         </div>
       </div>
@@ -1667,7 +1671,7 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
             disabled={dmPending}
             className="flex-1 py-[6px] rounded-[100px] border border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[13px] font-semibold text-[var(--color-text-primary)] active:scale-95 transition-transform disabled:opacity-60"
           >
-            {dmPending ? '...' : 'Message'}
+            {dmPending ? '...' : t('common.message')}
           </button>
           <button
             onClick={handleFollow}
@@ -1677,7 +1681,7 @@ function OrganizerCard({ org, currentUserId, onOpenProfile }: { org: any, curren
                 : 'border-[var(--border-default)] bg-white dark:bg-[#1A1A1A] text-[var(--color-text-primary)]'
             }`}
           >
-            {isFollowing ? '✓ Abonné(e)' : 'Suivre'}
+            <span>{isFollowing ? `✓ ${t('common.following')}` : t('common.follow')}</span>
           </button>
         </div>
       )}
