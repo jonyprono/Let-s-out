@@ -57,6 +57,8 @@ async function bootstrap() {
   await app.register(import('./modules/users/users.routes'), { prefix: '/api/v1/users' })
   await app.register(import('./modules/events/events.routes'), { prefix: '/api/v1/events' })
   await app.register(import('./modules/payments/event-payout.routes'), { prefix: '/api/v1/events' })
+  // Billetterie multi-catégories : /api/v1/events/:id/ticket-tiers, /payout-info, /ticket-sales, /my-tickets, /api/v1/tickets/:token
+  await app.register(import('./modules/events/ticketing.routes'), { prefix: '/api/v1' })
   await app.register(import('./modules/chat/chat.routes'), { prefix: '/api/v1/chat' })
   await app.register(import('./modules/chat/upload.routes'), { prefix: '/api/v1/chat' })
   await app.register(import('./modules/notifications/notifications.routes'), { prefix: '/api/v1/notifications' })

@@ -53,6 +53,9 @@ import { useFavoritesStore } from '@/stores/favorites.store'
 import { Carousel, CarouselContent, CarouselItem } from '@/app/components/ui/carousel'
 
 import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
+import { TicketPurchaseSheet } from '@/features/ticketing/components/TicketPurchaseSheet'
+import { EventTicketingBlock } from '@/features/ticketing/components/EventTicketingBlock'
+import { MyTicketModal } from '@/features/events/components/MyTicketModal'
 import { JoinPendingScreen } from '@/app/components/JoinPendingScreen'
 
 import { dateLocale } from '@/lib/locale'
@@ -165,6 +168,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const hasHydrated = useAuthStore((s) => s._hasHydrated)
   const { openUserProfile } = useUserProfile()
   const [showJoinModal, setShowJoinModal] = useState(false)
+  // Billetterie multi-tarifs : achat (catégories + quantités) et « Mes billets »
+  const [showTicketPurchase, setShowTicketPurchase] = useState(false)
+  const [showMyTickets, setShowMyTickets] = useState(false)
   const [showContributeModal, setShowContributeModal] = useState(false)
   const [showQRModal, setShowQRModal] = useState(false)
   const [codeCopied, setCodeCopied] = useState(false)
@@ -380,6 +386,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     }
     if (hasJoined) {
       goToChat()
+      return
+    }
+    if (event?.ticketingEnabled) {
+      setShowTicketPurchase(true)
       return
     }
     if (hasPool) {
@@ -985,6 +995,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                     </button>
                   )}
                 </div>
+              ) : event.ticketingEnabled ? (
+                /* ── BILLETTERIE MULTI-TARIFS ── */
+                <EventTicketingBlock
+                  eventId={event.id}
+                  hasTickets={myBookingData?.status === 'CONFIRMED'}
+                  isEnded={isEventEnded}
+                  onBuy={() => {
+                    if (!user) { toast.error(t('eventDetails.toasts.loginToJoin')); navigate('/login'); return }
+                    setShowTicketPurchase(true)
+                  }}
+                  onShowTickets={() => setShowMyTickets(true)}
+                />
               ) : (
                 /* ── STANDARD PARTICIPATION BLOCK ── */
                 <div className="rounded-[14px] bg-gray-50 dark:bg-[#222222] p-4 flex items-center justify-between">
@@ -1149,6 +1171,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 t('eventDetails.full')
               ) : isPastDeadline ? (
                 t('eventDetails.closed')
+              ) : event?.ticketingEnabled ? (
+                t('ticketing.purchase.buyTickets')
               ) : event?.requiresApproval ? (
                 t('eventDetails.requestToJoin')
               ) : (
@@ -1158,6 +1182,20 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           )}
         </div>
       </div>
+
+      {/* ── Billetterie : achat + mes billets ── */}
+      {event?.ticketingEnabled && (
+        <>
+          <TicketPurchaseSheet event={event} open={showTicketPurchase} onClose={() => setShowTicketPurchase(false)} />
+          <MyTicketModal
+            eventId={event.id}
+            eventTitle={event.title}
+            eventDate={event.startAt}
+            open={showMyTickets}
+            onClose={() => setShowMyTickets(false)}
+          />
+        </>
+      )}
 
       {/* ── Join Event Bottom Sheet ── */}
       {event && (

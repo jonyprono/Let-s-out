@@ -25,7 +25,9 @@ import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { SquareUnlock01Icon, SquareLock01Icon, EarthIcon, Coins01Icon } from 'hugeicons-react'
 import { toast } from 'sonner'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Ticket } from 'lucide-react'
+import { ticketingApi, ticketingKeys, payoutInfoError, apiErrorMessage, type PayoutInfo, type PayoutNetwork } from '@/features/ticketing/api'
+import { AddTierButton, CommissionNotice, PayoutAccountFields, TierCard, TierFormSheet } from '@/features/ticketing/components/TicketingFields'
 import { searchPlaces, reverseGeocode } from '@/lib/geo'
 import { isFieldValid } from '@/lib/validation'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -54,6 +56,17 @@ import { EVENT_CATEGORIES, getEventCategory, eventCategoryLabel } from '@/lib/ev
 interface CreateEventProps { onBack: () => void }
 
 let sessionDraft: any = null;
+
+/** Catégorie de billets en cours d'édition (id présent = déjà enregistrée côté serveur) */
+interface DraftTier {
+  key: string
+  id?: string
+  name: string
+  description: string | null
+  price: number
+  totalQuantity: number
+  soldQuantity: number
+}
 
 export function clearCreateEventDraft() {
   sessionDraft = null;
@@ -245,6 +258,20 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     ? eventCreator.profile?.avatarUrl
     : me?.profile?.avatarUrl
 
+  // ── Billetterie multi-tarifs ─────────────────────────────────────────────
+  const [ticketTiers, setTicketTiers] = useState<DraftTier[]>(sessionDraft?.ticketTiers ?? [])
+  const [removedTierIds, setRemovedTierIds] = useState<string[]>(sessionDraft?.removedTierIds ?? [])
+  const [savedTiers, setSavedTiers] = useState<Record<string, DraftTier>>({})
+  const [payoutInfo, setPayoutInfo] = useState<PayoutInfo>(sessionDraft?.payoutInfo ?? { phone: '', network: '', name: '' })
+  const [payoutErrField, setPayoutErrField] = useState<'phone' | 'network' | 'name' | null>(null)
+  const [editingTierKey, setEditingTierKey] = useState<string | 'new' | null>(null)
+  const isTicketing = participationMode === 'ticket'
+  const { data: ticketCfg } = useQuery({
+    queryKey: ticketingKeys.config,
+    queryFn: ticketingApi.config,
+    staleTime: 10 * 60_000,
+  })
+
   const [enablePool, setEnablePool] = useState(sessionDraft?.enablePool ?? false)
   const [poolDescription, setPoolDescription] = useState(sessionDraft?.poolDescription ?? '')
   const [poolTarget, setPoolTarget] = useState(sessionDraft?.poolTarget ?? '')
@@ -256,14 +283,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       regEndDate, regEndTime,
       address, city, lat, lon, privacy, requiresApproval, allowGuestInvites, description,
       participationMode, coverFiles, coverPreviews, selectedCoOrgs, maxPlaces, amount,
-      enablePool, poolDescription, poolTarget, poolMinAmount, showInFeed, showParticipants
+      enablePool, poolDescription, poolTarget, poolMinAmount, showInFeed, showParticipants,
+      ticketTiers, removedTierIds, payoutInfo
     }
   }, [
     title, category, startDate, startTime, hasEndDate, endDate, endTime,
     regEndDate, regEndTime,
     address, city, lat, lon, privacy, requiresApproval, allowGuestInvites, description,
     participationMode, coverFiles, coverPreviews, selectedCoOrgs, maxPlaces, amount,
-    enablePool, poolDescription, poolTarget, poolMinAmount, showInFeed, showParticipants
+    enablePool, poolDescription, poolTarget, poolMinAmount, showInFeed, showParticipants,
+    ticketTiers, removedTierIds, payoutInfo
   ])
 
   const fileRef = useRef<HTMLInputElement>(null)
@@ -408,6 +437,29 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       }
     }
 
+    // Billetterie existante : catégories (avec ventes) + compte de versement
+    if (editEventId) {
+      ticketingApi.sales(editEventId).then((sales) => {
+        if (!sales?.tiers?.length) return
+        const drafts: DraftTier[] = sales.tiers.map((tr) => ({
+          key: tr.id, id: tr.id, name: tr.name, description: tr.description,
+          price: tr.price, totalQuantity: tr.totalQuantity, soldQuantity: tr.soldQuantity,
+        }))
+        setParticipationMode('ticket')
+        setEnablePool(false)
+        setTicketTiers(drafts)
+        setRemovedTierIds([])
+        setSavedTiers(Object.fromEntries(drafts.map((d) => [d.id as string, d])))
+        if (sales.payoutInfo?.canEdit) {
+          setPayoutInfo({
+            phone: sales.payoutInfo.phone ?? '',
+            network: (sales.payoutInfo.network as PayoutNetwork) ?? '',
+            name: sales.payoutInfo.name ?? '',
+          })
+        }
+      }).catch(() => { })
+    }
+
     if (eventData && editEventId) {
       // Data already passed via navigation state
       applyEventData(eventData)
@@ -430,7 +482,55 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const isStartDateValid = startDate ? new Date(startDate) >= new Date(new Date().setHours(0, 0, 0, 0)) : false;
   const canGoToStep2 = isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid
   const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
-  const canSubmit = canGoToStep2 && !!participationMode && isCagnotteValid
+  // Seul le créateur définit le compte de versement (un co-organisateur qui modifie l'événement n'y touche pas)
+  const canEditPayout = !isEdit || !eventCreator || eventCreator.id === me?.id
+  const isTicketingValid = isTicketing
+    ? ticketTiers.length > 0 && (!canEditPayout || payoutInfoError(payoutInfo) === null)
+    : true
+  const canSubmit = canGoToStep2 && !!participationMode && isCagnotteValid && isTicketingValid
+
+  /** Enregistre catégories + compte de versement après la création / modification de l'événement */
+  const syncTicketing = async (eventId: string): Promise<boolean> => {
+    let ok = true
+    // Compte de versement d'abord : la billetterie n'est en vente qu'une fois le compte configuré
+    if (canEditPayout && payoutInfoError(payoutInfo) === null) {
+      try { await ticketingApi.savePayoutInfo(eventId, payoutInfo) } catch (e) { ok = false; toast.error(apiErrorMessage(e, t('ticketing.toasts.saveError'))) }
+    }
+    for (const id of removedTierIds) {
+      try { await ticketingApi.deleteTier(eventId, id) } catch (e) { ok = false; toast.error(apiErrorMessage(e, t('ticketing.toasts.saveError'))) }
+    }
+    const synced: DraftTier[] = []
+    for (const d of ticketTiers) {
+      const input = { name: d.name, description: d.description, price: d.price, totalQuantity: d.totalQuantity }
+      try {
+        if (d.id) {
+          const before = savedTiers[d.id]
+          const changed = !before || before.name !== d.name || before.description !== d.description || before.price !== d.price || before.totalQuantity !== d.totalQuantity
+          const r = changed ? await ticketingApi.updateTier(eventId, d.id, input) : null
+          synced.push(r ? { ...d, soldQuantity: r.soldQuantity } : d)
+        } else {
+          const r = await ticketingApi.createTier(eventId, input)
+          synced.push({ ...d, id: r.id, key: r.id })
+        }
+      } catch (e) {
+        ok = false
+        synced.push(d)
+        toast.error(apiErrorMessage(e, t('ticketing.toasts.saveError')))
+      }
+    }
+    setTicketTiers(synced)
+    setRemovedTierIds([])
+    setSavedTiers(Object.fromEntries(synced.filter((d) => d.id).map((d) => [d.id as string, d])))
+    return ok
+  }
+
+  const removeDraftTier = (key: string) => {
+    const tier = ticketTiers.find((d) => d.key === key)
+    if (!tier) return
+    if (tier.soldQuantity > 0) { toast.error(t('ticketing.errors.hasSales')); return }
+    if (tier.id) setRemovedTierIds((p) => [...p, tier.id as string])
+    setTicketTiers((p) => p.filter((d) => d.key !== key))
+  }
 
   const handleSubmit = async () => {
     if (formStep === 1) {
@@ -476,7 +576,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       const isEdit = !!(location.state?.editEventId || createdEventId)
 
       // Bug-2 guard: cagnotte or paid events require verified KYC
-      const isPaidOrCagnotte = (enablePool && poolTarget && parseFloat(poolTarget) > 0) || (amount && parseFloat(amount) > 0)
+      const isPaidOrCagnotte = (enablePool && poolTarget && parseFloat(poolTarget) > 0) || (amount && parseFloat(amount) > 0) || isTicketing
       if (isPaidOrCagnotte && !isKycVerified) {
         toast.error(t('createEvent.toasts.kycRequired'))
         setLoading(false)
@@ -506,8 +606,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         country: 'Bénin',
         latitude: lat ?? undefined,
         longitude: lon ?? undefined,
-        maxAttendees: maxPlaces ? parseInt(maxPlaces) : undefined,
-        price: amount ? parseFloat(amount) : undefined,
+        // Billetterie : les places et les prix sont portés par les catégories
+        maxAttendees: !isTicketing && maxPlaces ? parseInt(maxPlaces) : undefined,
+        price: !isTicketing && amount ? parseFloat(amount) : undefined,
         isPrivate: privacy === 'PRIVATE',
         requiresApproval,
         genderRestriction,
@@ -585,6 +686,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
       const eventId = editEventId || res.data?.id
       setCreatedEventId(eventId)
+      if (isTicketing && eventId) {
+        const ok = await syncTicketing(eventId)
+        if (!ok) toast.warning(t('ticketing.toasts.partialSync'))
+        qc.invalidateQueries({ queryKey: ticketingKeys.sales(eventId) })
+      }
       if (isEdit) {
         toast.success(t('createEvent.toasts.updated'))
         qc.invalidateQueries({ queryKey: ['events', eventId] })
@@ -708,7 +814,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
   const isPaid = amount && parseFloat(amount) > 0;
   const hasCagnotte = participationMode === 'cagnotte' || (enablePool && poolTarget && parseFloat(poolTarget) > 0);
-  const requiresVerification = isPaid || hasCagnotte;
+  const requiresVerification = isPaid || hasCagnotte || isTicketing;
   // Use KYC status for financial features
   const isVerified = isKycVerified;
 
@@ -786,6 +892,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   {participationMode === 'free' ? (
                     <div className="px-2.5 py-1 rounded-[6px] text-[12px] font-bold bg-[var(--functional-green-500)] text-[var(--color-text-inverse)]">
                       <span>{t('createEvent.done.free')}</span>
+                    </div>
+                  ) : isTicketing ? (
+                    <div className="px-2.5 py-1 rounded-[6px] text-[12px] font-bold bg-[#FF7A00] text-white">
+                      <span>{t('ticketing.mode.badge', { count: ticketTiers.length })}</span>
                     </div>
                   ) : (
                     <div className="px-[3px] py-[1px] rounded-[4px] w-[64px] flex items-center justify-center bg-[var(--color-cagnotte)]">
@@ -1257,7 +1367,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
           {formStep === 2 && (
             <div className="animate-in slide-in-from-right-2">
-              <div className="mb-4">
+              <div className={`mb-4 ${isTicketing ? 'hidden' : ''}`}>
                 <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5"><span>{t('createEvent.fields.maxAttendees')}</span></p>
                 <input
                   value={maxPlaces}
@@ -1325,6 +1435,46 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
                   </div>
 
+                </div>
+              )}
+
+              {/* Billetterie multi-tarifs : catégories + compte Mobile Money + commission */}
+              {isTicketing && (
+                <div className="animate-in slide-in-from-top-2 space-y-4">
+                  <div>
+                    <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5"><span>{t('ticketing.manage.categories')}</span></p>
+                    <div className="space-y-2.5">
+                      {ticketTiers.map((tier) => (
+                        <TierCard
+                          key={tier.key}
+                          tier={tier}
+                          percent={ticketCfg?.commissionPercent ?? 0}
+                          onEdit={() => setEditingTierKey(tier.key)}
+                          onDelete={tier.soldQuantity === 0 ? () => removeDraftTier(tier.key) : undefined}
+                        />
+                      ))}
+                      <AddTierButton onClick={() => setEditingTierKey('new')} />
+                    </div>
+                    {ticketTiers.length === 0 && (
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('ticketing.create.atLeastOne')}</span></p>
+                    )}
+                  </div>
+
+                  {canEditPayout ? (
+                    <div>
+                      <p className="text-[13px] font-semibold text-[var(--color-text-primary)] mb-0.5"><span>{t('ticketing.payout.title')}</span></p>
+                      <p className="text-[11px] text-[var(--color-text-muted)] mb-2.5"><span>{t('ticketing.payout.intro')}</span></p>
+                      <PayoutAccountFields
+                        value={payoutInfo}
+                        onChange={(v) => { setPayoutInfo(v); setPayoutErrField(null) }}
+                        errorField={payoutErrField}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-[12px] text-[var(--color-text-muted)]"><span>{t('ticketing.payout.creatorOnly')}</span></p>
+                  )}
+
+                  {ticketCfg && <CommissionNotice percent={ticketCfg.commissionPercent} delayHours={ticketCfg.payoutDelayHours} />}
                 </div>
               )}
 
@@ -1758,12 +1908,33 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         </div>
       </BottomSheet>
 
+      {/* ── Catégorie de billets (ajout / modification) ─────────────────── */}
+      <TierFormSheet
+        open={editingTierKey !== null}
+        onClose={() => setEditingTierKey(null)}
+        initial={(() => {
+          const d = editingTierKey && editingTierKey !== 'new' ? ticketTiers.find((x) => x.key === editingTierKey) : null
+          return d ? { name: d.name, description: d.description ?? '', price: String(d.price), totalQuantity: String(d.totalQuantity) } : null
+        })()}
+        minQuantity={editingTierKey && editingTierKey !== 'new' ? (ticketTiers.find((x) => x.key === editingTierKey)?.soldQuantity ?? 0) : 0}
+        percent={ticketCfg?.commissionPercent ?? 0}
+        onSubmit={(v) => {
+          if (editingTierKey === 'new') {
+            setTicketTiers((p) => [...p, { key: `new-${Date.now()}-${p.length}`, soldQuantity: 0, ...v }])
+          } else {
+            setTicketTiers((p) => p.map((x) => (x.key === editingTierKey ? { ...x, ...v } : x)))
+          }
+          setEditingTierKey(null)
+        }}
+      />
+
       <BottomSheet title={t('createEvent.participation.sheetTitle')} open={showParticipationSheet} onClose={() => setShowParticipationSheet(false)}>
         <p className="text-[13px] text-[var(--color-text-secondary)] mb-5"><span>{t('createEvent.participation.intro')}</span></p>
         <div className="flex flex-col">
           {[
             { value: 'free', label: t('createEvent.participation.freeOption'), desc: t('createEvent.participation.freeDesc'), Icon: SquareUnlock01Icon, requiresKyc: false },
             { value: 'cagnotte', label: t('createEvent.participation.cagnotte'), desc: t('createEvent.participation.cagnotteDesc'), Icon: Coins01Icon, requiresKyc: true },
+            { value: 'ticket', label: t('ticketing.mode.label'), desc: t('ticketing.mode.desc'), Icon: Ticket, requiresKyc: true },
           ].map(mode => {
             const isSelected = participationMode === mode.value
             const isLocked = mode.requiresKyc && !isKycVerified
@@ -1772,7 +1943,12 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                 key={mode.value}
                 onClick={() => {
                   if (isLocked) {
-                    toast.error(t('createEvent.toasts.kycPool'))
+                    toast.error(mode.value === 'ticket' ? t('ticketing.toasts.kycRequired') : t('createEvent.toasts.kycPool'))
+                    return
+                  }
+                  // Billetterie déjà enregistrée : on ne la quitte pas d'ici (catégories gérées dans « Gérer > Billetterie »)
+                  if (mode.value !== 'ticket' && Object.keys(savedTiers).length > 0) {
+                    toast.error(t('ticketing.errors.cannotSwitch'))
                     return
                   }
                   setParticipationMode(mode.value);

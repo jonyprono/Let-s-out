@@ -726,7 +726,21 @@
     "settings": "Ajustes",
     "scanStartError": "No se puede iniciar la cámara.",
     "emailedAfterEmailAdded_one": "Tu entrada se ha enviado a {{email}}.",
-    "emailedAfterEmailAdded_other": "Tus {{count}} entradas se han enviado a {{email}}."
+    "emailedAfterEmailAdded_other": "Tus {{count}} entradas se han enviado a {{email}}.",
+    "myTickets_one": "Mi entrada",
+    "myTickets_many": "Mis entradas ({{count}})",
+    "myTickets_other": "Mis entradas ({{count}})",
+    "myTicketsShort": "Mis entradas",
+    "ticketOf": "Entrada {{n}} / {{total}}",
+    "share": "Compartir esta entrada",
+    "shareTitle": "Tu entrada de Let's Out",
+    "shareText": "Aquí tienes tu entrada «{{tier}}» para {{event}}. Muestra el código QR en la entrada:",
+    "shareHint": "Desliza para ver cada entrada. Compártelas con tus invitados: cada código QR solo permite un acceso.",
+    "linkCopied": "Enlace de la entrada copiado",
+    "shareError": "No se pudo compartir.",
+    "validBig": "VÁLIDA",
+    "alreadyUsedBig": "YA VALIDADA",
+    "holder": "Titular"
   },
   "myPages": {
     "title": "Mis páginas",
@@ -1164,7 +1178,8 @@
     "tabs": {
       "details": "Detalles",
       "participants": "Participantes",
-      "cagnotte": "Bote común"
+      "cagnotte": "Bote común",
+      "ticketing": "Entradas"
     }
   },
   "payment": {
@@ -2544,5 +2559,132 @@
     "outsters_other": "{{count}} OUTSTERS",
     "eventsCount_one": "{{count}} evento",
     "eventsCount_other": "{{count}} eventos"
+  },
+  "ticketing": {
+    "mode": {
+      "label": "Venta de entradas multitarifa",
+      "desc": "Vende entradas por categoría (Estándar, VIP…) con un código QR por plaza",
+      "badge_one": "{{count}} categoría de entradas",
+      "badge_many": "{{count}} categorías de entradas",
+      "badge_other": "{{count}} categorías de entradas"
+    },
+    "create": {
+      "atLeastOne": "Añade al menos una categoría de entradas."
+    },
+    "commission": {
+      "title": "Comisión de Let's Out: {{percent}} % sobre cada venta",
+      "feesIncluded": "Las comisiones de pago Mobile Money están incluidas: sin otros cargos.",
+      "payoutRule": "Tus ingresos se abonan en tu monedero {{hours}} h después del final del evento."
+    },
+    "summary": {
+      "ticketPrice": "Precio de la entrada",
+      "commission": "Comisión de Let's Out ({{percent}} %)",
+      "youReceive": "Recibes"
+    },
+    "tier": {
+      "addButton": "Añadir una categoría",
+      "addTitle": "Nueva categoría",
+      "editTitle": "Editar categoría",
+      "name": "Nombre de la categoría",
+      "namePlaceholder": "Ej.: Estándar, VIP, Mesa…",
+      "description": "Descripción",
+      "descriptionPlaceholder": "Ej.: acceso a la zona VIP + 1 bebida",
+      "price": "Precio (F CFA)",
+      "quantity": "Número de plazas",
+      "add": "Añadir",
+      "save": "Guardar",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "deleteTitle": "Eliminar categoría",
+      "deleteConfirm": "¿Eliminar la categoría «{{name}}»? Todavía no se ha vendido ninguna entrada.",
+      "pause": "Pausar la venta",
+      "resume": "Reanudar la venta",
+      "paused": "Venta en pausa",
+      "soldOut": "Agotado",
+      "soldOf": "{{sold}} / {{total}} vendidas",
+      "netPerTicket": "Recibes {{amount}} por entrada"
+    },
+    "payout": {
+      "title": "Cuenta Mobile Money de cobro",
+      "intro": "La cuenta que recibirá tus ingresos (a través de tu monedero).",
+      "network": "Red",
+      "phone": "Número Mobile Money",
+      "holderName": "Nombre del titular de la cuenta",
+      "holderPlaceholder": "Nombre tal como está registrado en el operador",
+      "privacy": "Estos datos son privados: nunca se muestran a los participantes.",
+      "edit": "Editar",
+      "configure": "Configurar",
+      "save": "Guardar la cuenta",
+      "notConfigured": "Ninguna cuenta configurada.",
+      "creatorOnly": "Solo el creador del evento puede definir la cuenta de cobro."
+    },
+    "manage": {
+      "netToReceive": "Saldo neto a recibir",
+      "gross": "Total bruto vendido",
+      "net": "Neto del organizador",
+      "ticketsSold": "Entradas vendidas",
+      "orders": "Pedidos",
+      "checkedIn": "Accesos",
+      "payoutHeld": "Esperando el final del evento",
+      "payoutHeldUntil": "Abono automático en tu monedero a partir del {{date}} ({{hours}} h después del final).",
+      "payoutReleased": "Abonado en tu monedero",
+      "payoutReleasedOn": "Ingresos abonados el {{date}}. Puedes retirarlos a Mobile Money con tu PIN.",
+      "openWallet": "Abrir mi monedero",
+      "notOnSaleCreator": "La venta de entradas aún no está activa: configura tu cuenta Mobile Money de cobro abajo.",
+      "notOnSaleCohost": "La venta de entradas aún no está activa: el creador debe configurar su cuenta Mobile Money de cobro.",
+      "kycRequired": "La cuenta del creador debe estar verificada para vender entradas.",
+      "categories": "Categorías de entradas",
+      "noTiers": "Aún no hay categorías. Añade una para abrir la venta.",
+      "poolConflict": "Este evento tiene un bote común: la venta de entradas no está disponible.",
+      "loadError": "No se pudo cargar la venta de entradas."
+    },
+    "errors": {
+      "name": "Nombre obligatorio ({{max}} caracteres máx.).",
+      "price": "Precio entero, mínimo {{min}}.",
+      "quantity": "Número de plazas entero, al menos 1.",
+      "quantityBelowSold": "Ya se han vendido {{sold}} entrada(s): no puedes bajar de esa cifra.",
+      "network": "Elige MTN, MOOV o CELTIIS.",
+      "phone": "Número no válido (de 8 a 15 cifras, ej.: +229 01 97 00 00 00).",
+      "holderName": "Indica el nombre del titular (mínimo 2 caracteres).",
+      "hasSales": "Ya se han vendido entradas en esta categoría: ponla en pausa desde «Gestionar > Entradas».",
+      "cannotSwitch": "Este evento tiene venta de entradas: gestiona las categorías desde «Gestionar > Entradas»."
+    },
+    "toasts": {
+      "tierAdded": "Categoría añadida",
+      "tierSaved": "Categoría actualizada",
+      "tierDeleted": "Categoría eliminada",
+      "tierPaused": "Venta en pausa para esta categoría",
+      "tierResumed": "Venta reanudada para esta categoría",
+      "payoutSaved": "Cuenta de cobro guardada",
+      "saveError": "No se pudo guardar, inténtalo de nuevo.",
+      "partialSync": "Algunos datos de la venta de entradas no se guardaron: revisa «Gestionar > Entradas».",
+      "kycRequired": "🔒 Se requiere una cuenta verificada para vender entradas"
+    },
+    "purchase": {
+      "title": "Elegir mis entradas",
+      "buyTickets": "Comprar entradas",
+      "loadError": "No se pudieron cargar las entradas.",
+      "notOnSale": "La venta de entradas aún no está abierta.",
+      "remaining_one": "Queda {{formatted}} plaza",
+      "remaining_many": "Quedan {{formatted}} plazas",
+      "remaining_other": "Quedan {{formatted}} plazas",
+      "quantityFor": "Cantidad para {{name}}",
+      "decrease": "Quitar una entrada",
+      "increase": "Añadir una entrada",
+      "maxPerOrder": "Máximo {{max}} entradas por pedido",
+      "maxReached": "Límite alcanzado: {{max}} entradas por pedido",
+      "ticketCount_one": "{{count}} entrada",
+      "ticketCount_many": "{{count}} entradas",
+      "ticketCount_other": "{{count}} entradas",
+      "select": "Elige tus entradas",
+      "pay": "Pagar {{amount}}",
+      "confirming": "Pago recibido: tus entradas aparecerán en «Mis entradas» en unos instantes.",
+      "stockChanged": "Las plazas disponibles han cambiado: revisa tu selección."
+    },
+    "event": {
+      "title": "Entradas",
+      "allSoldOut": "Todas las plazas están agotadas.",
+      "buyMore": "Comprar más entradas"
+    }
   }
 }

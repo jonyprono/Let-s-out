@@ -58,8 +58,45 @@ export function canCheckIn(event: { creatorId: string; coHostIds: string[] }, us
 }
 
 export type CheckInResult =
-  | { status: 200; body: { result: 'VALID'; checkedInAt: Date; participant: { name: string; avatarUrl: string | null } } }
+  | { status: 200; body: { result: 'VALID'; checkedInAt: Date; participant: { name: string; avatarUrl: string | null }; tierName?: string | null } }
   | { status: 403 | 404 | 409 | 400; body: { error: string; code: string; [k: string]: unknown } }
+
+/**
+ * Billet individuel (billetterie multi-billets) : chaque QR est validé SÉPARÉMENT
+ * (une commande de 3 billets = 3 entrées indépendantes). Renvoie null si le jeton
+ * n'est pas un billet individuel (→ ancien billet porté par la réservation).
+ */
+async function checkInIndividualTicket(prisma: PrismaClient, eventId: string, scannerId: string, token: string): Promise<CheckInResult | null> {
+  const ticket = await prisma.ticket.findUnique({
+    where: { ticketToken: token },
+    select: {
+      id: true, eventId: true, tierName: true,
+      booking: { select: { status: true, user: { select: { profile: { select: { displayName: true, avatarUrl: true } } } } } },
+    },
+  })
+  if (!ticket) return null
+  if (ticket.eventId !== eventId) {
+    return { status: 404, body: { error: 'Ce billet n\'est pas valable pour cet événement.', code: 'TICKET_WRONG_EVENT' } }
+  }
+  const participant = { name: ticket.booking.user?.profile?.displayName || 'Participant', avatarUrl: ticket.booking.user?.profile?.avatarUrl ?? null }
+  if (ticket.booking.status !== 'CONFIRMED') {
+    return { status: 409, body: { error: 'Billet non valable (commande non confirmée ou annulée).', code: 'TICKET_NOT_CONFIRMED', bookingStatus: ticket.booking.status, participant, tierName: ticket.tierName } }
+  }
+  const now = new Date()
+  const { count } = await prisma.ticket.updateMany({
+    where: { id: ticket.id, checkedInAt: null },
+    data: { checkedInAt: now, checkedInById: scannerId },
+  })
+  if (count === 1) return { status: 200, body: { result: 'VALID', checkedInAt: now, participant, tierName: ticket.tierName } }
+  const first = await prisma.ticket.findUnique({ where: { id: ticket.id }, select: { checkedInAt: true, checkedInById: true } })
+  const by = first?.checkedInById
+    ? await prisma.profile.findUnique({ where: { userId: first.checkedInById }, select: { displayName: true } })
+    : null
+  return {
+    status: 409,
+    body: { error: 'Billet déjà validé.', code: 'TICKET_ALREADY_USED', firstCheckedInAt: first?.checkedInAt ?? null, checkedInBy: by?.displayName ?? null, participant, tierName: ticket.tierName },
+  }
+}
 
 export async function checkInTicket(prisma: PrismaClient, eventId: string, scannerId: string, rawPayload: unknown): Promise<CheckInResult> {
   const event = await prisma.event.findUnique({ where: { id: eventId }, select: { id: true, creatorId: true, coHostIds: true } })
@@ -71,11 +108,17 @@ export async function checkInTicket(prisma: PrismaClient, eventId: string, scann
   const token = parseTicketPayload(rawPayload)
   if (!token) return { status: 400, body: { error: 'QR code non reconnu : ce n\'est pas un billet Let\'s Out.', code: 'TICKET_INVALID_FORMAT' } }
 
+  // Billet individuel d'abord, sinon ancien billet porté par la réservation
+  const individual = await checkInIndividualTicket(prisma, eventId, scannerId, token)
+  if (individual) return individual
+
   const booking = await prisma.booking.findUnique({
     where: { ticketToken: token },
-    select: { id: true, eventId: true, status: true, checkedInAt: true, checkedInById: true, user: { select: { profile: { select: { displayName: true, avatarUrl: true } } } } },
+    select: { id: true, eventId: true, status: true, checkedInAt: true, checkedInById: true, user: { select: { profile: { select: { displayName: true, avatarUrl: true } } } }, _count: { select: { tickets: true } } },
   })
   if (!booking) return { status: 404, body: { error: 'Billet introuvable.', code: 'TICKET_NOT_FOUND' } }
+  // Commande de billetterie : seul chaque billet individuel donne une entrée, jamais la réservation elle-même
+  if (booking._count.tickets > 0) return { status: 404, body: { error: 'Billet introuvable.', code: 'TICKET_NOT_FOUND' } }
   if (booking.eventId !== eventId) {
     return { status: 404, body: { error: 'Ce billet n\'est pas valable pour cet événement.', code: 'TICKET_WRONG_EVENT' } }
   }

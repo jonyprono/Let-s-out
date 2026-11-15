@@ -726,7 +726,20 @@
     "settings": "Settings",
     "scanStartError": "Couldn’t start the camera.",
     "emailedAfterEmailAdded_one": "Your ticket has been sent to {{email}}.",
-    "emailedAfterEmailAdded_other": "Your {{count}} tickets have been sent to {{email}}."
+    "emailedAfterEmailAdded_other": "Your {{count}} tickets have been sent to {{email}}.",
+    "myTickets_one": "My ticket",
+    "myTickets_other": "My tickets ({{count}})",
+    "myTicketsShort": "My tickets",
+    "ticketOf": "Ticket {{n}} / {{total}}",
+    "share": "Share this ticket",
+    "shareTitle": "Your Let's Out ticket",
+    "shareText": "Here is your “{{tier}}” ticket for {{event}}. Show the QR code at the entrance:",
+    "shareHint": "Swipe to see each ticket. Share them with your guests: each QR code is valid for one entry only.",
+    "linkCopied": "Ticket link copied",
+    "shareError": "Unable to share.",
+    "validBig": "VALID",
+    "alreadyUsedBig": "ALREADY CHECKED IN",
+    "holder": "Holder"
   },
   "myPages": {
     "title": "My pages",
@@ -1164,7 +1177,8 @@
     "tabs": {
       "details": "Details",
       "participants": "Participants",
-      "cagnotte": "Shared pot"
+      "cagnotte": "Shared pot",
+      "ticketing": "Ticketing"
     }
   },
   "payment": {
@@ -2544,5 +2558,129 @@
     "outsters_other": "{{count}} OUTSTERS",
     "eventsCount_one": "{{count}} event",
     "eventsCount_other": "{{count}} events"
+  },
+  "ticketing": {
+    "mode": {
+      "label": "Multi-tier ticketing",
+      "desc": "Sell tickets by category (Standard, VIP…) with one QR code per seat",
+      "badge_one": "{{count}} ticket category",
+      "badge_other": "{{count}} ticket categories"
+    },
+    "create": {
+      "atLeastOne": "Add at least one ticket category."
+    },
+    "commission": {
+      "title": "Let's Out commission: {{percent}}% taken on each sale",
+      "feesIncluded": "Mobile Money payment fees are included: no other fees.",
+      "payoutRule": "Your revenue is paid into your wallet {{hours}} h after the event ends."
+    },
+    "summary": {
+      "ticketPrice": "Ticket price",
+      "commission": "Let's Out commission ({{percent}}%)",
+      "youReceive": "You receive"
+    },
+    "tier": {
+      "addButton": "Add a category",
+      "addTitle": "New category",
+      "editTitle": "Edit category",
+      "name": "Category name",
+      "namePlaceholder": "E.g. Standard, VIP, Table…",
+      "description": "Description",
+      "descriptionPlaceholder": "E.g. VIP lounge access + 1 drink",
+      "price": "Price (F CFA)",
+      "quantity": "Number of seats",
+      "add": "Add",
+      "save": "Save",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleteTitle": "Delete category",
+      "deleteConfirm": "Delete the “{{name}}” category? No tickets have been sold yet.",
+      "pause": "Pause sales",
+      "resume": "Resume sales",
+      "paused": "Sales paused",
+      "soldOut": "Sold out",
+      "soldOf": "{{sold}} / {{total}} sold",
+      "netPerTicket": "You receive {{amount}} per ticket"
+    },
+    "payout": {
+      "title": "Mobile Money payout account",
+      "intro": "The account that will receive your revenue (via your wallet).",
+      "network": "Network",
+      "phone": "Mobile Money number",
+      "holderName": "Account holder name",
+      "holderPlaceholder": "Name as registered with the operator",
+      "privacy": "This information stays private: it is never shown to attendees.",
+      "edit": "Edit",
+      "configure": "Set up",
+      "save": "Save account",
+      "notConfigured": "No account set up.",
+      "creatorOnly": "Only the event creator can set the payout account."
+    },
+    "manage": {
+      "netToReceive": "Net balance to receive",
+      "gross": "Gross sales",
+      "net": "Organizer net",
+      "ticketsSold": "Tickets sold",
+      "orders": "Orders",
+      "checkedIn": "Check-ins",
+      "payoutHeld": "Waiting for the event to end",
+      "payoutHeldUntil": "Automatic payout to your wallet from {{date}} ({{hours}} h after the end).",
+      "payoutReleased": "Paid into your wallet",
+      "payoutReleasedOn": "Revenue paid on {{date}}. You can withdraw it to Mobile Money with your PIN.",
+      "openWallet": "Open my wallet",
+      "notOnSaleCreator": "Ticketing not on sale yet: set up your Mobile Money payout account below.",
+      "notOnSaleCohost": "Ticketing not on sale yet: the creator must set up their Mobile Money payout account.",
+      "kycRequired": "The creator's account must be verified to sell tickets.",
+      "categories": "Ticket categories",
+      "noTiers": "No categories yet. Add one to open ticket sales.",
+      "poolConflict": "This event has a shared pot: ticketing is not available.",
+      "loadError": "Unable to load ticketing."
+    },
+    "errors": {
+      "name": "Name required ({{max}} characters max).",
+      "price": "Whole-number price, minimum {{min}}.",
+      "quantity": "Whole number of seats, at least 1.",
+      "quantityBelowSold": "{{sold}} ticket(s) already sold: you cannot go below that.",
+      "network": "Choose MTN, MOOV or CELTIIS.",
+      "phone": "Invalid number (8 to 15 digits, e.g. +229 01 97 00 00 00).",
+      "holderName": "Enter the account holder name (at least 2 characters).",
+      "hasSales": "Tickets have already been sold in this category: pause it from “Manage > Ticketing”.",
+      "cannotSwitch": "This event has ticketing: manage categories from “Manage > Ticketing”."
+    },
+    "toasts": {
+      "tierAdded": "Category added",
+      "tierSaved": "Category updated",
+      "tierDeleted": "Category deleted",
+      "tierPaused": "Sales paused for this category",
+      "tierResumed": "Sales resumed for this category",
+      "payoutSaved": "Payout account saved",
+      "saveError": "Could not save, please try again.",
+      "partialSync": "Some ticketing information was not saved: check “Manage > Ticketing”.",
+      "kycRequired": "🔒 Verified account required to sell tickets"
+    },
+    "purchase": {
+      "title": "Choose my tickets",
+      "buyTickets": "Buy tickets",
+      "loadError": "Unable to load tickets.",
+      "notOnSale": "Ticket sales are not open yet.",
+      "remaining_one": "{{formatted}} seat left",
+      "remaining_other": "{{formatted}} seats left",
+      "quantityFor": "Quantity for {{name}}",
+      "decrease": "Remove a ticket",
+      "increase": "Add a ticket",
+      "maxPerOrder": "Maximum {{max}} tickets per order",
+      "maxReached": "Limit reached: {{max}} tickets per order",
+      "ticketCount_one": "{{count}} ticket",
+      "ticketCount_other": "{{count}} tickets",
+      "select": "Choose your tickets",
+      "pay": "Pay {{amount}}",
+      "confirming": "Payment received: your tickets will appear in “My tickets” in a few moments.",
+      "stockChanged": "Available seats have changed: please check your selection."
+    },
+    "event": {
+      "title": "Tickets",
+      "allSoldOut": "All seats are sold out.",
+      "buyMore": "Buy more tickets"
+    }
   }
 }

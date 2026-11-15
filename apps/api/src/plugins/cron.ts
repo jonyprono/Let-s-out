@@ -107,6 +107,15 @@ export default fp(async (fastify: FastifyInstance) => {
         })
       }
 
+      // ── Billetterie : versement des recettes (fin d'événement + délai TICKET_PAYOUT_DELAY_HOURS) ──
+      try {
+        const { releaseDueTicketRevenues } = await import('../services/ticketing.service')
+        const released = await releaseDueTicketRevenues((fastify as any).prisma, now)
+        for (const r of released) if (r.released) fastify.log.info(r, '[Billetterie] Recettes versées sur le Wallet')
+      } catch (ticketErr: any) {
+        fastify.log.error({ ticketErr }, '[Billetterie] Échec du versement des recettes')
+      }
+
       // ── Event Reminders ──────────────────────────────────────────────────
       const setting1 = await (fastify as any).prisma.systemSetting.findUnique({ where: { key: 'EVENT_REMINDER_1_HOURS' } })
       const hours1 = setting1 && !isNaN(Number(setting1.value)) ? Number(setting1.value) : 24

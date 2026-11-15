@@ -1121,6 +1121,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const isRemovingPool = updateData.poolTarget === null;
     const newPoolTarget = updateData.poolTarget !== undefined ? updateData.poolTarget : event.poolTarget;
 
+    // Billetterie et cagnotte sont exclusives (l'argent des billets ne doit jamais partir dans une cagnotte)
+    if (event.ticketingEnabled && updateData.poolTarget != null && updateData.poolTarget > 0) {
+      return reply.code(409).send({ error: 'Cagnotte impossible : cet événement a une billetterie.', code: 'TICKETING_POOL_CONFLICT' })
+    }
+
     // KYC check only when setting/keeping a paid feature — not when removing it
     const needsVerification = !isRemovingPool && ((newPrice && newPrice > 0) || (newPoolTarget && newPoolTarget > 0));
     if (needsVerification) {
@@ -1658,7 +1663,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const { file } = req.params as { file: string }
     const token = parseTicketPayload(file.replace(/\.png$/, ''))
     if (!token) return reply.code(404).send({ error: 'Not found' })
-    const exists = await app.prisma.booking.findUnique({ where: { ticketToken: token }, select: { id: true } })
+    // Billet individuel (billetterie) ou ancien billet porté par la réservation
+    const exists =
+      (await app.prisma.ticket.findUnique({ where: { ticketToken: token }, select: { id: true } })) ??
+      (await app.prisma.booking.findUnique({ where: { ticketToken: token }, select: { id: true } }))
     if (!exists) return reply.code(404).send({ error: 'Not found' })
     const png = await ticketQrPng(token)
     return reply
@@ -1673,10 +1681,15 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const { id } = req.params as { id: string }
     const booking = await app.prisma.booking.findUnique({
       where: { userId_eventId: { userId: sub, eventId: id } },
-      select: { id: true, status: true, checkedInAt: true },
+      select: { id: true, status: true, checkedInAt: true, _count: { select: { tickets: true } } },
     })
     if (!booking || booking.status !== 'CONFIRMED') {
       return reply.code(404).send({ error: 'Aucun billet confirmé pour cet événement.', code: 'NO_TICKET' })
+    }
+    // Commande de billetterie : les billets individuels (GET /events/:id/my-tickets) sont les SEULS valables.
+    // Ne jamais générer de QR au niveau de la réservation (ce serait une entrée en plus).
+    if (booking._count.tickets > 0) {
+      return reply.code(409).send({ error: 'Utilisez vos billets individuels.', code: 'USE_TICKETS' })
     }
     const token = await ensureTicketToken(app.prisma, booking.id)
     return reply.send({

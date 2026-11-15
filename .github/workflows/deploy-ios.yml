@@ -3,6 +3,13 @@ name: Build and Deploy iOS to App Store Connect
 on:
   workflow_dispatch:
 
+# Un seul déploiement iOS à la fois : chaque run crée un certificat de distribution et révoque
+# le plus ancien. Deux runs en parallèle se révoquaient mutuellement leur certificat
+# (erreur altool 90721 « Certificate Revoked » à l'envoi). Les runs suivants attendent leur tour.
+concurrency:
+  group: deploy-ios
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy to TestFlight & App Store
@@ -108,6 +115,27 @@ jobs:
             -archivePath "./build/LetsOut.xcarchive" \
             -exportOptionsPlist "ExportOptions.plist" \
             -exportPath "./build/export"
+
+      - name: Verify signing certificate is still valid
+        env:
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+        run: |
+          python3 - <<'PY'
+          import os, sys, time, jwt, requests
+          kid, iss, cert = os.environ["APPSTORE_KEY_ID"], os.environ["APPSTORE_ISSUER_ID"], os.environ.get("SIGNING_CERT_ID")
+          if not cert:
+              print("SIGNING_CERT_ID absent : vérification ignorée"); sys.exit(0)
+          key = open(os.path.expanduser(f"~/.appstoreconnect/private_keys/AuthKey_{kid}.p8")).read()
+          now = int(time.time())
+          tok = jwt.encode({"iss": iss, "iat": now, "exp": now + 600, "aud": "appstoreconnect-v1"}, key, algorithm="ES256", headers={"kid": kid, "typ": "JWT"})
+          r = requests.get(f"https://api.appstoreconnect.apple.com/v1/certificates/{cert}", headers={"Authorization": f"Bearer {tok}"})
+          if r.status_code == 200:
+              print(f"✅ Certificat de signature {cert} toujours valide"); sys.exit(0)
+          print(f"::error::Le certificat de signature {cert} a été révoqué pendant le build (HTTP {r.status_code}). "
+                "Un autre run deploy-ios ou une action manuelle sur developer.apple.com l'a supprimé. Relancez le workflow.")
+          sys.exit(1)
+          PY
 
       - name: Upload to App Store Connect
         working-directory: apps/web/ios/App

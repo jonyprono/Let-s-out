@@ -71,12 +71,19 @@ def main():
 
     existing_certs = certs_resp.json().get("data", [])
     log(f"Found {len(existing_certs)} existing iOS Distribution certificates.")
+    for c in existing_certs:
+        a = c.get("attributes", {})
+        log(f"  - id={c['id']} serial={a.get('serialNumber')} expires={a.get('expirationDate')}")
 
-    # Apple limit is usually 2 or 3. If >= 2, delete the oldest
+    # Apple limite le nombre de certificats de distribution. S'il y en a >= 2, on supprime
+    # (= RÉVOQUE) le plus ancien. L'API ne garantit PAS l'ordre de la liste : on trie par date
+    # d'expiration (le plus ancien expire en premier). Le workflow est sérialisé (concurrency)
+    # pour qu'un run ne révoque jamais le certificat d'un autre run encore en cours.
     if len(existing_certs) >= 2:
+        existing_certs.sort(key=lambda c: c.get("attributes", {}).get("expirationDate") or "")
         oldest_cert = existing_certs[0]
         oldest_id = oldest_cert["id"]
-        log(f"Account has {len(existing_certs)} Distribution certs. Deleting oldest ({oldest_id}) to free up slot...")
+        log(f"Account has {len(existing_certs)} Distribution certs. Revoking oldest ({oldest_id}, serial {oldest_cert.get('attributes', {}).get('serialNumber')}) to free up slot...")
         del_resp = requests.delete(
             f"https://api.appstoreconnect.apple.com/v1/certificates/{oldest_id}",
             headers=api_headers
@@ -362,6 +369,8 @@ def main():
         with open(github_env, "a") as f:
             f.write(f"PROFILE_UUID={profile_uuid}\n")
             f.write(f"PROFILE_NAME={profile_name}\n")
+            # Utilisé avant l'envoi pour vérifier que le certificat n'a pas été révoqué entre-temps
+            f.write(f"SIGNING_CERT_ID={cert_id}\n")
 
     # Clean up sensitive temporary key and csr files
     for temp_f in [dist_key_path, dist_csr_path, "/tmp/distribution.cer", "/tmp/distribution.pem", p12_path]:

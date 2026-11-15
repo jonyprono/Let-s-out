@@ -770,7 +770,21 @@
     "settings": "Réglages",
     "scanStartError": "Impossible de démarrer la caméra.",
     "emailedAfterEmailAdded_one": "Votre billet a été envoyé à {{email}}.",
-    "emailedAfterEmailAdded_other": "Vos {{count}} billets ont été envoyés à {{email}}."
+    "emailedAfterEmailAdded_other": "Vos {{count}} billets ont été envoyés à {{email}}.",
+    "myTickets_one": "Mon billet",
+    "myTickets_many": "Mes billets ({{count}})",
+    "myTickets_other": "Mes billets ({{count}})",
+    "myTicketsShort": "Mes billets",
+    "ticketOf": "Billet {{n}} / {{total}}",
+    "share": "Partager ce billet",
+    "shareTitle": "Ton billet Let's Out",
+    "shareText": "Voici ton billet « {{tier}} » pour {{event}}. Présente le QR code à l’entrée :",
+    "shareHint": "Faites glisser pour voir chaque billet. Partagez-les à vos invités : chaque QR code ne permet qu’une seule entrée.",
+    "linkCopied": "Lien du billet copié",
+    "shareError": "Partage impossible.",
+    "validBig": "VALIDE",
+    "alreadyUsedBig": "DÉJÀ VALIDÉ",
+    "holder": "Titulaire"
   },
   "categories": {
     "all": "Tout",
@@ -1164,7 +1178,8 @@
     "tabs": {
       "details": "Détails",
       "participants": "Participants",
-      "cagnotte": "Cagnotte"
+      "cagnotte": "Cagnotte",
+      "ticketing": "Billetterie"
     }
   },
   "payment": {
@@ -2544,5 +2559,132 @@
     "outsters_other": "{{count}} OUTSTERS",
     "eventsCount_one": "{{count}} événement",
     "eventsCount_other": "{{count}} événements"
+  },
+  "ticketing": {
+    "mode": {
+      "label": "Billetterie multi-tarifs",
+      "desc": "Vendez des billets par catégorie (Standard, VIP…) avec un QR code par place",
+      "badge_one": "{{count}} catégorie de billets",
+      "badge_many": "{{count}} catégories de billets",
+      "badge_other": "{{count}} catégories de billets"
+    },
+    "create": {
+      "atLeastOne": "Ajoutez au moins une catégorie de billets."
+    },
+    "commission": {
+      "title": "Commission Let's Out : {{percent}} % prélevée sur chaque vente",
+      "feesIncluded": "Les frais de paiement Mobile Money sont inclus : aucun autre frais.",
+      "payoutRule": "Vos recettes sont versées sur votre portefeuille {{hours}} h après la fin de l’événement."
+    },
+    "summary": {
+      "ticketPrice": "Prix du billet",
+      "commission": "Commission Let's Out ({{percent}} %)",
+      "youReceive": "Vous recevez"
+    },
+    "tier": {
+      "addButton": "Ajouter une catégorie",
+      "addTitle": "Nouvelle catégorie",
+      "editTitle": "Modifier la catégorie",
+      "name": "Nom de la catégorie",
+      "namePlaceholder": "Ex : Standard, VIP, Table…",
+      "description": "Description",
+      "descriptionPlaceholder": "Ex : accès salon VIP + 1 boisson",
+      "price": "Prix (F CFA)",
+      "quantity": "Nombre de places",
+      "add": "Ajouter",
+      "save": "Enregistrer",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer la catégorie",
+      "deleteConfirm": "Supprimer la catégorie « {{name}} » ? Aucun billet n’a encore été vendu.",
+      "pause": "Suspendre la vente",
+      "resume": "Reprendre la vente",
+      "paused": "Vente suspendue",
+      "soldOut": "Épuisé",
+      "soldOf": "{{sold}} / {{total}} vendus",
+      "netPerTicket": "Vous recevez {{amount}} par billet"
+    },
+    "payout": {
+      "title": "Compte Mobile Money de versement",
+      "intro": "Le compte qui recevra vos recettes (via votre portefeuille).",
+      "network": "Réseau",
+      "phone": "Numéro Mobile Money",
+      "holderName": "Nom du titulaire du compte",
+      "holderPlaceholder": "Nom tel qu’enregistré chez l’opérateur",
+      "privacy": "Ces informations restent privées : elles ne sont jamais affichées aux participants.",
+      "edit": "Modifier",
+      "configure": "Configurer",
+      "save": "Enregistrer le compte",
+      "notConfigured": "Aucun compte configuré.",
+      "creatorOnly": "Seul le créateur de l’événement peut définir le compte de versement."
+    },
+    "manage": {
+      "netToReceive": "Solde net à recevoir",
+      "gross": "Total brut vendu",
+      "net": "Net organisateur",
+      "ticketsSold": "Billets vendus",
+      "orders": "Commandes",
+      "checkedIn": "Entrées",
+      "payoutHeld": "En attente de la fin de l’événement",
+      "payoutHeldUntil": "Versement automatique sur votre portefeuille à partir du {{date}} ({{hours}} h après la fin).",
+      "payoutReleased": "Versé sur votre portefeuille",
+      "payoutReleasedOn": "Recettes versées le {{date}}. Vous pouvez les retirer vers Mobile Money avec votre code PIN.",
+      "openWallet": "Ouvrir mon portefeuille",
+      "notOnSaleCreator": "Billetterie pas encore en vente : configurez votre compte Mobile Money de versement ci-dessous.",
+      "notOnSaleCohost": "Billetterie pas encore en vente : le créateur doit configurer son compte Mobile Money de versement.",
+      "kycRequired": "Le compte du créateur doit être vérifié pour vendre des billets.",
+      "categories": "Catégories de billets",
+      "noTiers": "Aucune catégorie pour le moment. Ajoutez-en une pour ouvrir la billetterie.",
+      "poolConflict": "Cet événement a une cagnotte : la billetterie n’est pas disponible.",
+      "loadError": "Impossible de charger la billetterie."
+    },
+    "errors": {
+      "name": "Nom requis ({{max}} caractères max).",
+      "price": "Prix entier, minimum {{min}}.",
+      "quantity": "Nombre de places entier, au moins 1.",
+      "quantityBelowSold": "Déjà {{sold}} billet(s) vendu(s) : impossible de descendre en dessous.",
+      "network": "Choisissez MTN, MOOV ou CELTIIS.",
+      "phone": "Numéro invalide (8 à 15 chiffres, ex. +229 01 97 00 00 00).",
+      "holderName": "Indiquez le nom du titulaire (2 caractères minimum).",
+      "hasSales": "Des billets ont déjà été vendus dans cette catégorie : suspendez-la depuis « Gérer > Billetterie ».",
+      "cannotSwitch": "Cet événement a une billetterie : gérez les catégories depuis « Gérer > Billetterie »."
+    },
+    "toasts": {
+      "tierAdded": "Catégorie ajoutée",
+      "tierSaved": "Catégorie mise à jour",
+      "tierDeleted": "Catégorie supprimée",
+      "tierPaused": "Vente suspendue pour cette catégorie",
+      "tierResumed": "Vente reprise pour cette catégorie",
+      "payoutSaved": "Compte de versement enregistré",
+      "saveError": "Enregistrement impossible, réessayez.",
+      "partialSync": "Certaines informations de billetterie n’ont pas été enregistrées : vérifiez dans « Gérer > Billetterie ».",
+      "kycRequired": "🔒 Compte vérifié requis pour vendre des billets"
+    },
+    "purchase": {
+      "title": "Choisir mes billets",
+      "buyTickets": "Acheter des billets",
+      "loadError": "Impossible de charger les billets.",
+      "notOnSale": "La billetterie n’est pas encore ouverte.",
+      "remaining_one": "{{formatted}} place restante",
+      "remaining_many": "{{formatted}} places restantes",
+      "remaining_other": "{{formatted}} places restantes",
+      "quantityFor": "Quantité pour {{name}}",
+      "decrease": "Retirer un billet",
+      "increase": "Ajouter un billet",
+      "maxPerOrder": "Maximum {{max}} billets par commande",
+      "maxReached": "Maximum atteint : {{max}} billets par commande",
+      "ticketCount_one": "{{count}} billet",
+      "ticketCount_many": "{{count}} billets",
+      "ticketCount_other": "{{count}} billets",
+      "select": "Choisissez vos billets",
+      "pay": "Payer {{amount}}",
+      "confirming": "Paiement reçu : vos billets apparaîtront dans « Mes billets » dans quelques instants.",
+      "stockChanged": "Les places disponibles ont changé : vérifiez votre sélection."
+    },
+    "event": {
+      "title": "Billetterie",
+      "allSoldOut": "Toutes les places sont vendues.",
+      "buyMore": "Acheter d’autres billets"
+    }
   }
 }

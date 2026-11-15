@@ -18,6 +18,19 @@ export interface TicketEmailData {
   coverImage?: string
 }
 
+export interface MultiTicketEmailData {
+  to: string
+  userName: string
+  eventName: string
+  eventDate: Date
+  location: string
+  /** Identifiant de la commande (paiement) */
+  orderRef: string
+  total: number
+  coverImage?: string
+  tickets: { token: string; tierName: string; price: number }[]
+}
+
 export class EmailService {
   private resend: Resend | null = null
 
@@ -121,6 +134,76 @@ export class EmailService {
       console.log(`[DEBUG EMAIL] Resend API response for ${data.to}:`, JSON.stringify(response))
     } catch (err) {
       console.error('[DEBUG EMAIL] Failed to send ticket email:', err)
+    }
+  }
+
+  /**
+   * Billetterie multi-billets : UN e-mail avec tous les billets de la commande.
+   * Chaque billet a son propre QR (LO1.<token>) et sa catégorie ; les PNG sont joints
+   * (accès hors connexion, transfert facile à un invité).
+   */
+  async sendTicketsEmail(data: MultiTicketEmailData): Promise<void> {
+    if (!this.resend || data.tickets.length === 0) return
+    const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+    const orderRef = data.orderRef.slice(-8).toUpperCase()
+    const formattedDate = format(data.eventDate, "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })
+    const coverUrl = data.coverImage || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    const n = data.tickets.length
+
+    const ticketBlocks = data.tickets.map((t, i) => `
+          <div style="text-align:center;margin-bottom:20px;padding:20px;border:2px dashed #e4e4e7;border-radius:20px;">
+            <p style="margin:0 0 6px;font-size:12px;color:#71717a;">Billet ${i + 1} / ${n}</p>
+            <p style="margin:0 0 12px;font-size:20px;font-weight:800;color:#FF7A00;letter-spacing:1px;">${esc(t.tierName.toUpperCase())}</p>
+            <img src="${ticketQrImageUrl(t.token)}" alt="QR Code" width="200" height="200" style="border-radius:12px;" />
+            <p style="margin:12px 0 0;font-family:monospace;font-size:15px;font-weight:700;color:#18181b;letter-spacing:2px;">${t.token.slice(0, 8).toUpperCase()}</p>
+            <p style="margin:6px 0 0;font-size:12px;color:#71717a;">1 entrée · ${t.price.toLocaleString('fr-FR')} F CFA</p>
+          </div>`).join('')
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Vos billets pour ${esc(data.eventName)}</title></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:#f4f4f5;margin:0;padding:20px;">
+      <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:24px;overflow:hidden;">
+        <img src="${coverUrl}" alt="" style="width:100%;height:200px;object-fit:cover;" />
+        <div style="padding:32px;">
+          <h1 style="font-size:24px;font-weight:800;color:#18181b;margin:0 0 8px;">${esc(data.eventName)}</h1>
+          <p style="font-size:16px;color:#71717a;margin:0 0 24px;">Bonjour ${esc(data.userName)}, voici ${n > 1 ? `vos ${n} billets` : 'votre billet'} !</p>
+          ${ticketBlocks}
+          <p style="font-size:13px;color:#71717a;text-align:center;margin:0 0 24px;">
+            Chaque QR code est valable pour <strong>une seule entrée</strong>. Vous pouvez transférer un billet à un invité :
+            il lui suffit de présenter son QR code à l'entrée.
+          </p>
+          <div style="background:#f9fafb;border-radius:16px;padding:20px;margin-bottom:24px;font-size:14px;">
+            <p style="margin:0 0 10px;"><span style="color:#71717a;">Date & heure :</span> <strong>${esc(formattedDate)}</strong></p>
+            <p style="margin:0 0 10px;"><span style="color:#71717a;">Lieu :</span> <strong>${esc(data.location)}</strong></p>
+            <p style="margin:0 0 10px;"><span style="color:#71717a;">Commande :</span> <strong style="font-family:monospace;">${orderRef}</strong></p>
+            <p style="margin:0;"><span style="color:#71717a;">Montant payé :</span> <strong>${data.total.toLocaleString('fr-FR')} F CFA</strong></p>
+          </div>
+          <p style="text-align:center;color:#a1a1aa;font-size:12px;border-top:1px solid #f4f4f5;padding-top:24px;margin:0;">
+            Cet e-mail sert de reçu officiel. Merci d'utiliser Let's Out !
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>`
+
+    try {
+      const attachments = await Promise.all(
+        data.tickets.map(async (t, i) => ({
+          filename: `billet-${i + 1}-${t.tierName.replace(/[^A-Za-z0-9]+/g, '-').toLowerCase()}.png`,
+          content: await ticketQrPng(t.token),
+        })),
+      )
+      await this.resend.emails.send({
+        from: emailFromTickets(),
+        to: data.to,
+        subject: n > 1 ? `Vos ${n} billets pour ${data.eventName}` : `Votre billet pour ${data.eventName}`,
+        html: htmlContent,
+        attachments,
+      })
+    } catch (err) {
+      console.error('[EMAIL] Failed to send multi-ticket email:', err)
     }
   }
 

@@ -191,8 +191,14 @@ export function TicketScanner() {
           {verdict?.kind === 'valid' && (
             <div className="rounded-3xl bg-green-600 text-white p-6 flex flex-col items-center gap-2 text-center">
               <CheckCircle2 className="w-16 h-16" aria-hidden="true" />
-              <p className="text-[22px] font-extrabold"><span>{t('tickets.valid')}</span></p>
-              <p className="text-[18px] font-semibold"><span>{verdict.data.participant.name}</span></p>
+              <p className="text-[28px] font-extrabold tracking-wide uppercase"><span>{t('tickets.validBig')}</span></p>
+              {verdict.data.tierName && (
+                <p className="max-w-full px-5 py-2 rounded-2xl bg-white text-green-700 text-[30px] leading-tight font-black uppercase break-words">
+                  <span>{verdict.data.tierName}</span>
+                </p>
+              )}
+              <p className="text-[13px] uppercase tracking-wider opacity-80 mt-1"><span>{t('tickets.holder')}</span></p>
+              <p className="text-[20px] font-bold -mt-1"><span>{verdict.data.participant.name}</span></p>
               <p className="text-[13px] opacity-90"><span>{t('tickets.validatedAt', { time: fmt(verdict.data.checkedInAt, { hour: '2-digit', minute: '2-digit', second: '2-digit' }) })}</span></p>
             </div>
           )}
@@ -201,7 +207,14 @@ export function TicketScanner() {
               {refusal.code === 'TICKET_NOT_CONFIRMED'
                 ? <AlertTriangle className="w-16 h-16" aria-hidden="true" />
                 : <XCircle className="w-16 h-16" aria-hidden="true" />}
-              <p className="text-[22px] font-extrabold"><span>{refusalTitle}</span></p>
+              <p className={`font-extrabold ${refusal.code === 'TICKET_ALREADY_USED' ? 'text-[28px] uppercase tracking-wide' : 'text-[22px]'}`}>
+                <span>{refusal.code === 'TICKET_ALREADY_USED' ? t('tickets.alreadyUsedBig') : refusalTitle}</span>
+              </p>
+              {refusal.tierName && (
+                <p className="max-w-full px-4 py-1.5 rounded-2xl bg-white/95 text-red-700 text-[22px] leading-tight font-black uppercase break-words">
+                  <span>{refusal.tierName}</span>
+                </p>
+              )}
               {refusal.participant?.name && <p className="text-[17px] font-semibold"><span>{refusal.participant.name}</span></p>}
               {refusal.code === 'TICKET_ALREADY_USED' && refusal.firstCheckedInAt && (
                 <p className="text-[14px] font-medium">

@@ -122,6 +122,8 @@ export interface CheckInSuccess {
   result: 'VALID'
   checkedInAt: string
   participant: { name: string; avatarUrl: string | null }
+  /** Catégorie du billet (billetterie multi-tarifs) — absent pour les anciens billets */
+  tierName?: string | null
 }
 
 /** Corps des refus de validation (codes stables, à traduire côté app) */
@@ -131,6 +133,7 @@ export interface CheckInError {
   firstCheckedInAt?: string | null
   checkedInBy?: string | null
   participant?: { name: string; avatarUrl: string | null }
+  tierName?: string | null
 }
 
 export const eventsApi = {

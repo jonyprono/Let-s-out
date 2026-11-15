@@ -251,6 +251,15 @@ model Event {
   reminder24hSent  Boolean       @default(false)
   reminder2hSent   Boolean       @default(false)
   genderRestriction GenderRestriction @default(ANY)
+
+  // ── Billetterie multi-catégories ──────────────────────────────────────────
+  ticketingEnabled        Boolean   @default(false)
+  /// Compte Mobile Money de versement — table séparée : jamais exposé par les `include` d'événement
+  payoutAccount           EventPayoutAccount?
+  /// Recettes versées sur le Wallet de l'organisateur (fin d'événement + délai) — garantit un versement unique
+  ticketRevenueReleasedAt DateTime?
+  ticketTiers             TicketTier[]
+  tickets                 Ticket[]
   directPayments   Payment[]     @relation("DirectPayments") // Dons sans Booking
 
   @@index([creatorId])
@@ -283,6 +292,8 @@ model Booking {
   payments  Payment[]
   refundRequests ParticipantRefundRequest[]
   payoutItems    PayoutBookingItem[]
+  /// Billets individuels (1 QR par place) — billetterie multi-catégories
+  tickets        Ticket[]
 
   @@unique([userId, eventId])
   @@index([userId])
@@ -494,6 +505,15 @@ model Payment {
   /// une transaction ne peut être comptée qu'une seule fois (webhook / sync-missed).
   providerTransactionId String? @unique
   amount          Float
+  // ── Ventilation financière (billetterie) — figée au moment de la vente ──
+  /// Montant payé par l'acheteur
+  grossAmount        Float?
+  /// Commission Let's Out (frais FedaPay inclus)
+  platformFeeAmount  Float?
+  /// Net revenant à l'organisateur
+  organizerNetAmount Float?
+  /// Taux appliqué (%) — un changement du réglage n'affecte pas les ventes passées
+  commissionPercent  Float?
   currency        String        @default("EUR")
   status          PaymentStatus @default(PENDING)
   metadata        Json?
@@ -512,6 +532,72 @@ model Payment {
   @@index([userId])
   @@index([eventId])             // Requêtes par événement uniformes
   @@map("payments")
+}
+
+/// Compte Mobile Money de l'organisateur pour une billetterie (1 par événement).
+/// Table séparée pour que le numéro ne soit JAMAIS renvoyé avec l'événement public.
+model EventPayoutAccount {
+  eventId   String   @id
+  /// Numéro au format international (+229…)
+  phone     String
+  /// MTN | MOOV | CELTIIS
+  network   String
+  /// Nom du titulaire du compte
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("event_payout_accounts")
+}
+
+/// Catégorie de billets d'un événement (Standard, VIP, Table…)
+model TicketTier {
+  id            String   @id @default(cuid())
+  eventId       String
+  name          String
+  description   String?
+  /// Prix unitaire en F CFA
+  price         Int
+  totalQuantity Int
+  soldQuantity  Int      @default(0)
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@index([eventId])
+  @@map("ticket_tiers")
+}
+
+/// Billet individuel : 1 place = 1 QR unique (LO1.<ticketToken>) = 1 entrée
+model Ticket {
+  id            String    @id @default(cuid())
+  bookingId     String
+  eventId       String
+  ticketTierId  String?
+  /// Instantanés au moment de l'achat (le billet reste juste si la catégorie change)
+  tierName      String
+  price         Int
+  ticketToken   String    @unique
+  /// Paiement (commande) qui a émis ce billet
+  paymentId     String?
+  checkedInAt   DateTime?
+  checkedInById String?
+  createdAt     DateTime  @default(now())
+
+  booking    Booking     @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticketTier TicketTier? @relation(fields: [ticketTierId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([eventId])
+  @@index([ticketTierId])
+  @@index([paymentId])
+  @@map("tickets")
 }
 
 model PayoutBookingItem {
@@ -775,6 +861,7 @@ enum WalletTxType {
   REFUND
   TRANSFER
   POOL_PAYOUT
+  TICKET_SALES
 }
 
 enum ReportReason {

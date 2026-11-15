@@ -4,6 +4,21 @@ import { EmailService } from '../../services/email.service'
 import { eventGenderDenial } from '../../services/signup-policy.service'
 import { ensureTicketToken } from '../../services/ticket.service'
 import {
+  creditTicketSaleTx,
+  getTicketingConfig,
+  issueTicketsTx,
+  normalizeOrderLines,
+  payoutInfoComplete,
+  PAYOUT_ACCOUNT_SELECT,
+  type PayoutAccount,
+  priceOrder,
+  reserveTierStock,
+  forceTierStock,
+  splitTicketAmount,
+  type OrderLine,
+  type PricedOrder,
+} from '../../services/ticketing.service'
+import {
   FEDAPAY_APPROVED_STATUSES,
   FedapayError,
   fedapayBaseUrl,
@@ -62,6 +77,8 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         maxAttendees: true, currentAttendees: true,
         poolTarget: true, poolMode: true, poolMinAmount: true,
         genderRestriction: true,
+        ticketingEnabled: true, endAt: true,
+        payoutAccount: { select: PAYOUT_ACCOUNT_SELECT },
       },
     })
     if (!event) return reply.code(404).send({ error: 'Événement introuvable' })
@@ -73,11 +90,19 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       if (genderDenied) return reply.code(genderDenied.status).send(genderDenied.body)
     }
 
-    const finalAmount = customAmount !== undefined ? customAmount : event.price;
+    // ── Billetterie : commande (catégories × quantités) chiffrée À PARTIR DE LA BASE ──
+    let ticketOrder: TicketOrder | null = null
+    if (event.ticketingEnabled && !isNonParticipantDonation) {
+      const prepared = await prepareTicketOrder(app, event, (req.body as any)?.ticketLines)
+      if (!prepared.ok) return reply.code(prepared.status).send({ error: prepared.error, code: prepared.code, tierId: prepared.tierId })
+      ticketOrder = prepared
+    }
+
+    const finalAmount = ticketOrder ? ticketOrder.total : customAmount !== undefined ? customAmount : event.price;
     if (finalAmount <= 0) return reply.code(400).send({ error: 'Le montant doit être supérieur à 0' })
 
     // Validate contribution amount against pool mode when paying a custom amount
-    if (customAmount !== undefined && event.poolTarget && event.poolTarget > 0) {
+    if (!ticketOrder && customAmount !== undefined && event.poolTarget && event.poolTarget > 0) {
       const mode = event.poolMode || 'libre'
       const min = event.poolMinAmount ?? 0
       if (mode === 'fixe' && min > 0 && finalAmount !== min) {
@@ -92,8 +117,9 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       }
     }
     // Only block new joins (not pool contributions) when the event is full
-    const isPoolContributionRequest = customAmount !== undefined && event.poolTarget && event.poolTarget > 0
-    if (!isPoolContributionRequest && event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
+    const isPoolContributionRequest = !ticketOrder && customAmount !== undefined && event.poolTarget && event.poolTarget > 0
+    // (billetterie : les quotas sont gérés par catégorie, déjà vérifiés ci-dessus)
+    if (!ticketOrder && !isPoolContributionRequest && event.maxAttendees && event.currentAttendees >= event.maxAttendees) {
       return reply.code(400).send({ error: 'Événement complet' })
     }
     
@@ -108,6 +134,10 @@ export default async function paymentsRoutes(app: FastifyInstance) {
     })
     if (!user) return reply.code(404).send({ error: 'Utilisateur introuvable' })
 
+    const paymentDescription = ticketOrder
+      ? `Billets (${ticketOrder.count}) : ${event.title}`
+      : `Participation : ${event.title}`
+
     // MODE DEV : pas de clé configurée ou simulation demandée → simuler.
     // Une clé LIVE désactive toute simulation (sinon paiement gratuit via /dev/confirm-booking).
     if (isFedapayLiveKey() && process.env.MOCK_PAYMENTS === 'true') {
@@ -121,8 +151,9 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         publicKey: process.env.FEDAPAY_PUBLIC_KEY || 'pk_sandbox_xxxx',
         amount: finalAmount,
         currency: event.currency || 'XOF',
-        description: `Participation : ${event.title}`,
+        description: paymentDescription,
         eventId,
+        ...(ticketOrder ? { ticketLines: ticketOrderLines(ticketOrder), ticketCount: ticketOrder.count } : {}),
       })
     }
 
@@ -136,7 +167,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}`,
       },
       body: JSON.stringify({
-        description: `Participation : ${event.title}`,
+        description: paymentDescription,
         amount: finalAmount,
         currency: { iso: event.currency || 'XOF' },
         callback_url: `${process.env.PUBLIC_API_URL || 'https://let-s-out-production.up.railway.app'}/api/v1/payments/fedapay/callback`,
@@ -146,7 +177,10 @@ export default async function paymentsRoutes(app: FastifyInstance) {
           email: user.email || `${user.id}@letsout.app`,
           ...(user.phone ? { phone_number: { number: user.phone.replace(/^\+229/, ''), country: 'BJ' } } : {}),
         },
-        metadata: JSON.stringify({ eventId, userId: sub, poolValidationStatus, delegatedToId, isAnonymous, isNonParticipantDonation }),
+        metadata: JSON.stringify({
+          eventId, userId: sub, poolValidationStatus, delegatedToId, isAnonymous, isNonParticipantDonation,
+          ...(ticketOrder ? { ticketLines: ticketOrderLines(ticketOrder) } : {}),
+        }),
       }),
     })
     const txData = (await txRes.json()) as any
@@ -178,9 +212,16 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       publicKey: process.env.FEDAPAY_PUBLIC_KEY,
       amount: finalAmount,
       currency: event.currency || 'XOF',
-      description: `Participation : ${event.title}`,
+      description: paymentDescription,
       eventId,
+      ...(ticketOrder ? { ticketLines: ticketOrderLines(ticketOrder), ticketCount: ticketOrder.count } : {}),
     })
+  })
+
+  // Configuration publique de la billetterie (taux affiché à l'organisateur, plafonds)
+  app.get('/ticket-config', async (_req, reply) => {
+    const cfg = await getTicketingConfig(app.prisma)
+    return reply.send(cfg)
   })
 
   // Webhook FedaPay : confirmer après paiement réel.
@@ -230,6 +271,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         isAnonymous: !!meta.isAnonymous,
         isNonParticipantDonation: !!meta.isNonParticipantDonation,
         providerTransactionId: tx.id,
+        ticketLines: normalizeOrderLines(meta.ticketLines) ?? undefined,
       })
       return reply.send({ received: true, alreadyProcessed: !!(res as any)?.alreadyProcessed })
     } catch (e) {
@@ -275,6 +317,7 @@ export default async function paymentsRoutes(app: FastifyInstance) {
         isAnonymous: !!meta.isAnonymous,
         isNonParticipantDonation: !!meta.isNonParticipantDonation,
         providerTransactionId: tx.id,
+        ticketLines: normalizeOrderLines(meta.ticketLines) ?? undefined,
       })
       return reply.send({ success: true, alreadyProcessed: !!(res as any)?.alreadyProcessed, message: 'Paiement synchronisé' })
     } catch (e: any) {
@@ -310,13 +353,30 @@ export default async function paymentsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({
       where: { id: eventId },
-      select: { id: true, price: true, poolTarget: true, poolMode: true, poolMinAmount: true, genderRestriction: true },
+      select: {
+        id: true, price: true, poolTarget: true, poolMode: true, poolMinAmount: true, genderRestriction: true,
+        ticketingEnabled: true, endAt: true,
+        payoutAccount: { select: PAYOUT_ACCOUNT_SELECT },
+      },
     })
     if (!event) return reply.code(404).send({ error: 'Not found' })
 
     if (!isNonParticipantDonation) {
       const genderDenied = await eventGenderDenial(app.prisma, sub, event.genderRestriction)
       if (genderDenied) return reply.code(genderDenied.status).send(genderDenied.body)
+    }
+
+    // Billetterie (sandbox / dev) : même chiffrage serveur qu'en production
+    if (event.ticketingEnabled && !isNonParticipantDonation) {
+      const prepared = await prepareTicketOrder(app, event, (req.body as any)?.ticketLines)
+      if (!prepared.ok) return reply.code(prepared.status).send({ error: prepared.error, code: prepared.code, tierId: prepared.tierId })
+      try {
+        await handleConfirmedBooking(app, { eventId, userId: sub, amount: prepared.total, ticketLines: ticketOrderLines(prepared) })
+        return reply.send({ message: 'Tickets issued (sandbox/dev)', eventId, ticketCount: prepared.count })
+      } catch (e) {
+        app.log.error({ err: e }, '[dev/confirm-booking] Ticket order failed')
+        return reply.code(500).send({ error: 'Internal Server Error during ticket issuance' })
+      }
     }
 
     const finalAmount = customAmount !== undefined ? customAmount : event.price;
@@ -391,6 +451,38 @@ type ConfirmArgs = {
   isNonParticipantDonation?: boolean;
   /** Identifiant de la transaction FedaPay : garantit qu'elle n'est comptée QU'UNE fois */
   providerTransactionId?: string;
+  /** Billetterie : catégories × quantités achetées (issues des métadonnées FedaPay) */
+  ticketLines?: OrderLine[];
+}
+
+// ── Billetterie : préparation d'une commande (prix et stocks lus en base) ────
+type TicketOrder = Extract<PricedOrder, { ok: true }>
+
+function ticketOrderLines(order: TicketOrder): OrderLine[] {
+  return order.lines.map((l) => ({ tierId: l.tierId, quantity: l.quantity }))
+}
+
+async function prepareTicketOrder(
+  app: FastifyInstance,
+  event: {
+    id: string; poolTarget: number | null; endAt: Date
+    payoutAccount: PayoutAccount | null
+  },
+  rawLines: unknown,
+): Promise<TicketOrder | { ok: false; status: number; code: string; error: string; tierId?: string }> {
+  if (event.poolTarget && event.poolTarget > 0) {
+    return { ok: false, status: 409, code: 'TICKETING_POOL_CONFLICT', error: 'Billetterie indisponible sur un événement avec cagnotte.' }
+  }
+  if (!payoutInfoComplete(event)) {
+    return { ok: false, status: 409, code: 'TICKETING_NOT_READY', error: "L'organisateur n'a pas encore finalisé sa billetterie." }
+  }
+  if (new Date(event.endAt).getTime() <= Date.now()) {
+    return { ok: false, status: 409, code: 'EVENT_ENDED', error: 'Cet événement est terminé.' }
+  }
+  const lines = normalizeOrderLines(rawLines)
+  if (!lines) return { ok: false, status: 400, code: 'TICKET_SELECTION_REQUIRED', error: 'Choisissez au moins un billet.' }
+  const { maxPerOrder } = await getTicketingConfig(app.prisma)
+  return priceOrder(app.prisma, event.id, lines, maxPerOrder)
 }
 
 /**
@@ -399,7 +491,13 @@ type ConfirmArgs = {
  * la contrainte unique fait échouer le 2e appel (même concurrent) → aucun double comptage.
  */
 export async function handleConfirmedBooking(app: FastifyInstance, args: ConfirmArgs) {
-  if (!args.providerTransactionId) return processConfirmedBooking(app, args, null)
+  // Billetterie : traitement dédié (billets individuels, stocks, commission)
+  const run = (claimId: string | null, state?: { committed: boolean }) =>
+    args.ticketLines?.length
+      ? processTicketOrder(app, args, claimId, state)
+      : processConfirmedBooking(app, args, claimId, state)
+
+  if (!args.providerTransactionId) return run(null)
 
   let claimId: string
   try {
@@ -426,7 +524,7 @@ export async function handleConfirmedBooking(app: FastifyInstance, args: Confirm
 
   const state = { committed: false }
   try {
-    return await processConfirmedBooking(app, args, claimId, state)
+    return await run(claimId, state)
   } catch (e) {
     // Échec AVANT le comptage : on libère la réservation pour permettre un nouvel essai.
     // Échec APRÈS : l'argent est compté, la réservation reste (sinon double comptage au retry).
@@ -751,4 +849,126 @@ async function processConfirmedBooking(
   }
 
   return booking
+}
+
+// ── Billetterie : confirmation d'une commande multi-billets ───────────────────
+/**
+ * Tout ce qui touche à l'argent et aux billets est fait dans UNE transaction (tout ou rien) :
+ * stocks réservés atomiquement, commande (Booking), Payment ventilé (brut / commission / net,
+ * taux figé), 1 Ticket + 1 QR unique par place, et crédit immédiat si les recettes de
+ * l'événement ont déjà été versées (vente tardive). Les envois (chat, notifications, e-mail)
+ * viennent après et ne peuvent pas annuler la vente.
+ */
+async function processTicketOrder(
+  app: FastifyInstance,
+  { eventId, userId, amount, isAnonymous = false, ticketLines = [] }: ConfirmArgs,
+  claimedPaymentId: string | null,
+  state: { committed: boolean } = { committed: false },
+) {
+  const event = await app.prisma.event.findUnique({
+    where: { id: eventId },
+    select: { id: true, title: true, creatorId: true, startAt: true, address: true, city: true, coverUrl: true, ticketRevenueReleasedAt: true },
+  })
+  if (!event) throw new Error(`TICKET_EVENT_NOT_FOUND:${eventId}`)
+
+  const tiers = await app.prisma.ticketTier.findMany({ where: { id: { in: ticketLines.map((l) => l.tierId) }, eventId } })
+  const tierById = new Map(tiers.map((t) => [t.id, t]))
+  const count = ticketLines.reduce((a, l) => a + l.quantity, 0)
+  const lines = ticketLines.map((l) => {
+    const tier = tierById.get(l.tierId)
+    // Catégorie supprimée entre le paiement et la confirmation (impossible si déjà vendue) :
+    // le billet reste émis, au prix moyen payé
+    return { tierId: l.tierId, name: tier?.name ?? 'Billet', price: tier?.price ?? Math.round(amount / Math.max(1, count)), quantity: l.quantity, exists: !!tier }
+  })
+  const { commissionPercent } = await getTicketingConfig(app.prisma)
+  const split = splitTicketAmount(amount, commissionPercent)
+  const existingBooking = await app.prisma.booking.findUnique({ where: { userId_eventId: { userId, eventId } } })
+  const wasConfirmed = existingBooking?.status === 'CONFIRMED'
+  const oversold: string[] = []
+
+  const result = await app.prisma.$transaction(async (tx: any) => {
+    // 1. Stocks : jamais au-delà du quota ; si un paiement simultané a pris les dernières places,
+    //    la vente (déjà encaissée) est quand même comptée et signalée pour traitement manuel.
+    for (const l of lines) {
+      if (!l.exists) continue
+      const ok = await reserveTierStock(tx, l.tierId, l.quantity)
+      if (!ok) { oversold.push(l.tierId); await forceTierStock(tx, l.tierId, l.quantity) }
+    }
+    // 2. Commande de l'acheteur (1 par personne et par événement ; un rachat s'y ajoute)
+    const booking = await tx.booking.upsert({
+      where: { userId_eventId: { userId, eventId } },
+      create: { userId, eventId, status: 'CONFIRMED', totalPaid: amount, quantity: count },
+      update: { status: 'CONFIRMED', totalPaid: { increment: amount }, quantity: wasConfirmed ? { increment: count } : count },
+    })
+    await tx.event.update({ where: { id: eventId }, data: { currentAttendees: { increment: count } } })
+    // 3. Paiement ventilé (taux figé)
+    const financial = {
+      bookingId: booking.id, status: 'SUCCEEDED' as const, isAnonymous,
+      grossAmount: split.gross, platformFeeAmount: split.fee, organizerNetAmount: split.net, commissionPercent,
+      metadata: { source: 'ticketing', lines: ticketLines, ...(oversold.length ? { oversold } : {}) },
+    }
+    const payment = claimedPaymentId
+      ? await tx.payment.update({ where: { id: claimedPaymentId }, data: financial })
+      : await tx.payment.create({ data: { userId, eventId, amount, currency: 'XOF', ...financial } })
+    // 4. Un billet individuel (QR unique) par place
+    const tickets = await issueTicketsTx(tx, { bookingId: booking.id, eventId, paymentId: payment.id, lines })
+    // 5. Recettes déjà versées (webhook en retard) : cette vente est créditée tout de suite
+    if (event.ticketRevenueReleasedAt) {
+      await creditTicketSaleTx(tx, { eventId, creatorId: event.creatorId, title: event.title, net: split.net, fee: split.fee, paymentId: payment.id })
+    }
+    return { booking, payment, tickets }
+  })
+  state.committed = true
+  if (oversold.length) app.log.error({ eventId, oversold, paymentId: result.payment.id }, '[Billetterie] SURVENTE : paiement encaissé au-delà du quota')
+
+  // ── Effets secondaires (ne remettent jamais la vente en cause) ──
+  try {
+    const conv = await app.prisma.conversation.findUnique({ where: { eventId } })
+    if (conv) {
+      await app.prisma.conversationMember.upsert({
+        where: { conversationId_userId: { conversationId: conv.id, userId } },
+        create: { conversationId: conv.id, userId },
+        update: {},
+      })
+    }
+    const summary = lines.map((l) => `${l.quantity}× ${l.name}`).join(', ')
+    await createAndSendNotification(app, {
+      userId,
+      type: 'PAYMENT_SUCCESS',
+      title: count > 1 ? `🎟️ Vos ${count} billets sont prêts !` : '🎟️ Votre billet est prêt !',
+      body: `${summary} — « ${event.title} ». Retrouvez-les dans « Mes billets ».`,
+      data: { eventId, bookingId: result.booking.id, screen: 'event-details' },
+    })
+    if (event.creatorId !== userId) {
+      await createAndSendNotification(app, {
+        userId: event.creatorId,
+        type: 'PAYMENT_SUCCESS',
+        title: '🎟️ Nouvelle vente de billets',
+        body: `${summary} vendus pour « ${event.title} » (net : ${split.net.toLocaleString('fr-FR')} F CFA).`,
+        data: { eventId, screen: 'event-details' },
+      })
+    }
+  } catch (err) {
+    app.log.error({ err }, '[Billetterie] Notifications non envoyées')
+  }
+  try {
+    const user = await app.prisma.user.findUnique({ where: { id: userId }, include: { profile: true } })
+    if (user?.email) {
+      await new EmailService().sendTicketsEmail({
+        to: user.email,
+        userName: user.profile?.displayName || 'Cher utilisateur',
+        eventName: event.title,
+        eventDate: event.startAt,
+        location: event.address || event.city || 'Lieu non spécifié',
+        orderRef: result.payment.id,
+        total: amount,
+        coverImage: event.coverUrl || undefined,
+        tickets: result.tickets.map((t: any) => ({ token: t.ticketToken, tierName: t.tierName, price: t.price })),
+      })
+    }
+  } catch (err) {
+    app.log.error({ err }, '[Billetterie] E-mail des billets non envoyé')
+  }
+
+  return { booking: result.booking, ticketCount: result.tickets.length, oversold: oversold.length > 0 }
 }

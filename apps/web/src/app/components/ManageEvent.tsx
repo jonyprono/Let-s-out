@@ -23,6 +23,7 @@ import { InviteFriendsModal } from '@/features/events/components/InviteFriendsMo
 import { ShareViaChatModal } from '@/features/events/components/ShareViaChatModal';
 import { eventsApi } from '@/features/events/api';
 import { Carousel, CarouselContent, CarouselItem } from '@/app/components/ui/carousel';
+import { TicketingManager } from '@/features/ticketing/components/TicketingManager';
 
 import { dateLocale, intlLocale, currentLang } from '@/lib/locale';
 export function ManageEvent() {
@@ -30,8 +31,9 @@ export function ManageEvent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuthStore();
-  const initialTab = (searchParams.get('tab') as 'details' | 'participants' | 'cagnotte') || 'details';
-  const [activeTab, setActiveTab] = useState<'details' | 'participants' | 'cagnotte'>(initialTab);
+  type ManageTab = 'details' | 'participants' | 'cagnotte' | 'ticketing';
+  const initialTab = (searchParams.get('tab') as ManageTab) || 'details';
+  const [activeTab, setActiveTab] = useState<ManageTab>(initialTab);
   const [cagnotteStep, setCagnotteStep] = useState<'empty' | 'form' | 'summary' | 'success' | 'validator-vote'>('empty');
 
   const qc = useQueryClient();
@@ -120,6 +122,15 @@ export function ManageEvent() {
   }
 
   const hasPot = Boolean(event.poolTarget && event.poolTarget > 0);
+  // Billetterie et cagnotte sont exclusives : un événement avec billetterie n'affiche pas l'onglet cagnotte,
+  // et l'onglet billetterie (organisateurs uniquement) n'apparaît pas si une cagnotte existe.
+  const visibleTabs: ManageTab[] = [
+    'details',
+    'participants',
+    ...(event.ticketingEnabled ? [] : (['cagnotte'] as ManageTab[])),
+    ...(isEventOrganizer && !hasPot ? (['ticketing'] as ManageTab[]) : []),
+  ];
+  const currentTab: ManageTab = visibleTabs.includes(activeTab) ? activeTab : 'details';
   
   // If we are in the cagnotte flow (form, summary, success) and it's not the active display, render fullscreen
   if (activeTab === 'cagnotte' && cagnotteStep === 'validator-vote') {
@@ -217,11 +228,11 @@ export function ManageEvent() {
 
       {/* Tabs */}
       <div className="flex w-full border-b border-gray-200 dark:border-gray-800 shrink-0 bg-white dark:bg-[#1A1A1A]">
-        {(['details', 'participants', 'cagnotte'] as const).map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3 text-[13px] font-semibold text-center relative ${activeTab === tab ? 'text-[#FF7A00]' : 'text-gray-500'}`}
+            className={`flex-1 py-3 text-[13px] font-semibold text-center relative ${currentTab === tab ? 'text-[#FF7A00]' : 'text-gray-500'}`}
           >
             <span>{t(`manageEvent.tabs.${tab}`)}</span>
             {tab === 'participants' && pendingRequests && pendingRequests.length > 0 && (
@@ -230,7 +241,7 @@ export function ManageEvent() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
             )}
-            {activeTab === tab && (
+            {currentTab === tab && (
               <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#FF7A00]" />
             )}
           </button>
@@ -239,9 +250,10 @@ export function ManageEvent() {
 
       {/* Tab Content */}
       <div className="flex-1 p-4 bg-[#F9F9F9] dark:bg-[#0a0a0b]">
-        {activeTab === 'details' && <TabDetails event={event} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
-        {activeTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} pendingRequests={pendingRequests || []} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
-        {activeTab === 'cagnotte' && <TabCagnotteInline event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} setCagnotteStep={setCagnotteStep} />}
+        {currentTab === 'details' && <TabDetails event={event} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
+        {currentTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} pendingRequests={pendingRequests || []} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
+        {currentTab === 'cagnotte' && <TabCagnotteInline event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} setCagnotteStep={setCagnotteStep} />}
+        {currentTab === 'ticketing' && <TicketingManager event={event} />}
       </div>
     </div>
   );
