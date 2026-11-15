@@ -88,12 +88,18 @@ jobs:
       - name: Archive app
         working-directory: apps/web/ios/App
         run: |
+          # Numéro de build unique et toujours croissant à chaque exécution du workflow
+          # (App Store Connect refuse un CFBundleVersion déjà envoyé). 100 + numéro du run
+          # GitHub : dépasse le dernier build envoyé à la main (9) et augmente tout seul.
+          BUILD_NUMBER=$((100 + ${{ github.run_number }}))
+          echo "CFBundleVersion = $BUILD_NUMBER"
           xcodebuild archive \
             -project App.xcodeproj \
             -scheme App \
             -configuration Release \
             -destination "generic/platform=iOS" \
-            -archivePath "./build/LetsOut.xcarchive"
+            -archivePath "./build/LetsOut.xcarchive" \
+            CURRENT_PROJECT_VERSION=$BUILD_NUMBER
 
       - name: Export IPA
         working-directory: apps/web/ios/App
