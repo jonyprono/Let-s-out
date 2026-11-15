@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router'
+import { useParams, useNavigate, useLocation } from 'react-router'
 import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page, PagePost } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
@@ -11,24 +11,9 @@ import { toast } from 'sonner'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { useConfirm } from '@/components/shared/ConfirmContext'
 
-// 15 Catégories (12 existantes + 3 nouvelles)
-const PAGE_CATEGORIES = [
-  { label: 'Art et culture',               value: 'CULTURE'   },
-  { label: 'Comédie',                      value: 'GAMING'    },
-  { label: 'Sport',                        value: 'SPORT'     },
-  { label: 'Santé et bien-être',           value: 'WELLNESS'  },
-  { label: 'Cuisine et gastronomie',       value: 'FOOD'      },
-  { label: 'Boissons',                     value: 'LIFESTYLE' },
-  { label: 'Réseautage professionnel',     value: 'SOCIAL'    },
-  { label: 'Fêtes',                        value: 'NIGHTLIFE' },
-  { label: 'Religion',                     value: 'OTHER'     },
-  { label: 'Shopping',                     value: 'TECH'      },
-  { label: 'Musique et son',               value: 'MUSIC'     },
-  { label: 'Télévision et cinéma',         value: 'ART'       },
-  { label: 'Jeux vidéos & jeux de société', value: 'GAMING'    },
-  { label: 'Concerts & festivals',         value: 'CONCERTS'  },
-  { label: 'Voyages et découverte',        value: 'TRAVEL'    },
-]
+import { PAGE_CATEGORIES } from '../categories'
+import { PageStatsPanel } from './PageStatsPanel'
+import { PageFollowersPanel } from './PageFollowersPanel'
 
 export function ManagePage() {
   const { id } = useParams<{ id: string }>()
@@ -42,7 +27,10 @@ export function ManagePage() {
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
-  const [currentSection, setCurrentSection] = useState<'menu' | 'settings' | 'stats' | 'posts' | 'followers'>('menu')
+  type Section = 'menu' | 'settings' | 'stats' | 'posts' | 'followers'
+  // « Mes pages » peut ouvrir directement une section (ex. Statistiques)
+  const initialSection = (useLocation().state as { section?: Section } | null)?.section
+  const [currentSection, setCurrentSection] = useState<Section>(initialSection ?? 'menu')
 
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
@@ -306,15 +294,7 @@ export function ManagePage() {
           )}
 
           {/* Stats section */}
-          {currentSection === 'stats' && (
-            <div className="flex flex-col items-center justify-center pt-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-4">
-                <BarChart3 className="w-8 h-8 text-blue-500" />
-              </div>
-              <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Statistiques</h3>
-              <p className="text-[14px] text-[var(--color-text-muted)]">Les statistiques détaillées de votre page seront bientôt disponibles.</p>
-            </div>
-          )}
+          {currentSection === 'stats' && id && <PageStatsPanel pageId={id} />}
 
           {/* Posts section */}
           {currentSection === 'posts' && (
@@ -383,15 +363,7 @@ export function ManagePage() {
           )}
 
           {/* Followers section */}
-          {currentSection === 'followers' && (
-            <div className="flex flex-col items-center justify-center pt-20 text-center">
-              <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
-                <Users className="w-8 h-8 text-green-500" />
-              </div>
-              <h3 className="text-[18px] font-bold text-[var(--color-text-primary)] mb-2">Vos abonnés</h3>
-              <p className="text-[14px] text-[var(--color-text-muted)]">La liste de vos abonnés sera bientôt disponible.</p>
-            </div>
-          )}
+          {currentSection === 'followers' && id && <PageFollowersPanel pageId={id} total={page?._count?.followers} />}
         </div>
 
         <BottomSheet title="Sélectionner une catégorie" open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>

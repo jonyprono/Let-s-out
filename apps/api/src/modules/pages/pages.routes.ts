@@ -33,9 +33,85 @@ export default async function pagesRoutes(app: FastifyInstance) {
     const { sub } = req.user as { sub: string }
     const pages = await app.prisma.page.findMany({
       where: { creatorId: sub },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      // Compteurs pour l'écran « Mes pages » (abonnés, publications)
+      include: { _count: { select: { followers: true, posts: true } } },
     })
     return reply.send({ data: pages })
+  })
+
+  // STATISTIQUES D'UNE PAGE — créateur uniquement
+  // Abonnés, publications, commentaires reçus, nouveaux abonnés (7 / 30 j) et nouveaux abonnés par jour (30 j)
+  app.get('/:id/stats', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const page = await app.prisma.page.findUnique({ where: { id }, select: { creatorId: true } })
+    if (!page) return reply.code(404).send({ error: 'Page not found' })
+    if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+
+    const DAY = 24 * 60 * 60 * 1000
+    const now = new Date()
+    const since30 = new Date(now.getTime() - 30 * DAY)
+    const since7 = new Date(now.getTime() - 7 * DAY)
+
+    const [followersCount, postsCount, commentsCount, recentFollows] = await Promise.all([
+      app.prisma.pageFollower.count({ where: { pageId: id } }),
+      app.prisma.pagePost.count({ where: { pageId: id } }),
+      app.prisma.pagePostComment.count({ where: { post: { pageId: id } } }),
+      app.prisma.pageFollower.findMany({ where: { pageId: id, createdAt: { gte: since30 } }, select: { createdAt: true } }),
+    ])
+
+    // Série journalière sur 30 jours (UTC), jours sans abonnement inclus à 0
+    const byDay = new Map<string, number>()
+    for (let i = 29; i >= 0; i--) byDay.set(new Date(now.getTime() - i * DAY).toISOString().slice(0, 10), 0)
+    for (const f of recentFollows) {
+      const key = f.createdAt.toISOString().slice(0, 10)
+      if (byDay.has(key)) byDay.set(key, (byDay.get(key) || 0) + 1)
+    }
+
+    return reply.send({
+      followersCount,
+      postsCount,
+      commentsCount,
+      newFollowers7d: recentFollows.filter((f) => f.createdAt >= since7).length,
+      newFollowers30d: recentFollows.length,
+      followersTimeline: [...byDay].map(([date, count]) => ({ date, count })),
+    })
+  })
+
+  // ABONNÉS D'UNE PAGE — créateur uniquement, du plus récent au plus ancien, paginé par curseur
+  app.get('/:id/followers', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const { cursor } = req.query as { cursor?: string }
+    const page = await app.prisma.page.findUnique({ where: { id }, select: { creatorId: true } })
+    if (!page) return reply.code(404).send({ error: 'Page not found' })
+    if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+
+    const LIMIT = 30
+    const rows = await app.prisma.pageFollower.findMany({
+      where: { pageId: id },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: LIMIT + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      select: {
+        id: true,
+        createdAt: true,
+        user: { select: { id: true, profile: { select: { displayName: true, username: true, avatarUrl: true } } } },
+      },
+    })
+    const hasMore = rows.length > LIMIT
+    const items = rows.slice(0, LIMIT)
+    return reply.send({
+      data: items.map((r) => ({
+        userId: r.user.id,
+        displayName: r.user.profile?.displayName || 'Utilisateur',
+        username: r.user.profile?.username ?? null,
+        avatarUrl: r.user.profile?.avatarUrl ?? null,
+        followedAt: r.createdAt,
+      })),
+      nextCursor: hasMore ? items[items.length - 1].id : null,
+    })
   })
 
   // LIST PAGES (by creatorId or discovery)

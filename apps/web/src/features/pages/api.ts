@@ -43,6 +43,24 @@ export interface PagePost {
   comments?: PagePostComment[]
 }
 
+export interface PageStats {
+  followersCount: number
+  postsCount: number
+  commentsCount: number
+  newFollowers7d: number
+  newFollowers30d: number
+  /** 30 jours, du plus ancien au plus récent ; date = AAAA-MM-JJ (UTC) */
+  followersTimeline: { date: string; count: number }[]
+}
+
+export interface PageFollowerItem {
+  userId: string
+  displayName: string
+  username: string | null
+  avatarUrl: string | null
+  followedAt: string
+}
+
 export const pagesApi = {
   create: (data: { name: string; category: string; description?: string }) =>
     apiClient.post<Page>('/pages', data),
@@ -70,6 +88,14 @@ export const pagesApi = {
 
   getById: (id: string) =>
     apiClient.get<Page>(`/pages/${id}`).then(res => res.data),
+
+  /** Statistiques de la page (créateur uniquement) */
+  getStats: (id: string) =>
+    apiClient.get<PageStats>(`/pages/${id}/stats`).then(res => res.data),
+
+  /** Abonnés de la page (créateur uniquement), du plus récent au plus ancien */
+  getFollowers: (id: string, cursor?: string) =>
+    apiClient.get<{ data: PageFollowerItem[]; nextCursor: string | null }>(`/pages/${id}/followers`, { params: { cursor } }).then(res => res.data),
 
   update: (id: string, data: Partial<Pick<Page, 'name' | 'category' | 'description' | 'avatarUrl' | 'coverUrl'>>) =>
     apiClient.patch<Page>(`/pages/${id}`, data).then(res => res.data),

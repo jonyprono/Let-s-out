@@ -478,9 +478,9 @@ export function Settings({ onBack }: SettingsProps) {
               icon={<LayoutDashboard className="w-4 h-4" />}
               iconBg="bg-violet-50 dark:bg-violet-500/10"
               iconColor="text-violet-500"
-              title="Créer une page"
-              subtitle="Publiez du contenu sous une identité dédiée"
-              onClick={() => navigate('/pages/create')}
+              title={t('settings.rows.myPages')}
+              subtitle={t('settings.rows.myPagesDesc')}
+              onClick={() => navigate('/pages/mine')}
             />
             <SettingsRow
               icon={<Radio className="w-4 h-4" />}
