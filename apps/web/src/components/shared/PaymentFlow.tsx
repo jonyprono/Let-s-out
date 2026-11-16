@@ -319,7 +319,7 @@ export function PaymentFlow({
               value={participationAmount}
               onChange={(e) => setParticipationAmount(e.target.value)}
               placeholder="0"
-              className="flex-1 px-4 text-[15px] text-gray-900 dark:text-white placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
+              className="flex-1 px-4 text-[16px] text-gray-900 dark:text-white placeholder:text-[#C0C0C0] outline-none bg-transparent h-full"
             />
             <span className="pr-4 text-[13px] font-semibold text-[#8D8D8D]">F CFA</span>
           </div>

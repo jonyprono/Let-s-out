@@ -180,11 +180,12 @@ select:focus-visible {
 }
 
 /* ── Global Inputs ─────────────────────────────────────────────── */
+/* 16 px minimum : en dessous, iOS zoome la page au focus (le viewport n'a pas de maximum-scale) */
 .app-input {
-  @apply w-full min-h-[52px] px-4 py-3 border border-[#E0E0E0] dark:border-[#2A2A2A] rounded-[12px] text-[14px] bg-transparent text-[var(--color-text-primary)] dark:text-white focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] transition-all;
+  @apply w-full min-h-[52px] px-4 py-3 border border-[#E0E0E0] dark:border-[#2A2A2A] rounded-[12px] text-[16px] bg-transparent text-[var(--color-text-primary)] dark:text-white focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] transition-all;
 }
 .app-input-textarea {
-  @apply w-full px-4 py-3 border border-[#E0E0E0] dark:border-[#2A2A2A] rounded-[16px] text-[14px] bg-transparent text-[var(--color-text-primary)] dark:text-white focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] transition-all resize-none;
+  @apply w-full px-4 py-3 border border-[#E0E0E0] dark:border-[#2A2A2A] rounded-[16px] text-[16px] bg-transparent text-[var(--color-text-primary)] dark:text-white focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] transition-all resize-none;
 }
 
 

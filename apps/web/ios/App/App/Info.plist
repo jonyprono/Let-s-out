@@ -52,7 +52,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>Let's Out a besoin d'accéder à votre appareil photo pour prendre des photos et vidéos à partager dans vos événements et conversations.</string>
+	<string>Let's Out a besoin d'accéder à votre appareil photo pour prendre des photos et vidéos à partager dans vos événements et conversations, et pour scanner les QR codes des billets et des événements.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Let's Out a besoin d'accéder à vos photos pour les partager dans vos événements et conversations.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

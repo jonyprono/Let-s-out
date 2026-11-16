@@ -267,7 +267,7 @@ export function PayoutApprovalScreen() {
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder={t('payout.notePlaceholder')}
-              className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[14px] h-20 resize-none focus:ring-2 focus:ring-[#FF7A00] focus:border-transparent outline-none"
+              className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[16px] h-20 resize-none focus:ring-2 focus:ring-[#FF7A00] focus:border-transparent outline-none"
             />
           </div>
           <button
@@ -296,7 +296,7 @@ export function PayoutApprovalScreen() {
               value={note}
               onChange={e => setNote(e.target.value)}
               placeholder={t('payout.rejectPlaceholder')}
-              className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[14px] h-24 resize-none focus:ring-2 focus:ring-[#FF7A00] focus:border-transparent outline-none"
+              className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[16px] h-24 resize-none focus:ring-2 focus:ring-[#FF7A00] focus:border-transparent outline-none"
             />
           </div>
           <button

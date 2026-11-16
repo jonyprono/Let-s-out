@@ -228,7 +228,7 @@ export function FeedCommentsModal({ eventId, organizerId, open, onClose }: FeedC
                   value={content}
                   onChange={e => setContent(e.target.value)}
                   placeholder={t('feedCommentsModal.ecrireUnCommentaire')}
-                  className="w-full bg-transparent text-[14px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-500"
+                  className="w-full bg-transparent text-[16px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-500"
                 />
                 <button type="button" className="text-gray-400 hover:text-gray-600">
                   <ImageIcon className="w-[18px] h-[18px]" strokeWidth={2.5} />

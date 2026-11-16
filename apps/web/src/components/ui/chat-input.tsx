@@ -27,7 +27,7 @@ export function ChatInput({ value, onChange, onSend, onAttach, onCamera, onMic, 
           }}
           rows={1}
           placeholder="Écrire un message..."
-          className="flex-1 bg-transparent py-[13px] font-poppins text-[15px] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none min-w-0 resize-none overflow-y-auto no-scrollbar"
+          className="flex-1 bg-transparent py-[13px] font-poppins text-[16px] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none min-w-0 resize-none overflow-y-auto no-scrollbar"
           style={{ height: '48px' }}
         />
         <div className="flex items-center gap-3 text-gray-400 pl-2 pb-1">

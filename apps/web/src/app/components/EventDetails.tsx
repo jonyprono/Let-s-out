@@ -1282,7 +1282,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('eventDetails.requestRefund')}</span></h3>
             <p className="text-[14px] text-gray-500 mb-4"><span>{t('eventDetails.refundIntro')}</span></p>
             <textarea
-              className="w-full h-24 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#222] text-[14px] mb-4 focus:outline-none focus:border-red-500"
+              className="w-full h-24 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#222] text-[16px] mb-4 focus:outline-none focus:border-red-500"
               placeholder={t('eventDetails.refundPlaceholder')}
               value={refundReason}
               onChange={(e) => setRefundReason(e.target.value)}

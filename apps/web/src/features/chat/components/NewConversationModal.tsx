@@ -111,7 +111,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
             placeholder={t('newConversationModal.nomDuGroupe')}
             value={groupName}
             onChange={e => setGroupName(e.target.value)}
-            className="flex-1 text-[15px] outline-none placeholder-gray-400 font-medium"
+            className="flex-1 text-[16px] outline-none placeholder-gray-400 font-medium"
           />
         </div>
       )}
@@ -125,7 +125,7 @@ export function NewConversationModal({ onClose }: NewConversationModalProps) {
             placeholder={t('newConversationModal.rechercherUnAmi')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="flex-1 bg-transparent text-[14px] outline-none placeholder-gray-500"
+            className="flex-1 bg-transparent text-[16px] outline-none placeholder-gray-500"
           />
         </div>
       </div>

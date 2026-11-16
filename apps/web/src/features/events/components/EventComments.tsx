@@ -130,7 +130,7 @@ export function EventComments({ eventId, organizerId }: { eventId: string, organ
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={t('eventComments.ajouterUnCommentaire')}
-            className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 rounded-full px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
+            className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 rounded-full px-4 py-2.5 text-[16px] focus:outline-none focus:ring-2 focus:ring-[#FF7A00]"
           />
           <button
             type="submit"

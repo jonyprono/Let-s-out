@@ -234,7 +234,7 @@ export function ManagePage() {
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors"
+                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[16px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors"
                 />
               </div>
               <div>
@@ -252,7 +252,7 @@ export function ManagePage() {
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[14px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors resize-none"
+                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[16px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors resize-none"
                 />
               </div>
               <PrimaryButton

@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
-import { AlertTriangle, CheckCircle2, Clock, Pencil, Wallet } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Clock, Pencil, ShieldCheck, Ticket, Wallet } from 'lucide-react'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { currentLang, dateLocale, intlLocale } from '@/lib/locale'
@@ -30,6 +30,8 @@ export function TicketingManager({ event }: { event: { id: string; creatorId: st
   const [payout, setPayout] = useState<PayoutInfo>({ phone: '', network: '', name: '' })
   const [payoutErr, setPayoutErr] = useState<'phone' | 'network' | 'name' | null>(null)
   const [kycBlocked, setKycBlocked] = useState(false)
+  const [opened, setOpened] = useState(false)
+  const [kycModalOpen, setKycModalOpen] = useState(false)
 
   const hasPot = Boolean(event.poolTarget && event.poolTarget > 0)
 
@@ -107,6 +109,58 @@ export function TicketingManager({ event }: { event: { id: string; creatorId: st
 
   const s: TicketSales = sales
   const percent = s.commissionPercent
+
+  // Billetterie pas encore ouverte (aucune catégorie) : écran d'accueil, comme l'onglet Cagnotte.
+  // « Ouvrir une billetterie » donne accès au gestionnaire complet ci-dessous.
+  if (s.tiers.length === 0 && !opened) {
+    return (
+      <div className="w-full flex-1 flex flex-col items-center justify-center p-6 bg-white dark:bg-[#1A1A1A] rounded-xl border border-gray-100 dark:border-gray-800 mt-4">
+        <div className="mb-6 flex justify-center">
+          <div className="w-28 h-28 rounded-full bg-[#FFF3E8] dark:bg-[#2A1A0A] flex items-center justify-center">
+            <Ticket className="w-14 h-14 text-[#FF7A00] -rotate-12" strokeWidth={1.5} aria-hidden="true" />
+          </div>
+        </div>
+        <h2 className="text-[18px] font-bold text-[#1B1818] dark:text-white mb-2 text-center"><span>{t('ticketing.manage.emptyTitle')}</span></h2>
+        <p className="text-[14px] text-[#737373] text-center mb-8 max-w-[280px] leading-relaxed">
+          <span>{t('ticketing.manage.emptyDesc')}</span>
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            // Même règle que la cagnotte : compte du créateur vérifié (KYC) obligatoire
+            if (s.creatorKycVerified === false) setKycModalOpen(true)
+            else setOpened(true)
+          }}
+          className="w-full py-3.5 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold text-gray-900 dark:text-white bg-white dark:bg-[#1A1A1A] active:scale-95 transition-transform"
+        >
+          <Ticket className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
+          <span>{t('ticketing.manage.openTicketing')}</span>
+        </button>
+
+        {/* Compte non vérifié : invitation à la vérification au lieu d'ouvrir la billetterie */}
+        <BottomSheet title={t('ticketing.manage.kycTitle')} open={kycModalOpen} onClose={() => setKycModalOpen(false)}>
+          <div className="flex flex-col items-center text-center">
+            <div className="w-14 h-14 rounded-full bg-[#FFF3E8] dark:bg-[#2A1A0A] flex items-center justify-center mb-4">
+              <ShieldCheck className="w-7 h-7 text-[#FF7A00]" aria-hidden="true" />
+            </div>
+            <p className="text-[14px] text-[var(--color-text-secondary)] mb-6 leading-relaxed">
+              <span>{s.payoutInfo.canEdit ? t('ticketing.manage.kycDescCreator') : t('ticketing.manage.kycDescCohost')}</span>
+            </p>
+            {s.payoutInfo.canEdit ? (
+              <PrimaryButton onClick={() => { setKycModalOpen(false); navigate('/verify-profile') }}>
+                <span>{t('createEvent.done.verify')}</span>
+              </PrimaryButton>
+            ) : (
+              <button type="button" onClick={() => setKycModalOpen(false)}
+                className="w-full h-12 rounded-full border border-[var(--border-default)] text-[var(--color-text-primary)] font-semibold text-[14px]">
+                <span>{t('tickets.cancel')}</span>
+              </button>
+            )}
+          </div>
+        </BottomSheet>
+      </div>
+    )
+  }
   const fmtDate = (iso: string) => {
     try {
       return format(new Date(iso), currentLang() === 'fr' ? "d MMMM yyyy 'à' HH'h'mm" : 'PPp', { locale: dateLocale() })

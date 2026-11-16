@@ -216,7 +216,7 @@ export function Messages(_props: MessagesProps) {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={t('messages.searchPlaceholder')}
-                className="flex-1 bg-transparent outline-none text-[14px] text-[#1B1818] dark:text-[#f5f5f5] placeholder:text-[#BDBDBD] font-inter min-w-0"
+                className="flex-1 bg-transparent outline-none text-[16px] text-[#1B1818] dark:text-[#f5f5f5] placeholder:text-[#BDBDBD] font-inter min-w-0"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-gray-100 dark:bg-[#2A2A2A] dark:bg-[#2a2a2a] rounded-full transition-colors flex-shrink-0">

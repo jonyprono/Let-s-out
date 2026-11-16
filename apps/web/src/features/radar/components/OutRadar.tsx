@@ -472,9 +472,9 @@ export function OutRadar() {
         style={{
           scrollbarWidth: 'none',
           WebkitOverflowScrolling: 'touch',
-          // Clears the fixed BottomNav (height: 62px + safe-area-inset-bottom, see BottomNav.tsx)
-          // plus breathing room — without this the last content was hidden behind the nav bar.
-          paddingBottom: 'calc(62px + env(safe-area-inset-bottom) + 16px)',
+          // Pas de padding-bottom ici : l'espace de fin est un élément en bas de liste (voir plus bas)
+          paddingBottom: 0,
+          overscrollBehaviorY: 'contain',
         }}
       >
         {activeTab === 'invites' ? (
@@ -888,6 +888,10 @@ export function OutRadar() {
             )}
           </>
         )}
+        {/* Espace de fin = barre du bas + safe-area. Un VRAI élément (et non un padding-bottom du
+            conteneur défilant, que WebKit/iOS n'inclut pas toujours dans la hauteur défilable) :
+            même principe que le fil d'accueil (Home, <div className="pb-28">), qui défile bien sur iPhone. */}
+        <div aria-hidden="true" className="shrink-0" style={{ height: 'calc(env(safe-area-inset-bottom, 0px) + 70px)' }} />
       </div>
 
       {/* ── MODAL : CONFIGURER LA VISIBILITÉ ─────────────────────────────────── */}
@@ -943,7 +947,7 @@ export function OutRadar() {
               <select
                 value={visibilityOutingType}
                 onChange={(e) => setVisibilityOutingType(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-xs font-medium outline-none text-gray-900 dark:text-white"
+                className="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-[16px] font-medium outline-none text-gray-900 dark:text-white"
               >
                 {OUTING_TYPES.filter((ot) => ot.value !== 'ALL').map((ot) => (
                   <option key={ot.value} value={ot.value}>
@@ -1070,7 +1074,7 @@ export function OutRadar() {
               <select
                 value={outingTypeFilter}
                 onChange={(e) => setOutingTypeFilter(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-xs font-medium outline-none text-gray-900 dark:text-white"
+                className="w-full p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-[16px] font-medium outline-none text-gray-900 dark:text-white"
               >
                 {OUTING_TYPES.map((ot) => (
                   <option key={ot.value} value={ot.value}>
@@ -1131,7 +1135,7 @@ export function OutRadar() {
               onChange={(e) => setInviteMessage(e.target.value)}
               maxLength={200}
               rows={3}
-              className="w-full p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700 text-xs text-gray-900 dark:text-white outline-none resize-none placeholder:text-gray-400"
+              className="w-full p-3 rounded-2xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700 text-[16px] text-gray-900 dark:text-white outline-none resize-none placeholder:text-gray-400"
             />
 
             <button

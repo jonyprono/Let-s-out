@@ -47,6 +47,11 @@ window.addEventListener('vite:preloadError', (event) => {
   }
 })
 
+// Développement : alerte console si un élément dépasse la largeur de l'écran (absent du build prod)
+if (import.meta.env.DEV) {
+  import('@/lib/dev-overflow-check').then((m) => m.startDevOverflowCheck()).catch(() => {})
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>

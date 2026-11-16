@@ -8,7 +8,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useUserProfile } from '@/features/users/UserProfileContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { getVideoPosterUrl } from '../utils/video-url';
+import { getFullscreenPosterUrl } from '../utils/video-url';
 import { useVideoFit, FIT_CLASS } from '../utils/video-fit';
 
 interface Props {
@@ -38,7 +38,8 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   const [isUserPaused, setIsUserPaused] = useState(false);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
 
-  const posterUrl = getVideoPosterUrl(video);
+  // Affiche aux proportions de la vidéo (et non la vignette paysage 480×270 des cartes)
+  const posterUrl = getFullscreenPosterUrl(video);
   // Cadrage commun : verticale = cover (plein écran), horizontale = contain sur fond flou
   const { fit, onLoadedMetadata: onFitMetadata } = useVideoFit();
 
@@ -49,13 +50,16 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   const setVlogMuted = useVideoSoundStore((s) => s.setVlogMuted);
   // Coupé par le navigateur (lecture automatique avec son refusée) sans que l'utilisateur l'ait choisi
   const [mutedByBrowser, setMutedByBrowser] = useState(false);
-  // null = inconnu (on suppose qu'il y a du son), false = aucune piste audio (ex. diaporama sans musique)
-  const [hasAudio, setHasAudio] = useState<boolean | null>(null);
-  const isMuted = vlogMuted || mutedByBrowser;
+  // État RÉEL de l'élément <video> (synchronisé par l'événement `volumechange`) : l'icône
+  // reflète toujours ce qu'on entend, jamais une supposition.
+  const [elementMuted, setElementMuted] = useState(vlogMuted);
+  const isMuted = elementMuted;
 
   const attemptPlay = useCallback((videoEl: HTMLVideoElement) => {
     videoEl.muted = useVideoSoundStore.getState().vlogMuted;
     setMutedByBrowser(false);
+    // play() direct (comme le lecteur des pages) : sur iOS, c'est play() qui déclenche le
+    // chargement — `preload` seul ne charge pas les données, donc `canplay` n'arrivait jamais.
     const playPromise = videoEl.play();
     if (playPromise !== undefined) {
       playPromise.catch((err) => {
@@ -76,27 +80,32 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
     if (videoEl && !mutedByBrowser) videoEl.muted = vlogMuted;
   }, [vlogMuted, mutedByBrowser]);
 
-  /** Détecte une vidéo sans piste audio (Safari: audioTracks, Firefox: mozHasAudio, Chrome: octets audio décodés) */
-  const detectAudio = (videoEl: HTMLVideoElement) => {
-    const el = videoEl as HTMLVideoElement & { audioTracks?: { length: number }; mozHasAudio?: boolean; webkitAudioDecodedByteCount?: number };
-    if (el.audioTracks !== undefined) return setHasAudio(el.audioTracks.length > 0);
-    if (el.mozHasAudio !== undefined) return setHasAudio(el.mozHasAudio);
-    if (el.webkitAudioDecodedByteCount !== undefined && el.currentTime > 1) {
-      setHasAudio(el.webkitAudioDecodedByteCount > 0);
-    }
-  };
-
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     const videoEl = videoRef.current;
-    if (!videoEl || hasAudio === false) return;
+    if (!videoEl) return;
     // Geste utilisateur : le navigateur autorise désormais le son
-    const nextMuted = !isMuted;
+    const nextMuted = !videoEl.muted;
     videoEl.muted = nextMuted;
     setMutedByBrowser(false);
     setVlogMuted(nextMuted);
     if (videoEl.paused && !isUserPaused) videoEl.play().catch(() => {});
   };
+
+  // Libération du décodeur quand la vidéo sort de la fenêtre (visible ± 1) ou à la fermeture.
+  // Sans cela, iOS garde le lecteur matériel de chaque <video> retiré du DOM jusqu'au
+  // ramasse-miettes : les vlogs suivants n'obtiennent plus de décodeur (image figée, pas de son).
+  useEffect(() => {
+    if (!isNear) return;
+    const videoEl = videoRef.current;
+    return () => {
+      if (!videoEl) return;
+      videoEl.pause();
+      videoEl.removeAttribute('src');
+      videoEl.load();
+    };
+    // Volontairement lié à isNear seul : le nettoyage ne doit viser que l'élément qui disparaît.
+  }, [isNear]);
 
   useEffect(() => {
     const videoEl = videoRef.current;
@@ -106,11 +115,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
       hasPlayedOnceRef.current = false;
       setIsUserPaused(false);
       setIsBuffering(false);
-      // If already has enough data, play immediately
-      if (videoEl.readyState >= 3) {
-        attemptPlay(videoEl);
-      }
-      // Otherwise onCanPlay will trigger play
+      attemptPlay(videoEl);
     } else {
       videoEl.pause();
       videoEl.currentTime = 0;
@@ -258,7 +263,8 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           ref={videoRef}
           src={videoUrl}
           poster={posterUrl}
-          preload={isActive ? 'auto' : 'none'}
+          // Voisine : métadonnées + 1re image préchargées ; vidéo visible : chargement complet
+          preload={isActive ? 'auto' : 'metadata'}
           loop
           controls={false}
           controlsList="nodownload nofullscreen noremoteplayback"
@@ -268,11 +274,12 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           webkit-playsinline="true"
           x5-playsinline="true"
           onCanPlay={(e) => {
-            // Video has enough data — start playing if this item is active
-            if (isActive && !isUserPaused) {
+            // Filet de sécurité : relance si la vidéo active est encore en pause (ex. après une erreur réseau)
+            if (isActive && !isUserPaused && e.currentTarget.paused) {
               attemptPlay(e.currentTarget);
             }
           }}
+          onVolumeChange={(e) => setElementMuted(e.currentTarget.muted)}
           onPlaying={() => {
             // Video actually started playing — clear any buffering state
             hasPlayedOnceRef.current = true;
@@ -285,13 +292,10 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
             }
           }}
           onLoadedMetadata={(e) => {
-            detectAudio(e.currentTarget);
+            setElementMuted(e.currentTarget.muted);
             onFitMetadata(e);
           }}
-          onTimeUpdate={(e) => {
-            handleTimeUpdate();
-            if (hasAudio === null) detectAudio(e.currentTarget);
-          }}
+          onTimeUpdate={handleTimeUpdate}
           onError={(e) => {
             // Previously silent: an undecodable codec/format on iOS left the
             // frame frozen/black forever with no feedback. Surface it instead.
@@ -369,25 +373,23 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
 
           {/* Action Buttons */}
           <div className="flex flex-col items-center gap-6">
-            {/* Son / muet — grisé « Pas de son » si la vidéo n'a aucune piste audio */}
+            {/* Son / muet — icône seule, reflet de l'état réel de la vidéo (comme le lecteur des pages).
+                L'ancien libellé « Pas de son » venait d'une détection de piste audio fausse sur iOS
+                (les 5 vlogs en production ont tous une piste audio). */}
             <button
               type="button"
               onClick={toggleMute}
-              disabled={hasAudio === false}
-              aria-pressed={hasAudio === false ? undefined : !isMuted}
-              aria-label={hasAudio === false ? t('vlogs.noSound') : isMuted ? t('vlogs.soundOn') : t('vlogs.soundOff')}
-              className="flex flex-col items-center gap-1 disabled:cursor-not-allowed"
+              aria-pressed={!isMuted}
+              aria-label={isMuted ? t('vlogs.soundOn') : t('vlogs.soundOff')}
+              className="flex flex-col items-center gap-1"
             >
-              <div className={`w-12 h-12 rounded-full backdrop-blur-md flex items-center justify-center ${hasAudio === false ? 'bg-white/5' : 'bg-white/10'}`}>
-                {hasAudio === false || isMuted ? (
-                  <VolumeX className={`w-6 h-6 ${hasAudio === false ? 'text-white/40' : 'text-white'}`} aria-hidden="true" />
+              <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center">
+                {isMuted ? (
+                  <VolumeX className="w-6 h-6 text-white" aria-hidden="true" />
                 ) : (
                   <Volume2 className="w-6 h-6 text-white" aria-hidden="true" />
                 )}
               </div>
-              <span className={`text-[12px] font-medium drop-shadow-md ${hasAudio === false ? 'text-white/50' : 'text-white'}`}>
-                {hasAudio === false ? t('vlogs.noSound') : isMuted ? t('vlogs.muted') : t('vlogs.soundLabel')}
-              </span>
             </button>
 
             <button
@@ -454,10 +456,11 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
               const tagsQuery = (video.event as any).tags?.length ? `&tags=${(video.event as any).tags.join(',')}` : '';
               navigate(`/events/create?category=${video.event.category}${tagsQuery}`);
             }}
-            className="w-full py-2.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-white font-medium text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg"
+            className="w-full py-2.5 px-3 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-white font-medium text-[13px] min-[390px]:text-[14px] leading-snug flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg"
           >
-            <CalendarPlus className="w-5 h-5" />
-            <span>{t('videoPlayerItem.creerUnEvenementSimilaire')}</span>
+            <CalendarPlus className="w-5 h-5 shrink-0" />
+            {/* Libellé long : sur les petits écrans il passe sur 2 lignes centrées au lieu de déborder */}
+            <span className="min-w-0 text-center">{t('videoPlayerItem.creerUnEvenementOuSortieSimilaire')}</span>
           </button>
         </div>
         
@@ -541,7 +544,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
                 placeholder={t('videoPlayerItem.ajouterUnCommentaire')}
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="flex-1 h-10 bg-gray-100 dark:bg-white/10 rounded-full px-4 text-[14px] outline-none border border-transparent focus:border-orange-500/50 min-w-0"
+                className="flex-1 h-10 bg-gray-100 dark:bg-white/10 rounded-full px-4 text-[16px] outline-none border border-transparent focus:border-orange-500/50 min-w-0"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && commentText.trim() && !postCommentMut.isPending) {
                     postCommentMut.mutate();

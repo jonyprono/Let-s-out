@@ -429,7 +429,7 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
                     placeholder={t('manageEvent.searchByName')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:border-[#FF7A00]"
+                    className="w-full bg-gray-50 dark:bg-[#222] border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-[16px] focus:outline-none focus:border-[#FF7A00]"
                   />
                 </div>
                 <div className="flex flex-col gap-3">
@@ -1330,7 +1330,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
           <input
             value={potName} onChange={e => setPotName(e.target.value)}
             placeholder={t('manageEvent.poolName')}
-            className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
+            className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
           />
           <p className="text-[11px] text-gray-400 mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
         </div>
@@ -1342,7 +1342,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             <input
               type="number" min={1} value={target} onChange={e => setTarget(e.target.value)}
               placeholder="0"
-              className="w-full pl-4 pr-16 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
+              className="w-full pl-4 pr-16 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
             />
             <span className="absolute right-4 text-[13px] font-medium text-gray-500 pointer-events-none">F CFA</span>
           </div>
@@ -1356,7 +1356,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             value={desc} onChange={e => setDesc(e.target.value)}
             placeholder={t('createEvent.fields.poolDetailsPlaceholder')}
             rows={4}
-            className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00] resize-none"
+            className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00] resize-none"
           />
         </div>
 
@@ -1367,7 +1367,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
             <input
               type="number" min={1} value={poolMinAmount} onChange={e => setPoolMinAmount(e.target.value)}
               placeholder="0"
-              className="w-full pl-4 pr-16 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
+              className="w-full pl-4 pr-16 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#FF7A00]"
             />
             <span className="absolute right-4 text-[13px] font-medium text-gray-500 pointer-events-none">F CFA</span>
           </div>
@@ -1387,7 +1387,7 @@ function TabCagnotteFullscreen({ event, step, setStep, onBack }: any) {
               type="datetime-local"
               value={deadline}
               onChange={e => setDeadline(e.target.value)}
-              className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
+              className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
             />
           </div>
         )}

@@ -281,7 +281,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value.slice(0, 30))}
                     placeholder="Nom"
-                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors pr-16"
+                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[16px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors pr-16"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] text-gray-400 font-medium">
                     {displayName.length}/30
@@ -303,7 +303,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Ville, Pays"
-                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors pr-10"
+                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[16px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors pr-10"
                   />
                   <ChevronLeft className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 -rotate-90 pointer-events-none" />
                 </div>
@@ -326,7 +326,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                     type="date"
                     value={birthDate}
                     onChange={(e) => setBirthDate(e.target.value)}
-                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors"
+                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[16px] font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors"
                   />
                 </div>
               </div>
@@ -345,7 +345,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
                     onChange={(e) => setBio(e.target.value.slice(0, 150))}
                     rows={4}
                     placeholder={t('editProfileModal.parlezNousDeVous')}
-                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[14px] leading-relaxed font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors resize-none pb-8"
+                    className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-2xl px-4 py-3.5 text-[16px] leading-relaxed font-medium text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] transition-colors resize-none pb-8"
                   />
                   <span className="absolute right-4 bottom-3 text-[12px] text-gray-400 font-medium">
                     {bio.length}/150

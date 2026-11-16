@@ -131,7 +131,7 @@ export function RateEventModal({ event, onClose }: RateEventModalProps) {
             onChange={e => setComment(e.target.value)}
             placeholder="Un petit mot ? (optionnel)..."
             rows={3}
-            className="w-full px-4 py-3 bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-white/10 rounded-xl text-[14px] resize-none focus:outline-none focus:border-[#FF7A00]"
+            className="w-full px-4 py-3 bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-white/10 rounded-xl text-[16px] resize-none focus:outline-none focus:border-[#FF7A00]"
           />
 
           {/* Submit */}

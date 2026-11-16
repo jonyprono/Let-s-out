@@ -1469,7 +1469,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
                 autoFocus
                 placeholder={t('chatDetails.ajouterUneLegende')}
                 id="caption-input"
-                className="flex-1 bg-transparent py-3 text-[14px] text-white placeholder:text-white/50 focus:outline-none resize-none no-scrollbar"
+                className="flex-1 bg-transparent py-3 text-[16px] text-white placeholder:text-white/50 focus:outline-none resize-none no-scrollbar"
                 style={{ maxHeight: '96px' }}
                 onChange={(e) => {
                   e.target.style.height = 'auto';

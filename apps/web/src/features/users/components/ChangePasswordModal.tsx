@@ -50,7 +50,7 @@ export function ChangePasswordModal({ onClose }: Props) {
                 type={showOld ? 'text' : 'password'}
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] font-medium outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
+                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[16px] font-medium outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
                 placeholder="••••••••"
               />
               <button
@@ -72,7 +72,7 @@ export function ChangePasswordModal({ onClose }: Props) {
                 type={showNew ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[15px] font-medium outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
+                className="w-full bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-[#333333] rounded-2xl px-4 py-4 text-[16px] font-medium outline-none focus:border-action-primary focus:bg-white dark:bg-[#1A1A1A] transition-all"
                 placeholder="••••••••"
               />
               <button

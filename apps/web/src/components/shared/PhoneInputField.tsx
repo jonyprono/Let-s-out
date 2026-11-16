@@ -38,7 +38,7 @@ export function PhoneInputField({
           }
         }}
         placeholder="00 00 00 00 00"
-        className="flex-1 min-w-0 h-full bg-transparent outline-none px-[1rem] text-[clamp(12px,3.5vw,14px)] font-semibold font-poppins text-[var(--color-text-primary)] placeholder:text-[#BDBDBD]"
+        className="flex-1 min-w-0 h-full bg-transparent outline-none px-[1rem] text-[16px] font-semibold font-poppins text-[var(--color-text-primary)] placeholder:text-[#BDBDBD]"
       />
     </div>
   );

@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { eventsApi, type CheckInError, type CheckInSuccess } from '@/features/events/api'
 import { hapticFeedback } from '@/lib/haptics'
 import { useAuthStore } from '@/stores/auth.store'
+import { isIosNativeScannerAvailable, isNativeScannerAvailable, openAppSettings, scanQrWithIosScanner, settingsPlatform } from '@/lib/camera-scan'
 
 type Verdict =
   | { kind: 'valid'; data: CheckInSuccess }
@@ -83,9 +84,32 @@ export function TicketScanner() {
     } catch { /* déjà arrêté */ }
   }
 
+  const showCameraDenied = () => {
+    toast.error(t(settingsPlatform() === 'ios' ? 'tickets.cameraDeniedIos' : 'tickets.cameraDeniedAndroid'), {
+      duration: 8000,
+      action: {
+        label: t('tickets.settings'),
+        onClick: () => { openAppSettings().then((ok) => { if (!ok) toast.error(t('tickets.settingsOpenError')) }) },
+      },
+    })
+  }
+
   const startScan = async () => {
     if (!Capacitor.isNativePlatform()) {
       toast.info(t('tickets.scanNativeOnly'))
+      return
+    }
+    // iPhone : écran caméra natif du plugin officiel (permission iOS demandée au 1er scan)
+    if (isIosNativeScannerAvailable()) {
+      const res = await scanQrWithIosScanner(t('tickets.aimAtTicket'))
+      if (res.status === 'ok') submit(res.value)
+      else if (res.status === 'denied') showCameraDenied()
+      else if (res.status === 'error') toast.error(t('tickets.scanStartError'))
+      return
+    }
+    // Aucun plugin de scan dans ce build (ancienne version iOS) : message exact, saisie manuelle possible
+    if (!isNativeScannerAvailable()) {
+      toast.info(t('tickets.scanUnavailableIos'))
       return
     }
     if (Capacitor.getPlatform() === 'android') {
@@ -95,10 +119,11 @@ export function TicketScanner() {
       } catch { /* le scan tentera quand même */ }
     }
     try {
+      // 1er scan : `prompt` → vraie fenêtre système. Déjà refusé : `denied` → explication + Réglages.
       const perm = await BarcodeScanner.checkPermissions()
       const granted = perm.camera === 'granted' || (await BarcodeScanner.requestPermissions()).camera === 'granted'
       if (!granted) {
-        toast.error(t('tickets.cameraPermission'), { action: { label: t('tickets.settings'), onClick: () => BarcodeScanner.openSettings().catch(() => {}) } })
+        showCameraDenied()
         return
       }
       setVerdict(null)
@@ -256,7 +281,7 @@ export function TicketScanner() {
               autoCorrect="off"
               spellCheck={false}
               placeholder="LO1.…"
-              className="flex-1 min-w-0 h-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] px-3 font-mono text-[13px] text-gray-900 dark:text-white"
+              className="flex-1 min-w-0 h-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] px-3 font-mono text-[16px] text-gray-900 dark:text-white"
             />
             <button type="submit" disabled={!isOrganizer || !manualCode.trim() || isChecking} className="px-4 h-11 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[13px] font-semibold disabled:opacity-40">
               <span>{t('tickets.check')}</span>

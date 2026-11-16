@@ -89,7 +89,7 @@ export function ForwardMessageModal({ onClose, messageContent, messageType }: Fo
               placeholder={t('forwardMessageModal.rechercherUneDiscussion')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:text-gray-400 rounded-full py-3 pl-11 pr-4 font-inter text-[15px] outline-none focus:ring-2 focus:ring-[var(--color-action-primary)] transition-shadow"
+              className="w-full bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-500 dark:text-gray-400 rounded-full py-3 pl-11 pr-4 font-inter text-[16px] outline-none focus:ring-2 focus:ring-[var(--color-action-primary)] transition-shadow"
             />
           </div>
         </div>

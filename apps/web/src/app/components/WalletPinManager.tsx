@@ -318,7 +318,7 @@ export function WalletPinManager({ onVerified, onClose, isChangeMode }: WalletPi
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder={t('wallet.pin.passwordPlaceholder')}
-                  className="w-[80%] px-4 py-3 bg-white dark:bg-[#18181b] border border-gray-200 dark:border-gray-800 rounded-[16px] outline-none focus:border-[#FF991C]"
+                  className="w-[80%] px-4 py-3 text-[16px] bg-white dark:bg-[#18181b] border border-gray-200 dark:border-gray-800 rounded-[16px] outline-none focus:border-[#FF991C]"
                 />
                 {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
                 

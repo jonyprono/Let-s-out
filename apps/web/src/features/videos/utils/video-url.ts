@@ -35,3 +35,26 @@ export function getVideoPosterUrl(video?: {
 
   return video.event?.coverUrl || undefined
 }
+
+/**
+ * Affiche (poster) du LECTEUR PLEIN ÉCRAN des OUT VLOGS.
+ *
+ * Le `thumbnailUrl` enregistré par l'API est une vignette PAYSAGE 480×270 recadrée (c_fill),
+ * faite pour les cartes. Les vlogs étant verticaux (576×1024 mesurés), cette vignette affichée
+ * en plein écran (object-cover) était à la fois zoomée/recadrée et très pixellisée.
+ * Ici on dérive une image aux proportions de la vidéo (c_limit : jamais agrandie ni rognée),
+ * comme le lecteur des posts de pages.
+ */
+export function getFullscreenPosterUrl(video?: {
+  url?: string | null
+  thumbnailUrl?: string | null
+  event?: { coverUrl?: string | null }
+} | null): string | undefined {
+  const url = video?.url
+  if (url && url.includes('cloudinary.com') && url.includes('/video/upload/')) {
+    return url
+      .replace('/video/upload/', '/video/upload/w_1080,c_limit,so_auto/')
+      .replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
+  }
+  return getVideoPosterUrl(video)
+}

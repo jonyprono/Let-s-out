@@ -167,7 +167,7 @@ export function PayoutRequestScreen() {
           <select 
             value={reasonCategory}
             onChange={(e) => setReasonCategory(e.target.value)}
-            className="w-full bg-gray-50 dark:bg-[#222] border-0 rounded-xl px-4 py-3 text-[15px] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF7A00] mb-3"
+            className="w-full bg-gray-50 dark:bg-[#222] border-0 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF7A00] mb-3"
           >
             <option value="Location de salle">{t('payout.reasons.venue')}</option>
             <option value="Frais traiteur">{t('payout.reasons.catering')}</option>
@@ -182,7 +182,7 @@ export function PayoutRequestScreen() {
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
               placeholder={t('payout.reasonPlaceholder')}
-              className="w-full bg-gray-50 dark:bg-[#222] border-0 rounded-xl px-4 py-3 text-[15px] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF7A00]"
+              className="w-full bg-gray-50 dark:bg-[#222] border-0 rounded-xl px-4 py-3 text-[16px] text-gray-900 dark:text-white focus:ring-2 focus:ring-[#FF7A00]"
             />
           )}
         </div>

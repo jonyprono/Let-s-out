@@ -333,7 +333,7 @@ export function EventCommentsPage() {
                 value={content}
                 onChange={e => setContent(e.target.value)}
                 placeholder={replyTo ? t('eventCommentsPage.repondreA', { v0: replyTo.name }) : t('eventCommentsPage.ajouterUnCommentaire')}
-                className="w-full bg-transparent text-[14px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-500"
+                className="w-full bg-transparent text-[16px] focus:outline-none text-gray-900 dark:text-white placeholder-gray-500"
               />
             </div>
 

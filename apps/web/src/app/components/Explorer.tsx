@@ -272,7 +272,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
               value={mapSearch}
               onChange={(e) => setMapSearch(e.target.value)}
               placeholder={t('explorer.rechercherUneVille')}
-              className="flex-1 text-[15px] outline-none bg-transparent text-[var(--color-text-primary)] font-poppins min-w-0"
+              className="flex-1 text-[16px] outline-none bg-transparent text-[var(--color-text-primary)] font-poppins min-w-0"
             />
             {mapSearch.length > 0 ? (
               <button onClick={() => setMapSearch('')} className="p-1 shrink-0 flex items-center justify-center">
@@ -625,7 +625,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                 onChange={e => setEventSearch(e.target.value)}
                 onFocus={() => setEventSearchFocused(true)}
                 onBlur={() => setEventSearchFocused(false)}
-                className="flex-1 text-[13px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0"
+                className="flex-1 text-[16px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0"
               />
               {eventSearch && (
                 <button onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}>
@@ -731,7 +731,7 @@ export function Explorer({ onNavigate }: ExplorerProps) {
                   onChange={e => setEventSearch(e.target.value)}
                   onFocus={() => setEventSearchFocused(true)}
                   onBlur={() => setEventSearchFocused(false)}
-                  className="flex-1 text-[12px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0 w-full text-ellipsis"
+                  className="flex-1 text-[16px] bg-transparent outline-none text-gray-800 dark:text-white placeholder:text-gray-400 font-medium min-w-0 w-full text-ellipsis"
                 />
                 {eventSearch && (
                   <button onClick={() => { setEventSearch(''); hapticFeedback.impact(); }}>

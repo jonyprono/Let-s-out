@@ -176,7 +176,7 @@ export function FriendsList() {
             placeholder={activeTab === 'global' ? t('friendsList.rechercherDeNouveauxUtilisateurs') : "Rechercher..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-white text-[15px] placeholder-gray-400"
+            className="bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-white text-[16px] placeholder-gray-400"
           />
         </div>
         

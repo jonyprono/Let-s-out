@@ -44,6 +44,8 @@ export interface TicketingConfig {
 
 export interface TicketSales {
   commissionPercent: number
+  /** KYC du créateur validé (règle de la cagnotte). Absent = ancienne API : le serveur reste l'autorité. */
+  creatorKycVerified?: boolean
   totals: { gross: number; fee: number; net: number; orders: number; ticketsIssued: number; ticketsCheckedIn: number }
   tiers: (TicketTier & { revenue: number })[]
   payout: { status: 'HELD' | 'RELEASED'; releasedAt: string | null; releaseAvailableAt: string; delayHours: number }

@@ -5,6 +5,7 @@ import { createAndSendNotification, createAndSendNotificationMany } from '../not
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 import { EmailService } from '../../services/email.service'
 import { eventGenderDenial } from '../../services/signup-policy.service'
+import { isKycVerified } from '../../services/kyc.service'
 import { checkInTicket, ensureTicketToken, parseTicketPayload, ticketQrPayload, ticketQrPng } from '../../services/ticket.service'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
@@ -930,8 +931,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     // Bug-2 guard: cagnotte/paid events require KYC verification even at creation
     const hasFinancialFeature = (body.poolTarget && body.poolTarget > 0) || (body.price && body.price > 0)
     if (hasFinancialFeature) {
-      const creatorProfile = await app.prisma.profile.findUnique({ where: { userId: sub } })
-      if (creatorProfile?.kycStatus !== 'verified') {
+      if (!(await isKycVerified(app.prisma, sub))) {
         return reply.code(403).send({
           error: 'Vérification requise',
           message: "Votre compte doit être vérifié (KYC) pour créer un événement avec cagnotte ou ticket payant.",

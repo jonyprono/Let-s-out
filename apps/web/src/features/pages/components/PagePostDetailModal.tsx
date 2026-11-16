@@ -578,7 +578,7 @@ export function PagePostDetailModal({
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               placeholder={t('pagePostDetailModal.ecrireUnCommentaire')}
-              className="flex-1 bg-gray-100 dark:bg-[#1F1F1F] text-gray-900 dark:text-white text-xs rounded-full px-4 py-2.5 outline-none focus:ring-1 focus:ring-[#FF7A00] transition-all"
+              className="flex-1 bg-gray-100 dark:bg-[#1F1F1F] text-gray-900 dark:text-white text-[16px] rounded-full px-4 py-2.5 outline-none focus:ring-1 focus:ring-[#FF7A00] transition-all"
             />
             <button
               type="submit"
@@ -621,7 +621,7 @@ export function PagePostDetailModal({
               value={editInput}
               onChange={(e) => setEditInput(e.target.value)}
               rows={4}
-              className="w-full p-3 rounded-2xl bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] resize-none mb-4"
+              className="w-full p-3 rounded-2xl bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-gray-700 text-[16px] text-gray-900 dark:text-white outline-none focus:border-[#FF7A00] resize-none mb-4"
               placeholder={t('pagePostDetailModal.exprimezVous')}
             />
             <div className="flex gap-2 justify-end">

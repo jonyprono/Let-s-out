@@ -807,7 +807,7 @@ export function Settings({ onBack }: SettingsProps) {
                     onChange={(e) => setDeleteReason(e.target.value)}
                     placeholder={t('settings.modals.deleteReasonOther')}
                     rows={2}
-                    className="w-full px-4 py-3 rounded-xl text-sm border border-gray-200 dark:border-[#2A2A2A] bg-transparent text-gray-700 dark:text-gray-300 placeholder-gray-300 focus:outline-none focus:border-red-400 resize-none"
+                    className="w-full px-4 py-3 rounded-xl text-[16px] border border-gray-200 dark:border-[#2A2A2A] bg-transparent text-gray-700 dark:text-gray-300 placeholder-gray-300 focus:outline-none focus:border-red-400 resize-none"
                   />
                 </div>
                 <div className="flex gap-3">

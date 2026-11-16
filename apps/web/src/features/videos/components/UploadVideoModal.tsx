@@ -430,7 +430,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                         const ev = pastEvents.find((ev: any) => ev.id === e.target.value)
                         if (ev && !category) setCategory(ev.category)
                       }}
-                      className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] text-gray-800 dark:text-white pr-10"
+                      className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-800 dark:text-white pr-10"
                     >
                       <option value=""><span>{t('uploadVideoModal.choisirUnEvenement')}</span></option>
                       {pastEvents.map((ev: any) => (
@@ -461,7 +461,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Ex: Aftermovie incroyable, Meilleurs moments..."
                 maxLength={100}
-                className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] text-gray-800 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/30"
+                className="w-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-800 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7A00]/30"
               />
             </div>
 
@@ -472,7 +472,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value)}
-                  className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] text-gray-800 dark:text-white pr-10"
+                  className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-800 dark:text-white pr-10"
                 >
                   <option value="">{t('categories.choose')}</option>
                   {/* Catégories proposées + valeur historique éventuelle de l'événement */}

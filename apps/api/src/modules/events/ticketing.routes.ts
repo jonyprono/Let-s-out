@@ -9,6 +9,7 @@ import {
   ticketSalesTotals,
   validatePayoutInfo,
 } from '../../services/ticketing.service'
+import { isKycVerified } from '../../services/kyc.service'
 
 /**
  * Billetterie multi-catégories (enregistré sous /api/v1).
@@ -101,9 +102,10 @@ export default async function ticketingRoutes(app: FastifyInstance) {
     if (event.poolTarget && event.poolTarget > 0) {
       return reply.code(409).send({ error: 'Billetterie impossible sur un événement avec cagnotte.', code: 'TICKETING_POOL_CONFLICT' })
     }
-    // Vente payante = argent réel : le CRÉATEUR (qui reçoit les fonds) doit être vérifié (KYC)
-    const creatorProfile = await app.prisma.profile.findUnique({ where: { userId: event.creatorId }, select: { kycStatus: true } })
-    if (creatorProfile?.kycStatus !== 'verified') {
+    // Ouvrir une billetterie / ajouter une catégorie = argent réel : même règle que la cagnotte
+    // (isKycVerified). C'est le CRÉATEUR, qui reçoit les fonds, qui doit être vérifié.
+    // Non rétroactif : les catégories existantes restent en vente, seul l'ajout est bloqué.
+    if (!(await isKycVerified(app.prisma, event.creatorId))) {
       return reply.code(403).send({ error: "Le compte de l'organisateur doit être vérifié (KYC) pour vendre des billets.", code: 'KYC_REQUIRED' })
     }
     const parsed = readTierInput(req.body, false)
@@ -183,17 +185,20 @@ export default async function ticketingRoutes(app: FastifyInstance) {
     const event = await loadEvent(id)
     if (!event) return reply.code(404).send({ error: 'Événement introuvable' })
     if (!isOrganizer(event, sub)) return reply.code(403).send({ error: 'Réservé aux organisateurs.', code: 'NOT_ORGANIZER' })
-    const [tiers, totals, checkedIn, issued, cfg] = await Promise.all([
+    const [tiers, totals, checkedIn, issued, cfg, creatorKycVerified] = await Promise.all([
       app.prisma.ticketTier.findMany({ where: { eventId: id }, orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }] }),
       ticketSalesTotals(app.prisma, id),
       app.prisma.ticket.count({ where: { eventId: id, checkedInAt: { not: null } } }),
       app.prisma.ticket.count({ where: { eventId: id } }),
       getTicketingConfig(app.prisma),
+      isKycVerified(app.prisma, event.creatorId),
     ])
     const releaseAt = new Date(new Date(event.endAt).getTime() + cfg.payoutDelayHours * 3600_000)
     const isCreator = event.creatorId === sub
     return reply.send({
       commissionPercent: cfg.commissionPercent,
+      // Même règle que la cagnotte : l'interface bloque « Ouvrir une billetterie » si false
+      creatorKycVerified,
       totals: { ...totals, ticketsIssued: issued, ticketsCheckedIn: checkedIn },
       tiers: tiers.map((t) => ({ ...publicTier(t), revenue: t.soldQuantity * t.price })),
       payout: {

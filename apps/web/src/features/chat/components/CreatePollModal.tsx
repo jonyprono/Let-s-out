@@ -131,7 +131,7 @@ export function CreatePollModal({
               onChange={(e) => setQuestion(e.target.value)}
               placeholder={t('createPollModal.exQuelleDateVousConvient')}
               maxLength={200}
-              className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF7A00] transition-colors"
+              className="w-full px-4 py-3 rounded-2xl bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 text-[16px] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF7A00] transition-colors"
             />
           </div>
 
@@ -156,7 +156,7 @@ export function CreatePollModal({
                     onChange={(e) => handleOptionChange(idx, e.target.value)}
                     placeholder={`Option ${idx + 1}`}
                     maxLength={100}
-                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF7A00] transition-colors"
+                    className="flex-1 px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-[#2A2A2A] border border-gray-200 dark:border-gray-700 text-[16px] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#FF7A00] transition-colors"
                   />
                   {options.length > 2 && (
                     <button

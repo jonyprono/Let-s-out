@@ -115,7 +115,7 @@ export function FriendRequests() {
               placeholder={t('friendRequests.rechercherUneDemande')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-white text-[15px] placeholder-gray-400"
+              className="bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-white text-[16px] placeholder-gray-400"
             />
           </div>
         </div>

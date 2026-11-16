@@ -143,7 +143,7 @@ export function ShareViaChatModal({ event, onClose }: ShareViaChatModalProps) {
             placeholder={t('shareViaChatModal.rechercherUneConversation')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-[14px] text-gray-900 dark:text-white placeholder:text-gray-400 outline-none"
+            className="w-full pl-9 pr-4 py-2.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-xl text-[16px] text-gray-900 dark:text-white placeholder:text-gray-400 outline-none"
           />
         </div>
       </div>

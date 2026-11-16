@@ -1,5 +1,33 @@
 import { networkInterfaces } from 'os'
+import { readFileSync } from 'fs'
+import { createRequire } from 'module'
 import type { CapacitorConfig } from '@capacitor/cli'
+
+/**
+ * Plugins réservés à iOS (exclus de la synchro Android).
+ * - @capacitor/barcode-scanner : scanner QR natif sur iPhone (compatible Swift Package Manager).
+ *   Android garde @capacitor-mlkit/barcode-scanning, qui y fonctionne déjà ; embarquer aussi ce
+ *   plugin sur Android ajouterait Compose/CameraX et une 2e version de ML Kit pour rien.
+ */
+const IOS_ONLY_PLUGINS = ['@capacitor/barcode-scanner']
+
+/**
+ * Plugins Android = détection automatique de Capacitor (dépendances dont le package.json déclare
+ * un champ `capacitor`) MOINS les plugins iOS-only. Ainsi un futur plugin reste inclus d'office.
+ */
+function androidPlugins(): string[] {
+  const req = createRequire(__filename)
+  const pkg = JSON.parse(readFileSync(req.resolve('./package.json'), 'utf8'))
+  const deps = Object.keys({ ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) })
+  return deps.filter((name) => {
+    if (IOS_ONLY_PLUGINS.includes(name)) return false
+    try {
+      return Boolean(JSON.parse(readFileSync(req.resolve(`${name}/package.json`), 'utf8')).capacitor)
+    } catch {
+      return false
+    }
+  })
+}
 
 function getLocalIP() {
   const interfaces = networkInterfaces()
@@ -34,6 +62,9 @@ const config: CapacitorConfig = {
   appId: 'com.fihodecorp.letsout',
   appName: "Let's Out",
   webDir: 'dist',
+  android: {
+    includePlugins: androidPlugins(),
+  },
   server: isProduction
     ? {
         // Production: load /app directly — bypasses LandingPage entirely for native apps

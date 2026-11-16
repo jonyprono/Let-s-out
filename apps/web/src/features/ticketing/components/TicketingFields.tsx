@@ -17,7 +17,7 @@ export function netOf(price: number, percent: number) {
 }
 
 const inputCls =
-  'w-full px-4 py-3.5 border rounded-[12px] text-[length:var(--font-size-body-medium)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]'
+  'w-full px-4 py-3.5 border rounded-[12px] text-[16px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-placeholder)] focus:outline-none focus:border-2 focus:border-[var(--border-brand-primary)] bg-[var(--color-background-primary)]'
 const borderOk = 'border-[var(--border-default)]'
 const borderErr = 'border-[var(--functional-red-500)]'
 const labelCls = 'text-[13px] font-semibold text-[var(--color-text-primary)] mb-1.5'

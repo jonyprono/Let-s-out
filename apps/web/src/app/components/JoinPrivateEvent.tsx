@@ -8,6 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next'
+import { isIosNativeScannerAvailable, isNativeScannerAvailable, openAppSettings, scanQrWithIosScanner, settingsPlatform } from '@/lib/camera-scan'
 
 export function JoinPrivateEvent() {
   const { t } = useTranslation()
@@ -60,9 +61,42 @@ export function JoinPrivateEvent() {
     }
   };
 
+  const showCameraDenied = () => {
+    toast.error(t(settingsPlatform() === 'ios' ? 'tickets.cameraDeniedIos' : 'tickets.cameraDeniedAndroid'), {
+      action: {
+        label: t('joinPrivateEvent.parametres'),
+        onClick: () => {
+          openAppSettings().then((ok) => { if (!ok) toast.error(t('tickets.settingsOpenError')); });
+        },
+      },
+      duration: 8000,
+    });
+  };
+
   const startScan = async () => {
     if (!Capacitor.isNativePlatform()) {
       toast.info(t('joinPrivateEvent.leScannerDeQrCode'));
+      return;
+    }
+
+    // iPhone : écran caméra natif du plugin officiel (permission iOS demandée au 1er scan)
+    if (isIosNativeScannerAvailable()) {
+      const res = await scanQrWithIosScanner(t('joinPrivateEvent.scanInstructions'));
+      if (res.status === 'ok') {
+        let value = res.value;
+        if (value.includes('/event/join/')) value = value.split('/event/join/').pop() || value;
+        setCode(value);
+        handleJoin(value);
+      } else if (res.status === 'denied') {
+        showCameraDenied();
+      } else if (res.status === 'error') {
+        toast.error(t('joinPrivateEvent.erreurLorsDuDemarrageDu'));
+      }
+      return;
+    }
+    // Aucun plugin de scan dans ce build (ancienne version iOS) : message exact, saisie manuelle possible
+    if (!isNativeScannerAvailable()) {
+      toast.info(t('tickets.scanUnavailableIos'));
       return;
     }
 
@@ -81,15 +115,7 @@ export function JoinPrivateEvent() {
 
     const granted = await requestCameraPermission();
     if (!granted) {
-      toast.error(t('joinPrivateEvent.permissionCameraRequisePourScanner'), {
-        action: {
-          label: t('joinPrivateEvent.parametres'),
-          onClick: () => {
-            BarcodeScanner.openSettings().catch(() => {});
-          },
-        },
-        duration: 5000,
-      });
+      showCameraDenied();
       return;
     }
 

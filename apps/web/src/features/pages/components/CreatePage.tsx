@@ -245,7 +245,7 @@ export function CreatePage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('createPage.nomDeLaPage')}
-            className="w-full h-12 px-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-[#FF7A00] transition-colors"
+            className="w-full h-12 px-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder:text-gray-400 text-[16px] focus:outline-none focus:border-[#FF7A00] transition-colors"
           />
         </div>
 
@@ -275,7 +275,7 @@ export function CreatePage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Bio..."
-            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder:text-gray-400 text-sm focus:outline-none focus:border-[#FF7A00] transition-colors resize-none"
+            className="w-full p-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#141414] text-gray-900 dark:text-white placeholder:text-gray-400 text-[16px] focus:outline-none focus:border-[#FF7A00] transition-colors resize-none"
           />
         </div>
 

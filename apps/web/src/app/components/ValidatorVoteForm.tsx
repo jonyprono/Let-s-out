@@ -177,7 +177,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
                   type="datetime-local"
                   value={voteDeadline}
                   onChange={e => setVoteDeadline(e.target.value)}
-                  className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[14px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
+                  className="w-full px-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-xl text-[16px] bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white focus:outline-none focus:border-[#FF7A00]"
                 />
               </div>
             )}
@@ -219,7 +219,7 @@ export function ValidatorVoteForm({ event, attendees, onBack }: any) {
               placeholder={t('validatorVote.searchPlaceholder')}
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 rounded-lg bg-gray-50 dark:bg-[#2A2A2A] text-sm border-none focus:ring-1 focus:ring-[#FF7A00] outline-none dark:text-white placeholder-gray-400"
+              className="w-full h-10 pl-9 pr-4 rounded-lg bg-gray-50 dark:bg-[#2A2A2A] text-[16px] border-none focus:ring-1 focus:ring-[#FF7A00] outline-none dark:text-white placeholder-gray-400"
             />
           </div>
 

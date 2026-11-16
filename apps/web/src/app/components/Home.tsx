@@ -528,7 +528,7 @@ const PagePostCard = memo(function PagePostCard({
               onChange={(e) => setEditInput(e.target.value)}
               rows={5}
               placeholder={t('home.texteDeVotrePublication')}
-              className="w-full p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7A00] resize-none"
+              className="w-full p-3.5 rounded-2xl bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-800 text-[16px] text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF7A00] resize-none"
             />
 
             <div className="flex items-center justify-end gap-2.5 mt-4">
@@ -1056,7 +1056,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
             <input
               type="text"
               placeholder={t('home.search.placeholder')}
-              className="flex-1 text-[13px] text-gray-900 dark:text-white bg-transparent outline-none truncate placeholder:text-gray-400"
+              className="flex-1 text-[16px] text-gray-900 dark:text-white bg-transparent outline-none truncate placeholder:text-gray-400"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

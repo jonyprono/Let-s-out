@@ -68,7 +68,7 @@ export function AddFriendsModal({ onClose }: AddFriendsModalProps) {
             placeholder={t('addFriendsModal.rechercherParPseudoOuNom')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="flex-1 bg-transparent text-[15px] outline-none placeholder-gray-500"
+            className="flex-1 bg-transparent text-[16px] outline-none placeholder-gray-500"
           />
         </div>
       </div>

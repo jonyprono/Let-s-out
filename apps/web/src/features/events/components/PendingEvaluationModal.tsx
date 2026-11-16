@@ -124,7 +124,7 @@ export function PendingEvaluationModal({ event, onClose, onSubmit }: PendingEval
             onChange={(e) => setComment(e.target.value)}
             placeholder="Un petit mot ? (optionnel)..."
             rows={3}
-            className="w-full min-h-[80px] flex-shrink-0 bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[14px] focus:outline-none focus:border-[#FF7A00] resize-none"
+            className="w-full min-h-[80px] flex-shrink-0 bg-gray-50 dark:bg-[#222222] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] focus:outline-none focus:border-[#FF7A00] resize-none"
           />
         </div>
 
