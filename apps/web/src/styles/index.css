@@ -15,6 +15,10 @@ html, body, #root {
   overscroll-behavior: none;
 }
 
+/* Fond de la page = fond du splash natif (aucun flash au démarrage ni au retour d'arrière-plan) */
+html { background-color: #ffffff; }
+html.dark { background-color: #111111; }
+
 body {
   margin: 0;
   /* Prevents 300ms tap delay on mobile */

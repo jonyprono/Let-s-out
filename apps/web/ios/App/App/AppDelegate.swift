@@ -8,10 +8,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Avoid a black flash between the native splash screen hiding and the
-        // WKWebView's first paint (WKWebView defaults to a black background
-        // until CSS loads, especially noticeable on the remote server.url load).
-        window?.backgroundColor = .white
+        // Fond de lancement unique (clair #FFFFFF / sombre #111111) — même couleur que
+        // LaunchScreen, l'image Splash, la WebView et le fond de l'app : aucun flash.
+        window?.backgroundColor = AppColors.launchBackground
 
         // Son des vidéos (OUT VLOGS, pages) même avec le commutateur silencieux/vibreur.
         // Sans catégorie explicite, iOS utilise .soloAmbient qui coupe l'audio du WKWebView
@@ -61,4 +60,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+}
+
+// MARK: - Fond de lancement (aucun flash blanc / noir au démarrage)
+
+enum AppColors {
+    /// Couleur « LaunchBackground » d'Assets.xcassets : #FFFFFF (clair) / #111111 (sombre)
+    static var launchBackground: UIColor {
+        UIColor(named: "LaunchBackground") ?? UIColor { trait in
+            trait.userInterfaceStyle == .dark
+                ? UIColor(red: 17 / 255, green: 17 / 255, blue: 17 / 255, alpha: 1)
+                : .white
+        }
+    }
+}
+
+/// Contrôleur principal (Main.storyboard) : sans réglage, Capacitor donne à la WebView le fond
+/// `systemBackground`, NOIR en mode sombre, visible tant que la page distante n'est pas affichée.
+/// On lui donne la couleur de fond de l'app, identique au splash.
+class MainViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        super.capacitorDidLoad()
+        let background = AppColors.launchBackground
+        view.backgroundColor = background
+        webView?.backgroundColor = background
+        webView?.scrollView.backgroundColor = background
+        if #available(iOS 15.0, *) {
+            webView?.underPageBackgroundColor = background
+        }
+    }
 }

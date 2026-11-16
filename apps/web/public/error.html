@@ -15,7 +15,7 @@
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0a0a0b;
+        --bg: #111111;
         --text: #f9fafb;
         --text-muted: #9ca3af;
         --circle-bg: rgba(239, 68, 68, 0.2);
@@ -129,6 +129,10 @@
         retry();
       }
     }, 2500);
+  </script>
+  <script>
+    // Page hors ligne : masquer le splash natif tout de suite (sinon il resterait jusqu'au délai de sécurité)
+    try { window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen && window.Capacitor.Plugins.SplashScreen.hide(); } catch (e) {}
   </script>
 </body>
 </html>

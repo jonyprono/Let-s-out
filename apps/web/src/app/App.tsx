@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { QueryClientProvider } from '@tanstack/react-query'
 import { App as CapacitorApp } from '@capacitor/app'
 import { StatusBar, Style } from '@capacitor/status-bar'
+import { SplashScreen } from '@capacitor/splash-screen'
 import { Capacitor } from '@capacitor/core'
 
 import { ThemeProvider, useTheme } from 'next-themes'
@@ -37,7 +38,7 @@ function CapacitorThemeSync() {
         }
       }
       // Fallback to theme-based colors
-      return isDark ? '#1a1a1a' : '#ffffff'
+      return isDark ? '#111111' : '#ffffff'
     }
 
     // Wait a tick for the DOM to update after navigation
@@ -321,11 +322,30 @@ function PushNotificationCoordinator() {
   return null
 }
 
+/**
+ * Masque le splash natif dès que l'app a peint son premier écran (double requestAnimationFrame =
+ * après la peinture réelle). Le splash a la même couleur que l'app : la transition est invisible.
+ * Sans effet sur le web et sur les anciennes versions de l'app (plugin absent → rejet ignoré).
+ */
+function NativeSplashHider() {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    let cancelled = false
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (cancelled) return
+      SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => {})
+    }))
+    return () => { cancelled = true }
+  }, [])
+  return null
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
       <BrowserRouter>
+        <NativeSplashHider />
         <PushNotificationCoordinator />
         <GlobalVideoPlaybackCoordinator />
         <DeepLinkHandler />

@@ -50,15 +50,24 @@ const config: CapacitorConfig = {
         errorPath: 'error.html',
       },
   plugins: {
+    // Démarrage sans flash : le splash (= LaunchScreen.storyboard, fond « LaunchBackground »
+    // #FFFFFF clair / #111111 sombre) reste affiché jusqu'au premier rendu de l'app, qui le masque
+    // elle-même (SplashScreen.hide() dans App.tsx). launchShowDuration n'est qu'un FILET DE SÉCURITÉ
+    // (page hors ligne, erreur) : en temps normal le splash est masqué bien avant.
+    // Pas de backgroundColor ici : on garde la couleur dynamique (clair / sombre) du storyboard.
     SplashScreen: {
-      launchShowDuration: 3000,
       launchAutoHide: true,
-      backgroundColor: "#ffffff",
+      launchShowDuration: 10000,
+      launchFadeOutDuration: 200,
+      showSpinner: false,
     },
     StatusBar: {
       overlaysWebView: false,
-      style: 'LIGHT',
-      backgroundColor: '#ffffff',
+      // DEFAULT : icônes adaptées au mode clair / sombre du téléphone dès le lancement
+      style: 'DEFAULT',
+      // Transparent : la bande de la barre d'état laisse voir le fond natif (même couleur que l'app)
+      // au lieu d'une bande blanche fixe. L'app applique ensuite la couleur exacte de chaque écran.
+      backgroundColor: '#00000000',
     },
     Keyboard: {
       // 'native' lets the WKWebView handle its own resize (prevents the page
