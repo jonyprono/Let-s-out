@@ -20,6 +20,7 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { useTranslation } from 'react-i18next'
 
 import { intlLocale } from '@/lib/locale'
+import { apiErrorText } from '@/lib/pool-errors'
 const OPERATORS = [
   { id: 'mtn', label: 'MTN Momo', logo: '/logos/mtn.png', prefix: '97' },
   { id: 'moov', label: 'MOOV', logo: '/logos/moov.png', prefix: '96' },
@@ -136,8 +137,10 @@ export function Wallet() {
       const res = await apiClient.post('/wallet/payout', payload, { headers: { 'x-wallet-pin-token': pinToken } })
       return res.data
     },
-    onSuccess: () => {
-      toast.success(t('wallet.withdrawInitiated'))
+    onSuccess: (data: any) => {
+      // Envoyé tout de suite, ou en cours de vérification chez FedaPay (recrédit automatique si échec)
+      if (data?.status === 'PROCESSING') toast.info(t('wallet.withdrawProcessing'))
+      else toast.success(t('wallet.withdrawInitiated'))
       setWithdrawMode(false)
       setWithdrawStep('form')
       setWithdrawData({ amount: '' })
@@ -154,7 +157,10 @@ export function Wallet() {
         setWithdrawStep('form')
         toast.error(t('wallet.sessionExpired'))
       } else {
-        toast.error(err.response?.data?.error || t('wallet.withdrawError'))
+        toast.error(apiErrorText(t, err, 'wallet.withdrawError'))
+        // En cas d'échec FedaPay le Wallet a été recrédité : on rafraîchit le solde
+        queryClient.invalidateQueries({ queryKey: ['wallet'] })
+        queryClient.invalidateQueries({ queryKey: ['wallet-transactions'] })
       }
     },
   })

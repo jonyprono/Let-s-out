@@ -22,8 +22,17 @@ export interface PoolDirectDonationInfo {
  * Calcule le montant débloqué de la cagnotte en fonction des validations individuelles
  * et prend en compte les retraits partiels déjà effectués.
  */
-export async function calculateAvailablePoolAmount(
-  app: FastifyInstance,
+export async function calculateAvailablePoolAmount(app: FastifyInstance, eventId: string) {
+  return computePoolAvailability((app as any).prisma, eventId)
+}
+
+/**
+ * Même calcul, utilisable DANS une transaction Prisma (client ou `tx`).
+ * Une part figée dans une demande est déduite tant qu'elle est PENDING (en attente d'approbation)
+ * ou RELEASED (versée). Une part RETURNED (refusée / expirée) redevient disponible.
+ */
+export async function computePoolAvailability(
+  db: any,
   eventId: string
 ): Promise<{
   availableAmount: number;
@@ -33,7 +42,7 @@ export async function calculateAvailablePoolAmount(
   directDonations: PoolDirectDonationInfo[];
   hasPool: boolean;
 }> {
-  const event = await (app as any).prisma.event.findUnique({
+  const event = await db.event.findUnique({
     where: { id: eventId },
     select: { enableNonVoterPenalties: true, poolClosedAt: true, poolTarget: true, validatorVoteDeadline: true }
   });
@@ -43,7 +52,7 @@ export async function calculateAvailablePoolAmount(
   }
   
   // On récupère toutes les réservations avec leurs déductions
-  const bookings = await (app as any).prisma.booking.findMany({
+  const bookings = await db.booking.findMany({
     where: { eventId, status: { not: 'REFUNDED' } },
     select: { 
       id: true,
@@ -52,7 +61,7 @@ export async function calculateAvailablePoolAmount(
       poolValidationStatus: true, 
       delegatedToId: true,
       payoutItems: {
-        select: { amountDeducted: true, payoutRequest: { select: { status: true } } }
+        select: { amountDeducted: true, state: true }
       }
     },
   });
@@ -68,7 +77,7 @@ export async function calculateAvailablePoolAmount(
       
       // Calculer le montant restant (non encore retiré)
       const deducted = b.payoutItems
-        .filter((item: any) => item.payoutRequest.status !== 'REJECTED' && item.payoutRequest.status !== 'CANCELLED')
+        .filter((item: any) => item.state !== 'RETURNED')
         .reduce((sum: number, item: any) => sum + item.amountDeducted, 0);
       
       const remainingAmount = Math.max(0, b.totalPaid - deducted);
@@ -100,17 +109,14 @@ export async function calculateAvailablePoolAmount(
   // ── Dons directs (sans Booking) ─────────────────────────────────────────
   // Ces paiements n'ont pas de droit de vote/délégation.
   // Leur montant restant est toujours disponible (pas de PENDING count).
-  const directPayments = await (app as any).prisma.payment.findMany({
+  const directPayments = await db.payment.findMany({
     where: { eventId, bookingId: null, status: 'SUCCEEDED' },
     select: {
       id: true,
       userId: true,
       amount: true,
       payoutDirectItems: {
-        select: {
-          amountDeducted: true,
-          payoutRequest: { select: { status: true } }
-        }
+        select: { amountDeducted: true, state: true }
       }
     }
   });
@@ -119,7 +125,7 @@ export async function calculateAvailablePoolAmount(
 
   for (const p of directPayments) {
     const deducted = (p.payoutDirectItems as any[])
-      .filter(i => i.payoutRequest.status !== 'REJECTED' && i.payoutRequest.status !== 'CANCELLED')
+      .filter((i: any) => i.state !== 'RETURNED')
       .reduce((s: number, i: any) => s + i.amountDeducted, 0);
     const remaining = Math.max(0, p.amount - deducted);
     totalCollected += p.amount;

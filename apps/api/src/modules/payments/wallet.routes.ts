@@ -3,6 +3,13 @@ import type { FastifyInstance } from 'fastify'
 import { AuthService } from '../auth/auth.service'
 import { writeAuditLog } from '../../services/audit.service'
 import { EmailService } from '../../services/email.service'
+import {
+  createAndStartPayout,
+  fedapayPayoutMode,
+  markWithdrawalSent,
+  normalizeBeninPhone,
+  refundWithdrawal,
+} from '../../services/mobile-money-payout.service'
 
 export default async function walletRoutes(app: FastifyInstance) {
   // Middleware to verify wallet PIN token
@@ -436,232 +443,113 @@ export default async function walletRoutes(app: FastifyInstance) {
     return reply.send({ data: transactions })
   })
 
-  // Retrait (Payout) vers Mobile Money
-  // ─ FinTech Audit 1: Race-condition safe via $transaction with balance recheck 
+  // Retrait (Payout) vers Mobile Money — API Payouts FedaPay en 2 étapes (création puis envoi)
+  // ─ Débit atomique (solde revérifié), idempotence, recrédit automatique si FedaPay échoue
   // ─ Audit 8: audit log à chaque retrait
   app.post('/payout', { preHandler: [app.authenticate, verifyWalletPin] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { amount: rawAmount, phone, network, eventTitle, eventId } = req.body as { amount: number; phone: string; network: string; eventTitle?: string; eventId?: string }
+    const { amount: rawAmount, phone, network, eventTitle, eventId } = (req.body || {}) as { amount: number; phone: string; network: string; eventTitle?: string; eventId?: string }
     const idempotencyKey = req.headers['x-idempotency-key'] as string | undefined
     const ipAddress = req.ip
 
     const amount = Math.floor(Number(rawAmount))
-
     if (isNaN(amount) || amount <= 0) return reply.code(400).send({ error: 'Montant invalide' })
-    if (!phone) return reply.code(400).send({ error: 'Numéro de téléphone requis' })
+    const nationalPhone = normalizeBeninPhone(phone)
+    if (!nationalPhone) return reply.code(400).send({ error: 'Numéro Mobile Money invalide', code: 'INVALID_PHONE' })
+    const mode = fedapayPayoutMode(network)
+    if (!mode) return reply.code(400).send({ error: 'Réseau non pris en charge (MTN, MOOV ou CELTIIS).', code: 'NETWORK_UNSUPPORTED' })
 
+    const idempotencyRef = idempotencyKey ? `idem:${idempotencyKey}` : undefined
+    const label = eventTitle ? `Retrait (En cours) - ${eventTitle}` : 'Retrait Mobile Money (En cours)'
+
+    // 1. Débit atomique du Wallet
+    let withdrawal
     try {
-      const idempotencyRef = idempotencyKey ? `idem:${idempotencyKey}` : undefined;
-      const initialRef = idempotencyRef || eventId || phone;
-      
-      const transactionRecord = await app.prisma.$transaction(async (tx) => {
-        // 1. Idempotency check inside the transaction (Repeatable Read / Read Committed)
+      withdrawal = await app.prisma.$transaction(async (tx) => {
         if (idempotencyRef) {
-          const existing = await tx.walletTransaction.findFirst({
-            where: { refId: idempotencyRef },
-          })
-          if (existing) {
-            throw new Error('IDEMPOTENCY_ALREADY_PROCESSED')
-          }
+          const existing = await tx.walletTransaction.findFirst({ where: { refId: idempotencyRef } })
+          if (existing) throw new Error('IDEMPOTENCY_ALREADY_PROCESSED')
         }
-
-        // 2. Read current balance for reference
         const freshWallet = await tx.wallet.findUnique({ where: { userId: sub } })
-        if (!freshWallet || freshWallet.balance < amount) {
-          throw new Error('INSUFFICIENT_BALANCE')
-        }
-
-        // 3. ATOMIC DECREMENT: Only succeeds if balance is still >= amount
+        if (!freshWallet || freshWallet.balance < amount) throw new Error('INSUFFICIENT_BALANCE')
         const updateResult = await tx.wallet.updateMany({
           where: { id: freshWallet.id, balance: { gte: amount } },
           data: { balance: { decrement: amount } },
         })
-
-        if (updateResult.count === 0) {
-          throw new Error('INSUFFICIENT_BALANCE') // Race condition prevented
-        }
-
+        if (updateResult.count === 0) throw new Error('INSUFFICIENT_BALANCE')
         return tx.walletTransaction.create({
           data: {
-            walletId: freshWallet.id,
-            amount,
-            type: 'WITHDRAWAL',
-            balanceAfter: freshWallet.balance - amount,
-            description: eventTitle ? `Retrait (En cours) - ${eventTitle}` : `Retrait Mobile Money (En cours)`,
-            refId: initialRef,
+            walletId: freshWallet.id, amount, type: 'WITHDRAWAL', balanceAfter: freshWallet.balance - amount,
+            description: label, refId: idempotencyRef || eventId || null, payoutStatus: 'PROCESSING',
           },
         })
       })
-
-
-      // MODE DEV: Simuler le succès si pas de clé
-      if (!process.env.FEDAPAY_SECRET_KEY) {
-        await app.prisma.walletTransaction.update({
-           where: { id: transactionRecord.id },
-           data: { description: eventTitle ? `Retrait - ${eventTitle}` : `Retrait Mobile Money` }
-        })
-
-        await writeAuditLog(app.prisma as any, {
-          actorId: sub,
-          actorRole: 'USER',
-          action: 'WALLET_WITHDRAWAL',
-          targetType: 'wallet',
-          eventId,
-          amount,
-          newValue: { phone, network, mode: 'SIMULATED' },
-          ipAddress,
-          userAgent: req.headers['user-agent'],
-        })
-
-        // Fire-and-forget withdrawal receipt email (never blocks response)
-        ;(async () => {
-          try {
-            const u = await app.prisma.user.findUnique({
-              where: { id: sub },
-              include: { profile: true },
-            })
-            if (u?.email) {
-              const emailSvc = new EmailService()
-              await emailSvc.sendWithdrawalReceiptEmail({
-                to: u.email,
-                displayName: u.profile?.displayName || 'Utilisateur',
-                amount,
-                phone,
-                network,
-                eventTitle,
-              })
-            }
-          } catch (emailErr) {
-            app.log.warn({ err: emailErr }, '[Withdrawal Receipt Email] Failed')
-          }
-        })()
-
-        return reply.send({ success: true, message: 'Retrait simulé avec succès' })
-      }
-
-      // MODE PROD / SANDBOX: Appeler l'API FedaPay Payouts
-      const isSandbox = process.env.FEDAPAY_SECRET_KEY?.startsWith('sk_sandbox_') || false;
-      const baseUrl = isSandbox
-        ? 'https://sandbox-api.fedapay.com/v1' 
-        : 'https://api.fedapay.com/v1';
-
-      try {
-        const payoutRes = await fetch(`${baseUrl}/payouts`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}`,
-          },
-          body: JSON.stringify({
-            amount: amount,
-            currency: { iso: 'XOF' },
-            mode: isSandbox ? 'momo_test' : network,
-            customer: { phone_number: { number: phone.replace(/^\+229/, '').replace(/^229/, ''), country: 'BJ' } },
-            send_now: true,
-          }),
-        })
-
-        const payoutData = (await payoutRes.json()) as any
-
-        if (!payoutRes.ok || payoutData.error) {
-          // Log FedaPay error details (without key) for diagnosis
-          app.log.error({ 
-            fedapayStatus: payoutRes.status, 
-            fedapayMessage: payoutData?.message,
-            fedapayErrors: payoutData?.errors,
-            baseUrl,
-          }, '[FedaPay Payout] Request rejected by FedaPay')
-          const errMsg = payoutData?.message 
-            || payoutData?.error?.message 
-            || (payoutData?.errors ? Object.values(payoutData.errors).flat().join(', ') : null)
-            || 'Erreur lors du transfert FedaPay'
-          throw new Error(errMsg);
-        }
-
-        // FedaPay succeeded! Update transaction ref and description
-        await app.prisma.walletTransaction.update({
-          where: { id: transactionRecord.id },
-          data: {
-            refId: idempotencyRef || eventId || payoutData.v1?.payout?.id?.toString() || phone,
-            description: eventTitle ? `Retrait - ${eventTitle}` : `Retrait Mobile Money`
-          }
-        })
-
-        await writeAuditLog(app.prisma as any, {
-          actorId: sub,
-          actorRole: 'USER',
-          action: 'WALLET_WITHDRAWAL',
-          targetType: 'wallet',
-          eventId,
-          amount,
-          newValue: { phone, network, fedapayId: payoutData.v1?.payout?.id },
-          ipAddress,
-          userAgent: req.headers['user-agent'],
-        })
-
-        // Fire-and-forget withdrawal receipt email (never blocks response)
-        ;(async () => {
-          try {
-            const u = await app.prisma.user.findUnique({
-              where: { id: sub },
-              include: { profile: true },
-            })
-            if (u?.email) {
-              const emailSvc = new EmailService()
-              await emailSvc.sendWithdrawalReceiptEmail({
-                to: u.email,
-                displayName: u.profile?.displayName || 'Utilisateur',
-                amount,
-                phone,
-                network,
-                eventTitle,
-              })
-            }
-          } catch (emailErr) {
-            app.log.warn({ err: emailErr }, '[Withdrawal Receipt Email] Failed')
-          }
-        })()
-
-        return reply.send({ success: true, message: 'Retrait initié avec succès' })
-      } catch (fedaErr: any) {
-         // FEDAPAY FAILED OR NETWORK ERROR -> REFUND WALLET
-         app.log.error(fedaErr, '[FedaPay Payout Error] -> Initiating Refund')
-         await app.prisma.$transaction(async (tx) => {
-           const freshWallet = await tx.wallet.findUnique({ where: { userId: sub } })
-           if (!freshWallet) return;
-           // Mark the WITHDRAWAL as failed in its description
-           await tx.walletTransaction.update({
-             where: { id: transactionRecord.id },
-             data: { description: eventTitle ? `Retrait (Échoué) - ${eventTitle}` : `Retrait Mobile Money (Échoué)` }
-           })
-           await tx.wallet.update({
-             where: { id: freshWallet.id },
-             data: { balance: { increment: amount } },
-           })
-           await tx.walletTransaction.create({
-             data: {
-               walletId: freshWallet.id,
-               amount,
-               type: 'REFUND',
-               balanceAfter: freshWallet.balance + amount,
-               description: `Remboursement suite à échec de retrait`,
-               refId: initialRef,
-             },
-           })
-         })
-         
-         return reply.code(500).send({ error: 'Erreur lors du retrait, le montant a été recrédité.', details: fedaErr.message })
-      }
-
     } catch (err: any) {
-      if (err.message === 'INSUFFICIENT_BALANCE') {
-        return reply.code(400).send({ error: 'Solde insuffisant' })
-      }
-      if (err.message === 'IDEMPOTENCY_ALREADY_PROCESSED') {
-        return reply.send({ success: true, message: 'Déjà traité (idempotence)', idempotent: true })
-      }
-      app.log.error('[Payout Error]', err)
+      if (err.message === 'INSUFFICIENT_BALANCE') return reply.code(400).send({ error: 'Solde insuffisant' })
+      if (err.message === 'IDEMPOTENCY_ALREADY_PROCESSED') return reply.send({ success: true, message: 'Déjà traité (idempotence)', idempotent: true })
+      app.log.error({ err }, '[Payout Error]')
       return reply.code(500).send({ error: 'Erreur interne lors du retrait' })
     }
+
+    const audit = (extra: Record<string, unknown>) => writeAuditLog(app.prisma as any, {
+      actorId: sub, actorRole: 'USER', action: 'WALLET_WITHDRAWAL', targetType: 'wallet', targetId: withdrawal.id,
+      eventId, amount, newValue: { phone: nationalPhone, network: mode, ...extra }, ipAddress, userAgent: req.headers['user-agent'],
+    })
+    const sendReceipt = () => {
+      ;(async () => {
+        try {
+          const u = await app.prisma.user.findUnique({ where: { id: sub }, include: { profile: true } })
+          if (u?.email) {
+            await new EmailService().sendWithdrawalReceiptEmail({
+              to: u.email, displayName: u.profile?.displayName || 'Utilisateur', amount, phone, network, eventTitle,
+            })
+          }
+        } catch (emailErr) {
+          app.log.warn({ err: emailErr }, '[Withdrawal Receipt Email] Failed')
+        }
+      })()
+    }
+
+    // MODE DEV : pas de clé FedaPay → retrait simulé
+    if (!process.env.FEDAPAY_SECRET_KEY) {
+      await markWithdrawalSent(app.prisma, withdrawal.id)
+      await audit({ mode: 'SIMULATED' })
+      sendReceipt()
+      return reply.send({ success: true, status: 'SENT', message: 'Retrait simulé avec succès' })
+    }
+
+    // 2. Création + envoi réel chez FedaPay
+    const user = await app.prisma.user.findUnique({ where: { id: sub }, select: { email: true, profile: { select: { firstName: true, lastName: true, displayName: true } } } })
+    const nameParts = String(user?.profile?.displayName || 'Client Letsout').trim().split(/\s+/)
+    const attempt = await createAndStartPayout({
+      amount, mode, phone: nationalPhone,
+      firstname: user?.profile?.firstName || nameParts[0] || 'Client',
+      lastname: user?.profile?.lastName || nameParts.slice(1).join(' ') || 'Letsout',
+      email: user?.email,
+      description: eventTitle ? `Retrait Let's Out - ${eventTitle}` : "Retrait Let's Out",
+    })
+
+    if (attempt.kind === 'failed') {
+      app.log.error({ message: attempt.message, payoutId: attempt.payoutId }, '[FedaPay Payout] Échec — recrédit du Wallet')
+      if (attempt.payoutId) {
+        await app.prisma.walletTransaction.update({ where: { id: withdrawal.id }, data: { providerPayoutId: attempt.payoutId } })
+      }
+      await refundWithdrawal(app.prisma, withdrawal.id, attempt.message)
+      await audit({ result: 'FAILED', reason: attempt.message, fedapayId: attempt.payoutId })
+      return reply.code(502).send({ error: 'Le retrait a échoué, le montant a été recrédité sur votre portefeuille.', details: attempt.message, code: 'PAYOUT_FAILED' })
+    }
+
+    await app.prisma.walletTransaction.update({ where: { id: withdrawal.id }, data: { providerPayoutId: attempt.payoutId ?? null } })
+    if (attempt.kind === 'started' && attempt.status === 'sent') await markWithdrawalSent(app.prisma, withdrawal.id)
+    await audit({ result: attempt.kind === 'started' ? attempt.status : 'UNKNOWN', fedapayId: attempt.payoutId })
+    if (attempt.kind === 'started') sendReceipt()
+
+    return reply.code(attempt.kind === 'started' ? 200 : 202).send({
+      success: true,
+      status: attempt.kind === 'started' && attempt.status === 'sent' ? 'SENT' : 'PROCESSING',
+      message: attempt.kind === 'started'
+        ? 'Retrait envoyé : vous recevrez l’argent sur votre compte Mobile Money dans quelques instants.'
+        : 'Retrait en cours de vérification : en cas d’échec, le montant sera automatiquement recrédité.',
+    })
   })
 }

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { SafeImage } from '@/components/shared/SafeImage';
 
 import { intlLocale } from '@/lib/locale';
+import { apiErrorText } from '@/lib/pool-errors'
 export function EventPoolValidation() {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>();
@@ -46,7 +47,7 @@ export function EventPoolValidation() {
       toast.success(t('poolValidation.toasts.revoked'));
       navigate(`/events/${id}`);
     },
-    onError: (err: any) => toast.error(err.response?.data?.error || t('poolValidation.toasts.revokeError'))
+    onError: (err: any) => toast.error(apiErrorText(t, err, 'poolValidation.toasts.revokeError'))
   });
 
   const validateMut = useMutation({
@@ -59,7 +60,7 @@ export function EventPoolValidation() {
       toast.success(mode === 'VALIDATE' ? t('poolValidation.toasts.validated') : t('poolValidation.toasts.delegated'));
       navigate(`/events/${id}`);
     },
-    onError: (err: any) => toast.error(err.response?.data?.error || t('poolValidation.toasts.validateError'))
+    onError: (err: any) => toast.error(apiErrorText(t, err, 'poolValidation.toasts.validateError'))
   });
 
   if (isLoadingEvent || isLoadingAttendees) {

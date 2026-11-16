@@ -611,6 +611,12 @@
       "pinResetSuccess": "Code PIN réinitialisé, veuillez en créer un nouveau",
       "incorrectCode": "Code incorrect ou expiré",
       "pinsMismatch": "Les codes PIN ne correspondent pas"
+    },
+    "withdrawProcessing": "Retrait en cours de vérification : en cas d’échec, le montant sera automatiquement recrédité.",
+    "errors": {
+      "NETWORK_UNSUPPORTED": "Réseau non pris en charge : choisissez MTN, MOOV ou CELTIIS.",
+      "INVALID_PHONE": "Numéro Mobile Money invalide.",
+      "PAYOUT_FAILED": "Le retrait a échoué : le montant a été recrédité sur votre portefeuille."
     }
   },
   "anonymousDonation": {
@@ -1338,7 +1344,13 @@
       "validated": "Budget validé avec succès",
       "delegated": "Validation déléguée"
     },
-    "appointedValidator": "Validateur désigné"
+    "appointedValidator": "Validateur désigné",
+    "errors": {
+      "DELEGATE_ORGANIZER_FORBIDDEN": "Vous ne pouvez pas confier votre part à l’organisateur : c’est lui qui reçoit les fonds.",
+      "DELEGATE_NOT_PARTICIPANT": "La personne choisie doit être un participant de l’événement.",
+      "DELEGATE_SELF": "Pour approuver vous-même votre part, choisissez « Valider ».",
+      "DELEGATE_REQUIRED": "Choisissez la personne à qui confier votre part."
+    }
   },
   "payout": {
     "title": "Initier un retrait",

@@ -10,101 +10,51 @@ export default fp(async (fastify: FastifyInstance) => {
     try {
       const now = new Date()
 
-      // Find pending or partial payout requests that have expired
-      const setting = await (fastify as any).prisma.systemSetting.findUnique({ where: { key: 'PAYOUT_APPROVAL_DEADLINE_HOURS' } });
-      const deadlineHours = setting && !isNaN(Number(setting.value)) ? Number(setting.value) : 48;
-      
-      const expiredRequests = await (fastify as any).prisma.eventPayoutRequest.findMany({
-        where: {
-          status: { in: ['PENDING', 'PARTIAL'] }
-        },
-        include: { event: true, approvalsList: { where: { status: 'PENDING' }, include: { user: { include: { profile: true } } } } }
-      })
-
-      for (const req of expiredRequests) {
-        if (req.approvalsList.length === 0) continue
-
-        await (fastify as any).prisma.$transaction(async (tx: any) => {
-          for (const approval of req.approvalsList) {
-            // Check if this specific approval has exceeded the deadline since its creation
-            const approvalAgeMs = now.getTime() - new Date(approval.createdAt).getTime()
-            const deadlineMs = deadlineHours * 60 * 60 * 1000
-
-            if (approvalAgeMs < deadlineMs) {
-              continue // Give this specific approval more time (happens when fallback re-delegates)
-            }
-
-            // 1. Mark approval as EXPIRED
-            await tx.payoutApproval.update({
-              where: { id: approval.id },
-              data: { status: 'EXPIRED' }
-            })
-
-            // 2. Find delegators who were depending on this validator
-            const affectedItems = await tx.payoutBookingItem.findMany({
-              where: {
-                payoutRequestId: req.id,
-                delegatedToSnapshot: approval.userId
-              },
-              include: { booking: true }
-            })
-
-            const affectedBookingIds = affectedItems.map((item: any) => item.bookingId)
-            if (affectedBookingIds.length > 0) {
-              await tx.booking.updateMany({
-                where: { id: { in: affectedBookingIds } },
-                data: { poolValidationStatus: 'PENDING', delegatedToId: null }
-              })
-            }
-
-            const affectedUserIds = affectedItems.map((item: any) => item.booking.userId)
-            const uniqueUserIds = [...new Set(affectedUserIds)].filter(uid => uid !== req.event.creatorId) as string[]
-
-            const notifications: any[] = []
-
-            if (uniqueUserIds.length > 0) {
-              // 3. Notify them to fallback
-              uniqueUserIds.forEach((uid: string) => {
-                notifications.push({
-                  userId: uid,
-                  type: 'SYSTEM',
-                  title: 'Reprise en main requise',
-                  body: `Votre validateur n'a pas répondu à temps pour le déblocage de ${req.amount} F sur ${req.event.title} — choisissez qui doit valider votre part.`,
-                  data: { eventId: req.eventId, payoutId: req.id, action: 'FALLBACK_REQUIRED', screen: 'pool-validation' }
-                })
-              })
-            }
-
-            // 4. Notify the validator
+      // ── Cagnotte : validateurs qui n'ont pas répondu dans le délai (PAYOUT_APPROVAL_DEADLINE_HOURS) ──
+      // Leur part revient dans la cagnotte, la demande est recalculée (jamais bloquée), les délégants
+      // sont invités à reprendre la main.
+      try {
+        const { expireOverdueApprovals } = await import('../services/payout-engine.service')
+        const expired = await expireOverdueApprovals((fastify as any).prisma, now)
+        for (const e of expired) {
+          const notifications: any[] = e.affectedUserIds.map((uid) => ({
+            userId: uid,
+            type: 'SYSTEM',
+            title: 'Reprise en main requise',
+            body: `Votre validateur n'a pas répondu à temps pour le déblocage de ${e.amount} F sur ${e.eventTitle} — choisissez qui doit valider votre part.`,
+            data: { eventId: e.eventId, payoutId: e.payoutId, action: 'FALLBACK_REQUIRED', screen: 'pool-validation' },
+          }))
+          notifications.push({
+            userId: e.validatorId,
+            type: 'SYSTEM',
+            title: 'Délai de validation dépassé',
+            body: `Vous n'avez pas répondu à temps pour le déblocage de ${e.amount} F sur ${e.eventTitle}. Vos droits ont été révoqués pour cette demande.`,
+            data: { eventId: e.eventId, payoutId: e.payoutId, screen: 'event-details' },
+          })
+          if (e.validatorId !== e.creatorId) {
             notifications.push({
-              userId: approval.userId,
+              userId: e.creatorId,
               type: 'SYSTEM',
-              title: 'Délai de validation dépassé',
-              body: `Vous n'avez pas répondu à temps pour le déblocage de ${req.amount} F sur ${req.event.title}. Vos droits ont été révoqués pour cette demande.`,
-              data: { eventId: req.eventId, payoutId: req.id, screen: 'event-details' }
+              title: "Un validateur n'a pas répondu",
+              body: `${e.validatorName} n'a pas répondu à temps pour le déblocage de ${e.amount} F sur ${e.eventTitle}. Sa part retourne dans la cagnotte.`,
+              data: { eventId: e.eventId, payoutId: e.payoutId, screen: 'event-details' },
             })
-
-            // 5. Notify the organizer
-            if (approval.userId !== req.event.creatorId) {
-              const validatorName = approval.user?.profile?.displayName || 'Un validateur'
-              notifications.push({
-                userId: req.event.creatorId,
-                type: 'SYSTEM',
-                title: 'Un validateur n\'a pas répondu',
-                body: `${validatorName} n'a pas répondu à temps pour le déblocage de ${req.amount} F sur ${req.event.title}. Ses délégataires ont été invités à reprendre la main.`,
-                data: { eventId: req.eventId, payoutId: req.id, screen: 'event-details' }
-              })
-            }
-
-            if (notifications.length > 0) {
-              // Note: We don't await this inside the transaction to avoid blocking it for too long, 
-              // but createAndSendNotificationMany saves to DB then sends push.
-              await createAndSendNotificationMany(fastify, notifications).catch((err: any) => {
-                fastify.log.error({ err }, `Failed to send fallback notifications for payout ${req.id}:`)
-              })
-            }
           }
-        })
+          await createAndSendNotificationMany(fastify, notifications).catch((err: any) => {
+            fastify.log.error({ err }, `Failed to send expiry notifications for payout ${e.payoutId}:`)
+          })
+        }
+      } catch (payoutErr: any) {
+        fastify.log.error({ payoutErr }, '[POOL_PAYOUT_CRON] Échec du traitement des délais de validation')
+      }
+
+      // ── Retraits Mobile Money : suivi du statut FedaPay (envoyé / échoué → recrédit automatique) ──
+      try {
+        const { reconcileMobileMoneyPayouts } = await import('../services/mobile-money-payout.service')
+        const results = await reconcileMobileMoneyPayouts((fastify as any).prisma, now)
+        for (const r of results) fastify.log.info(r, '[Retrait Mobile Money] Statut mis à jour')
+      } catch (mmErr: any) {
+        fastify.log.error({ mmErr }, '[MOBILE_MONEY_CRON] Échec du suivi des retraits')
       }
 
       // ── Billetterie : versement des recettes (fin d'événement + délai TICKET_PAYOUT_DELAY_HOURS) ──

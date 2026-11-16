@@ -489,10 +489,15 @@ model WalletTransaction {
   balanceAfter Float
   description  String?
   refId        String?
+  /// Retrait Mobile Money : identifiant du payout FedaPay
+  providerPayoutId String?
+  /// Retrait Mobile Money : PROCESSING (envoyé, en attente FedaPay) | SENT | FAILED (recrédité)
+  payoutStatus     String?
   createdAt    DateTime     @default(now())
   wallet       Wallet       @relation(fields: [walletId], references: [id])
 
   @@index([walletId])
+  @@index([payoutStatus])
   @@map("wallet_transactions")
 }
 
@@ -606,7 +611,11 @@ model PayoutBookingItem {
   bookingId              String
   amountDeducted         Float
   validationStatusSnapshot PoolValidationStatus
+  /// Validateur qui approuve cette part : le délégué, ou le participant lui-même (jamais vide)
   delegatedToSnapshot    String?
+  /// PENDING (en attente d'approbation) | RELEASED (versée à l'organisateur) | RETURNED (refusée / expirée : revenue dans la cagnotte)
+  state                  String               @default("PENDING")
+  releasedAt             DateTime?
   createdAt              DateTime             @default(now())
 
   payoutRequest          EventPayoutRequest   @relation(fields: [payoutRequestId], references: [id], onDelete: Cascade)
@@ -623,6 +632,9 @@ model PayoutDirectItem {
   payoutRequestId String
   paymentId       String             // FK vers Payment (don direct, bookingId = null)
   amountDeducted  Float
+  /// PENDING | RELEASED | RETURNED (voir PayoutBookingItem.state)
+  state           String             @default("PENDING")
+  releasedAt      DateTime?
   createdAt       DateTime           @default(now())
 
   payoutRequest   EventPayoutRequest @relation(fields: [payoutRequestId], references: [id], onDelete: Cascade)

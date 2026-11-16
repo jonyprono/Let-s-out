@@ -567,6 +567,12 @@
       "pinResetSuccess": "Your PIN has been reset. Please create a new one.",
       "incorrectCode": "Invalid or expired code",
       "pinsMismatch": "The PINs do not match"
+    },
+    "withdrawProcessing": "Withdrawal being verified: if it fails, the amount will be credited back automatically.",
+    "errors": {
+      "NETWORK_UNSUPPORTED": "Network not supported: choose MTN, MOOV or CELTIIS.",
+      "INVALID_PHONE": "Invalid Mobile Money number.",
+      "PAYOUT_FAILED": "The withdrawal failed: the amount has been credited back to your wallet."
     }
   },
   "anonymousDonation": {
@@ -1337,7 +1343,13 @@
       "validated": "Budget approved",
       "delegated": "Approval delegated"
     },
-    "appointedValidator": "Appointed validator"
+    "appointedValidator": "Appointed validator",
+    "errors": {
+      "DELEGATE_ORGANIZER_FORBIDDEN": "You cannot entrust your share to the organizer: they are the one receiving the funds.",
+      "DELEGATE_NOT_PARTICIPANT": "The person you choose must be a participant in the event.",
+      "DELEGATE_SELF": "To approve your share yourself, choose “Validate”.",
+      "DELEGATE_REQUIRED": "Choose who to entrust your share to."
+    }
   },
   "payout": {
     "title": "Start a withdrawal",

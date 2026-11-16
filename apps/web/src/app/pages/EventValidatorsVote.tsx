@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth.store';
 
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next'
+import { apiErrorText } from '@/lib/pool-errors'
 
 const VoteBoxIcon = () => (
   <svg width="77" height="128" viewBox="0 0 77 128" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[77px] h-[128px]">
@@ -100,7 +101,7 @@ export function EventValidatorsVote() {
       setIsSuccess(true);
       setTimeout(() => setIsSuccess(false), 2500); // Hide success screen after a bit to show the list again
     } catch (err: any) {
-      toast.error(t('eventValidatorsVote.erreurLorsDeLaSoumission'));
+      toast.error(apiErrorText(t, err, 'eventValidatorsVote.erreurLorsDeLaSoumission'));
     } finally {
       setIsSubmitting(false);
     }

@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { createAndSendNotification } from '../notifications/notifications.routes'
 import { writeAuditLog } from '../../services/audit.service'
-import { releaseFunds } from '../payments/event-payout.routes'
+import { PayoutError, adminForceRelease, adminReject } from '../../services/payout-engine.service'
 import { format } from 'date-fns'
 import adminStatsRoutes from './admin-stats.routes'
 import adminListsRoutes from './admin-lists.routes'
@@ -336,23 +336,18 @@ export default async function adminRoutes(app: FastifyInstance) {
   app.post('/payouts/:id/force-approve', async (req, reply) => {
     const { id } = req.params as { id: string }
     
-    const payoutReq = await app.prisma.eventPayoutRequest.findUnique({
-      where: { id },
-      include: { event: true }
-    })
-    if (!payoutReq) return reply.code(404).send({ error: 'Request not found' })
-    if (['APPROVED', 'EXPIRED'].includes(payoutReq.status)) {
-      return reply.code(400).send({ error: `Cannot approve request with status ${payoutReq.status}` })
-    }
-
     const adminUser = req.user as { sub: string }
 
-    await releaseFunds(app, payoutReq.eventId, payoutReq.requestedBy, payoutReq.amount, payoutReq.event.title, payoutReq.id)
-
-    const updated = await app.prisma.eventPayoutRequest.update({
-      where: { id },
-      data: { status: 'APPROVED' }
-    })
+    // Verse uniquement les parts encore en attente (jamais une part déjà versée : pas de double paiement)
+    let forced
+    try {
+      forced = await adminForceRelease(app.prisma, id)
+    } catch (err) {
+      if (err instanceof PayoutError) return reply.code(err.status).send({ error: err.message, code: err.code })
+      throw err
+    }
+    const payoutReq = forced.request
+    const updated = await app.prisma.eventPayoutRequest.findUnique({ where: { id } })
 
     await writeAuditLog(app.prisma, {
       actorId: adminUser.sub,
@@ -361,7 +356,7 @@ export default async function adminRoutes(app: FastifyInstance) {
       targetType: 'payoutRequest',
       targetId: id,
       eventId: payoutReq.eventId,
-      amount: payoutReq.amount,
+      amount: forced.released,
       comment: 'Forcé par un administrateur',
       ipAddress: req.ip,
       userAgent: req.headers['user-agent']
@@ -374,16 +369,18 @@ export default async function adminRoutes(app: FastifyInstance) {
     const { id } = req.params as { id: string }
     const { reason } = z.object({ reason: z.string() }).parse(req.body)
 
-    const payoutReq = await app.prisma.eventPayoutRequest.findUnique({ where: { id } })
-    if (!payoutReq) return reply.code(404).send({ error: 'Request not found' })
-    if (payoutReq.status === 'APPROVED') return reply.code(400).send({ error: 'Cannot reject already approved payout' })
-
     const adminUser = req.user as { sub: string }
 
-    const updated = await app.prisma.eventPayoutRequest.update({
-      where: { id },
-      data: { status: 'REJECTED', rejectionReason: reason || 'Refusé par administrateur' }
-    })
+    // Les parts en attente reviennent dans la cagnotte ; celles déjà versées restent versées
+    let rejected
+    try {
+      rejected = await adminReject(app.prisma, id, reason || 'Refusé par administrateur')
+    } catch (err) {
+      if (err instanceof PayoutError) return reply.code(err.status).send({ error: err.message, code: err.code })
+      throw err
+    }
+    const payoutReq = rejected.request
+    const updated = await app.prisma.eventPayoutRequest.findUnique({ where: { id } })
 
     await writeAuditLog(app.prisma, {
       actorId: adminUser.sub,
