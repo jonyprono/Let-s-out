@@ -119,6 +119,10 @@ button, [role="button"], a {
 }
 
 /* ── Scanner transparency for Capacitor ─────────────────────────────────── */
+/* Le flux caméra (ML Kit, Android) est rendu SOUS la WebView : toute la chaîne jusqu'à <html>
+   doit être transparente. <html> a un fond (= fond du splash natif, anti-flash au démarrage) :
+   sans `html.barcode-scanner-active`, ce fond blanc remplissait le cadre de visée. */
+html.barcode-scanner-active,
 body.barcode-scanner-active,
 body.barcode-scanner-active #root,
 body.barcode-scanner-active #app-layout-wrapper,

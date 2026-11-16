@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { eventsApi, type CheckInError, type CheckInSuccess } from '@/features/events/api'
 import { hapticFeedback } from '@/lib/haptics'
 import { useAuthStore } from '@/stores/auth.store'
-import { isIosNativeScannerAvailable, isNativeScannerAvailable, openAppSettings, scanQrWithIosScanner, settingsPlatform } from '@/lib/camera-scan'
+import { isIosNativeScannerAvailable, isNativeScannerAvailable, openAppSettings, scanQrWithIosScanner, setScannerBackdrop, settingsPlatform } from '@/lib/camera-scan'
 
 type Verdict =
   | { kind: 'valid'; data: CheckInSuccess }
@@ -44,7 +44,7 @@ export function TicketScanner() {
     if (scanningRef.current) {
       BarcodeScanner.removeAllListeners().catch(() => {})
       BarcodeScanner.stopScan().catch(() => {})
-      document.body.classList.remove('barcode-scanner-active')
+      setScannerBackdrop(false)
     }
   }, [])
 
@@ -75,7 +75,7 @@ export function TicketScanner() {
   }
 
   const stopScan = async () => {
-    document.body.classList.remove('barcode-scanner-active')
+    setScannerBackdrop(false)
     scanningRef.current = false
     setIsScanning(false)
     try {
@@ -128,7 +128,7 @@ export function TicketScanner() {
       }
       setVerdict(null)
       handledRef.current = false
-      document.body.classList.add('barcode-scanner-active')
+      setScannerBackdrop(true)
       scanningRef.current = true
       setIsScanning(true)
       await BarcodeScanner.addListener('barcodesScanned', async (result: any) => {

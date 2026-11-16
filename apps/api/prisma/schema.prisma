@@ -539,6 +539,34 @@ model Payment {
   @@map("payments")
 }
 
+/// Commande FedaPay enregistrée DÈS la création de la transaction (POST /payments/fedapay/initiate).
+/// Source de vérité du rattachement transaction → acheteur / événement / billets : FedaPay ne conserve
+/// PAS les métadonnées envoyées (constaté en production le 2026-11-16 : `metadata` réécrit par FedaPay,
+/// `custom_metadata` nul), ce qui empêchait toute confirmation (webhook ignoré, sync-missed en 403).
+/// Permet aussi le rattrapage automatique (cron) si le webhook n'arrive pas.
+model PaymentIntent {
+  providerTransactionId String    @id
+  userId                String
+  eventId               String
+  /// Montant demandé à FedaPay (hors frais FedaPay)
+  amount                Float
+  /// Options de la commande : ticketLines, poolValidationStatus, delegatedToId, isAnonymous, isNonParticipantDonation
+  payload               Json
+  /// PENDING (en attente) | PROCESSED (commande confirmée) | CLOSED (refusée / annulée / expirée chez FedaPay)
+  status                String    @default("PENDING")
+  /// Dernier statut lu chez FedaPay
+  providerStatus        String?
+  attempts              Int       @default(0)
+  lastCheckedAt         DateTime?
+  processedAt           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId, eventId])
+  @@map("payment_intents")
+}
+
 /// Compte Mobile Money de l'organisateur pour une billetterie (1 par événement).
 /// Table séparée pour que le numéro ne soit JAMAIS renvoyé avec l'événement public.
 model EventPayoutAccount {

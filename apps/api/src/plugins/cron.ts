@@ -243,8 +243,31 @@ export default fp(async (fastify: FastifyInstance) => {
   // Interval
   const timer = setInterval(runCron, INTERVAL_MS)
 
+  // ── Paiements FedaPay : rattrapage des commandes payées mais non confirmées ──
+  // Boucle dédiée et plus fréquente que le cron général : un acheteur ne doit pas attendre
+  // 15 min ses billets si le webhook n'arrive pas. Une seule exécution à la fois.
+  const PAYMENT_RECONCILE_MS = 2 * 60 * 1000
+  let reconciling = false
+  const runPaymentReconcile = async () => {
+    if (reconciling) return
+    reconciling = true
+    try {
+      const { reconcilePaymentIntents } = await import('../modules/payments/payments.routes')
+      const results = await reconcilePaymentIntents(fastify)
+      const processed = results.filter((r) => r.outcome === 'processed')
+      if (processed.length) fastify.log.info({ processed }, '[FedaPay] Commandes confirmées par rattrapage')
+    } catch (err: any) {
+      fastify.log.error({ err }, '[FedaPay] Échec du rattrapage des commandes')
+    } finally {
+      reconciling = false
+    }
+  }
+  setTimeout(runPaymentReconcile, 15_000)
+  const paymentTimer = setInterval(runPaymentReconcile, PAYMENT_RECONCILE_MS)
+
   fastify.addHook('onClose', (_, done) => {
     clearInterval(timer)
+    clearInterval(paymentTimer)
     done()
   })
 })

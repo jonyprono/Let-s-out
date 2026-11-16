@@ -27,6 +27,17 @@ export async function openAppSettings(): Promise<boolean> {
   }
 }
 
+/**
+ * Rend la page transparente (ou opaque) pendant le scan ML Kit (Android) : la caméra est affichée
+ * SOUS la WebView. La classe est posée sur <html> ET <body> (cf. index.css) : <html> porte le fond
+ * anti-flash du démarrage, qui sinon remplissait le cadre de visée en blanc.
+ */
+export function setScannerBackdrop(active: boolean): void {
+  for (const el of [document.documentElement, document.body]) {
+    el.classList.toggle('barcode-scanner-active', active)
+  }
+}
+
 /** Le plugin ML Kit (scan en direct sous l'interface de l'app) est-il présent ? Android uniquement. */
 export function isNativeScannerAvailable(): boolean {
   return Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('BarcodeScanner')

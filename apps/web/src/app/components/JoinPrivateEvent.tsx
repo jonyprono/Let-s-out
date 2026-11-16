@@ -8,7 +8,7 @@ import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next'
-import { isIosNativeScannerAvailable, isNativeScannerAvailable, openAppSettings, scanQrWithIosScanner, settingsPlatform } from '@/lib/camera-scan'
+import { isIosNativeScannerAvailable, isNativeScannerAvailable, openAppSettings, scanQrWithIosScanner, setScannerBackdrop, settingsPlatform } from '@/lib/camera-scan'
 
 export function JoinPrivateEvent() {
   const { t } = useTranslation()
@@ -41,7 +41,7 @@ export function JoinPrivateEvent() {
         // but BarcodeScanner.stopScan() releases the hardware immediately.
         BarcodeScanner.removeAllListeners();
         BarcodeScanner.stopScan().catch(() => {});
-        document.body.classList.remove('barcode-scanner-active');
+        setScannerBackdrop(false);
       }
     };
   }, []);
@@ -120,7 +120,7 @@ export function JoinPrivateEvent() {
     }
 
     try {
-      document.body.classList.add('barcode-scanner-active');
+      setScannerBackdrop(true);
       isScanningRef.current = true;
       setIsScanning(true);
       
@@ -147,7 +147,7 @@ export function JoinPrivateEvent() {
   };
 
   const stopScan = async () => {
-    document.body.classList.remove('barcode-scanner-active');
+    setScannerBackdrop(false);
     isScanningRef.current = false;
     setIsScanning(false);
     try {

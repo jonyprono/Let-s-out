@@ -16,6 +16,7 @@ import {
   Navigation,
   Shield,
   EyeOff,
+  Ticket,
 } from 'lucide-react'
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -56,6 +57,8 @@ import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
 import { TicketPurchaseSheet } from '@/features/ticketing/components/TicketPurchaseSheet'
 import { EventTicketingBlock } from '@/features/ticketing/components/EventTicketingBlock'
 import { MyTicketModal } from '@/features/events/components/MyTicketModal'
+import { ticketingKeys } from '@/features/ticketing/api'
+import { apiClient } from '@/lib/api-client'
 import { JoinPendingScreen } from '@/app/components/JoinPendingScreen'
 
 import { dateLocale } from '@/lib/locale'
@@ -249,6 +252,27 @@ export function EventDetails({ onBack }: EventDetailsProps) {
       return query.state.data?.status === 'PENDING' ? 5000 : false
     }
   })
+
+  // Paiement FedaPay en attente pour cet événement (fenêtre fermée avant l'approbation, app
+  // quittée, webhook en retard) : vérifié en arrière-plan à l'ouverture de la fiche. Si la
+  // commande a été payée, billets + e-mail sont émis côté serveur et l'écran se met à jour.
+  const syncedPendingRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!id || !user || syncedPendingRef.current === id) return
+    if (myBookingData?.status === 'CONFIRMED' && !event?.ticketingEnabled) return
+    syncedPendingRef.current = id
+    apiClient.post('/payments/sync-pending', { eventId: id })
+      .then(({ data }) => {
+        if (data?.processed > 0) {
+          qc.invalidateQueries({ queryKey: ['events', id] })
+          qc.invalidateQueries({ queryKey: ['events', id, 'my-booking'] })
+          qc.invalidateQueries({ queryKey: ticketingKeys.myTickets(id) })
+          qc.invalidateQueries({ queryKey: ticketingKeys.publicTiers(id) })
+          toast.success(t('ticketing.purchase.recovered'))
+        }
+      })
+      .catch(() => { /* silencieux : le serveur rattrape aussi automatiquement (cron) */ })
+  }, [id, user, myBookingData?.status, event?.ticketingEnabled, qc, t])
 
   // Fetch attendees when modal is open
   const { data: attendeesData, isLoading: attendeesLoading } = useQuery({
@@ -1045,6 +1069,18 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           {hasJoined ? (
             /* Participant or Creator: two buttons */
             <>
+              {/* Détenteur de billets : « Mes billets » toujours visible dans la barre du bas
+                  (le partage reste disponible dans l'en-tête) */}
+              {event.ticketingEnabled && myBookingData?.status === 'CONFIRMED' ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setShowMyTickets(true)}
+                  className="flex-[0.45] flex items-center justify-center gap-2 rounded-full font-semibold border-[#FF7A00] text-[#FF7A00]"
+                >
+                  <Ticket className="w-4 h-4" aria-hidden="true" />
+                  <span>{t('tickets.myTicketsShort')}</span>
+                </Button>
+              ) : (
               <Button
                 variant="outline"
                 onClick={handleShare}
@@ -1053,6 +1089,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 <CustomShareIcon />
                 <span>{t('common.share')}</span>
               </Button>
+              )}
               {event?.status === 'PUBLISHED' && (
                 <Button
                   onClick={goToChat}

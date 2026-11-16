@@ -2702,6 +2702,7 @@
       "select": "Elige tus entradas",
       "pay": "Pagar {{amount}}",
       "confirming": "Pago recibido: tus entradas aparecerán en «Mis entradas» en unos instantes.",
+      "recovered": "Pago confirmado: tus entradas están disponibles en «Mis entradas» y te las hemos enviado por correo.",
       "stockChanged": "Las plazas disponibles han cambiado: revisa tu selección."
     },
     "event": {

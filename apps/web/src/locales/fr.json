@@ -2702,6 +2702,7 @@
       "select": "Choisissez vos billets",
       "pay": "Payer {{amount}}",
       "confirming": "Paiement reçu : vos billets apparaîtront dans « Mes billets » dans quelques instants.",
+      "recovered": "Paiement confirmé : vos billets sont disponibles dans « Mes billets » et vous ont été envoyés par e-mail.",
       "stockChanged": "Les places disponibles ont changé : vérifiez votre sélection."
     },
     "event": {

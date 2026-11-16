@@ -75,12 +75,22 @@ export function TicketPurchaseSheet({ event, open, onClose }: { event: { id: str
       await openFedapayCheckout(tx, {
         onDismissed: () => { toast.error(t('payment.toasts.cancelled')); setPaying(false) },
         onCompleted: async () => {
-          try {
-            await apiClient.post('/payments/sync-missed', { eventId: event.id, transactionId: tx.transactionId })
-          } catch {
-            // Le webhook FedaPay confirmera la commande : les billets apparaîtront dans « Mes billets »
-            toast.info(t('ticketing.purchase.confirming'))
+          // FedaPay peut approuver le paiement quelques dizaines de secondes APRÈS la fermeture de
+          // la fenêtre (constaté : ~1 min en SBIN). On réessaie donc tant que le paiement est « en
+          // attente » ; au-delà, le serveur confirme seul (webhook, cron, ou ouverture de la fiche).
+          const delays = [0, 3000, 6000, 10000]
+          let confirmed = false
+          for (const ms of delays) {
+            if (ms) await new Promise((r) => setTimeout(r, ms))
+            try {
+              await apiClient.post('/payments/sync-missed', { eventId: event.id, transactionId: tx.transactionId })
+              confirmed = true
+              break
+            } catch (err: any) {
+              if (err?.response?.data?.code !== 'PAYMENT_PENDING') break
+            }
           }
+          if (!confirmed) toast.info(t('ticketing.purchase.confirming'))
           finish(tx.amount, tx.ticketCount ?? count)
         },
       })

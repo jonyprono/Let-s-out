@@ -77,7 +77,9 @@ export interface FedapayTransaction {
 
 export function parseFedapayMetadata(tx: any): Record<string, any> {
   try {
-    const raw = tx?.metadata ?? tx?.custom_metadata ?? {}
+    // `metadata` est réécrit par FedaPay (données internes) : nos données éventuelles sont dans
+    // `custom_metadata`. La source de vérité reste la commande enregistrée (PaymentIntent).
+    const raw = tx?.custom_metadata ?? tx?.metadata ?? {}
     const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
     return parsed && typeof parsed === 'object' ? parsed : {}
   } catch {

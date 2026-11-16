@@ -2698,6 +2698,7 @@
       "select": "Choose your tickets",
       "pay": "Pay {{amount}}",
       "confirming": "Payment received: your tickets will appear in “My tickets” in a few moments.",
+      "recovered": "Payment confirmed: your tickets are available in “My tickets” and have been emailed to you.",
       "stockChanged": "Available seats have changed: please check your selection."
     },
     "event": {

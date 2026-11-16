@@ -191,6 +191,32 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       return reply.code(500).send({ error: `No transaction id found. FedaPay response: ${JSON.stringify(txData)}` })
     }
 
+    // Commande enregistrée CHEZ NOUS avant tout paiement : FedaPay ne conserve pas nos métadonnées,
+    // c'est donc ce rattachement qui permet au webhook / sync-missed / cron d'émettre les billets.
+    // Sans lui, aucun paiement ne doit être ouvert (l'argent serait encaissé sans commande).
+    try {
+      await app.prisma.paymentIntent.upsert({
+        where: { providerTransactionId: String(transactionId) },
+        create: {
+          providerTransactionId: String(transactionId),
+          userId: sub,
+          eventId,
+          amount: finalAmount,
+          payload: {
+            poolValidationStatus: poolValidationStatus ?? null,
+            delegatedToId: delegatedToId ?? null,
+            isAnonymous: !!isAnonymous,
+            isNonParticipantDonation: !!isNonParticipantDonation,
+            ...(ticketOrder ? { ticketLines: ticketOrderLines(ticketOrder) } : {}),
+          } as Record<string, unknown> as any,
+        },
+        update: {},
+      })
+    } catch (e) {
+      app.log.error({ err: e, transactionId }, '[FedaPay] Commande non enregistrée — paiement non ouvert')
+      return reply.code(500).send({ error: 'Impossible de préparer le paiement. Réessayez.' })
+    }
+
     const tokenRes = await fetch(
       `${baseUrl}/transactions/${transactionId}/token`,
       { method: 'POST', headers: { Authorization: `Bearer ${process.env.FEDAPAY_SECRET_KEY}` } },
@@ -253,26 +279,19 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       // 5xx → FedaPay renverra le webhook plus tard
       return reply.code(e instanceof FedapayError && e.status === 404 ? 200 : 502).send({ received: false })
     }
-    if (!FEDAPAY_APPROVED_STATUSES.includes(tx.status)) return reply.send({ received: true, status: tx.status })
+    if (!FEDAPAY_APPROVED_STATUSES.includes(tx.status)) {
+      await markIntentChecked(app, tx.id, tx.status)
+      return reply.send({ received: true, status: tx.status })
+    }
 
-    const meta = tx.metadata
-    if (!meta.eventId || !meta.userId) {
-      app.log.warn({ txId }, '[FedaPay webhook] eventId ou userId absent des métadonnées')
+    const order = await resolveFedapayOrder(app, tx)
+    if (!order) {
+      app.log.error({ txId }, '[FedaPay webhook] Transaction APPROUVÉE sans commande connue (ni enregistrée, ni en métadonnées)')
       return reply.send({ received: true })
     }
 
     try {
-      const res = await handleConfirmedBooking(app, {
-        eventId: meta.eventId,
-        userId: meta.userId,
-        amount: tx.amount,
-        poolValidationStatus: meta.poolValidationStatus,
-        delegatedToId: meta.delegatedToId,
-        isAnonymous: !!meta.isAnonymous,
-        isNonParticipantDonation: !!meta.isNonParticipantDonation,
-        providerTransactionId: tx.id,
-        ticketLines: normalizeOrderLines(meta.ticketLines) ?? undefined,
-      })
+      const res = await confirmFedapayOrder(app, tx, order)
       return reply.send({ received: true, alreadyProcessed: !!(res as any)?.alreadyProcessed })
     } catch (e) {
       app.log.error({ err: e, txId }, '[FedaPay webhook] Échec de la confirmation')
@@ -298,32 +317,36 @@ export default async function paymentsRoutes(app: FastifyInstance) {
       return reply.code(502).send({ error: 'Erreur de synchronisation' })
     }
 
-    const meta = tx.metadata
-    if (meta.userId !== sub || meta.eventId !== eventId) {
-      app.log.warn({ sub, eventId, txId: tx.id }, '[sync-missed] Transaction n’appartenant pas à cet utilisateur / événement')
+    // Propriété vérifiée sur la commande enregistrée à l'initiate (FedaPay ne garde pas nos métadonnées)
+    const order = await resolveFedapayOrder(app, tx)
+    if (!order || order.userId !== sub || order.eventId !== eventId) {
+      app.log.warn({ sub, eventId, txId: tx.id, known: !!order }, '[sync-missed] Transaction n’appartenant pas à cet utilisateur / événement')
       return reply.code(403).send({ error: 'Transaction non autorisée' })
     }
     if (!FEDAPAY_APPROVED_STATUSES.includes(tx.status)) {
-      return reply.code(409).send({ error: 'Paiement non confirmé', status: tx.status })
+      await markIntentChecked(app, tx.id, tx.status)
+      return reply.code(409).send({ error: 'Paiement non confirmé', status: tx.status, code: 'PAYMENT_PENDING' })
     }
 
     try {
-      const res = await handleConfirmedBooking(app, {
-        eventId,
-        userId: sub,
-        amount: tx.amount,
-        poolValidationStatus: meta.poolValidationStatus,
-        delegatedToId: meta.delegatedToId,
-        isAnonymous: !!meta.isAnonymous,
-        isNonParticipantDonation: !!meta.isNonParticipantDonation,
-        providerTransactionId: tx.id,
-        ticketLines: normalizeOrderLines(meta.ticketLines) ?? undefined,
-      })
+      const res = await confirmFedapayOrder(app, tx, order)
       return reply.send({ success: true, alreadyProcessed: !!(res as any)?.alreadyProcessed, message: 'Paiement synchronisé' })
     } catch (e: any) {
       app.log.error(e)
       return reply.code(500).send({ error: 'Erreur de synchronisation' })
     }
+  })
+
+  // Rattrapage automatique à l'ouverture d'un événement : commandes FedaPay EN ATTENTE de
+  // l'utilisateur pour cet événement (ex. paiement approuvé après la fermeture de la fenêtre,
+  // app quittée, webhook en retard). Aucune requête FedaPay s'il n'y a rien en attente.
+  app.post('/sync-pending', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { eventId } = (req.body ?? {}) as { eventId?: string }
+    if (!eventId) return reply.code(400).send({ error: 'eventId requis' })
+    const results = await reconcilePaymentIntents(app, new Date(), { userId: sub, eventId, limit: 5 })
+    const processed = results.filter((r) => r.outcome === 'processed').length
+    return reply.send({ processed, pending: results.filter((r) => r.outcome === 'pending').length })
   })
 
   // DEV / SANDBOX : confirmer manuellement (simule le webhook)
@@ -483,6 +506,113 @@ async function prepareTicketOrder(
   if (!lines) return { ok: false, status: 400, code: 'TICKET_SELECTION_REQUIRED', error: 'Choisissez au moins un billet.' }
   const { maxPerOrder } = await getTicketingConfig(app.prisma)
   return priceOrder(app.prisma, event.id, lines, maxPerOrder)
+}
+
+// ── Commandes FedaPay : rattachement transaction → commande, confirmation, rattrapage ──────
+type FedapayTx = Awaited<ReturnType<typeof getFedapayTransaction>>
+type ResolvedOrder = Omit<ConfirmArgs, 'amount' | 'providerTransactionId'> & { source: 'intent' | 'metadata' }
+
+/** Statuts FedaPay définitifs sans paiement : la commande est close */
+const FEDAPAY_CLOSED_STATUSES = ['declined', 'canceled', 'cancelled', 'expired', 'refunded']
+
+/** Fenêtre de rattrapage automatique des commandes en attente (réglage admin, heures) */
+export const PAYMENT_INTENT_WINDOW = { key: 'PAYMENT_INTENT_RECONCILE_HOURS', fallback: 72 } as const
+
+/**
+ * Retrouve la commande d'une transaction FedaPay :
+ * 1. la commande enregistrée à l'initiate (source de vérité) ;
+ * 2. sinon les métadonnées FedaPay (anciennes transactions, si FedaPay les a gardées).
+ */
+async function resolveFedapayOrder(app: FastifyInstance, tx: FedapayTx): Promise<ResolvedOrder | null> {
+  const intent = await app.prisma.paymentIntent.findUnique({ where: { providerTransactionId: String(tx.id) } })
+  const src: any = intent ? { ...(intent.payload as object), userId: intent.userId, eventId: intent.eventId } : tx.metadata
+  if (!src?.eventId || !src?.userId) return null
+  return {
+    source: intent ? 'intent' : 'metadata',
+    eventId: String(src.eventId),
+    userId: String(src.userId),
+    poolValidationStatus: src.poolValidationStatus ?? undefined,
+    delegatedToId: src.delegatedToId ?? undefined,
+    isAnonymous: !!src.isAnonymous,
+    isNonParticipantDonation: !!src.isNonParticipantDonation,
+    ticketLines: normalizeOrderLines(src.ticketLines) ?? undefined,
+  }
+}
+
+/** Confirme une transaction APPROUVÉE (idempotent : providerTransactionId unique) et clôt sa commande */
+async function confirmFedapayOrder(app: FastifyInstance, tx: FedapayTx, order: ResolvedOrder) {
+  const { source: _source, ...args } = order
+  const res = await handleConfirmedBooking(app, { ...args, amount: tx.amount, providerTransactionId: String(tx.id) })
+  await app.prisma.paymentIntent.updateMany({
+    where: { providerTransactionId: String(tx.id), status: { not: 'PROCESSED' } },
+    data: { status: 'PROCESSED', providerStatus: tx.status, processedAt: new Date(), lastCheckedAt: new Date() },
+  })
+  return res
+}
+
+/** Mémorise le dernier statut FedaPay d'une commande non approuvée (close si statut définitif) */
+async function markIntentChecked(app: FastifyInstance, txId: string, providerStatus: string) {
+  const closed = FEDAPAY_CLOSED_STATUSES.includes(providerStatus)
+  await app.prisma.paymentIntent.updateMany({
+    where: { providerTransactionId: String(txId), status: 'PENDING' },
+    data: { providerStatus, lastCheckedAt: new Date(), attempts: { increment: 1 }, ...(closed ? { status: 'CLOSED' } : {}) },
+  }).catch(() => {})
+}
+
+/**
+ * Rattrapage : relit chez FedaPay les commandes EN ATTENTE (fenêtre PAYMENT_INTENT_RECONCILE_HOURS)
+ * et confirme celles qui ont été payées — billets, e-mail, notifications. Utilisé par le cron
+ * (toutes les commandes) et par /sync-pending (celles d'un utilisateur pour un événement).
+ * Ne dépend ni du webhook, ni de l'app restée ouverte.
+ */
+export async function reconcilePaymentIntents(
+  app: FastifyInstance,
+  now: Date = new Date(),
+  filter: { userId?: string; eventId?: string; limit?: number } = {},
+): Promise<Array<{ transactionId: string; outcome: 'processed' | 'pending' | 'closed' | 'error' }>> {
+  const row = await app.prisma.systemSetting.findUnique({ where: { key: PAYMENT_INTENT_WINDOW.key } })
+  const hours = row && Number(row.value) > 0 ? Number(row.value) : PAYMENT_INTENT_WINDOW.fallback
+  const intents = await app.prisma.paymentIntent.findMany({
+    where: {
+      status: 'PENDING',
+      createdAt: { gte: new Date(now.getTime() - hours * 3600_000) },
+      ...(filter.userId ? { userId: filter.userId } : {}),
+      ...(filter.eventId ? { eventId: filter.eventId } : {}),
+    },
+    orderBy: { createdAt: 'asc' },
+    take: filter.limit ?? 50,
+  })
+  const results: Array<{ transactionId: string; outcome: 'processed' | 'pending' | 'closed' | 'error' }> = []
+  for (const intent of intents) {
+    const transactionId = intent.providerTransactionId
+    try {
+      const tx = await getFedapayTransaction(transactionId)
+      if (FEDAPAY_APPROVED_STATUSES.includes(tx.status)) {
+        const order = await resolveFedapayOrder(app, tx)
+        if (!order) throw new Error('ORDER_NOT_FOUND')
+        await confirmFedapayOrder(app, tx, order)
+        app.log.info({ transactionId, eventId: intent.eventId }, '[FedaPay] Commande en attente confirmée par rattrapage')
+        results.push({ transactionId, outcome: 'processed' })
+      } else {
+        await markIntentChecked(app, transactionId, tx.status)
+        results.push({ transactionId, outcome: FEDAPAY_CLOSED_STATUSES.includes(tx.status) ? 'closed' : 'pending' })
+      }
+    } catch (e: any) {
+      if (e instanceof FedapayError && e.status === 404) {
+        await markIntentChecked(app, transactionId, 'not_found')
+        await app.prisma.paymentIntent.updateMany({ where: { providerTransactionId: transactionId, status: 'PENDING' }, data: { status: 'CLOSED' } })
+        results.push({ transactionId, outcome: 'closed' })
+        continue
+      }
+      app.log.error({ err: e, transactionId }, '[FedaPay] Rattrapage de la commande impossible (nouvel essai au prochain passage)')
+      await app.prisma.paymentIntent.updateMany({
+        where: { providerTransactionId: transactionId, status: 'PENDING' },
+        data: { attempts: { increment: 1 }, lastCheckedAt: new Date() },
+      }).catch(() => {})
+      results.push({ transactionId, outcome: 'error' })
+    }
+  }
+  return results
 }
 
 /**
