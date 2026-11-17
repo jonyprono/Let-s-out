@@ -1,5 +1,5 @@
 import { format } from 'date-fns'
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { Share2, MessageCircle, Star, Heart } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { optimizeImageUrl } from '@/lib/cloudinary-image'
@@ -91,15 +91,32 @@ function FeedInteractionBar({
   const [optimisticAction, setOptimisticAction] = useState<{ emoji: string | null, diff: number } | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Résumé fourni par la liste (GET /events) : aucune requête par carte tant que l'utilisateur
+  // n'a pas réagi sur CETTE carte. Après une réaction, la carte relit ses propres réactions.
+  const [interacted, setInteracted] = useState(false)
+  const summary = event.reactionSummary
+  const summaryData = useMemo(() => {
+    if (!summary) return undefined
+    const out: Record<string, { count: number; users: { id: string }[] }> = {}
+    for (const [emoji, count] of Object.entries(summary.counts)) {
+      out[emoji] = { count, users: summary.myEmoji === emoji && currentUser ? [{ id: currentUser.id }] : [] }
+    }
+    return out
+  }, [summary, currentUser])
+
+  const reactionsKey = ['events', event.id, 'reactions'] as const
+  const fetchReactions = async () => {
+    const res = await apiClient.get<{ data: Record<string, { count: number; users: any[] }> }>(
+      `/events/${event.id}/reactions`
+    )
+    return res.data.data
+  }
+
   // Fetch live reaction counts for this event card
-  const { data: reactionsData } = useQuery({
-    queryKey: ['events', event.id, 'reactions'],
-    queryFn: async () => {
-      const res = await apiClient.get<{ data: Record<string, { count: number; users: any[] }> }>(
-        `/events/${event.id}/reactions`
-      )
-      return res.data.data
-    },
+  const { data: fetchedReactions } = useQuery({
+    enabled: !summary || interacted,
+    queryKey: reactionsKey,
+    queryFn: fetchReactions,
     initialData: () => {
       const init = (event.reactions ?? []).reduce(
         (acc: Record<string, { count: number; users: any[] }>, r: { emoji: string }) => {
@@ -115,6 +132,7 @@ function FeedInteractionBar({
     retry: 1,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   })
+  const reactionsData = summary && !interacted ? summaryData : fetchedReactions
 
   const totalReactions =
     reactionsData
@@ -142,7 +160,14 @@ function FeedInteractionBar({
       })
     },
     onSettled: async () => {
-      await qc.invalidateQueries({ queryKey: ['events', event.id, 'reactions'] })
+      if (summary && !interacted) {
+        // Résumé de la liste → données en direct pour CETTE carte uniquement : on les charge
+        // AVANT de basculer (sinon le compteur clignoterait pendant le chargement).
+        await qc.fetchQuery({ queryKey: reactionsKey, queryFn: fetchReactions, staleTime: 0 }).catch(() => {})
+        setInteracted(true)
+      } else {
+        await qc.invalidateQueries({ queryKey: reactionsKey })
+      }
       // Clear optimistic state ONLY AFTER the fresh reactions data has been fetched
       setOptimisticAction(null)
     },

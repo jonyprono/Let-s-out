@@ -10,6 +10,16 @@ import { checkInTicket, ensureTicketToken, parseTicketPayload, ticketQrPayload, 
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 
+/**
+ * Champs d'un utilisateur visibles PUBLIQUEMENT (réactions, commentaires, médias d'événement).
+ * SÉCURITÉ : ne jamais renvoyer l'enregistrement complet (include: { user: true } / profile: true) —
+ * il contient e-mail, téléphone, hash du mot de passe et du PIN Wallet, pièces KYC, position GPS.
+ */
+const PUBLIC_USER_SELECT = {
+  id: true,
+  profile: { select: { username: true, displayName: true, avatarUrl: true } },
+} as const
+
 const CreateEventSchema = z.object({
   title: z.string().min(3).max(100),
   description: z.string().min(3).max(5000),
@@ -426,14 +436,42 @@ export default async function eventsRoutes(app: FastifyInstance) {
       skip: Number(offset),
     })
 
-    const total = await app.prisma.event.count({
-      where: {
-        ...whereClause,
-        creator: { deletedAt: null, isActive: true },
-      },
-    })
+    const viewerId = (req.user as any)?.sub as string | undefined
+    const eventIds = events.map((e) => e.id)
+    const [total, reactionGroups, myReactions] = await Promise.all([
+      app.prisma.event.count({
+        where: {
+          ...whereClause,
+          creator: { deletedAt: null, isActive: true },
+        },
+      }),
+      // Compteurs de réactions de TOUTE la page en 1 requête (avant : 1 requête /reactions par carte)
+      eventIds.length
+        ? app.prisma.eventReaction.groupBy({
+            by: ['eventId', 'emoji'],
+            where: { eventId: { in: eventIds }, user: { deletedAt: null, isActive: true } },
+            _count: { _all: true },
+          })
+        : Promise.resolve([] as Array<{ eventId: string; emoji: string; _count: { _all: number } }>),
+      viewerId && eventIds.length
+        ? app.prisma.eventReaction.findMany({ where: { userId: viewerId, eventId: { in: eventIds } }, select: { eventId: true, emoji: true } })
+        : Promise.resolve([] as Array<{ eventId: string; emoji: string }>),
+    ])
 
-    return reply.send({ data: events, total })
+    const countsByEvent = new Map<string, Record<string, number>>()
+    for (const g of reactionGroups) {
+      const counts = countsByEvent.get(g.eventId) ?? {}
+      counts[g.emoji] = g._count._all
+      countsByEvent.set(g.eventId, counts)
+    }
+    const myEmojiByEvent = new Map(myReactions.map((r) => [r.eventId, r.emoji]))
+    const data = events.map((e) => ({
+      ...e,
+      // Résumé des réactions (même règle que GET /:id/reactions : comptes supprimés exclus)
+      reactionSummary: { counts: countsByEvent.get(e.id) ?? {}, myEmoji: myEmojiByEvent.get(e.id) ?? null },
+    }))
+
+    return reply.send({ data, total })
   })
 
   // ─── VALIDATEURS (Cagnotte) ───────────────────────────────────────────────
@@ -2016,7 +2054,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
           // Exclude reactions from deleted accounts
           user: { deletedAt: null, isActive: true },
         },
-        include: { user: { include: { profile: true } } }
+        include: { user: { select: PUBLIC_USER_SELECT } }
       })
 
       const grouped = reactions.reduce((acc: any, r: any) => {
@@ -2046,7 +2084,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const comment = await app.prisma.eventComment.create({
       data: { userId, eventId, content: content.trim() },
-      include: { user: { include: { profile: true } } }
+      include: { user: { select: PUBLIC_USER_SELECT } }
     })
     return reply.send({ data: comment })
   })
@@ -2060,7 +2098,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
         user: { deletedAt: null, isActive: true },
       },
       orderBy: { createdAt: 'desc' },
-      include: { user: { include: { profile: true } } }
+      include: { user: { select: PUBLIC_USER_SELECT } }
     })
     return reply.send({ data: comments })
   })
@@ -2097,7 +2135,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
       orderBy: { createdAt: 'desc' },
       take: 20,
       include: {
-        user: { include: { profile: true } },
+        user: { select: PUBLIC_USER_SELECT },
         event: { select: { id: true, title: true, coverUrl: true } }
       }
     })
@@ -2132,7 +2170,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
       const media = await app.prisma.eventMedia.create({
         data: { eventId, uploadedBy: userId, type, url },
-        include: { user: { include: { profile: true } } }
+        include: { user: { select: PUBLIC_USER_SELECT } }
       })
 
       return reply.send({ data: media })

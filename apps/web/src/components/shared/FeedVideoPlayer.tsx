@@ -234,7 +234,7 @@ export function FeedVideoPlayer({
       {/* Center Play Button Overlay (visible when paused) */}
       {!isPlaying && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center text-white border border-white/20 shadow-xl transition-transform transform scale-100 group-hover:scale-105">
+          <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-black/70 flex items-center justify-center text-white border border-white/20 shadow-xl transition-transform transform scale-100 group-hover:scale-105">
             <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white ml-0.5" />
           </div>
         </div>
@@ -244,7 +244,7 @@ export function FeedVideoPlayer({
       <button
         type="button"
         onClick={toggleMute}
-        className="absolute top-2.5 left-2.5 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-black/80 active:scale-90 transition-all shadow-md"
+        className="absolute top-2.5 left-2.5 z-20 w-8 h-8 rounded-full bg-black/70 border border-white/20 text-white flex items-center justify-center hover:bg-black/80 active:scale-90 transition-all shadow-md"
         title={isMuted ? 'Activer le son' : 'Couper le son'}
       >
         {isMuted ? (
@@ -350,7 +350,7 @@ export function FeedVideoPlayer({
             e.stopPropagation();
             onExpand();
           }}
-          className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1.5 active:scale-95 transition-all shadow-md hover:bg-black/80"
+          className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1 rounded-full bg-black/70 border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1.5 active:scale-95 transition-all shadow-md hover:bg-black/80"
         >
           <Maximize className="w-3 h-3" />
           <span>Agrandir</span>

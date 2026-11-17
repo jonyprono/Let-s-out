@@ -169,9 +169,12 @@ button, [role="button"], a {
    `transition-colors` → toutes les fenêtres fixed de l'app y étaient enfermées, ce qui
    sur iOS (défilement composité) les rognait/décalait avec le fil (fiche commentaires
    invisible). Cela créait aussi une couche GPU par élément animé (mémoire iOS). */
+/* [class*="active:scale"] a été RETIRÉ à son tour : toutes les cartes du fil portent
+   `active:scale-[0.98]` → 203 éléments forcés en calques GPU permanents sur l'accueil (mesuré),
+   à recomposer à chaque image du défilement. L'effet d'appui (scale au toucher) reste identique :
+   le navigateur crée le calque seulement pendant l'animation. */
 .animate-spin,
-.animate-pulse,
-[class*="active:scale"] {
+.animate-pulse {
   will-change: transform;
 }
 

@@ -50,6 +50,33 @@ async function getDetailedStats(app: FastifyInstance, userId: string) {
   };
 }
 
+/**
+ * SÉCURITÉ — champs d'un profil visibles par un AUTRE membre (profil, recherche).
+ * Liste blanche : tout champ ajouté au modèle Profile reste privé tant qu'il n'est pas listé ici.
+ * Jamais : pièces / selfies / numéro / identité KYC, date de naissance, genre, position GPS.
+ */
+const PUBLIC_PROFILE_FIELDS = [
+  'id', 'userId', 'username', 'displayName', 'bio', 'avatarUrl', 'coverUrl', 'city', 'country',
+  'interests', 'isPublic', 'followersCount', 'followingCount', 'eventsCount', 'createdAt',
+  'kycStatus', 'reliabilityScore',
+] as const
+
+/** Pièces KYC : jamais renvoyées par les routes de profil, même à leur propriétaire */
+const KYC_DOCUMENT_FIELDS = ['kycIdNumber', 'kycIdFront', 'kycIdBack', 'kycSelfie', 'kycSelfieWithId'] as const
+
+/** Profil tel que renvoyé : un tiers ne reçoit que la liste blanche ; le propriétaire
+ *  garde ses propres données (prénom, date de naissance…) sauf les pièces KYC. */
+function toVisibleProfile<T extends Record<string, any>>(profile: T, isOwner: boolean, extra: Record<string, any> = {}) {
+  const out: Record<string, any> = {}
+  if (isOwner) {
+    for (const [k, v] of Object.entries(profile)) if (!(KYC_DOCUMENT_FIELDS as readonly string[]).includes(k)) out[k] = v
+  } else {
+    for (const k of PUBLIC_PROFILE_FIELDS) if (k in profile) out[k] = profile[k]
+  }
+  if ('user' in profile) out.user = profile.user // relation déjà limitée par son `select`
+  return { ...out, ...extra }
+}
+
 export default async function usersRoutes(app: FastifyInstance) {
   // All routes require authentication
   app.addHook('preHandler', app.authenticate)
@@ -118,7 +145,7 @@ export default async function usersRoutes(app: FastifyInstance) {
       where: { OR: [{ initiatorId: userId }, { receiverId: userId }], status: 'ACCEPTED' }
     })
 
-    return reply.send({ ...profile, friendshipStatus, isFollowing, commonEventsCount, detailedStats, friendsCount })
+    return reply.send(toVisibleProfile(profile, profile.userId === sub, { friendshipStatus, isFollowing, commonEventsCount, detailedStats, friendsCount }))
   })
 
   // Get user profile by username
@@ -195,7 +222,7 @@ export default async function usersRoutes(app: FastifyInstance) {
       where: { OR: [{ initiatorId: userId }, { receiverId: userId }], status: 'ACCEPTED' }
     })
 
-    return reply.send({ ...profile, friendshipStatus, isFollowing, commonEventsCount, detailedStats, friendsCount })
+    return reply.send(toVisibleProfile(profile, userId === sub, { friendshipStatus, isFollowing, commonEventsCount, detailedStats, friendsCount }))
   })
 
   // Update own profile
@@ -705,6 +732,8 @@ export default async function usersRoutes(app: FastifyInstance) {
       },
       take: Number(limit) * 2, // Take more to account for filtered out users
       skip: Number(offset),
+      // SÉCURITÉ : liste blanche (avant : profil complet → pièces KYC, GPS, date de naissance)
+      select: Object.fromEntries(PUBLIC_PROFILE_FIELDS.map((k) => [k, true])) as Record<(typeof PUBLIC_PROFILE_FIELDS)[number], true>,
     })
 
     // Filter out users who have blocked the current user or whom the current user has blocked

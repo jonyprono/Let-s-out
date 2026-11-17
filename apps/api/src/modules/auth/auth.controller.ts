@@ -30,6 +30,25 @@ import {
 } from '../../services/signup-policy.service'
 import bcrypt from 'bcryptjs'
 
+/**
+ * SÉCURITÉ — utilisateur renvoyé à l'app (connexion, inscription, /auth/me) : stocké dans la session
+ * de l'appareil, il ne doit contenir AUCUN secret : ni hash de mot de passe / PIN Wallet (un PIN court
+ * se retrouve hors ligne à partir de son hash, sans le blocage après essais), ni consigne des bots,
+ * ni pièces KYC (photos / numéro). L'app lit l'état du PIN via /wallet/pin, pas ici.
+ */
+const PRIVATE_USER_FIELDS = ['passwordHash', 'walletPinHash', 'walletPinSalt', 'walletPinAttempts', 'walletPinLockedUntil', 'botPrompt'] as const
+const KYC_DOCUMENT_FIELDS = ['kycIdNumber', 'kycIdFront', 'kycIdBack', 'kycSelfie', 'kycSelfieWithId'] as const
+export function toSafeUser<T extends Record<string, any>>(user: T): Record<string, any> {
+  const out: Record<string, any> = { ...user }
+  for (const k of PRIVATE_USER_FIELDS) delete out[k]
+  if (out.profile && typeof out.profile === 'object') {
+    const profile = { ...out.profile }
+    for (const k of KYC_DOCUMENT_FIELDS) delete profile[k]
+    out.profile = profile
+  }
+  return out
+}
+
 export class AuthController {
   private service: AuthService
 
@@ -157,7 +176,7 @@ export class AuthController {
       accessToken,
       refreshToken,
       isNewUser: true,
-      user: { ...user, passwordHash: undefined },
+      user: toSafeUser(user),
     })
   }
 
@@ -352,7 +371,7 @@ export class AuthController {
         maxAge: 30 * 24 * 60 * 60,
       })
 
-      return reply.code(201).send({ accessToken, refreshToken, user: { ...user, passwordHash: undefined } })
+      return reply.code(201).send({ accessToken, refreshToken, user: toSafeUser(user) })
     } catch (err: any) {
       if (err.message === 'USER_ALREADY_EXISTS') {
         return reply.code(409).send({ error: 'User already exists' })
@@ -424,7 +443,7 @@ export class AuthController {
       maxAge: 30 * 24 * 60 * 60,
     })
 
-    return reply.send({ accessToken, refreshToken, user: { ...user, passwordHash: undefined } })
+    return reply.send({ accessToken, refreshToken, user: toSafeUser(user) })
   }
 
   async refresh(req: FastifyRequest, reply: FastifyReply) {
@@ -538,7 +557,7 @@ export class AuthController {
       include: { profile: true, badges: true },
     })
     if (!user) return reply.code(404).send({ error: 'User not found' })
-    return reply.send({ ...user, passwordHash: undefined })
+    return reply.send(toSafeUser(user))
   }
 
   async resetPassword(req: FastifyRequest, reply: FastifyReply) {
@@ -814,7 +833,7 @@ export class AuthController {
       accessToken,
       refreshToken,
       isNewUser: false,
-      user: { ...user, passwordHash: undefined },
+      user: toSafeUser(user),
     })
   }
 

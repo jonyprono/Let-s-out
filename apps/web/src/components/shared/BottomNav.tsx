@@ -55,7 +55,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="w-full flex flex-col items-center flex-shrink-0 bg-white/75 dark:bg-[#1A1A1A]/85 backdrop-blur-[25px] border-t border-black/30 dark:border-white/10 z-50 transition-colors"
+      className="w-full flex flex-col items-center flex-shrink-0 bg-white/95 dark:bg-[#1A1A1A]/95 border-t border-black/30 dark:border-white/10 z-50 transition-colors"
       style={{
         height: 'calc(62px + env(safe-area-inset-bottom))',
         padding: '12px 16px',
