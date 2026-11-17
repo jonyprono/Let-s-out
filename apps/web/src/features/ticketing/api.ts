@@ -81,6 +81,18 @@ export function ticketShareUrl(token: string) {
   return `${abs}/tickets/${encodeURIComponent(token)}/view`
 }
 
+/**
+ * Règle UNIQUE d'affichage de « Mon billet / Mes billets » : billetterie ouverte sur l'événement
+ * ET réservation confirmée avec au moins un billet réellement émis. Une simple participation
+ * (gratuite, ou antérieure à l'ouverture de la billetterie) n'a pas de billet → pas de bouton.
+ */
+export function hasRealTickets(
+  event: { ticketingEnabled?: boolean | null } | null | undefined,
+  booking: { status?: string; ticketsCount?: number } | null | undefined,
+): boolean {
+  return !!event?.ticketingEnabled && booking?.status === 'CONFIRMED' && (booking.ticketsCount ?? 0) > 0
+}
+
 export const ticketingApi = {
   publicTiers: (eventId: string) => apiClient.get<PublicTiers>(`/events/${eventId}/ticket-tiers`).then((r) => r.data),
   myTickets: (eventId: string) => apiClient.get<MyTickets>(`/events/${eventId}/my-tickets`).then((r) => r.data),

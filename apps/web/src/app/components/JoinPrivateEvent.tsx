@@ -200,8 +200,8 @@ export function JoinPrivateEvent() {
     return (
       <div className="fixed inset-0 z-[100] flex flex-col bg-transparent">
         <div className="absolute top-0 left-0 right-0 px-6 pt-safe-6 pb-6 flex justify-between items-center z-10" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)' }}>
-          <button onClick={stopScan} className="w-10 h-10 bg-[#F5F5F5] dark:bg-[#222222] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <ChevronLeft className="w-6 h-6 text-gray-800 dark:text-gray-200" strokeWidth={2.5} />
+          <button onClick={stopScan} aria-label={t('joinPrivateEvent.annuler')} className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center active:scale-95 transition-transform">
+            <ChevronLeft className="w-6 h-6 text-gray-800" strokeWidth={2.5} aria-hidden="true" />
           </button>
           <span className="text-white font-bold"><span>{t('joinPrivateEvent.scannerLeCodeQr')}</span></span>
           <div className="w-10" />
@@ -222,7 +222,8 @@ export function JoinPrivateEvent() {
 
         <div className="p-8 text-center bg-black/80 pb-12 z-10">
           <p className="text-white text-sm mb-6"><span>{t('joinPrivateEvent.placezLeQrCodeAu')}</span></p>
-          <button onClick={stopScan} className="px-6 py-3 bg-white dark:bg-[#1A1A1A]/20 rounded-full text-white font-bold">
+          {/* Mode scan uniquement : fond orange plein + texte blanc (avant : texte blanc sur fond blanc en thème clair) */}
+          <button onClick={stopScan} className="px-8 py-3 bg-[#FF7A00] rounded-full text-white font-bold shadow-lg shadow-black/40 ring-1 ring-white/25 active:scale-95 transition-transform">
             <span>{t('joinPrivateEvent.annuler')}</span>
           </button>
         </div>

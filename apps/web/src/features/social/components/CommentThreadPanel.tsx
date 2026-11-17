@@ -129,16 +129,27 @@ export function CommentThreadPanel({ source, enabled, authorUserId, moderatorUse
 
   const renderComment = (c: SocialComment, rootId: string, isReply: boolean) => {
     const name = displayNameOf(c.user)
+    // @pseudo affiché sous le nom (sauf s'il est identique au nom affiché)
+    const handle = c.user.profile?.username && c.user.profile.username !== name ? c.user.profile.username : null
     return (
       <div key={c.id} className="flex gap-3">
         <button type="button" onClick={() => openUserProfile(c.userId)} className="shrink-0" aria-label={name}>
           <Avatar comment={c} size={isReply ? 'sm' : 'md'} />
         </button>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5">
-            <button type="button" onClick={() => openUserProfile(c.userId)} className="font-semibold text-[13px] text-gray-900 dark:text-white truncate max-w-[60%]">
-              <span>{name}</span>
-            </button>
+          {/* Nom complet aligné à gauche, sur 2 lignes max, coupé uniquement entre les mots.
+              (Avant : `truncate max-w-[60%]` sur un <button> centré → nom rogné au début ET à la fin.) */}
+          <button
+            type="button"
+            onClick={() => openUserProfile(c.userId)}
+            className="block w-full min-w-0 text-left"
+          >
+            <span className="block font-semibold text-[13px] leading-snug text-gray-900 dark:text-white break-words line-clamp-2">{name}</span>
+            {handle && (
+              <span className="block text-[12px] leading-snug text-gray-400 truncate">{`@${handle}`}</span>
+            )}
+          </button>
+          <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
             {authorUserId && c.userId === authorUserId && (
               <span className="bg-[#FFF1E5] dark:bg-[#FF7A00]/20 text-[#FF7A00] text-[10px] font-bold px-1.5 py-0.5 rounded-sm"><span>{t('social.author')}</span></span>
             )}

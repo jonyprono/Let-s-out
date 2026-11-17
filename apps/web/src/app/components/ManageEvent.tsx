@@ -24,6 +24,7 @@ import { ShareViaChatModal } from '@/features/events/components/ShareViaChatModa
 import { eventsApi } from '@/features/events/api';
 import { Carousel, CarouselContent, CarouselItem } from '@/app/components/ui/carousel';
 import { TicketingManager } from '@/features/ticketing/components/TicketingManager';
+import { hasRealTickets } from '@/features/ticketing/api';
 
 import { dateLocale, intlLocale, currentLang } from '@/lib/locale';
 export function ManageEvent() {
@@ -111,7 +112,8 @@ export function ManageEvent() {
   const { t } = useTranslation();
   const [showTicket, setShowTicket] = useState(false);
   const isEventOrganizer = !!event && !!user && (event.creatorId === user.id || (event.coHostIds || []).includes(user.id));
-  const isTicketHolder = myBookingData?.status === 'CONFIRMED';
+  // « Mon billet » : billetterie ouverte ET au moins un billet réel (pas une simple participation gratuite)
+  const isTicketHolder = hasRealTickets(event, myBookingData);
 
   if (isLoading) {
     return <div className="w-full h-full flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]"><div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF7A00] animate-spin" /></div>;

@@ -57,7 +57,7 @@ import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
 import { TicketPurchaseSheet } from '@/features/ticketing/components/TicketPurchaseSheet'
 import { EventTicketingBlock } from '@/features/ticketing/components/EventTicketingBlock'
 import { MyTicketModal } from '@/features/events/components/MyTicketModal'
-import { ticketingKeys } from '@/features/ticketing/api'
+import { hasRealTickets, ticketingKeys } from '@/features/ticketing/api'
 import { apiClient } from '@/lib/api-client'
 import { JoinPendingScreen } from '@/app/components/JoinPendingScreen'
 
@@ -1023,7 +1023,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
                 /* ── BILLETTERIE MULTI-TARIFS ── */
                 <EventTicketingBlock
                   eventId={event.id}
-                  hasTickets={myBookingData?.status === 'CONFIRMED'}
+                  hasTickets={hasRealTickets(event, myBookingData)}
                   isEnded={isEventEnded}
                   onBuy={() => {
                     if (!user) { toast.error(t('eventDetails.toasts.loginToJoin')); navigate('/login'); return }
@@ -1071,7 +1071,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <>
               {/* Détenteur de billets : « Mes billets » toujours visible dans la barre du bas
                   (le partage reste disponible dans l'en-tête) */}
-              {event.ticketingEnabled && myBookingData?.status === 'CONFIRMED' ? (
+              {hasRealTickets(event, myBookingData) ? (
                 <Button
                   variant="outline"
                   onClick={() => setShowMyTickets(true)}

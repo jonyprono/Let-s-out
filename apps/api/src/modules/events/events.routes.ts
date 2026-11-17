@@ -859,10 +859,13 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const booking = await app.prisma.booking.findUnique({
       where: { userId_eventId: { userId: sub, eventId: id } },
+      include: { _count: { select: { tickets: true } } },
     })
 
     if (!booking) return reply.code(404).send({ error: 'No booking found' })
-    return reply.send(booking)
+    // ticketsCount : billets individuels réellement émis (billetterie). 0 = simple participation.
+    const { _count, ...rest } = booking
+    return reply.send({ ...rest, ticketsCount: _count.tickets })
   })
 
   // Upload event cover

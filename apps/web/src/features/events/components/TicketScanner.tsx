@@ -169,7 +169,8 @@ export function TicketScanner() {
         </div>
         <div className="p-8 text-center bg-black/80 z-10" style={{ paddingBottom: 'max(2rem, calc(env(safe-area-inset-bottom, 0px) + 1.5rem))' }}>
           <p className="text-white text-sm mb-6"><span>{t('tickets.aimAtTicket')}</span></p>
-          <button type="button" onClick={stopScan} className="px-6 py-3 bg-white/20 rounded-full text-white font-bold">
+          {/* Mode scan uniquement : même bouton contrasté que « Rejoindre un événement privé » */}
+          <button type="button" onClick={stopScan} className="px-8 py-3 bg-[#FF7A00] rounded-full text-white font-bold shadow-lg shadow-black/40 ring-1 ring-white/25 active:scale-95 transition-transform">
             <span>{t('tickets.cancel')}</span>
           </button>
         </div>
