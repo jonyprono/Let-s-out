@@ -617,6 +617,22 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
   const pausedUntil = useRef(0);
   const inView = useRef(true);
   const count = events.length;
+  // Largeur du carrousel mise en cache (mesurée au montage puis seulement si elle change) :
+  // plus aucune lecture de offsetWidth — donc aucune mise en page forcée — à chaque événement scroll.
+  const widthRef = useRef(0);
+  const indexRef = useRef(0);
+  const scrollRaf = useRef<number | null>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    widthRef.current = el.offsetWidth;
+    if (typeof ResizeObserver === 'undefined') return;
+    // Rappelé seulement quand la taille change (rotation, fenêtre) — jamais pendant le défilement
+    const ro = new ResizeObserver(() => { widthRef.current = el.offsetWidth; });
+    ro.observe(el);
+    return () => { ro.disconnect(); if (scrollRaf.current !== null) cancelAnimationFrame(scrollRaf.current); };
+  }, []);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -626,19 +642,34 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
     return () => io.disconnect();
   }, []);
 
+  /** Au plus 1 calcul par image ; un rendu seulement si la carte affichée change */
+  const handleCarouselScroll = useCallback(() => {
+    if (scrollRaf.current !== null) return;
+    scrollRaf.current = requestAnimationFrame(() => {
+      scrollRaf.current = null;
+      const el = scrollRef.current;
+      const step = widthRef.current * 0.85;
+      if (!el || step <= 0) return;
+      const idx = Math.min(Math.max(Math.round(el.scrollLeft / step), 0), Math.max(count - 1, 0));
+      if (idx !== indexRef.current) {
+        indexRef.current = idx;
+        setFeaturedIndex(idx);
+      }
+    });
+  }, [count]);
+
   useEffect(() => {
     if (count === 0) return;
     const interval = setInterval(() => {
       if (document.hidden || !inView.current || Date.now() < pausedUntil.current) return;
-      setFeaturedIndex(prev => {
-        const next = (prev + 1) % count;
-        const el = scrollRef.current;
-        if (el) {
-          // Dernier élément → retour au début ; sinon on avance d'une carte (~85 % de la largeur)
-          el.scrollTo({ left: next === 0 ? 0 : next * (el.offsetWidth * 0.85), behavior: 'smooth' });
-        }
-        return next;
-      });
+      const next = (indexRef.current + 1) % count;
+      const el = scrollRef.current;
+      if (el) {
+        // Dernier élément → retour au début ; sinon on avance d'une carte (~85 % de la largeur)
+        el.scrollTo({ left: next === 0 ? 0 : next * ((widthRef.current || el.offsetWidth) * 0.85), behavior: 'smooth' });
+      }
+      indexRef.current = next;
+      setFeaturedIndex(next);
     }, FEATURED_AUTOPLAY_MS);
     return () => clearInterval(interval);
   }, [count]);
@@ -653,11 +684,7 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
         style={{ scrollbarWidth: 'none' }}
         onTouchStart={pause}
         onPointerDown={pause}
-        onScroll={(e) => {
-          const el = e.currentTarget;
-          const idx = Math.round(el.scrollLeft / (el.offsetWidth * 0.85));
-          setFeaturedIndex(idx);
-        }}
+        onScroll={handleCarouselScroll}
       >
         {events.map(event => (
           <FeaturedCard key={event.id} event={event} onOpen={onOpen} />
