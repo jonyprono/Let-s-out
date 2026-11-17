@@ -707,18 +707,36 @@ export function Home({ userData, onNavigate }: HomeProps) {
   // ── En-tête qui se replie au défilement ──────────────────────────────
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const lastFeedScrollTop = useRef(0);
+  const headerCollapsedRef = useRef(false);
+  const feedScrollRaf = useRef<number | null>(null);
+  const feedScrollEl = useRef<HTMLElement | null>(null);
   const isSearchCollapsed = headerCollapsed && !searchQuery;
-  const handleFeedScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  // Au plus 1 calcul par image (requestAnimationFrame), 1 seule lecture (scrollTop), et un
+  // rendu de l'accueil UNIQUEMENT quand l'en-tête change d'état. Avant : à chaque événement
+  // scroll, lecture de scrollHeight/clientHeight (mise en page forcée) + setState.
+  const handleFeedScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const el = e.target as HTMLElement;
-    // Ignore les défilements horizontaux (bande OUT VLOGS, filtres…)
-    if (!(el instanceof HTMLElement) || el.scrollHeight <= el.clientHeight) return;
-    const y = el.scrollTop;
-    const delta = y - lastFeedScrollTop.current;
-    if (Math.abs(delta) < 12) return; // hystérésis : évite les clignotements
-    lastFeedScrollTop.current = y;
-    if (y < 40) setHeaderCollapsed(false);
-    else setHeaderCollapsed(delta > 0);
-  };
+    // Seul le fil vertical compte (pas la bande OUT VLOGS ni les filtres horizontaux) :
+    // test par classe, sans lecture de dimensions.
+    if (!(el instanceof HTMLElement) || !el.classList.contains('ptr__children')) return;
+    feedScrollEl.current = el;
+    if (feedScrollRaf.current !== null) return;
+    feedScrollRaf.current = requestAnimationFrame(() => {
+      feedScrollRaf.current = null;
+      const target = feedScrollEl.current;
+      if (!target) return;
+      const y = target.scrollTop;
+      const delta = y - lastFeedScrollTop.current;
+      if (Math.abs(delta) < 12) return; // hystérésis : évite les clignotements
+      lastFeedScrollTop.current = y;
+      const next = y < 40 ? false : delta > 0;
+      if (next !== headerCollapsedRef.current) {
+        headerCollapsedRef.current = next;
+        setHeaderCollapsed(next);
+      }
+    });
+  }, []);
+  useEffect(() => () => { if (feedScrollRaf.current !== null) cancelAnimationFrame(feedScrollRaf.current) }, []);
   const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null);
   const qc = useQueryClient();
   const isOffline = !useIsOnline();

@@ -39,6 +39,12 @@ export function FeedVideoPlayer({
   const [showControls, setShowControls] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const controlsTimeoutRef = useRef<any>(null);
+  // Chargement différé : AUCUNE donnée vidéo tant que le lecteur est loin de l'écran.
+  // Avant : preload="auto" sur chaque vidéo du fil → les 17 vidéos de l'accueil se téléchargeaient
+  // entièrement dès l'ouverture. Ici : pas de `src` avant ~1,5 écran de distance, puis seulement
+  // les métadonnées ; le téléchargement complet ne commence qu'à la lecture.
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const wantPlayRef = useRef(false); // lecture demandée avant que la source soit attachée
 
   // Auto-generate Cloudinary poster if available and poster not explicitly provided,
   // with a transparent 1x1 gif fallback to completely suppress the native Android black play watermark
@@ -82,7 +88,8 @@ export function FeedVideoPlayer({
     if (video.paused) {
       userPausedRef.current = false;
       pauseOtherVideos();
-      video.play().catch(() => {});
+      if (!shouldLoad) { wantPlayRef.current = true; setShouldLoad(true); }
+      else video.play().catch(() => {});
     } else {
       userPausedRef.current = true;
       video.pause();
@@ -112,6 +119,33 @@ export function FeedVideoPlayer({
     if (!video) return;
     setDuration(video.duration || 0);
   };
+
+  // Lecture demandée (toucher ou arrivée à l'écran) AVANT que la source soit attachée : on lance
+  // play() juste après l'attache. (iOS ignore souvent preload="metadata" et ne charge rien avant
+  // play() : attendre `loadedmetadata` bloquerait la vidéo.)
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!shouldLoad || !video || !wantPlayRef.current) return;
+    wantPlayRef.current = false;
+    video.muted = globalIsMuted;
+    video.play().catch(() => {
+      if (!video.muted) { video.muted = true; setIsMuted(true); globalIsMuted = true; video.play().catch(() => {}); }
+    });
+  }, [shouldLoad]);
+
+  // Attache la source quand le lecteur approche de l'écran (une seule fois)
+  useEffect(() => {
+    if (shouldLoad) return;
+    const container = containerRef.current;
+    if (!container) return;
+    if (typeof IntersectionObserver === 'undefined') { setShouldLoad(true); return; }
+    const near = new IntersectionObserver(
+      (entries) => { if (entries.some((e) => e.isIntersecting)) { setShouldLoad(true); near.disconnect(); } },
+      { rootMargin: '150% 0px' }
+    );
+    near.observe(container);
+    return () => near.disconnect();
+  }, [shouldLoad]);
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
@@ -156,6 +190,8 @@ export function FeedVideoPlayer({
               pauseOtherVideos();
               video.muted = globalIsMuted;
               setIsMuted(globalIsMuted);
+              // Source pas encore attachée : la lecture partira dès les métadonnées reçues
+              if (!video.getAttribute('src')) { wantPlayRef.current = true; setShouldLoad(true); return; }
               video.play().catch(() => {
                 // If browser blocks unmuted autoplay without prior interaction, fallback to muted autoplay
                 if (!video.muted) {
@@ -168,6 +204,7 @@ export function FeedVideoPlayer({
             }
           } else if (!entry.isIntersecting || entry.intersectionRatio < 0.35) {
             // Scrolled away: pause video
+            wantPlayRef.current = false;
             if (!video.paused) {
               video.pause();
             }
@@ -211,7 +248,7 @@ export function FeedVideoPlayer({
     >
       <video
         ref={videoRef}
-        src={src}
+        src={shouldLoad ? src : undefined}
         poster={derivedPoster}
         controls={false}
         loop
@@ -220,7 +257,7 @@ export function FeedVideoPlayer({
         webkit-playsinline="true"
         x5-playsinline="true"
         disablePictureInPicture
-        preload="auto"
+        preload={shouldLoad ? 'metadata' : 'none'}
         onPlay={handlePlay}
         onPause={handlePause}
         onTimeUpdate={handleTimeUpdate}
