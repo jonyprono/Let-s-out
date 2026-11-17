@@ -15,7 +15,6 @@ import {
   Calendar,
   Star,
   Plus,
-  Heart,
   Share2,
   MoreVertical,
   Camera,
@@ -32,6 +31,8 @@ import {
   X,
   Play,
 } from 'lucide-react'
+import { PostLikeButton } from '@/features/social/components/PostLikeButton'
+import { shareContent } from '@/lib/share-links'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 import { useConfirm } from '@/components/shared/ConfirmContext'
@@ -80,8 +81,6 @@ export function PageView() {
     setIsLightboxOpen(true)
   }
 
-  // Likes state (local optimistic)
-  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({})
   const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null)
   const [commentModalPost, setCommentModalPost] = useState<PagePost | null>(null)
   const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null)
@@ -128,11 +127,11 @@ export function PageView() {
           avatarUrl: page.avatarUrl,
           creatorId: page.creatorId,
         },
-        likesCount: 0,
+        likesCount: p.likesCount ?? 0,
         commentsCount: p._count?.comments || p.comments?.length || 0,
-        hasLiked: Boolean(likedPosts[p.id]),
+        hasLiked: Boolean(p.hasLiked),
       }))
-  }, [posts, page, likedPosts])
+  }, [posts, page])
 
   const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -621,14 +620,13 @@ export function PageView() {
 
                       {/* Post Actions Footer matching Figma */}
                       <div className="grid grid-cols-4 border-t border-gray-100 dark:border-gray-800 text-gray-500 py-3">
-                        <button
-                          onClick={() =>
-                            setLikedPosts((prev) => ({ ...prev, [post.id]: !prev[post.id] }))
-                          }
-                          className="flex items-center justify-center p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
-                        >
-                          <Heart className={`w-4 h-4 ${likedPosts[post.id] ? 'fill-red-500 text-red-500' : ''}`} />
-                        </button>
+                        <PostLikeButton
+                          pageId={page.id}
+                          postId={post.id}
+                          liked={post.hasLiked}
+                          likesCount={post.likesCount}
+                          className="p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        />
 
                         <button
                           onClick={() => setCommentModalPost(post)}
@@ -644,13 +642,8 @@ export function PageView() {
                         </button>
 
                         <button
-                          onClick={() => {
-                            if (navigator.share) {
-                              navigator.share({ title: page.name, text: post.content || '' })
-                            } else {
-                              toast.success(t('pageView.lienCopieDansLePresse'))
-                            }
-                          }}
+                          onClick={() => shareContent({ kind: 'post', id: post.id }, { title: page.name, text: post.content || '' })}
+                          aria-label={t('social.share')}
                           className="flex items-center justify-center p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
                         >
                           <Share2 className="w-4 h-4" />

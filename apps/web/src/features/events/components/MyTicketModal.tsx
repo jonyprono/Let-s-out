@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { QRCodeSVG } from 'qrcode.react'
-import { X, Loader2, CheckCircle2, Share2 } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Share2, Mail } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { toast } from 'sonner'
 import { eventsApi } from '@/features/events/api'
@@ -48,6 +48,18 @@ export function MyTicketModal({ eventId, eventTitle, eventDate, open, onClose }:
     queryFn: () => eventsApi.getMyTicket(eventId),
     enabled: open && noIndividualTickets,
     staleTime: 30_000,
+  })
+
+  // Renvoi des billets par e-mail (toujours à l'adresse du compte, choisie côté serveur)
+  const resendEmail = useMutation({
+    mutationFn: () => ticketingApi.resendTicketsEmail(eventId),
+    onSuccess: (res) => toast.success(t('tickets.resendEmailSent', { email: res.to })),
+    onError: (err: any) => {
+      const code = err?.response?.data?.code
+      if (code === 'RESEND_COOLDOWN') toast.info(t('tickets.resendEmailCooldown', { seconds: err.response.data.retryAfter ?? 60 }))
+      else if (code === 'NO_EMAIL') toast.error(t('tickets.resendEmailNoEmail'))
+      else toast.error(t('tickets.resendEmailError'))
+    },
   })
 
   useEffect(() => {
@@ -202,6 +214,19 @@ export function MyTicketModal({ eventId, eventTitle, eventDate, open, onClose }:
             <p className="font-poppins text-[11px] text-gray-500 dark:text-gray-400 text-center">
               <span>{tickets.length > 1 ? t('tickets.shareHint') : t('tickets.singleUse')}</span>
             </p>
+
+            {/* Renvoi de TOUS les billets de la commande à l'adresse e-mail du compte */}
+            <button
+              type="button"
+              onClick={() => resendEmail.mutate()}
+              disabled={resendEmail.isPending}
+              className="w-full h-11 rounded-full bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-100 font-poppins font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-60"
+            >
+              {resendEmail.isPending
+                ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                : <Mail className="w-4 h-4" aria-hidden="true" />}
+              <span>{resendEmail.isPending ? t('tickets.resendEmailSending') : t('tickets.resendEmail')}</span>
+            </button>
           </>
         ) : single.data ? (
           <>

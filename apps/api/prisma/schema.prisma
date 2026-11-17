@@ -59,6 +59,9 @@ model User {
   eventVideoReactions EventVideoReaction[]
   eventVideoComments  EventVideoComment[]
   pagePostComments    PagePostComment[]
+  eventVideoCommentLikes EventVideoCommentLike[]
+  pagePostCommentLikes   PagePostCommentLike[]
+  pagePostLikes          PagePostLike[]
   blocksCreated    UserBlock[]          @relation("UserBlocker")
   blocksReceived   UserBlock[]          @relation("UserBlocked")
   isBanned         Boolean              @default(false)
@@ -885,6 +888,15 @@ enum NotifType {
   EVENT_REMINDER
   RADAR_INVITE
   RADAR_INVITE_ACCEPTED
+  COMMENT_REPLY
+  // Types déjà envoyés par l'API mais absents de l'enum : l'insertion échouait (notification,
+  // WebSocket et push jamais délivrés). Ajoutés le 2026-11-17.
+  PAGE_POST
+  CO_HOST_INVITE
+  JOIN_APPROVED
+  JOIN_REJECTED
+  NEW_BADGE
+  NEW_FOLLOWER
 }
 
 enum PaymentStatus {
@@ -1145,15 +1157,36 @@ model EventVideoComment {
   userId    String
   videoId   String
   content   String
+  /// Réponse à un commentaire (1 seul niveau, style Instagram : toujours le commentaire RACINE)
+  parentId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  video EventVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user    User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video   EventVideo              @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  parent  EventVideoComment?      @relation("EventVideoCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies EventVideoComment[]     @relation("EventVideoCommentReplies")
+  likes   EventVideoCommentLike[]
 
   @@index([videoId])
   @@index([userId])
+  @@index([parentId])
   @@map("event_video_comments")
+}
+
+/// « J'aime » sur un commentaire de vlog (1 par utilisateur)
+model EventVideoCommentLike {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  createdAt DateTime @default(now())
+
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment EventVideoComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+  @@map("event_video_comment_likes")
 }
 
 // ── Pages (Outsters) ──────────────────────────────────────────────────────────
@@ -1198,8 +1231,24 @@ model PagePost {
 
   page        Page              @relation(fields: [pageId], references: [id], onDelete: Cascade)
   comments    PagePostComment[]
+  likes       PagePostLike[]
 
   @@map("page_posts")
+}
+
+/// « J'aime » sur une publication de page (1 par utilisateur). Avant : like local, jamais enregistré.
+model PagePostLike {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post PagePost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+  @@map("page_post_likes")
 }
 
 model PagePostComment {
@@ -1207,12 +1256,34 @@ model PagePostComment {
   text      String
   postId    String
   userId    String
+  /// Réponse à un commentaire (1 seul niveau, style Instagram : toujours le commentaire RACINE)
+  parentId  String?
   createdAt DateTime @default(now())
 
-  post      PagePost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      PagePost              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    PagePostComment?      @relation("PagePostCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   PagePostComment[]     @relation("PagePostCommentReplies")
+  likes     PagePostCommentLike[]
 
+  @@index([postId])
+  @@index([parentId])
   @@map("page_post_comments")
+}
+
+/// « J'aime » sur un commentaire de publication de page (1 par utilisateur)
+model PagePostCommentLike {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  createdAt DateTime @default(now())
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment PagePostComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+  @@map("page_post_comment_likes")
 }
 
 // ── OUT RADAR ─────────────────────────────────────────────────────────────

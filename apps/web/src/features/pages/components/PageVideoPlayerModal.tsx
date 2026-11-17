@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, UIEvent, useMemo } from 'react'
 import i18n from '@/lib/i18n'
 import { createPortal } from 'react-dom'
-import { ChevronLeft, Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Sparkles } from 'lucide-react'
+import { ChevronLeft, MessageCircle, Share2, Volume2, VolumeX, Play, Sparkles } from 'lucide-react'
+import { PostLikeButton } from '@/features/social/components/PostLikeButton'
+import { shareContent } from '@/lib/share-links'
 import { App } from '@capacitor/app'
 import { useNavigate } from 'react-router'
 import { PagePostCommentsModal } from './PagePostCommentsModal'
 import { videosApi, EventVideo } from '@/features/videos/api'
 import { VideoPlayerModal } from '@/features/videos/components/VideoPlayerModal'
 import { useVideoFit, FIT_CLASS } from '@/features/videos/utils/video-fit'
-import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
 
 export interface PageVideoItem {
@@ -344,8 +345,6 @@ function PageVideoPlayerItem({
     ? item.videoUrl.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
     : undefined
   const [isMuted, setIsMuted] = useState(false)
-  const [liked, setLiked] = useState(Boolean(item.hasLiked))
-  const [likesCount, setLikesCount] = useState(item.likesCount || 0)
   const [progress, setProgress] = useState(0)
 
   useEffect(() => {
@@ -387,29 +386,10 @@ function PageVideoPlayerItem({
     }
   }
 
-  const handleToggleLike = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    setLiked((prev) => {
-      const next = !prev
-      setLikesCount((c) => (next ? c + 1 : Math.max(0, c - 1)))
-      return next
-    })
-  }
-
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (navigator.share) {
-      navigator.share({
-        title: item.page.name,
-        text: item.content || t('pageVideoPlayerModal.videoPublieePar', { v0: item.page.name }),
-        url: window.location.href,
-      }).catch(() => {})
-    } else {
-      navigator.clipboard?.writeText(window.location.href)
-      toast.success(t('pageVideoPlayerModal.lienCopieDansLePresse'))
-    }
+    shareContent({ kind: 'post', id: item.id }, { title: item.page.name, text: item.content || '' })
   }
-
   return (
     <div
       className="relative w-full h-full snap-start snap-always flex flex-col justify-between overflow-hidden bg-black"
@@ -521,23 +501,16 @@ function PageVideoPlayerItem({
               {isMuted ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5 text-white" />}
             </button>
 
-            {/* Like button */}
-            <button
-              onClick={handleToggleLike}
-              className="flex flex-col items-center gap-1 group active:scale-95 transition-transform"
-            >
-              <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-md">
-                <Heart
-                  className={`w-5 h-5 transition-colors ${
-                    liked ? 'text-red-500 fill-red-500' : 'text-white'
-                  }`}
-                />
-              </div>
-              <span className="text-white text-[11px] font-semibold drop-shadow">
-                {likesCount}
-              </span>
-            </button>
-
+            {/* Like (enregistré, retour haptique) */}
+            <PostLikeButton
+              pageId={item.pageId}
+              postId={item.id}
+              liked={item.hasLiked}
+              likesCount={item.likesCount}
+              layout="stack"
+              className="group"
+              iconClassName="w-11 h-11 p-3 rounded-full bg-black/40 backdrop-blur-md border border-white/15 shadow-md text-white"
+            />
             {/* Comment button */}
             <button
               onClick={(e) => {
@@ -554,17 +527,15 @@ function PageVideoPlayerItem({
               </span>
             </button>
 
-            {/* Share button */}
+            {/* Partage : lien direct vers la publication (/posts/:id), icône seule */}
             <button
               onClick={handleShare}
+              aria-label={t('social.share')}
               className="flex flex-col items-center gap-1 group active:scale-95 transition-transform"
             >
               <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border border-white/15 flex items-center justify-center shadow-md text-white">
                 <Share2 className="w-5 h-5" />
               </div>
-              <span className="text-white text-[11px] font-medium drop-shadow">
-                <span>{t('pageVideoPlayerModal.partager')}</span>
-              </span>
             </button>
           </div>
         </div>

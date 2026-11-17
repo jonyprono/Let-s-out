@@ -39,8 +39,11 @@ export interface PagePost {
   content?: string
   mediaUrls: string[]
   createdAt: string
-  _count?: { comments: number }
+  _count?: { comments: number; likes?: number }
   comments?: PagePostComment[]
+  /** « J'aime » enregistrés (API) */
+  likesCount?: number
+  hasLiked?: boolean
 }
 
 export interface PageStats {

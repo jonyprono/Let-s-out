@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { postAuthPath } from '@/lib/return-to'
 import { useNavigate } from 'react-router'
 import { authApi, type AuthResponse } from '../api'
 import { useAuthStore } from '@/stores/auth.store'
@@ -64,7 +65,7 @@ export function useRegister() {
       setAccessToken(data.accessToken)
       if (data.refreshToken) setRefreshToken(data.refreshToken)
       setUser(data.user)
-      navigate('/home')
+      navigate(postAuthPath())
     },
   })
 }
@@ -87,7 +88,7 @@ export function useLogin() {
       setAccessToken(data.accessToken)
       if (data.refreshToken) setRefreshToken(data.refreshToken)
       setUser(data.user)
-      navigate('/home')
+      navigate(postAuthPath())
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.error || (error.message === 'Network Error' ? "Erreur réseau : serveur inaccessible" : 'Erreur lors de la connexion'))
@@ -129,7 +130,7 @@ export function useGoogleSignIn() {
       if (session.refreshToken) setRefreshToken(session.refreshToken)
       setUser(session.user as any)
       localStorage.removeItem('pending_google_signup')
-      nav('/home', { replace: true })
+      nav(postAuthPath(), { replace: true })
     },
     onError: (err: any) => {
       if (err.response?.data?.code === 'GOOGLE_ACCOUNT_NOT_FOUND') {
@@ -228,7 +229,7 @@ export function useDirectLogin() {
       setAccessToken(data.accessToken)
       if (data.refreshToken) setRefreshToken(data.refreshToken)
       setUser(data.user)
-      navigate('/home')
+      navigate(postAuthPath())
     },
     onError: (error: any) => {
       if (error.message === 'Network Error') {

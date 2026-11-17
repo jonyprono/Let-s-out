@@ -34,6 +34,15 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="letsout.app" android:pathPrefix="/events" />
             </intent-filter>
+            <!-- Liens partagés : vlog (/videos, alias /vlogs) et publication de page (/posts) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="letsout.app" android:pathPrefix="/videos/" />
+                <data android:scheme="https" android:host="letsout.app" android:pathPrefix="/vlogs/" />
+                <data android:scheme="https" android:host="letsout.app" android:pathPrefix="/posts/" />
+            </intent-filter>
         </activity>
 
         <provider

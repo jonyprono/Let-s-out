@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  X, 
-  Heart, 
-  MessageCircle, 
-  Share2, 
-  Send, 
-  Loader2, 
-  MoreVertical, 
+import {
+  X,
+  MoreVertical,
   Copy, 
   Pencil, 
   Trash2,
   Maximize2
 } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth.store';
-import { pagesApi, PagePostComment } from '../api';
+import { pagesApi } from '../api';
+import { countComments, pagePostCommentSource } from '@/features/social/api';
+import { CommentThreadPanel } from '@/features/social/components/CommentThreadPanel';
+import { PostActionBar } from '@/features/social/components/PostActionBar';
+import { usePostLike } from '@/features/social/usePostLike';
+import { shareContent } from '@/lib/share-links';
 import { useConfirm } from '@/components/shared/ConfirmContext';
 import { toast } from 'sonner';
 import { SafeImage } from '@/components/shared/SafeImage';
@@ -62,13 +62,10 @@ export function PagePostDetailModal({
   const { t } = useTranslation()
   const me = useAuthStore((s) => (s as any).user);
   const confirm = useConfirm();
-  const qc = useQueryClient();
 
   const isCreator = me?.id === post.page.creatorId || post.isOwner;
   const [following, setFollowing] = useState(Boolean(post.isFollowing));
   const [followLoading, setFollowLoading] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(post._count?.likes || 0);
   const [postContent, setPostContent] = useState(post.content || '');
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -80,9 +77,6 @@ export function PagePostDetailModal({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxInitialIndex, setLightboxInitialIndex] = useState(0);
-
-  // Comments state
-  const [commentText, setCommentText] = useState('');
 
   const pageAvatarUrl = post.page.avatarUrl || null;
   const isVideo =
@@ -111,33 +105,17 @@ export function PagePostDetailModal({
     };
   }, [api]);
 
-  // Query comments
-  const { data: comments = [], isLoading: isCommentsLoading } = useQuery<PagePostComment[]>({
-    queryKey: ['pages', post.page.id, 'posts', post.id, 'comments'],
-    queryFn: () => pagesApi.getComments(post.page.id, post.id),
+  // Commentaires (fil partagé) — même clé que le panneau : compteur lu en cache
+  const commentSource = useMemo(() => pagePostCommentSource(post.page.id, post.id), [post.page.id, post.id]);
+  const { data: commentThreads } = useQuery({
+    queryKey: commentSource.queryKey,
+    queryFn: commentSource.list,
     enabled: open && Boolean(post.page?.id && post.id),
   });
+  const commentsTotal = commentThreads ? countComments(commentThreads) : (post._count?.comments || 0);
 
-  // Add comment mutation
-  const postMutation = useMutation({
-    mutationFn: (text: string) => pagesApi.addComment(post.page.id, post.id, text),
-    onSuccess: () => {
-      setCommentText('');
-      qc.invalidateQueries({ queryKey: ['pages', post.page.id, 'posts', post.id, 'comments'] });
-      qc.invalidateQueries({ queryKey: ['feed', 'pages'] });
-      qc.invalidateQueries({ queryKey: ['pages', post.page.id, 'posts'] });
-    },
-  });
-
-  // Delete comment mutation
-  const deleteMutation = useMutation({
-    mutationFn: (commentId: string) => pagesApi.deleteComment(post.page.id, post.id, commentId),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['pages', post.page.id, 'posts', post.id, 'comments'] });
-      qc.invalidateQueries({ queryKey: ['feed', 'pages'] });
-      qc.invalidateQueries({ queryKey: ['pages', post.page.id, 'posts'] });
-    },
-  });
+  // « J'aime » enregistré (optimiste + retour haptique)
+  const postLike = usePostLike({ pageId: post.page.id, postId: post.id, liked: Boolean(post.hasLiked), likesCount: post.likesCount ?? 0 });
 
   const handleFollow = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -197,12 +175,6 @@ export function PagePostDetailModal({
     } catch {
       toast.error(t('pagePostDetailModal.erreurLorsDeLaSuppression'));
     }
-  };
-
-  const handleSendComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentText.trim() || postMutation.isPending) return;
-    postMutation.mutate(commentText.trim());
   };
 
   const handleNavigateToPage = () => {
@@ -464,137 +436,32 @@ export function PagePostDetailModal({
             )}
 
             {/* Interaction Row (Heart, Comments Count, Share) */}
-            <div className="grid grid-cols-3 text-gray-500 dark:text-gray-400 py-3 bg-white dark:bg-[#121212]">
-              <button
-                onClick={() => {
-                  setLiked(!liked);
-                  setLikesCount((prev: number) => (liked ? Math.max(0, prev - 1) : prev + 1));
-                }}
-                className="flex items-center justify-center gap-2 p-1 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                <Heart className={`w-5 h-5 ${liked ? 'fill-red-500 text-red-500' : ''}`} />
-                <span className="text-xs font-semibold">{likesCount > 0 ? likesCount : 'J\'aime'}</span>
-              </button>
+            <PostActionBar
+              className="py-2 bg-white dark:bg-[#121212]"
+              liked={postLike.liked}
+              likesCount={postLike.likesCount}
+              onLike={postLike.toggle}
+              commentsCount={commentsTotal}
+              onShare={() => shareContent({ kind: 'post', id: post.id }, { title: post.page.name, text: postContent })}
+            />
 
-              <div className="flex items-center justify-center gap-2 p-1 border-l border-gray-100 dark:border-white/10 text-xs font-semibold">
-                <MessageCircle className="w-5 h-5" />
-                <span>{comments.length} commentaire{comments.length > 1 ? 's' : ''}</span>
-              </div>
-
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({ title: post.page.name, text: postContent || '' });
-                  } else {
-                    navigator.clipboard?.writeText(window.location.href);
-                    toast.success(t('pagePostDetailModal.lienCopie'));
-                  }
-                }}
-                className="flex items-center justify-center gap-2 p-1 border-l border-gray-100 dark:border-white/10 hover:text-gray-900 dark:hover:text-white transition-colors text-xs font-semibold"
-              >
-                <Share2 className="w-5 h-5" />
-                <span><span>{t('pagePostDetailModal.partager')}</span></span>
-              </button>
-            </div>
-
-            {/* Comments List */}
-            <div className="p-4 space-y-4 bg-gray-50/50 dark:bg-[#0A0A0A]">
-              <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Commentaires ({comments.length})
+            {/* Commentaires : fil (likes, réponses @mention) qui suit le défilement, saisie collée en bas */}
+            <div className="bg-gray-50/50 dark:bg-[#0A0A0A]">
+              <h4 className="px-4 pt-4 text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                <span>{t('social.title', { count: commentsTotal })}</span>
               </h4>
-
-              {isCommentsLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#FF7A00]" />
-                </div>
-              ) : comments.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-6">
-                  <span>{t('pagePostDetailModal.aucunCommentairePourLeMoment')}</span>
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {comments.map((comment) => {
-                    const isCommentCreator = comment.userId === post.page.creatorId;
-                    const isMyComment = me?.id === comment.userId;
-                    const avatar = comment.user?.profile?.avatarUrl;
-                    const name =
-                      comment.user?.profile?.displayName ||
-                      (comment.user as any)?.username ||
-                      'Utilisateur';
-
-                    return (
-                      <div key={comment.id} className="flex gap-2.5 items-start">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center shrink-0 overflow-hidden text-xs font-bold text-[#FF7A00]">
-                          {avatar ? (
-                            <img src={avatar} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            name[0]?.toUpperCase()
-                          )}
-                        </div>
-
-                        <div className="flex-1 bg-white dark:bg-[#1A1A1A] p-2.5 rounded-2xl border border-gray-100 dark:border-white/5 text-xs">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-semibold text-gray-900 dark:text-white">
-                              {name}
-                              {isCommentCreator && (
-                                <span className="ml-1.5 text-[10px] bg-[#FFF2D3] dark:bg-[#FF7A00]/20 text-[#FF7A00] px-1.5 py-0.5 rounded-full font-medium">
-                                  Auteur
-                                </span>
-                              )}
-                            </span>
-                            <span className="text-[10px] text-gray-400">
-                              {getRelativeTime(comment.createdAt)}
-                            </span>
-                          </div>
-                          <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap">
-                            {comment.text}
-                          </p>
-                        </div>
-
-                        {(isMyComment || isCreator) && (
-                          <button
-                            onClick={() => deleteMutation.mutate(comment.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 transition-colors self-center"
-                            title={t('pagePostDetailModal.supprimerLeCommentaire')}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              <CommentThreadPanel
+                source={commentSource}
+                enabled={open}
+                layout="inline"
+                authorUserId={post.page.creatorId}
+                moderatorUserId={post.page.creatorId}
+                composerClassName="bg-white dark:bg-[#121212]"
+              />
             </div>
           </div>
-
-          {/* ── Direct Comment Input Bar ── */}
-          <form
-            onSubmit={handleSendComment}
-            className="p-3 bg-white dark:bg-[#121212] border-t border-gray-100 dark:border-white/10 flex items-center gap-2 shrink-0"
-          >
-            <input
-              type="text"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder={t('pagePostDetailModal.ecrireUnCommentaire')}
-              className="flex-1 bg-gray-100 dark:bg-[#1F1F1F] text-gray-900 dark:text-white text-[16px] rounded-full px-4 py-2.5 outline-none focus:ring-1 focus:ring-[#FF7A00] transition-all"
-            />
-            <button
-              type="submit"
-              disabled={!commentText.trim() || postMutation.isPending}
-              className="w-9 h-9 rounded-full bg-[#FF7A00] text-white flex items-center justify-center hover:bg-[#E06C00] disabled:opacity-40 disabled:hover:bg-[#FF7A00] transition-colors shrink-0 shadow-sm"
-            >
-              {postMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4 ml-0.5" />
-              )}
-            </button>
-          </form>
         </div>
       </div>
-
       {/* ── Facebook-Style Fullscreen Photo Lightbox ── */}
       <PhotoLightboxModal
         images={post.mediaUrls || []}

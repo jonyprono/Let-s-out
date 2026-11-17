@@ -142,7 +142,16 @@ export function handleNotificationRouting(data: any, navigate?: (path: string) =
   const eventId = data.eventId;
   const conversationId = data.conversationId || data.chatId;
 
-  if (screen === 'event-details' && eventId) {
+  // Contenus sociaux : réponse à un commentaire (vlog / publication), nouvelle publication d'une page
+  if (screen === 'video' && data.videoId) {
+    navigate(`/videos/${data.videoId}`);
+  } else if ((screen === 'post' || data.type === 'PAGE_POST') && data.postId) {
+    navigate(`/posts/${data.postId}`);
+  } else if (data.type === 'NEW_BADGE') {
+    navigate('/badges');
+  } else if (screen === 'user-profile' && data.followerId) {
+    navigate(`/profile/${data.followerId}`);
+  } else if (screen === 'event-details' && eventId) {
     navigate(`/events/${eventId}`);
   } else if (screen === 'videos') {
     navigate('/videos');

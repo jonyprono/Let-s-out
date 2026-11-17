@@ -31,6 +31,37 @@ export interface MultiTicketEmailData {
   tickets: { token: string; tierName: string; price: number }[]
 }
 
+/** Résultat d'un envoi : `id` = identifiant Resend (retrouvable dans le tableau de bord Resend) */
+export type EmailSendResult = { ok: true; id: string } | { ok: false; reason: string }
+
+/** Masque une adresse dans les journaux : « sen…@gmail.com » (suivi possible sans exposer l'adresse) */
+export function maskEmail(email: string): string {
+  const [local = '', domain = ''] = String(email).split('@')
+  return `${local.slice(0, 3)}…@${domain}`
+}
+
+/**
+ * Interprète la réponse de `resend.emails.send`.
+ * ATTENTION : le SDK `resend` 1.x ne LÈVE PAS d'erreur quand l'API refuse l'envoi (domaine non
+ * vérifié, expéditeur invalide, quota…) : il RENVOIE le corps d'erreur { statusCode, message, name }.
+ * Sans cette lecture, un refus passait totalement inaperçu (ni log, ni erreur).
+ */
+export function interpretResendResponse(res: any): EmailSendResult {
+  if (res && typeof res.id === 'string') return { ok: true, id: res.id }
+  if (res?.data?.id) return { ok: true, id: String(res.data.id) } // format des SDK récents
+  const err = res?.error ?? res
+  const reason = [err?.statusCode, err?.name, err?.message].filter(Boolean).join(' — ') || 'Réponse Resend inattendue'
+  return { ok: false, reason }
+}
+
+function logEmailResult(kind: string, to: string, subject: string, result: EmailSendResult) {
+  if (result.ok) {
+    console.log(`[EMAIL] ${kind} envoyé — à ${maskEmail(to)} — « ${subject} » — id Resend ${result.id}`)
+  } else {
+    console.error(`[EMAIL] ${kind} NON envoyé — à ${maskEmail(to)} — « ${subject} » — ${result.reason}`)
+  }
+}
+
 export class EmailService {
   private resend: Resend | null = null
 
@@ -123,17 +154,18 @@ export class EmailService {
     </html>
     `
 
+    const subject = `Votre ticket pour ${data.eventName}`
     try {
       const response = await this.resend.emails.send({
         from: emailFromTickets(), // billets : expéditeur Billetterie exclusivement
         to: data.to,
-        subject: `Votre ticket pour ${data.eventName}`,
+        subject,
         html: htmlContent,
         attachments: [{ filename: `billet-${bookingRef}.png`, content: await ticketQrPng(data.ticketToken) }],
       })
-      console.log(`[DEBUG EMAIL] Resend API response for ${data.to}:`, JSON.stringify(response))
-    } catch (err) {
-      console.error('[DEBUG EMAIL] Failed to send ticket email:', err)
+      logEmailResult('Billet', data.to, subject, interpretResendResponse(response))
+    } catch (err: any) {
+      logEmailResult('Billet', data.to, subject, { ok: false, reason: `Exception : ${err?.message ?? err}` })
     }
   }
 
@@ -142,8 +174,13 @@ export class EmailService {
    * Chaque billet a son propre QR (LO1.<token>) et sa catégorie ; les PNG sont joints
    * (accès hors connexion, transfert facile à un invité).
    */
-  async sendTicketsEmail(data: MultiTicketEmailData): Promise<void> {
-    if (!this.resend || data.tickets.length === 0) return
+  async sendTicketsEmail(data: MultiTicketEmailData): Promise<EmailSendResult> {
+    if (data.tickets.length === 0) return { ok: false, reason: 'Aucun billet à envoyer' }
+    if (!this.resend) {
+      const result = { ok: false as const, reason: 'RESEND_API_KEY non configurée' }
+      logEmailResult('Billets', data.to, `Billets ${data.eventName}`, result)
+      return result
+    }
     const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
     const orderRef = data.orderRef.slice(-8).toUpperCase()
     const formattedDate = format(data.eventDate, "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })
@@ -188,6 +225,8 @@ export class EmailService {
     </body>
     </html>`
 
+    const subject = n > 1 ? `Vos ${n} billets pour ${data.eventName}` : `Votre billet pour ${data.eventName}`
+    let result: EmailSendResult
     try {
       const attachments = await Promise.all(
         data.tickets.map(async (t, i) => ({
@@ -195,16 +234,19 @@ export class EmailService {
           content: await ticketQrPng(t.token),
         })),
       )
-      await this.resend.emails.send({
+      const response = await this.resend.emails.send({
         from: emailFromTickets(),
         to: data.to,
-        subject: n > 1 ? `Vos ${n} billets pour ${data.eventName}` : `Votre billet pour ${data.eventName}`,
+        subject,
         html: htmlContent,
         attachments,
       })
-    } catch (err) {
-      console.error('[EMAIL] Failed to send multi-ticket email:', err)
+      result = interpretResendResponse(response)
+    } catch (err: any) {
+      result = { ok: false, reason: `Exception : ${err?.message ?? err}` }
     }
+    logEmailResult(`Billets (${n})`, data.to, subject, result)
+    return result
   }
 
   // (Ancien sendWelcomeEmail SUPPRIMÉ : second e-mail de bienvenue envoyé en doublon aux

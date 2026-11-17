@@ -45,6 +45,10 @@ const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string; bg:
   SYSTEM:              { icon: Notification01Icon,  get label() { return i18n.t('notifications.systeme') },                    color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
   EVENT_REVIEW_REQUEST:{ icon: Notification01Icon,  get label() { return i18n.t('notifications.avisDemande') },               color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
   PAGE_POST:           { icon: Notification01Icon,  get label() { return i18n.t('notifications.nouvellePublication') },       color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
+  COMMENT_REPLY:       { icon: Notification01Icon,  get label() { return i18n.t('notifications.reponseCommentaire') },       color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
+  CO_HOST_INVITE:      { icon: UserMultiple02Icon,  get label() { return i18n.t('notifications.coOrganisation') },           color: 'text-violet-500', bg: 'bg-violet-50 dark:bg-violet-900/20' },
+  NEW_BADGE:           { icon: TickDouble01Icon,    get label() { return i18n.t('notifications.nouveauBadge') },             color: 'text-amber-500',  bg: 'bg-amber-50 dark:bg-amber-900/20' },
+  NEW_FOLLOWER:        { icon: UserAdd01Icon,       get label() { return i18n.t('notifications.nouvelAbonne') },             color: 'text-pink-500',   bg: 'bg-pink-50 dark:bg-pink-900/20' },
   RADAR_INVITE:        { icon: Location01Icon,      label: 'OUT RADAR',                  color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
   RADAR_INVITE_ACCEPTED:{ icon: TickDouble01Icon,   get label() { return i18n.t('notifications.outRadarAccepte') },          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
   default:             { icon: Notification01Icon,  label: 'Notification',               color: 'text-gray-400',   bg: 'bg-gray-50 dark:bg-gray-800' },
@@ -64,6 +68,10 @@ function getActionLabel(type: string) {
     case 'JOIN_REJECTED':       return i18n.t('notifications.voirLEvenement');
     case 'JOIN_REQUEST':        return i18n.t('notifications.gererLaDemande');
     case 'PAGE_POST':           return i18n.t('notifications.voirLaPublication');
+    case 'COMMENT_REPLY':       return i18n.t('notifications.voirLaReponse');
+    case 'CO_HOST_INVITE':      return i18n.t('notifications.voirLEvenement');
+    case 'NEW_BADGE':           return i18n.t('notifications.voirMesBadges');
+    case 'NEW_FOLLOWER':        return i18n.t('notifications.voirLeProfil');
     case 'RADAR_INVITE':
     case 'RADAR_INVITE_ACCEPTED':return i18n.t('notifications.voirLesInvitationsOutRadar');
     default:                    return i18n.t('notifications.voirLesDetails');
@@ -158,7 +166,22 @@ export function Notifications({ onBack }: NotificationsProps) {
         if (d?.eventId) navigate(`/events/${d.eventId}`);
         break;
       case 'PAGE_POST':
-        if (d?.pageId) navigate(`/pages/${d.pageId}`);
+        // Directement la publication (lien /posts/:id) ; sinon la page
+        if (d?.postId) navigate(`/posts/${d.postId}`);
+        else if (d?.pageId) navigate(`/pages/${d.pageId}`);
+        break;
+      case 'COMMENT_REPLY':
+        if (d?.videoId) navigate(`/videos/${d.videoId}`);
+        else if (d?.postId) navigate(`/posts/${d.postId}`);
+        break;
+      case 'CO_HOST_INVITE':
+        if (d?.eventId) navigate(`/events/${d.eventId}`);
+        break;
+      case 'NEW_BADGE':
+        navigate('/badges');
+        break;
+      case 'NEW_FOLLOWER':
+        if (d?.followerId) navigate(`/profile/${d.followerId}`);
         break;
       case 'RADAR_INVITE':
       case 'RADAR_INVITE_ACCEPTED':

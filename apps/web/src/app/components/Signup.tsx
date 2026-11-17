@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { postAuthPath } from '@/lib/return-to'
 import { interestLabel } from '@/lib/interests'
 import { useNavigate, useLocation } from 'react-router'
 import {
@@ -471,7 +472,7 @@ export function Signup({ onBack }: SignupProps) {
           await useAuthStore.getState().refreshUser()
           localStorage.setItem('letsout_onboarding_done', 'true')
           localStorage.removeItem('pending_google_signup')
-          nav('/home')
+          nav(postAuthPath())
         } catch (e: any) {
           toast.error(e?.response?.data?.error || t('signup.errorSaving'))
         } finally {
@@ -502,7 +503,7 @@ export function Signup({ onBack }: SignupProps) {
               if (city) profileData.city = city
               await apiClient.patch('/users/me/profile', profileData)
             } catch (e) { console.error('Background updates error:', e) }
-            finally { localStorage.setItem('letsout_onboarding_done', 'true'); nav('/home') }
+            finally { localStorage.setItem('letsout_onboarding_done', 'true'); nav(postAuthPath()) }
           },
           onError: (e: any) => {
             const msg = e.response?.data?.error || ''

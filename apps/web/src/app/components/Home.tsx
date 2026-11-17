@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 import i18n from '@/lib/i18n'
-import { Loader2, WifiOff, RefreshCw, Heart, MessageCircle, Share2, MoreVertical, Copy, Pencil, Trash2, X, Maximize2 } from 'lucide-react';
+import { Loader2, WifiOff, RefreshCw, MoreVertical, Copy, Pencil, Trash2, X, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { EventMediaFeed } from '@/features/events/components/EventMediaFeed';
 import { Search01Icon } from 'hugeicons-react';
@@ -16,6 +16,9 @@ import { PermissionsRequest } from './PermissionsRequest';
 import { pagesApi, PagePost } from '@/features/pages/api';
 import { useConfirm } from '@/components/shared/ConfirmContext';
 import { PagePostCommentsModal } from '@/features/pages/components/PagePostCommentsModal';
+import { PostActionBar } from '@/features/social/components/PostActionBar';
+import { usePostLike } from '@/features/social/usePostLike';
+import { shareContent } from '@/lib/share-links';
 import { PagePostDetailModal } from '@/features/pages/components/PagePostDetailModal';
 import { PhotoLightboxModal } from '@/components/shared/PhotoLightboxModal';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/app/components/ui/carousel';
@@ -90,7 +93,8 @@ const PagePostCard = memo(function PagePostCard({
   const isCreator = me?.id === post.page.creatorId || post.isOwner;
   const [following, setFollowing] = useState(Boolean(post.isFollowing));
   const [followLoading, setFollowLoading] = useState(false);
-  const [liked, setLiked] = useState(false);
+  // « J'aime » enregistré en base (avant : état local, perdu au rechargement)
+  const postLike = usePostLike({ pageId: post.page.id, postId: post.id, liked: Boolean(post.hasLiked), likesCount: post.likesCount ?? 0 });
   const [showComments, setShowComments] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post._count?.comments || 0);
   const [postContent, setPostContent] = useState(post.content || '');
@@ -436,49 +440,17 @@ const PagePostCard = memo(function PagePostCard({
           </div>
         )}
 
-        {/* Footer 3 columns with vertical dividers — libellés visibles : J'aime / n commentaires / Partager */}
-        <div className="grid grid-cols-[1fr_1.4fr_1fr] border-t border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 py-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setLiked(!liked);
-            }}
-            aria-pressed={liked}
-            className={`flex items-center justify-center gap-1.5 p-1 transition-colors hover:text-gray-900 dark:hover:text-white ${liked ? 'text-red-500' : ''}`}
-          >
-            <Heart className={`w-4 h-4 shrink-0 ${liked ? 'fill-red-500 text-red-500' : ''}`} aria-hidden="true" />
-            <span className="text-xs font-semibold truncate">{t('home.post.like')}</span>
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowComments(true);
-            }}
-            className="flex items-center justify-center gap-1.5 p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors min-w-0"
-            title="Commenter"
-          >
-            <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span className="text-xs font-semibold truncate">
-              {commentsCount > 0 ? t('home.post.comments', { count: commentsCount }) : t('home.post.comment')}
-            </span>
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (navigator.share) {
-                navigator.share({ title: post.page.name, text: postContent || '' });
-              }
-            }}
-            className="flex items-center justify-center gap-1.5 p-1 border-l border-gray-100 dark:border-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <Share2 className="w-4 h-4 shrink-0" aria-hidden="true" />
-            <span className="text-xs font-semibold truncate">{t('home.post.share')}</span>
-          </button>
-        </div>
+        {/* Barre d'actions épurée (style X) : icônes + compteurs, like enregistré + retour haptique */}
+        <PostActionBar
+          className="border-t border-gray-100 dark:border-gray-800 py-1.5"
+          liked={postLike.liked}
+          likesCount={postLike.likesCount}
+          onLike={postLike.toggle}
+          commentsCount={commentsCount}
+          onComment={() => setShowComments(true)}
+          onShare={() => shareContent({ kind: 'post', id: post.id }, { title: post.page.name, text: postContent })}
+        />
       </div>
-
       {/* Direct Comment Sheet */}
       <PagePostCommentsModal
         pageId={post.page.id}

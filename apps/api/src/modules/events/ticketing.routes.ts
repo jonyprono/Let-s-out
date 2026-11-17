@@ -10,6 +10,10 @@ import {
   validatePayoutInfo,
 } from '../../services/ticketing.service'
 import { isKycVerified } from '../../services/kyc.service'
+import { EmailService, maskEmail } from '../../services/email.service'
+
+/** Délai minimal entre deux renvois de billets par e-mail (réglage admin, secondes) */
+const RESEND_COOLDOWN = { key: 'TICKET_EMAIL_RESEND_COOLDOWN_SECONDS', fallback: 60 } as const
 
 /**
  * Billetterie multi-catégories (enregistré sous /api/v1).
@@ -239,6 +243,60 @@ export default async function ticketingRoutes(app: FastifyInstance) {
         checkedInAt: t.checkedInAt,
       })),
     })
+  })
+
+  // ── Renvoyer mes billets par e-mail (acheteur) ──────────────────────────────
+  // Toujours à l'adresse DU COMPTE (jamais une adresse saisie : pas de détournement de billets).
+  // Délai minimal entre deux envois (anti-abus) : réglage TICKET_EMAIL_RESEND_COOLDOWN_SECONDS.
+  // Mémorisé par instance de l'API : suffisant contre les clics répétés.
+  const lastResend = new Map<string, number>()
+  app.post('/events/:id/my-tickets/resend-email', {
+    preHandler: [app.authenticate],
+    config: { rateLimit: { max: 5, timeWindow: '10 minutes' } },
+  }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+
+    const setting = await app.prisma.systemSetting.findUnique({ where: { key: RESEND_COOLDOWN.key } })
+    const cooldownSec = setting && Number(setting.value) >= 0 ? Number(setting.value) : RESEND_COOLDOWN.fallback
+    const k = `${sub}:${id}`
+    const elapsedSec = (Date.now() - (lastResend.get(k) ?? 0)) / 1000
+    if (elapsedSec < cooldownSec) {
+      return reply.code(429).send({ error: 'Patientez avant un nouvel envoi.', code: 'RESEND_COOLDOWN', retryAfter: Math.ceil(cooldownSec - elapsedSec) })
+    }
+
+    const [booking, user, event] = await Promise.all([
+      app.prisma.booking.findUnique({
+        where: { userId_eventId: { userId: sub, eventId: id } },
+        select: { id: true, status: true, tickets: { orderBy: { createdAt: 'asc' }, select: { ticketToken: true, tierName: true, price: true, paymentId: true } } },
+      }),
+      app.prisma.user.findUnique({ where: { id: sub }, select: { email: true, profile: { select: { displayName: true } } } }),
+      app.prisma.event.findUnique({ where: { id }, select: { title: true, startAt: true, address: true, city: true, coverUrl: true } }),
+    ])
+    if (!event || !booking || booking.status !== 'CONFIRMED' || booking.tickets.length === 0) {
+      return reply.code(404).send({ error: 'Aucun billet pour cet événement.', code: 'NO_TICKETS' })
+    }
+    if (!user?.email) {
+      return reply.code(400).send({ error: 'Aucune adresse e-mail sur votre compte.', code: 'NO_EMAIL' })
+    }
+
+    lastResend.set(k, Date.now())
+    const result = await new EmailService().sendTicketsEmail({
+      to: user.email,
+      userName: user.profile?.displayName || 'Cher utilisateur',
+      eventName: event.title,
+      eventDate: event.startAt,
+      location: event.address || event.city || 'Lieu non spécifié',
+      orderRef: booking.tickets[0].paymentId || booking.id,
+      total: booking.tickets.reduce((a, t) => a + t.price, 0),
+      coverImage: event.coverUrl || undefined,
+      tickets: booking.tickets.map((t) => ({ token: t.ticketToken, tierName: t.tierName, price: t.price })),
+    })
+    if (!result.ok) {
+      lastResend.delete(k) // échec : l'utilisateur peut réessayer tout de suite
+      return reply.code(502).send({ error: "L'e-mail n'a pas pu être envoyé. Réessayez plus tard.", code: 'EMAIL_FAILED' })
+    }
+    return reply.send({ sent: true, to: maskEmail(user.email), count: booking.tickets.length })
   })
 
   // ── Billet partagé (lien envoyé à un invité) ────────────────────────────────

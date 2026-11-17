@@ -1,5 +1,8 @@
 import { FastifyInstance } from 'fastify'
-import { createAndSendNotificationMany } from '../notifications/notifications.routes'
+import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
+import {
+  buildCommentThreads, commentInclude, COMMENT_MAX_LENGTH, excerpt, readCommentText, toCommentDto, toggleLike,
+} from '../../services/social.service'
 
 // Génère la miniature Cloudinary automatiquement depuis l'URL vidéo
 // Ex: .../upload/v123/xyz.mp4 → .../upload/w_480,h_270,c_fill,so_auto/v123/xyz.jpg
@@ -9,7 +12,63 @@ function buildThumbnailUrl(videoUrl: string): string {
     .replace(/\.(mp4|webm|mov|avi)$/, '.jpg')
 }
 
+/**
+ * Confidentialité d'un vlog (source unique : liste, vlog seul, commentaires) :
+ * PUBLIC pour tous ; PARTICIPANTS pour les participants confirmés et organisateurs ; PRIVATE pour l'auteur.
+ */
+function videoPrivacyOr(viewerId: string | null): any[] {
+  return viewerId ? [
+    { privacy: 'PUBLIC' },
+    { privacy: 'PARTICIPANTS', event: { OR: [
+      { creatorId: viewerId },
+      { coHostIds: { has: viewerId } },
+      { bookings: { some: { userId: viewerId, status: 'CONFIRMED' } } },
+    ]}},
+    { privacy: 'PRIVATE', userId: viewerId },
+  ] : [{ privacy: 'PUBLIC' }]
+}
+
+function videoInclude(viewerId: string | null) {
+  return {
+    user: {
+      select: {
+        id: true,
+        profile: { select: { displayName: true, avatarUrl: true, username: true } },
+      },
+    },
+    event: {
+      select: { id: true, title: true, category: true, startAt: true, endAt: true, coverUrl: true, city: true },
+    },
+    _count: {
+      select: { reactions: true, comments: true }
+    },
+    reactions: viewerId ? {
+      where: { userId: viewerId },
+      select: { emoji: true }
+    } : false as const,
+  }
+}
+
+const viewerOf = (req: any): string | null => (req.user as any)?.sub ?? null
+
 export async function videoRoutes(app: FastifyInstance) {
+
+  /** Vlog visible par cet utilisateur (sinon null) */
+  const findVisibleVideo = (id: string, viewerId: string | null) =>
+    app.prisma.eventVideo.findFirst({ where: { id, isActive: true, deletedAt: null, OR: videoPrivacyOr(viewerId) }, select: { id: true, userId: true, title: true } })
+
+  // ─── GET /api/v1/videos/:id — un vlog (lien partagé /videos/:id) ─────────
+  // Même règle de confidentialité que la liste : un vlog non visible répond 404 (sans dire qu'il existe).
+  app.get('/:id', { preHandler: [(app as any).optionalAuthenticate] }, async (req, reply) => {
+    const { id } = req.params as { id: string }
+    const viewerId = viewerOf(req)
+    const video = await app.prisma.eventVideo.findFirst({
+      where: { id, isActive: true, deletedAt: null, OR: videoPrivacyOr(viewerId) },
+      include: videoInclude(viewerId),
+    })
+    if (!video) return reply.code(404).send({ error: 'Vidéo introuvable', code: 'VIDEO_NOT_FOUND' })
+    return reply.send({ data: video })
+  })
 
   // ─── GET /api/v1/videos ────────────────────────────────────────────────
   app.get('/', { preHandler: [(app as any).optionalAuthenticate] }, async (req, reply) => {
@@ -39,34 +98,9 @@ export async function videoRoutes(app: FastifyInstance) {
         ...(timeline === 'upcoming' && { event: { endAt: { gte: now } } }),
         ...(cursor && { createdAt: { lt: new Date(cursor) } }),
         // Privacy: exclude PRIVATE (unless own) and PARTICIPANTS (unless confirmed or organizer)
-        OR: currentUserId ? [
-          { privacy: 'PUBLIC' },
-          { privacy: 'PARTICIPANTS', event: { OR: [
-            { creatorId: currentUserId },
-            { coHostIds: { has: currentUserId } },
-            { bookings: { some: { userId: currentUserId, status: 'CONFIRMED' } } },
-          ]}},
-          { privacy: 'PRIVATE', userId: currentUserId },
-        ] : [{ privacy: 'PUBLIC' }],
+        OR: videoPrivacyOr(currentUserId),
       },
-      include: {
-        user: {
-          select: {
-            id: true,
-            profile: { select: { displayName: true, avatarUrl: true, username: true } },
-          },
-        },
-        event: {
-          select: { id: true, title: true, category: true, startAt: true, endAt: true, coverUrl: true, city: true },
-        },
-        _count: {
-          select: { reactions: true, comments: true }
-        },
-        reactions: req.user ? {
-          where: { userId: (req.user as any).sub },
-          select: { emoji: true }
-        } : false,
-      },
+      include: videoInclude(currentUserId),
       orderBy: { createdAt: 'desc' },
       take: Math.min(parseInt(limit), 50),
     })
@@ -299,39 +333,79 @@ export async function videoRoutes(app: FastifyInstance) {
   })
 
   // ─── GET /api/v1/videos/:id/comments ────────────────────────────────────
-  app.get('/:id/comments', async (req, reply) => {
+  // Fils de commentaires : racines (plus récentes d'abord) + réponses, likes, « aimé par moi ».
+  app.get('/:id/comments', { preHandler: [(app as any).optionalAuthenticate] }, async (req, reply) => {
     const { id: videoId } = req.params as { id: string }
-    
-    const comments = await app.prisma.eventVideoComment.findMany({
+    const viewerId = viewerOf(req)
+    if (!(await findVisibleVideo(videoId, viewerId))) return reply.code(404).send({ error: 'Vidéo introuvable' })
+
+    const raw = await app.prisma.eventVideoComment.findMany({
       where: { videoId },
-      include: {
-        user: { select: { id: true, profile: { select: { displayName: true, avatarUrl: true, username: true } } } }
-      },
-      orderBy: { createdAt: 'desc' }
+      include: commentInclude(viewerId),
+      orderBy: { createdAt: 'desc' },
     })
-    
-    return reply.send({ data: comments })
+    return reply.send({ data: buildCommentThreads(raw as any, 'desc') })
   })
 
   // ─── POST /api/v1/videos/:id/comments ───────────────────────────────────
+  // `parentId` facultatif : réponse. Toujours rattachée au commentaire RACINE (1 niveau).
   app.post('/:id/comments', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub: userId } = req.user as { sub: string }
     const { id: videoId } = req.params as { id: string }
-    const { content } = req.body as { content: string }
+    const { content, parentId } = (req.body ?? {}) as { content?: string; parentId?: string | null }
 
-    if (!content?.trim()) return reply.code(400).send({ error: 'Le commentaire ne peut pas être vide' })
+    const setting = await app.prisma.systemSetting.findUnique({ where: { key: COMMENT_MAX_LENGTH.key } })
+    const maxLength = setting && Number(setting.value) > 0 ? Number(setting.value) : COMMENT_MAX_LENGTH.fallback
+    const parsed = readCommentText(content, maxLength)
+    if (!parsed.ok) return reply.code(400).send({ error: parsed.error })
 
-    const video = await app.prisma.eventVideo.findUnique({ where: { id: videoId } })
-    if (!video || video.deletedAt) return reply.code(404).send({ error: 'Vidéo introuvable' })
+    const video = await findVisibleVideo(videoId, userId)
+    if (!video) return reply.code(404).send({ error: 'Vidéo introuvable' })
 
-    const comment = await app.prisma.eventVideoComment.create({
-      data: { userId, videoId, content: content.trim() },
-      include: {
-        user: { select: { id: true, profile: { select: { displayName: true, avatarUrl: true, username: true } } } }
-      }
+    let rootId: string | null = null
+    let repliedTo: { userId: string } | null = null
+    if (parentId) {
+      const parent = await app.prisma.eventVideoComment.findFirst({ where: { id: parentId, videoId }, select: { id: true, parentId: true, userId: true } })
+      if (!parent) return reply.code(404).send({ error: 'Commentaire introuvable', code: 'PARENT_NOT_FOUND' })
+      rootId = parent.parentId ?? parent.id
+      repliedTo = { userId: parent.userId }
+    }
+
+    const created = await app.prisma.eventVideoComment.create({
+      data: { userId, videoId, content: parsed.text, parentId: rootId },
+      include: commentInclude(userId),
     })
 
-    return reply.code(201).send({ data: comment })
+    if (repliedTo && repliedTo.userId !== userId) {
+      const author = created.user?.profile?.displayName || created.user?.profile?.username || "Quelqu'un"
+      createAndSendNotification(app, {
+        userId: repliedTo.userId,
+        type: 'COMMENT_REPLY',
+        title: `${author} a répondu à votre commentaire`,
+        body: excerpt(parsed.text),
+        data: { videoId, commentId: created.id, screen: 'video' },
+      }).catch(() => {})
+    }
+
+    return reply.code(201).send({ data: toCommentDto(created as any) })
+  })
+
+  // ─── POST /api/v1/videos/:id/comments/:commentId/like ───────────────────
+  // Bascule « J'aime » (corps facultatif { liked: true|false } pour forcer l'état)
+  app.post('/:id/comments/:commentId/like', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub: userId } = req.user as { sub: string }
+    const { id: videoId, commentId } = req.params as { id: string; commentId: string }
+    const desired = (req.body as any)?.liked
+    if (!(await findVisibleVideo(videoId, userId))) return reply.code(404).send({ error: 'Vidéo introuvable' })
+    const comment = await app.prisma.eventVideoComment.findFirst({ where: { id: commentId, videoId }, select: { id: true } })
+    if (!comment) return reply.code(404).send({ error: 'Commentaire introuvable' })
+
+    const res = await toggleLike({
+      create: () => app.prisma.eventVideoCommentLike.create({ data: { userId, commentId } }),
+      remove: () => app.prisma.eventVideoCommentLike.deleteMany({ where: { userId, commentId } }),
+      count: () => app.prisma.eventVideoCommentLike.count({ where: { commentId } }),
+    }, typeof desired === 'boolean' ? desired : undefined)
+    return reply.send(res)
   })
 
   // ─── DELETE /api/v1/videos/:id/comments/:commentId ──────────────────────

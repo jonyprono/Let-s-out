@@ -60,6 +60,8 @@ function CapacitorThemeSync() {
 import { Toaster, toast } from 'sonner'
 import { queryClient } from '@/lib/query-client'
 import { useAuthStore } from '@/stores/auth.store'
+import { authLinkWithReturn, captureRedirectParam, clearReturnTo, peekReturnTo, postAuthPath } from '@/lib/return-to'
+import { SharedContentRoute } from '@/features/social/deeplink/SharedContent'
 import { AppLayout } from '@/app/layouts/AppLayout'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
 import { SmartAppBanner } from '@/components/shared/SmartAppBanner'
@@ -143,7 +145,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
   const location = useLocation()
-  if (!token) return <Navigate to="/login" replace />
+  // Non connecté : la page demandée est retenue → on y revient après connexion / inscription
+  if (!token) return <Navigate to={authLinkWithReturn('/login', location.pathname + location.search)} replace />
 
   const pendingGoogleSignup = localStorage.getItem('pending_google_signup') === 'true'
   if (pendingGoogleSignup) {
@@ -162,7 +165,9 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.accessToken)
   const user = useAuthStore((s) => s.user)
   const location = useLocation()
-  
+  // ?redirect= (lien partagé, page protégée) : mémorisé pour survivre aux étapes d'inscription / Google
+  useEffect(() => { captureRedirectParam(location.search) }, [location.search])
+
   if (token) {
     const pendingGoogleSignup = localStorage.getItem('pending_google_signup') === 'true'
     if (pendingGoogleSignup) {
@@ -173,7 +178,7 @@ function GuestRoute({ children }: { children: React.ReactNode }) {
     const p: any = user?.profile || {}
     const isProfileIncomplete = !p.displayName
     if (user?.role !== 'ADMIN' && isProfileIncomplete) return <Navigate to="/onboarding" replace />
-    return <Navigate to="/home" replace />
+    return <Navigate to={postAuthPath()} replace />
   }
   return <>{children}</>
 }
@@ -189,7 +194,7 @@ function RootRoute() {
     const p: any = user?.profile || {}
     const isProfileIncomplete = !p.displayName
     if (user?.role !== 'ADMIN' && isProfileIncomplete) return <Navigate to="/onboarding" replace />
-    return <Navigate to="/home" replace />
+    return <Navigate to={postAuthPath()} replace />
   }
 
   // Detect native Capacitor WebView
@@ -249,10 +254,12 @@ function CapacitorBackButton() {
       navigate(-1)
     }
     
-    CapacitorApp.addListener('backButton', handleBackButton)
+    // Retire UNIQUEMENT cet écouteur : removeAllListeners() supprimait aussi celui des liens
+    // entrants (DeepLinkHandler) à chaque navigation → les liens partagés n'ouvraient plus l'app.
+    const handle = CapacitorApp.addListener('backButton', handleBackButton)
 
     return () => {
-      CapacitorApp.removeAllListeners()
+      handle.then((h) => h.remove()).catch(() => {})
     }
   }, [navigate, location])
 
@@ -266,24 +273,32 @@ function DeepLinkHandler() {
     if (!Capacitor.isNativePlatform()) return
 
     const handleDeepLink = (data: any) => {
-      // data.url will look like "https://letsout.app/event/join/XYZ"
-      const url = data.url
-      if (url && url.includes('letsout.app')) {
-        const slug = url.split('letsout.app').pop()
-        if (slug) {
-          // navigate into the react router
-          navigate(slug)
-        }
-      }
+      // Ex. https://letsout.app/event/join/XYZ, /videos/:id, /vlogs/:id, /posts/:id
+      try {
+        const u = new URL(String(data?.url ?? ''))
+        if (u.hostname !== 'letsout.app' && u.hostname !== 'www.letsout.app') return
+        const target = u.pathname + u.search
+        if (target && target !== '/') navigate(target)
+      } catch { /* URL invalide : ignorée */ }
     }
 
-    CapacitorApp.addListener('appUrlOpen', handleDeepLink)
+    const handle = CapacitorApp.addListener('appUrlOpen', handleDeepLink)
 
     return () => {
-      CapacitorApp.removeAllListeners()
+      handle.then((h) => h.remove()).catch(() => {})
     }
   }, [navigate])
 
+  return null
+}
+
+/** La page de retour mémorisée (lien partagé, page protégée) est consommée une fois atteinte */
+function ReturnToTracker() {
+  const location = useLocation()
+  useEffect(() => {
+    const target = peekReturnTo()
+    if (target && (target === location.pathname || target === location.pathname + location.search)) clearReturnTo()
+  }, [location.pathname, location.search])
   return null
 }
 
@@ -349,6 +364,7 @@ export default function App() {
         <PushNotificationCoordinator />
         <GlobalVideoPlaybackCoordinator />
         <DeepLinkHandler />
+        <ReturnToTracker />
         <CapacitorThemeSync />
         <AppBootstrap />
         <SmartAppBanner />
@@ -368,6 +384,12 @@ export default function App() {
 
           {/* Onboarding — accessible to authenticated users after signup */}
           <Route path="/onboarding" element={<Onboarding />} />
+
+          {/* Liens partagés (deep links) : visiteur → inscription obligatoire ; connecté → plein écran.
+              /vlogs/:id = alias de /videos/:id (liens déjà diffusés). */}
+          <Route path="/videos/:id" element={<SharedContentRoute kind="video" protect={(n) => <ProtectedRoute>{n}</ProtectedRoute>} />} />
+          <Route path="/vlogs/:id" element={<SharedContentRoute kind="video" protect={(n) => <ProtectedRoute>{n}</ProtectedRoute>} />} />
+          <Route path="/posts/:id" element={<SharedContentRoute kind="post" protect={(n) => <ProtectedRoute>{n}</ProtectedRoute>} />} />
 
           {/* Legal routes */}
           <Route path="/privacy" element={<PrivacyPolicy />} />

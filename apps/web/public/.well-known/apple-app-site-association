@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["REPLACE_WITH_TEAM_ID.com.fihodecorp.letsout"],
+        "appIDs": ["GWZQYSN37A.com.letsout.app"],
         "components": [
           {
             "/": "/event/join/*",
@@ -11,12 +11,24 @@
           {
             "/": "/events/*",
             "comment": "Matches any event detail page"
+          },
+          {
+            "/": "/videos/*",
+            "comment": "Shared vlog"
+          },
+          {
+            "/": "/vlogs/*",
+            "comment": "Shared vlog (alias)"
+          },
+          {
+            "/": "/posts/*",
+            "comment": "Shared page post"
           }
         ]
       }
     ]
   },
   "webcredentials": {
-    "apps": ["REPLACE_WITH_TEAM_ID.com.fihodecorp.letsout"]
+    "apps": ["GWZQYSN37A.com.letsout.app"]
   }
 }

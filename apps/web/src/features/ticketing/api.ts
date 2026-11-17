@@ -84,6 +84,9 @@ export function ticketShareUrl(token: string) {
 export const ticketingApi = {
   publicTiers: (eventId: string) => apiClient.get<PublicTiers>(`/events/${eventId}/ticket-tiers`).then((r) => r.data),
   myTickets: (eventId: string) => apiClient.get<MyTickets>(`/events/${eventId}/my-tickets`).then((r) => r.data),
+  /** Renvoie tous mes billets de l'événement à l'adresse e-mail du compte (`to` = adresse masquée) */
+  resendTicketsEmail: (eventId: string) =>
+    apiClient.post<{ sent: true; to: string; count: number }>(`/events/${eventId}/my-tickets/resend-email`).then((r) => r.data),
   config: () => apiClient.get<TicketingConfig>('/payments/ticket-config').then((r) => r.data),
   sales: (eventId: string) => apiClient.get<TicketSales>(`/events/${eventId}/ticket-sales`).then((r) => r.data),
   createTier: (eventId: string, input: TierInput) => apiClient.post<TicketTier>(`/events/${eventId}/ticket-tiers`, input).then((r) => r.data),

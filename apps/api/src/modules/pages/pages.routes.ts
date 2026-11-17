@@ -1,8 +1,29 @@
 import { FastifyInstance } from 'fastify'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
-import { createAndSendNotificationMany } from '../notifications/notifications.routes'
+import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
+import {
+  buildCommentThreads, commentInclude, COMMENT_MAX_LENGTH, excerpt, readCommentText, toCommentDto, toggleLike,
+} from '../../services/social.service'
+
+const viewerOf = (req: any): string | null => {
+  try { return (req.user as any)?.sub ?? null } catch { return null }
+}
+
+/** Compteurs d'une publication : commentaires, likes, et « aimé par moi » */
+function postSocialInclude(viewerId: string | null) {
+  return {
+    _count: { select: { comments: true, likes: true } },
+    ...(viewerId ? { likes: { where: { userId: viewerId }, select: { id: true } } } : {}),
+  }
+}
+
+/** Ajoute likesCount / hasLiked et retire la liste brute des likes */
+function withPostLikes<T extends { _count?: any; likes?: any[] }>(post: T) {
+  const { likes, ...rest } = post as any
+  return { ...rest, likesCount: post._count?.likes ?? 0, hasLiked: !!likes?.length }
+}
 
 export default async function pagesRoutes(app: FastifyInstance) {
   // CREATE A PAGE
@@ -220,7 +241,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
       where,
       include: {
         page: { select: { id: true, name: true, avatarUrl: true, creatorId: true } },
-        _count: { select: { comments: true } }
+        ...postSocialInclude(sub ?? null),
       },
       orderBy: { createdAt: 'desc' },
       take: limit
@@ -236,7 +257,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
     const posts = await app.prisma.pagePost.findMany(findManyArgs)
 
     const data = posts.map((post: any) => ({
-      ...post,
+      ...withPostLikes(post),
       isFollowing: followedPageIds.has(post.pageId),
       isOwner: sub ? post.page.creatorId === sub : false
     }))
@@ -398,13 +419,15 @@ export default async function pagesRoutes(app: FastifyInstance) {
   // LIST POSTS (include comment count + comments)
   app.get('/:id/posts', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
     const { id } = req.params as { id: string }
+    const viewerId = viewerOf(req)
 
     const posts = await app.prisma.pagePost.findMany({
       where: { pageId: id },
       orderBy: { createdAt: 'desc' },
       include: {
-        _count: { select: { comments: true } },
+        ...postSocialInclude(viewerId),
         comments: {
+          where: { parentId: null }, // aperçu : commentaires racines uniquement
           orderBy: { createdAt: 'asc' },
           take: 5,
           include: {
@@ -413,38 +436,122 @@ export default async function pagesRoutes(app: FastifyInstance) {
         }
       }
     })
-    return reply.send({ data: posts })
+    return reply.send({ data: posts.map(withPostLikes) })
   })
 
-  // GET COMMENTS FOR A POST
-  app.get('/:id/posts/:postId/comments', async (req, reply) => {
-    const { postId } = req.params as { id: string; postId: string }
-    const comments = await app.prisma.pagePostComment.findMany({
+  // ONE POST (lien partagé /posts/:postId) — même filtrage que le fil (créateur banni / blocages)
+  app.get('/posts/:postId', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
+    const { postId } = req.params as { postId: string }
+    const viewerId = viewerOf(req)
+    const post = await app.prisma.pagePost.findUnique({
+      where: { id: postId },
+      include: {
+        page: { select: { id: true, name: true, avatarUrl: true, creatorId: true, creator: { select: { isBanned: true } } } },
+        ...postSocialInclude(viewerId),
+      },
+    })
+    if (!post || post.page.creator?.isBanned) return reply.code(404).send({ error: 'Publication introuvable', code: 'POST_NOT_FOUND' })
+    if (viewerId) {
+      const blocked = await app.prisma.userBlock.findFirst({
+        where: { OR: [{ blockerId: viewerId, blockedId: post.page.creatorId }, { blockerId: post.page.creatorId, blockedId: viewerId }] },
+        select: { id: true },
+      })
+      if (blocked) return reply.code(404).send({ error: 'Publication introuvable', code: 'POST_NOT_FOUND' })
+    }
+    const following = viewerId
+      ? !!(await app.prisma.pageFollower.findUnique({ where: { pageId_userId: { pageId: post.pageId, userId: viewerId } } }))
+      : false
+    const { creator: _creator, ...page } = post.page
+    return reply.send({
+      data: { ...withPostLikes({ ...post, page }), isFollowing: following, isOwner: viewerId ? post.page.creatorId === viewerId : false },
+    })
+  })
+
+  // LIKE / UNLIKE A POST (bascule ; corps facultatif { liked: true|false })
+  app.post('/:id/posts/:postId/like', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id, postId } = req.params as { id: string; postId: string }
+    const desired = (req.body as any)?.liked
+    const post = await app.prisma.pagePost.findFirst({ where: { id: postId, pageId: id }, select: { id: true } })
+    if (!post) return reply.code(404).send({ error: 'Publication introuvable' })
+    const res = await toggleLike({
+      create: () => app.prisma.pagePostLike.create({ data: { userId: sub, postId } }),
+      remove: () => app.prisma.pagePostLike.deleteMany({ where: { userId: sub, postId } }),
+      count: () => app.prisma.pagePostLike.count({ where: { postId } }),
+    }, typeof desired === 'boolean' ? desired : undefined)
+    return reply.send(res)
+  })
+
+  // GET COMMENTS FOR A POST — fils (racines + réponses), likes, « aimé par moi »
+  app.get('/:id/posts/:postId/comments', { preHandler: [app.optionalAuthenticate] }, async (req, reply) => {
+    const { id, postId } = req.params as { id: string; postId: string }
+    const viewerId = viewerOf(req)
+    const post = await app.prisma.pagePost.findFirst({ where: { id: postId, pageId: id }, select: { id: true } })
+    if (!post) return reply.code(404).send({ error: 'Publication introuvable' })
+    const raw = await app.prisma.pagePostComment.findMany({
       where: { postId },
       orderBy: { createdAt: 'asc' },
-      include: {
-        user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, displayName: true } } } }
-      }
+      include: commentInclude(viewerId),
     })
-    return reply.send({ data: comments })
+    return reply.send({ data: buildCommentThreads(raw as any, 'asc') })
   })
 
-  // ADD COMMENT TO A POST
+  // ADD COMMENT TO A POST — `parentId` facultatif : réponse (rattachée au commentaire RACINE)
   app.post('/:id/posts/:postId/comments', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { postId } = req.params as { id: string; postId: string }
-    const { text } = req.body as { text: string }
+    const { id, postId } = req.params as { id: string; postId: string }
+    const { text, parentId } = (req.body ?? {}) as { text?: string; parentId?: string | null }
 
-    if (!text?.trim()) return reply.code(400).send({ error: 'Text required' })
+    const setting = await app.prisma.systemSetting.findUnique({ where: { key: COMMENT_MAX_LENGTH.key } })
+    const maxLength = setting && Number(setting.value) > 0 ? Number(setting.value) : COMMENT_MAX_LENGTH.fallback
+    const parsed = readCommentText(text, maxLength)
+    if (!parsed.ok) return reply.code(400).send({ error: parsed.error })
 
-    const comment = await app.prisma.pagePostComment.create({
-      data: { postId, userId: sub, text: text.trim() },
-      include: {
-        user: { select: { id: true, profile: { select: { username: true, avatarUrl: true, displayName: true } } } }
-      }
+    const post = await app.prisma.pagePost.findFirst({ where: { id: postId, pageId: id }, select: { id: true } })
+    if (!post) return reply.code(404).send({ error: 'Publication introuvable' })
+
+    let rootId: string | null = null
+    let repliedToUserId: string | null = null
+    if (parentId) {
+      const parent = await app.prisma.pagePostComment.findFirst({ where: { id: parentId, postId }, select: { id: true, parentId: true, userId: true } })
+      if (!parent) return reply.code(404).send({ error: 'Commentaire introuvable', code: 'PARENT_NOT_FOUND' })
+      rootId = parent.parentId ?? parent.id
+      repliedToUserId = parent.userId
+    }
+
+    const created = await app.prisma.pagePostComment.create({
+      data: { postId, userId: sub, text: parsed.text, parentId: rootId },
+      include: commentInclude(sub),
     })
 
-    return reply.code(201).send(comment)
+    if (repliedToUserId && repliedToUserId !== sub) {
+      const author = created.user?.profile?.displayName || created.user?.profile?.username || "Quelqu'un"
+      createAndSendNotification(app, {
+        userId: repliedToUserId,
+        type: 'COMMENT_REPLY',
+        title: `${author} a répondu à votre commentaire`,
+        body: excerpt(parsed.text),
+        data: { pageId: id, postId, commentId: created.id, screen: 'post' },
+      }).catch(() => {})
+    }
+
+    // Format historique (objet à la racine) conservé + champs sociaux
+    return reply.code(201).send(toCommentDto(created as any))
+  })
+
+  // LIKE / UNLIKE A COMMENT (bascule ; corps facultatif { liked: true|false })
+  app.post('/:id/posts/:postId/comments/:commentId/like', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id, postId, commentId } = req.params as { id: string; postId: string; commentId: string }
+    const desired = (req.body as any)?.liked
+    const comment = await app.prisma.pagePostComment.findFirst({ where: { id: commentId, postId, post: { pageId: id } }, select: { id: true } })
+    if (!comment) return reply.code(404).send({ error: 'Commentaire introuvable' })
+    const res = await toggleLike({
+      create: () => app.prisma.pagePostCommentLike.create({ data: { userId: sub, commentId } }),
+      remove: () => app.prisma.pagePostCommentLike.deleteMany({ where: { userId: sub, commentId } }),
+      count: () => app.prisma.pagePostCommentLike.count({ where: { commentId } }),
+    }, typeof desired === 'boolean' ? desired : undefined)
+    return reply.send(res)
   })
 
   // DELETE COMMENT ON A POST (author or page creator)
