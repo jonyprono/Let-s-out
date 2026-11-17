@@ -6,6 +6,7 @@ import { PayoutError, adminForceRelease, adminReject } from '../../services/payo
 import { format } from 'date-fns'
 import adminStatsRoutes from './admin-stats.routes'
 import adminListsRoutes from './admin-lists.routes'
+import { kycFileUrl } from '../../services/cloudinary.service'
 import {
   validateSystemSettingValue,
   clearSignupPolicyCache,
@@ -132,11 +133,12 @@ export default async function adminRoutes(app: FastifyInstance) {
 
     return reply.send({
       ...mapKycRow(profile),
+      // Liens signés expirant (pièces privées) ; anciens liens publics tels quels pendant la migration
       documents: {
-        idFront: profile.kycIdFront,
-        idBack: profile.kycIdBack,
-        selfie: profile.kycSelfie,
-        selfieWithId: profile.kycSelfieWithId,
+        idFront: kycFileUrl(profile.kycIdFront),
+        idBack: kycFileUrl(profile.kycIdBack),
+        selfie: kycFileUrl(profile.kycSelfie),
+        selfieWithId: kycFileUrl(profile.kycSelfieWithId),
       },
       user: profile.user,
     })

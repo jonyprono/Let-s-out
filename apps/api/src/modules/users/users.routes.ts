@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { createAndSendNotification } from '../notifications/notifications.routes'
-import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
+import { uploadKycFile } from '../../services/cloudinary.service'
 import { evaluateUserBadges } from '../../services/badge.service'
 import { findUpcomingConfirmedBookings, sendUpcomingTicketsToEmail } from '../../services/ticket-mailer.service'
 import { AuthService } from '../auth/auth.service'
@@ -402,8 +402,8 @@ export default async function usersRoutes(app: FastifyInstance) {
         const folder = `kyc/${sub}`
         
         const buffer = await part.toBuffer()
-        const url = await uploadBufferToCloudinary(buffer, folder, filename)
-        saved[part.fieldname] = url
+        // SÉCURITÉ : stockage privé (lien signé admin uniquement) — jamais un lien public
+        saved[part.fieldname] = await uploadKycFile(buffer, folder, filename)
       }
 
       if (Object.keys(saved).length === 0) {
@@ -482,7 +482,9 @@ export default async function usersRoutes(app: FastifyInstance) {
         },
       })
 
-      return reply.send({ success: true, kycStatus: profile.kycStatus, documents: saved, reason: rejectReason })
+      // Pièces reçues (oui / non) — jamais leur référence de stockage
+      const documents = Object.fromEntries(Object.keys(saved).map((k) => [k, true]))
+      return reply.send({ success: true, kycStatus: profile.kycStatus, documents, reason: rejectReason })
     } catch (err) {
       console.error('KYC Upload error', err)
       return reply.code(500).send({ error: 'Upload failed' })
