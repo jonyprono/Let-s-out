@@ -77,11 +77,68 @@ video {
   to   { transform: translateY(0);    opacity: 1; }
 }
 
+/* ── Accueil : premier glissement ───────────────────────────────────────────── */
+/* react-simple-pull-to-refresh démarre .ptr__children en `overflow: hidden` et ne le passe en
+   `overflow-y: auto` qu'À LA FIN du premier toucher (initContainer) : le 1er glissement après
+   chaque affichage de l'accueil ne faisait pas défiler le fil. Défilable dès le départ ;
+   pendant un « tirer pour rafraîchir », la bibliothèque impose son style en ligne (prioritaire). */
+.ptr > .ptr__children {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* ── Accueil : cartes du fil hors écran ignorées par le moteur de rendu ─────── */
+/* Le fil affiche ~60 cartes (~14 500 px) sans virtualisation : seules les cartes proches de
+   l'écran sont mises en page / dessinées. `auto` = la hauteur réelle mémorisée après le 1er
+   affichage (pas de saut de défilement) ; la valeur chiffrée sert seulement avant.
+   ATTENTION : content-visibility rogne ce qui dépasse et capture les `position: fixed` —
+   ne jamais l'appliquer à un bloc qui contient un menu / une fenêtre en `fixed`. */
+/* Carte d'événement : appliqué au bloc INTÉRIEUR (image + texte), qui rogne déjà son contenu
+   (overflow-hidden arrondi) → l'ombre, portée par le cadre extérieur, n'est pas rognée et
+   l'espacement du fil ne change pas. */
+.feed-cv-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 190px;
+}
+.feed-cv-body {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}
+
 /* ── OUT RADAR — Pulse animation des cercles concentriques ───────────────── */
-@keyframes radarPulse {
-  0%   { r: 0;    opacity: 0.9; }
-  60%  { r: 140;  opacity: 0.2; }
-  100% { r: 145;  opacity: 0;   }
+/* Anneaux = <div> arrondies agrandies par transform: scale (GPU), identiques sur iOS, Android, web.
+   Avant : animation CSS de l'attribut SVG `r` → gérée par Chrome (Android) mais PAS par WebKit
+   (iPhone) : les cercles restaient à r="0", donc invisibles. Taille = rayon réel du radar (100 %). */
+.radar-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border-style: solid;
+  border-color: #FF7A00;
+  transform: scale(0);
+  transform-origin: center;
+  opacity: 0;
+  will-change: transform, opacity;
+  pointer-events: none;
+  animation: radarPulseRing 2s ease-out infinite;
+}
+@keyframes radarPulseRing {
+  0%   { transform: scale(0);     opacity: 0.9; }
+  60%  { transform: scale(0.965); opacity: 0.2; }
+  100% { transform: scale(1);     opacity: 0;   }
+}
+/* « Réduire les animations » (iOS / Android / OS) : pas d'agrandissement, anneaux fixes qui
+   « respirent » doucement — on voit toujours que la recherche est en cours. */
+@keyframes radarPulseSoft {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 0.75; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radar-pulse-ring {
+    animation: radarPulseSoft 2.4s ease-in-out infinite;
+    transform: scale(var(--radar-ring-rest, 0.6));
+    will-change: opacity;
+  }
 }
 
 .page-enter {

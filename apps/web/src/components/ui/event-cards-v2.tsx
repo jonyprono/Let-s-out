@@ -470,10 +470,13 @@ export function RowEventCard({
   event,
   onClick,
   layout = 'responsive',
+  deferRender = false,
 }: {
   event: Event
   onClick?: () => void
   layout?: 'responsive' | 'compact'
+  /** Longues listes : rendu différé hors écran (content-visibility, cf. .feed-cv-row). Défaut : non. */
+  deferRender?: boolean
 }) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const isSaved = isFavorite(event.id)
@@ -502,7 +505,7 @@ export function RowEventCard({
     >
       {/* ── Main row: image left / content right ── */}
       <div
-        className={`flex flex-row overflow-hidden rounded-[24px] ${isCompact ? 'min-h-[130px]' : 'min-h-[190px]'}`}
+        className={`flex flex-row overflow-hidden rounded-[24px] ${isCompact ? 'min-h-[130px]' : 'min-h-[190px]'}${deferRender ? ' feed-cv-row' : ''}`}
         onClick={onClick}
       >
         {/* Left: Image — 43% width, stretches to full card height, all corners rounded */}

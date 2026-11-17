@@ -23,6 +23,13 @@ const RING_FRACS = [0.27, 0.46, 0.63, 0.77]
 
 const AVATAR_SIZE = 40
 
+/** Anneaux de recherche : décalage (s), épaisseur (px), taille fixe si « Réduire les animations » */
+const RADAR_PULSES = [
+  { delay: 0, width: 2, rest: 0.35 },
+  { delay: 0.65, width: 1.6, rest: 0.65 },
+  { delay: 1.3, width: 1.2, rest: 0.95 },
+]
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function hashStr(s: string): number {
@@ -186,14 +193,29 @@ export function RadarView({
                   strokeWidth={0.75} />
               )
             })}
-
-            {/* Pulse pendant recherche */}
-            {isSearching && [0, 0.65, 1.3].map((delay, i) => (
-              <circle key={i} cx={cx} cy={cy} r="0" fill="none"
-                stroke="#FF7A00" strokeWidth={2 - i * 0.4}
-                style={{ animation: `radarPulse 2s ease-out infinite`, animationDelay: `${delay}s` }} />
-            ))}
           </svg>
+
+          {/* Pulse pendant recherche : 3 anneaux orange (transform: scale + opacity, cf. .radar-pulse-ring).
+              Montés seulement pendant la recherche → s'arrêtent à la fin du décompte / aux résultats. */}
+          {isSearching && (
+            <div
+              className="absolute pointer-events-none"
+              style={{ left: cx - radius, top: cy - radius, width: radius * 2, height: radius * 2 }}
+              aria-hidden="true"
+            >
+              {RADAR_PULSES.map((p, i) => (
+                <span
+                  key={i}
+                  className="radar-pulse-ring"
+                  style={{
+                    borderWidth: p.width,
+                    animationDelay: `${p.delay}s`,
+                    ['--radar-ring-rest' as string]: p.rest,
+                  } as React.CSSProperties}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Pastille centrale utilisateur */}
           <div className="absolute z-10 flex items-center justify-center rounded-full bg-[#FF7A00] border-[3px] border-white dark:border-[#0f0f0f] shadow-lg shadow-[#FF7A00]/40"

@@ -58,9 +58,98 @@ export const apiClient = axios.create({
   timeout: isCapacitor() ? 90000 : 45000,
 })
 
+// ── Renouvellement du jeton d'accès (partagé) ─────────────────────────────────
+//
+// Le jeton d'accès dure 15 min (JWT_EXPIRES_IN). Avant : à l'ouverture de l'app après une pause,
+// TOUTES les requêtes partaient avec un jeton périmé → 401 → renouvellement → renvoi, soit
+// 3 allers-retours avant le premier affichage (+ un 2e renouvellement si un 401 arrivait en retard).
+// Maintenant : (A) le jeton est renouvelé AVANT l'envoi s'il expire dans moins de
+// TOKEN_REFRESH_MARGIN_MS, et (B) un seul renouvellement à la fois, partagé par tous les appels.
+
+/** Renouvellement anticipé si le jeton expire dans moins de 30 s (horloges client/serveur décalées) */
+const TOKEN_REFRESH_MARGIN_MS = 30_000
+
+// Auth endpoints that should NOT trigger refresh logic (proactive or after a 401)
+const authEndpoints = ['/auth/login', '/auth/register', '/auth/check-', '/auth/verify-', '/auth/send-', '/auth/logout', '/auth/refresh']
+const isAuthEndpoint = (url?: string) => authEndpoints.some(e => url?.includes(e))
+
+/** Millisecondes avant expiration, lues dans le jeton (champ `exp`) — sans appel réseau. null = illisible. */
+function msBeforeExpiry(token: string): number | null {
+  try {
+    const payload = token.split('.')[1]
+    if (!payload) return null
+    const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(payload.length / 4) * 4, '=')))
+    return typeof json.exp === 'number' ? json.exp * 1000 - Date.now() : null
+  } catch {
+    return null
+  }
+}
+
+const isNetworkOrServerError = (err: any) => {
+  const isNetworkError = !err?.response && (
+    err?.message === 'Network Error' ||
+    err?.code === 'ECONNABORTED' ||
+    err?.code === 'ERR_NETWORK' ||
+    err?.code === 'ERR_CANCELED'
+  )
+  return isNetworkError || err?.response?.status >= 500
+}
+
+async function doRefresh(): Promise<string> {
+  // Always send refreshToken in body (works for cross-origin web + Capacitor)
+  // Also relies on cookie as fallback if body token is missing
+  const storedRefreshToken = useAuthStore.getState().refreshToken
+  const body = storedRefreshToken ? { refreshToken: storedRefreshToken } : {}
+
+  // For admin sessions, the refresh token is a dummy string.
+  // We include the expired access token in the Authorization header so the
+  // backend can decode it (without verifying expiry) to identify the admin.
+  const refreshHeaders: Record<string, string> = {}
+  if (storedRefreshToken === 'admin_no_refresh_token_needed') {
+    const expiredToken = useAuthStore.getState().accessToken
+    if (expiredToken) {
+      refreshHeaders['Authorization'] = `Bearer ${expiredToken}`
+    }
+  }
+
+  try {
+    // axios brut (pas apiClient) : le renouvellement ne repasse pas par ces intercepteurs
+    const { data } = await axios.post(
+      `${resolveApiUrl()}/auth/refresh`,
+      body,
+      { withCredentials: true, headers: refreshHeaders },
+    )
+    const { accessToken, refreshToken } = data
+    useAuthStore.getState().setAccessToken(accessToken)
+    if (refreshToken) useAuthStore.getState().setRefreshToken(refreshToken)
+    return accessToken
+  } catch (err: any) {
+    // If the refresh failed simply due to a network drop or a server error (500), DO NOT log the user out!
+    if (!isNetworkOrServerError(err)) {
+      // Session vraiment invalide : déconnexion (comportement inchangé)
+      const wasAdmin = useAuthStore.getState().user?.role === 'ADMIN'
+      useAuthStore.getState().logout()
+      if (!useAuthStore.getState().isLoggingOut) {
+        window.location.href = wasAdmin ? '/admin/login' : '/welcome'
+      }
+    }
+    throw err
+  }
+}
+
+let refreshPromise: Promise<string> | null = null
+
+/** Un seul renouvellement à la fois : tous les appels concurrents attendent le même. */
+export function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = doRefresh().finally(() => { refreshPromise = null })
+  }
+  return refreshPromise
+}
+
 // ── Request interceptor ───────────────────────────────────────────────────────
 
-apiClient.interceptors.request.use((config) => {
+apiClient.interceptors.request.use(async (config) => {
   // Let the browser handle FormData boundary automatically
   if (config.data instanceof FormData) {
     delete config.headers['Content-Type']
@@ -72,7 +161,17 @@ apiClient.interceptors.request.use((config) => {
     config.headers['Content-Type'] = 'application/json'
   }
 
-  const token = useAuthStore.getState().accessToken
+  let token = useAuthStore.getState().accessToken
+  // (A) Jeton expiré ou sur le point de l'être : renouvelé AVANT l'envoi (plus de cascade 401 → renvoi).
+  // En cas d'échec réseau, on envoie quand même avec l'ancien jeton (le filet 401 ci-dessous prend le relais).
+  if (token && !isAuthEndpoint(config.url) && !useAuthStore.getState().isLoggingOut) {
+    const remaining = msBeforeExpiry(token)
+    if (remaining !== null && remaining < TOKEN_REFRESH_MARGIN_MS) {
+      token = await refreshAccessToken().catch(() => useAuthStore.getState().accessToken)
+      // Session invalide : doRefresh a déconnecté et redirige → inutile d'envoyer la requête
+      if (!token) throw new axios.CanceledError('Session expirée')
+    }
+  }
   if (token) config.headers.Authorization = `Bearer ${token}`
 
   // For Capacitor mobile, send refreshToken in body if it's a refresh request
@@ -90,25 +189,13 @@ apiClient.interceptors.request.use((config) => {
 
 // ── Response interceptor ─────────────────────────────────────────────────────
 
-let isRefreshing = false
-let failedQueue: Array<{ resolve: (v: string) => void; reject: (e: unknown) => void }> = []
-
 // Track if we've already shown the offline toast to avoid spamming
 let offlineToastShown = false
 window.addEventListener('online', () => { offlineToastShown = false })
 
-function processQueue(error: unknown, token: string | null = null) {
-  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token!)))
-  failedQueue = []
-}
-
 // Endpoints that should NOT trigger the network error toast
 const silentEndpoints = ['/notifications', '/auth/me', '/auth/refresh', '/chat/admin']
 const isSilent = (url?: string) => silentEndpoints.some(e => url?.includes(e))
-
-// Auth endpoints that should NOT trigger 401 refresh logic
-const authEndpoints = ['/auth/login', '/auth/register', '/auth/check-', '/auth/verify-', '/auth/send-', '/auth/logout', '/auth/refresh']
-const isAuthEndpoint = (url?: string) => authEndpoints.some(e => url?.includes(e))
 
 apiClient.interceptors.response.use(
   (res) => {
@@ -141,7 +228,9 @@ apiClient.interceptors.response.use(
 
     const original = error.config
 
-    // ── 401: try to refresh token ──────────────────────────────────────────
+    // ── 401: filet de sécurité (jeton révoqué, horloge du téléphone décalée…) ──
+    // (B) Même renouvellement PARTAGÉ que l'envoi anticipé : plusieurs 401 simultanés ou tardifs
+    // n'en déclenchent qu'un seul. Chaque requête n'est renvoyée qu'une fois (_retry).
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint(original.url)) {
       const authState = useAuthStore.getState()
       // Ne pas rétablir la session après une déconnexion volontaire
@@ -149,71 +238,17 @@ apiClient.interceptors.response.use(
         return Promise.reject(error)
       }
 
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        }).then((token) => {
-          original.headers.Authorization = `Bearer ${token}`
-          return apiClient(original)
-        })
-      }
-
       original._retry = true
-      isRefreshing = true
-
+      // Un autre appel a peut-être déjà obtenu un nouveau jeton pendant que celui-ci était en vol
+      const sentToken = String(original.headers?.Authorization ?? '').replace(/^Bearer /, '')
+      const currentToken = useAuthStore.getState().accessToken
       try {
-        // Always send refreshToken in body (works for cross-origin web + Capacitor)
-        // Also relies on cookie as fallback if body token is missing
-        const storedRefreshToken = useAuthStore.getState().refreshToken
-        const body = storedRefreshToken ? { refreshToken: storedRefreshToken } : {}
-
-        // For admin sessions, the refresh token is a dummy string.
-        // We include the expired access token in the Authorization header so the
-        // backend can decode it (without verifying expiry) to identify the admin.
-        const refreshHeaders: Record<string, string> = {}
-        if (storedRefreshToken === 'admin_no_refresh_token_needed') {
-          const expiredToken = useAuthStore.getState().accessToken
-          if (expiredToken) {
-            refreshHeaders['Authorization'] = `Bearer ${expiredToken}`
-          }
-        }
-
-        const { data } = await axios.post(
-          `${resolveApiUrl()}/auth/refresh`,
-          body,
-          { withCredentials: true, headers: refreshHeaders },
-        )
-        const { accessToken, refreshToken } = data
-        useAuthStore.getState().setAccessToken(accessToken)
-        if (refreshToken) useAuthStore.getState().setRefreshToken(refreshToken)
-        processQueue(null, accessToken)
-        original.headers.Authorization = `Bearer ${accessToken}`
+        const token = currentToken && currentToken !== sentToken ? currentToken : await refreshAccessToken()
+        original.headers.Authorization = `Bearer ${token}`
         return apiClient(original)
-      } catch (err: any) {
-        processQueue(err, null)
-        
-        const isNetworkError = !err.response && (
-          err.message === 'Network Error' ||
-          err.code === 'ECONNABORTED' ||
-          err.code === 'ERR_NETWORK' ||
-          err.code === 'ERR_CANCELED'
-        )
-        const isServerError = err.response?.status >= 500
-
-        // If the refresh failed simply due to a network drop or a server error (500), DO NOT log the user out!
-        if (isNetworkError || isServerError) {
-          return Promise.reject(err)
-        }
-
-        // Determine redirect target before clearing state
-        const wasAdmin = useAuthStore.getState().user?.role === 'ADMIN'
-        useAuthStore.getState().logout()
-        if (!useAuthStore.getState().isLoggingOut) {
-          window.location.href = wasAdmin ? '/admin/login' : '/welcome'
-        }
+      } catch (err) {
+        // Déconnexion éventuelle déjà gérée dans doRefresh (sauf coupure réseau / erreur 500)
         return Promise.reject(err)
-      } finally {
-        isRefreshing = false
       }
     }
 

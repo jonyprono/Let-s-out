@@ -316,6 +316,9 @@ const PagePostCard = memo(function PagePostCard({
           </div>
         </div>
 
+        {/* Corps (texte + médias) ignoré par le rendu tant qu'il est hors écran. L'en-tête (menu en
+            `fixed`), la barre d'actions et les fenêtres restent EN DEHORS : content-visibility les rognerait. */}
+        <div className="feed-cv-body">
         {/* Content - Clicking opens single publication view */}
         {postContent && (
           <div
@@ -439,6 +442,7 @@ const PagePostCard = memo(function PagePostCard({
             )}
           </div>
         )}
+        </div>
 
         {/* Barre d'actions épurée (style X) : icônes + compteurs, like enregistré + retour haptique */}
         <PostActionBar
@@ -683,7 +687,8 @@ const FeaturedCard = memo(function FeaturedCard({ event, onOpen }: { event: AppE
 });
 
 const RowCard = memo(function RowCard({ event, onOpen }: { event: AppEvent; onOpen: (id: string) => void }) {
-  return <RowEventCard event={event as any} onClick={() => onOpen(event.id)} />;
+  // deferRender : carte du fil d'accueil → rendu différé tant qu'elle est hors écran
+  return <RowEventCard event={event as any} onClick={() => onOpen(event.id)} deferRender />;
 });
 
 // ── Main Home component ─────────────────────────────────────────────────────────
@@ -870,6 +875,22 @@ export function Home({ userData, onNavigate }: HomeProps) {
     }
     return mixed.map(e => ({ type: 'event', data: e }));
   }, [popularEvents, pagePostsData, activeFilter, query]);
+
+  // Liste du fil mémoïsée : le pliage/dépliage de l'en-tête au défilement (handleFeedScroll →
+  // setHeaderCollapsed) re-rend Home, mais ne reconstruit plus les ~60 cartes du fil.
+  // Callbacks stables (openEvent, navigateStable, setter d'état) → recalcul seulement si le fil change.
+  const feedList = useMemo(() => mixedFeed.map((item, idx) => (
+    item.type === 'event' ? (
+      <RowCard key={`evt-${item.data.id}-${idx}`} event={item.data as AppEvent} onOpen={openEvent} />
+    ) : (
+      <PagePostCard
+        key={`post-${item.data.id}-${idx}`}
+        post={item.data}
+        onNavigate={navigateStable}
+        onOpenVideo={setPlayingPageVideoId}
+      />
+    )
+  )), [mixedFeed, openEvent, navigateStable]);
 
   // Real stats
   const now = new Date();
@@ -1152,22 +1173,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
                     </div>
                   ) : (
                     <div className="px-4 space-y-3">
-                      {mixedFeed.map((item, idx) => (
-                        item.type === 'event' ? (
-                          <RowCard
-                            key={`evt-${item.data.id}-${idx}`}
-                            event={item.data as AppEvent}
-                            onOpen={openEvent}
-                          />
-                        ) : (
-                          <PagePostCard
-                            key={`post-${item.data.id}-${idx}`}
-                            post={item.data}
-                            onNavigate={navigateStable}
-                            onOpenVideo={setPlayingPageVideoId}
-                          />
-                        )
-                      ))}
+                      {feedList}
                     </div>
                   )}
 
