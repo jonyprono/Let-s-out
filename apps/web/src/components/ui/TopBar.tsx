@@ -1,5 +1,6 @@
 import React from 'react'
 import { BackButton } from './BackButton'
+import { requestScrollToTop } from '@/lib/scroll-to-top'
 
 interface TopBarProps {
   title?: React.ReactNode
@@ -16,7 +17,8 @@ export function TopBar({ title, rightAction, onBack, className = '', hideBack = 
       <div className="flex items-center gap-3 overflow-hidden">
         {!hideBack && <BackButton onClick={onBack} />}
         {title && (
-          <h1 className={`text-[17px] font-semibold text-gray-900 dark:text-white truncate ${className}`}>
+          // Appui sur le titre = retour en haut de l'écran (comme la barre d'état iOS)
+          <h1 onClick={requestScrollToTop} className={`text-[17px] font-semibold text-gray-900 dark:text-white truncate ${className}`}>
             {title}
           </h1>
         )}

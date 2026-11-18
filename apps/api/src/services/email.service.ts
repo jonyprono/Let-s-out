@@ -126,6 +126,13 @@ export class EmailService {
             <p class="qr-text">Billet personnel à usage unique — valable pour une seule entrée.</p>
           </div>
 
+          <!-- Avertissement anti-fraude : styles en ligne (certains clients e-mail ignorent <style>) -->
+          <div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:16px;padding:16px 18px;margin-bottom:24px;">
+            <p style="margin:0;font-size:14px;line-height:1.5;color:#9A3412;">
+              <strong>🔒 Important :</strong> ce billet et son QR code sont strictement personnels et valables pour une seule entrée. Ne les partagez pas pour éviter toute usurpation.
+            </p>
+          </div>
+
           <div class="details-box">
             <div class="detail-row">
               <span class="detail-label">Date & Heure</span>
@@ -207,10 +214,13 @@ export class EmailService {
           <h1 style="font-size:24px;font-weight:800;color:#18181b;margin:0 0 8px;">${esc(data.eventName)}</h1>
           <p style="font-size:16px;color:#71717a;margin:0 0 24px;">Bonjour ${esc(data.userName)}, voici ${n > 1 ? `vos ${n} billets` : 'votre billet'} !</p>
           ${ticketBlocks}
-          <p style="font-size:13px;color:#71717a;text-align:center;margin:0 0 24px;">
-            Chaque QR code est valable pour <strong>une seule entrée</strong>. Vous pouvez transférer un billet à un invité :
-            il lui suffit de présenter son QR code à l'entrée.
-          </p>
+          <div style="background:#FFF7ED;border:1px solid #FDBA74;border-radius:16px;padding:16px 18px;margin:0 0 24px;">
+            <p style="margin:0;font-size:14px;line-height:1.5;color:#9A3412;">
+              <strong>🔒 Important :</strong> ${n > 1 ? 'ces billets et leurs QR codes sont strictement personnels' : 'ce billet et son QR code sont strictement personnels'} et chaque QR code n'est valable que pour <strong>une seule entrée</strong>.
+              Ne les publiez jamais (réseaux sociaux, groupes) pour éviter toute usurpation.
+              ${n > 1 ? "Pour un invité, transférez-lui uniquement son billet : il lui suffit de présenter son QR code à l'entrée." : ''}
+            </p>
+          </div>
           <div style="background:#f9fafb;border-radius:16px;padding:20px;margin-bottom:24px;font-size:14px;">
             <p style="margin:0 0 10px;"><span style="color:#71717a;">Date & heure :</span> <strong>${esc(formattedDate)}</strong></p>
             <p style="margin:0 0 10px;"><span style="color:#71717a;">Lieu :</span> <strong>${esc(data.location)}</strong></p>

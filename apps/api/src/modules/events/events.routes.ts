@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { randomBytes } from 'crypto'
-import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
+import { createAndSendNotification, createAndSendNotificationMany, notifyAccessTicketIssued } from '../notifications/notifications.routes'
 import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 import { EmailService } from '../../services/email.service'
 import { eventGenderDenial } from '../../services/signup-policy.service'
@@ -1387,6 +1387,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     } catch (e) { app.log.warn(`Failed to send join notification: ${e}`) }
 
+    // Billet d'accès émis (participation confirmée) : avertissement « QR code personnel »
+    if (!event.requiresApproval) {
+      await notifyAccessTicketIssued(app, { userId: sub, eventId: id, eventTitle: event.title, bookingId: booking.id })
+    }
+
     if (!event.requiresApproval) {
       try {
         const user = await app.prisma.user.findUnique({ where: { id: sub } })
@@ -1684,6 +1689,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
           data: { eventId: id, screen: 'event-details' }
         })
       } catch (e) { app.log.warn(`Failed to send approval notification: ${e}`) }
+      // Billet d'accès émis (réservation CONFIRMED) : avertissement « QR code personnel »
+      await notifyAccessTicketIssued(app, { userId: booking.userId, eventId: id, eventTitle: event.title, bookingId })
     } // end else (free event)
 
     return reply.send({ message: 'Request approved' })

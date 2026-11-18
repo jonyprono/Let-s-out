@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router'
+import { requestScrollToTop } from '@/lib/scroll-to-top'
 import { BottomNav } from '@/components/shared/BottomNav'
 import { OfflineBanner } from '@/components/shared/OfflineBanner'
 
@@ -8,7 +10,15 @@ export function AppLayout() {
   const isEventDetails = location.pathname.startsWith('/events/') && location.pathname !== '/events/create'
   const isCreateEvent = location.pathname === '/events/create'
   const isSearchScreen = location.search.includes('screen=search')
-  
+
+  // iOS : appui sur la barre d'état / l'encoche → retour en haut. Le défilement natif de WKWebView
+  // ne s'applique pas (la page ne défile pas, ce sont des conteneurs internes) ; @capacitor/status-bar
+  // relaie l'appui en événement `statusTap` sur window. Jamais émis sur Android ni sur le web.
+  useEffect(() => {
+    window.addEventListener('statusTap', requestScrollToTop)
+    return () => window.removeEventListener('statusTap', requestScrollToTop)
+  }, [])
+
   const hideBottomNav =
     isChatDetails ||
     isEventDetails ||

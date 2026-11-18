@@ -12,6 +12,7 @@ import {
   Notification01Icon,
   UserMultiple02Icon,
   Location01Icon,
+  Ticket01Icon,
 } from 'hugeicons-react';
 import { TopBar } from '@/components/ui/TopBar';
 import { Tag } from 'lucide-react';
@@ -20,6 +21,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { dateLocale } from '@/lib/locale';
 import { useTranslation } from 'react-i18next'
 import i18n from '@/lib/i18n'
+import { isTicketIssued, notifTitle, notifBody } from '@/lib/notification-text'
 interface NotificationsProps {
   onBack: () => void;
 }
@@ -53,6 +55,19 @@ const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string; bg:
   RADAR_INVITE_ACCEPTED:{ icon: TickDouble01Icon,   get label() { return i18n.t('notifications.outRadarAccepte') },          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
   default:             { icon: Notification01Icon,  label: 'Notification',               color: 'text-gray-400',   bg: 'bg-gray-50 dark:bg-gray-800' },
 };
+
+// Billet d'accès émis : envoyé en type SYSTEM + data.kind (aucune migration côté base).
+// Titre et texte traduits ici (fr / en / es) ; le texte stocké (français) sert au push.
+const TICKET_ISSUED_CONFIG = {
+  icon: Ticket01Icon,
+  get label() { return i18n.t('notifications.billetDAcces') },
+  color: 'text-[#FF7A00]',
+  bg: 'bg-orange-50 dark:bg-orange-900/20',
+};
+function notifConfig(n: any) {
+  if (isTicketIssued(n)) return TICKET_ISSUED_CONFIG;
+  return TYPE_CONFIG[n.type] ?? TYPE_CONFIG.default;
+}
 
 function getActionLabel(type: string) {
   switch (type) {
@@ -201,7 +216,7 @@ export function Notifications({ onBack }: NotificationsProps) {
 
   // ── Detail view ─────────────────────────────────────────────────────────────
   if (selectedNotification) {
-    const cfg = TYPE_CONFIG[selectedNotification.type] ?? TYPE_CONFIG.default;
+    const cfg = notifConfig(selectedNotification);
     const Icon = cfg.icon;
     const isPoolUnlock = selectedNotification.type === 'POOL_UNLOCK_REQUEST' || selectedNotification.type === 'POOL_UNLOCK_APPROVED';
     const timeAgo = formatDistanceToNow(new Date(selectedNotification.createdAt), { addSuffix: true, locale: dateLocale() });
@@ -224,12 +239,12 @@ export function Notifications({ onBack }: NotificationsProps) {
               <div className="flex-1">
                 <p className={`text-[12px] font-semibold uppercase tracking-wider ${cfg.color} mb-0.5`}>{cfg.label}</p>
                 <p className="text-[15px] font-bold text-gray-900 dark:text-white leading-snug">
-                  {selectedNotification.title}
+                  <span>{notifTitle(selectedNotification)}</span>
                 </p>
               </div>
             </div>
             <p className="text-[14px] leading-[22px] text-gray-600 dark:text-gray-300">
-              {selectedNotification.body}
+              <span>{notifBody(selectedNotification)}</span>
             </p>
           </div>
 
@@ -256,7 +271,7 @@ export function Notifications({ onBack }: NotificationsProps) {
             onClick={() => handleAction(selectedNotification)}
             className="w-full h-[52px] bg-[#FF7A00] text-white rounded-[14px] font-semibold text-[15px] flex items-center justify-center active:scale-95 transition-transform"
           >
-            {getActionLabel(selectedNotification.type)}
+            <span>{isTicketIssued(selectedNotification) ? t('notifications.voirMonBillet') : getActionLabel(selectedNotification.type)}</span>
           </button>
         </div>
       </div>
@@ -323,7 +338,7 @@ export function Notifications({ onBack }: NotificationsProps) {
         ) : (
           <div className="w-full flex flex-col pt-2">
             {displayedNotifications.map((notif, index) => {
-              const cfg = TYPE_CONFIG[notif.type] ?? TYPE_CONFIG.default;
+              const cfg = notifConfig(notif);
               const Icon = cfg.icon;
               const timeAgo = notif.createdAt
                 ? formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true, locale: dateLocale() })
@@ -351,7 +366,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                         <span className="text-[11px] text-gray-400 shrink-0 ml-2">{timeAgo}</span>
                       </div>
                       <span className="text-[12px] leading-[18px] text-gray-500 dark:text-gray-400 text-left line-clamp-2">
-                        {notif.body}
+                        <span>{notifBody(notif)}</span>
                       </span>
                     </div>
 

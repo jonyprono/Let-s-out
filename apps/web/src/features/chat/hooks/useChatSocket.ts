@@ -11,6 +11,7 @@
  */
 
 import { useAuthStore } from '@/stores/auth.store'
+import { notifTitle, notifBody } from '@/lib/notification-text'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
@@ -212,8 +213,9 @@ export function useChatSocket() {
         
         // Show real-time toast
         if (data.notification?.title && data.notification?.body) {
-          toast.success(data.notification.title, {
-            description: data.notification.body,
+          // Titre / texte traduits pour les notifications qui le permettent (billet d'accès)
+          toast.success(notifTitle(data.notification), {
+            description: notifBody(data.notification),
             duration: 5000,
           })
         }

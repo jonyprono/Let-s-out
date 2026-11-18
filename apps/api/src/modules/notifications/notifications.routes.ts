@@ -172,6 +172,39 @@ export async function createAndSendNotification(
 }
 
 /**
+ * Billet d'accès émis (participation confirmée) : avertit le participant que son QR code est
+ * strictement personnel (anti-fraude). Type SYSTEM + `data.kind = 'TICKET_ISSUED'` : pas de
+ * nouvelle valeur d'enum, donc aucune migration. L'app traduit titre et texte d'après `kind`
+ * (fr / en / es) ; le texte ci-dessous sert au push et aux anciennes versions de l'app.
+ * `ticketsCount > 1` (billetterie multi-places) : les billets peuvent être remis à des invités
+ * (bouton « Partager ») → le message ne l'interdit pas, il demande de ne les remettre qu'à
+ * la personne qui les utilisera. Ne lève jamais.
+ */
+export async function notifyAccessTicketIssued(
+  app: FastifyInstance,
+  args: { userId: string; eventId: string; eventTitle: string; bookingId?: string; ticketsCount?: number },
+) {
+  const count = Math.max(1, args.ticketsCount ?? 1)
+  const body = count > 1
+    ? `Ne publiez jamais vos QR codes. Chaque billet est personnel et à usage unique : remettez-le uniquement à la personne qui l'utilisera pour l'entrée à « ${args.eventTitle} ».`
+    : `Ne partagez jamais votre QR code. Il est strictement personnel et à usage unique pour l'entrée à « ${args.eventTitle} ».`
+  await createAndSendNotification(app, {
+    userId: args.userId,
+    type: 'SYSTEM',
+    title: count > 1 ? '🎟️ Vos billets d\'accès sont disponibles' : '🎟️ Votre billet d\'accès est disponible',
+    body,
+    data: {
+      kind: 'TICKET_ISSUED',
+      eventId: args.eventId,
+      eventTitle: args.eventTitle,
+      ticketsCount: String(count),
+      ...(args.bookingId ? { bookingId: args.bookingId } : {}),
+      screen: 'event-details',
+    },
+  })
+}
+
+/**
  * Same as above but for multiple users at once (e.g. event cancellation).
  */
 export async function createAndSendNotificationMany(

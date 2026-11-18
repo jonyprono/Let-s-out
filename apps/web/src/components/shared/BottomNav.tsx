@@ -6,6 +6,7 @@ import {
   UserCircle02Icon as User,
 } from 'hugeicons-react'
 import { useConversations } from '@/features/chat/api'
+import { requestScrollToTop } from '@/lib/scroll-to-top'
 
 // Icône de messagerie (récupérée de Figma)
 function ChatBubbleIcon({ color = '#56514F', strokeWidth = 1.25, width = 20, height = 20, ...props }: any) {
@@ -52,6 +53,12 @@ export function BottomNav() {
     : 0
 
   const isActive = (path: string) => location.pathname === path
+  // Onglet déjà affiché : un nouvel appui ramène l'écran tout en haut (comme Instagram / X)
+  // au lieu de renavigner vers la même page (qui ne faisait rien).
+  const onTabPress = (path: string) => {
+    if (isActive(path)) requestScrollToTop()
+    else navigate(path)
+  }
 
   return (
     <nav
@@ -69,7 +76,7 @@ export function BottomNav() {
           return (
             <button
               key={tab.path}
-              onClick={() => navigate(tab.path)}
+              onClick={() => onTabPress(tab.path)}
               className="flex flex-col items-center justify-center gap-[2px]"
               style={{ width: '78px', height: '38px' }}
               aria-label={tab.label}
@@ -125,7 +132,7 @@ export function BottomNav() {
           return (
             <button
               key={tab.path}
-              onClick={() => navigate(tab.path)}
+              onClick={() => onTabPress(tab.path)}
               className="flex flex-col items-center justify-center gap-[2px]"
               style={{ width: '78px', height: '38px' }}
               aria-label={tab.label}

@@ -3,12 +3,31 @@ import { createPortal } from 'react-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { QRCodeSVG } from 'qrcode.react'
-import { X, Loader2, CheckCircle2, Share2, Mail } from 'lucide-react'
+import { X, Loader2, CheckCircle2, Share2, Mail, ShieldAlert } from 'lucide-react'
 import { Capacitor } from '@capacitor/core'
 import { toast } from 'sonner'
 import { eventsApi } from '@/features/events/api'
 import { ticketingApi, ticketingKeys, ticketShareUrl, type MyTicketItem } from '@/features/ticketing/api'
 import { useAuthStore } from '@/stores/auth.store'
+
+/**
+ * Avertissement anti-fraude, juste sous le QR. `shareable` (billetterie : bouton « Partager » pour
+ * remettre une place à un invité) → ne pas interdire la remise, seulement la publication.
+ */
+function PersonalTicketWarning({ shareable }: { shareable: boolean }) {
+  const { t } = useTranslation()
+  return (
+    <div
+      className="w-full flex items-start gap-2.5 rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-4 py-3"
+      role="note"
+    >
+      <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" aria-hidden="true" />
+      <p className="font-poppins text-[12.5px] leading-snug font-medium text-amber-900 dark:text-amber-200">
+        <span>{shareable ? t('tickets.personalWarningShareable') : t('tickets.personalWarning')}</span>
+      </p>
+    </div>
+  )
+}
 
 interface MyTicketModalProps {
   eventId: string
@@ -172,6 +191,7 @@ export function MyTicketModal({ eventId, eventTitle, eventDate, open, onClose }:
                   <div className={`p-4 bg-white rounded-2xl border border-gray-200 ${tk.checkedInAt ? 'opacity-40' : ''}`}>
                     <QRCodeSVG value={tk.qrPayload} size={224} level="M" marginSize={2} title={t('tickets.qrAlt')} />
                   </div>
+                  {!tk.checkedInAt && <PersonalTicketWarning shareable />}
                   {tk.checkedInAt ? (
                     <div className="w-full flex items-center gap-2 rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-2.5" role="status">
                       <CheckCircle2 className="w-5 h-5 text-green-700 dark:text-green-400 shrink-0" aria-hidden="true" />
@@ -243,6 +263,7 @@ export function MyTicketModal({ eventId, eventTitle, eventDate, open, onClose }:
             <div className={`p-4 bg-white rounded-2xl border border-gray-200 ${single.data.checkedInAt ? 'opacity-40' : ''}`}>
               <QRCodeSVG value={single.data.qrPayload} size={232} level="M" marginSize={2} title={t('tickets.qrAlt')} />
             </div>
+            {!single.data.checkedInAt && <PersonalTicketWarning shareable={false} />}
 
             {single.data.checkedInAt ? (
               <div className="w-full flex items-center gap-2 rounded-2xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3" role="status">

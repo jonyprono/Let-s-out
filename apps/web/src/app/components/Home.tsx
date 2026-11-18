@@ -10,6 +10,7 @@ import { eventsApi, Event as AppEvent } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
 import { usersApi } from '@/features/users/api';
 import { hapticFeedback } from '@/lib/haptics';
+import { requestScrollToTop, SCROLL_TO_TOP_EVENT } from '@/lib/scroll-to-top';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { useIsOnline } from '@/hooks/useIsOnline';
 import { PermissionsRequest } from './PermissionsRequest';
@@ -818,6 +819,17 @@ export function Home({ userData, onNavigate }: HomeProps) {
     io.observe(marker);
     return () => io.disconnect();
   }, [applyHeaderCollapsed]);
+  // Retour en haut (barre d'état iOS, re-tap sur « Accueil », appui sur l'en-tête) : le panneau
+  // recherche + filtres est redéployé tout de suite, sans attendre la fin de l'animation.
+  // Le défilement lui-même est fait par requestScrollToTop (pas de preventDefault ici).
+  useEffect(() => {
+    const onScrollToTop = () => {
+      dragAccum.current = 0;
+      applyHeaderCollapsed(false);
+    };
+    window.addEventListener(SCROLL_TO_TOP_EVENT, onScrollToTop);
+    return () => window.removeEventListener(SCROLL_TO_TOP_EVENT, onScrollToTop);
+  }, [applyHeaderCollapsed]);
   const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null);
   const qc = useQueryClient();
   const isOffline = !useIsOnline();
@@ -1101,7 +1113,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
             )}
           </button>
 
-          <div className="flex-1 min-w-0">
+          {/* Appui sur la salutation (zone du titre) = retour en haut du fil */}
+          <div className="flex-1 min-w-0 cursor-pointer" onClick={requestScrollToTop}>
             <h1 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight truncate">
               {t('home.header.welcome', { name: displayName })}
             </h1>

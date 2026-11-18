@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { createAndSendNotification } from '../notifications/notifications.routes'
+import { createAndSendNotification, notifyAccessTicketIssued } from '../notifications/notifications.routes'
 import { EmailService } from '../../services/email.service'
 import { eventGenderDenial } from '../../services/signup-policy.service'
 import { ensureTicketToken } from '../../services/ticket.service'
@@ -924,6 +924,12 @@ async function processConfirmedBooking(
     data: { bookingId: booking.id, eventId, amount: String(amount), screen: 'event-details' },
   })
 
+  // Billet d'accès émis : seulement à la 1re confirmation (pas à chaque contribution suivante
+  // à la cagnotte, qui ne change rien au billet). Avertissement « QR code personnel ».
+  if (isNewParticipant) {
+    await notifyAccessTicketIssued(app, { userId, eventId, eventTitle: event?.title || "l'événement", bookingId: booking.id })
+  }
+
   // Notify creator
   if (event?.creatorId && event.creatorId !== userId) {
     const payer = await app.prisma.profile.findUnique({ where: { userId } })
@@ -1081,6 +1087,8 @@ async function processTicketOrder(
   } catch (err) {
     app.log.error({ err }, '[Billetterie] Notifications non envoyées')
   }
+  // Billets d'accès émis : avertissement anti-fraude (QR codes personnels, une entrée chacun)
+  await notifyAccessTicketIssued(app, { userId, eventId, eventTitle: event.title, bookingId: result.booking.id, ticketsCount: result.tickets.length })
   try {
     const user = await app.prisma.user.findUnique({ where: { id: userId }, include: { profile: true } })
     if (user?.email) {
