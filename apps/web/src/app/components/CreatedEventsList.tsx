@@ -2,8 +2,13 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { RowEventCard } from '@/components/ui/event-cards-v2';
 import { TopBar } from '@/components/ui/TopBar';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { Pencil, Trash2 } from 'lucide-react';
 import { usersApi } from '@/features/users/api';
+import { eventsApi } from '@/features/events/api';
+import { BottomSheet, runAfterSheetClosed } from '@/components/ui/bottom-sheet';
+import { ConfirmSheet } from '@/components/shared/ConfirmSheet';
 import { useAuthStore } from '@/stores/auth.store';
 import { useParams } from 'react-router';
 import { useTranslation } from 'react-i18next'
@@ -17,6 +22,11 @@ export function CreatedEventsList() {
   const isOwnProfile = !userId || userId === user?.id;
 
   const [activeTab, setActiveTab] = useState<'events' | 'cagnottes'>('events');
+  // Options du créateur (⋮) : feuille d'actions, puis confirmation de suppression
+  const [menuEvent, setMenuEvent] = useState<any | null>(null);
+  const [deleteEvent, setDeleteEvent] = useState<any | null>(null);
+  const qc = useQueryClient();
+  const activityKey = ['users', 'activity', targetUserId];
 
   const { data: activity } = useQuery({
     queryKey: ['users', 'activity', targetUserId],
@@ -52,6 +62,42 @@ export function CreatedEventsList() {
   const cagnottes = useMemo(() => {
     return createdEvents.filter((e: any) => e.poolTarget != null || e.poolMode != null);
   }, [createdEvents]);
+
+  // ⋮ réservé au CRÉATEUR, sur ses événements à venir et ses brouillons (un événement passé ne se
+  // modifie plus et ne s'annule pas). Les co-organisateurs n'ont pas ces options ici.
+  const canManage = (ev: any) => isOwnProfile && !!user?.id && ev.creatorId === user.id;
+  // « Supprimer » appelle DELETE /events/:id, qui ANNULE l'événement sans aucun remboursement :
+  // masqué dès que de l'argent a pu être encaissé (cagnotte alimentée, ou événement payant /
+  // billetterie avec au moins une réservation). L'annulation se gère alors depuis la fiche de gestion.
+  const hasCollectedMoney = (ev: any) =>
+    (ev.poolCollected ?? 0) > 0 ||
+    (((ev.price ?? 0) > 0 || !!ev.ticketingEnabled) && (ev._count?.bookings ?? 0) > 0);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => eventsApi.cancel(id),
+    onSuccess: (_res, id) => {
+      // Mise à jour locale : la carte disparaît sans recharger la page
+      qc.setQueryData(activityKey, (old: any) => old ? {
+        ...old,
+        createdEvents: (old.createdEvents ?? []).filter((e: any) => e.id !== id),
+        draftEvents: (old.draftEvents ?? []).filter((e: any) => e.id !== id),
+      } : old);
+      // Les autres listes (accueil, explorer…) se remettront à jour à leur prochain affichage
+      qc.invalidateQueries({ queryKey: ['events'], refetchType: 'none' });
+      setDeleteEvent(null);
+      toast.success(t('createdEventsList.evenementSupprime'));
+    },
+    onError: () => toast.error(t('createdEventsList.erreurSuppression')),
+  });
+
+  const editEvent = (ev: any) => {
+    setMenuEvent(null);
+    runAfterSheetClosed(() => navigate('/events/create', { state: { editEventId: ev.id, eventData: ev } }));
+  };
+  const askDelete = (ev: any) => {
+    setMenuEvent(null);
+    runAfterSheetClosed(() => setDeleteEvent(ev));
+  };
 
   // Determine which events are co-hosted (not created by the user, but they are in coHostIds)
   const isCoHostedEvent = (ev: any) => 
@@ -136,7 +182,12 @@ export function CreatedEventsList() {
                   {isCoHostedEvent(ev) && (
                     <span className="absolute top-2 right-2 z-10 text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">Co-organisateur</span>
                   )}
-                  <RowEventCard event={ev} onClick={() => navigate(`/events/${ev.id}/manage`)} />
+                  <RowEventCard
+                    event={ev}
+                    onClick={() => navigate(`/events/${ev.id}/manage`)}
+                    onMoreClick={canManage(ev) ? () => setMenuEvent(ev) : undefined}
+                    moreLabel={t('createdEventsList.optionsEvenement')}
+                  />
                 </div>
               ))
             )}
@@ -163,7 +214,13 @@ export function CreatedEventsList() {
               <h2 className="text-[14px] font-semibold text-gray-700 dark:text-gray-300 mb-3 mt-6"><span>{t('createdEventsList.nonPubliesBrouillons')}</span></h2>
               <div className="flex flex-col gap-3">
                 {drafts.map((ev: any) => (
-                  <RowEventCard key={ev.id} event={ev} onClick={() => navigate(`/events/create`, { state: { editEventId: ev.id, eventData: ev } })} />
+                  <RowEventCard
+                    key={ev.id}
+                    event={ev}
+                    onClick={() => navigate(`/events/create`, { state: { editEventId: ev.id, eventData: ev } })}
+                    onMoreClick={canManage(ev) ? () => setMenuEvent(ev) : undefined}
+                    moreLabel={t('createdEventsList.optionsEvenement')}
+                  />
                 ))}
               </div>
             </>
@@ -184,6 +241,59 @@ export function CreatedEventsList() {
           )}
         </div>
       )}
+
+      {/* Options du créateur : Modifier / Supprimer */}
+      <BottomSheet open={!!menuEvent} onClose={() => setMenuEvent(null)} title={menuEvent?.title}>
+        {menuEvent && (
+          <div className="flex flex-col gap-2 pt-2" role="menu" aria-label={t('createdEventsList.optionsEvenement')}>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => editEvent(menuEvent)}
+              className="w-full flex items-center gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-white/5 text-left active:scale-[0.98] transition-transform"
+            >
+              <span className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shrink-0">
+                <Pencil className="w-5 h-5 text-[#FF7A00]" aria-hidden="true" />
+              </span>
+              <span className="font-semibold text-[15px] text-gray-900 dark:text-white"><span>{t('createdEventsList.modifierEvenement')}</span></span>
+            </button>
+            {hasCollectedMoney(menuEvent) ? (
+              <div className="w-full flex items-start gap-3 p-4 rounded-2xl bg-gray-50 dark:bg-white/5 opacity-70" role="menuitem" aria-disabled="true">
+                <span className="w-10 h-10 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-gray-500" aria-hidden="true" />
+                </span>
+                <span className="flex flex-col min-w-0">
+                  <span className="font-semibold text-[15px] text-gray-500 dark:text-gray-400"><span>{t('createdEventsList.supprimerEvenement')}</span></span>
+                  <span className="text-[12px] text-gray-500 dark:text-gray-400 leading-snug mt-0.5"><span>{t('createdEventsList.suppressionImpossiblePaye')}</span></span>
+                </span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => askDelete(menuEvent)}
+                className="w-full flex items-center gap-3 p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 text-left active:scale-[0.98] transition-transform"
+              >
+                <span className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-red-500" aria-hidden="true" />
+                </span>
+                <span className="font-semibold text-[15px] text-red-600 dark:text-red-400"><span>{t('createdEventsList.supprimerEvenement')}</span></span>
+              </button>
+            )}
+          </div>
+        )}
+      </BottomSheet>
+
+      <ConfirmSheet
+        open={!!deleteEvent}
+        title={t('createdEventsList.confirmDeleteTitle')}
+        description={t('createdEventsList.confirmDeleteText')}
+        confirmText={t('createdEventsList.supprimer')}
+        cancelText={t('createdEventsList.annuler')}
+        isPending={deleteMutation.isPending}
+        onClose={() => setDeleteEvent(null)}
+        onConfirm={() => deleteEvent && deleteMutation.mutate(deleteEvent.id)}
+      />
     </div>
   );
 }

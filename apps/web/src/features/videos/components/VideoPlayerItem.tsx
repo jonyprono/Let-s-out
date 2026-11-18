@@ -13,6 +13,7 @@ import { useUserProfile } from '@/features/users/UserProfileContext';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { getFullscreenPosterUrl } from '../utils/video-url';
+import { ConfirmSheet } from '@/components/shared/ConfirmSheet';
 import { useVideoFit, FIT_CLASS } from '../utils/video-fit';
 
 interface Props {
@@ -29,6 +30,8 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   const { openUserProfile } = useUserProfile();
   const [showComments, setShowComments] = useState(false);
   const [showShareSheet, setShowShareSheet] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   // Track if the video has had its first successful play (to avoid false buffering state)
@@ -410,17 +413,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
             {/* Delete button — author or event organizer */}
             {user && (video.userId === user.id || (video.event as any)?.creatorId === user.id || ((video.event as any)?.coHostIds || []).includes(user.id)) && (
               <button 
-                onClick={async () => {
-                  if (!confirm(t('videoPlayerItem.supprimerCetteVideo'))) return;
-                  try {
-                    await videosApi.delete(video.id);
-                    toast.success(t('videoPlayerItem.videoSupprimee'));
-                    qc.invalidateQueries({ queryKey: ['videos'] });
-                    qc.invalidateQueries({ queryKey: ['feed', 'videos'] });
-                  } catch {
-                    toast.error(t('videoPlayerItem.erreurLorsDeLaSuppression2'));
-                  }
-                }}
+                onClick={() => setConfirmDelete(true)}
                 className="flex flex-col items-center gap-1"
               >
                 <div className="w-12 h-12 rounded-full bg-red-500/20 backdrop-blur-md flex items-center justify-center">
@@ -480,6 +473,30 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           </div>
         </>
       )}
+      {/* Confirmation de suppression (feuille Let's Out, au lieu du dialogue natif) */}
+      <ConfirmSheet
+        open={confirmDelete}
+        title={t('videoPlayerItem.confirmDeleteTitle')}
+        description={t('videoPlayerItem.confirmDeleteText')}
+        confirmText={t('videoPlayerItem.supprimer')}
+        cancelText={t('videoPlayerItem.annuler')}
+        isPending={deleting}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={async () => {
+          setDeleting(true);
+          try {
+            await videosApi.delete(video.id);
+            setConfirmDelete(false);
+            toast.success(t('videoPlayerItem.videoSupprimee'));
+            qc.invalidateQueries({ queryKey: ['videos'] });
+            qc.invalidateQueries({ queryKey: ['feed', 'videos'] });
+          } catch {
+            toast.error(t('videoPlayerItem.erreurLorsDeLaSuppression2'));
+          } finally {
+            setDeleting(false);
+          }
+        }}
+      />
       {/* Share Sheet */}
       {showShareSheet && (
         <>

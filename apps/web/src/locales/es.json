@@ -2406,7 +2406,7 @@
     "videoSupprimee": "Vídeo eliminado",
     "erreurLorsDeLaSuppression2": "Error al borrar",
     "supprimer": "Eliminar",
-    "creerUnEvenementOuSortieSimilaire": "Crear un evento o una salida similar",
+    "creerUnEvenementOuSortieSimilaire": "Crear una salida similar y encontrar outsters",
     "aucunCommentaireSoyezLePremier": "No hay comentarios. ¡Sé el primero!",
     "ajouterUnCommentaire": "Añadir un comentario...",
     "partagerEnDehors": "Compartir en otras redes",
@@ -2415,7 +2415,10 @@
     "decouvreDeLEvenementSur": "¡Descubre «{{v0}}» del evento «{{v1}}» en Let's Out!",
     "partagerCetteVideo": "Compartir este vídeo",
     "supprimerCetteVideo": "¿Quieres borrar este vídeo?",
-    "commentaires": "Comentarios ({{v0}})"
+    "commentaires": "Comentarios ({{v0}})",
+    "confirmDeleteTitle": "¿Eliminar este vlog?",
+    "confirmDeleteText": "Esta acción es irreversible. El vlog se eliminará definitivamente.",
+    "annuler": "Cancelar"
   },
   "videoPlayerModal": {
     "fermer": "Cerrar"
@@ -2477,7 +2480,17 @@
     "nonPubliesBrouillons": "No publicados (Borradores)",
     "aucuneCagnottePourLeMoment": "De momento no hay ningún bote común.",
     "cagnotte": "Bote común",
-    "collecte": "Recogido"
+    "collecte": "Recogido",
+    "optionsEvenement": "Opciones del evento",
+    "modifierEvenement": "Editar el evento",
+    "supprimerEvenement": "Eliminar el evento",
+    "suppressionImpossiblePaye": "Algunos participantes ya han pagado: la cancelación se gestiona desde la página de gestión del evento.",
+    "confirmDeleteTitle": "¿Eliminar este evento?",
+    "confirmDeleteText": "Esta acción es irreversible. El evento se cancelará y se quitará de tu lista; se avisará a los participantes inscritos.",
+    "annuler": "Cancelar",
+    "supprimer": "Eliminar",
+    "evenementSupprime": "Evento eliminado",
+    "erreurSuppression": "No se pudo eliminar el evento. Inténtalo de nuevo."
   },
   "joinedEventsList": {
     "evenementsRejoints": "Eventos a los que he asistido",

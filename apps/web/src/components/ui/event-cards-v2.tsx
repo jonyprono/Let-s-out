@@ -1,6 +1,6 @@
 import { format } from 'date-fns'
 import { useState, useRef, useMemo } from 'react'
-import { Share2, MessageCircle, Star, Heart } from 'lucide-react'
+import { Share2, MessageCircle, Star, Heart, MoreVertical } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { optimizeImageUrl } from '@/lib/cloudinary-image'
 import { Event } from '@/features/events/api'
@@ -496,12 +496,18 @@ export function RowEventCard({
   onClick,
   layout = 'responsive',
   deferRender = false,
+  onMoreClick,
+  moreLabel,
 }: {
   event: Event
   onClick?: () => void
   layout?: 'responsive' | 'compact'
   /** Longues listes : rendu différé hors écran (content-visibility, cf. .feed-cv-row). Défaut : non. */
   deferRender?: boolean
+  /** Bouton ⋮ (options de l'organisateur) à côté de l'étoile ; absent = carte inchangée */
+  onMoreClick?: () => void
+  /** Nom accessible du bouton ⋮ (texte traduit fourni par l'appelant) */
+  moreLabel?: string
 }) {
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const isSaved = isFavorite(event.id)
@@ -583,6 +589,17 @@ export function RowEventCard({
               >
                 <Star className="w-3.5 h-3.5" fill={isSaved ? '#FF7A00' : 'none'} stroke={isSaved ? '#FF7A00' : '#bbb'} />
               </button>
+              {onMoreClick && (
+                <button
+                  type="button"
+                  onClick={e => { e.stopPropagation(); onMoreClick(); }}
+                  aria-label={moreLabel}
+                  aria-haspopup="menu"
+                  className="w-7 h-7 -mr-1 rounded-full flex items-center justify-center shrink-0 active:scale-95 transition-transform text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10"
+                >
+                  <MoreVertical className="w-4 h-4" aria-hidden="true" />
+                </button>
+              )}
             </div>
 
             {/* Description */}

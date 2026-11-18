@@ -2406,7 +2406,7 @@
     "videoSupprimee": "Vidéo supprimée",
     "erreurLorsDeLaSuppression2": "Erreur lors de la suppression",
     "supprimer": "Supprimer",
-    "creerUnEvenementOuSortieSimilaire": "Créer un événement ou une sortie similaire",
+    "creerUnEvenementOuSortieSimilaire": "Créer une sortie similaire et trouver des outsters",
     "aucunCommentaireSoyezLePremier": "Aucun commentaire. Soyez le premier !",
     "ajouterUnCommentaire": "Ajouter un commentaire...",
     "partagerEnDehors": "Partager en dehors",
@@ -2415,7 +2415,10 @@
     "decouvreDeLEvenementSur": "Découvre \"{{v0}}\" de l'événement \"{{v1}}\" sur Let's Out !",
     "partagerCetteVideo": "Partager cette vidéo",
     "supprimerCetteVideo": "Supprimer cette vidéo ?",
-    "commentaires": "Commentaires ({{v0}})"
+    "commentaires": "Commentaires ({{v0}})",
+    "confirmDeleteTitle": "Supprimer ce vlog ?",
+    "confirmDeleteText": "Cette action est irréversible. Le vlog sera définitivement supprimé.",
+    "annuler": "Annuler"
   },
   "videoPlayerModal": {
     "fermer": "Fermer"
@@ -2477,7 +2480,17 @@
     "nonPubliesBrouillons": "Non publiés (Brouillons)",
     "aucuneCagnottePourLeMoment": "Aucune cagnotte pour le moment.",
     "cagnotte": "Cagnotte",
-    "collecte": "Collecté"
+    "collecte": "Collecté",
+    "optionsEvenement": "Options de l'événement",
+    "modifierEvenement": "Modifier l'événement",
+    "supprimerEvenement": "Supprimer l'événement",
+    "suppressionImpossiblePaye": "Des participants ont déjà payé : l'annulation se gère depuis la fiche de gestion de l'événement.",
+    "confirmDeleteTitle": "Supprimer cet événement ?",
+    "confirmDeleteText": "Cette action est irréversible. L'événement sera annulé et retiré de votre liste ; les participants inscrits seront prévenus.",
+    "annuler": "Annuler",
+    "supprimer": "Supprimer",
+    "evenementSupprime": "Événement supprimé",
+    "erreurSuppression": "Impossible de supprimer l'événement. Réessayez."
   },
   "joinedEventsList": {
     "evenementsRejoints": "Evénements rejoints",

@@ -7,9 +7,31 @@ export interface BottomSheetProps {
   children: React.ReactNode;
   noPadding?: boolean;
   className?: string;
+  /** Classe de z-index du voile (défaut z-50). Plus haut pour s'afficher au-dessus d'un plein écran. */
+  overlayClassName?: string;
 }
 
-export function BottomSheet({ title, open, onClose, children, noPadding, className }: BottomSheetProps) {
+/**
+ * Exécute `fn` une fois la feuille fermée ET son entrée d'historique retirée.
+ * À appeler juste après avoir fermé une feuille, quand l'action suivante ouvre une autre feuille
+ * ou navigue : sinon le retour arrière de la 1re feuille (history.back) peut fermer la 2e
+ * aussitôt ouverte, ou annuler la navigation.
+ */
+export function runAfterSheetClosed(fn: () => void, timeoutMs = 350) {
+  let done = false
+  const run = () => {
+    if (done) return
+    done = true
+    window.removeEventListener('popstate', onPop)
+    clearTimeout(timer)
+    fn()
+  }
+  const onPop = () => setTimeout(run, 0)
+  window.addEventListener('popstate', onPop)
+  const timer = setTimeout(run, timeoutMs)
+}
+
+export function BottomSheet({ title, open, onClose, children, noPadding, className, overlayClassName }: BottomSheetProps) {
   // Use a ref to always have the latest onClose without triggering effect re-runs
   const onCloseRef = React.useRef(onClose);
   useEffect(() => {
@@ -40,7 +62,7 @@ export function BottomSheet({ title, open, onClose, children, noPadding, classNa
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center pointer-events-auto">
+    <div className={`fixed inset-0 ${overlayClassName || 'z-50'} flex items-end justify-center pointer-events-auto`}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
       <div
         className={`relative w-full max-w-[600px] bg-[var(--color-background-primary)] max-h-[95vh] flex flex-col rounded-t-[32px] ${noPadding ? '' : 'px-5 pt-4 pb-10'} ${className || ''} animate-in slide-in-from-bottom-full duration-300`}

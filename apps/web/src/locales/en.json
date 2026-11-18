@@ -2405,7 +2405,7 @@
     "videoSupprimee": "Video deleted",
     "erreurLorsDeLaSuppression2": "Error whilst deleting",
     "supprimer": "Delete",
-    "creerUnEvenementOuSortieSimilaire": "Create a similar event or outing",
+    "creerUnEvenementOuSortieSimilaire": "Create a similar outing and find outsters",
     "aucunCommentaireSoyezLePremier": "No comments yet. Be the first!",
     "ajouterUnCommentaire": "Add a comment...",
     "partagerEnDehors": "Share externally",
@@ -2414,7 +2414,10 @@
     "decouvreDeLEvenementSur": "Discover \"{{v0}}\" from the \"{{v1}}\" event on Let's Out!",
     "partagerCetteVideo": "Share this video",
     "supprimerCetteVideo": "Delete this video?",
-    "commentaires": "Comments ({{v0}})"
+    "commentaires": "Comments ({{v0}})",
+    "confirmDeleteTitle": "Delete this vlog?",
+    "confirmDeleteText": "This action cannot be undone. The vlog will be permanently deleted.",
+    "annuler": "Cancel"
   },
   "videoPlayerModal": {
     "fermer": "Close"
@@ -2476,7 +2479,17 @@
     "nonPubliesBrouillons": "Unpublished (Drafts)",
     "aucuneCagnottePourLeMoment": "No shared pot at the moment.",
     "cagnotte": "Shared pot",
-    "collecte": "Collected"
+    "collecte": "Collected",
+    "optionsEvenement": "Event options",
+    "modifierEvenement": "Edit event",
+    "supprimerEvenement": "Delete event",
+    "suppressionImpossiblePaye": "Some participants have already paid: cancellation is handled from the event's management page.",
+    "confirmDeleteTitle": "Delete this event?",
+    "confirmDeleteText": "This action cannot be undone. The event will be cancelled and removed from your list; registered participants will be notified.",
+    "annuler": "Cancel",
+    "supprimer": "Delete",
+    "evenementSupprime": "Event deleted",
+    "erreurSuppression": "Couldn't delete the event. Please try again."
   },
   "joinedEventsList": {
     "evenementsRejoints": "Events attended",
