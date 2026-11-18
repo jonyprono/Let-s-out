@@ -617,11 +617,15 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
   const pausedUntil = useRef(0);
   const inView = useRef(true);
   const count = events.length;
-  // Largeur du carrousel mise en cache (mesurée au montage puis seulement si elle change) :
-  // plus aucune lecture de offsetWidth — donc aucune mise en page forcée — à chaque événement scroll.
+  // AUCUNE lecture de position pendant le défilement (scrollLeft / offsetWidth forcent une mise en
+  // page à chaque image de l'animation) :
+  //  - défilement automatique : la carte cible est connue → index posé directement ;
+  //  - glissé au doigt : un IntersectionObserver (asynchrone, hors du fil de rendu) signale la carte
+  //    visible à plus de 60 %.
+  // La largeur n'est lue qu'au montage et au redimensionnement (rotation), pour l'auto-défilement.
   const widthRef = useRef(0);
   const indexRef = useRef(0);
-  const scrollRaf = useRef<number | null>(null);
+  const autoScrollUntil = useRef(0); // pendant l'animation automatique, l'observateur est ignoré
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -631,8 +635,28 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
     // Rappelé seulement quand la taille change (rotation, fenêtre) — jamais pendant le défilement
     const ro = new ResizeObserver(() => { widthRef.current = el.offsetWidth; });
     ro.observe(el);
-    return () => { ro.disconnect(); if (scrollRaf.current !== null) cancelAnimationFrame(scrollRaf.current); };
+    return () => ro.disconnect();
   }, []);
+
+  // Carte visible lors d'un glissé manuel
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || count === 0 || typeof IntersectionObserver === 'undefined') return;
+    const cards = Array.from(el.children) as HTMLElement[];
+    const ratios = new Map<Element, number>();
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) ratios.set(e.target, e.intersectionRatio);
+      if (Date.now() < autoScrollUntil.current) return;
+      let best = -1, bestRatio = 0.6;
+      cards.forEach((c, i) => { const r = ratios.get(c) ?? 0; if (r >= bestRatio) { best = i; bestRatio = r; } });
+      if (best >= 0 && best !== indexRef.current) {
+        indexRef.current = best;
+        setFeaturedIndex(best);
+      }
+    }, { root: el, threshold: [0.6, 0.9] });
+    cards.forEach((c) => io.observe(c));
+    return () => io.disconnect();
+  }, [count, events]);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -642,22 +666,6 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
     return () => io.disconnect();
   }, []);
 
-  /** Au plus 1 calcul par image ; un rendu seulement si la carte affichée change */
-  const handleCarouselScroll = useCallback(() => {
-    if (scrollRaf.current !== null) return;
-    scrollRaf.current = requestAnimationFrame(() => {
-      scrollRaf.current = null;
-      const el = scrollRef.current;
-      const step = widthRef.current * 0.85;
-      if (!el || step <= 0) return;
-      const idx = Math.min(Math.max(Math.round(el.scrollLeft / step), 0), Math.max(count - 1, 0));
-      if (idx !== indexRef.current) {
-        indexRef.current = idx;
-        setFeaturedIndex(idx);
-      }
-    });
-  }, [count]);
-
   useEffect(() => {
     if (count === 0) return;
     const interval = setInterval(() => {
@@ -665,6 +673,9 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
       const next = (indexRef.current + 1) % count;
       const el = scrollRef.current;
       if (el) {
+        // L'animation traverse les cartes intermédiaires (retour au début) : l'observateur est
+        // ignoré pendant ce temps, l'index posé ci-dessous fait foi.
+        autoScrollUntil.current = Date.now() + 1200;
         // Dernier élément → retour au début ; sinon on avance d'une carte (~85 % de la largeur)
         el.scrollTo({ left: next === 0 ? 0 : next * ((widthRef.current || el.offsetWidth) * 0.85), behavior: 'smooth' });
       }
@@ -674,7 +685,8 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
     return () => clearInterval(interval);
   }, [count]);
 
-  const pause = () => { pausedUntil.current = Date.now() + FEATURED_RESUME_AFTER_TOUCH_MS; };
+  // Le doigt reprend la main : l'observateur suit à nouveau la carte visible immédiatement
+  const pause = () => { pausedUntil.current = Date.now() + FEATURED_RESUME_AFTER_TOUCH_MS; autoScrollUntil.current = 0; };
 
   return (
     <>
@@ -684,7 +696,6 @@ const FeaturedCarousel = memo(function FeaturedCarousel({
         style={{ scrollbarWidth: 'none' }}
         onTouchStart={pause}
         onPointerDown={pause}
-        onScroll={handleCarouselScroll}
       >
         {events.map(event => (
           <FeaturedCard key={event.id} event={event} onOpen={onOpen} />

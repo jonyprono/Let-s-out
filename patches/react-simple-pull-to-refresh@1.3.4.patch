@@ -1,0 +1,82 @@
+diff --git a/build/index.cjs.js b/build/index.cjs.js
+index 89668dc7f7ca2dc17618339c9c0f98dde7dad6e0..c1782079a84fdf2c8018f8540964e7ba3f410161 100644
+--- a/build/index.cjs.js
++++ b/build/index.cjs.js
+@@ -113,7 +113,25 @@ var PullToRefresh = function (_a) {
+         var childrenEl = childrenRef.current;
+         childrenEl.addEventListener('touchstart', onTouchStart, { passive: true });
+         childrenEl.addEventListener('mousedown', onTouchStart);
+-        childrenEl.addEventListener('touchmove', onTouchMove, { passive: false });
++        // [Let's Out patch] Écouteur touchmove BLOQUANT (passive: false) seulement quand le fil est tout en
++        // haut (scrollTop <= 0), seul cas où le « tirer pour rafraîchir » doit empêcher le défilement.
++        // Ailleurs, aucun écouteur bloquant : le navigateur fait défiler sans attendre le fil principal.
++        // (Attaché dès l'arrivée en haut, pas dans touchstart : le navigateur décide au contact si le
++        // geste est bloquable.)
++        var blockingTouchMove = false;
++        var syncTouchMove = function () {
++            var atTop = childrenEl.scrollTop <= 0;
++            if (atTop && !blockingTouchMove) {
++                childrenEl.addEventListener('touchmove', onTouchMove, { passive: false });
++                blockingTouchMove = true;
++            }
++            else if (!atTop && blockingTouchMove && !isDragging) {
++                childrenEl.removeEventListener('touchmove', onTouchMove, { passive: false });
++                blockingTouchMove = false;
++            }
++        };
++        syncTouchMove();
++        childrenEl.addEventListener('scroll', syncTouchMove, { passive: true });
+         childrenEl.addEventListener('mousemove', onTouchMove);
+         window.addEventListener('scroll', onScroll);
+         childrenEl.addEventListener('touchend', onEnd);
+@@ -122,7 +140,8 @@ var PullToRefresh = function (_a) {
+         return function () {
+             childrenEl.removeEventListener('touchstart', onTouchStart);
+             childrenEl.removeEventListener('mousedown', onTouchStart);
+-            childrenEl.removeEventListener('touchmove', onTouchMove);
++            childrenEl.removeEventListener('touchmove', onTouchMove, { passive: false });
++            childrenEl.removeEventListener('scroll', syncTouchMove, { passive: true });
+             childrenEl.removeEventListener('mousemove', onTouchMove);
+             window.removeEventListener('scroll', onScroll);
+             childrenEl.removeEventListener('touchend', onEnd);
+diff --git a/build/index.esm.js b/build/index.esm.js
+index 8ad8b921cbc430f5809e407f20ce53bcf00150cf..8207131f4eb7c99a6ff85b59a14cb3e3b6b4615d 100644
+--- a/build/index.esm.js
++++ b/build/index.esm.js
+@@ -108,7 +108,25 @@ var PullToRefresh = function (_a) {
+         var childrenEl = childrenRef.current;
+         childrenEl.addEventListener('touchstart', onTouchStart, { passive: true });
+         childrenEl.addEventListener('mousedown', onTouchStart);
+-        childrenEl.addEventListener('touchmove', onTouchMove, { passive: false });
++        // [Let's Out patch] Écouteur touchmove BLOQUANT (passive: false) seulement quand le fil est tout en
++        // haut (scrollTop <= 0), seul cas où le « tirer pour rafraîchir » doit empêcher le défilement.
++        // Ailleurs, aucun écouteur bloquant : le navigateur fait défiler sans attendre le fil principal.
++        // (Attaché dès l'arrivée en haut, pas dans touchstart : le navigateur décide au contact si le
++        // geste est bloquable.)
++        var blockingTouchMove = false;
++        var syncTouchMove = function () {
++            var atTop = childrenEl.scrollTop <= 0;
++            if (atTop && !blockingTouchMove) {
++                childrenEl.addEventListener('touchmove', onTouchMove, { passive: false });
++                blockingTouchMove = true;
++            }
++            else if (!atTop && blockingTouchMove && !isDragging) {
++                childrenEl.removeEventListener('touchmove', onTouchMove, { passive: false });
++                blockingTouchMove = false;
++            }
++        };
++        syncTouchMove();
++        childrenEl.addEventListener('scroll', syncTouchMove, { passive: true });
+         childrenEl.addEventListener('mousemove', onTouchMove);
+         window.addEventListener('scroll', onScroll);
+         childrenEl.addEventListener('touchend', onEnd);
+@@ -117,7 +135,8 @@ var PullToRefresh = function (_a) {
+         return function () {
+             childrenEl.removeEventListener('touchstart', onTouchStart);
+             childrenEl.removeEventListener('mousedown', onTouchStart);
+-            childrenEl.removeEventListener('touchmove', onTouchMove);
++            childrenEl.removeEventListener('touchmove', onTouchMove, { passive: false });
++            childrenEl.removeEventListener('scroll', syncTouchMove, { passive: true });
+             childrenEl.removeEventListener('mousemove', onTouchMove);
+             window.removeEventListener('scroll', onScroll);
+             childrenEl.removeEventListener('touchend', onEnd);
