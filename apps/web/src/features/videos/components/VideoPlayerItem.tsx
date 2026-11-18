@@ -338,18 +338,21 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
         <div className="absolute bottom-0 left-0 right-0 h-[60%] bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
 
 
-        <div className="relative z-10 flex items-end justify-between p-4 pb-safe-6 pointer-events-auto">
+        {/* Bloc du bas : seuls ses éléments actifs (profil, événement, boutons) captent l'appui.
+            Avant, tout le bloc (pleine largeur, ~300 px de haut) l'interceptait : un appui dans la
+            moitié basse de l'écran ne mettait pas la vidéo en pause. */}
+        <div className="relative z-10 flex items-end justify-between p-4 pb-safe-6 pointer-events-none">
           {/* Info */}
           <div className="flex-1 pr-12 text-white">
             <h2 className="text-[16px] font-bold mb-1 shadow-sm">{video.title}</h2>
             <p 
-              className="text-[14px] text-white/90 mb-2 cursor-pointer active:opacity-70"
+              className="text-[14px] text-white/90 mb-2 cursor-pointer active:opacity-70 pointer-events-auto w-fit"
               onClick={() => openUserProfile(video.userId, undefined, { title: video.event.title })}
             >
               @{(video.user as any).profile?.displayName || (video.user as any).username || 'Utilisateur'}
             </p>
             <div 
-              className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[12px] font-medium cursor-pointer active:scale-95 transition-transform"
+              className="inline-flex items-center gap-1.5 px-2 py-1 bg-white/20 backdrop-blur-md rounded-lg text-[12px] font-medium cursor-pointer active:scale-95 transition-transform pointer-events-auto"
               onClick={() => navigate(`/events/${video.eventId}`)}
             >
               <span>📍 {video.event.title}</span>
@@ -357,7 +360,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-6 pointer-events-auto">
             {/* Son / muet — icône seule, reflet de l'état réel de la vidéo (comme le lecteur des pages).
                 L'ancien libellé « Pas de son » venait d'une détection de piste audio fausse sur iOS
                 (les 5 vlogs en production ont tous une piste audio). */}
@@ -426,13 +429,13 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
         </div>
         
         {/* Persistent "Create Similar Event" Button */}
-        <div className="relative z-10 w-full px-4 mb-3 pointer-events-auto">
+        <div className="relative z-10 w-full px-4 mb-3 pointer-events-none">
           <button 
             onClick={() => {
               const tagsQuery = (video.event as any).tags?.length ? `&tags=${(video.event as any).tags.join(',')}` : '';
               navigate(`/events/create?category=${video.event.category}${tagsQuery}`);
             }}
-            className="w-full py-2.5 px-3 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-white font-medium text-[13px] min-[390px]:text-[14px] leading-snug flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg"
+            className="w-full py-2.5 px-3 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-white font-medium text-[13px] min-[390px]:text-[14px] leading-snug flex items-center justify-center gap-2 active:scale-[0.98] transition-transform shadow-lg pointer-events-auto"
           >
             <CalendarPlus className="w-5 h-5 shrink-0" />
             {/* Libellé long : sur les petits écrans il passe sur 2 lignes centrées au lieu de déborder */}

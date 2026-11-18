@@ -170,7 +170,7 @@ export const eventsApi = {
     apiClient.get(`/events/${id}/attendees`, { params }),
 
   getMyBooking: (id: string) =>
-    apiClient.get<{ id: string; status: string; totalPaid: number; createdAt: string; ticketsCount?: number }>(`/events/${id}/my-booking`),
+    apiClient.get<{ id: string; status: string; totalPaid: number; createdAt: string; ticketsCount?: number; /** Départ volontaire (≠ refus) */ leftAt?: string | null }>(`/events/${id}/my-booking`),
 
   /** Billet du participant connecté (réservation CONFIRMED) — QR = jeton secret, pas l'id de réservation */
   getMyTicket: (id: string) =>

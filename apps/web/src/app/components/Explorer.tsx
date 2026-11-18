@@ -564,8 +564,14 @@ export function Explorer({ onNavigate }: ExplorerProps) {
       <div className="w-full h-full flex flex-col bg-white dark:bg-black">
         {/* Header */}
         <div className="px-4 pt-safe-4 pt-4 pb-3 flex items-center gap-3 bg-white dark:bg-black z-10 sticky top-0 border-b border-gray-100 dark:border-gray-800">
-          <button onClick={() => setViewAll(null)} className="w-10 h-10 bg-gray-100 dark:bg-[#2A2A2A] rounded-full flex items-center justify-center active:scale-95 transition-transform">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {/* Retour lisible : flèche + libellé (avant : petit rond gris sans texte) */}
+          <button
+            type="button"
+            onClick={() => setViewAll(null)}
+            className="h-10 pl-2 pr-3.5 bg-gray-100 dark:bg-[#2A2A2A] rounded-full flex items-center gap-1 text-gray-900 dark:text-white active:scale-95 transition-transform shrink-0"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span className="text-[14px] font-semibold">{t('common.back')}</span>
           </button>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h1>
         </div>

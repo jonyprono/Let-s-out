@@ -109,10 +109,10 @@ export function GroupChatInfoSheet({ conversation, event, onClose, onInvite, onC
   })
 
   const leaveMut = useMutation({
+    // Quitter le CHAT uniquement. Avant : pour un groupe d'événement, eventsApi.leave annulait aussi
+    // la participation (réservation CANCELLED). La participation se quitte depuis la fiche de l'événement.
     mutationFn: async () => {
-      if (event?.id) {
-        await eventsApi.leave(event.id)
-      } else if (conversation?.id) {
+      if (conversation?.id) {
         await chatApi.leaveGroup(conversation.id)
       }
     },

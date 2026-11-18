@@ -1209,13 +1209,24 @@
       "updateError": "Erreur lors de la mise à jour",
       "declined": "Demande refusée",
       "declineError": "Erreur lors du refus",
-      "accepted": "Demande acceptée"
+      "accepted": "Demande acceptée",
+      "mustJoin": "Rejoignez l'événement pour accéder à cet espace."
     },
     "tabs": {
       "details": "Détails",
       "participants": "Participants",
       "cagnotte": "Cagnotte",
       "ticketing": "Billetterie"
+    },
+    "leave": {
+      "button": "Quitter l'événement",
+      "confirmTitle": "Quitter cet événement ?",
+      "confirmText": "Vous ne ferez plus partie des participants. Cette action est irréversible.",
+      "confirm": "Quitter",
+      "cancel": "Annuler",
+      "success": "Vous avez quitté l'événement",
+      "error": "Impossible de quitter l'événement. Réessayez.",
+      "paidError": "Votre participation a été payée : pour l'annuler, faites une demande de remboursement."
     }
   },
   "payment": {
@@ -2223,7 +2234,10 @@
     "ticketIssuedBodyMulti": "Ne publiez jamais vos QR codes. Chaque billet est personnel et à usage unique : remettez-le uniquement à la personne qui l’utilisera pour l’entrée à « {{event}} ».",
     "toutes": "Toutes",
     "nonLuesLabel": "Non lues",
-    "nonLuesCount": "Non lues ({{count}})"
+    "nonLuesCount": "Non lues ({{count}})",
+    "participantParti": "Participant parti",
+    "participantLeftTitle": "Un participant est parti",
+    "participantLeftBody": "{{name}} a quitté votre événement « {{event}} »."
   },
   "forgotPassword": {
     "veuillezSelectionnerSmsOuWhatsapp": "Veuillez sélectionner SMS ou Whatsapp.",

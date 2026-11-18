@@ -3,13 +3,13 @@ import i18n from '@/lib/i18n'
 import { useNavigate } from 'react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { TopBar } from '@/components/ui/TopBar'
-import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { pagesApi } from '../api'
 import { toast } from 'sonner'
 import { ChevronDown, Loader2, Camera, X } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
 
 import { PAGE_CATEGORIES } from '../categories'
+import { EventCategorySheet } from '@/features/events/components/EventCategorySheet'
 import { useTranslation } from 'react-i18next'
 
 export function CreatePage() {
@@ -301,50 +301,14 @@ export function CreatePage() {
         </div>
       </div>
 
-      {/* Category BottomSheet */}
-      <BottomSheet
+      {/* Choix de la catégorie : même sélecteur que la création d'événement */}
+      <EventCategorySheet
         title={t('createPage.selectionnerUneCategorie')}
         open={showCategorySheet}
         onClose={() => setShowCategorySheet(false)}
-      >
-        <div className="divide-y divide-[var(--border-tertiary)]">
-          {PAGE_CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => {
-                setCategory(cat.value)
-                setShowCategorySheet(false)
-              }}
-              className={`w-full flex items-center justify-between px-1 py-[15px] text-left transition-colors active:bg-[var(--color-background-secondary)] ${
-                category === cat.value ? 'bg-[#FF7A00]/5' : ''
-              }`}
-            >
-              <span
-                className={`flex-1 text-[14px] font-medium text-left ${
-                  category === cat.value
-                    ? 'text-[#FF7A00] font-semibold'
-                    : 'text-[var(--color-text-primary)]'
-                }`}
-              >
-                {cat.label}
-              </span>
-              <div
-                className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                  category === cat.value
-                    ? 'border-[#FF7A00] bg-[#FF7A00]'
-                    : 'border-[var(--border-default)]'
-                }`}
-              >
-                {category === cat.value && (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
-      </BottomSheet>
+        value={category}
+        onSelect={setCategory}
+      />
     </div>
   )
 }

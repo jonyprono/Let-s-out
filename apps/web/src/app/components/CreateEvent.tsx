@@ -52,7 +52,8 @@ import { format } from 'date-fns'
 
 import { dateLocale, currentLang } from '@/lib/locale';
 import { useTranslation } from 'react-i18next'
-import { EVENT_CATEGORIES, getEventCategory, eventCategoryLabel } from '@/lib/event-categories'
+import { getEventCategory, eventCategoryLabel } from '@/lib/event-categories'
+import { EventCategorySheet } from '@/features/events/components/EventCategorySheet'
 interface CreateEventProps { onBack: () => void }
 
 let sessionDraft: any = null;
@@ -1886,27 +1887,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
       </BottomSheet>
 
       {/* ── Category Sheet ───────────────────────────────────────────────── */}
-      <BottomSheet title={t('createEvent.sheets.categoryTitle')} open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
-        <div className="divide-y divide-[var(--border-tertiary)]">
-          {EVENT_CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => { setCategory(cat.id); setShowCategorySheet(false) }}
-              className="w-full flex items-center gap-4 py-[13px] text-left active:bg-[var(--color-background-secondary)] transition-colors"
-            >
-              {/* Icon Frame - DIRECT ON WHITE AS REQUESTED */}
-              <cat.Icon className="w-[24px] h-[24px] text-[var(--color-icon-primary)] shrink-0" strokeWidth={1.5} />
-              {/* Label */}
-              <span className="flex-1 text-[length:var(--font-size-body-medium)] font-medium text-[var(--color-text-primary)] text-left"><span>{eventCategoryLabel(t, cat.id)}</span></span>
-              {/* Radio */}
-              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${category === cat.id ? 'border-[var(--brand-orange-500)]' : 'border-[var(--border-default)]'
-                }`}>
-                {category === cat.id && <div className="w-[11px] h-[11px] rounded-full bg-[var(--brand-orange-500)]" />}
-              </div>
-            </button>
-          ))}
-        </div>
-      </BottomSheet>
+      <EventCategorySheet
+        title={t('createEvent.sheets.categoryTitle')}
+        open={showCategorySheet}
+        onClose={() => setShowCategorySheet(false)}
+        value={category}
+        onSelect={setCategory}
+      />
 
       {/* ── Catégorie de billets (ajout / modification) ─────────────────── */}
       <TierFormSheet

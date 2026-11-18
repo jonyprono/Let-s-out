@@ -327,7 +327,10 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
   const isPendingParticipant = !!myBookingData && myBookingData.status === 'PENDING'
   const isApprovedParticipant = !!myBookingData && myBookingData.status === 'APPROVED' // Approved but payment pending
-  const isRejectedParticipant = !!myBookingData && (myBookingData.status === 'REJECTED' || myBookingData.status === 'CANCELLED')
+  // CANCELLED + leftAt = l'utilisateur est parti de lui-même (ou a retiré sa demande) : ce n'est pas un
+  // refus → il revoit le bouton « Rejoindre » / « Demander à rejoindre » (gratuit = aucun paiement).
+  const hasLeftVoluntarily = !!myBookingData && myBookingData.status === 'CANCELLED' && !!myBookingData.leftAt
+  const isRejectedParticipant = !!myBookingData && !hasLeftVoluntarily && (myBookingData.status === 'REJECTED' || myBookingData.status === 'CANCELLED')
   // hasJoined = only CONFIRMED bookings (not just APPROVED) OR creator
   const hasJoined = (!!myBookingData && myBookingData.status === 'CONFIRMED') || isCreator
   

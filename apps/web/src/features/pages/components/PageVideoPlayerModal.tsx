@@ -442,13 +442,19 @@ function PageVideoPlayerItem({
       <div
         className="relative z-30 w-full flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/70 to-transparent pt-12 px-4"
         style={{ paddingBottom: 'max(1rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))' }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation()
+          // Avant : tout ce bloc bloquait l'appui (pas de pause en bas de l'écran). Désormais un appui
+          // hors bouton / lien / zone marquée data-no-toggle met en pause ou relance la vidéo.
+          if (!(e.target as Element).closest('button, a, input, textarea, [data-no-toggle]')) togglePlay()
+        }}
       >
         <div className="flex items-end justify-between gap-3 mb-3">
           {/* Left Column: Page info & Description right below the video */}
           <div className="flex-1 min-w-0 pr-2">
             {/* Page Header */}
             <div
+              data-no-toggle
               className="flex items-center gap-2.5 mb-2.5 cursor-pointer active:opacity-80"
               onClick={() => {
                 onCloseParent()

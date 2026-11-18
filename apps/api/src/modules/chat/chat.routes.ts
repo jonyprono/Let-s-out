@@ -687,7 +687,22 @@ export default async function chatRoutes(app: FastifyInstance) {
 
     // Check if user is a member
     const isMember = conversation.members.some((m) => m.userId === sub)
-    if (!isMember) return reply.code(403).send({ error: 'Not a member. Join the event first.' })
+    if (!isMember) {
+      // Quitter le chat ne retire pas de l'événement : un participant confirmé (ou un organisateur)
+      // qui a quitté la discussion y est réintégré en l'ouvrant depuis la fiche de l'événement.
+      const ev = await app.prisma.event.findUnique({ where: { id: eventId }, select: { creatorId: true, coHostIds: true } })
+      const isOrganizer = !!ev && (ev.creatorId === sub || (ev.coHostIds || []).includes(sub))
+      const confirmed = isOrganizer || !!(await app.prisma.booking.findFirst({
+        where: { userId: sub, eventId, status: 'CONFIRMED' },
+        select: { id: true },
+      }))
+      if (!confirmed) return reply.code(403).send({ error: 'Not a member. Join the event first.' })
+      await app.prisma.conversationMember.upsert({
+        where: { conversationId_userId: { conversationId: conversation.id, userId: sub } },
+        create: { conversationId: conversation.id, userId: sub },
+        update: {},
+      })
+    }
 
     return reply.send(conversation)
   })

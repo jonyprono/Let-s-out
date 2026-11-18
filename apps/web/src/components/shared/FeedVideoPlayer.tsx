@@ -338,7 +338,12 @@ export function FeedVideoPlayer({
         className={`absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pt-6 pb-2.5 flex flex-col gap-1.5 transition-opacity duration-200 z-10 ${
           !isPlaying || showControls ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          // Le 1er toucher affiche cette barre : sans ceci, un appui en bas de la vidéo tombait sur
+          // la barre et ne mettait pas en pause. Hors bouton / curseur : pause / lecture.
+          if (!(e.target as Element).closest('button, a, input')) togglePlay();
+        }}
       >
         {/* Scrubber track */}
         <div className="relative w-full flex items-center h-3 cursor-pointer group/bar">

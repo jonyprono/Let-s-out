@@ -5,14 +5,13 @@ import { TopBar } from '@/components/ui/TopBar'
 import { pagesApi, Page, PagePost } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { FeedVideoPlayer } from '@/components/shared/FeedVideoPlayer'
-import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { Loader2, Camera, Trash2, Settings, BarChart3, Users, FileText, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { useConfirm } from '@/components/shared/ConfirmContext'
 
-import { PAGE_CATEGORIES } from '../categories'
+import { EventCategorySheet } from '@/features/events/components/EventCategorySheet'
 import { PageStatsPanel } from './PageStatsPanel'
 import { PageFollowersPanel } from './PageFollowersPanel'
 
@@ -370,36 +369,13 @@ export function ManagePage() {
           {currentSection === 'followers' && id && <PageFollowersPanel pageId={id} total={page?._count?.followers} />}
         </div>
 
-        <BottomSheet title={t('managePage.selectionnerUneCategorie')} open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
-          <div className="divide-y divide-[var(--border-tertiary)]">
-            {PAGE_CATEGORIES.map(cat => (
-              <button
-                key={cat.value}
-                onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
-                className={`w-full flex items-center justify-between px-1 py-[15px] text-left transition-colors active:bg-[var(--color-background-secondary)] ${
-                  category === cat.value ? 'bg-[var(--brand-orange-500)]/5' : ''
-                }`}
-              >
-                <span className={`flex-1 text-[14px] font-medium text-left ${
-                  category === cat.value
-                    ? 'text-[var(--brand-orange-500)] font-semibold'
-                    : 'text-[var(--color-text-primary)]'
-                }`}>{cat.label}</span>
-                <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                  category === cat.value
-                    ? 'border-[var(--brand-orange-500)] bg-[var(--brand-orange-500)]'
-                    : 'border-[var(--border-default)]'
-                }`}>
-                  {category === cat.value && (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        </BottomSheet>
+        <EventCategorySheet
+          title={t('managePage.selectionnerUneCategorie')}
+          open={showCategorySheet}
+          onClose={() => setShowCategorySheet(false)}
+          value={category}
+          onSelect={setCategory}
+        />
       </div>
     )
   }
@@ -558,36 +534,13 @@ export function ManagePage() {
 
       </div>
 
-      <BottomSheet title={t('managePage.selectionnerUneCategorie')} open={showCategorySheet} onClose={() => setShowCategorySheet(false)}>
-        <div className="divide-y divide-[var(--border-tertiary)]">
-          {PAGE_CATEGORIES.map(cat => (
-            <button
-              key={cat.value}
-              onClick={() => { setCategory(cat.value); setShowCategorySheet(false) }}
-              className={`w-full flex items-center justify-between px-1 py-[15px] text-left transition-colors active:bg-[var(--color-background-secondary)] ${
-                category === cat.value ? 'bg-[var(--brand-orange-500)]/5' : ''
-              }`}
-            >
-              <span className={`flex-1 text-[14px] font-medium text-left ${
-                category === cat.value
-                  ? 'text-[var(--brand-orange-500)] font-semibold'
-                  : 'text-[var(--color-text-primary)]'
-              }`}>{cat.label}</span>
-              <div className={`w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                category === cat.value
-                  ? 'border-[var(--brand-orange-500)] bg-[var(--brand-orange-500)]'
-                  : 'border-[var(--border-default)]'
-              }`}>
-                {category === cat.value && (
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
-      </BottomSheet>
+      <EventCategorySheet
+        title={t('managePage.selectionnerUneCategorie')}
+        open={showCategorySheet}
+        onClose={() => setShowCategorySheet(false)}
+        value={category}
+        onSelect={setCategory}
+      />
     </div>
   )
 }

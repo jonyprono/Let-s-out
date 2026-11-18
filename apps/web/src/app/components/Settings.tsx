@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { useFeatureFlags, FLAG_KEYS } from '@/features/admin/useFeatureFlags';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { openDebugPanel } from '@/app/components/DebugPanel';
+import { PLAY_STORE_URL, APP_STORE_URL, rateTargets, openStoreUrl } from '@/lib/app-store-links';
 
 interface SettingsProps {
   onBack?: () => void;
@@ -593,6 +594,8 @@ export function Settings({ onBack }: SettingsProps) {
               title={t('settings.rows.privacy')}
               onClick={() => navigate('/privacy')}
             />
+            {/* Masqué s'il n'y a aucune fiche store à proposer (ex. iOS tant que l'ID App Store n'est pas configuré) */}
+            {(rateTargets().playStore || rateTargets().appStore) && (
             <SettingsRow
               icon={<Star className="w-4 h-4" />}
               iconBg="bg-yellow-50 dark:bg-yellow-500/10"
@@ -601,6 +604,7 @@ export function Settings({ onBack }: SettingsProps) {
               subtitle={t('settings.rows.rateAppDesc')}
               onClick={() => setShowRatingModal(true)}
             />
+            )}
             <SettingsRow
               icon={<Share2 className="w-4 h-4" />}
               iconBg="bg-green-50 dark:bg-green-500/10"
@@ -683,24 +687,28 @@ export function Settings({ onBack }: SettingsProps) {
               </p>
             </div>
             <div className="space-y-3">
+              {rateTargets().playStore && (
               <button
                 onClick={() => {
-                  window.open('https://play.google.com/store/apps/details?id=app.letsout.android', '_blank');
+                  void openStoreUrl(PLAY_STORE_URL);
                   setShowRatingModal(false);
                 }}
                 className="w-full py-4 bg-gray-50 dark:bg-[#222] hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-2xl flex items-center justify-center gap-3 font-semibold text-gray-900 dark:text-white transition-colors border border-gray-100 dark:border-[#333]"
               >
                 Google Play Store
               </button>
+              )}
+              {rateTargets().appStore && APP_STORE_URL && (
               <button
                 onClick={() => {
-                  window.open('https://apps.apple.com/app/lets-out/id123456789', '_blank');
+                  if (APP_STORE_URL) void openStoreUrl(APP_STORE_URL);
                   setShowRatingModal(false);
                 }}
                 className="w-full py-4 bg-gray-50 dark:bg-[#222] hover:bg-gray-100 dark:hover:bg-[#2A2A2A] rounded-2xl flex items-center justify-center gap-3 font-semibold text-gray-900 dark:text-white transition-colors border border-gray-100 dark:border-[#333]"
               >
                 Apple App Store
               </button>
+              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
-import { Loader2, Navigation } from 'lucide-react'
+import { Loader2, Navigation, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import L from 'leaflet'
 import '@/lib/leaflet-init'
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet'
@@ -240,6 +241,7 @@ export default function ExplorerMap({
   searchTarget,
   flyTarget,
 }: ExplorerMapProps) {
+  const { t } = useTranslation()
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [zoom, setZoom] = useState(13)
   const [zoomTarget, setZoomTarget] = useState<{ lat: number; lon: number; id: number } | null>(null)
@@ -383,12 +385,16 @@ export default function ExplorerMap({
             animation: 'slideUpCard 0.22s cubic-bezier(0.25,0.46,0.45,0.94) both',
           }}
         >
-          {/* Close pill */}
-          <div className="flex justify-center mb-2">
+          {/* Fermer la carte : ✕ bien visible (avant : petite barre grise sans libellé) */}
+          <div className="flex justify-end mb-2">
             <button
+              type="button"
               onClick={closeCard}
-              className="w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full active:scale-95 transition-transform"
-            />
+              aria-label={t('common.close')}
+              className="w-9 h-9 rounded-full bg-white dark:bg-[#1A1A1A] shadow-lg border border-gray-100 dark:border-white/10 flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <X className="w-5 h-5 text-gray-800 dark:text-white" aria-hidden="true" />
+            </button>
           </div>
           <RowEventCard
             event={selectedEvent}

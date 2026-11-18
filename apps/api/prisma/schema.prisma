@@ -288,6 +288,9 @@ model Booking {
   ticketToken   String?   @unique
   checkedInAt   DateTime? // 1er scan valide à l'entrée (null = pas encore entré)
   checkedInById String?   // créateur ou co-organisateur qui a validé
+  /// Départ VOLONTAIRE du participant (« Quitter l'événement ») : distingue un départ (peut
+  /// redemander / rejoindre) d'un refus de l'organisateur (statut CANCELLED aussi, leftAt null).
+  leftAt        DateTime?
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   event     Event         @relation(fields: [eventId], references: [id])
@@ -897,6 +900,8 @@ enum NotifType {
   JOIN_REJECTED
   NEW_BADGE
   NEW_FOLLOWER
+  // Un participant a quitté l'événement (notification à l'organisateur). Ajouté le 2026-11-19.
+  PARTICIPANT_LEFT
 }
 
 enum PaymentStatus {

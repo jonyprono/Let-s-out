@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { PLAY_STORE_URL, APP_STORE_URL } from '@/lib/app-store-links'
 import { Capacitor } from '@capacitor/core';
 import { X } from 'lucide-react';
 
@@ -44,9 +45,10 @@ export function SmartAppBanner() {
 
   const handleDownload = () => {
     if (isAndroid) {
-      window.location.href = 'https://play.google.com/store/apps/details?id=com.fihodecorp.letsout';
-    } else if (isIOS) {
-      window.location.href = 'https://apps.apple.com/app/idYOUR_APP_STORE_ID'; // TODO: Update with real App Store ID when available
+      window.location.href = PLAY_STORE_URL;
+    } else if (isIOS && APP_STORE_URL) {
+      // Identifiant App Store configuré (VITE_IOS_APP_STORE_ID) ; sinon : site, plus de lien cassé
+      window.location.href = APP_STORE_URL;
     } else {
       window.location.href = 'https://letsout.app';
     }

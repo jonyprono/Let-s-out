@@ -8,7 +8,8 @@ import { toast } from 'sonner'
 import { MAX_VIDEO_DURATION_SECONDS, formatVideoDurationLimit, isVideoTooLong, readVideoDuration } from '@/lib/video-limits'
 
 import { useTranslation } from 'react-i18next'
-import { EVENT_CATEGORIES, getEventCategory, eventCategoryShortLabel } from '@/lib/event-categories'
+import { getEventCategory, eventCategoryLabel } from '@/lib/event-categories'
+import { EventCategorySheet } from '@/features/events/components/EventCategorySheet'
 
 interface UploadVideoModalProps {
   eventId?: string
@@ -31,6 +32,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
   const [title, setTitle] = useState('')
   const [selectedEventId, setSelectedEventId] = useState(presetEventId ?? '')
   const [category, setCategory] = useState(eventCategory ?? '')
+  const [showCategorySheet, setShowCategorySheet] = useState(false)
   const [privacy, setPrivacy] = useState<'PUBLIC' | 'PARTICIPANTS' | 'PRIVATE'>('PUBLIC')
 
   // Video upload state
@@ -471,20 +473,31 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             {/* Category */}
             <div>
               <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5"><span>{t('uploadVideoModal.categorie')}</span></label>
-              <div className="relative">
-                <select
-                  value={category}
-                  onChange={e => setCategory(e.target.value)}
-                  className="w-full appearance-none bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-[16px] text-gray-800 dark:text-white pr-10"
-                >
-                  <option value="">{t('categories.choose')}</option>
-                  {/* Catégories proposées + valeur historique éventuelle de l'événement */}
-                  {[...EVENT_CATEGORIES, ...(category && !EVENT_CATEGORIES.some(c => c.id === category) && getEventCategory(category) ? [getEventCategory(category)!] : [])].map(c => (
-                    <option key={c.id} value={c.id}>{`${c.emoji} ${eventCategoryShortLabel(t, c.id)}`}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
+              {/* Même sélecteur que la création d'événement (avant : <select> natif) */}
+              {(() => {
+                const selectedCat = getEventCategory(category)
+                return (
+                  <button
+                    type="button"
+                    onClick={() => setShowCategorySheet(true)}
+                    aria-haspopup="dialog"
+                    className="relative w-full flex items-center gap-3 bg-gray-50 dark:bg-[#1A1A1A] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 pr-10 text-left text-[16px]"
+                  >
+                    {selectedCat && <selectedCat.Icon className="w-5 h-5 text-[#FF7A00] shrink-0" strokeWidth={1.5} aria-hidden="true" />}
+                    <span className={`truncate ${selectedCat ? 'text-gray-800 dark:text-white' : 'text-gray-400'}`}>
+                      <span>{selectedCat ? eventCategoryLabel(t, selectedCat.id) : t('categories.choose')}</span>
+                    </span>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" aria-hidden="true" />
+                  </button>
+                )
+              })()}
+              <EventCategorySheet
+                title={t('createEvent.sheets.categoryTitle')}
+                open={showCategorySheet}
+                onClose={() => setShowCategorySheet(false)}
+                value={category}
+                onSelect={setCategory}
+              />
             </div>
 
             {/* Privacy */}

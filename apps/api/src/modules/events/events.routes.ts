@@ -1332,17 +1332,32 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const existing = await app.prisma.booking.findUnique({
       where: { userId_eventId: { userId: sub, eventId: id } },
     })
-    if (existing) return reply.code(409).send({ error: 'Already joined', alreadyJoined: true })
+    // Participant parti de lui-même (« Quitter l'événement ») : il peut rejoindre / redemander comme
+    // la première fois (la réservation existante est réutilisée : 1 réservation par personne et par
+    // événement). Un refus de l'organisateur (CANCELLED sans leftAt) reste bloquant, comme avant.
+    const rejoinAfterLeaving = !!existing && existing.status === 'CANCELLED' && !!existing.leftAt
+    if (existing && !rejoinAfterLeaving) return reply.code(409).send({ error: 'Already joined', alreadyJoined: true })
 
     // In REQUEST_APPROVAL mode: create PENDING booking without incrementing currentAttendees.
     // currentAttendees is only incremented when the request is approved.
-    const booking = await app.prisma.booking.create({
-      data: {
-        userId: sub,
-        eventId: id,
-        status: event.requiresApproval ? 'PENDING' : 'CONFIRMED',
-      },
-    })
+    const booking = rejoinAfterLeaving
+      ? await app.prisma.booking.update({
+          where: { id: existing!.id },
+          data: {
+            status: event.requiresApproval ? 'PENDING' : 'CONFIRMED',
+            leftAt: null,
+            // Ancien passage d'entrée effacé : la nouvelle participation part de zéro
+            checkedInAt: null,
+            checkedInById: null,
+          },
+        })
+      : await app.prisma.booking.create({
+          data: {
+            userId: sub,
+            eventId: id,
+            status: event.requiresApproval ? 'PENDING' : 'CONFIRMED',
+          },
+        })
 
     if (!event.requiresApproval) {
       await app.prisma.event.update({
@@ -1431,7 +1446,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({
       where: { id },
-      select: { conversation: { select: { id: true } }, creatorId: true }
+      select: { conversation: { select: { id: true } }, creatorId: true, title: true }
     })
 
     if (event?.creatorId === sub) {
@@ -1440,16 +1455,30 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const booking = await app.prisma.booking.findUnique({
       where: { userId_eventId: { userId: sub, eventId: id } },
+      include: { _count: { select: { tickets: true, payments: { where: { status: 'SUCCEEDED' } } } } },
     })
 
+    // Participation PAYÉE (prix, billets ou cagnotte, y compris contribution anonyme) : quitter
+    // annulerait l'accès sans remboursement → refusé ; le participant passe par la demande de
+    // remboursement existante.
+    if (booking && booking.status === 'CONFIRMED' &&
+        ((booking.totalPaid ?? 0) > 0 || booking._count.tickets > 0 || booking._count.payments > 0)) {
+      return reply.code(409).send({
+        error: 'Participation payée : utilisez la demande de remboursement.',
+        code: 'PAID_PARTICIPATION',
+      })
+    }
+
     const operations: any[] = []
+    const wasConfirmed = booking?.status === 'CONFIRMED'
 
     if (booking && booking.status === 'CONFIRMED') {
       // Only decrement if booking was CONFIRMED (not a pending request being cancelled)
       operations.push(
         app.prisma.booking.update({
           where: { id: booking.id },
-          data: { status: 'CANCELLED' },
+          // leftAt : départ VOLONTAIRE → pourra rejoindre à nouveau (≠ refus de l'organisateur)
+          data: { status: 'CANCELLED', leftAt: new Date() },
         })
       )
       operations.push(
@@ -1459,11 +1488,12 @@ export default async function eventsRoutes(app: FastifyInstance) {
         })
       )
     } else if (booking && booking.status === 'PENDING') {
-      // Pending request: cancel without touching currentAttendees
+      // Pending request: cancel without touching currentAttendees.
+      // leftAt : demande retirée par l'utilisateur lui-même → il pourra redemander plus tard.
       operations.push(
         app.prisma.booking.update({
           where: { id: booking.id },
-          data: { status: 'CANCELLED' },
+          data: { status: 'CANCELLED', leftAt: new Date() },
         })
       )
     }
@@ -1480,6 +1510,22 @@ export default async function eventsRoutes(app: FastifyInstance) {
       await app.prisma.$transaction(operations)
     } else if (!booking) {
       return reply.code(404).send({ error: 'Not joined' })
+    }
+
+    // L'organisateur est prévenu du départ d'un participant CONFIRMÉ (pas d'un simple retrait de
+    // demande). Prénom = 1er mot du nom affiché. L'app traduit le texte (type PARTICIPANT_LEFT).
+    if (wasConfirmed && event?.creatorId) {
+      try {
+        const profile = await app.prisma.profile.findUnique({ where: { userId: sub }, select: { displayName: true } })
+        const firstName = (profile?.displayName || '').trim().split(/\s+/)[0] || 'Un participant'
+        await createAndSendNotification(app, {
+          userId: event.creatorId,
+          type: 'PARTICIPANT_LEFT',
+          title: '👋 Départ d\'un participant',
+          body: `${firstName} a quitté votre événement « ${event.title} ».`,
+          data: { eventId: id, firstName, eventTitle: event.title, leaverId: sub, screen: 'event-details' },
+        })
+      } catch (e) { app.log.warn(`Failed to send participant-left notification: ${e}`) }
     }
 
     return reply.send({ message: 'Left event' })

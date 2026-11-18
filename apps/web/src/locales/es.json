@@ -1209,13 +1209,24 @@
       "updateError": "Error al actualizar",
       "declined": "Solicitud rechazada",
       "declineError": "Error al rechazar",
-      "accepted": "Solicitud aceptada"
+      "accepted": "Solicitud aceptada",
+      "mustJoin": "Únete al evento para acceder a este espacio."
     },
     "tabs": {
       "details": "Detalles",
       "participants": "Participantes",
       "cagnotte": "Bote común",
       "ticketing": "Entradas"
+    },
+    "leave": {
+      "button": "Abandonar el evento",
+      "confirmTitle": "¿Abandonar este evento?",
+      "confirmText": "Dejarás de formar parte de los participantes. Esta acción es irreversible.",
+      "confirm": "Abandonar",
+      "cancel": "Cancelar",
+      "success": "Has abandonado el evento",
+      "error": "No se pudo abandonar el evento. Inténtalo de nuevo.",
+      "paidError": "Tu participación fue pagada: para cancelarla, solicita un reembolso."
     }
   },
   "payment": {
@@ -2223,7 +2234,10 @@
     "ticketIssuedBodyMulti": "Nunca publiques tus códigos QR. Cada entrada es personal y de un solo uso: entrégala solo a la persona que la usará para entrar a «{{event}}».",
     "toutes": "Todas",
     "nonLuesLabel": "Sin leer",
-    "nonLuesCount": "Sin leer ({{count}})"
+    "nonLuesCount": "Sin leer ({{count}})",
+    "participantParti": "Participante salió",
+    "participantLeftTitle": "Un participante se fue",
+    "participantLeftBody": "{{name}} abandonó tu evento «{{event}}»."
   },
   "forgotPassword": {
     "veuillezSelectionnerSmsOuWhatsapp": "Elige entre SMS o WhatsApp.",

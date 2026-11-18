@@ -1208,13 +1208,24 @@
       "updateError": "Error while updating",
       "declined": "Request declined",
       "declineError": "Error while declining",
-      "accepted": "Request accepted"
+      "accepted": "Request accepted",
+      "mustJoin": "Join the event to access this area."
     },
     "tabs": {
       "details": "Details",
       "participants": "Participants",
       "cagnotte": "Shared pot",
       "ticketing": "Ticketing"
+    },
+    "leave": {
+      "button": "Leave event",
+      "confirmTitle": "Leave this event?",
+      "confirmText": "You will no longer be a participant. This action cannot be undone.",
+      "confirm": "Leave",
+      "cancel": "Cancel",
+      "success": "You left the event",
+      "error": "Couldn't leave the event. Please try again.",
+      "paidError": "Your participation was paid: to cancel it, please request a refund."
     }
   },
   "payment": {
@@ -2222,7 +2233,10 @@
     "ticketIssuedBodyMulti": "Never post your QR codes. Each ticket is personal and single-use: only give it to the person who will use it to enter “{{event}}”.",
     "toutes": "All",
     "nonLuesLabel": "Unread",
-    "nonLuesCount": "Unread ({{count}})"
+    "nonLuesCount": "Unread ({{count}})",
+    "participantParti": "Participant left",
+    "participantLeftTitle": "A participant left",
+    "participantLeftBody": "{{name}} left your event “{{event}}”."
   },
   "forgotPassword": {
     "veuillezSelectionnerSmsOuWhatsapp": "Please select SMS or WhatsApp.",

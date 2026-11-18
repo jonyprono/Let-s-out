@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
-import { Loader2, Film, EyeOff, Ticket, ScanLine } from 'lucide-react';
+import { Loader2, Film, EyeOff, Ticket, ScanLine, LogOut } from 'lucide-react';
+import { ConfirmSheet } from '@/components/shared/ConfirmSheet';
 import { useTranslation } from 'react-i18next';
 import { eventCategoryLabel } from '@/lib/event-categories';
 import { canDesignatePoolCandidates } from '@/lib/pool-contribution';
@@ -96,7 +97,12 @@ export function ManageEvent() {
       
       if (!isOrganizer && !isConfirmedParticipant) {
         navigate(`/events/${id}`, { replace: true });
-        toast.error(t('manageEvent.toasts.mustPay'));
+        // Départ volontaire : simple retour à la fiche, sans message d'erreur. Sinon, message adapté :
+        // « payer » seulement si l'entrée est payante (prix, billetterie, cagnotte), « rejoindre » sinon.
+        if (!myBookingData?.leftAt) {
+          const paidEntry = (event.price ?? 0) > 0 || !!event.ticketingEnabled || (event.poolTarget ?? 0) > 0;
+          toast.error(paidEntry ? t('manageEvent.toasts.mustPay') : t('manageEvent.toasts.mustJoin'));
+        }
       }
     }
   }, [isLoading, isLoadingAttendees, isLoadingBooking, event, user, attendeesData, myBookingData, navigate, id]);
@@ -115,6 +121,31 @@ export function ManageEvent() {
   const isEventOrganizer = !!event && !!user && (event.creatorId === user.id || (event.coHostIds || []).includes(user.id));
   // « Mon billet » : toute participation confirmée donne un billet d'accès (gratuit ou payant)
   const isTicketHolder = hasAccessTicket(myBookingData);
+
+  // « Quitter l'événement » : participant confirmé, non organisateur, événement non terminé, et
+  // participation SANS paiement (sinon le serveur refuse : passer par la demande de remboursement).
+  const qcLeave = useQueryClient();
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const canLeave = isTicketHolder && !isEventOrganizer && !!event &&
+    !(event.endAt && new Date(event.endAt) < new Date()) &&
+    (myBookingData?.totalPaid ?? 0) <= 0 && (myBookingData?.ticketsCount ?? 0) === 0;
+  const leaveMutation = useMutation({
+    mutationFn: () => eventsApi.leave(id!),
+    onSuccess: () => {
+      setShowLeaveConfirm(false);
+      qcLeave.invalidateQueries({ queryKey: ['events', id] });
+      qcLeave.invalidateQueries({ queryKey: ['events', id, 'my-booking'] });
+      qcLeave.invalidateQueries({ queryKey: ['events', id, 'attendees'] });
+      qcLeave.invalidateQueries({ queryKey: ['chat'] });
+      qcLeave.invalidateQueries({ queryKey: ['me', 'access-tickets'] });
+      toast.success(t('manageEvent.leave.success'));
+      navigate(`/events/${id}`, { replace: true });
+    },
+    onError: (err: any) => {
+      setShowLeaveConfirm(false);
+      toast.error(err?.response?.data?.code === 'PAID_PARTICIPATION' ? t('manageEvent.leave.paidError') : t('manageEvent.leave.error'));
+    },
+  });
 
   if (isLoading) {
     return <div className="w-full h-full flex items-center justify-center bg-[#F9F9F9] dark:bg-[#0a0a0b]"><div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-[#FF7A00] animate-spin" /></div>;
@@ -227,6 +258,30 @@ export function ManageEvent() {
         eventDate={event.startAt}
         open={showTicket}
         onClose={() => setShowTicket(false)}
+      />
+
+      {/* ── Quitter l'événement (participant confirmé, participation sans paiement) ── */}
+      {canLeave && (
+        <div className="px-4 pb-4 -mt-1 bg-white dark:bg-[#1A1A1A]">
+          <button
+            type="button"
+            onClick={() => setShowLeaveConfirm(true)}
+            className="w-full h-11 rounded-full border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+          >
+            <LogOut className="w-4 h-4" aria-hidden="true" />
+            <span>{t('manageEvent.leave.button')}</span>
+          </button>
+        </div>
+      )}
+      <ConfirmSheet
+        open={showLeaveConfirm}
+        title={t('manageEvent.leave.confirmTitle')}
+        description={t('manageEvent.leave.confirmText')}
+        confirmText={t('manageEvent.leave.confirm')}
+        cancelText={t('manageEvent.leave.cancel')}
+        isPending={leaveMutation.isPending}
+        onClose={() => setShowLeaveConfirm(false)}
+        onConfirm={() => leaveMutation.mutate()}
       />
 
       {/* Tabs */}

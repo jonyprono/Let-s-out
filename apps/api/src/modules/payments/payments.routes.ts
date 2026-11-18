@@ -681,7 +681,8 @@ async function processConfirmedBooking(
     where: { userId_eventId: { userId, eventId } },
   })
   // A new participant means either no booking or booking was APPROVED (not yet counted as attendee)
-  const isNewParticipant = !existingBooking || existingBooking.status === 'APPROVED'
+  // CANCELLED (parti / demande retirée) : n'était plus compté parmi les participants → compté à nouveau
+  const isNewParticipant = !existingBooking || existingBooking.status === 'APPROVED' || existingBooking.status === 'CANCELLED'
 
   const eventForPool = await app.prisma.event.findUnique({
     where: { id: eventId },
@@ -773,6 +774,7 @@ async function processConfirmedBooking(
       },
       update: { 
         status: 'CONFIRMED',
+        leftAt: null,
         // Si anonyme : totalPaid du Booking n'est pas incrémenté (montant caché publiquement)
         // Le paiement réel est tracé dans Payment avec isAnonymous=true
         totalPaid: isAnonymous ? undefined : { increment: amount },
@@ -1034,7 +1036,7 @@ async function processTicketOrder(
     const booking = await tx.booking.upsert({
       where: { userId_eventId: { userId, eventId } },
       create: { userId, eventId, status: 'CONFIRMED', totalPaid: amount, quantity: count },
-      update: { status: 'CONFIRMED', totalPaid: { increment: amount }, quantity: wasConfirmed ? { increment: count } : count },
+      update: { status: 'CONFIRMED', leftAt: null, totalPaid: { increment: amount }, quantity: wasConfirmed ? { increment: count } : count },
     })
     await tx.event.update({ where: { id: eventId }, data: { currentAttendees: { increment: count } } })
     // 3. Paiement ventilé (taux figé)

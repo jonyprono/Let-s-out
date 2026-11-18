@@ -53,6 +53,7 @@ const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string; bg:
   NEW_FOLLOWER:        { icon: UserAdd01Icon,       get label() { return i18n.t('notifications.nouvelAbonne') },             color: 'text-pink-500',   bg: 'bg-pink-50 dark:bg-pink-900/20' },
   RADAR_INVITE:        { icon: Location01Icon,      label: 'OUT RADAR',                  color: 'text-[#FF7A00]',  bg: 'bg-orange-50 dark:bg-orange-900/20' },
   RADAR_INVITE_ACCEPTED:{ icon: TickDouble01Icon,   get label() { return i18n.t('notifications.outRadarAccepte') },          color: 'text-green-500',  bg: 'bg-green-50 dark:bg-green-900/20' },
+  PARTICIPANT_LEFT:    { icon: UserMultiple02Icon,  get label() { return i18n.t('notifications.participantParti') },          color: 'text-gray-500',   bg: 'bg-gray-50 dark:bg-gray-900/20' },
   default:             { icon: Notification01Icon,  label: 'Notification',               color: 'text-gray-400',   bg: 'bg-gray-50 dark:bg-gray-800' },
 };
 
@@ -85,6 +86,7 @@ function getActionLabel(type: string) {
     case 'PAGE_POST':           return i18n.t('notifications.voirLaPublication');
     case 'COMMENT_REPLY':       return i18n.t('notifications.voirLaReponse');
     case 'CO_HOST_INVITE':      return i18n.t('notifications.voirLEvenement');
+    case 'PARTICIPANT_LEFT':    return i18n.t('notifications.voirLEvenement');
     case 'NEW_BADGE':           return i18n.t('notifications.voirMesBadges');
     case 'NEW_FOLLOWER':        return i18n.t('notifications.voirLeProfil');
     case 'RADAR_INVITE':
@@ -191,6 +193,10 @@ export function Notifications({ onBack }: NotificationsProps) {
         break;
       case 'CO_HOST_INVITE':
         if (d?.eventId) navigate(`/events/${d.eventId}`);
+        break;
+      case 'PARTICIPANT_LEFT':
+        // Organisateur : directement l'onglet participants de la gestion
+        if (d?.eventId) navigate(`/events/${d.eventId}/manage?tab=participants`);
         break;
       case 'NEW_BADGE':
         navigate('/badges');
