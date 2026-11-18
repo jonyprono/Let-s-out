@@ -1749,7 +1749,10 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const { id } = req.params as { id: string }
     const booking = await app.prisma.booking.findUnique({
       where: { userId_eventId: { userId: sub, eventId: id } },
-      select: { id: true, status: true, checkedInAt: true, _count: { select: { tickets: true } } },
+      select: {
+        id: true, status: true, checkedInAt: true, _count: { select: { tickets: true } },
+        event: { select: { price: true, poolTarget: true } },
+      },
     })
     if (!booking || booking.status !== 'CONFIRMED') {
       return reply.code(404).send({ error: 'Aucun billet confirmé pour cet événement.', code: 'NO_TICKET' })
@@ -1760,10 +1763,15 @@ export default async function eventsRoutes(app: FastifyInstance) {
       return reply.code(409).send({ error: 'Utilisez vos billets individuels.', code: 'USE_TICKETS' })
     }
     const token = await ensureTicketToken(app.prisma, booking.id)
+    // Prix d'ENTRÉE affiché sur le billet : 0 = « Gratuit ». Une cagnotte n'est pas un droit
+    // d'entrée (gestion commune des fonds) → billet gratuit, même si le participant a contribué.
+    const hasPool = (booking.event?.poolTarget ?? 0) > 0
+    const entryPrice = hasPool ? 0 : Math.max(0, Math.round(booking.event?.price ?? 0))
     return reply.send({
       bookingRef: booking.id.slice(-8).toUpperCase(),
       qrPayload: ticketQrPayload(token),
       checkedInAt: booking.checkedInAt,
+      price: entryPrice,
     })
   })
 

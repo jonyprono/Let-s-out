@@ -24,6 +24,7 @@ const RESEND_COOLDOWN = { key: 'TICKET_EMAIL_RESEND_COOLDOWN_SECONDS', fallback:
  *   PUT    /events/:id/payout-info               créateur uniquement (destination de l'argent)
  *   GET    /events/:id/ticket-sales              organisateur / co-organisateurs — brut / commission / net
  *   GET    /events/:id/my-tickets                acheteur — ses billets (1 QR par place)
+ *   GET    /me/access-tickets                    participant — tous ses billets d'accès (rubrique « Mes billets »)
  *   GET    /tickets/:token                       public — billet partagé (le jeton EST le billet)
  */
 export default async function ticketingRoutes(app: FastifyInstance) {
@@ -242,6 +243,51 @@ export default async function ticketingRoutes(app: FastifyInstance) {
         shareToken: t.ticketToken,
         checkedInAt: t.checkedInAt,
       })),
+    })
+  })
+
+  // ── Rubrique « Mes billets » : tous mes billets d'accès ─────────────────────
+  // Vision produit : toute participation CONFIRMÉE donne un billet d'accès (QR), gratuit ou payant.
+  // Liste légère (aucun QR ici) : le QR de chaque événement s'ouvre via /events/:id/my-tickets
+  // (billetterie) ou /events/:id/my-ticket (billet unique porté par la réservation).
+  app.get('/me/access-tickets', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const bookings = await app.prisma.booking.findMany({
+      where: { userId: sub, status: 'CONFIRMED' },
+      select: {
+        id: true,
+        checkedInAt: true,
+        tickets: { select: { price: true, checkedInAt: true } },
+        event: {
+          select: {
+            id: true, title: true, startAt: true, endAt: true, coverUrl: true,
+            city: true, address: true, status: true, price: true, poolTarget: true,
+          },
+        },
+      },
+      orderBy: { event: { startAt: 'asc' } },
+      take: 300,
+    })
+    return reply.send({
+      data: bookings.map((b) => {
+        const e = b.event
+        const individual = b.tickets.length > 0
+        const entryPrice = individual
+          ? b.tickets.reduce((s, t) => s + t.price, 0)
+          : ((e.poolTarget ?? 0) > 0 ? 0 : Math.max(0, Math.round(e.price ?? 0)))
+        return {
+          eventId: e.id,
+          title: e.title,
+          startAt: e.startAt,
+          endAt: e.endAt,
+          coverUrl: e.coverUrl,
+          location: e.address || e.city || null,
+          eventStatus: e.status,
+          ticketsCount: individual ? b.tickets.length : 1,
+          totalPrice: entryPrice,
+          allUsed: individual ? b.tickets.every((t) => !!t.checkedInAt) : !!b.checkedInAt,
+        }
+      }),
     })
   })
 

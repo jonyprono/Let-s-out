@@ -13,6 +13,7 @@ const OTP_SEND_WINDOW_SECONDS = 10 * 60
 
 import { getFirebaseApp } from '../../services/push.service'
 import { emailFromGeneral } from '../../services/email-senders'
+import { interpretResendResponse, logEmailResult } from '../../services/email.service'
 
 // Initialize Firebase Admin (handles both SERVICE_ACCOUNT and individual vars)
 getFirebaseApp()
@@ -675,12 +676,19 @@ export class AuthService {
     `;
 
     // Unique e-mail de bienvenue de l'app (téléphone : pas d'e-mail ; e-mail : register ; Google : createGoogleUser)
-    await resend.emails.send({
+    // Le SDK Resend ne lève PAS d'erreur quand l'API refuse l'envoi (expéditeur/domaine non
+    // vérifié, quota…) : il renvoie le corps d'erreur. Avant, ce retour était ignoré → échec
+    // totalement silencieux. On l'interprète et on le journalise comme les e-mails de billets.
+    const subject = "Bienvenue sur Let's Out ! 🎉";
+    const response = await resend.emails.send({
       from: emailFromGeneral(),
       to: email,
-      subject: "Bienvenue sur Let's Out ! 🎉",
+      subject,
       html: htmlContent,
     });
+    const result = interpretResendResponse(response);
+    logEmailResult('Bienvenue', email, subject, result);
+    if (!result.ok) throw new Error(`Welcome email refused by Resend: ${result.reason}`);
   }
   // ── Helpers ────────────────────────────────────────────────────────────────
 

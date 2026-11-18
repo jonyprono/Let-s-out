@@ -25,6 +25,23 @@ function getProximityInfo(distanceKm: number): { tier: ProximityTier; label: str
   return { tier: 'UNDER_10KM', label: 'Dans votre zone (moins de 10 km)' }
 }
 
+/**
+ * Le message saisi avec l'invitation n'était stocké que sur RadarInvite.message :
+ * la conversation créée à l'acceptation démarrait vide. On l'insère comme premier
+ * vrai message (expéditeur = l'inviteur, horodaté à l'envoi de l'invitation),
+ * dans le même `conversation.create` (écriture atomique).
+ */
+function radarInviteFirstMessage(invite: { senderId: string; message: string | null; createdAt: Date }) {
+  const content = invite.message?.trim()
+  if (!content) return {}
+  return {
+    lastMessageAt: new Date(), // remonte la discussion en tête de liste dès l'acceptation
+    messages: {
+      create: [{ senderId: invite.senderId, type: 'TEXT' as const, content, createdAt: invite.createdAt }],
+    },
+  }
+}
+
 // Anti-triangulation : mémorisation de l'horodatage de dernière recherche par utilisateur
 const lastSearchTimestamps = new Map<string, number>()
 
@@ -393,7 +410,9 @@ export default async function radarRoutes(app: FastifyInstance) {
       }
 
       // Filtre Vérification KYC
-      const isVerified = item.user.profile?.kycStatus === 'verified' || item.user.isVerified
+      // Badge = KYC validé uniquement. `user.isVerified` vaut true dès l'inscription
+      // (simple OTP téléphone / e-mail, cf. auth.service register) : ne PAS l'utiliser ici.
+      const isVerified = item.user.profile?.kycStatus === 'verified'
       if (verifiedOnly && !isVerified) continue
 
       // Filtre Type de sortie
@@ -596,6 +615,7 @@ export default async function radarRoutes(app: FastifyInstance) {
                 members: {
                   create: [{ userId: inv.senderId }, { userId: inv.receiverId }],
                 },
+                ...radarInviteFirstMessage(inv),
               },
             })
             // Attache la conversation de façon atomique, uniquement si personne d'autre
@@ -672,6 +692,7 @@ export default async function radarRoutes(app: FastifyInstance) {
             members: {
               create: [{ userId: invite.senderId }, { userId: invite.receiverId }],
             },
+            ...radarInviteFirstMessage(invite),
           },
         })
         conversationId = newConv.id

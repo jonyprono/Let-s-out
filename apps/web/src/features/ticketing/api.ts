@@ -93,7 +93,36 @@ export function hasRealTickets(
   return !!event?.ticketingEnabled && booking?.status === 'CONFIRMED' && (booking.ticketsCount ?? 0) > 0
 }
 
+/**
+ * Billet d'ACCÈS (vision produit : toute participation confirmée donne un billet avec QR).
+ * - Billetterie : billets individuels (catégorie + montant).
+ * - Sinon (gratuit, prix unique, cagnotte) : QR unique porté par la réservation, émis à la
+ *   demande par GET /events/:id/my-ticket et accepté par le scan d'entrée.
+ * `hasRealTickets` reste réservé à la billetterie (« acheter » vs « mes billets » dans son bloc).
+ */
+export function hasAccessTicket(booking: { status?: string } | null | undefined): boolean {
+  return booking?.status === 'CONFIRMED'
+}
+
+/** Une ligne de la rubrique « Mes billets » (un événement = un ou plusieurs billets d'accès) */
+export interface AccessTicketSummary {
+  eventId: string
+  title: string
+  startAt: string
+  endAt: string
+  coverUrl: string | null
+  location: string | null
+  eventStatus: string
+  ticketsCount: number
+  /** Total payé pour l'entrée en F CFA (0 = gratuit) */
+  totalPrice: number
+  allUsed: boolean
+}
+
 export const ticketingApi = {
+  /** Tous mes billets d'accès (participations confirmées) */
+  myAccessTickets: () =>
+    apiClient.get<{ data: AccessTicketSummary[] }>('/me/access-tickets').then((r) => r.data.data),
   publicTiers: (eventId: string) => apiClient.get<PublicTiers>(`/events/${eventId}/ticket-tiers`).then((r) => r.data),
   myTickets: (eventId: string) => apiClient.get<MyTickets>(`/events/${eventId}/my-tickets`).then((r) => r.data),
   /** Renvoie tous mes billets de l'événement à l'adresse e-mail du compte (`to` = adresse masquée) */
@@ -113,6 +142,7 @@ export const ticketingKeys = {
   publicTiers: (eventId: string) => ['events', eventId, 'ticket-tiers'] as const,
   myTickets: (eventId: string) => ['events', eventId, 'my-tickets'] as const,
   sales: (eventId: string) => ['events', eventId, 'ticket-sales'] as const,
+  myAccessTickets: ['me', 'access-tickets'] as const,
 }
 
 /** Validation locale d'une catégorie : renvoie le champ en erreur, ou null */

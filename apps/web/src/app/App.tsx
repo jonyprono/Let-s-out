@@ -74,6 +74,7 @@ const TermsOfService = lazyRoute(() => import('@/app/components/TermsOfService')
 const LandingPage = lazyRoute(() => import('@/app/components/LandingPage').then(m => m.LandingPage))
 const HelpSupport = lazyRoute(() => import('./components/HelpSupport').then(m => m.default))
 const OutRadar = lazyRoute(() => import('@/features/radar/components/OutRadar').then(m => m.OutRadar))
+const MyTicketsPage = lazyRoute(() => import('@/features/ticketing/components/MyTicketsPage').then(m => m.MyTicketsPage))
 const EventValidatorsVote = lazyRoute(() => import('@/app/pages/EventValidatorsVote').then(m => m.EventValidatorsVote))
 const TicketScanner = lazyRoute(() => import('@/features/events/components/TicketScanner').then(m => m.TicketScanner))
 const EventPoolValidation = lazyRoute(() => import('./components/EventPoolValidation').then(m => m.EventPoolValidation))
@@ -425,6 +426,8 @@ export default function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/explorer" element={<Explorer />} />
             <Route path="/my-events" element={<MyEvents />} />
+            {/* Rubrique « Mes billets » : tous les billets d'accès (QR) de l'utilisateur */}
+            <Route path="/my-tickets" element={<MyTicketsPage />} />
             <Route path="/events/create" element={<CreateEvent />} />
             <Route path="/events/:id" element={<EventDetails />} />
             <Route path="/events/:id/manage" element={<ManageEvent />} />

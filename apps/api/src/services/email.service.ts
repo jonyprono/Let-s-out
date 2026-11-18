@@ -54,7 +54,7 @@ export function interpretResendResponse(res: any): EmailSendResult {
   return { ok: false, reason }
 }
 
-function logEmailResult(kind: string, to: string, subject: string, result: EmailSendResult) {
+export function logEmailResult(kind: string, to: string, subject: string, result: EmailSendResult) {
   if (result.ok) {
     console.log(`[EMAIL] ${kind} envoyé — à ${maskEmail(to)} — « ${subject} » — id Resend ${result.id}`)
   } else {

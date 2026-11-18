@@ -80,8 +80,9 @@ export function ManageEventView({
   const handlePublish = async () => {
     // Vérification de profil obligatoire pour les événements payants ou cagnotte
     const needsVerification = (event.price && event.price > 0) || (event.poolTarget && event.poolTarget > 0)
-    const isVerified = (user as any)?.isVerified || (user as any)?.profile?.isVerified
-    if (needsVerification && !isVerified) {
+    // KYC validé uniquement (même règle que CreateEvent) : `user.isVerified` = simple OTP, vrai pour tous
+    const isKycVerified = user?.profile?.kycStatus === 'verified'
+    if (needsVerification && !isKycVerified) {
       toast.error(t('eventView.kycRequired'))
       navigate('/verify-profile')
       return

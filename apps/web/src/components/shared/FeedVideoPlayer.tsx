@@ -48,11 +48,32 @@ export function FeedVideoPlayer({
 
   // Auto-generate Cloudinary poster if available and poster not explicitly provided,
   // with a transparent 1x1 gif fallback to completely suppress the native Android black play watermark
-  const derivedPoster =
+  const realPoster =
     poster ||
     (src.includes('cloudinary.com') && src.includes('/video/upload/')
       ? src.replace('/upload/', '/upload/so_auto/').replace(/\.(mp4|webm|mov|avi)$/i, '.jpg')
-      : 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+      : null);
+  const derivedPoster =
+    realPoster || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+  // Géométrie figée (iOS / WebKit) : avant, la hauteur du lecteur venait de la taille
+  // intrinsèque de <video>. Sur WebKit, quand la lecture démarre, le poster est masqué et,
+  // tant que la 1re image n'est pas décodée, la taille intrinsèque retombe à la valeur par
+  // défaut (300×150) → le lecteur rétrécit sur fond noir puis reprend sa taille.
+  // On fixe donc le ratio (lu sur le poster, puis confirmé par les métadonnées) et la vidéo
+  // remplit le cadre en absolu : sa taille intrinsèque n'influence plus la mise en page.
+  const [ratio, setRatio] = useState<number | null>(null);
+  useEffect(() => {
+    if (!realPoster) return;
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth > 1 && img.naturalHeight > 1) {
+        setRatio((r) => r ?? img.naturalWidth / img.naturalHeight);
+      }
+    };
+    img.src = realPoster;
+    return () => { img.onload = null; };
+  }, [realPoster]);
 
   // Pause all other videos on the page when this video starts playing
   const pauseOtherVideos = useCallback(() => {
@@ -118,6 +139,10 @@ export function FeedVideoPlayer({
     const video = videoRef.current;
     if (!video) return;
     setDuration(video.duration || 0);
+    // Vraies dimensions de la vidéo (jamais le 300×150 transitoire : loadedmetadata les fournit)
+    if (video.videoWidth > 0 && video.videoHeight > 0) {
+      setRatio(video.videoWidth / video.videoHeight);
+    }
   };
 
   // Lecture demandée (toucher ou arrivée à l'écran) AVANT que la source soit attachée : on lance
@@ -238,7 +263,12 @@ export function FeedVideoPlayer({
     <div
       ref={containerRef}
       className={`relative w-full bg-black overflow-hidden select-none group cursor-pointer ${className}`}
-      style={{ maxHeight: isFullscreen ? '100vh' : maxHeight }}
+      style={{
+        maxHeight: isFullscreen ? '100vh' : maxHeight,
+        // Hauteur = largeur / ratio, plafonnée par maxHeight (même rendu qu'avant, mais stable)
+        aspectRatio: isFullscreen ? undefined : String(ratio ?? 16 / 9),
+        height: isFullscreen ? '100vh' : undefined,
+      }}
       onClick={(e) => {
         e.stopPropagation();
         togglePlay(e);
@@ -246,6 +276,19 @@ export function FeedVideoPlayer({
       onMouseMove={triggerControlsVisibility}
       onTouchStart={triggerControlsVisibility}
     >
+      {/* Poster en image sous la vidéo : sur iOS, entre play() et la 1re image décodée,
+          la vidéo est vide → on voit ce poster au lieu d'un flash noir. */}
+      {realPoster && (
+        <img
+          src={realPoster}
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+          className={`absolute inset-0 w-full h-full pointer-events-none ${
+            objectFit === 'cover' ? 'object-cover' : 'object-contain'
+          }`}
+        />
+      )}
       <video
         ref={videoRef}
         src={shouldLoad ? src : undefined}
@@ -262,10 +305,9 @@ export function FeedVideoPlayer({
         onPause={handlePause}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        className={`w-full h-full transition-all ${
+        className={`absolute inset-0 w-full h-full ${
           objectFit === 'cover' ? 'object-cover' : 'object-contain'
         }`}
-        style={{ maxHeight: isFullscreen ? '100vh' : maxHeight }}
       />
 
       {/* Center Play Button Overlay (visible when paused) */}

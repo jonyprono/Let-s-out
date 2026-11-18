@@ -230,7 +230,16 @@ export function MyTicketModal({ eventId, eventTitle, eventDate, open, onClose }:
           </>
         ) : single.data ? (
           <>
-            {/* Ancien billet unique (réservation) */}
+            {/* Billet d'accès unique (réservation) : gratuit ou prix d'entrée */}
+            {typeof single.data.price === 'number' && (
+              <span className="max-w-full truncate px-4 py-1.5 rounded-full bg-[#FF7A00] text-white font-poppins font-extrabold text-[18px] uppercase tracking-wide">
+                <span>
+                  {single.data.price > 0
+                    ? t('tickets.priceAmount', { amount: single.data.price.toLocaleString(i18n.language || 'fr') })
+                    : t('tickets.free')}
+                </span>
+              </span>
+            )}
             <div className={`p-4 bg-white rounded-2xl border border-gray-200 ${single.data.checkedInAt ? 'opacity-40' : ''}`}>
               <QRCodeSVG value={single.data.qrPayload} size={232} level="M" marginSize={2} title={t('tickets.qrAlt')} />
             </div>

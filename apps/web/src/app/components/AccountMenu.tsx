@@ -11,6 +11,7 @@ import {
   Medal01Icon,
   HeadphonesIcon,
   Book01Icon,
+  Ticket01Icon,
 } from 'hugeicons-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { NotificationIconWithBadge } from '@/components/shared/NotificationIconWithBadge';
@@ -33,7 +34,8 @@ export function AccountMenu() {
   const displayName = user?.profile?.displayName || user?.email?.split('@')[0] || 'Utilisateur';
   const username = user?.profile?.username ? `@${user.profile.username}` : '';
   const avatarUrl = user?.profile?.avatarUrl;
-  const isVerified = user?.isVerified || false;
+  // Badge certifié = KYC validé uniquement (`user.isVerified` = simple OTP, vrai pour tous les comptes)
+  const isVerified = user?.profile?.kycStatus === 'verified';
 
   // Real stats
   const { data: activity } = useQuery({
@@ -92,6 +94,13 @@ export function AccountMenu() {
       subtitle: t('accountMenu.evenementsCreesEtRejoints'),
       icon: Calendar01Icon,
       path: '/my-events',
+      badge: null,
+    },
+    {
+      label: t('tickets.pageTitle'),
+      subtitle: t('tickets.menuSubtitle'),
+      icon: Ticket01Icon,
+      path: '/my-tickets',
       badge: null,
     },
     {

@@ -119,6 +119,8 @@ export interface MyTicket {
   bookingRef: string
   qrPayload: string
   checkedInAt: string | null
+  /** Prix d'entrée en F CFA (0 = gratuit). Absent sur une API pas encore déployée. */
+  price?: number
 }
 
 export interface CheckInSuccess {

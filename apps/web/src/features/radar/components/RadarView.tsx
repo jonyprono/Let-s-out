@@ -5,6 +5,7 @@ import { SafeImage } from '@/components/shared/SafeImage'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import type { RadarSearchResult } from '../api'
 import { useTranslation } from 'react-i18next'
+import { useUserProfile } from '@/features/users/UserProfileContext'
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
@@ -106,6 +107,7 @@ export function RadarView({
   listRef,
 }: RadarViewProps) {
   const { t } = useTranslation()
+  const { openUserProfile } = useUserProfile()
   const wrapRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState(280)
 
@@ -308,7 +310,12 @@ export function RadarView({
         <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-gray-800 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           <div className="relative h-14 bg-gradient-to-r from-[#FF7A00]/20 via-orange-50 to-transparent dark:from-[#FF7A00]/10 dark:via-[#222] dark:to-[#1A1A1A]">
             <div className="absolute left-4 bottom-0 translate-y-1/2 z-10">
-              <div className="relative">
+              <button
+                type="button"
+                onClick={() => openUserProfile(selectedProfile.id)}
+                className="relative block rounded-full focus:outline-none active:scale-95 transition-transform"
+                aria-label={t('radarView.profilDe', { v0: selectedProfile.displayName })}
+              >
                 <div className="w-14 h-14 rounded-full border-2 border-white dark:border-[#1A1A1A] overflow-hidden shadow-md bg-gray-200 dark:bg-gray-700">
                   {selectedProfile.avatarUrl ? (
                     <SafeImage src={selectedProfile.avatarUrl} alt={selectedProfile.displayName} className="w-full h-full object-cover" />
@@ -323,7 +330,7 @@ export function RadarView({
                     <VerifiedBadge size={16} />
                   </div>
                 )}
-              </div>
+              </button>
             </div>
             <button onClick={() => setSelectedProfile(null)}
               className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center hover:bg-black/20 transition-colors">
@@ -333,7 +340,13 @@ export function RadarView({
 
           <div className="pt-9 px-4 pb-4 space-y-3">
             <div>
-              <p className="font-bold text-sm text-gray-900 dark:text-white">{selectedProfile.displayName}</p>
+              <button
+                type="button"
+                onClick={() => openUserProfile(selectedProfile.id)}
+                className="block text-left font-bold text-sm text-gray-900 dark:text-white hover:underline focus:outline-none"
+              >
+                <span>{selectedProfile.displayName}</span>
+              </button>
               <p className="text-[11px] text-[#FF7A00] font-medium mt-0.5">{selectedProfile.proximity}</p>
             </div>
 

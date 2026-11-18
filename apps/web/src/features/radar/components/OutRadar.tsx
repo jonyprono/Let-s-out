@@ -29,6 +29,7 @@ import { apiClient } from '@/lib/api-client'
 import { radarApi, RadarSearchResult } from '../api'
 import { RadarView } from './RadarView'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
+import { useUserProfile } from '@/features/users/UserProfileContext'
 import i18n from '@/lib/i18n'
 
 // Types de sortie avec libellés et icônes
@@ -54,6 +55,7 @@ export function OutRadar() {
   const queryClient = useQueryClient()
   const currentUser = useAuthStore((s: any) => s.user)
   const { t } = useTranslation()
+  const { openUserProfile } = useUserProfile()
 
   // Onglet principal : 'radar' (Recherche & Profils) ou 'invites' (Mes invitations)
   const initialTab = searchParams.get('tab') === 'invites' ? 'invites' : 'radar'
@@ -517,7 +519,12 @@ export function OutRadar() {
                       className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs space-y-3"
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => otherUser?.id && openUserProfile(otherUser.id)}
+                          className="flex items-center gap-3 min-w-0 text-left focus:outline-none active:opacity-80"
+                          aria-label={t('radarView.profilDe', { v0: profile?.displayName || 'Outster' })}
+                        >
                           <div className="w-11 h-11 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0">
                             {profile?.avatarUrl ? (
                               <SafeImage
@@ -534,7 +541,7 @@ export function OutRadar() {
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <p className="font-semibold text-sm truncate">{profile?.displayName || 'Outster'}</p>
-                              {(profile?.kycStatus === 'verified' || otherUser?.isVerified) && (
+                              {profile?.kycStatus === 'verified' && (
                                 <VerifiedBadge size={14} />
                               )}
                             </div>
@@ -542,7 +549,7 @@ export function OutRadar() {
                               {isReceived ? 'Vous a invité' : 'Invitation envoyée'} · {new Date(inv.createdAt).toLocaleDateString()}
                             </p>
                           </div>
-                        </div>
+                        </button>
 
                         {/* Statut badge */}
                         <span
@@ -796,7 +803,12 @@ export function OutRadar() {
                     className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-xs relative transition-all"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
+                      <button
+                        type="button"
+                        onClick={() => openUserProfile(profile.id)}
+                        className="flex items-center gap-3 min-w-0 text-left focus:outline-none active:opacity-80"
+                        aria-label={t('radarView.profilDe', { v0: profile.displayName })}
+                      >
                         {/* Avatar */}
                         <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden shrink-0 border border-gray-100 dark:border-gray-800">
                           {profile.avatarUrl ? (
@@ -827,7 +839,7 @@ export function OutRadar() {
                             </span>
                           )}
                         </div>
-                      </div>
+                      </button>
 
                       {/* Menu modération */}
                       <div className="relative">

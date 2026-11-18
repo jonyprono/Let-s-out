@@ -57,7 +57,7 @@ import { JoinEventBottomSheet } from '@/app/components/JoinEventBottomSheet'
 import { TicketPurchaseSheet } from '@/features/ticketing/components/TicketPurchaseSheet'
 import { EventTicketingBlock } from '@/features/ticketing/components/EventTicketingBlock'
 import { MyTicketModal } from '@/features/events/components/MyTicketModal'
-import { hasRealTickets, ticketingKeys } from '@/features/ticketing/api'
+import { hasRealTickets, hasAccessTicket, ticketingKeys } from '@/features/ticketing/api'
 import { apiClient } from '@/lib/api-client'
 import { JoinPendingScreen } from '@/app/components/JoinPendingScreen'
 
@@ -1075,9 +1075,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
           {hasJoined ? (
             /* Participant or Creator: two buttons */
             <>
-              {/* Détenteur de billets : « Mes billets » toujours visible dans la barre du bas
-                  (le partage reste disponible dans l'en-tête) */}
-              {hasRealTickets(event, myBookingData) ? (
+              {/* Participation confirmée = billet d'accès (QR), gratuit ou payant : « Mon billet »
+                  toujours visible dans la barre du bas (le partage reste disponible dans l'en-tête) */}
+              {hasAccessTicket(myBookingData) ? (
                 <Button
                   variant="outline"
                   onClick={() => setShowMyTickets(true)}
@@ -1226,18 +1226,19 @@ export function EventDetails({ onBack }: EventDetailsProps) {
         </div>
       </div>
 
-      {/* ── Billetterie : achat + mes billets ── */}
+      {/* ── Billetterie : achat ── */}
       {event?.ticketingEnabled && (
-        <>
-          <TicketPurchaseSheet event={event} open={showTicketPurchase} onClose={() => setShowTicketPurchase(false)} />
-          <MyTicketModal
-            eventId={event.id}
-            eventTitle={event.title}
-            eventDate={event.startAt}
-            open={showMyTickets}
-            onClose={() => setShowMyTickets(false)}
-          />
-        </>
+        <TicketPurchaseSheet event={event} open={showTicketPurchase} onClose={() => setShowTicketPurchase(false)} />
+      )}
+      {/* ── Billet d'accès : pour TOUTE participation confirmée (gratuite ou payante) ── */}
+      {event && (
+        <MyTicketModal
+          eventId={event.id}
+          eventTitle={event.title}
+          eventDate={event.startAt}
+          open={showMyTickets}
+          onClose={() => setShowMyTickets(false)}
+        />
       )}
 
       {/* ── Join Event Bottom Sheet ── */}
