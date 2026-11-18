@@ -1,82 +1,172 @@
 diff --git a/build/index.cjs.js b/build/index.cjs.js
-index 89668dc7f7ca2dc17618339c9c0f98dde7dad6e0..c1782079a84fdf2c8018f8540964e7ba3f410161 100644
+index 89668dc7f7ca2dc17618339c9c0f98dde7dad6e0..e4eebf24d9b8a41e809f460b288d493c5c89a2d8 100644
 --- a/build/index.cjs.js
 +++ b/build/index.cjs.js
-@@ -113,7 +113,25 @@ var PullToRefresh = function (_a) {
+@@ -102,6 +102,10 @@ var PullToRefresh = function (_a) {
+     var childrenRef = React.useRef(null);
+     var pullDownRef = React.useRef(null);
+     var fetchMoreRef = React.useRef(null);
++    // [Let's Out patch v2] Marqueur invisible en tete du contenu + IntersectionObserver :
++    // savoir si le fil est tout en haut SANS lire scrollTop (chaque lecture peut forcer une mise en page).
++    var topSentinelRef = React.useRef(null);
++    var atTopRef = React.useRef(true);
+     var pullToRefreshThresholdBreached = false;
+     var fetchMoreTresholdBreached = false; // if true, fetchMore loader is displayed
+     var isDragging = false;
+@@ -113,7 +117,38 @@ var PullToRefresh = function (_a) {
          var childrenEl = childrenRef.current;
          childrenEl.addEventListener('touchstart', onTouchStart, { passive: true });
          childrenEl.addEventListener('mousedown', onTouchStart);
 -        childrenEl.addEventListener('touchmove', onTouchMove, { passive: false });
-+        // [Let's Out patch] Écouteur touchmove BLOQUANT (passive: false) seulement quand le fil est tout en
-+        // haut (scrollTop <= 0), seul cas où le « tirer pour rafraîchir » doit empêcher le défilement.
-+        // Ailleurs, aucun écouteur bloquant : le navigateur fait défiler sans attendre le fil principal.
-+        // (Attaché dès l'arrivée en haut, pas dans touchstart : le navigateur décide au contact si le
-+        // geste est bloquable.)
++        // [Let's Out patch v2] Ecouteur touchmove BLOQUANT (passive: false) seulement quand le fil est
++        // tout en haut : seul cas ou « tirer pour rafraichir » doit empecher le defilement. Ailleurs, aucun
++        // ecouteur bloquant : le navigateur fait defiler sans attendre le fil principal.
++        // Le haut est detecte par un IntersectionObserver sur un marqueur (asynchrone, aucune lecture de
++        // scrollTop). Attache des l'arrivee en haut, pas dans touchstart : le navigateur decide au contact
++        // si le geste est bloquable.
 +        var blockingTouchMove = false;
-+        var syncTouchMove = function () {
-+            var atTop = childrenEl.scrollTop <= 0;
-+            if (atTop && !blockingTouchMove) {
++        var setBlocking = function (on) {
++            if (on && !blockingTouchMove) {
 +                childrenEl.addEventListener('touchmove', onTouchMove, { passive: false });
 +                blockingTouchMove = true;
 +            }
-+            else if (!atTop && blockingTouchMove && !isDragging) {
++            else if (!on && blockingTouchMove && !isDragging) {
 +                childrenEl.removeEventListener('touchmove', onTouchMove, { passive: false });
 +                blockingTouchMove = false;
 +            }
 +        };
-+        syncTouchMove();
-+        childrenEl.addEventListener('scroll', syncTouchMove, { passive: true });
++        var topObserver = null;
++        if (typeof IntersectionObserver !== 'undefined' && topSentinelRef.current) {
++            topObserver = new IntersectionObserver(function (entries) {
++                var entry = entries[entries.length - 1];
++                atTopRef.current = entry.isIntersecting;
++                setBlocking(entry.isIntersecting);
++            }, { root: childrenEl, threshold: 0 });
++            topObserver.observe(topSentinelRef.current);
++            setBlocking(atTopRef.current);
++        }
++        else {
++            // Navigateur sans IntersectionObserver : comportement d'origine (toujours bloquant)
++            atTopRef.current = true;
++            setBlocking(true);
++        }
          childrenEl.addEventListener('mousemove', onTouchMove);
          window.addEventListener('scroll', onScroll);
          childrenEl.addEventListener('touchend', onEnd);
-@@ -122,7 +140,8 @@ var PullToRefresh = function (_a) {
+@@ -122,7 +157,8 @@ var PullToRefresh = function (_a) {
          return function () {
              childrenEl.removeEventListener('touchstart', onTouchStart);
              childrenEl.removeEventListener('mousedown', onTouchStart);
 -            childrenEl.removeEventListener('touchmove', onTouchMove);
 +            childrenEl.removeEventListener('touchmove', onTouchMove, { passive: false });
-+            childrenEl.removeEventListener('scroll', syncTouchMove, { passive: true });
++            if (topObserver) topObserver.disconnect();
              childrenEl.removeEventListener('mousemove', onTouchMove);
              window.removeEventListener('scroll', onScroll);
              childrenEl.removeEventListener('touchend', onEnd);
+@@ -204,6 +240,12 @@ var PullToRefresh = function (_a) {
+             startY = e.touches[0].pageY;
+         }
+         currentY = startY;
++        // [Let's Out patch v2] Fil pas en haut : rien a tirer. Sortie AVANT isTreeScrollable (getComputedStyle
++        // sur chaque ancetre) et getBoundingClientRect, qui forcaient un calcul de styles / mise en page a
++        // chaque contact. (Le resultat est le meme : le fil defile vers le haut, isTreeScrollable renvoyait vrai.)
++        if (!atTopRef.current) {
++            return;
++        }
+         // Check if element can be scrolled
+         if (e.type === 'touchstart' && isTreeScrollable(e.target, DIRECTION.UP)) {
+             return;
+@@ -286,6 +328,7 @@ var PullToRefresh = function (_a) {
+             React__default.createElement("div", { className: "ptr__loader ptr__pull-down--loading" }, refreshingContent),
+             React__default.createElement("div", { className: "ptr__pull-down--pull-more" }, pullingContent)),
+         React__default.createElement("div", { className: "ptr__children", ref: childrenRef },
++            React__default.createElement("div", { className: "ptr__top-sentinel", ref: topSentinelRef, "aria-hidden": true, style: { height: 1, marginBottom: -1, pointerEvents: 'none' } }),
+             children,
+             React__default.createElement("div", { className: "ptr__fetch-more", ref: fetchMoreRef },
+                 React__default.createElement("div", { className: "ptr__loader ptr__fetch-more--loading" }, refreshingContent)))));
 diff --git a/build/index.esm.js b/build/index.esm.js
-index 8ad8b921cbc430f5809e407f20ce53bcf00150cf..8207131f4eb7c99a6ff85b59a14cb3e3b6b4615d 100644
+index 8ad8b921cbc430f5809e407f20ce53bcf00150cf..df6d8e702fc3466d894fd16186bd114563d01438 100644
 --- a/build/index.esm.js
 +++ b/build/index.esm.js
-@@ -108,7 +108,25 @@ var PullToRefresh = function (_a) {
+@@ -97,6 +97,10 @@ var PullToRefresh = function (_a) {
+     var childrenRef = useRef(null);
+     var pullDownRef = useRef(null);
+     var fetchMoreRef = useRef(null);
++    // [Let's Out patch v2] Marqueur invisible en tete du contenu + IntersectionObserver :
++    // savoir si le fil est tout en haut SANS lire scrollTop (chaque lecture peut forcer une mise en page).
++    var topSentinelRef = useRef(null);
++    var atTopRef = useRef(true);
+     var pullToRefreshThresholdBreached = false;
+     var fetchMoreTresholdBreached = false; // if true, fetchMore loader is displayed
+     var isDragging = false;
+@@ -108,7 +112,38 @@ var PullToRefresh = function (_a) {
          var childrenEl = childrenRef.current;
          childrenEl.addEventListener('touchstart', onTouchStart, { passive: true });
          childrenEl.addEventListener('mousedown', onTouchStart);
 -        childrenEl.addEventListener('touchmove', onTouchMove, { passive: false });
-+        // [Let's Out patch] Écouteur touchmove BLOQUANT (passive: false) seulement quand le fil est tout en
-+        // haut (scrollTop <= 0), seul cas où le « tirer pour rafraîchir » doit empêcher le défilement.
-+        // Ailleurs, aucun écouteur bloquant : le navigateur fait défiler sans attendre le fil principal.
-+        // (Attaché dès l'arrivée en haut, pas dans touchstart : le navigateur décide au contact si le
-+        // geste est bloquable.)
++        // [Let's Out patch v2] Ecouteur touchmove BLOQUANT (passive: false) seulement quand le fil est
++        // tout en haut : seul cas ou « tirer pour rafraichir » doit empecher le defilement. Ailleurs, aucun
++        // ecouteur bloquant : le navigateur fait defiler sans attendre le fil principal.
++        // Le haut est detecte par un IntersectionObserver sur un marqueur (asynchrone, aucune lecture de
++        // scrollTop). Attache des l'arrivee en haut, pas dans touchstart : le navigateur decide au contact
++        // si le geste est bloquable.
 +        var blockingTouchMove = false;
-+        var syncTouchMove = function () {
-+            var atTop = childrenEl.scrollTop <= 0;
-+            if (atTop && !blockingTouchMove) {
++        var setBlocking = function (on) {
++            if (on && !blockingTouchMove) {
 +                childrenEl.addEventListener('touchmove', onTouchMove, { passive: false });
 +                blockingTouchMove = true;
 +            }
-+            else if (!atTop && blockingTouchMove && !isDragging) {
++            else if (!on && blockingTouchMove && !isDragging) {
 +                childrenEl.removeEventListener('touchmove', onTouchMove, { passive: false });
 +                blockingTouchMove = false;
 +            }
 +        };
-+        syncTouchMove();
-+        childrenEl.addEventListener('scroll', syncTouchMove, { passive: true });
++        var topObserver = null;
++        if (typeof IntersectionObserver !== 'undefined' && topSentinelRef.current) {
++            topObserver = new IntersectionObserver(function (entries) {
++                var entry = entries[entries.length - 1];
++                atTopRef.current = entry.isIntersecting;
++                setBlocking(entry.isIntersecting);
++            }, { root: childrenEl, threshold: 0 });
++            topObserver.observe(topSentinelRef.current);
++            setBlocking(atTopRef.current);
++        }
++        else {
++            // Navigateur sans IntersectionObserver : comportement d'origine (toujours bloquant)
++            atTopRef.current = true;
++            setBlocking(true);
++        }
          childrenEl.addEventListener('mousemove', onTouchMove);
          window.addEventListener('scroll', onScroll);
          childrenEl.addEventListener('touchend', onEnd);
-@@ -117,7 +135,8 @@ var PullToRefresh = function (_a) {
+@@ -117,7 +152,8 @@ var PullToRefresh = function (_a) {
          return function () {
              childrenEl.removeEventListener('touchstart', onTouchStart);
              childrenEl.removeEventListener('mousedown', onTouchStart);
 -            childrenEl.removeEventListener('touchmove', onTouchMove);
 +            childrenEl.removeEventListener('touchmove', onTouchMove, { passive: false });
-+            childrenEl.removeEventListener('scroll', syncTouchMove, { passive: true });
++            if (topObserver) topObserver.disconnect();
              childrenEl.removeEventListener('mousemove', onTouchMove);
              window.removeEventListener('scroll', onScroll);
              childrenEl.removeEventListener('touchend', onEnd);
+@@ -199,6 +235,12 @@ var PullToRefresh = function (_a) {
+             startY = e.touches[0].pageY;
+         }
+         currentY = startY;
++        // [Let's Out patch v2] Fil pas en haut : rien a tirer. Sortie AVANT isTreeScrollable (getComputedStyle
++        // sur chaque ancetre) et getBoundingClientRect, qui forcaient un calcul de styles / mise en page a
++        // chaque contact. (Le resultat est le meme : le fil defile vers le haut, isTreeScrollable renvoyait vrai.)
++        if (!atTopRef.current) {
++            return;
++        }
+         // Check if element can be scrolled
+         if (e.type === 'touchstart' && isTreeScrollable(e.target, DIRECTION.UP)) {
+             return;
+@@ -281,6 +323,7 @@ var PullToRefresh = function (_a) {
+             React.createElement("div", { className: "ptr__loader ptr__pull-down--loading" }, refreshingContent),
+             React.createElement("div", { className: "ptr__pull-down--pull-more" }, pullingContent)),
+         React.createElement("div", { className: "ptr__children", ref: childrenRef },
++            React.createElement("div", { className: "ptr__top-sentinel", ref: topSentinelRef, "aria-hidden": true, style: { height: 1, marginBottom: -1, pointerEvents: 'none' } }),
+             children,
+             React.createElement("div", { className: "ptr__fetch-more", ref: fetchMoreRef },
+                 React.createElement("div", { className: "ptr__loader ptr__fetch-more--loading" }, refreshingContent)))));
