@@ -29,7 +29,22 @@ export const uploadBufferToCloudinary = (
   buffer: Buffer,
   folder: string,
   filename: string
-): Promise<string> => {
+): Promise<string> => uploadBufferToCloudinaryDetailed(buffer, folder, filename).then((r) => r.url);
+
+/** Résultat détaillé d'un envoi (durée en secondes pour une vidéo, sinon null) */
+export interface CloudinaryUploadInfo {
+  url: string;
+  publicId: string;
+  resourceType: string;
+  duration: number | null;
+}
+
+/** Même envoi que uploadBufferToCloudinary, avec les métadonnées (ex. durée d'une vidéo) */
+export const uploadBufferToCloudinaryDetailed = (
+  buffer: Buffer,
+  folder: string,
+  filename: string
+): Promise<CloudinaryUploadInfo> => {
   return new Promise((resolve, reject) => {
     const isVideo = /\.(mp4|webm|mov|avi|mkv|3gp)$/i.test(filename);
     const uploadStream = cloudinary.uploader.upload_stream(
@@ -46,7 +61,13 @@ export const uploadBufferToCloudinary = (
           console.error('[Cloudinary] upload error:', JSON.stringify(error));
           reject(error);
         } else if (result) {
-          resolve(result.secure_url);
+          const d = Number((result as any).duration);
+          resolve({
+            url: result.secure_url,
+            publicId: result.public_id,
+            resourceType: result.resource_type,
+            duration: Number.isFinite(d) && d > 0 ? d : null,
+          });
         } else {
           reject(new Error('[Cloudinary] Unknown error: no result returned'));
         }
@@ -55,6 +76,15 @@ export const uploadBufferToCloudinary = (
 
     uploadStream.end(buffer);
   });
+};
+
+/** Suppression d'un fichier envoyé puis refusé (ex. vidéo trop longue). Ne lève jamais. */
+export const destroyCloudinaryAsset = async (publicId: string, resourceType: string): Promise<void> => {
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType, invalidate: true });
+  } catch (err) {
+    console.error('[Cloudinary] destroy error:', err);
+  }
 };
 
 // ── Pièces KYC : stockage PRIVÉ ─────────────────────────────────────────────

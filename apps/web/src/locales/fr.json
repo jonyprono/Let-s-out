@@ -1657,7 +1657,9 @@
     "envoiDeLaVideo": "Envoi de la vidéo ({{v0}}%)...",
     "publicationEnCours": "Publication en cours...",
     "followStats_one": "0 suivis · {{count}} abonné",
-    "followStats_other": "0 suivis · {{count}} abonnés"
+    "followStats_other": "0 suivis · {{count}} abonnés",
+    "videoTropLongue": "La vidéo ne doit pas dépasser {{max}}.",
+    "ajouterUneVideo": "Ajouter une vidéo ({{max}} max)"
   },
   "managePage": {
     "erreurDeChargementDeLa": "Erreur de chargement de la page. Veuillez réessayer.",
@@ -2345,7 +2347,7 @@
     "enregistrer": "Enregistrer"
   },
   "uploadVideoModal": {
-    "laVideoNeDoitPas": "La vidéo ne doit pas dépasser 30 secondes.",
+    "laVideoNeDoitPas": "La vidéo ne doit pas dépasser {{max}}.",
     "ajoutezAuMoinsUnePhoto": "Ajoutez au moins une photo.",
     "ajoutezUnTitre": "Ajoutez un titre.",
     "choisissezUnEvenement": "Choisissez un événement.",
@@ -2386,9 +2388,12 @@
     "publierLesMomentsForts": "🎬 Publier les moments forts",
     "generation": "Génération...",
     "creerEtPublierLeDiaporama": "🖼️ Créer et publier le diaporama",
-    "videoHint": "(max 30s, formats mp4/mov/webm)",
+    "videoHint": "(max {{max}}, formats mp4/mov/webm)",
     "videoLabel": "Vidéo *",
-    "durationPerPhoto": "Durée par photo :"
+    "durationPerPhoto": "Durée par photo :",
+    "dureeIllisible": "Impossible de lire la durée de cette vidéo. Essayez un fichier mp4 ou mov.",
+    "slideshowTotal": "(total : {{seconds}} s)",
+    "envoiEnCours": "Envoi en cours..."
   },
   "videoPlayerItem": {
     "erreurLorsDeLaReaction": "Erreur lors de la réaction",

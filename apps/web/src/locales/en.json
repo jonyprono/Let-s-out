@@ -1656,7 +1656,9 @@
     "envoiDeLaVideo": "Sending the video ({{v0}}%)...",
     "publicationEnCours": "Publishing...",
     "followStats_one": "0 followers · {{count}} is following",
-    "followStats_other": "0 followers · {{count}} followers"
+    "followStats_other": "0 followers · {{count}} followers",
+    "videoTropLongue": "The video must not exceed {{max}}.",
+    "ajouterUneVideo": "Add a video ({{max}} max)"
   },
   "managePage": {
     "erreurDeChargementDeLa": "An error occurred whilst loading the page. Please try again.",
@@ -2344,7 +2346,7 @@
     "enregistrer": "Save"
   },
   "uploadVideoModal": {
-    "laVideoNeDoitPas": "The video must not exceed 30 seconds.",
+    "laVideoNeDoitPas": "The video must not exceed {{max}}.",
     "ajoutezAuMoinsUnePhoto": "Please add at least one photo.",
     "ajoutezUnTitre": "Add a title.",
     "choisissezUnEvenement": "Choose an event.",
@@ -2385,9 +2387,12 @@
     "publierLesMomentsForts": "🎬 Share the highlights",
     "generation": "Generation...",
     "creerEtPublierLeDiaporama": "🖼️ Create and publish the slideshow",
-    "videoHint": "(max. 30 seconds, mp4/mov/webm formats)",
+    "videoHint": "(max. {{max}}, mp4/mov/webm formats)",
     "videoLabel": "Video *",
-    "durationPerPhoto": "Time per photo:"
+    "durationPerPhoto": "Time per photo:",
+    "dureeIllisible": "Couldn't read this video's duration. Try an mp4 or mov file.",
+    "slideshowTotal": "(total: {{seconds}} s)",
+    "envoiEnCours": "Uploading..."
   },
   "videoPlayerItem": {
     "erreurLorsDeLaReaction": "Error during the reaction",

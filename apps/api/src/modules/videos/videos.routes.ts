@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import { isVideoDurationTooLong, videoTooLongBody } from '../../config/video-limits'
 import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
 import {
   buildCommentThreads, commentInclude, COMMENT_MAX_LENGTH, excerpt, readCommentText, toCommentDto, toggleLike,
@@ -130,6 +131,14 @@ export async function videoRoutes(app: FastifyInstance) {
     if (!eventId || !url || !title || !category || !duration) {
       return reply.code(400).send({ error: 'Champs requis manquants (eventId, url, title, category, duration).' })
     }
+    // Durée max des OUT VLOGS (même règle que l'app : durée arrondie à la seconde)
+    const durationSeconds = Number(duration)
+    if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+      return reply.code(400).send({ error: 'Durée de la vidéo invalide.', field: 'duration' })
+    }
+    if (isVideoDurationTooLong(durationSeconds)) {
+      return reply.code(400).send({ ...videoTooLongBody(), field: 'duration' })
+    }
 
     const event = await app.prisma.event.findUnique({
       where: { id: eventId },
@@ -167,7 +176,7 @@ export async function videoRoutes(app: FastifyInstance) {
         thumbnailUrl,
         title: title.trim(),
         category: category as any,
-        duration: Math.round(duration),
+        duration: Math.round(durationSeconds),
         privacy: (privacy ?? 'PUBLIC') as any,
       },
       include: {

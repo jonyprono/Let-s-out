@@ -35,6 +35,7 @@ import { PostLikeButton } from '@/features/social/components/PostLikeButton'
 import { shareContent } from '@/lib/share-links'
 import { useAuthStore } from '@/stores/auth.store'
 import { toast } from 'sonner'
+import { formatVideoDurationLimit, isVideoTooLong, readVideoDuration } from '@/lib/video-limits'
 import { useConfirm } from '@/components/shared/ConfirmContext'
 import { useTranslation } from 'react-i18next'
 
@@ -107,6 +108,8 @@ export function PageView() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
+  // Durée (s) de la vidéo choisie, envoyée au serveur qui revérifie la limite ; null = illisible
+  const postVideoDurationRef = useRef<number | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const isOwner = Boolean(me?.id && page?.creatorId && me.id === page.creatorId)
@@ -214,6 +217,15 @@ export function PageView() {
         toast.error(t('pageView.laVideoNeDoitPas'))
         return
       }
+      // Durée max commune (OUT VLOGS + Pages). Durée illisible (format non lu par le navigateur) :
+      // acceptée comme avant, le serveur décide.
+      const d = await readVideoDuration(file)
+      if (d !== null && isVideoTooLong(d)) {
+        toast.error(t('pageView.videoTropLongue', { max: formatVideoDurationLimit() }))
+        e.target.value = ''
+        return
+      }
+      postVideoDurationRef.current = d === null ? null : Math.round(d)
       setPostImages([])
       setPostImagePreviews([])
       setPostVideo(file)
@@ -246,6 +258,7 @@ export function PageView() {
       const newPost = await pagesApi.createPost(id, {
         content: postContent.trim() || undefined,
         mediaUrls,
+        ...(postVideo && postVideoDurationRef.current !== null ? { videoDuration: postVideoDurationRef.current } : {}),
       })
       setPosts((prev) => [newPost, ...prev])
       toast.success(t('pageView.publicationCreeeAvecSucces'))
@@ -261,6 +274,10 @@ export function PageView() {
       setShowCreatePostModal(false)
     } catch (err: any) {
       console.error('[handlePublishPost] error:', err)
+      if (err?.response?.data?.code === 'VIDEO_TOO_LONG') {
+        toast.error(t('pageView.videoTropLongue', { max: formatVideoDurationLimit() }))
+        return
+      }
       const errorMsg =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
@@ -1033,6 +1050,8 @@ export function PageView() {
                   <button
                     type="button"
                     onClick={() => videoInputRef.current?.click()}
+                    aria-label={t('pageView.ajouterUneVideo', { max: formatVideoDurationLimit() })}
+                    title={t('pageView.ajouterUneVideo', { max: formatVideoDurationLimit() })}
                     className="flex-1 h-11 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
                     <Video className="w-5 h-5" />

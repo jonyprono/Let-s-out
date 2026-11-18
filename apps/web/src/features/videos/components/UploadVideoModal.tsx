@@ -5,6 +5,7 @@ import { X, Upload, Loader2, CheckCircle2, AlertCircle, Film, ChevronDown, Image
 import { apiClient } from '@/lib/api-client'
 import { videosApi } from '@/features/videos/api'
 import { toast } from 'sonner'
+import { MAX_VIDEO_DURATION_SECONDS, formatVideoDurationLimit, isVideoTooLong, readVideoDuration } from '@/lib/video-limits'
 
 import { useTranslation } from 'react-i18next'
 import { EVENT_CATEGORIES, getEventCategory, eventCategoryShortLabel } from '@/lib/event-categories'
@@ -99,21 +100,19 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
     setFileName(file.name)
     setUploadedUrl(null)
 
-    const videoEl = document.createElement('video')
-    videoEl.src = URL.createObjectURL(file)
-    const isValid = await new Promise<boolean>(resolve => {
-      videoEl.onloadedmetadata = () => {
-        const d = Math.round(videoEl.duration)
-        if (d > 30) {
-          toast.error(t('uploadVideoModal.laVideoNeDoitPas'))
-          resolve(false)
-        } else {
-          setDuration(d)
-          resolve(true)
-        }
-      }
-    })
-    URL.revokeObjectURL(videoEl.src)
+    // Durée max commune (OUT VLOGS + Pages) : MAX_VIDEO_DURATION_SECONDS, revérifiée par le serveur
+    const rawDuration = await readVideoDuration(file)
+    let isValid = true
+    if (rawDuration === null) {
+      // Durée illisible : le serveur l'exige → message clair au lieu d'un envoi bloqué
+      setUploadError(t('uploadVideoModal.dureeIllisible'))
+      isValid = false
+    } else if (isVideoTooLong(rawDuration)) {
+      toast.error(t('uploadVideoModal.laVideoNeDoitPas', { max: formatVideoDurationLimit() }))
+      isValid = false
+    } else {
+      setDuration(Math.round(rawDuration))
+    }
     if (!isValid) {
       setUploadProgress(null)
       return
@@ -242,7 +241,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
     )
 
     // Draw each photo for `slideDurationPerPhoto` seconds
-    const totalDuration = Math.min(slidePhotos.length * slideDurationPerPhoto, 30)
+    const totalDuration = Math.min(slidePhotos.length * slideDurationPerPhoto, MAX_VIDEO_DURATION_SECONDS)
     const fps = 30
     const framesPerPhoto = slideDurationPerPhoto * fps
 
@@ -336,7 +335,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
         url: result.secure_url,
         title: title.trim(),
         category: category || selectedEvent?.category || 'OTHER',
-        duration: Math.min(slidePhotos.length * slideDurationPerPhoto, 30),
+        duration: Math.min(slidePhotos.length * slideDurationPerPhoto, MAX_VIDEO_DURATION_SECONDS),
         privacy,
       })
       toast.success(t('uploadVideoModal.diaporamaPublieAvecSucces'))
@@ -363,6 +362,10 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
       onClose()
     },
     onError: (err: any) => {
+      if (err?.response?.data?.code === 'VIDEO_TOO_LONG') {
+        toast.error(t('uploadVideoModal.laVideoNeDoitPas', { max: formatVideoDurationLimit() }))
+        return
+      }
       toast.error(err?.response?.data?.error ?? t('uploadVideoModal.erreurLorsDeLaPublication2'))
     },
   })
@@ -510,7 +513,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
             {mode === 'video' && (
               <div>
                 <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
-                  <span>{i18n.t('uploadVideoModal.videoLabel')}</span> <span className="font-normal text-gray-400"><span>{i18n.t('uploadVideoModal.videoHint')}</span></span>
+                  <span>{i18n.t('uploadVideoModal.videoLabel')}</span> <span className="font-normal text-gray-400"><span>{i18n.t('uploadVideoModal.videoHint', { max: formatVideoDurationLimit() })}</span></span>
                 </label>
 
                 {/* Success */}
@@ -536,7 +539,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 {uploadProgress !== null && (
                   <div className="mb-3">
                     <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                      <span className="font-medium">{uploadProgress < 100 ? 'Envoi en cours...' : t('uploadVideoModal.envoiTermine')}</span>
+                      <span className="font-medium">{uploadProgress < 100 ? t('uploadVideoModal.envoiEnCours') : t('uploadVideoModal.envoiTermine')}</span>
                       <span className="font-bold text-[#FF7A00]">{uploadProgress}%</span>
                     </div>
                     <div className="h-3 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
@@ -572,7 +575,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                     <Upload className="w-7 h-7" />
                   )}
                   <span className="text-[13px] font-medium">
-                    {uploadedUrl ? t('uploadVideoModal.remplacerLaVideo') : isUploading ? 'Envoi en cours...' : t('uploadVideoModal.choisirUneVideo')}
+                    {uploadedUrl ? t('uploadVideoModal.remplacerLaVideo') : isUploading ? t('uploadVideoModal.envoiEnCours') : t('uploadVideoModal.choisirUneVideo')}
                   </span>
                 </button>
               </div>
@@ -629,19 +632,19 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 <div>
                   <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                     <span>{i18n.t('uploadVideoModal.durationPerPhoto')}</span> <span className="text-[#FF7A00]">{slideDurationPerPhoto}s</span>
-                    <span className="ml-2 font-normal text-gray-400">(total : {Math.min(slidePhotos.length * slideDurationPerPhoto, 30)}s)</span>
+                    <span className="ml-2 font-normal text-gray-400"><span>{t('uploadVideoModal.slideshowTotal', { seconds: Math.min(slidePhotos.length * slideDurationPerPhoto, MAX_VIDEO_DURATION_SECONDS) })}</span></span>
                   </label>
                   <input
                     type="range"
                     min={1}
-                    max={Math.max(1, Math.floor(30 / Math.max(slidePhotos.length, 1)))}
+                    max={Math.max(1, Math.floor(MAX_VIDEO_DURATION_SECONDS / Math.max(slidePhotos.length, 1)))}
                     value={slideDurationPerPhoto}
                     onChange={e => setSlideDurationPerPhoto(Number(e.target.value))}
                     className="w-full accent-[#FF7A00]"
                   />
                   <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
                     <span>1s</span>
-                    <span>{Math.max(1, Math.floor(30 / Math.max(slidePhotos.length, 1)))}s max</span>
+                    <span>{Math.max(1, Math.floor(MAX_VIDEO_DURATION_SECONDS / Math.max(slidePhotos.length, 1)))}s max</span>
                   </div>
                 </div>
 
@@ -700,7 +703,7 @@ export function UploadVideoModal({ eventId: presetEventId, eventTitle, eventCate
                 {!isGenerating && slideUploadProgress !== null && (
                   <div>
                     <div className="flex justify-between text-[11px] text-gray-500 mb-1">
-                      <span className="font-medium">{slideUploadProgress < 100 ? 'Envoi en cours...' : t('uploadVideoModal.envoiTermine')}</span>
+                      <span className="font-medium">{slideUploadProgress < 100 ? t('uploadVideoModal.envoiEnCours') : t('uploadVideoModal.envoiTermine')}</span>
                       <span className="font-bold text-[#FF7A00]">{slideUploadProgress}%</span>
                     </div>
                     <div className="h-3 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">

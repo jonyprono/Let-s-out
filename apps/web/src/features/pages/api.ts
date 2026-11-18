@@ -109,7 +109,8 @@ export const pagesApi = {
   follow: (id: string) =>
     apiClient.post<{ followed: boolean }>(`/pages/${id}/follow`).then(res => res.data),
 
-  createPost: (id: string, data: { content?: string; mediaUrls: string[] }) =>
+  /** `videoDuration` (s) : revérifiée par le serveur (durée max des vidéos) */
+  createPost: (id: string, data: { content?: string; mediaUrls: string[]; videoDuration?: number }) =>
     apiClient.post<PagePost>(`/pages/${id}/posts`, data).then(res => res.data),
 
   getPosts: (id: string) =>

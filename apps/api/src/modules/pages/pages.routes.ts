@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify'
-import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
+import { uploadBufferToCloudinaryDetailed, destroyCloudinaryAsset } from '../../services/cloudinary.service'
+import { isVideoDurationTooLong, videoTooLongBody } from '../../config/video-limits'
 import { createAndSendNotification, createAndSendNotificationMany } from '../notifications/notifications.routes'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
@@ -379,11 +380,20 @@ export default async function pagesRoutes(app: FastifyInstance) {
   app.post('/:id/posts', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub } = req.user as { sub: string }
     const { id } = req.params as { id: string }
-    const { content, mediaUrls } = req.body as any
+    const { content, mediaUrls, videoDuration } = req.body as any
 
     const page = await app.prisma.page.findUnique({ where: { id } })
     if (!page) return reply.code(404).send({ error: 'Page not found' })
     if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+
+    // Durée max des vidéos (même règle que les OUT VLOGS). Champ facultatif : les anciennes
+    // versions de l'app ne l'envoient pas (publication acceptée comme avant).
+    if (videoDuration !== undefined && videoDuration !== null) {
+      const d = Number(videoDuration)
+      if (Number.isFinite(d) && isVideoDurationTooLong(d)) {
+        return reply.code(400).send({ ...videoTooLongBody(), field: 'videoDuration' })
+      }
+    }
 
     const post = await app.prisma.pagePost.create({
       data: {
@@ -629,7 +639,14 @@ export default async function pagesRoutes(app: FastifyInstance) {
       const ext = path.extname(part.filename) || '.jpg'
       const filename = `page-${imageType}-${uuidv4()}${ext}`
       const buffer = await part.toBuffer()
-      imageUrl = await uploadBufferToCloudinary(buffer, `pages/${id}`, filename)
+      // Envoi de secours d'une vidéo de publication (si l'envoi direct a échoué) : la durée réelle
+      // est connue ici → refus au-delà de la limite, fichier supprimé.
+      const uploaded = await uploadBufferToCloudinaryDetailed(buffer, `pages/${id}`, filename)
+      if (uploaded.resourceType === 'video' && uploaded.duration !== null && isVideoDurationTooLong(uploaded.duration)) {
+        await destroyCloudinaryAsset(uploaded.publicId, uploaded.resourceType)
+        return reply.code(400).send(videoTooLongBody())
+      }
+      imageUrl = uploaded.url
     }
 
     if (!imageUrl) return reply.code(400).send({ error: 'No file provided' })
