@@ -744,37 +744,63 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
   // ── En-tête qui se replie au défilement ──────────────────────────────
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
-  const lastFeedScrollTop = useRef(0);
   const headerCollapsedRef = useRef(false);
-  const feedScrollRaf = useRef<number | null>(null);
-  const feedScrollEl = useRef<HTMLElement | null>(null);
   const isSearchCollapsed = headerCollapsed && !searchQuery;
-  // Au plus 1 calcul par image (requestAnimationFrame), 1 seule lecture (scrollTop), et un
-  // rendu de l'accueil UNIQUEMENT quand l'en-tête change d'état. Avant : à chaque événement
-  // scroll, lecture de scrollHeight/clientHeight (mise en page forcée) + setState.
-  const handleFeedScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.target as HTMLElement;
-    // Seul le fil vertical compte (pas la bande OUT VLOGS ni les filtres horizontaux) :
-    // test par classe, sans lecture de dimensions.
-    if (!(el instanceof HTMLElement) || !el.classList.contains('ptr__children')) return;
-    feedScrollEl.current = el;
-    if (feedScrollRaf.current !== null) return;
-    feedScrollRaf.current = requestAnimationFrame(() => {
-      feedScrollRaf.current = null;
-      const target = feedScrollEl.current;
-      if (!target) return;
-      const y = target.scrollTop;
-      const delta = y - lastFeedScrollTop.current;
-      if (Math.abs(delta) < 12) return; // hystérésis : évite les clignotements
-      lastFeedScrollTop.current = y;
-      const next = y < 40 ? false : delta > 0;
-      if (next !== headerCollapsedRef.current) {
-        headerCollapsedRef.current = next;
-        setHeaderCollapsed(next);
-      }
-    });
+  // AUCUNE lecture de position (scrollTop) : chaque lecture peut forcer une mise en page, et celle
+  // faite à chaque image coûtait ~520 ms par passe de défilement (mesuré).
+  //  - SENS : déduit du mouvement du doigt (touchstart / touchmove PASSIFS via React) ou de la
+  //    molette ; seuls les mouvements surtout verticaux comptent (carrousel / vlogs ignorés) ;
+  //  - PRÈS DU HAUT (< 40 px) : marqueur invisible observé par IntersectionObserver → en-tête déplié.
+  // Rendu de l'accueil UNIQUEMENT quand l'en-tête change d'état.
+  const nearTopRef = useRef(true);
+  const feedTopMarkerRef = useRef<HTMLDivElement>(null);
+  const touchLast = useRef<{ x: number; y: number } | null>(null);
+  const dragAccum = useRef(0); // déplacement vertical cumulé depuis la dernière décision (hystérésis)
+  const applyHeaderCollapsed = useCallback((collapsed: boolean) => {
+    const next = nearTopRef.current ? false : collapsed;
+    if (next !== headerCollapsedRef.current) {
+      headerCollapsedRef.current = next;
+      setHeaderCollapsed(next);
+    }
   }, []);
-  useEffect(() => () => { if (feedScrollRaf.current !== null) cancelAnimationFrame(feedScrollRaf.current) }, []);
+  // Doigt / molette vers le haut de l'écran = le fil descend → replier ; vers le bas → déplier
+  const feedMoved = useCallback((contentDelta: number) => {
+    dragAccum.current += contentDelta;
+    if (Math.abs(dragAccum.current) < 12) return; // hystérésis : évite les clignotements
+    applyHeaderCollapsed(dragAccum.current > 0);
+    dragAccum.current = 0;
+  }, [applyHeaderCollapsed]);
+  const handleFeedTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchLast.current = t ? { x: t.clientX, y: t.clientY } : null;
+    dragAccum.current = 0;
+  }, []);
+  const handleFeedTouchMove = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0];
+    const last = touchLast.current;
+    if (!t || !last) return;
+    const dx = t.clientX - last.x, dy = t.clientY - last.y;
+    touchLast.current = { x: t.clientX, y: t.clientY };
+    if (Math.abs(dx) > Math.abs(dy)) return; // glissé horizontal (carrousel, OUT VLOGS, filtres)
+    feedMoved(-dy); // le doigt monte (dy < 0) → le contenu descend
+  }, [feedMoved]);
+  const handleFeedWheel = useCallback((e: React.WheelEvent) => {
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    feedMoved(e.deltaY);
+  }, [feedMoved]);
+  // Proximité du haut du fil, sans lecture de position
+  useEffect(() => {
+    const marker = feedTopMarkerRef.current;
+    const root = marker?.closest('.ptr__children') ?? null;
+    if (!marker || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver((entries) => {
+      const near = entries[entries.length - 1].isIntersecting;
+      nearTopRef.current = near;
+      if (near) applyHeaderCollapsed(false);
+    }, { root, threshold: 0 });
+    io.observe(marker);
+    return () => io.disconnect();
+  }, [applyHeaderCollapsed]);
   const [playingPageVideoId, setPlayingPageVideoId] = useState<string | null>(null);
   const qc = useQueryClient();
   const isOffline = !useIsOnline();
@@ -932,7 +958,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
     return mixed.map(e => ({ type: 'event', data: e }));
   }, [popularEvents, pagePostsData, activeFilter, query]);
 
-  // Liste du fil mémoïsée : le pliage/dépliage de l'en-tête au défilement (handleFeedScroll →
+  // Liste du fil mémoïsée : le pliage/dépliage de l'en-tête au défilement (applyHeaderCollapsed →
   // setHeaderCollapsed) re-rend Home, mais ne reconstruit plus les ~60 cartes du fil.
   // Callbacks stables (openEvent, navigateStable, setter d'état) → recalcul seulement si le fil change.
   const feedList = useMemo(() => mixedFeed.map((item, idx) => (
@@ -1147,9 +1173,20 @@ export function Home({ userData, onNavigate }: HomeProps) {
       </div>
 
       {/* ── Scrollable content ── (le défilement réel a lieu dans un enfant : capture) */}
-      <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }} onScrollCapture={handleFeedScroll}>
+      <div
+        className="flex-1 overflow-y-auto"
+        style={{ scrollbarWidth: 'none' }}
+        onTouchStart={handleFeedTouchStart}
+        onTouchMove={handleFeedTouchMove}
+        onWheel={handleFeedWheel}
+      >
         <PullToRefresh onRefresh={handleRefresh} isPullable={!isOffline} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">{t('home.refreshing')}</div>}>
           <div className="pb-28">
+            {/* Marqueur « près du haut » (40 px) dans un conteneur de hauteur nulle : n'occupe aucune
+                place et ne décale rien ; observé par IntersectionObserver pour l'en-tête. */}
+            <div aria-hidden="true" style={{ position: 'relative', height: 0 }}>
+              <div ref={feedTopMarkerRef} style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 40, pointerEvents: 'none' }} />
+            </div>
 
             {showSpinner && (
               <div className="flex justify-center py-16">
