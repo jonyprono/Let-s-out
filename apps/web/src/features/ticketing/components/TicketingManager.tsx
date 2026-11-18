@@ -12,13 +12,14 @@ import {
   apiErrorMessage, payoutInfoError, ticketingApi, ticketingKeys,
   type PayoutInfo, type PayoutNetwork, type TicketSales,
 } from '../api'
-import { AddTierButton, CommissionNotice, PayoutAccountFields, TierCard, TierFormSheet, formatFcfa } from './TicketingFields'
+import { AddTierButton, PayoutAccountFields, PayoutKycNotice, TierCard, TierFormSheet, formatFcfa } from './TicketingFields'
 
 type EditingTier = { id: string; name: string; description: string | null; price: number; totalQuantity: number; soldQuantity: number } | 'new' | null
 
 /**
  * Onglet « Billetterie » de ManageEvent (organisateur + co-organisateurs) :
- * bilan brut / commission / net en temps réel, statut du versement, catégories, compte Mobile Money.
+ * bilan épuré en temps réel (ventes brutes, billets vendus, solde net versé / en cours de traitement),
+ * catégories, compte Mobile Money (avec rappel KYC : titulaire = identité vérifiée).
  */
 export function TicketingManager({ event }: { event: { id: string; creatorId: string; poolTarget?: number | null } }) {
   const { t } = useTranslation()
@@ -183,64 +184,46 @@ export function TicketingManager({ event }: { event: { id: string; creatorId: st
 
   return (
     <div className="space-y-4 pb-8">
-      {/* ── Bilan financier ── */}
+      {/* ── Bilan (épuré) : ventes brutes, billets vendus, solde net reversé / en cours de traitement ── */}
       <div className="bg-white dark:bg-[#1A1A1A] rounded-xl p-4 border border-gray-100 dark:border-gray-800">
-        <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wide"><span>{t('ticketing.manage.netToReceive')}</span></p>
-        <p className="text-[28px] font-bold text-gray-900 dark:text-white leading-tight mt-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
-          <span>{formatFcfa(s.totals.net)}</span>
-        </p>
-        <div className="mt-4 space-y-2 text-[13px]">
-          <div className="flex justify-between text-gray-600 dark:text-gray-300">
-            <span>{t('ticketing.manage.gross')}</span>
-            <span className="font-semibold text-gray-900 dark:text-white">{formatFcfa(s.totals.gross)}</span>
-          </div>
-          <div className="flex justify-between text-gray-600 dark:text-gray-300">
-            <span>{t('ticketing.summary.commission', { percent })}</span>
-            <span className="font-semibold text-gray-900 dark:text-white">{`− ${formatFcfa(s.totals.fee)}`}</span>
-          </div>
-          <div className="h-px bg-gray-100 dark:bg-gray-800" />
-          <div className="flex justify-between font-semibold text-gray-900 dark:text-white">
-            <span>{t('ticketing.manage.net')}</span>
-            <span className="text-[#FF7A00]">{formatFcfa(s.totals.net)}</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2 mt-4">
+        <div className="grid grid-cols-2 gap-2">
           {[
-            { label: t('ticketing.manage.ticketsSold'), value: s.totals.ticketsIssued },
-            { label: t('ticketing.manage.orders'), value: s.totals.orders },
-            { label: t('ticketing.manage.checkedIn'), value: s.totals.ticketsCheckedIn },
+            { label: t('ticketing.manage.grossSales'), value: formatFcfa(s.totals.gross) },
+            { label: t('ticketing.manage.ticketsSold'), value: s.totals.ticketsIssued.toLocaleString(intlLocale()) },
           ].map((k) => (
-            <div key={k.label} className="rounded-lg bg-gray-50 dark:bg-[#0F0F10] px-2 py-2 text-center">
-              <p className="text-[17px] font-bold text-gray-900 dark:text-white"><span>{k.value.toLocaleString(intlLocale())}</span></p>
+            <div key={k.label} className="rounded-lg bg-gray-50 dark:bg-[#0F0F10] px-3 py-2.5">
               <p className="text-[11px] text-gray-500"><span>{k.label}</span></p>
+              <p className="text-[17px] font-bold text-gray-900 dark:text-white mt-0.5"><span>{k.value}</span></p>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* ── Statut du versement ── */}
-      <div className={`rounded-xl p-4 border flex gap-3 items-start ${s.payout.status === 'RELEASED'
-        ? 'bg-[#ECFDF3] border-[#ABEFC6] dark:bg-[#0B2617] dark:border-[#14532D]'
-        : 'bg-white border-gray-100 dark:bg-[#1A1A1A] dark:border-gray-800'}`}>
-        {s.payout.status === 'RELEASED'
-          ? <CheckCircle2 className="w-5 h-5 text-[#16A34A] shrink-0 mt-[1px]" aria-hidden="true" />
-          : <Clock className="w-5 h-5 text-[#FF7A00] shrink-0 mt-[1px]" aria-hidden="true" />}
-        <div className="flex-1 text-[13px]">
-          <p className="font-semibold text-gray-900 dark:text-white">
-            <span>{s.payout.status === 'RELEASED' ? t('ticketing.manage.payoutReleased') : t('ticketing.manage.payoutHeld')}</span>
+        <div className="h-px bg-gray-100 dark:bg-gray-800 my-4" />
+        <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wide"><span>{t('ticketing.manage.netBalance')}</span></p>
+        <div className="flex items-center justify-between gap-3 mt-1">
+          <p className="text-[26px] font-bold text-gray-900 dark:text-white leading-tight" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            <span>{formatFcfa(s.totals.net)}</span>
           </p>
-          <p className="text-gray-600 dark:text-gray-300 mt-0.5">
-            <span>{s.payout.status === 'RELEASED' && s.payout.releasedAt
-              ? t('ticketing.manage.payoutReleasedOn', { date: fmtDate(s.payout.releasedAt) })
-              : t('ticketing.manage.payoutHeldUntil', { date: fmtDate(s.payout.releaseAvailableAt), hours: s.payout.delayHours })}</span>
-          </p>
-          {s.payout.status === 'RELEASED' && s.payoutInfo.canEdit && (
-            <button type="button" onClick={() => navigate('/wallet')} className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#FF7A00]">
-              <Wallet className="w-4 h-4" aria-hidden="true" />
-              <span>{t('ticketing.manage.openWallet')}</span>
-            </button>
+          {s.payout.status === 'RELEASED' ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF3] dark:bg-[#0B2617] text-[#16A34A] text-[12px] font-semibold px-2.5 py-1 shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t('ticketing.manage.statusReleased')}</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF3E8] dark:bg-[#2A1A0A] text-[#FF7A00] text-[12px] font-semibold px-2.5 py-1 shrink-0">
+              <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t('ticketing.manage.statusProcessing')}</span>
+            </span>
           )}
         </div>
+        {s.payout.status === 'RELEASED' && s.payout.releasedAt && (
+          <p className="text-[12px] text-gray-500 mt-1"><span>{t('ticketing.manage.payoutReleasedOn', { date: fmtDate(s.payout.releasedAt) })}</span></p>
+        )}
+        {s.payout.status === 'RELEASED' && s.payoutInfo.canEdit && (
+          <button type="button" onClick={() => navigate('/wallet')} className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#FF7A00]">
+            <Wallet className="w-4 h-4" aria-hidden="true" />
+            <span>{t('ticketing.manage.openWallet')}</span>
+          </button>
+        )}
       </div>
 
       {/* ── Alerte : billetterie pas encore en vente ── */}
@@ -311,9 +294,8 @@ export function TicketingManager({ event }: { event: { id: string; creatorId: st
         {!s.payoutInfo.canEdit && (
           <p className="mt-2 text-[11px] text-gray-400"><span>{t('ticketing.payout.creatorOnly')}</span></p>
         )}
+        <div className="mt-3"><PayoutKycNotice /></div>
       </div>
-
-      <CommissionNotice percent={percent} delayHours={s.payout.delayHours} />
 
       {/* ── Feuilles ── */}
       <TierFormSheet

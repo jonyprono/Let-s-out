@@ -51,6 +51,14 @@ const CreateEventSchema = z.object({
   status: z.enum(['DRAFT', 'PUBLISHED']).default('PUBLISHED'),
 })
 
+/**
+ * Cagnotte active pour laquelle des candidats validateurs ont un sens : objectif défini, cagnotte ni
+ * versée ni clôturée, vote des validateurs pas encore clos. (Même règle côté app : ManageEvent.)
+ */
+export function hasActivePoolForCandidates(e: { poolTarget: number | null; poolReleased: boolean; poolClosedAt: Date | null; validatorVoteStatus: string | null }): boolean {
+  return (e.poolTarget ?? 0) > 0 && !e.poolReleased && !e.poolClosedAt && e.validatorVoteStatus !== 'CLOSED'
+}
+
 // Whitelist for PATCH /:id — Zod strips any key not listed here by default,
 // so sensitive fields (poolCollected, poolWithdrawn, validatorIds, joinCode,
 // creatorId, id, createdAt, validatorVoteStatus, …) can never be mass-assigned
@@ -467,6 +475,11 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const myEmojiByEvent = new Map(myReactions.map((r) => [r.eventId, r.emoji]))
     const data = events.map((e) => ({
       ...e,
+      // SÉCURITÉ : liste PUBLIQUE (sans connexion) — le code d'accès d'un événement privé affiché dans
+      // le fil n'y figure JAMAIS. Il n'est délivré que par GET /:id, à l'organisateur / co-organisateurs
+      // et aux participants confirmés. (Avant : renvoyé à tous ; l'app l'affichait 1–2 s sur la page
+      // de l'événement, depuis ce cache, avant l'écran de restriction.)
+      joinCode: null,
       // Résumé des réactions (même règle que GET /:id/reactions : comptes supprimés exclus)
       reactionSummary: { counts: countsByEvent.get(e.id) ?? {}, myEmoji: myEmojiByEvent.get(e.id) ?? null },
     }))
@@ -734,12 +747,18 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const event = await app.prisma.event.findUnique({
       where: { id },
-      select: { creatorId: true, coHostIds: true, validatorCandidates: true, title: true }
+      select: { creatorId: true, coHostIds: true, validatorCandidates: true, title: true, poolTarget: true, poolReleased: true, poolClosedAt: true, validatorVoteStatus: true }
     })
-    
+
     if (!event) return reply.code(404).send({ error: 'Event not found' })
     const isOrganizer = event.creatorId === userId || (event.coHostIds || []).includes(userId)
     if (!isOrganizer) return reply.code(403).send({ error: 'Only organizer can modify candidates' })
+
+    // Les candidats validateurs n'existent que pour une cagnotte ACTIVE dont le vote n'est pas clos
+    // (même règle que l'affichage du bouton « Rendre candidat » dans l'app). Le retrait reste permis.
+    if (action === 'ADD' && !hasActivePoolForCandidates(event)) {
+      return reply.code(409).send({ error: "Pas de cagnotte active sur cet événement : aucun candidat validateur à désigner.", code: 'NO_ACTIVE_POOL' })
+    }
 
     if (action === 'ADD') {
       if (!event.validatorCandidates.includes(candidateId)) {
@@ -824,6 +843,12 @@ export default async function eventsRoutes(app: FastifyInstance) {
       const isOrganizer = event.creatorId === sub || (event.coHostIds || []).includes(sub)
       if (isOrganizer) {
         canSeeJoinCode = true
+        // Événement privé sans code (rendu privé avant que PATCH n'en génère un) : code créé à la
+        // 1re ouverture par l'organisateur — le début de l'id ne permet plus de rejoindre un privé.
+        if (event.isPrivate && !event.joinCode) {
+          event.joinCode = randomBytes(5).toString('hex').toUpperCase()
+          await app.prisma.event.update({ where: { id }, data: { joinCode: event.joinCode } }).catch(() => { event.joinCode = null })
+        }
       } else {
         const booking = await app.prisma.booking.findUnique({
           where: { userId_eventId: { userId: sub, eventId: id } },
@@ -1195,6 +1220,8 @@ export default async function eventsRoutes(app: FastifyInstance) {
         ...updateData,
         // category is non-nullable in the DB — explicit null means "reset to default"
         category: updateData.category === null ? 'OTHER' : updateData.category,
+        // Événement rendu privé après sa création : il lui faut un code (seul moyen de le rejoindre)
+        ...(updateData.isPrivate === true && !event.joinCode && { joinCode: randomBytes(5).toString('hex').toUpperCase() }),
       },
     })
 
@@ -1758,14 +1785,14 @@ export default async function eventsRoutes(app: FastifyInstance) {
     const { sub } = req.user as { sub: string }
     const { code } = req.params as { code: string }
 
-    const event = await app.prisma.event.findFirst({
-      where: {
-        OR: [
-          { joinCode: code.toUpperCase() },
-          { id: { startsWith: code, mode: 'insensitive' } }
-        ]
-      }
-    })
+    // SÉCURITÉ : un événement PRIVÉ ne se rejoint qu'avec son code exact. Le début de l'identifiant
+    // (liens de partage /event/join/<5 caractères>) ne vaut que pour les événements PUBLICS : sinon,
+    // n'importe qui ayant le lien /events/<id> d'un événement privé pouvait le rejoindre sans code.
+    const event =
+      (await app.prisma.event.findFirst({ where: { joinCode: code.toUpperCase() } })) ??
+      (await app.prisma.event.findFirst({
+        where: { isPrivate: false, id: { startsWith: code, mode: 'insensitive' } },
+      }))
     if (!event) return reply.code(404).send({ error: 'Code invalide ou événement introuvable' })
     if (event.status === 'CANCELLED') return reply.code(400).send({ error: "Cet événement a été annulé." })
 

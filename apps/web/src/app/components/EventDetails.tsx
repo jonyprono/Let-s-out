@@ -198,29 +198,35 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     refetchOnWindowFocus: true,
     staleTime: 5_000,
     initialData: () => {
+      // SÉCURITÉ : l'affichage immédiat depuis un cache (fil, carte, activité) ne porte JAMAIS le code
+      // d'accès ; seul GET /events/:id le délivre, après contrôle d'accès côté serveur.
+      const withoutCode = (e: any) => (e ? { ...e, joinCode: undefined } : undefined);
+
       // 1. Chercher dans le feed public
       const feedData = qc.getQueryData<any>(['feed']);
       const inFeed = feedData?.pages?.flatMap((p: any) => p.data)?.find((e: any) => e.id === id);
-      if (inFeed) return inFeed;
+      if (inFeed) return withoutCode(inFeed);
 
       // 2. Chercher dans la map
       const mapData = qc.getQueryData<any>(['events-map']);
       const inMap = mapData?.find((e: any) => e.id === id);
-      if (inMap) return inMap;
+      if (inMap) return withoutCode(inMap);
 
       // 3. Chercher dans l'activité de l'utilisateur (My Events)
       const activityData = qc.getQueryData<any>(['users', 'activity', user?.id]);
       if (activityData) {
         const inJoined = activityData.joinedEvents?.find((e: any) => e.id === id);
-        if (inJoined) return inJoined;
+        if (inJoined) return withoutCode(inJoined);
         const inCreated = activityData.createdEvents?.find((e: any) => e.id === id);
-        if (inCreated) return inCreated;
+        if (inCreated) return withoutCode(inCreated);
         const inPast = activityData.pastEvents?.find((e: any) => e.id === id);
-        if (inPast) return inPast;
+        if (inPast) return withoutCode(inPast);
       }
 
       return undefined;
-    }
+    },
+    // Données du cache affichées tout de suite, mais rechargées immédiatement (droits à jour)
+    initialDataUpdatedAt: 0
   })
 
   const { data: payoutStatus } = useQuery({

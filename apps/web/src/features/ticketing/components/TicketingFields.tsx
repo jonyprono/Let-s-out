@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Info, Pencil, Plus, Trash2, Ticket } from 'lucide-react'
+import { Info, Pencil, Plus, ShieldAlert, Trash2, Ticket } from 'lucide-react'
 import { BottomSheet } from '@/components/ui/bottom-sheet'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { intlLocale } from '@/lib/locale'
@@ -229,6 +229,17 @@ export function AddTierButton({ onClick, disabled }: { onClick: () => void; disa
 }
 
 // ── Coordonnées Mobile Money ──────────────────────────────────────────────────
+// ── Conformité (lutte anti-blanchiment) : titulaire du compte = identité vérifiée (KYC) ────────
+export function PayoutKycNotice() {
+  const { t } = useTranslation()
+  return (
+    <div className="rounded-[12px] border border-[#FCD9BD] bg-[#FFF8F1] dark:bg-[#2A1A0A] dark:border-[#5C3511] px-3 py-2.5 flex gap-2 items-start" role="note">
+      <ShieldAlert className="w-4 h-4 text-[#FF7A00] shrink-0 mt-[1px]" aria-hidden="true" />
+      <p className="text-[12px] leading-snug text-gray-700 dark:text-gray-200"><span>{t('ticketing.payout.kycNameWarning')}</span></p>
+    </div>
+  )
+}
+
 export function PayoutAccountFields({
   value, onChange, errorField, disabled,
 }: {
@@ -273,6 +284,7 @@ export function PayoutAccountFields({
           className={`${inputCls} ${errorField === 'name' ? borderErr : borderOk}`} />
         {errorField === 'name' && <p className="text-[11px] text-[var(--functional-red-500)] mt-1 ml-1"><span>{t('ticketing.errors.holderName')}</span></p>}
       </div>
+      <PayoutKycNotice />
       <p className="text-[11px] text-[var(--color-text-muted)] ml-1"><span>{t('ticketing.payout.privacy')}</span></p>
     </div>
   )

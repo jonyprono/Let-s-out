@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import i18n from '@/lib/i18n'
 import { createPortal } from 'react-dom';
-import { Copy, Share2, Download, Check, Lock } from 'lucide-react';
+import { Copy, Share2, Download, Check, Lock, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi } from '@/features/events/api';
@@ -30,7 +30,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
   });
 
   // Fetch current user's booking to check participation
-  const { data: myBookingData } = useQuery({
+  const { data: myBookingData, isLoading: bookingLoading } = useQuery({
     queryKey: ['events', eventId, 'my-booking'],
     queryFn: async () => {
       try {
@@ -57,8 +57,15 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
         : true
   );
   
-  const joinCode = eventData?.joinCode || eventId.slice(0, 5).toUpperCase();
-  const eventLink = `https://letsout.app/event/join/${joinCode}`;
+  // SÉCURITÉ : rien n'est affiché (ni code, ni lien, ni QR) tant que l'événement ET la participation de
+  // l'utilisateur ne sont pas connus. Avant : pendant ce chargement, eventData était vide → la
+  // restriction ne s'appliquait pas et la fenêtre montrait 1–2 s un « code » (début de l'identifiant)
+  // qui permettait de rejoindre un événement privé sans invitation.
+  const permissionsResolved = !!eventData && (!user || !bookingLoading);
+
+  // Le début de l'identifiant ne sert de code QUE pour un événement public (un privé exige son vrai code)
+  const joinCode = eventData?.joinCode || (eventData && !isPrivate ? eventId.slice(0, 5).toUpperCase() : '');
+  const eventLink = joinCode ? `https://letsout.app/event/join/${joinCode}` : '';
 
   const copyText = async (text: string, setCopied: (v: boolean) => void, successMsg: string) => {
     try {
@@ -179,7 +186,19 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
     toast.success(t('shareModal.qrCodeTelecharge'));
   };
 
-  if (eventData && !canShare) {
+  if (!permissionsResolved) {
+    return createPortal(
+      <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
+        <div className="absolute inset-0" onClick={onClose} />
+        <div className="w-full bg-white dark:bg-[#1A1A1A] rounded-t-[28px] flex flex-col items-center relative shadow-2xl p-10">
+          <Loader2 className="w-7 h-7 animate-spin text-action-primary" aria-label={t('shareModal.chargement')} />
+        </div>
+      </div>,
+      document.body
+    );
+  }
+
+  if (!canShare || !joinCode) {
     return createPortal(
       <div className="fixed inset-0 z-[60] bg-black/60 flex items-end justify-center animate-in fade-in duration-200">
         <div className="absolute inset-0" onClick={onClose} />
@@ -191,7 +210,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
             <div className="w-16 h-16 rounded-full bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-action-primary" />
             </div>
-            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2">Partage restreint</h3>
+            <h3 className="text-[18px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('shareModal.partageRestreint')}</span></h3>
             <p className="text-[14px] text-gray-600 dark:text-gray-300 max-w-xs mb-6 leading-relaxed">
               {isPrivate
                 ? (!isJoined
@@ -205,7 +224,7 @@ export function ShareModal({ eventId, eventTitle, onClose }: ShareModalProps) {
               onClick={onClose}
               className="w-full py-3.5 rounded-full bg-action-primary text-white font-semibold text-[14px] active:scale-95 transition-transform shadow-md"
             >
-              Compris
+              <span>{t('shareModal.compris')}</span>
             </button>
           </div>
         </div>

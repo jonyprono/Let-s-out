@@ -1180,6 +1180,8 @@
     "contributionDeadline": "Contribution deadline (date and time)",
     "poolSummary": "Shared pot summary",
     "target": "Target",
+    "candidate": "★ Candidate",
+    "makeCandidate": "☆ Make candidate",
     "toasts": {
       "mustPay": "You must pay and confirm your participation to access this area.",
       "coHostAdded": "Co-organizer added",
@@ -1442,6 +1444,9 @@
     }
   },
   "shareModal": {
+    "partageRestreint": "Sharing restricted",
+    "compris": "Got it",
+    "chargement": "Loading…",
     "impossibleDeCopier": "Unable to copy",
     "qrCodeTelecharge": "QR Code downloaded!",
     "partager": "Share",
@@ -2644,10 +2649,15 @@
       "configure": "Set up",
       "save": "Save account",
       "notConfigured": "No account set up.",
-      "creatorOnly": "Only the event creator can set the payout account."
+      "creatorOnly": "Only the event creator can set the payout account.",
+      "kycNameWarning": "Required: the Mobile Money account must be in the same name as your verified ID (KYC). Otherwise, the payout will be blocked."
     },
     "manage": {
       "netToReceive": "Net balance to receive",
+      "grossSales": "Total gross sales",
+      "netBalance": "Net balance",
+      "statusReleased": "Paid out",
+      "statusProcessing": "Processing",
       "gross": "Gross sales",
       "net": "Organizer net",
       "ticketsSold": "Tickets sold",

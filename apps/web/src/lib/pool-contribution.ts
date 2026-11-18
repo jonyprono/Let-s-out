@@ -74,6 +74,19 @@ export function hasActivePool(event: { poolTarget?: number | null }): boolean {
   return !!(event.poolTarget && event.poolTarget > 0)
 }
 
+/**
+ * Désignation des candidats validateurs possible : cagnotte définie, ni versée ni clôturée, vote des
+ * validateurs pas encore clos. Même règle que l'API (PATCH /events/:id/validators/candidates).
+ */
+export function canDesignatePoolCandidates(event: {
+  poolTarget?: number | null
+  poolReleased?: boolean | null
+  poolClosedAt?: string | null
+  validatorVoteStatus?: string | null
+}): boolean {
+  return hasActivePool(event) && !event.poolReleased && !event.poolClosedAt && event.validatorVoteStatus !== 'CLOSED'
+}
+
 export function hasPaidParticipation(
   event: { price: number },
   booking?: { status: string; totalPaid?: number } | null,

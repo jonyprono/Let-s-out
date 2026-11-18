@@ -86,6 +86,11 @@ video {
   overflow-x: hidden;
   overflow-y: auto;
 }
+/* Accueil : le panneau recherche + filtres est posé PAR-DESSUS le fil → l'indicateur « tirer pour
+   rafraîchir » s'affiche juste en dessous, et non caché derrière (--home-search-h = hauteur mesurée). */
+.home-ptr > .ptr__pull-down {
+  top: var(--home-search-h, 0px);
+}
 
 /* ── Accueil : cartes du fil hors écran ignorées par le moteur de rendu ─────── */
 /* Le fil affiche ~60 cartes (~14 500 px) sans virtualisation : seules les cartes proches de

@@ -1181,6 +1181,8 @@
     "contributionDeadline": "Date et heure limite de contribution",
     "poolSummary": "Résumé de la cagnotte",
     "target": "Objectif",
+    "candidate": "★ Candidat",
+    "makeCandidate": "☆ Rendre candidat",
     "toasts": {
       "mustPay": "Vous devez payer et confirmer votre participation pour accéder à cet espace.",
       "coHostAdded": "Co-organisateur ajouté",
@@ -1443,6 +1445,9 @@
     }
   },
   "shareModal": {
+    "partageRestreint": "Partage restreint",
+    "compris": "Compris",
+    "chargement": "Chargement…",
     "impossibleDeCopier": "Impossible de copier",
     "qrCodeTelecharge": "QR Code téléchargé !",
     "partager": "Partager",
@@ -2646,10 +2651,15 @@
       "configure": "Configurer",
       "save": "Enregistrer le compte",
       "notConfigured": "Aucun compte configuré.",
-      "creatorOnly": "Seul le créateur de l’événement peut définir le compte de versement."
+      "creatorOnly": "Seul le créateur de l’événement peut définir le compte de versement.",
+      "kycNameWarning": "Obligatoire : le compte Mobile Money doit être au même nom que votre pièce d’identité vérifiée (KYC). Sinon, le versement sera bloqué."
     },
     "manage": {
       "netToReceive": "Solde net à recevoir",
+      "grossSales": "Total des ventes brutes",
+      "netBalance": "Solde net",
+      "statusReleased": "Reversé",
+      "statusProcessing": "En cours de traitement",
       "gross": "Total brut vendu",
       "net": "Net organisateur",
       "ticketsSold": "Billets vendus",

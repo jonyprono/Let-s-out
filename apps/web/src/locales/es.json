@@ -1181,6 +1181,8 @@
     "contributionDeadline": "Fecha y hora límite de aportación",
     "poolSummary": "Resumen del bote común",
     "target": "Objetivo",
+    "candidate": "★ Candidato",
+    "makeCandidate": "☆ Hacer candidato",
     "toasts": {
       "mustPay": "Debes pagar y confirmar tu participación para acceder a este espacio.",
       "coHostAdded": "Coorganizador añadido",
@@ -1443,6 +1445,9 @@
     }
   },
   "shareModal": {
+    "partageRestreint": "Compartir restringido",
+    "compris": "Entendido",
+    "chargement": "Cargando…",
     "impossibleDeCopier": "No se puede copiar",
     "qrCodeTelecharge": "¡QR Code descargado!",
     "partager": "Compartir",
@@ -2646,10 +2651,15 @@
       "configure": "Configurar",
       "save": "Guardar la cuenta",
       "notConfigured": "Ninguna cuenta configurada.",
-      "creatorOnly": "Solo el creador del evento puede definir la cuenta de cobro."
+      "creatorOnly": "Solo el creador del evento puede definir la cuenta de cobro.",
+      "kycNameWarning": "Obligatorio: la cuenta Mobile Money debe estar a nombre de la misma persona que tu documento de identidad verificado (KYC). De lo contrario, el pago quedará bloqueado."
     },
     "manage": {
       "netToReceive": "Saldo neto a recibir",
+      "grossSales": "Total de ventas brutas",
+      "netBalance": "Saldo neto",
+      "statusReleased": "Abonado",
+      "statusProcessing": "En proceso",
       "gross": "Total bruto vendido",
       "net": "Neto del organizador",
       "ticketsSold": "Entradas vendidas",

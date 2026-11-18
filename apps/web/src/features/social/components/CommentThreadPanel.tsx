@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useConfirm } from '@/components/shared/ConfirmContext'
 import { intlLocale } from '@/lib/locale'
 import { useUserProfile } from '@/features/users/UserProfileContext'
-import { displayNameOf, mentionOf, type CommentSource, type SocialComment } from '../api'
+import { displayNameOf, type CommentSource, type SocialComment } from '../api'
 import { useCommentThread } from '../useCommentThread'
 
 interface Props {
@@ -65,7 +65,7 @@ function Avatar({ comment, size }: { comment: SocialComment; size: 'sm' | 'md' }
 }
 
 /**
- * Fil de commentaires style Instagram / TikTok : cœur + compteur, « Répondre » (mention @pseudo),
+ * Fil de commentaires style Instagram / TikTok : cœur + compteur, « Répondre » (bandeau + parentId),
  * réponses en retrait (1 niveau) repliables, suppression par l'auteur ou le modérateur.
  */
 export function CommentThreadPanel({ source, enabled, authorUserId, moderatorUserId, composerClassName, layout = 'sheet' }: Props) {
@@ -78,7 +78,7 @@ export function CommentThreadPanel({ source, enabled, authorUserId, moderatorUse
   const { comments, isLoading, isError, refetch, add, like, remove } = useCommentThread(source, enabled)
 
   const [text, setText] = useState('')
-  const [replyTo, setReplyTo] = useState<{ rootId: string; name: string; mention: string } | null>(null)
+  const [replyTo, setReplyTo] = useState<{ rootId: string; name: string } | null>(null)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -86,27 +86,19 @@ export function CommentThreadPanel({ source, enabled, authorUserId, moderatorUse
 
   const startReply = (c: SocialComment, rootId: string) => {
     if (!me) { toast.info(t('social.loginToComment')); return }
-    const mention = mentionOf(c.user)
-    setReplyTo({ rootId, name: displayNameOf(c.user), mention })
-    setText((prev) => (prev.startsWith(mention) ? prev : `${mention} `))
+    // Aucun « @pseudo » inséré dans le champ : le bandeau « Répondre à [Nom] ✕ » indique la réponse,
+    // et le commentaire est rattaché au fil via parentId.
+    setReplyTo({ rootId, name: displayNameOf(c.user) })
     setExpanded((e) => ({ ...e, [rootId]: true }))
-    requestAnimationFrame(() => {
-      const el = inputRef.current
-      if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length) }
-    })
+    requestAnimationFrame(() => inputRef.current?.focus())
   }
 
-  const cancelReply = () => {
-    if (replyTo && text.trim() === replyTo.mention) setText('')
-    setReplyTo(null)
-  }
+  const cancelReply = () => setReplyTo(null)
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const value = text.trim()
     if (!value || add.isPending) return
-    // Mention seule sans message : rien à envoyer
-    if (replyTo && value === replyTo.mention) return
     add.mutate({ text: value, parentId: replyTo?.rootId ?? null }, {
       onSuccess: () => { setText(''); if (replyTo) setExpanded((x) => ({ ...x, [replyTo.rootId]: true })); setReplyTo(null) },
       onError: (err: any) => toast.error(err?.response?.data?.error || t('social.sendError')),
@@ -128,9 +120,8 @@ export function CommentThreadPanel({ source, enabled, authorUserId, moderatorUse
   }
 
   const renderComment = (c: SocialComment, rootId: string, isReply: boolean) => {
+    // Nom complet seul ; à défaut le pseudo seul — jamais les deux ensemble
     const name = displayNameOf(c.user)
-    // @pseudo affiché sous le nom (sauf s'il est identique au nom affiché)
-    const handle = c.user.profile?.username && c.user.profile.username !== name ? c.user.profile.username : null
     return (
       <div key={c.id} className="flex gap-3">
         <button type="button" onClick={() => openUserProfile(c.userId)} className="shrink-0" aria-label={name}>
@@ -145,9 +136,6 @@ export function CommentThreadPanel({ source, enabled, authorUserId, moderatorUse
             className="block w-full min-w-0 text-left"
           >
             <span className="block font-semibold text-[13px] leading-snug text-gray-900 dark:text-white break-words line-clamp-2">{name}</span>
-            {handle && (
-              <span className="block text-[12px] leading-snug text-gray-400 truncate">{`@${handle}`}</span>
-            )}
           </button>
           <div className="flex items-center flex-wrap gap-x-2 gap-y-0.5 mt-0.5">
             {authorUserId && c.userId === authorUserId && (
@@ -245,7 +233,7 @@ export function CommentThreadPanel({ source, enabled, authorUserId, moderatorUse
             />
             <button
               type="submit"
-              disabled={!text.trim() || add.isPending || (!!replyTo && text.trim() === replyTo.mention)}
+              disabled={!text.trim() || add.isPending}
               aria-label={t('social.send')}
               className="w-10 h-10 shrink-0 rounded-full bg-[#FF7A00] flex items-center justify-center text-white disabled:opacity-40 active:scale-95 transition-transform"
             >

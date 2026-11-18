@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, memo } from 'react';
 import i18n from '@/lib/i18n'
 import { Loader2, WifiOff, RefreshCw, MoreVertical, Copy, Pencil, Trash2, X, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -746,6 +746,23 @@ export function Home({ userData, onNavigate }: HomeProps) {
   const [headerCollapsed, setHeaderCollapsed] = useState(false);
   const headerCollapsedRef = useRef(false);
   const isSearchCollapsed = headerCollapsed && !searchQuery;
+  // Panneau recherche + filtres : posé PAR-DESSUS la zone du fil et replié par glissement GPU
+  // (translate3d). Avant : animation de hauteur (grid-template-rows) → la zone du fil changeait de
+  // taille à chaque image et le navigateur recalculait la mise en page de tout le fil (~14 000 px) :
+  // gel de ~600 ms au premier glissé (mesuré sur l'enregistrement Android). La place du panneau est
+  // réservée par un espaceur de hauteur FIXE en tête du fil : rien ne change de taille au repli.
+  // Hauteur mesurée au montage puis seulement si elle change (ResizeObserver), jamais au défilement.
+  const searchPanelRef = useRef<HTMLDivElement>(null);
+  const [searchPanelH, setSearchPanelH] = useState(0);
+  useLayoutEffect(() => {
+    const el = searchPanelRef.current;
+    if (!el) return;
+    setSearchPanelH(el.offsetHeight);
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => setSearchPanelH(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   // AUCUNE lecture de position (scrollTop) : chaque lecture peut forcer une mise en page, et celle
   // faite à chaque image coûtait ~520 ms par passe de défilement (mesuré).
   //  - SENS : déduit du mouvement du doigt (touchstart / touchmove PASSIFS via React) ou de la
@@ -1070,8 +1087,8 @@ export function Home({ userData, onNavigate }: HomeProps) {
 
   return (
     <div className="w-full h-full flex flex-col bg-white dark:bg-black overflow-hidden">
-      {/* ── Fixed Header ── */}
-      <div className="bg-white dark:bg-black z-20 flex-shrink-0">
+      {/* ── Fixed Header (ligne avatar / salutation / notifications / scan) ── */}
+      <div className="bg-white dark:bg-black flex-shrink-0">
         {/* Row 1: Avatar + greeting + notif + scan */}
         <div className="flex items-center gap-2.5 mb-2 px-4 pt-safe-3 pt-3">
           <button onClick={() => onNavigate('profile')} className="w-11 h-11 rounded-full overflow-hidden border-2 border-[#FF7A00] shrink-0 active:opacity-70 transition-opacity">
@@ -1114,14 +1131,25 @@ export function Home({ userData, onNavigate }: HomeProps) {
           </button>
         </div>
 
-        {/* Search bar + Filter chips — repliés quand on fait défiler vers le bas (plus de place pour le fil),
-            réaffichés dès qu'on remonte. Jamais repliés pendant une recherche. */}
+      </div>
+
+      {/* ── Zone du fil : taille FIXE (ne change jamais au repli du panneau) ── */}
+      <div
+        className="relative flex-1 min-h-0 flex flex-col overflow-hidden"
+        style={{ ['--home-search-h' as string]: `${searchPanelH}px` } as React.CSSProperties}
+      >
+        {/* Search bar + Filter chips — PAR-DESSUS le fil ; repliés par glissement vers le haut quand on
+            fait défiler vers le bas, réaffichés dès qu'on remonte. Jamais repliés pendant une recherche.
+            overflow-hidden de la zone : le panneau disparaît proprement derrière son bord supérieur. */}
         <div
-          className="grid transition-[grid-template-rows] duration-200 ease-out"
-          style={{ gridTemplateRows: isSearchCollapsed ? '0fr' : '1fr' }}
+          ref={searchPanelRef}
+          className="absolute inset-x-0 top-0 z-30 bg-white dark:bg-black transition-transform duration-200 ease-out"
+          style={{
+            transform: isSearchCollapsed ? 'translate3d(0, -100%, 0)' : 'translate3d(0, 0, 0)',
+            pointerEvents: isSearchCollapsed ? 'none' : undefined,
+          }}
           aria-hidden={isSearchCollapsed || undefined}
         >
-        <div className="min-h-0 overflow-hidden">
         <div className="px-4 pb-2">
           <div
             className="w-full flex items-center gap-3 px-4 bg-gray-100 dark:bg-[#1A1A1A] rounded-full text-left mb-2 transition-colors focus-within:ring-2 focus-within:ring-[#FF7A00]/50"
@@ -1169,24 +1197,25 @@ export function Home({ userData, onNavigate }: HomeProps) {
           </div>
         </div>
         </div>
-        </div>
-      </div>
 
-      {/* ── Scrollable content ── (le défilement réel a lieu dans un enfant : capture) */}
+      {/* ── Scrollable content ── (le défilement réel a lieu dans un enfant : capture)
+          isolation : le contenu du fil (boutons vidéo, menus…) reste SOUS le panneau de recherche. */}
       <div
         className="flex-1 overflow-y-auto"
-        style={{ scrollbarWidth: 'none' }}
+        style={{ scrollbarWidth: 'none', isolation: 'isolate' }}
         onTouchStart={handleFeedTouchStart}
         onTouchMove={handleFeedTouchMove}
         onWheel={handleFeedWheel}
       >
-        <PullToRefresh onRefresh={handleRefresh} isPullable={!isOffline} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">{t('home.refreshing')}</div>}>
+        <PullToRefresh className="home-ptr" onRefresh={handleRefresh} isPullable={!isOffline} pullingContent="" refreshingContent={<div className="p-4 text-center text-gray-400 text-sm">{t('home.refreshing')}</div>}>
           <div className="pb-28">
             {/* Marqueur « près du haut » (40 px) dans un conteneur de hauteur nulle : n'occupe aucune
                 place et ne décale rien ; observé par IntersectionObserver pour l'en-tête. */}
             <div aria-hidden="true" style={{ position: 'relative', height: 0 }}>
               <div ref={feedTopMarkerRef} style={{ position: 'absolute', top: 0, left: 0, width: 1, height: 40, pointerEvents: 'none' }} />
             </div>
+            {/* Place réservée au panneau de recherche (hauteur FIXE, défile avec le fil) */}
+            <div aria-hidden="true" style={{ height: 'var(--home-search-h, 0px)' }} />
 
             {showSpinner && (
               <div className="flex justify-center py-16">
@@ -1279,6 +1308,7 @@ export function Home({ userData, onNavigate }: HomeProps) {
             )}
           </div>
         </PullToRefresh>
+      </div>
       </div>
 
       {showPermissions && (

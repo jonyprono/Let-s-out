@@ -5,6 +5,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Loader2, Film, EyeOff, Ticket, ScanLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { eventCategoryLabel } from '@/lib/event-categories';
+import { canDesignatePoolCandidates } from '@/lib/pool-contribution';
 import { MyTicketModal } from '@/features/events/components/MyTicketModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -521,6 +522,9 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
     : new Date() > new Date(event.startAt);
 
   const validatorCandidates = event.validatorCandidates || [];
+  // « Rendre candidat » n'a de sens que pour une cagnotte ACTIVE dont le vote des validateurs n'est pas
+  // clos (avant : bouton affiché à l'organisateur même sans cagnotte). Même règle côté API.
+  const showCandidateToggle = isCreator && canDesignatePoolCandidates(event);
 
   return (
     <div className="flex flex-col h-full relative">
@@ -656,7 +660,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                   </span>
                 </div>
                 
-                {isCreator && (
+                {showCandidateToggle && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -672,7 +676,7 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                         : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
                     }`}
                   >
-                    {isCandidate ? '★ Candidat' : '☆ Rendre candidat'}
+                    <span>{isCandidate ? t('manageEvent.candidate') : t('manageEvent.makeCandidate')}</span>
                   </button>
                 )}
               </div>

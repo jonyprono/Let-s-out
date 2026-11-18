@@ -62,13 +62,14 @@ export interface Event {
   }
   poolCollected?: number
   poolReleased?: boolean
+  poolClosedAt?: string | null
   _count?: { bookings: number; comments?: number; reactions?: number }
   reactions?: { emoji: string }[]
   /** Résumé des réactions fourni par GET /events (évite 1 requête /reactions par carte) */
   reactionSummary?: { counts: Record<string, number>; myEmoji: string | null }
   validatorIds?: string[]
   validatorCandidates?: string[]
-  validatorVoteStatus?: 'OPEN' | 'CLOSED' | 'NONE'
+  validatorVoteStatus?: 'PENDING' | 'OPEN' | 'CLOSED' | 'NONE'
   validatorThreshold?: number
   expectedValidatorVotes?: number
   validatorVotes?: any[]
