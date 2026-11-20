@@ -1980,7 +1980,8 @@
     "inviter": "Invite {{v0}}",
     "nearbyCount_one": "{{count}} Outster nearby",
     "nearbyCount_other": "{{count}} Outsters nearby",
-    "inviteInfo": "A notification will be sent to {{name}}. If she accepts, you can discuss the plans together to organise the outing."
+    "inviteInfo": "A notification will be sent to {{name}}. If she accepts, you can discuss the plans together to organise the outing.",
+    "reessayer": "Try again"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Searching for Outsters nearby...",
@@ -1998,7 +1999,8 @@
     "bloquer": "Block {{v0}}",
     "signaler": "Report {{v0}}",
     "nearbyHint_one": "{{count}} Outster nearby · tap an avatar",
-    "nearbyHint_other": "{{count}} Outsters nearby · tap an avatar"
+    "nearbyHint_other": "{{count}} Outsters nearby · tap an avatar",
+    "scanEnCours": "Scanning: {{seconds}} s"
   },
   "profileV2": {
     "erreurLorsDeL": "An error occurred during the action.",
@@ -2832,5 +2834,11 @@
     "videoNotFound": "This video no longer exists or isn't available.",
     "postNotFound": "This post no longer exists or isn't available.",
     "backHome": "Back to home"
+  },
+  "interestsSheet": {
+    "title": "My interests",
+    "save": "Save",
+    "saved": "Interests updated",
+    "error": "Couldn't save your interests. Please try again."
   }
 }

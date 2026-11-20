@@ -313,7 +313,7 @@ export async function videoRoutes(app: FastifyInstance) {
   app.post('/:id/reactions', { preHandler: [app.authenticate] }, async (req, reply) => {
     const { sub: userId } = req.user as { sub: string }
     const { id: videoId } = req.params as { id: string }
-    const { emoji } = req.body as { emoji: string }
+    const { emoji, liked } = req.body as { emoji: string; liked?: boolean }
 
     const video = await app.prisma.eventVideo.findUnique({ where: { id: videoId } })
     if (!video || video.deletedAt) return reply.code(404).send({ error: 'Vidéo introuvable' })
@@ -322,6 +322,22 @@ export async function videoRoutes(app: FastifyInstance) {
       where: { userId_videoId: { userId, videoId } }
     })
 
+    // État VOULU fourni par l'app ({ liked: true|false }) : opération idempotente. Avant, une
+    // bascule pure : si l'app affichait à tort « pas aimé » (cache périmé), « J'aime » SUPPRIMAIT
+    // le like existant. Réponse : état réel + compteur, pour resynchroniser l'affichage.
+    if (typeof liked === 'boolean') {
+      if (liked && !existing) {
+        await app.prisma.eventVideoReaction.create({ data: { userId, videoId, emoji: emoji || '❤️' } }).catch((e: any) => {
+          if (e?.code !== 'P2002') throw e // double appui simultané : déjà créé, rien à faire
+        })
+      } else if (!liked && existing) {
+        await app.prisma.eventVideoReaction.deleteMany({ where: { userId, videoId } })
+      }
+      const count = await app.prisma.eventVideoReaction.count({ where: { videoId } })
+      return reply.send({ action: liked ? 'added' : 'removed', liked, count })
+    }
+
+    // Ancienne bascule (anciennes versions de l'app sans le champ `liked`)
     if (existing) {
       if (existing.emoji === emoji) {
         await app.prisma.eventVideoReaction.delete({ where: { id: existing.id } })

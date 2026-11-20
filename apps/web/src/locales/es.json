@@ -1981,7 +1981,8 @@
     "inviter": "Invitar a {{v0}}",
     "nearbyCount_one": "{{count}} Outster cerca",
     "nearbyCount_other": "{{count}} Outsters cerca",
-    "inviteInfo": "Se le enviará una notificación a {{name}}. Si acepta, podréis hablar para organizar la salida."
+    "inviteInfo": "Se le enviará una notificación a {{name}}. Si acepta, podréis hablar para organizar la salida.",
+    "reessayer": "Reintentar"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Buscando a Outsters por aquí...",
@@ -1999,7 +2000,8 @@
     "bloquer": "Bloquear a {{v0}}",
     "signaler": "Reportar a {{v0}}",
     "nearbyHint_one": "{{count}} Outster cerca · toca un avatar",
-    "nearbyHint_other": "{{count}} Outsters cerca · toca un avatar"
+    "nearbyHint_other": "{{count}} Outsters cerca · toca un avatar",
+    "scanEnCours": "Escaneando: {{seconds}} s"
   },
   "profileV2": {
     "erreurLorsDeL": "Se ha producido un error al realizar la acción.",
@@ -2836,5 +2838,11 @@
     "videoNotFound": "Este video ya no existe o no está disponible.",
     "postNotFound": "Esta publicación ya no existe o no está disponible.",
     "backHome": "Volver al inicio"
+  },
+  "interestsSheet": {
+    "title": "Mis intereses",
+    "save": "Guardar",
+    "saved": "Intereses actualizados",
+    "error": "No se pudieron guardar tus intereses. Inténtalo de nuevo."
   }
 }

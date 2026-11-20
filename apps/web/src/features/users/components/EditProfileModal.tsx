@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { interestLabel } from '@/lib/interests'
+import { interestLabel, interestIcon, PROFILE_INTEREST_OPTIONS } from '@/lib/interests'
 import i18n from '@/lib/i18n'
 import { useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, Loader2, Camera, User, Eye, X, ShieldCheck, Calendar } from 'lucide-react'
@@ -12,13 +12,8 @@ import { invalidateAvatarQueries } from '@/lib/avatar-cache'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 
-const AVAILABLE_INTERESTS = [
-  'Sorties', 'Sport', 'Cinéma', 'Voyage', 'Food', 'Business',
-  'Networking', 'Nightlife', 'Musique', 'Culture', 'Art', 'Tech',
-  'Jeux vidéos & jeux de société', 'Concerts & festivals',
-  'Voyages & découverte', 'Gastronomie', 'Shopping', 'Bien-être',
-  'Réseautage professionnel', 'Science & Education', 'Lifestyle',
-]
+// Liste partagée avec la feuille « Mes intérêts » du profil
+const AVAILABLE_INTERESTS = PROFILE_INTEREST_OPTIONS
 
 interface EditProfileModalProps {
   onClose: () => void
@@ -158,21 +153,7 @@ export function EditProfileModal({ onClose }: EditProfileModalProps) {
     }
   }
 
-  const getInterestIcon = (interest: string) => {
-    const lower = interest.toLowerCase()
-    if (lower.includes('sport')) return '⚽'
-    if (lower.includes('musique')) return '🎶'
-    if (lower.includes('food') || lower.includes('cuisine')) return '🍳'
-    if (lower.includes('art')) return '🎨'
-    if (lower.includes('culture')) return '🌍'
-    if (lower.includes('voyage')) return '✈️'
-    if (lower.includes('tech') || lower.includes('business')) return '💼'
-    if (lower.includes('networking')) return '🤝'
-    if (lower.includes('nightlife')) return '🍸'
-    if (lower.includes('cinéma')) return '🎬'
-    if (lower.includes('sorties')) return '🎟️'
-    return '📌'
-  }
+  const getInterestIcon = interestIcon
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-[#111111] font-poppins">

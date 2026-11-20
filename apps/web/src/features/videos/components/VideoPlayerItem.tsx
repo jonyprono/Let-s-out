@@ -151,23 +151,43 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
   );
   const [likesCount, setLikesCount] = useState(video._count?.reactions || 0);
 
+  // Données serveur plus récentes (liste rechargée après navigation / invalidation) : l'état local
+  // suit le serveur. Avant, il était figé à la 1re valeur, parfois tirée d'un cache périmé
+  // (« pas aimé » alors que le like existait). Jamais pendant un appui en cours.
+  const serverLiked = !!(video.reactions && video.reactions.length > 0);
+  const serverCount = video._count?.reactions || 0;
+  const likePendingRef = useRef(false);
+  useEffect(() => {
+    if (likePendingRef.current) return;
+    setHasLiked(serverLiked);
+    setLikesCount(serverCount);
+  }, [serverLiked, serverCount]);
+
   const toggleLikeMut = useMutation({
-    mutationFn: () => videosApi.toggleReaction(video.id, '❤️'),
-    onMutate: async () => {
+    // État VOULU envoyé au serveur (idempotent) : un état local faux ne peut plus annuler un like
+    mutationFn: (nextLiked: boolean) => videosApi.setLiked(video.id, nextLiked),
+    onMutate: async (nextLiked: boolean) => {
       hapticFeedback.impact(); // vibration légère au like
+      likePendingRef.current = true;
       const wasLiked = hasLiked;
-      setHasLiked(!wasLiked);
-      setLikesCount((prev) => (wasLiked ? prev - 1 : prev + 1));
+      setHasLiked(nextLiked);
+      setLikesCount((prev) => Math.max(0, prev + (nextLiked ? 1 : -1)));
       return { wasLiked };
+    },
+    onSuccess: (res) => {
+      // Recalage sur la vérité du serveur (état + compteur réels)
+      if (res && typeof res.liked === 'boolean') setHasLiked(res.liked);
+      if (res && typeof res.count === 'number') setLikesCount(res.count);
     },
     onError: (_err, _variables, context) => {
       if (context) {
         setHasLiked(context.wasLiked);
-        setLikesCount((prev) => (context.wasLiked ? prev + 1 : prev - 1));
+        setLikesCount((prev) => Math.max(0, prev + (context.wasLiked ? 1 : -1)));
       }
       toast.error(t('videoPlayerItem.erreurLorsDeLaReaction'));
     },
     onSettled: () => {
+      likePendingRef.current = false;
       qc.invalidateQueries({ queryKey: ['videos'] });
       qc.invalidateQueries({ queryKey: ['feed', 'videos'] });
     }
@@ -381,7 +401,7 @@ export function VideoPlayerItem({ video, isActive, isNear = true }: Props) {
             </button>
 
             <button
-              onClick={() => toggleLikeMut.mutate()}
+              onClick={() => { if (!toggleLikeMut.isPending) toggleLikeMut.mutate(!hasLiked); }}
               className="flex flex-col items-center gap-1 group"
             >
               <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center">

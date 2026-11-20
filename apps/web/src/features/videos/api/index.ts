@@ -68,6 +68,12 @@ export const videosApi = {
     return res.data
   },
 
+  /** Fixe l'état « J'aime » (idempotent) ; renvoie l'état réel et le nombre total de likes */
+  setLiked: async (videoId: string, liked: boolean): Promise<{ liked: boolean; count: number }> => {
+    const res = await apiClient.post(`/videos/${videoId}/reactions`, { emoji: '❤️', liked })
+    return res.data
+  },
+
   getComments: async (videoId: string) => {
     const res = await apiClient.get(`/videos/${videoId}/comments`)
     return res.data.data

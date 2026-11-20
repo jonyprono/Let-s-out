@@ -4,6 +4,7 @@ import i18n from '@/lib/i18n'
 import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCircle, Check, UserCheck, Loader2, MoreVertical, BellOff, AlertTriangle, Ban, FileText, Camera, X } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
+import { InterestsSheet } from '@/features/users/components/InterestsSheet';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -36,6 +37,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
   // Ouverture directe de l'édition du profil (ex. OUT RADAR : date de naissance manquante)
   const [showEditModal, setShowEditModal] = useState(() => !!(location.state as any)?.openEdit);
   const [activeTab, setActiveTab] = useState<Tab>('profil');
+  // « + Ajouter » sous « Mes intérêts » : feuille dédiée (et non le formulaire complet)
+  const [showInterestsSheet, setShowInterestsSheet] = useState(false);
   const { username } = useParams<{ username?: string }>();
   const preloadedProfile = location.state?.profile;
   const [showBlockModal, setShowBlockModal] = useState(false);
@@ -573,7 +576,8 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                 )}
                 {isOwnProfile && (
                   <button
-                    onClick={() => setShowEditModal(true)}
+                    type="button"
+                    onClick={() => setShowInterestsSheet(true)}
                     className="flex items-center gap-1.5 px-4 py-1.5 bg-white dark:bg-[#222] border border-dashed border-[#D4D4D4] dark:border-[#555] rounded-full text-[13px] font-medium text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
                   >
                     <span className="text-gray-400 text-[16px] leading-[0]">+</span> <span>{i18n.t('common.add')}</span>
@@ -622,7 +626,14 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-inter text-[14px] font-medium text-gray-500"><span>{t('profileV2.prochainsEvenements')}</span></h3>
-                  <button className="text-[13px] text-gray-500 font-medium"><span>{t('profileV2.voirTout')}</span></button>
+                  {/* Voir tout : onglet « Événements » du profil (créés / rejoints) */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('events')}
+                    className="text-[13px] text-gray-500 font-medium cursor-pointer active:scale-95 transition-transform"
+                  >
+                    <span>{t('profileV2.voirTout')}</span>
+                  </button>
                 </div>
                 <div className="flex overflow-x-auto hide-scrollbar pb-4 pl-1">
                   {upcomingEvents.map((event: any) => (
@@ -732,6 +743,9 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
         )}
       </div>
       {showEditModal && <EditProfileModal onClose={() => setShowEditModal(false)} />}
+      {isOwnProfile && (
+        <InterestsSheet open={showInterestsSheet} onClose={() => setShowInterestsSheet(false)} initial={interests} />
+      )}
 
       {/* ── Actions bottom sheet (⋮ menu) ──────────────────────────────── */}
       {showActionsSheet && (

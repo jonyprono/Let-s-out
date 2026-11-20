@@ -51,3 +51,32 @@ export function interestLabel(t: TFunction, value: string): string {
   const key = INTEREST_KEYS[value?.trim().toLowerCase()]
   return key ? t(`interests.${key}`) : value
 }
+
+/**
+ * Centres d'intérêt proposés dans le profil (formulaire « Modifier mon profil » et feuille
+ * « Mes intérêts ») : source unique, valeurs enregistrées telles quelles en base.
+ */
+export const PROFILE_INTEREST_OPTIONS = [
+  'Sorties', 'Sport', 'Cinéma', 'Voyage', 'Food', 'Business',
+  'Networking', 'Nightlife', 'Musique', 'Culture', 'Art', 'Tech',
+  'Jeux vidéos & jeux de société', 'Concerts & festivals',
+  'Voyages & découverte', 'Gastronomie', 'Shopping', 'Bien-être',
+  'Réseautage professionnel', 'Science & Education', 'Lifestyle',
+]
+
+/** Icône d'une pastille de centre d'intérêt */
+export function interestIcon(interest: string): string {
+  const lower = interest.toLowerCase()
+  if (lower.includes('sport')) return '⚽'
+  if (lower.includes('musique')) return '🎶'
+  if (lower.includes('food') || lower.includes('cuisine')) return '🍳'
+  if (lower.includes('art')) return '🎨'
+  if (lower.includes('culture')) return '🌍'
+  if (lower.includes('voyage')) return '✈️'
+  if (lower.includes('tech') || lower.includes('business')) return '💼'
+  if (lower.includes('networking')) return '🤝'
+  if (lower.includes('nightlife')) return '🍸'
+  if (lower.includes('cinéma')) return '🎬'
+  if (lower.includes('sorties')) return '🎟️'
+  return '📌'
+}

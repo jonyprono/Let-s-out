@@ -57,19 +57,18 @@ setInterval(() => {
 
 
 /**
- * Contrôle d'âge OUT RADAR : date de naissance obligatoire et âge ≥ MIN_SIGNUP_AGE.
+ * Contrôle d'âge OUT RADAR.
+ * - Date de naissance ABSENTE : jamais bloquant (consigne produit : la date ne doit plus empêcher
+ *   l'accès ; l'âge est déjà contrôlé à l'inscription). Plus aucune réponse `needsBirthDate`.
+ * - Date ENREGISTRÉE montrant un âge < MIN_SIGNUP_AGE : refus maintenu (protection des mineurs :
+ *   OUT RADAR rend l'utilisateur localisable par des inconnus à proximité).
  * Retourne la réponse d'erreur à envoyer, ou null si l'accès est autorisé.
  */
 async function radarAgeDenial(
   app: FastifyInstance,
   birthDate: Date | null | undefined,
 ): Promise<{ status: number; body: Record<string, unknown> } | null> {
-  if (!birthDate) {
-    return {
-      status: 403,
-      body: { error: 'Veuillez renseigner votre date de naissance dans votre profil pour utiliser OUT RADAR.', needsBirthDate: true },
-    }
-  }
+  if (!birthDate) return null
   let minAge: number
   try {
     minAge = await getMinSignupAge(app.prisma)
@@ -161,8 +160,8 @@ export default async function radarRoutes(app: FastifyInstance) {
       longitude?: number
     }
 
-    // Âge ≥ MIN_SIGNUP_AGE (SystemSetting, aucun seuil codé en dur).
-    // Un ancien compte sans date de naissance doit d'abord la renseigner dans son profil.
+    // Âge ≥ MIN_SIGNUP_AGE (SystemSetting) seulement si une date est enregistrée ;
+    // un compte sans date de naissance n'est plus bloqué (cf. radarAgeDenial).
     const profile = await app.prisma.profile.findUnique({
       where: { userId },
       select: { birthDate: true, kycBirthDate: true },
@@ -390,9 +389,10 @@ export default async function radarRoutes(app: FastifyInstance) {
     for (const item of candidates) {
       if (!item.latitude || !item.longitude) continue
 
-      // Sécurité : n'afficher que les profils d'au moins MIN_SIGNUP_AGE ans
+      // Sécurité : un profil dont la date ENREGISTRÉE indique un âge < MIN_SIGNUP_AGE n'est jamais
+      // affiché. Une date absente n'exclut plus le profil (consigne : la date ne bloque plus).
       const targetBirthDate = item.user.profile?.kycBirthDate || item.user.profile?.birthDate
-      if (!targetBirthDate || ageFromStoredDate(targetBirthDate) < minAge) continue
+      if (targetBirthDate && ageFromStoredDate(targetBirthDate) < minAge) continue
 
       // Calcul de la distance
       const distance = getDistanceKm(latitude, longitude, item.latitude, item.longitude)

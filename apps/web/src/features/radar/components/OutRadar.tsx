@@ -28,6 +28,7 @@ import { useAuthStore } from '@/stores/auth.store'
 import { apiClient } from '@/lib/api-client'
 import { radarApi, RadarSearchResult } from '../api'
 import { RadarView } from './RadarView'
+import { radarSession, radarSearchKey } from '../radar-session'
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge'
 import { useUserProfile } from '@/features/users/UserProfileContext'
 import i18n from '@/lib/i18n'
@@ -40,6 +41,10 @@ const OUTING_TYPES = [
   { value: 'SPECIFIC_EVENT', get label() { return i18n.t('outRadar.evenementPrecis') } },
   { value: 'GROUP_ACTIVITY', get label() { return i18n.t('outRadar.activiteDeGroupe') } },
 ]
+
+/** Durée d'un scan radar (secondes) : les profils apparaissent sur le radar au fil du scan,
+ *  la liste complète s'affiche à la fin. */
+const RADAR_SCAN_SECONDS = 20
 
 /** Rayons proposés (km) — doivent correspondre à RADAR_ALLOWED_RADII_KM (apps/api radar.routes.ts) */
 const RADAR_RADII = [
@@ -67,25 +72,35 @@ export function OutRadar() {
     }
   }, [searchParams])
 
+  // Retour depuis un profil ouvert pendant la session radar : on retrouve le dernier scan
+  // (position, filtres, positions des avatars et résultats) sans relancer de recherche.
+  const [restored] = useState(() => {
+    const s = radarSession.load()
+    if (s) queryClient.setQueryData(radarSearchKey(s), s.results)
+    return s
+  })
+  useEffect(() => () => radarSession.onRadarLeave(), [])
+  const openProfileKeepingScan = (userId: string) => {
+    radarSession.keepForProfileVisit()
+    openUserProfile(userId)
+  }
+
   // État de localisation
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(restored?.coords ?? null)
   const [geoError, setGeoError] = useState<string | null>(null)
   const [requestingGeo, setRequestingGeo] = useState(false)
 
   // Paramètres de recherche
-  const [radiusKm, setRadiusKm] = useState<number>(1) // 500 m, 1 km, 5 km ou 10 km (RADAR_RADII)
-  const [genderFilter, setGenderFilter] = useState<'ALL' | 'FEMALE' | 'MALE'>('ALL')
-  const [verifiedOnly, setVerifiedOnly] = useState(false)
-  const [outingTypeFilter, setOutingTypeFilter] = useState('ALL')
+  const [radiusKm, setRadiusKm] = useState<number>(restored?.radiusKm ?? 1) // 500 m, 1 km, 5 km ou 10 km (RADAR_RADII)
+  const [genderFilter, setGenderFilter] = useState<'ALL' | 'FEMALE' | 'MALE'>(restored?.genderFilter ?? 'ALL')
+  const [verifiedOnly, setVerifiedOnly] = useState(restored?.verifiedOnly ?? false)
+  const [outingTypeFilter, setOutingTypeFilter] = useState(restored?.outingTypeFilter ?? 'ALL')
   const [showFiltersModal, setShowFiltersModal] = useState(false)
 
   // Visibilité
   const [showVisibilityModal, setShowVisibilityModal] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState<30 | 60 | 180>(30)
   const [visibilityOutingType, setVisibilityOutingType] = useState('SPONTANEOUS')
-
-  // Date de naissance manquante (anciens comptes) : on renvoie vers le profil, plus de saisie ici
-  const [showBirthDateModal, setShowBirthDateModal] = useState(false)
 
   // Menu action profil (bloquer / signaler)
   const [actionMenuProfileId, setActionMenuProfileId] = useState<string | null>(null)
@@ -96,11 +111,11 @@ export function OutRadar() {
   const [sendingInvite, setSendingInvite] = useState(false)
 
   // OUT RADAR : identifiant de session pour redistribuer les angles à chaque recherche
-  const [searchSessionId, setSearchSessionId] = useState(() => Math.random().toString(36).slice(2))
+  const [searchSessionId, setSearchSessionId] = useState(() => restored?.sessionId ?? Math.random().toString(36).slice(2))
 
-  // Recherche avec durée minimale de 30 secondes
+  // Recherche animée d'une durée fixe (RADAR_SCAN_SECONDS)
   const [isManualSearching, setIsManualSearching] = useState(false)
-  const [searchCountdown, setSearchCountdown] = useState(30)
+  const [searchCountdown, setSearchCountdown] = useState(RADAR_SCAN_SECONDS)
   const searchTimerRef = useRef<any>(null)
 
   useEffect(() => {
@@ -185,7 +200,16 @@ export function OutRadar() {
     },
     enabled: Boolean(coords),
     staleTime: 10000,
+    // Retour depuis un profil : résultats restaurés affichés tels quels (pas de nouveau scan
+    // implicite). « Rechercher » relance toujours explicitement (refetch).
+    refetchOnMount: false,
   })
+
+  // Mémorise le dernier scan terminé (et ses mises à jour : invitation envoyée…) pour le retour
+  useEffect(() => {
+    if (isManualSearching || !coords || !searchResults) return
+    radarSession.save({ coords, radiusKm, genderFilter, verifiedOnly, outingTypeFilter, sessionId: searchSessionId, results: searchResults })
+  }, [searchResults, isManualSearching, coords, radiusKm, genderFilter, verifiedOnly, outingTypeFilter, searchSessionId])
 
   // ── 3. Query: Mes invitations ──────────────────────────────────────────────
   const { data: invitesList, isLoading: loadingInvites } = useQuery({
@@ -218,7 +242,15 @@ export function OutRadar() {
         }
       }
 
-      const pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 })
+      // Haute précision (GPS) jusqu'à 20 s ; en cas d'échec ou de délai dépassé (intérieur, GPS
+      // lent), nouvel essai en basse précision : position réseau / Wi-Fi, bien plus rapide.
+      let pos
+      try {
+        pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 20000 })
+      } catch (firstErr) {
+        console.warn('Geolocation high accuracy failed, retrying with network positioning:', firstErr)
+        pos = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 })
+      }
       setRequestingGeo(false)
       const newCoords = {
         latitude: pos.coords.latitude,
@@ -253,13 +285,13 @@ export function OutRadar() {
     // Déclenche l'appel API
     triggerSearch()
 
-    // Démarre la recherche animée de 30 secondes
+    // Démarre la recherche animée (RADAR_SCAN_SECONDS)
     if (searchTimerRef.current) clearInterval(searchTimerRef.current)
     setIsManualSearching(true)
-    setSearchCountdown(30)
+    setSearchCountdown(RADAR_SCAN_SECONDS)
 
     const startTime = Date.now()
-    const DURATION_MS = 30000
+    const DURATION_MS = RADAR_SCAN_SECONDS * 1000
 
     searchTimerRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime
@@ -314,11 +346,6 @@ export function OutRadar() {
       }
     },
     onError: (err: any) => {
-      if (err?.response?.data?.needsBirthDate) {
-        setShowVisibilityModal(false)
-        setShowBirthDateModal(true)
-        return
-      }
       const msg = err?.response?.data?.error || t('outRadar.erreurLorsDuChangementDe')
       toast.error(msg)
     },
@@ -330,13 +357,7 @@ export function OutRadar() {
       return
     }
 
-    // Vérifier si la date de naissance est renseignée
-    const userBirthDate = (currentUser?.profile as any)?.birthDate
-    if (!userBirthDate) {
-      setShowVisibilityModal(false)
-      setShowBirthDateModal(true)
-      return
-    }
+    // Plus aucun contrôle de date de naissance ici : la date n'est jamais exigée pour OUT RADAR.
 
     // Pour devenir visible, on a besoin des coordonnées
     let currentCoords = coords
@@ -521,7 +542,7 @@ export function OutRadar() {
                       <div className="flex items-center justify-between gap-3">
                         <button
                           type="button"
-                          onClick={() => otherUser?.id && openUserProfile(otherUser.id)}
+                          onClick={() => otherUser?.id && openProfileKeepingScan(otherUser.id)}
                           className="flex items-center gap-3 min-w-0 text-left focus:outline-none active:opacity-80"
                           aria-label={t('radarView.profilDe', { v0: profile?.displayName || 'Outster' })}
                         >
@@ -738,7 +759,18 @@ export function OutRadar() {
               {geoError && (
                 <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900/50 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-orange-800 dark:text-orange-200">
                   <AlertCircle className="w-4 h-4 shrink-0 text-[#FF7A00] mt-0.5" />
-                  <p>{geoError}</p>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <p>{geoError}</p>
+                    <button
+                      type="button"
+                      onClick={() => { void requestLocation() }}
+                      disabled={requestingGeo}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FF7A00] text-white text-[11px] font-bold active:scale-95 transition-transform disabled:opacity-60"
+                    >
+                      {requestingGeo && <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />}
+                      <span>{t('outRadar.reessayer')}</span>
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -775,6 +807,8 @@ export function OutRadar() {
                 <RadarView
                   isSearching={isManualSearching || requestingGeo || fetchingSearch || loadingSearch}
                   searchCountdown={isManualSearching ? searchCountdown : undefined}
+                  scanDurationSec={RADAR_SCAN_SECONDS}
+                  onOpenProfile={openProfileKeepingScan}
                   results={searchResults}
                   sessionId={searchSessionId}
                   onSendInvite={(profile) => setInviteTarget(profile)}
@@ -805,7 +839,7 @@ export function OutRadar() {
                     <div className="flex items-start justify-between gap-3">
                       <button
                         type="button"
-                        onClick={() => openUserProfile(profile.id)}
+                        onClick={() => openProfileKeepingScan(profile.id)}
                         className="flex items-center gap-3 min-w-0 text-left focus:outline-none active:opacity-80"
                         aria-label={t('radarView.profilDe', { v0: profile.displayName })}
                       >
@@ -979,47 +1013,6 @@ export function OutRadar() {
               ) : (
                 t('outRadar.confirmerEtDevenirVisible')
               )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL : DATE DE NAISSANCE MANQUANTE (anciens comptes) ───────────── */}
-      {/* Plus de saisie ici : la date se renseigne une seule fois dans le profil
-          (contrôlée par MIN_SIGNUP_AGE côté serveur, puis verrouillée). */}
-      {showBirthDateModal && (
-        <div className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="radar-birthdate-title"
-            className="w-full max-w-sm bg-white dark:bg-[#1A1A1A] rounded-3xl p-6 border border-gray-100 dark:border-gray-800 space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
-          >
-            <div className="flex items-center justify-between">
-              <h3 id="radar-birthdate-title" className="font-bold text-base text-gray-900 dark:text-white">
-                {t('radar.birthDateRequiredTitle')}
-              </h3>
-              <button
-                onClick={() => setShowBirthDateModal(false)}
-                aria-label={t('radar.close')}
-                className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-              >
-                <span aria-hidden="true">✕</span>
-              </button>
-            </div>
-
-            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-              {t('radar.birthDateRequiredBody')}
-            </p>
-
-            <button
-              onClick={() => {
-                setShowBirthDateModal(false)
-                navigate('/profile', { state: { openEdit: true } })
-              }}
-              className="w-full py-3 rounded-full bg-[#FF7A00] hover:bg-[#E06C00] text-white text-xs font-bold active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-[#FF7A00]/25"
-            >
-              <span>{t('radar.birthDateRequiredCta')}</span>
             </button>
           </div>
         </div>

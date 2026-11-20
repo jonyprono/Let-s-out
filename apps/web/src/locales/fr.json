@@ -1981,7 +1981,8 @@
     "inviter": "Inviter {{v0}}",
     "nearbyCount_one": "{{count}} Outster à proximité",
     "nearbyCount_other": "{{count}} Outsters à proximité",
-    "inviteInfo": "Une notification sera envoyée à {{name}}. Si elle accepte, vous pourrez discuter ensemble pour organiser la sortie."
+    "inviteInfo": "Une notification sera envoyée à {{name}}. Si elle accepte, vous pourrez discuter ensemble pour organiser la sortie.",
+    "reessayer": "Réessayer"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Recherche d'Outsters à proximité...",
@@ -1999,7 +2000,8 @@
     "bloquer": "Bloquer {{v0}}",
     "signaler": "Signaler {{v0}}",
     "nearbyHint_one": "{{count}} Outster à proximité · touchez un avatar",
-    "nearbyHint_other": "{{count}} Outsters à proximité · touchez un avatar"
+    "nearbyHint_other": "{{count}} Outsters à proximité · touchez un avatar",
+    "scanEnCours": "Scan en cours : {{seconds}} s"
   },
   "profileV2": {
     "erreurLorsDeL": "Erreur lors de l'action.",
@@ -2836,5 +2838,11 @@
     "videoNotFound": "Cette vidéo n’existe plus ou n’est pas accessible.",
     "postNotFound": "Cette publication n’existe plus ou n’est pas accessible.",
     "backHome": "Retour à l’accueil"
+  },
+  "interestsSheet": {
+    "title": "Mes centres d'intérêt",
+    "save": "Enregistrer",
+    "saved": "Centres d'intérêt mis à jour",
+    "error": "Impossible d'enregistrer vos centres d'intérêt. Réessayez."
   }
 }

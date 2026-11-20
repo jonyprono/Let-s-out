@@ -260,19 +260,6 @@ export function ManageEvent() {
         onClose={() => setShowTicket(false)}
       />
 
-      {/* ── Quitter l'événement (participant confirmé, participation sans paiement) ── */}
-      {canLeave && (
-        <div className="px-4 pb-4 -mt-1 bg-white dark:bg-[#1A1A1A]">
-          <button
-            type="button"
-            onClick={() => setShowLeaveConfirm(true)}
-            className="w-full h-11 rounded-full border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 font-semibold text-[14px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
-          >
-            <LogOut className="w-4 h-4" aria-hidden="true" />
-            <span>{t('manageEvent.leave.button')}</span>
-          </button>
-        </div>
-      )}
       <ConfirmSheet
         open={showLeaveConfirm}
         title={t('manageEvent.leave.confirmTitle')}
@@ -312,6 +299,21 @@ export function ManageEvent() {
         {currentTab === 'participants' && <TabParticipants event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} pendingRequests={pendingRequests || []} isCreator={user?.id === event.creatorId || (event.coHostIds || []).includes(user?.id)} />}
         {currentTab === 'cagnotte' && <TabCagnotteInline event={event} attendees={Array.isArray(attendeesData) ? attendeesData : attendeesData?.data || []} setCagnotteStep={setCagnotteStep} />}
         {currentTab === 'ticketing' && <TicketingManager event={event} />}
+
+        {/* Quitter l'événement : simple lien discret en bas de page, sous les informations
+            (avant : gros bouton rouge sous « Mon billet »). Confirmation inchangée. */}
+        {canLeave && currentTab === 'details' && (
+          <div className="flex justify-center pt-6 pb-4">
+            <button
+              type="button"
+              onClick={() => setShowLeaveConfirm(true)}
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 text-[13px] font-medium text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 underline-offset-2 hover:underline active:opacity-70 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t('manageEvent.leave.button')}</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -82,6 +82,10 @@ function computePositions(
 export interface RadarViewProps {
   isSearching: boolean
   searchCountdown?: number
+  /** Durée totale du scan (s) : sert à faire apparaître les profils sur le radar au fil du scan */
+  scanDurationSec?: number
+  /** Ouverture d'un profil (l'écran Radar conserve alors son dernier scan pour le retour) */
+  onOpenProfile?: (userId: string) => void
   results: RadarSearchResult[] | undefined
   sessionId: string
   onSendInvite: (profile: RadarSearchResult) => void
@@ -97,6 +101,8 @@ export interface RadarViewProps {
 export function RadarView({
   isSearching,
   searchCountdown,
+  scanDurationSec,
+  onOpenProfile,
   results,
   sessionId,
   onSendInvite,
@@ -107,7 +113,8 @@ export function RadarView({
   listRef,
 }: RadarViewProps) {
   const { t } = useTranslation()
-  const { openUserProfile } = useUserProfile()
+  const { openUserProfile: openProfileDefault } = useUserProfile()
+  const openUserProfile = onOpenProfile ?? openProfileDefault
   const wrapRef = useRef<HTMLDivElement>(null)
   const [size, setSize] = useState(280)
 
@@ -138,11 +145,30 @@ export function RadarView({
   const hasResults = !isSearching && allResults.length > 0
   const isEmpty = !isSearching && results !== undefined && allResults.length === 0
 
+  // Pendant le scan : chaque profil détecté apparaît sur les cercles au fil du temps (du plus
+  // proche au plus éloigné), tous visibles avant la fin du décompte. La liste complète, elle,
+  // n'est affichée qu'à la fin du scan (cf. OutRadar).
+  const scanProgress = isSearching && typeof searchCountdown === 'number' && scanDurationSec
+    ? Math.min(1, Math.max(0, 1 - searchCountdown / scanDurationSec))
+    : null
+  const scanVisible = scanProgress === null
+    ? 0
+    : positions.filter((_, i) => scanProgress >= ((i + 1) / (positions.length + 1)) * 0.9).length
+  // Profils déjà apparus pendant le scan : restent affichés à la fin (pas de clignotement)
+  const revealedDuringScanRef = useRef(0)
   useEffect(() => {
-    setVisibleCount(0)
+    if (isSearching) revealedDuringScanRef.current = scanVisible
+  }, [isSearching, scanVisible])
+
+  useEffect(() => {
+    // Fin du scan : on repart du nombre de profils déjà apparus ; pendant le scan, rien à animer ici
+    const start = isSearching ? 0 : revealedDuringScanRef.current
+    if (!isSearching) revealedDuringScanRef.current = 0
+    setVisibleCount(start)
     if (isSearching || !results || results.length === 0) return
-    let count = 0
+    let count = start
     const total = Math.min(results.length, MAX_AVATARS_ON_RADAR)
+    if (count >= total) return
     const timer = setInterval(() => {
       count++
       setVisibleCount(count)
@@ -226,15 +252,19 @@ export function RadarView({
           </div>
 
           {/* Avatars */}
-          {!isSearching && positions.map(({ x, y, result }, idx) => {
-            const show = idx < visibleCount
+          {positions.map(({ x, y, result }, idx) => {
+            const show = isSearching ? idx < scanVisible : idx < visibleCount
             const sel = selectedProfile?.id === result.id
             const half = AVATAR_SIZE / 2
             return (
               <button key={result.id}
                 onClick={() => setSelectedProfile(sel ? null : result)}
+                disabled={isSearching}
+                tabIndex={show ? undefined : -1}
                 className="absolute focus:outline-none group"
                 style={{
+                  // Pendant le scan : affichage seul (fiche ouverte à la fin du scan)
+                  pointerEvents: isSearching || !show ? 'none' : undefined,
                   left: x - half, top: y - half,
                   width: AVATAR_SIZE, height: AVATAR_SIZE,
                   zIndex: sel ? 20 : 11,
@@ -284,7 +314,7 @@ export function RadarView({
                 <div className="mt-1 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#FF7A00]/15 dark:bg-[#FF7A00]/20 border border-[#FF7A00]/30 backdrop-blur-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#FF7A00] animate-ping" />
                   <span className="text-[10px] font-bold text-[#FF7A00] tracking-tight">
-                    Scan en cours : {searchCountdown}s
+                    <span>{t('radarView.scanEnCours', { seconds: searchCountdown })}</span>
                   </span>
                 </div>
               )}
