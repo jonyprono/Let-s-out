@@ -12,20 +12,17 @@ export function RadarFab() {
   const { t } = useTranslation()
   return (
     <div
-      className="fixed right-5 z-40"
-      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 92px)' }}
+      className="fixed bottom-[100px] right-5 z-40"
     >
       <button
         type="button"
         onClick={() => { hapticFeedback.impact(); navigate('/radar') }}
         aria-label={t('home.openRadar')}
-        className="group relative flex items-center gap-2 h-12 pl-3 pr-4 rounded-full bg-white dark:bg-[#1A1A1A] border border-[#FF7A00]/25 shadow-[0_6px_20px_rgba(255,122,0,0.25)] active:scale-95 transition-transform"
+        className="relative w-11 h-11 rounded-[14px] bg-[#FF7A00] shadow-lg flex items-center justify-center active:scale-95 transition-transform"
       >
-        <span className="relative flex w-8 h-8 items-center justify-center rounded-full bg-[#FF7A00]" aria-hidden="true">
-          <span className="absolute inset-0 rounded-full bg-[#FF7A00] opacity-40 motion-safe:animate-ping" />
-          <Radio className="relative w-4 h-4 text-white" strokeWidth={2.25} />
-        </span>
-        <span className="text-[12px] font-extrabold tracking-wide text-[#FF7A00]">OUT RADAR</span>
+        {/* Onde discrète (désactivée si l'utilisateur réduit les animations) */}
+        <span className="absolute inset-0 rounded-[14px] bg-[#FF7A00] opacity-30 motion-safe:animate-ping" aria-hidden="true" />
+        <Radio className="relative w-5 h-5 text-white" strokeWidth={2} aria-hidden="true" />
       </button>
     </div>
   )
