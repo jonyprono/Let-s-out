@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { LiveBadge } from '@/components/ui/LiveBadge';
+import { isEventLive } from '@/lib/event-status';
 import { useAuthStore } from '@/stores/auth.store';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
-import { Loader2, Film, EyeOff, Ticket, ScanLine, LogOut } from 'lucide-react';
+import { Loader2, Film, EyeOff, Ticket, ScanLine, LogOut, CalendarPlus, CalendarClock } from 'lucide-react';
 import { ConfirmSheet } from '@/components/shared/ConfirmSheet';
 import { useTranslation } from 'react-i18next';
 import { eventCategoryLabel } from '@/lib/event-categories';
@@ -212,6 +214,7 @@ export function ManageEvent() {
 
       {/* Event Title & Date */}
       <div className="px-4 py-4 shrink-0 bg-white dark:bg-[#1A1A1A]">
+        {isEventLive(event) && <LiveBadge className="mb-2" />}
         <h1 className="text-[20px] font-bold text-gray-900 dark:text-white mb-1">{event.title}</h1>
         <p className="text-[13px] text-gray-500">
           {(() => {
@@ -331,6 +334,12 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
   const [searchQuery, setSearchQuery] = useState('');
   const qc = useQueryClient();
   const isEventEnded = event.endAt ? new Date(event.endAt) < new Date() : false;
+  const { user: me } = useAuthStore();
+  // Événement terminé : « Programmer une nouvelle édition » (créateur) et report de la date, possible
+  // seulement sans argent en jeu (même règle côté API : RESCHEDULE_PAID_EVENT).
+  const isEventOwner = !!me && event.creatorId === me.id;
+  const hasMoneyInvolved = (event.price ?? 0) > 0 || !!event.ticketingEnabled || (event.poolTarget ?? 0) > 0 || (event.poolCollected ?? 0) > 0;
+  const canReschedule = isEventEnded && !hasMoneyInvolved;
   const { data: usersData, isLoading: isLoadingFriends } = useQuery({
     queryKey: ['users-search', searchQuery],
     queryFn: async () => {
@@ -520,8 +529,32 @@ function TabDetails({ event, isCreator }: { event: any, isCreator?: boolean }) {
         </div>
       )}
 
+      {/* Événement terminé : relancer une nouvelle édition (formulaire pré-rempli, nouvelle date à choisir) */}
+      {isEventOwner && isEventEnded && (
+        <button
+          type="button"
+          onClick={() => navigate('/events/create', { state: { duplicateFrom: event } })}
+          className="w-full py-3.5 mb-3 flex items-center justify-center gap-2 rounded-xl bg-[#FF7A00] text-[14px] font-semibold text-white active:scale-95 transition-transform shadow-sm"
+        >
+          <CalendarPlus className="w-4 h-4" aria-hidden="true" />
+          <span>{t('manageEvent.newEdition')}</span>
+        </button>
+      )}
+
+      {/* Événement terminé sans paiement : le reporter à une nouvelle date (même fiche, mêmes participants) */}
+      {isCreator && canReschedule && (
+        <button
+          type="button"
+          onClick={() => navigate('/events/create', { state: { editEventId: event.id, eventData: event, reschedule: true } })}
+          className="w-full py-3.5 mb-6 flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 text-[14px] font-semibold bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-white active:scale-95 transition-transform"
+        >
+          <CalendarClock className="w-4 h-4" aria-hidden="true" />
+          <span>{t('manageEvent.reschedule')}</span>
+        </button>
+      )}
+
       {/* Modifier l'événement — organisateur uniquement, événement non terminé */}
-      {isCreator && (
+      {isCreator && !canReschedule && (
         <button
           onClick={() => !isEventEnded && navigate('/events/create', { state: { editEventId: event.id, eventData: event } })}
           disabled={isEventEnded}
@@ -570,6 +603,10 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
   // Attendees endpoint already returns confirmed participants
   // Add the organizer at the top of the list if not already present
   const rawParticipants = attendees.map(b => b.user || b);
+  // Contrôle d'entrée (organisateurs) : heure de la 1re validation du billet, par participant
+  const entryByUserId = new Map<string, { checkedInAt?: string | null; ticketsCount?: number; ticketsCheckedIn?: number }>(
+    attendees.filter((b: any) => b?.user?.id).map((b: any) => [b.user.id, b])
+  );
   const creatorAlreadyInList = rawParticipants.some((p: any) => p.id === event.creatorId);
   const creatorEntry = !creatorAlreadyInList && event.creator ? { ...event.creator, _isOrganizer: true } : null;
   const participants = creatorEntry ? [creatorEntry, ...rawParticipants] : rawParticipants;
@@ -591,11 +628,11 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
           <h2 className="text-[16px] font-bold text-gray-900 dark:text-white mb-3"><span>{t('manageEvent.pendingCount', { count: pendingRequests.length })}</span></h2>
           <div className="flex flex-col gap-3">
             {pendingRequests.map(req => (
-              <div key={req.id} className="flex items-center justify-between p-3 bg-white dark:bg-[#1A1A1A] rounded-[12px] border border-[var(--border-default)]">
-                <div className="flex items-center gap-3">
+              <div key={req.id} className="flex items-center justify-between gap-2 p-3 bg-white dark:bg-[#1A1A1A] rounded-[12px] border border-[var(--border-default)]">
+                <div className="flex items-center gap-3 min-w-0">
                   <div onClick={() => openUserProfile(
                       req.user.id,
-                      { displayName: req.user.profile?.displayName || req.user.profile?.username || 'Utilisateur', avatarUrl: req.user.profile?.avatarUrl },
+                      { displayName: req.user.profile?.displayName || req.user.profile?.username || t('manageEvent.requestUserFallback'), avatarUrl: req.user.profile?.avatarUrl },
                       { title: event?.title || t('common.event'), coverUrl: event?.coverUrl }
                     )}
                     className="cursor-pointer shrink-0"
@@ -606,14 +643,14 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                       <UserAvatarIcon size={40} />
                     )}
                   </div>
-                  <div className="flex flex-col justify-center">
-                    <span className="text-[14px] font-semibold text-gray-900 dark:text-white leading-none mb-1">
-                      {req.user.profile?.displayName || req.user.profile?.username || 'Utilisateur'}
+                  <div className="flex flex-col justify-center min-w-0">
+                    <span className="text-[14px] font-semibold text-gray-900 dark:text-white leading-none mb-1 truncate">
+                      {req.user.profile?.displayName || req.user.profile?.username || t('manageEvent.requestUserFallback')}
                     </span>
                     <span className="text-[12px] text-gray-500 leading-none"><span>{t('manageEvent.requestSent')}</span></span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={async () => {
                       const prevData = qc.getQueryData(['events', event.id, 'pending-requests'])
@@ -631,9 +668,11 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                         toast.error(e?.response?.data?.message || t('manageEvent.toasts.declineError'))
                       }
                     }}
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 text-red-500 active:scale-95 transition-transform"
+                    aria-label={t('manageEvent.declineRequest')}
+                    className="h-8 px-3 flex items-center justify-center gap-1 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 text-[12px] font-semibold active:scale-95 transition-transform"
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <span>{t('manageEvent.declineRequest')}</span>
                   </button>
                   <button
                     onClick={async () => {
@@ -650,12 +689,14 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                         qc.invalidateQueries({ queryKey: ['events', event.id, 'pending-requests'] })
                       } catch (e: any) {
                         qc.setQueryData(['events', event.id, 'pending-requests'], prevData)
-                        toast.error(e?.response?.data?.message || 'Erreur lors de l\'approbation')
+                        toast.error(e?.response?.data?.code === 'EVENT_FULL' ? t('manageEvent.toasts.eventFull') : t('manageEvent.toasts.approveError'))
                       }
                     }}
-                    className="w-8 h-8 flex items-center justify-center rounded-full bg-green-50 text-green-500 active:scale-95 transition-transform"
+                    aria-label={t('manageEvent.acceptRequest')}
+                    className="h-8 px-3 flex items-center justify-center gap-1 rounded-full bg-[#FF7A00] text-white text-[12px] font-semibold active:scale-95 transition-transform"
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>{t('manageEvent.acceptRequest')}</span>
                   </button>
                 </div>
               </div>
@@ -713,8 +754,20 @@ function TabParticipants({ event, attendees, pendingRequests, isCreator }: { eve
                     <span className="text-[10px] font-bold text-[#FF7A00] uppercase tracking-wide">{t('common.organizer')}</span>
                   )}
                   <span className="text-[14px] font-medium text-gray-900 dark:text-white truncate block">
-                    {user.profile?.displayName || user.profile?.username || 'Utilisateur'}
+                    {user.profile?.displayName || user.profile?.username || t('manageEvent.requestUserFallback')}
                   </span>
+                  {isCreator && (() => {
+                    const entry = entryByUserId.get(user.id);
+                    if (!entry?.checkedInAt) return null;
+                    const multi = (entry.ticketsCount ?? 0) > 1;
+                    return (
+                      <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-green-600 dark:text-green-400">
+                        <span aria-hidden="true">✓</span>
+                        <span>{t('manageEvent.checkedInAt', { time: format(new Date(entry.checkedInAt), currentLang() === 'fr' ? "HH'h'mm" : 'p', { locale: dateLocale() }) })}</span>
+                        {multi && <span>{t('manageEvent.ticketsCheckedIn', { done: entry.ticketsCheckedIn ?? 0, total: entry.ticketsCount })}</span>}
+                      </span>
+                    );
+                  })()}
                 </div>
                 
                 {showCandidateToggle && (

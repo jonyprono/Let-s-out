@@ -1,5 +1,6 @@
 import { Event } from '@/features/events/api'
 import { differenceInDays, isAfter } from 'date-fns'
+import { isEventLive } from '@/lib/event-status'
 
 /**
  * Calcule un score global pour mettre en avant les événements.
@@ -47,7 +48,13 @@ export function sortFeaturedEvents(events: Event[]): Event[] {
  * (Basé purement sur la popularité absolue)
  */
 export function sortPopularEvents(events: Event[]): Event[] {
-  return [...events].sort((a, b) => (b.currentAttendees || 0) - (a.currentAttendees || 0));
+  // Les événements EN COURS restent en tête du fil tant qu'ils ont lieu, puis popularité
+  const now = new Date();
+  return [...events].sort((a, b) => {
+    const liveDiff = Number(isEventLive(b, now)) - Number(isEventLive(a, now));
+    if (liveDiff !== 0) return liveDiff;
+    return (b.currentAttendees || 0) - (a.currentAttendees || 0);
+  });
 }
 
 /**

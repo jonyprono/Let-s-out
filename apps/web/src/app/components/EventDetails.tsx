@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { LiveBadge } from '@/components/ui/LiveBadge'
+import { isEventLive } from '@/lib/event-status'
 import { useParams, useNavigate } from 'react-router'
 import { EventReactions } from '@/features/events/components/EventReactions'
 import { EventComments } from '@/features/events/components/EventComments'
@@ -729,6 +731,7 @@ export function EventDetails({ onBack }: EventDetailsProps) {
 
             {/* Title & Badges */}
             <div>
+              {isEventLive(event) && <LiveBadge className="mb-2" />}
               <h1 className="text-[20px] font-semibold font-poppins text-[#1B1818] leading-tight mb-2">{event.title}</h1>
               <div className="flex flex-wrap gap-2 mb-4">
                 {event.genderRestriction === 'FEMALE' && (

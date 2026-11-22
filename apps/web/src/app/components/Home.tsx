@@ -10,6 +10,7 @@ import { eventsApi, Event as AppEvent } from '@/features/events/api';
 import { useNotifications } from '@/features/notifications/api';
 import { usersApi } from '@/features/users/api';
 import { hapticFeedback } from '@/lib/haptics';
+import { RadarFab } from '@/components/shared/RadarFab';
 import { requestScrollToTop, SCROLL_TO_TOP_EVENT } from '@/lib/scroll-to-top';
 import PullToRefresh from 'react-simple-pull-to-refresh';
 import { useIsOnline } from '@/hooks/useIsOnline';
@@ -1323,6 +1324,9 @@ export function Home({ userData, onNavigate }: HomeProps) {
         </PullToRefresh>
       </div>
       </div>
+
+      {/* Raccourci OUT RADAR (masqué pendant la lecture d'une vidéo plein écran) */}
+      {!playingPageVideoId && <RadarFab />}
 
       {showPermissions && (
         <PermissionsRequest onComplete={() => setShowPermissions(false)} />

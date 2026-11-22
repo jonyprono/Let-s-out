@@ -412,7 +412,8 @@
     "modifier": "Modifier",
     "supprimer": "Supprimer",
     "photo": "Photo {{v0}}",
-    "you": "vous"
+    "you": "vous",
+    "openRadar": "Ouvrir OUT RADAR"
   },
   "profile": {
     "myProfile": "Mon Profil",
@@ -650,10 +651,7 @@
     "sendInvite": "Envoyer une invitation",
     "block": "Bloquer",
     "report": "Signaler",
-    "close": "Fermer",
-    "birthDateRequiredTitle": "Date de naissance requise",
-    "birthDateRequiredBody": "Pour des raisons de sécurité, OUT RADAR nécessite votre date de naissance. Renseignez-la une fois dans votre profil pour continuer.",
-    "birthDateRequiredCta": "Compléter mon profil"
+    "close": "Fermer"
   },
   "vlogs": {
     "soundLabel": "Son",
@@ -818,7 +816,11 @@
     "shareError": "Partage impossible.",
     "validBig": "VALIDE",
     "alreadyUsedBig": "DÉJÀ VALIDÉ",
-    "holder": "Titulaire"
+    "holder": "Titulaire",
+    "tooEarly": "Le scan des billets n'est autorisé que le jour de l'événement.",
+    "opensOn": "Le contrôle ouvrira le {{date}} à 00h00.",
+    "eventEnded": "L'événement est terminé : le contrôle des billets est fermé.",
+    "manualPlaceholder": "Code à 8 caractères (ex. A1B2C3D4)"
   },
   "categories": {
     "all": "Tout",
@@ -916,7 +918,8 @@
       "poolMin": "Participation minimale",
       "addRegDeadline": "Ajouter une date limite d'inscription",
       "regDeadline": "Date limite d'inscription",
-      "regDeadlineValue": "{{date}} à {{time}}"
+      "regDeadlineValue": "{{date}} à {{time}}",
+      "categoryRequired": "Choisissez une catégorie pour continuer."
     },
     "privateOptions": {
       "title": "Options de l'événement privé",
@@ -1032,7 +1035,9 @@
       "serverError": "Erreur de connexion au serveur",
       "published": "🎉 Événement publié avec succès !",
       "publishError": "Erreur lors de la publication",
-      "kycPool": "Votre compte doit être vérifié (KYC) pour activer la cagnotte."
+      "kycPool": "Votre compte doit être vérifié (KYC) pour activer la cagnotte.",
+      "categoryRequired": "Choisissez une catégorie pour l'événement.",
+      "duplicatePrefilled": "Informations reprises. Choisissez la date de la nouvelle édition."
     }
   },
   "eventDetails": {
@@ -1210,7 +1215,9 @@
       "declined": "Demande refusée",
       "declineError": "Erreur lors du refus",
       "accepted": "Demande acceptée",
-      "mustJoin": "Rejoignez l'événement pour accéder à cet espace."
+      "mustJoin": "Rejoignez l'événement pour accéder à cet espace.",
+      "eventFull": "L'événement est complet : impossible d'accepter cette demande.",
+      "approveError": "Impossible d'accepter la demande. Réessayez."
     },
     "tabs": {
       "details": "Détails",
@@ -1227,7 +1234,14 @@
       "success": "Vous avez quitté l'événement",
       "error": "Impossible de quitter l'événement. Réessayez.",
       "paidError": "Votre participation a été payée : pour l'annuler, faites une demande de remboursement."
-    }
+    },
+    "requestUserFallback": "Utilisateur",
+    "declineRequest": "Refuser",
+    "acceptRequest": "Accepter",
+    "newEdition": "Programmer une nouvelle édition",
+    "reschedule": "Reporter l'événement",
+    "checkedInAt": "Entré à {{time}}",
+    "ticketsCheckedIn": "· {{done}}/{{total}} billets"
   },
   "payment": {
     "summaryTitle": "Résumé de la transaction",
@@ -1451,7 +1465,8 @@
       "PENDING": "En attente"
     },
     "youApproved": "Vous avez approuvé cette demande",
-    "youRejected": "Vous avez refusé cette demande"
+    "youRejected": "Vous avez refusé cette demande",
+    "processingDelay": "Les demandes de retrait sont traitées sous 24h à 72h ouvrées."
   },
   "validatorVote": {
     "startedTitle": "Vote lancé !",
@@ -1982,7 +1997,9 @@
     "nearbyCount_one": "{{count}} Outster à proximité",
     "nearbyCount_other": "{{count}} Outsters à proximité",
     "inviteInfo": "Une notification sera envoyée à {{name}}. Si elle accepte, vous pourrez discuter ensemble pour organiser la sortie.",
-    "reessayer": "Réessayer"
+    "reessayer": "Réessayer",
+    "kycRequiredForFilter": "Vous devez faire certifier votre profil (KYC) pour utiliser ce filtre.",
+    "certifyMyProfile": "Faire certifier mon profil"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Recherche d'Outsters à proximité...",
@@ -2059,7 +2076,14 @@
     "lUtilisateurNePourraPlus": "L'utilisateur ne pourra plus vous envoyer de messages, voir votre profil complet ni interagir avec vous.",
     "commonEvents_one": "{{n}} événement en commun",
     "commonEvents_other": "{{n}} événements en commun",
-    "cannotView": "Vous ne pouvez pas voir ce profil ou il n'existe pas."
+    "cannotView": "Vous ne pouvez pas voir ce profil ou il n'existe pas.",
+    "upcomingSheetTitle": "Prochains événements ({{count}})",
+    "upcomingEmpty": "Aucun événement à venir.",
+    "upcomingRole": {
+      "organizer": "Organisateur",
+      "cohost": "Co-organisateur",
+      "participant": "Participation confirmée"
+    }
   },
   "accountMenu": {
     "membreActif": "Membre actif",
@@ -2239,7 +2263,13 @@
     "nonLuesCount": "Non lues ({{count}})",
     "participantParti": "Participant parti",
     "participantLeftTitle": "Un participant est parti",
-    "participantLeftBody": "{{name}} a quitté votre événement « {{event}} »."
+    "participantLeftBody": "{{name}} a quitté votre événement « {{event}} ».",
+    "joinApprovedTitle": "Demande acceptée !",
+    "joinApprovedTicketBody": "Votre demande pour {{event}} a été acceptée ! Votre billet est disponible.",
+    "reminderJ3Title": "J-3 !",
+    "reminderJ3Body": "J-3 avant {{event}} ! Préparez-vous.",
+    "reminderJ1Title": "C'est bientôt !",
+    "reminderJ1Body": "Plus que {{hours}}h avant {{event}} ! Est-ce que votre outfit est prêt ? ✨"
   },
   "forgotPassword": {
     "veuillezSelectionnerSmsOuWhatsapp": "Veuillez sélectionner SMS ou Whatsapp.",
@@ -2844,5 +2874,10 @@
     "save": "Enregistrer",
     "saved": "Centres d'intérêt mis à jour",
     "error": "Impossible d'enregistrer vos centres d'intérêt. Réessayez."
+  },
+  "eventStatus": {
+    "live": "En cours",
+    "upcoming": "Événement à venir",
+    "ended": "Événement terminé"
   }
 }

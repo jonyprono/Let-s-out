@@ -8,6 +8,26 @@
     }
   },
   "rewrites": [
+    {
+      "source": "/events/:id",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(facebookexternalhit|Facebot|facebookcatalog|WhatsApp|TelegramBot|Twitterbot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|Snapchat|redditbot|Applebot|vkShare|Embedly|Googlebot|bingbot).*" }],
+      "destination": "https://let-s-out-production.up.railway.app/api/v1/share/events/:id"
+    },
+    {
+      "source": "/event/join/:code",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(facebookexternalhit|Facebot|facebookcatalog|WhatsApp|TelegramBot|Twitterbot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|Snapchat|redditbot|Applebot|vkShare|Embedly|Googlebot|bingbot).*" }],
+      "destination": "https://let-s-out-production.up.railway.app/api/v1/share/event/join/:code"
+    },
+    {
+      "source": "/videos/:id",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(facebookexternalhit|Facebot|facebookcatalog|WhatsApp|TelegramBot|Twitterbot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|Snapchat|redditbot|Applebot|vkShare|Embedly|Googlebot|bingbot).*" }],
+      "destination": "https://let-s-out-production.up.railway.app/api/v1/share/videos/:id"
+    },
+    {
+      "source": "/vlogs/:id",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(facebookexternalhit|Facebot|facebookcatalog|WhatsApp|TelegramBot|Twitterbot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|Snapchat|redditbot|Applebot|vkShare|Embedly|Googlebot|bingbot).*" }],
+      "destination": "https://let-s-out-production.up.railway.app/api/v1/share/vlogs/:id"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

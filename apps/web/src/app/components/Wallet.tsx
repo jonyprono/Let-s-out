@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { PayoutDelayNotice } from '@/components/shared/PayoutDelayNotice'
 import { motion } from 'motion/react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { 
@@ -344,6 +345,8 @@ export function Wallet() {
                 <span className="text-[14px] font-semibold text-green-600 dark:text-green-400">{t('wallet.free')}</span>
               </div>
             </div>
+
+            <PayoutDelayNotice />
 
             <Button 
               onClick={() => withdrawMutation.mutate({ 

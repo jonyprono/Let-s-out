@@ -38,6 +38,14 @@ export function TicketScanner() {
     enabled: !!id,
   })
   const isOrganizer = !!event && !!user && (event.creatorId === user.id || (event.coHostIds || []).includes(user.id))
+  // Indication : avant le jour J, le serveur refuse tout scan (CHECKIN_TOO_EARLY). Comparaison des jours
+  // calendaires de l'appareil ; l'autorité reste le serveur (fuseau des événements).
+  const isBeforeEventDay = (() => {
+    if (!event?.startAt) return false
+    const start = new Date(event.startAt)
+    const dayStart = new Date(start.getFullYear(), start.getMonth(), start.getDate())
+    return Date.now() < dayStart.getTime()
+  })()
 
   // Libère toujours la caméra en quittant l'écran
   useEffect(() => () => {
@@ -184,6 +192,8 @@ export function TicketScanner() {
       : refusal.code === 'TICKET_NOT_CONFIRMED' ? t('tickets.notConfirmed')
       : refusal.code === 'TICKET_WRONG_EVENT' ? t('tickets.wrongEvent')
       : refusal.code === 'CHECKIN_FORBIDDEN' ? t('tickets.forbidden')
+      : refusal.code === 'CHECKIN_TOO_EARLY' ? t('tickets.tooEarly')
+      : refusal.code === 'CHECKIN_EVENT_ENDED' ? t('tickets.eventEnded')
       : t('tickets.notFound')
     : ''
 
@@ -204,6 +214,13 @@ export function TicketScanner() {
         {event && !isOrganizer && (
           <div className="rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 text-[13px] text-red-800 dark:text-red-300" role="alert">
             <span>{t('tickets.forbidden')}</span>
+          </div>
+        )}
+
+        {event && isOrganizer && isBeforeEventDay && (
+          <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 text-[13px] text-amber-800 dark:text-amber-300" role="status">
+            <p className="font-semibold"><span>{t('tickets.tooEarly')}</span></p>
+            <p className="mt-1"><span>{t('tickets.opensOn', { date: fmt(event.startAt, { weekday: 'long', day: 'numeric', month: 'long' }) })}</span></p>
           </div>
         )}
 
@@ -253,7 +270,9 @@ export function TicketScanner() {
                   {refusal.checkedInBy && <span>{' '}{t('tickets.by', { name: refusal.checkedInBy })}</span>}
                 </p>
               )}
-              <p className="text-[13px] opacity-90"><span>{t('tickets.denyEntry')}</span></p>
+              {refusal.code !== 'CHECKIN_TOO_EARLY' && refusal.code !== 'CHECKIN_EVENT_ENDED' && (
+                <p className="text-[13px] opacity-90"><span>{t('tickets.denyEntry')}</span></p>
+              )}
             </div>
           )}
         </div>
@@ -281,7 +300,7 @@ export function TicketScanner() {
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
-              placeholder="LO1.…"
+              placeholder={t('tickets.manualPlaceholder')}
               className="flex-1 min-w-0 h-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1A1A1A] px-3 font-mono text-[16px] text-gray-900 dark:text-white"
             />
             <button type="submit" disabled={!isOrganizer || !manualCode.trim() || isChecking} className="px-4 h-11 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-[13px] font-semibold disabled:opacity-40">

@@ -1,4 +1,7 @@
 import { format } from 'date-fns'
+import { useTranslation } from 'react-i18next'
+import { LiveBadge } from '@/components/ui/LiveBadge'
+import { eventTimeStatus } from '@/lib/event-status'
 import { useState, useRef, useMemo } from 'react'
 import { Share2, MessageCircle, Star, Heart, MoreVertical } from 'lucide-react'
 import { SafeImage } from '@/components/shared/SafeImage'
@@ -323,10 +326,14 @@ export function FeaturedEventCard({
 
       {/* Top row: badge + heart */}
       <div className="absolute top-3 left-3 right-3 flex items-start justify-between pointer-events-none">
-        <div className="flex items-center gap-1 bg-[#B45309] px-2 py-1 rounded-lg pointer-events-auto">
-          <span className="text-[10px]">⭐</span>
-          <span className="text-white text-[10px] font-bold tracking-wider">{badge}</span>
-        </div>
+        {eventTimeStatus(event) === 'live' ? (
+          <LiveBadge className="pointer-events-auto" />
+        ) : (
+          <div className="flex items-center gap-1 bg-[#B45309] px-2 py-1 rounded-lg pointer-events-auto">
+            <span className="text-[10px]">⭐</span>
+            <span className="text-white text-[10px] font-bold tracking-wider">{badge}</span>
+          </div>
+        )}
         <div className="flex items-center gap-2 pointer-events-auto">
           <button
             onClick={e => { e.stopPropagation(); setShowShareModal(true); }}
@@ -430,9 +437,13 @@ export function SquareEventCard({
 
       {/* Badge + Heart */}
       <div className="absolute top-2.5 left-2.5 right-2.5 flex items-start justify-between pointer-events-none">
-        <div className="bg-[#FF7A00] px-2 py-0.5 rounded-md pointer-events-auto">
-          <span className="text-white text-[9px] font-bold tracking-wider uppercase">{badge}</span>
-        </div>
+        {eventTimeStatus(event) === 'live' ? (
+          <LiveBadge size="sm" className="pointer-events-auto" />
+        ) : (
+          <div className="bg-[#FF7A00] px-2 py-0.5 rounded-md pointer-events-auto">
+            <span className="text-white text-[9px] font-bold tracking-wider uppercase">{badge}</span>
+          </div>
+        )}
         <div className="flex items-center gap-1.5 pointer-events-auto">
           <button
             onClick={e => { e.stopPropagation(); setShowShareModal(true); }}
@@ -509,6 +520,7 @@ export function RowEventCard({
   /** Nom accessible du bouton ⋮ (texte traduit fourni par l'appelant) */
   moreLabel?: string
 }) {
+  const { t } = useTranslation()
   const { isFavorite, addFavorite, removeFavorite } = useFavoritesStore()
   const isSaved = isFavorite(event.id)
 
@@ -527,9 +539,9 @@ export function RowEventCard({
   const tags = event.tags || []
   const isCompact = layout === 'compact'
   
-  // Status check for "Événement à venir"
-  const isUpcoming = new Date(event.startAt) > new Date()
-  
+  // Statut : à venir / en cours / terminé
+  const timeStatus = eventTimeStatus(event)
+
   return (
     <div
       className="flex flex-col w-full bg-white dark:bg-[#1A1A1A] rounded-[24px] overflow-visible shadow-[0_2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_12px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-white/5 active:scale-[0.98] transition-transform cursor-pointer"
@@ -560,16 +572,19 @@ export function RowEventCard({
           </div>
 
           {/* Bottom-left: Status Badge */}
-          {!isCompact && (
-            isUpcoming ? (
+          {timeStatus === 'live' ? (
+            // En cours : visible aussi sur la carte compacte
+            <LiveBadge size="sm" className="absolute bottom-3 left-2" />
+          ) : !isCompact && (
+            timeStatus === 'upcoming' ? (
               <div className="absolute bottom-3 left-2 right-2 bg-black/60 rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
                 <div className="w-2 h-2 rounded-full bg-[#FF7A00] shrink-0" />
-                <span className="text-white text-[9px] font-semibold tracking-wide truncate">Événement à venir</span>
+                <span className="text-white text-[9px] font-semibold tracking-wide truncate"><span>{t('eventStatus.upcoming')}</span></span>
               </div>
             ) : (
               <div className="absolute bottom-3 left-2 right-2 bg-black/70 rounded-full px-2.5 py-1 flex items-center gap-1.5 border border-white/15">
                 <div className="w-2 h-2 rounded-full bg-gray-400 shrink-0" />
-                <span className="text-gray-200 text-[9px] font-semibold tracking-wide truncate">Événement terminé</span>
+                <span className="text-gray-200 text-[9px] font-semibold tracking-wide truncate"><span>{t('eventStatus.ended')}</span></span>
               </div>
             )
           )}

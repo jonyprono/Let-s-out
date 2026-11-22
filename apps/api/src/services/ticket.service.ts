@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
 import QRCode from 'qrcode'
+import { checkInWindow } from '../config/event-time'
 
 /**
  * Billets d'événements : jeton secret, QR code, contrôle d'entrée.
@@ -29,6 +30,37 @@ export function parseTicketPayload(raw: unknown): string | null {
   const value = raw.trim()
   const token = value.startsWith(TICKET_PREFIX) ? value.slice(TICKET_PREFIX.length) : value
   return TOKEN_PATTERN.test(token) ? token : null
+}
+
+/** Code court imprimé sur le billet (8 caractères), saisi à la main si la caméra ne fonctionne pas */
+const SHORT_CODE_PATTERN = /^[A-Za-z0-9_-]{8}$/
+
+/**
+ * Code court → jeton du billet, limité à l'événement contrôlé :
+ *  - billet individuel (billetterie) : 8 premiers caractères du jeton (affichés en majuscules) ;
+ *  - billet unique (réservation) : 8 derniers caractères de la référence de réservation.
+ * Plusieurs correspondances (ambiguïté) → null : il faut alors scanner le QR.
+ */
+async function resolveShortCode(prisma: PrismaClient, eventId: string, raw: unknown): Promise<string | null> {
+  if (typeof raw !== 'string') return null
+  const code = raw.replace(/\s+/g, '')
+  if (!SHORT_CODE_PATTERN.test(code)) return null
+
+  const tickets = await prisma.ticket.findMany({
+    where: { eventId, ticketToken: { startsWith: code, mode: 'insensitive' } },
+    select: { ticketToken: true },
+    take: 2,
+  })
+  const bookings = await prisma.booking.findMany({
+    where: { eventId, status: 'CONFIRMED', id: { endsWith: code.toLowerCase() } },
+    select: { id: true, _count: { select: { tickets: true } } },
+    take: 2,
+  })
+  // Une commande de billetterie n'a pas de billet « réservation » : seuls ses billets individuels comptent
+  const bookingMatches = bookings.filter((b) => b._count.tickets === 0)
+  if (tickets.length + bookingMatches.length !== 1) return null
+  if (tickets.length === 1) return tickets[0].ticketToken
+  return ensureTicketToken(prisma, bookingMatches[0].id)
 }
 
 /** Garantit qu'une réservation a un jeton (génération paresseuse pour les réservations existantes). */
@@ -99,13 +131,23 @@ async function checkInIndividualTicket(prisma: PrismaClient, eventId: string, sc
 }
 
 export async function checkInTicket(prisma: PrismaClient, eventId: string, scannerId: string, rawPayload: unknown): Promise<CheckInResult> {
-  const event = await prisma.event.findUnique({ where: { id: eventId }, select: { id: true, creatorId: true, coHostIds: true } })
+  const event = await prisma.event.findUnique({ where: { id: eventId }, select: { id: true, creatorId: true, coHostIds: true, startAt: true, endAt: true } })
   if (!event) return { status: 404, body: { error: 'Événement introuvable.', code: 'EVENT_NOT_FOUND' } }
   if (!canCheckIn(event, scannerId)) {
     return { status: 403, body: { error: 'Seuls l\'organisateur et les co-organisateurs peuvent valider les billets.', code: 'CHECKIN_FORBIDDEN' } }
   }
 
-  const token = parseTicketPayload(rawPayload)
+  // Contrôle d'entrée uniquement le jour J (dès 00h00, fuseau des événements) et jusqu'à la fin
+  const checkInState = checkInWindow(event.startAt, event.endAt)
+  if (checkInState === 'TOO_EARLY') {
+    return { status: 403, body: { error: "Le scan des billets n'est autorisé que le jour de l'événement.", code: 'CHECKIN_TOO_EARLY', startAt: event.startAt } }
+  }
+  if (checkInState === 'ENDED') {
+    return { status: 403, body: { error: "L'événement est terminé : le contrôle des billets est fermé.", code: 'CHECKIN_EVENT_ENDED' } }
+  }
+
+  // QR scanné / jeton complet, sinon code court du billet saisi à la main
+  const token = parseTicketPayload(rawPayload) ?? (await resolveShortCode(prisma, eventId, rawPayload))
   if (!token) return { status: 400, body: { error: 'QR code non reconnu : ce n\'est pas un billet Let\'s Out.', code: 'TICKET_INVALID_FORMAT' } }
 
   // Billet individuel d'abord, sinon ancien billet porté par la réservation

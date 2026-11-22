@@ -251,6 +251,7 @@ model Event {
   medias           EventMedia[]
   videos           EventVideo[]
   reports          Report[]
+  reminder72hSent  Boolean       @default(false) // Rappel J-3 envoyé
   reminder24hSent  Boolean       @default(false)
   reminder2hSent   Boolean       @default(false)
   genderRestriction GenderRestriction @default(ANY)

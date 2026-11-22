@@ -81,7 +81,7 @@ async function radarAgeDenial(
   if (ageFromStoredDate(birthDate) < minAge) {
     return {
       status: 403,
-      body: { error: `OUT RADAR est réservé aux membres de ${minAge} ans et plus.`, code: 'UNDERAGE', minSignupAge: minAge, needsBirthDate: false },
+      body: { error: `OUT RADAR est réservé aux membres de ${minAge} ans et plus.`, code: 'UNDERAGE', minSignupAge: minAge },
     }
   }
   return null
@@ -298,11 +298,14 @@ export default async function radarRoutes(app: FastifyInstance) {
     // 3. Âge du chercheur ≥ MIN_SIGNUP_AGE
     const userProfile = await app.prisma.profile.findUnique({
       where: { userId },
-      select: { birthDate: true, kycBirthDate: true },
+      select: { birthDate: true, kycBirthDate: true, kycStatus: true },
     })
     const ageDenied = await radarAgeDenial(app, userProfile?.kycBirthDate || userProfile?.birthDate)
     if (ageDenied) return reply.code(ageDenied.status).send(ageDenied.body)
     const minAge = await getMinSignupAge(app.prisma)
+    // Filtre « Profils vérifiés uniquement » réservé aux comptes eux-mêmes vérifiés (KYC) : pour un
+    // compte non vérifié (ancienne version de l'app), le filtre est simplement ignoré.
+    const applyVerifiedOnly = !!verifiedOnly && userProfile?.kycStatus === 'verified'
 
     const now = new Date()
 
@@ -413,7 +416,7 @@ export default async function radarRoutes(app: FastifyInstance) {
       // Badge = KYC validé uniquement. `user.isVerified` vaut true dès l'inscription
       // (simple OTP téléphone / e-mail, cf. auth.service register) : ne PAS l'utiliser ici.
       const isVerified = item.user.profile?.kycStatus === 'verified'
-      if (verifiedOnly && !isVerified) continue
+      if (applyVerifiedOnly && !isVerified) continue
 
       // Filtre Type de sortie
       if (outingType && outingType !== 'ALL' && item.outingType !== outingType) {

@@ -13,6 +13,7 @@ import {
   type PayoutInfo, type PayoutNetwork, type TicketSales,
 } from '../api'
 import { AddTierButton, PayoutAccountFields, PayoutKycNotice, TierCard, TierFormSheet, formatFcfa } from './TicketingFields'
+import { PayoutDelayNotice } from '@/components/shared/PayoutDelayNotice'
 
 type EditingTier = { id: string; name: string; description: string | null; price: number; totalQuantity: number; soldQuantity: number } | 'new' | null
 
@@ -311,6 +312,7 @@ export function TicketingManager({ event }: { event: { id: string; creatorId: st
       <BottomSheet title={t('ticketing.payout.title')} open={payoutOpen} onClose={() => setPayoutOpen(false)}>
         <div className="space-y-4">
           <PayoutAccountFields value={payout} onChange={(v) => { setPayout(v); setPayoutErr(null) }} errorField={payoutErr} />
+          <PayoutDelayNotice />
           <PrimaryButton onClick={submitPayout} loading={savePayout.isPending} disabled={savePayout.isPending}>
             <span>{t('ticketing.payout.save')}</span>
           </PrimaryButton>

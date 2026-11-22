@@ -1214,6 +1214,17 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     }
 
+    // Report d'un événement TERMINÉ (nouvelle date) : uniquement s'il n'y a pas d'argent en jeu.
+    // Billets vendus, entrée payante ou cagnotte suivent leurs propres échéances (versements,
+    // remboursements) calées sur la date de fin : on ne les déplace pas après coup.
+    const changesDates = updateData.startAt !== undefined || updateData.endAt !== undefined
+    if (changesDates && event.endAt < new Date()) {
+      const hasMoney = (event.price ?? 0) > 0 || !!event.ticketingEnabled || (event.poolTarget ?? 0) > 0 || (event.poolCollected ?? 0) > 0
+      if (hasMoney) {
+        return reply.code(409).send({ error: 'Un événement terminé avec paiement, billetterie ou cagnotte ne peut pas être reporté.', code: 'RESCHEDULE_PAID_EVENT' })
+      }
+    }
+
     const updated = await app.prisma.event.update({
       where: { id },
       data: {
@@ -1541,18 +1552,17 @@ export default async function eventsRoutes(app: FastifyInstance) {
     })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
 
-    // If private event with hidden participant profiles, only organizer/co-hosts can see the list
-    if (event.isPrivate && !event.showParticipants) {
-      let callerId: string | null = null
-      try {
-        const decoded: any = await req.jwtVerify()
-        callerId = decoded?.sub
-      } catch (_) {}
+    // Appelant (route publique : la connexion est facultative)
+    let callerId: string | null = null
+    try {
+      const decoded: any = await req.jwtVerify()
+      callerId = decoded?.sub ?? null
+    } catch (_) {}
+    const isOrganizer = !!callerId && (event.creatorId === callerId || (event.coHostIds || []).includes(callerId))
 
-      const isOrganizer = callerId && (event.creatorId === callerId || (event.coHostIds || []).includes(callerId))
-      if (!isOrganizer) {
-        return reply.send({ data: [] })
-      }
+    // If private event with hidden participant profiles, only organizer/co-hosts can see the list
+    if (event.isPrivate && !event.showParticipants && !isOrganizer) {
+      return reply.send({ data: [] })
     }
 
     const bookings = await app.prisma.booking.findMany({
@@ -1561,7 +1571,9 @@ export default async function eventsRoutes(app: FastifyInstance) {
         user: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true } } } },
         payoutItems: {
           select: { amountDeducted: true, payoutRequest: { select: { status: true } } }
-        }
+        },
+        // Entrées validées des billets individuels (billetterie) : heure d'entrée côté organisateur
+        tickets: { select: { checkedInAt: true } },
       },
       take: Number(limit),
       skip: Number(offset),
@@ -1594,8 +1606,19 @@ export default async function eventsRoutes(app: FastifyInstance) {
       const deducted = b.payoutItems
         .filter((item: any) => item.payoutRequest.status !== 'REJECTED' && item.payoutRequest.status !== 'CANCELLED')
         .reduce((sum: number, item: any) => sum + item.amountDeducted, 0);
+      // SÉCURITÉ : le jeton du billet (contenu du QR) ne doit JAMAIS sortir de cette route publique —
+      // avant, `...b` l'exposait et permettait d'entrer avec le billet d'un autre participant.
+      const { ticketToken: _ticketToken, checkedInById: _checkedInById, tickets, checkedInAt, ...rest } = b
+      // Heure d'entrée (réservation, ou 1er billet individuel validé) : organisateurs uniquement
+      const ticketEntries = tickets.map(t => t.checkedInAt).filter((d): d is Date => !!d).sort((x, y) => x.getTime() - y.getTime())
+      const entryAt = checkedInAt ?? ticketEntries[0] ?? null
       return {
-        ...b,
+        ...rest,
+        ...(isOrganizer && {
+          checkedInAt: entryAt,
+          ticketsCount: tickets.length,
+          ticketsCheckedIn: ticketEntries.length,
+        }),
         remainingAmount: Math.max(0, b.totalPaid - deducted)
       }
     });
@@ -1684,7 +1707,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
         where: { eventId: id, status: 'CONFIRMED' }
       })
       if (confirmedCount >= event.maxAttendees) {
-        return reply.code(400).send({ error: "L'événement est complet — impossible d'approuver cette demande." })
+        return reply.code(400).send({ error: "L'événement est complet — impossible d'approuver cette demande.", code: 'EVENT_FULL' })
       }
     }
 
@@ -1703,15 +1726,24 @@ export default async function eventsRoutes(app: FastifyInstance) {
           type: 'JOIN_APPROVED',
           title: '✅ Demande approuvée !',
           body: `Votre demande pour rejoindre "${event.title}" a été approuvée. Finalisez votre inscription en effectuant le paiement.`,
-          data: { eventId: id, screen: 'event-details', requiresPayment: 'true' }
+          data: { eventId: id, eventTitle: event.title, screen: 'event-details', requiresPayment: 'true' }
         })
       } catch (e) { app.log.warn(`Failed to send approval notification: ${e}`) }
     } else {
-      // Free event: confirm directly + increment counter + add to conversation
-      await app.prisma.$transaction([
-        app.prisma.booking.update({ where: { id: bookingId }, data: { status: 'CONFIRMED' } }),
-        app.prisma.event.update({ where: { id }, data: { currentAttendees: { increment: 1 } } }),
-      ])
+      // Free event: confirm directly + increment counter + add to conversation.
+      // Passage PENDING → CONFIRMED conditionnel : un double appui (ou deux co-organisateurs en même
+      // temps) n'incrémente pas deux fois le compteur de participants.
+      const confirmed = await app.prisma.$transaction(async (tx) => {
+        const upd = await tx.booking.updateMany({ where: { id: bookingId, status: 'PENDING' }, data: { status: 'CONFIRMED' } })
+        if (upd.count === 0) return false
+        await tx.event.update({ where: { id }, data: { currentAttendees: { increment: 1 } } })
+        return true
+      })
+      if (!confirmed) return reply.code(400).send({ error: 'Request is not pending' })
+
+      // Billet d'accès généré immédiatement (QR unique), avant la notification « votre billet est prêt »
+      let ticketToken: string | null = null
+      try { ticketToken = await ensureTicketToken(app.prisma, bookingId) } catch (e) { app.log.warn(`Failed to create ticket token on approval: ${e}`) }
 
       // Add to event conversation (only now — not during the request)
       try {
@@ -1730,13 +1762,38 @@ export default async function eventsRoutes(app: FastifyInstance) {
         await createAndSendNotification(app, {
           userId: booking.userId,
           type: 'JOIN_APPROVED',
-          title: '✅ Demande approuvée !',
-          body: `Votre demande pour rejoindre "${event.title}" a été approuvée. Bienvenue !`,
-          data: { eventId: id, screen: 'event-details' }
+          title: '✅ Demande acceptée !',
+          // Texte traduit côté app (lib/notification-text.ts) d'après data.eventTitle ; celui-ci sert au push natif
+          body: `Votre demande pour ${event.title} a été acceptée ! Votre billet est disponible.`,
+          data: { eventId: id, eventTitle: event.title, ticketReady: 'true', screen: 'event-details' }
         })
       } catch (e) { app.log.warn(`Failed to send approval notification: ${e}`) }
       // Billet d'accès émis (réservation CONFIRMED) : avertissement « QR code personnel »
       await notifyAccessTicketIssued(app, { userId: booking.userId, eventId: id, eventTitle: event.title, bookingId })
+
+      // Billet par e-mail, comme pour un événement gratuit rejoint sans approbation
+      if (ticketToken) {
+        try {
+          const approvedUser = await app.prisma.user.findUnique({ where: { id: booking.userId }, select: { email: true } })
+          if (approvedUser?.email) {
+            const approvedProfile = await app.prisma.profile.findUnique({ where: { userId: booking.userId }, select: { displayName: true } })
+            await new EmailService().sendTicketEmail({
+              to: approvedUser.email,
+              userName: approvedProfile?.displayName || 'Cher utilisateur',
+              eventName: event.title,
+              eventDate: event.startAt,
+              location: event.address || event.city || 'Lieu non spécifié',
+              bookingId,
+              ticketToken,
+              price: 0,
+              quantity: 1,
+              coverImage: event.coverUrl || undefined,
+            })
+          }
+        } catch (err) {
+          app.log.error(`Failed to send ticket email after approval for booking ${bookingId}: ${err}`)
+        }
+      }
     } // end else (free event)
 
     return reply.send({ message: 'Request approved' })

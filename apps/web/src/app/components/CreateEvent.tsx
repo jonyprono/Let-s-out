@@ -174,6 +174,13 @@ export function CreateEvent({ onBack }: CreateEventProps) {
     try { return format(new Date(`2000-01-01T${hhmm}`), 'p', { locale: dateLocale() }) } catch { return hhmm }
   }
   const location = useLocation()
+  // « Programmer une nouvelle édition » : on part d'un formulaire vierge (jamais du brouillon d'une
+  // autre création), avant que les champs ci-dessous ne lisent le brouillon. Une fois par montage.
+  const draftResetDoneRef = useRef(false)
+  if (!draftResetDoneRef.current) {
+    draftResetDoneRef.current = true
+    if (location.state?.duplicateFrom && !location.state?.editEventId) sessionDraft = null
+  }
   const me = useAuthStore((state: any) => state.user)
   // isVerified on User model = phone/email OTP verified (always true after signup)
   // For financial features (cagnotte/paid), we need KYC verification: profile.kycStatus === 'verified'
@@ -382,18 +389,50 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   useEffect(() => {
     const editEventId = location.state?.editEventId
     const eventData = location.state?.eventData
+    // Report d'un événement terminé : anciennes dates non reprises, l'organisateur en choisit de nouvelles
+    const isReschedule = !!location.state?.reschedule
+    const duplicateFrom = location.state?.duplicateFrom
+
+    // Nouvelle édition d'un événement passé : contenu repris (titre, description, catégorie, lieu,
+    // adresse, visuels, visibilité), date et heure laissées vides. Aucun paiement, billetterie,
+    // cagnotte ni co-organisateur n'est recopié. L'événement d'origine n'est pas modifié.
+    if (duplicateFrom && !editEventId) {
+      const d = duplicateFrom
+      if (d.title) setTitle(d.title)
+      if (d.category) setCategory(d.category)
+      if (d.description) setDescription(d.description)
+      if (d.city) setCity(d.city)
+      if (d.address) setAddress(d.address)
+      if (d.latitude != null) { setLat(d.latitude); setTempLat(d.latitude) }
+      if (d.longitude != null) { setLon(d.longitude); setTempLon(d.longitude) }
+      if (d.isPrivate !== undefined) setPrivacy(d.isPrivate ? 'PRIVATE' : 'PUBLIC')
+      if (d.requiresApproval !== undefined) setRequiresApproval(Boolean(d.requiresApproval))
+      if (d.isPrivate) {
+        if (d.showInFeed !== undefined) setShowInFeed(Boolean(d.showInFeed))
+        if (d.showParticipants !== undefined) setShowParticipants(Boolean(d.showParticipants))
+        if (d.allowGuestShare !== undefined) setAllowGuestInvites(Boolean(d.allowGuestShare))
+      }
+      const urls: string[] = (d.mediaUrls?.length ? d.mediaUrls : [d.coverUrl]).filter(Boolean)
+      if (urls.length) { setCoverPreviews(urls.slice(0, 4)); setCoverFiles([]) }
+      setStartDate(''); setStartTime(''); setHasEndDate(false); setEndDate(''); setEndTime('')
+      setRegEndDate(''); setRegEndTime('')
+      // Consommé : un retour sur cet écran reprend le brouillon (avec la nouvelle date saisie), sans re-remplir
+      navigate(location.pathname, { replace: true, state: null })
+      toast.info(t('createEvent.toasts.duplicatePrefilled'))
+      return
+    }
 
     const applyEventData = (d: any) => {
       if (d.creator) setEventCreator(d.creator)
       if (d.status) setEventStatus(d.status)
       if (d.title) setTitle(d.title)
       if (d.category) setCategory(d.category)
-      if (d.startAt) {
+      if (d.startAt && !isReschedule) {
         const dt = new Date(d.startAt)
         setStartDate(dt.toISOString().split('T')[0])
         setStartTime(dt.toISOString().split('T')[1].slice(0, 5))
       }
-      if (d.endAt) {
+      if (d.endAt && !isReschedule) {
         const dt = new Date(d.endAt)
         setEndDate(dt.toISOString().split('T')[0])
         setEndTime(dt.toISOString().split('T')[1].slice(0, 5))
@@ -424,7 +463,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         setPoolMinAmount(String(d.poolMinAmount))
       }
       if (d.poolDescription) setPoolDescription(d.poolDescription)
-      if (d.registrationDeadline) {
+      if (d.registrationDeadline && !isReschedule) {
         const rd = new Date(d.registrationDeadline)
         setRegEndDate(rd.toISOString().split('T')[0])
         setRegEndTime(rd.toISOString().split('T')[1].slice(0, 5))
@@ -481,7 +520,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // Enable/disable 'Next' button
   const isDescriptionValid = description.trim().length >= 3
   const isStartDateValid = startDate ? new Date(startDate) >= new Date(new Date().setHours(0, 0, 0, 0)) : false;
-  const canGoToStep2 = isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid
+  const canGoToStep2 = isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid && !!category
   const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
   // Seul le créateur définit le compte de versement (un co-organisateur qui modifie l'événement n'y touche pas)
   const canEditPayout = !isEdit || !eventCreator || eventCreator.id === me?.id
@@ -535,7 +574,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
 
   const handleSubmit = async () => {
     if (formStep === 1) {
-      if (!canGoToStep2) { toast.error(t('createEvent.toasts.fillRequired')); return }
+      if (!canGoToStep2) {
+        const onlyCategoryMissing = !category && isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid
+        toast.error(onlyCategoryMissing ? t('createEvent.toasts.categoryRequired') : t('createEvent.toasts.fillRequired'))
+        return
+      }
       setFormStep(2)
       return
     }
@@ -631,7 +674,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         poolDescription: enablePool && poolDescription
           ? poolDescription.trim()
           : isEdit ? null : undefined,
-        registrationDeadline: regEndDate && regEndTime ? new Date(`${regEndDate}T${regEndTime}`).toISOString() : undefined,
+        // Report : l'ancienne date limite (passée) est effacée si aucune nouvelle n'est saisie
+        registrationDeadline: regEndDate && regEndTime
+          ? new Date(`${regEndDate}T${regEndTime}`).toISOString()
+          : (location.state?.reschedule ? null : undefined),
         status: isEdit ? (eventStatus || undefined) : 'PUBLISHED',
         coHostIds: selectedCoOrgs.map(o => o.id),
       }
@@ -1355,11 +1401,14 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     <InputField
                       label={t('createEvent.fields.category')}
                       value={catLabel ?? undefined}
-                      placeholder={t('createEvent.fields.optional')}
+                      placeholder={t('categories.choose')}
                       readOnly
                       onClick={() => setShowCategorySheet(true)}
                     />
-                    <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.optional')}</span></p>
+                    {/* Catégorie obligatoire : plus de valeur par défaut (l'API classait un événement sans catégorie dans « Religion ») */}
+                    {!category && (
+                      <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.categoryRequired')}</span></p>
+                    )}
                   </div>
                 </div>
               )}

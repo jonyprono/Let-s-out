@@ -134,7 +134,7 @@ export interface CheckInSuccess {
 /** Corps des refus de validation (codes stables, à traduire côté app) */
 export interface CheckInError {
   error: string
-  code: 'CHECKIN_FORBIDDEN' | 'TICKET_INVALID_FORMAT' | 'TICKET_NOT_FOUND' | 'TICKET_WRONG_EVENT' | 'TICKET_NOT_CONFIRMED' | 'TICKET_ALREADY_USED' | 'EVENT_NOT_FOUND'
+  code: 'CHECKIN_FORBIDDEN' | 'TICKET_INVALID_FORMAT' | 'TICKET_NOT_FOUND' | 'TICKET_WRONG_EVENT' | 'TICKET_NOT_CONFIRMED' | 'TICKET_ALREADY_USED' | 'EVENT_NOT_FOUND' | 'CHECKIN_TOO_EARLY' | 'CHECKIN_EVENT_ENDED'
   firstCheckedInAt?: string | null
   checkedInBy?: string | null
   participant?: { name: string; avatarUrl: string | null }

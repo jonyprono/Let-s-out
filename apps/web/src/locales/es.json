@@ -368,7 +368,8 @@
     "modifier": "Editar",
     "supprimer": "Eliminar",
     "photo": "Foto {{v0}}",
-    "you": "tú"
+    "you": "tú",
+    "openRadar": "Abrir OUT RADAR"
   },
   "profile": {
     "myProfile": "Mi perfil",
@@ -606,10 +607,7 @@
     "sendInvite": "Enviar una invitación",
     "block": "Bloquear",
     "report": "Denunciar",
-    "close": "Cerrar",
-    "birthDateRequiredTitle": "Se requiere la fecha de nacimiento",
-    "birthDateRequiredBody": "Por motivos de seguridad, OUT RADAR necesita tu fecha de nacimiento. Introdúcela una vez en tu perfil para continuar.",
-    "birthDateRequiredCta": "Completar mi perfil"
+    "close": "Cerrar"
   },
   "vlogs": {
     "soundLabel": "Sonido",
@@ -774,7 +772,11 @@
     "shareError": "No se pudo compartir.",
     "validBig": "VÁLIDA",
     "alreadyUsedBig": "YA VALIDADA",
-    "holder": "Titular"
+    "holder": "Titular",
+    "tooEarly": "Las entradas solo se pueden escanear el día del evento.",
+    "opensOn": "El control se abrirá el {{date}} a las 00:00.",
+    "eventEnded": "El evento ha terminado: el control de entradas está cerrado.",
+    "manualPlaceholder": "Código de 8 caracteres (p. ej. A1B2C3D4)"
   },
   "myPages": {
     "title": "Mis páginas",
@@ -916,7 +918,8 @@
       "poolMin": "Aportación mínima",
       "addRegDeadline": "Añadir una fecha límite de inscripción",
       "regDeadline": "Fecha límite de inscripción",
-      "regDeadlineValue": "{{date}} a las {{time}}"
+      "regDeadlineValue": "{{date}} a las {{time}}",
+      "categoryRequired": "Elige una categoría para continuar."
     },
     "privateOptions": {
       "title": "Opciones del evento privado",
@@ -1032,7 +1035,9 @@
       "serverError": "No se pudo conectar con el servidor",
       "published": "🎉 ¡Evento publicado!",
       "publishError": "Error al publicar el evento",
-      "kycPool": "Tu cuenta debe estar verificada (KYC) para activar el bote común."
+      "kycPool": "Tu cuenta debe estar verificada (KYC) para activar el bote común.",
+      "categoryRequired": "Elige una categoría para el evento.",
+      "duplicatePrefilled": "Datos copiados. Elige la fecha de la nueva edición."
     }
   },
   "eventDetails": {
@@ -1210,7 +1215,9 @@
       "declined": "Solicitud rechazada",
       "declineError": "Error al rechazar",
       "accepted": "Solicitud aceptada",
-      "mustJoin": "Únete al evento para acceder a este espacio."
+      "mustJoin": "Únete al evento para acceder a este espacio.",
+      "eventFull": "El evento está completo: no se puede aceptar esta solicitud.",
+      "approveError": "No se pudo aceptar la solicitud. Inténtalo de nuevo."
     },
     "tabs": {
       "details": "Detalles",
@@ -1227,7 +1234,14 @@
       "success": "Has abandonado el evento",
       "error": "No se pudo abandonar el evento. Inténtalo de nuevo.",
       "paidError": "Tu participación fue pagada: para cancelarla, solicita un reembolso."
-    }
+    },
+    "requestUserFallback": "Usuario",
+    "declineRequest": "Rechazar",
+    "acceptRequest": "Aceptar",
+    "newEdition": "Programar una nueva edición",
+    "reschedule": "Aplazar el evento",
+    "checkedInAt": "Entró a las {{time}}",
+    "ticketsCheckedIn": "· {{done}}/{{total}} entradas"
   },
   "payment": {
     "summaryTitle": "Resumen de la transacción",
@@ -1451,7 +1465,8 @@
       "PENDING": "Pendiente"
     },
     "youApproved": "Has aprobado esta solicitud",
-    "youRejected": "Has rechazado esta solicitud"
+    "youRejected": "Has rechazado esta solicitud",
+    "processingDelay": "Las solicitudes de retiro se procesan en un plazo de 24 a 72 horas hábiles."
   },
   "validatorVote": {
     "startedTitle": "¡Votación iniciada!",
@@ -1982,7 +1997,9 @@
     "nearbyCount_one": "{{count}} Outster cerca",
     "nearbyCount_other": "{{count}} Outsters cerca",
     "inviteInfo": "Se le enviará una notificación a {{name}}. Si acepta, podréis hablar para organizar la salida.",
-    "reessayer": "Reintentar"
+    "reessayer": "Reintentar",
+    "kycRequiredForFilter": "Debes verificar tu perfil (KYC) para usar este filtro.",
+    "certifyMyProfile": "Verificar mi perfil"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Buscando a Outsters por aquí...",
@@ -2059,7 +2076,14 @@
     "lUtilisateurNePourraPlus": "El usuario ya no podrá enviarte mensajes, ver tu perfil completo ni interactuar contigo.",
     "commonEvents_one": "{{n}} evento en común",
     "commonEvents_other": "{{n}} eventos en común",
-    "cannotView": "No puedes ver este perfil o es que no existe."
+    "cannotView": "No puedes ver este perfil o es que no existe.",
+    "upcomingSheetTitle": "Próximos eventos ({{count}})",
+    "upcomingEmpty": "No hay eventos próximos.",
+    "upcomingRole": {
+      "organizer": "Organizador",
+      "cohost": "Coorganizador",
+      "participant": "Participación confirmada"
+    }
   },
   "accountMenu": {
     "membreActif": "Miembro activo",
@@ -2239,7 +2263,13 @@
     "nonLuesCount": "Sin leer ({{count}})",
     "participantParti": "Participante salió",
     "participantLeftTitle": "Un participante se fue",
-    "participantLeftBody": "{{name}} abandonó tu evento «{{event}}»."
+    "participantLeftBody": "{{name}} abandonó tu evento «{{event}}».",
+    "joinApprovedTitle": "¡Solicitud aceptada!",
+    "joinApprovedTicketBody": "¡Tu solicitud para {{event}} ha sido aceptada! Tu entrada está disponible.",
+    "reminderJ3Title": "¡Faltan 3 días!",
+    "reminderJ3Body": "¡Faltan 3 días para {{event}}! Prepárate.",
+    "reminderJ1Title": "¡Ya casi!",
+    "reminderJ1Body": "¡Solo quedan {{hours}} h para {{event}}! ¿Tienes listo tu outfit? ✨"
   },
   "forgotPassword": {
     "veuillezSelectionnerSmsOuWhatsapp": "Elige entre SMS o WhatsApp.",
@@ -2844,5 +2874,10 @@
     "save": "Guardar",
     "saved": "Intereses actualizados",
     "error": "No se pudieron guardar tus intereses. Inténtalo de nuevo."
+  },
+  "eventStatus": {
+    "live": "En curso",
+    "upcoming": "Próximo evento",
+    "ended": "Evento finalizado"
   }
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PayoutDelayNotice } from '@/components/shared/PayoutDelayNotice';
 import { useNavigate, useParams } from 'react-router';
 import { BackButton } from '@/components/ui/BackButton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -92,9 +93,10 @@ export function PayoutRequestScreen() {
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
           <h2 className="text-[20px] font-bold text-gray-900 dark:text-white mb-2"><span>{t('payout.sentTitle')}</span></h2>
-          <p className="text-[14px] text-gray-500 mb-8 max-w-[280px]">
+          <p className="text-[14px] text-gray-500 mb-4 max-w-[280px]">
             <span>{t('payout.sentDesc')}</span>
           </p>
+          <PayoutDelayNotice className="mb-8 max-w-sm text-left" />
           <button
             onClick={() => navigate(`/events/${id}/manage?tab=cagnotte`)}
             className="w-full max-w-sm h-[48px] bg-[#FF7A00] text-white rounded-xl text-[15px] font-semibold active:scale-95 transition-transform"
@@ -121,6 +123,8 @@ export function PayoutRequestScreen() {
           </p>
           <p className="text-[11px] text-amber-600/70 mt-1"><span>{t('payout.minAllowed')}</span></p>
         </div>
+
+        <PayoutDelayNotice className="mb-6" />
 
         <div className="bg-white dark:bg-[#1A1A1A] rounded-[16px] p-5 shadow-sm border border-gray-100 dark:border-gray-800 mb-6">
           <h3 className="font-semibold text-gray-900 dark:text-white text-[15px] mb-4"><span>{t('payout.howMuch')}</span></h3>

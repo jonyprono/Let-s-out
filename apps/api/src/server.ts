@@ -68,6 +68,8 @@ async function bootstrap() {
   await app.register(import('./modules/videos/videos.routes'), { prefix: '/api/v1/videos' })
   await app.register(import('./modules/pages/pages.routes'), { prefix: '/api/v1/pages' })
   await app.register(import('./modules/radar/radar.routes'), { prefix: '/api/v1/radar' })
+  // Aperçus de partage (OpenGraph) servis aux robots des réseaux sociaux via une réécriture Vercel
+  await app.register(import('./modules/share/share.routes'), { prefix: '/api/v1/share' })
 
   // ── PUBLIC: Feature flags (lecture seule, pas d'auth requise) ─────
   app.get('/api/v1/feature-flags', async (_req, reply) => {
@@ -219,6 +221,8 @@ async function bootstrap() {
       { table: 'event_payout_requests', column: 'idempotencyKey', migration: 'add_payout_idempotency_key' },
       // 20260909000000_add_kyc_document_type
       { table: 'profiles', column: 'kycDocumentType', migration: 'add_kyc_document_type' },
+      // 20261124000000_event_reminder_72h
+      { table: 'events', column: 'reminder72hSent', migration: 'event_reminder_72h' },
     ]
 
     // Table-level checks: { table, migration } — table must exist

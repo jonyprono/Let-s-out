@@ -368,7 +368,8 @@
     "modifier": "Edit",
     "supprimer": "Delete",
     "photo": "Photo {{v0}}",
-    "you": "you"
+    "you": "you",
+    "openRadar": "Open OUT RADAR"
   },
   "profile": {
     "myProfile": "My Profile",
@@ -606,10 +607,7 @@
     "sendInvite": "Send invitation",
     "block": "Block",
     "report": "Report",
-    "close": "Close",
-    "birthDateRequiredTitle": "Date of birth required",
-    "birthDateRequiredBody": "For security reasons, OUT RADAR requires your date of birth. Please enter it once in your profile to continue.",
-    "birthDateRequiredCta": "Complete my profile"
+    "close": "Close"
   },
   "vlogs": {
     "soundLabel": "Sound",
@@ -773,7 +771,11 @@
     "shareError": "Unable to share.",
     "validBig": "VALID",
     "alreadyUsedBig": "ALREADY CHECKED IN",
-    "holder": "Holder"
+    "holder": "Holder",
+    "tooEarly": "Tickets can only be scanned on the day of the event.",
+    "opensOn": "Check-in opens on {{date}} at midnight.",
+    "eventEnded": "The event is over: ticket check-in is closed.",
+    "manualPlaceholder": "8-character code (e.g. A1B2C3D4)"
   },
   "myPages": {
     "title": "My pages",
@@ -915,7 +917,8 @@
       "poolMin": "Minimum contribution",
       "addRegDeadline": "Add a registration deadline",
       "regDeadline": "Registration deadline",
-      "regDeadlineValue": "{{date}} at {{time}}"
+      "regDeadlineValue": "{{date}} at {{time}}",
+      "categoryRequired": "Choose a category to continue."
     },
     "privateOptions": {
       "title": "Private event options",
@@ -1031,7 +1034,9 @@
       "serverError": "Couldn't reach the server",
       "published": "🎉 Event published!",
       "publishError": "Error while publishing the event",
-      "kycPool": "Your account must be verified (KYC) to enable a shared pot."
+      "kycPool": "Your account must be verified (KYC) to enable a shared pot.",
+      "categoryRequired": "Choose a category for the event.",
+      "duplicatePrefilled": "Details copied. Choose the date of the new edition."
     }
   },
   "eventDetails": {
@@ -1209,7 +1214,9 @@
       "declined": "Request declined",
       "declineError": "Error while declining",
       "accepted": "Request accepted",
-      "mustJoin": "Join the event to access this area."
+      "mustJoin": "Join the event to access this area.",
+      "eventFull": "The event is full: this request can't be accepted.",
+      "approveError": "Couldn't accept the request. Please try again."
     },
     "tabs": {
       "details": "Details",
@@ -1226,7 +1233,14 @@
       "success": "You left the event",
       "error": "Couldn't leave the event. Please try again.",
       "paidError": "Your participation was paid: to cancel it, please request a refund."
-    }
+    },
+    "requestUserFallback": "User",
+    "declineRequest": "Decline",
+    "acceptRequest": "Accept",
+    "newEdition": "Schedule a new edition",
+    "reschedule": "Reschedule the event",
+    "checkedInAt": "Checked in at {{time}}",
+    "ticketsCheckedIn": "· {{done}}/{{total}} tickets"
   },
   "payment": {
     "summaryTitle": "Transaction summary",
@@ -1450,7 +1464,8 @@
       "PENDING": "Pending"
     },
     "youApproved": "You approved this request",
-    "youRejected": "You rejected this request"
+    "youRejected": "You rejected this request",
+    "processingDelay": "Withdrawal requests are processed within 24 to 72 business hours."
   },
   "validatorVote": {
     "startedTitle": "Vote started!",
@@ -1981,7 +1996,9 @@
     "nearbyCount_one": "{{count}} Outster nearby",
     "nearbyCount_other": "{{count}} Outsters nearby",
     "inviteInfo": "A notification will be sent to {{name}}. If she accepts, you can discuss the plans together to organise the outing.",
-    "reessayer": "Try again"
+    "reessayer": "Try again",
+    "kycRequiredForFilter": "You must verify your profile (KYC) to use this filter.",
+    "certifyMyProfile": "Get my profile verified"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Searching for Outsters nearby...",
@@ -2058,7 +2075,14 @@
     "lUtilisateurNePourraPlus": "The user will no longer be able to send you messages, view your full profile or interact with you.",
     "commonEvents_one": "{{n}} shared event",
     "commonEvents_other": "{{n}} shared events",
-    "cannotView": "You cannot view this profile, or it does not exist."
+    "cannotView": "You cannot view this profile, or it does not exist.",
+    "upcomingSheetTitle": "Upcoming events ({{count}})",
+    "upcomingEmpty": "No upcoming events.",
+    "upcomingRole": {
+      "organizer": "Organizer",
+      "cohost": "Co-organizer",
+      "participant": "Attendance confirmed"
+    }
   },
   "accountMenu": {
     "membreActif": "Active member",
@@ -2238,7 +2262,13 @@
     "nonLuesCount": "Unread ({{count}})",
     "participantParti": "Participant left",
     "participantLeftTitle": "A participant left",
-    "participantLeftBody": "{{name}} left your event “{{event}}”."
+    "participantLeftBody": "{{name}} left your event “{{event}}”.",
+    "joinApprovedTitle": "Request accepted!",
+    "joinApprovedTicketBody": "Your request for {{event}} has been accepted! Your ticket is available.",
+    "reminderJ3Title": "3 days to go!",
+    "reminderJ3Body": "3 days until {{event}}! Get ready.",
+    "reminderJ1Title": "Almost there!",
+    "reminderJ1Body": "Only {{hours}}h until {{event}}! Is your outfit ready? ✨"
   },
   "forgotPassword": {
     "veuillezSelectionnerSmsOuWhatsapp": "Please select SMS or WhatsApp.",
@@ -2840,5 +2870,10 @@
     "save": "Save",
     "saved": "Interests updated",
     "error": "Couldn't save your interests. Please try again."
+  },
+  "eventStatus": {
+    "live": "Live",
+    "upcoming": "Upcoming event",
+    "ended": "Event ended"
   }
 }

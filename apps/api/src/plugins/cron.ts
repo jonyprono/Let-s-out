@@ -67,6 +67,34 @@ export default fp(async (fastify: FastifyInstance) => {
       }
 
       // ── Event Reminders ──────────────────────────────────────────────────
+      // Rappel J-3 (72 h avant) aux participants confirmés. Un événement déjà à moins de 48 h (créé
+      // tard, ou existant au déploiement) n'a pas de « J-3 » : il est simplement marqué comme traité.
+      try {
+        const { REMINDER_J3_HOURS, REMINDER_J3_MIN_LEAD_HOURS } = await import('../config/event-time')
+        const j3Limit = new Date(now.getTime() + REMINDER_J3_HOURS * 3600_000)
+        const j3MinLead = new Date(now.getTime() + REMINDER_J3_MIN_LEAD_HOURS * 3600_000)
+        const eventsJ3 = await (fastify as any).prisma.event.findMany({
+          where: { status: 'PUBLISHED', reminder72hSent: false, startAt: { gte: now, lte: j3Limit } },
+          select: { id: true, title: true, startAt: true, bookings: { where: { status: 'CONFIRMED' }, select: { userId: true } } },
+          take: 200,
+        })
+        for (const ev of eventsJ3) {
+          // Marqué d'abord : un échec d'envoi ne provoque jamais de doublon au cycle suivant
+          const { count } = await (fastify as any).prisma.event.updateMany({ where: { id: ev.id, reminder72hSent: false }, data: { reminder72hSent: true } })
+          if (count === 0 || new Date(ev.startAt) < j3MinLead || ev.bookings.length === 0) continue
+          await createAndSendNotificationMany(fastify, ev.bookings.map((b: any) => ({
+            userId: b.userId,
+            type: 'EVENT_REMINDER',
+            title: '📅 J-3 !',
+            // Texte traduit côté app (lib/notification-text.ts, data.kind) ; celui-ci sert au push natif
+            body: `J-3 avant ${ev.title} ! Préparez-vous.`,
+            data: { eventId: ev.id, eventTitle: ev.title, kind: 'REMINDER_J3', screen: 'event-details' },
+          }))).catch(() => {})
+        }
+      } catch (j3Err: any) {
+        fastify.log.error({ j3Err }, '[REMINDER_J3] Échec des rappels J-3')
+      }
+
       const setting1 = await (fastify as any).prisma.systemSetting.findUnique({ where: { key: 'EVENT_REMINDER_1_HOURS' } })
       const hours1 = setting1 && !isNaN(Number(setting1.value)) ? Number(setting1.value) : 24
       
@@ -90,8 +118,9 @@ export default fp(async (fastify: FastifyInstance) => {
             userId: b.userId,
             type: 'EVENT_REMINDER',
             title: '⏰ Rappel d\'événement',
-            body: `L'événement "${ev.title}" commence dans moins de ${hours1} heures !`,
-            data: { eventId: ev.id, screen: 'event-details' }
+            // Rappel de la veille (24 h par défaut) : « outfit » ; traduit côté app via data.kind
+            body: `Plus que ${hours1}h avant ${ev.title} ! Est-ce que votre outfit est prêt ? ✨`,
+            data: { eventId: ev.id, eventTitle: ev.title, hours: String(hours1), kind: 'REMINDER_J1', screen: 'event-details' }
           }))
           await createAndSendNotificationMany(fastify, notifications).catch(() => {})
         }

@@ -5,6 +5,9 @@ import { Settings, UserPlus, Calendar, Users, Activity, ChevronLeft, MessageCirc
 import { useAuthStore } from '@/stores/auth.store';
 import { EditProfileModal } from '@/features/users/components/EditProfileModal';
 import { InterestsSheet } from '@/features/users/components/InterestsSheet';
+import { UpcomingEventsSheet, type UpcomingEventItem } from '@/features/users/components/UpcomingEventsSheet';
+import { runAfterSheetClosed } from '@/components/ui/bottom-sheet';
+import { eventTimeStatus } from '@/lib/event-status';
 import { SafeImage } from '@/components/shared/SafeImage';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -96,7 +99,22 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
 
   const createdEvents = activity?.createdEvents ?? [];
   const pastEvents = activity?.pastEvents ?? [];
-  const upcomingEvents = createdEvents.filter((e: any) => new Date(e.startAt) > new Date()).slice(0, 5);
+  // Prochains événements du profil : organisés / co-organisés + rejoints (participation confirmée),
+  // à venir ou en cours, du plus proche au plus lointain. Aperçu : 5 ; « Voir tout » : liste complète.
+  const upcomingItems: UpcomingEventItem[] = (() => {
+    const byId = new Map<string, UpcomingEventItem>();
+    for (const e of createdEvents) {
+      if (eventTimeStatus(e) === 'ended') continue;
+      byId.set(e.id, { event: e, role: e.creatorId === targetUserId ? 'organizer' : 'cohost' });
+    }
+    for (const e of (activity?.joinedEvents ?? []) as any[]) {
+      if (eventTimeStatus(e) === 'ended' || byId.has(e.id)) continue;
+      byId.set(e.id, { event: e, role: 'participant' });
+    }
+    return [...byId.values()].sort((a, b) => new Date(a.event.startAt).getTime() - new Date(b.event.startAt).getTime());
+  })();
+  const upcomingEvents = upcomingItems.slice(0, 5).map((i) => i.event);
+  const [showUpcomingSheet, setShowUpcomingSheet] = useState(false);
   const friends = friendsData ?? [];
 
   // From API: real friendship & follow state
@@ -622,14 +640,23 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
             </div>
 
             {/* Prochains Événements */}
+            <UpcomingEventsSheet
+              open={showUpcomingSheet}
+              onClose={() => setShowUpcomingSheet(false)}
+              items={upcomingItems}
+              onOpenEvent={(eventId) => {
+                setShowUpcomingSheet(false);
+                runAfterSheetClosed(() => navigate(`/events/${eventId}`));
+              }}
+            />
             {upcomingEvents.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-inter text-[14px] font-medium text-gray-500"><span>{t('profileV2.prochainsEvenements')}</span></h3>
-                  {/* Voir tout : onglet « Événements » du profil (créés / rejoints) */}
+                  {/* Voir tout : liste complète des prochains événements (organisés + rejoints) */}
                   <button
                     type="button"
-                    onClick={() => setActiveTab('events')}
+                    onClick={() => setShowUpcomingSheet(true)}
                     className="text-[13px] text-gray-500 font-medium cursor-pointer active:scale-95 transition-transform"
                   >
                     <span>{t('profileV2.voirTout')}</span>

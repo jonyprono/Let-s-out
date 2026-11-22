@@ -93,7 +93,18 @@ export function OutRadar() {
   // Paramètres de recherche
   const [radiusKm, setRadiusKm] = useState<number>(restored?.radiusKm ?? 1) // 500 m, 1 km, 5 km ou 10 km (RADAR_RADII)
   const [genderFilter, setGenderFilter] = useState<'ALL' | 'FEMALE' | 'MALE'>(restored?.genderFilter ?? 'ALL')
-  const [verifiedOnly, setVerifiedOnly] = useState(restored?.verifiedOnly ?? false)
+  // Filtre « Profils vérifiés uniquement » : réservé aux comptes eux-mêmes certifiés KYC
+  const isKycVerified = currentUser?.profile?.kycStatus === 'verified'
+  const [verifiedOnly, setVerifiedOnly] = useState(isKycVerified && (restored?.verifiedOnly ?? false))
+  const toggleVerifiedOnly = (checked: boolean) => {
+    if (checked && !isKycVerified) {
+      toast.info(t('outRadar.kycRequiredForFilter'), {
+        action: { label: t('outRadar.certifyMyProfile'), onClick: () => navigate('/verify-profile') },
+      })
+      return
+    }
+    setVerifiedOnly(checked)
+  }
   const [outingTypeFilter, setOutingTypeFilter] = useState(restored?.outingTypeFilter ?? 'ALL')
   const [showFiltersModal, setShowFiltersModal] = useState(false)
 
@@ -357,7 +368,8 @@ export function OutRadar() {
       return
     }
 
-    // Plus aucun contrôle de date de naissance ici : la date n'est jamais exigée pour OUT RADAR.
+    // Aucune demande de date de naissance : l'âge est contrôlé à l'inscription. OUT RADAR est
+    // ouvert à tout utilisateur connecté (recherche et visibilité).
 
     // Pour devenir visible, on a besoin des coordonnées
     let currentCoords = coords
@@ -1062,12 +1074,22 @@ export function OutRadar() {
               <div>
                 <p className="text-xs font-semibold text-gray-800 dark:text-gray-200"><span>{t('outRadar.profilsVerifiesUniquement')}</span></p>
                 <p className="text-[11px] text-gray-400"><span>{t('outRadar.afficherUniquementLesComptesCertifies')}</span></p>
+                {!isKycVerified && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/verify-profile')}
+                    className="mt-0.5 text-[11px] font-semibold text-[#FF7A00] underline underline-offset-2"
+                  >
+                    <span>{t('outRadar.certifyMyProfile')}</span>
+                  </button>
+                )}
               </div>
               <input
                 type="checkbox"
                 checked={verifiedOnly}
-                onChange={(e) => setVerifiedOnly(e.target.checked)}
-                className="w-4 h-4 accent-[#FF7A00] rounded cursor-pointer"
+                onChange={(e) => toggleVerifiedOnly(e.target.checked)}
+                aria-label={t('outRadar.profilsVerifiesUniquement')}
+                className={`w-4 h-4 accent-[#FF7A00] rounded cursor-pointer ${isKycVerified ? '' : 'opacity-50'}`}
               />
             </div>
 
