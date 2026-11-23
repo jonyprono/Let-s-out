@@ -5,17 +5,13 @@ import { hapticFeedback } from '@/lib/haptics'
 
 /**
  * Raccourci flottant vers OUT RADAR (page d'accueil), au-dessus de la barre de navigation,
- * en bas à droite. Rehaussé de la zone sûre système (barre de gestes Android / indicateur iOS)
- * pour rester bien dégagé au-dessus de la barre d'onglets. Bouton fixe, sans animation.
+ * en bas à droite — positionnement identique au bouton « carte » d'Explorer. Bouton fixe, sans animation.
  */
 export function RadarFab() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   return (
-    <div
-      className="fixed right-5 z-40"
-      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 115px)' }}
-    >
+    <div className="fixed bottom-[100px] right-5 z-[1050]">
       <button
         type="button"
         onClick={() => { hapticFeedback.impact(); navigate('/radar') }}
