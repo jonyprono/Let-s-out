@@ -340,13 +340,17 @@ export function EventDetails({ onBack }: EventDetailsProps) {
   const hasPaidForEvent = isCreator || event?.price === 0 || (myBookingData && myBookingData.totalPaid >= event?.price)
   const isApprovedButUnpaid = isApprovedParticipant // APPROVED (not yet CONFIRMED via payment)
 
+  // Participant confirmé (et à jour de paiement) ou organisateur → vue de gestion.
+  // Calculé pendant le rendu : tant que la redirection n'a pas pris effet, on affiche le
+  // skeleton (voir plus bas) au lieu de peindre la vue publique (« Rejoindre » / billets).
+  const shouldRedirectToManage = !!user && !!event && event.status !== 'DRAFT'
+    && ((hasJoined && hasPaidForEvent) || isOrganizer)
+
   useEffect(() => {
-    if (user && event && event.status !== 'DRAFT') {
-      if ((hasJoined && hasPaidForEvent) || isOrganizer) {
-        navigate(`/events/${id}/manage`, { replace: true })
-      }
+    if (shouldRedirectToManage) {
+      navigate(`/events/${id}/manage`, { replace: true })
     }
-  }, [user, event, hasJoined, isOrganizer, id, navigate])
+  }, [shouldRedirectToManage, id, navigate])
 
 
   const joinMutation = useMutation({
@@ -536,7 +540,9 @@ export function EventDetails({ onBack }: EventDetailsProps) {
     )
   }
 
-  if (isLoading) {
+  // Sans attendre la réservation, un participant déjà inscrit verrait brièvement la vue
+  // non-participant avant la bascule vers /manage (flash). Idem pendant la redirection.
+  if (isLoading || (user && bookingLoading) || shouldRedirectToManage) {
     return <EventDetailsSkeleton />
   }
 

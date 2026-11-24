@@ -224,7 +224,7 @@
     "submit": "Se connecter",
     "submitting": "Connexion...",
     "or": "Ou",
-    "google": "Se connecter avec Google",
+    "google": "Se connecter avec votre Email",
     "googleLoading": "Connexion avec Google...",
     "newUser": "Vous êtes nouveau sur Let's Out ?",
     "signUp": "Inscrivez-vous",
@@ -248,7 +248,7 @@
     "step2Subtitle": "Code à {{length}} chiffres envoyé par {{channel}} au",
     "resend": "Renvoyer le code",
     "resendIn": "dans",
-    "google": "S'inscrire avec Google",
+    "google": "S'inscrire avec votre Email",
     "otpAlternative": "Le code tarde à arriver ? Vous pouvez aussi :",
     "step3Title": "Quel est votre nom ?",
     "step3Subtitle": "Ces informations aideront vos amis à vous reconnaître et ne seront visibles que sur Let's Out.",
@@ -2879,5 +2879,22 @@
     "live": "En cours",
     "upcoming": "Événement à venir",
     "ended": "Événement terminé"
+  },
+  "legal": {
+    "termsTitle": "Conditions Générales d'Utilisation",
+    "privacyTitle": "Politique de confidentialité",
+    "partI": "Partie I — Conditions Générales d'Utilisation (CGU)",
+    "partII": "Partie II — Politique de confidentialité",
+    "versionLabel": "Version :",
+    "versionValue": "2.0 — entrée en vigueur à la date de publication dans l'application",
+    "publisherLabel": "Éditeur :",
+    "publisherValue": "FIHODECORP SARL, Société à Responsabilité Limitée de droit béninois",
+    "headOfficeLabel": "Siège social :",
+    "headOfficeValue": "Quartier Honmèho, Bohicon, République du Bénin",
+    "registration": "RCCM RB/ABY/26 B 3100 (Tribunal de commerce d'Abomey) | IFU 3202634790371",
+    "frenchPrevails": "",
+    "articleTitle": "Article {{n}} — {{title}}",
+    "backHome": "← Retour à l'accueil",
+    "footer": "Let's Out, par FIHODECORP SARL. Version 2.0"
   }
 }

@@ -1,0 +1,347 @@
+{
+  "keyPoints": {
+    "title": "Los puntos clave en resumen",
+    "intro": "Este resumen te ayuda a entender lo esencial. No sustituye las condiciones completas que siguen, que son las que prevalecen.",
+    "table": {
+      "head": ["Tema", "Lo que hay que recordar"],
+      "rows": [
+        ["Quién puede usar Let's Out", "Cualquier persona física de al menos 18 años."],
+        ["Comisión sobre los botes comunes", "4 % del importe de cada contribución."],
+        ["Comisión sobre la venta de entradas", "7 % del precio de cada entrada vendida."],
+        ["Plazo de tramitación de un retiro", "De 24 horas a unos 5 días hábiles, a partir de la validación de la solicitud."],
+        ["Seguridad de los botes comunes", "Los fondos de un bote común solo se desembolsan tras su validación según las reglas del grupo, y se reembolsan íntegramente si el evento se cancela."],
+        ["Tu papel de organizador", "Eres el único responsable del evento que creas. Let's Out es un intermediario técnico."],
+        ["Tus datos", "Nunca se venden. Puedes consultarlos, corregirlos o eliminarlos en cualquier momento."],
+        ["Contacto", "fihodecorp@gmail.com o +229 01 66 65 23 13."]
+      ]
+    }
+  },
+  "cgu": [
+    { "n": 1, "title": "Objeto y aceptación", "blocks": [
+      { "p": "Las presentes Condiciones Generales de Uso (las «CGU») rigen el acceso y el uso de la aplicación móvil Let's Out (la «Aplicación»), editada por FIHODECORP SARL (el «Editor»)." },
+      { "p": "Let's Out es una plataforma social que permite crear y unirse a eventos colectivos locales, financiar estos eventos mediante botes comunes, vender y comprar entradas, y entrar en contacto con otros usuarios que comparten los mismos intereses." },
+      { "p": "Al crear una cuenta, marcar la casilla de aceptación o utilizar la Aplicación, el usuario declara haber leído, comprendido y aceptado sin reservas las presentes CGU y la Política de privacidad (Parte II). Si el usuario no acepta estas condiciones, debe abstenerse de utilizar la Aplicación." }
+    ]},
+    { "n": 2, "title": "Definiciones", "blocks": [
+      { "ul": [
+        "Usuario: toda persona que dispone de una cuenta Let's Out.",
+        "Organizador: el usuario que crea un evento, un bote común o una venta de entradas.",
+        "Participante: el usuario que se une a un evento, contribuye a un bote común o compra una entrada.",
+        "Anfitrión local: el usuario, particular o profesional, que ofrece un lugar o espacio para acoger un evento.",
+        "Evento: toda salida, actividad, encuentro o manifestación publicada en la Aplicación.",
+        "Bote común: recaudación de contribuciones entre los participantes de un evento, destinada a financiar los gastos de dicho evento.",
+        "Venta de entradas: servicio de venta de entradas de acceso a un evento a través de la Aplicación.",
+        "Proveedor de pago: todo agregador de pagos, operador de dinero móvil, banco o entidad financiera que interviene en el procesamiento de los pagos, en particular FedaPay.",
+        "Día hábil: de lunes a viernes, excepto los días festivos en Benín."
+      ]}
+    ]},
+    { "n": 3, "title": "Editor y aviso legal", "blocks": [
+      { "p": "La Aplicación es editada por la siguiente sociedad:" },
+      { "table": { "head": ["Concepto", "Información"], "rows": [
+        ["Denominación social", "FIHODECORP (FIHODECORP SARL)"],
+        ["Forma jurídica", "Sociedad de Responsabilidad Limitada (SARL) de derecho beninés"],
+        ["Capital social", "100 000 FCFA"],
+        ["Registro mercantil (RCCM)", "RB/ABY/26 B 3100, inscripción del 4 de junio de 2026, Secretaría del Tribunal de Comercio de Abomey"],
+        ["Número de identificación fiscal (IFU)", "3202634790371"],
+        ["Domicilio social", "Quartier Honmèho, Bohicon, República de Benín"],
+        ["Email", "fihodecorp@gmail.com"],
+        ["Teléfono", "+229 01 66 65 23 13"],
+        ["Aplicación editada", "Let's Out"]
+      ]}}
+    ]},
+    { "n": 4, "title": "Acceso al servicio y cuenta de usuario", "blocks": [
+      { "h": "4.1 Edad mínima" },
+      { "p": "La Aplicación está reservada a personas físicas de al menos 18 años cumplidos y jurídicamente capaces. Se prohíbe a los menores crear una cuenta, participar en un bote común o comprar una entrada. El Editor puede solicitar cualquier justificante de edad y eliminar sin previo aviso toda cuenta cuyo titular sea menor de edad." },
+      { "h": "4.2 Creación y seguridad de la cuenta" },
+      { "ul": [
+        "La información proporcionada debe ser exacta, completa y mantenerse actualizada.",
+        "Cada persona solo puede tener una cuenta. La suplantación de identidad está prohibida.",
+        "El usuario es responsable de la confidencialidad de sus credenciales y de toda actividad realizada desde su cuenta.",
+        "En caso de pérdida, robo o uso fraudulento de sus credenciales, el usuario debe informar inmediatamente al Editor en fihodecorp@gmail.com."
+      ]},
+      { "h": "4.3 Verificación de identidad" },
+      { "p": "Por la seguridad de la comunidad y el cumplimiento de la normativa, el Editor puede exigir la verificación de la identidad del usuario, en particular antes de crear un evento de pago, abrir una venta de entradas o tramitar una solicitud de retiro. Negarse a esta verificación puede conllevar la denegación o suspensión de estos servicios." }
+    ]},
+    { "n": 5, "title": "Papel del Editor", "blocks": [
+      { "p": "El Editor proporciona una plataforma técnica de puesta en contacto. No es organizador, ni coorganizador, ni vendedor de los eventos publicados por los usuarios, y no es parte de los acuerdos celebrados entre organizadores, anfitriones locales y participantes." },
+      { "p": "El Editor no es un banco ni una entidad de crédito. Los pagos son procesados por Proveedores de pago. Las sumas mantenidas en concepto de botes comunes y venta de entradas no constituyen depósitos bancarios, no están remuneradas y no generan ningún interés a favor del usuario." }
+    ]},
+    { "n": 6, "title": "Eventos, organizadores y anfitriones locales", "blocks": [
+      { "h": "6.1 Obligaciones del organizador" },
+      { "p": "El organizador es el único responsable de su evento. Se compromete a:" },
+      { "ul": [
+        "proporcionar información exacta (fecha, lugar, programa, precio, número de plazas, condiciones de cancelación) y actualizarla sin demora;",
+        "respetar las leyes y reglamentos aplicables, en particular en materia de seguridad, autorizaciones administrativas, venta de bebidas, contaminación acústica, fiscalidad y derechos de autor;",
+        "garantizar la seguridad de los participantes y contratar los seguros necesarios para el evento;",
+        "no organizar ningún evento ilícito, discriminatorio, peligroso o contrario a las buenas costumbres."
+      ]},
+      { "h": "6.2 Anfitriones locales" },
+      { "p": "El anfitrión local actúa con total independencia. Garantiza que tiene derecho a acoger el evento en el lugar propuesto, que este se ajusta a su descripción y a las normas de seguridad, y que respeta los derechos de los vecinos y de terceros. Una insignia o mención «verificado» solo refleja el control de cierta información por parte del Editor y no constituye ni una certificación ni una garantía de seguridad o calidad del lugar." },
+      { "h": "6.3 Participación y prudencia" },
+      { "p": "Los encuentros reales conllevan riesgos. El participante sigue siendo el único juez de su participación, debe actuar con prudencia (en particular en un primer encuentro) y se le invita a informar al Editor de cualquier comportamiento inapropiado. En caso de peligro, debe contactar de inmediato con las autoridades competentes." }
+    ]},
+    { "n": 7, "title": "Botes comunes", "blocks": [
+      { "h": "7.1 Principio" },
+      { "p": "El bote común permite a los participantes de un evento poner fondos en común para financiar los gastos de dicho evento (transporte, comida, alquiler, entradas, material, etc.). El objeto, el importe objetivo y las reglas de validación los define el organizador al crear el bote común y son visibles para todos los participantes antes de cualquier contribución." },
+      { "h": "7.2 Custodia de los fondos" },
+      { "p": "En la versión actual de la Aplicación, los fondos recaudados son custodiados por FIHODECORP SARL en una cuenta dedicada a los botes comunes, distinta de sus fondos propios de explotación, en calidad de tercero de confianza temporal, a la espera de establecer una colaboración con una entidad financiera autorizada. El Editor se prohíbe utilizar estos fondos para fines distintos de los previstos en las presentes CGU. Los usuarios serán informados de cualquier cambio en el sistema de custodia." },
+      { "h": "7.3 Contribución" },
+      { "ul": [
+        "La contribución es libre y voluntaria, sin perjuicio del importe mínimo que pueda fijar el organizador.",
+        "El importe de la comisión aplicable se muestra claramente antes de confirmar el pago.",
+        "Una contribución confirmada solo puede retirarse en los casos previstos en las presentes CGU (cancelación del evento, saldo no utilizado, error técnico demostrado o decisión del Editor)."
+      ]},
+      { "h": "7.4 Desembolso de los fondos" },
+      { "ul": [
+        "Todo gasto es presentado por el organizador con los justificantes solicitados por la Aplicación (presupuesto, factura, nombre del proveedor, importe).",
+        "El desembolso solo se produce tras la validación del gasto según la regla fijada al crear el bote común (umbral de participantes que aprueban).",
+        "Cada participante puede consultar en tiempo real las contribuciones recibidas, los gastos presentados, validados o rechazados, y el saldo disponible.",
+        "El Editor puede rechazar o suspender un desembolso en caso de duda seria sobre su regularidad, litigio entre participantes, sospecha de fraude u orden de una autoridad."
+      ]},
+      { "h": "7.5 Cancelación y reembolso" },
+      { "p": "En caso de cancelación del evento, aplazamiento sin el acuerdo de los participantes o imposibilidad de celebrarlo, las contribuciones se reembolsan íntegramente a los contribuyentes, incluida la comisión del Editor, en un plazo máximo de siete (7) días hábiles a partir de la constatación de la cancelación. Los gastos no reembolsables que pueda cobrar un Proveedor de pago, cuando existan, se indican antes del pago." },
+      { "h": "7.6 Saldo no utilizado" },
+      { "p": "Al finalizar el evento, el saldo no gastado se devuelve, según la decisión del grupo tomada en la Aplicación, a prorrata de las contribuciones, o bien se destina a otro uso validado por el grupo. A falta de decisión en un plazo de treinta (30) días después del evento, el saldo se devuelve a prorrata de las contribuciones." },
+      { "h": "7.7 Prohibiciones" },
+      { "p": "Está prohibido utilizar un bote común para recaudar fondos sin relación con un evento, con un objeto ilícito, para donaciones no declaradas, para financiar actividades ilegales o para un uso distinto del anunciado. Toda malversación de fondos puede dar lugar a la suspensión de la cuenta, a la congelación de las sumas afectadas y a acciones civiles y penales." }
+    ]},
+    { "n": 8, "title": "Venta de entradas", "blocks": [
+      { "h": "8.1 Principio" },
+      { "p": "La venta de entradas permite a un organizador vender entradas para su evento y a un usuario comprarlas a través de la Aplicación. La entrada es personal y adopta la forma de un código o código QR único, que se presenta en la entrada." },
+      { "h": "8.2 Responsabilidad del organizador" },
+      { "p": "El organizador fija el precio, el número de entradas y las condiciones del evento. Es el vendedor de la entrada y el único responsable de la prestación, de su contenido, de su celebración y de sus obligaciones fiscales. El Editor solo actúa como intermediario técnico de cobro y de gestión de accesos." },
+      { "h": "8.3 Compra y uso de la entrada" },
+      { "ul": [
+        "La compra es firme y definitiva desde la confirmación del pago, sin perjuicio de los casos de reembolso previstos a continuación.",
+        "La entrada es nominativa o está asociada a la cuenta del comprador. Solo puede utilizarse una vez: toda entrada ya escaneada queda invalidada.",
+        "La reventa de entradas por encima de su precio original, así como la reproducción o falsificación de una entrada, están prohibidas y conllevan la anulación de la entrada sin reembolso y la suspensión de la cuenta."
+      ]},
+      { "h": "8.4 Cancelación, aplazamiento y reembolso" },
+      { "ul": [
+        "Si el organizador cancela el evento, las entradas se reembolsan íntegramente, comisión incluida, en un plazo máximo de siete (7) días hábiles.",
+        "En caso de aplazamiento, la entrada sigue siendo válida para la nueva fecha. El comprador que no pueda asistir puede solicitar el reembolso en los siete (7) días siguientes al anuncio del aplazamiento.",
+        "Salvo indicación contraria mostrada antes de la compra, el comprador que no se presente o ya no desee participar no tiene derecho a ningún reembolso. El organizador puede prever una política de reembolso más favorable, que debe indicarse en la página del evento."
+      ]},
+      { "h": "8.5 Pago al organizador" },
+      { "p": "El producto neto de la venta de entradas (tras deducir la comisión del Editor) se pone a disposición del organizador después de la celebración del evento, salvo condiciones particulares mostradas en la Aplicación. El organizador solicita su pago según las modalidades del artículo 10. El Editor puede aplazar el pago en caso de litigio, denuncia, elevada proporción de solicitudes de reembolso o sospecha de fraude." }
+    ]},
+    { "n": 9, "title": "Gastos y comisiones", "blocks": [
+      { "p": "El uso de la Aplicación es gratuito para crear una cuenta, navegar y participar en un evento gratuito. Los servicios de bote común y venta de entradas dan lugar a las siguientes comisiones:" },
+      { "table": { "head": ["Servicio", "Comisión", "Base de cálculo", "Momento del cobro"], "rows": [
+        ["Bote común", "4 %", "Importe de cada contribución", "Al pagar la contribución"],
+        ["Venta de entradas", "7 %", "Precio de cada entrada vendida", "Al vender la entrada"]
+      ]}},
+      { "ul": [
+        "Las comisiones se retienen de las sumas recaudadas. El importe neto disponible para el organizador se muestra en la Aplicación. Los impuestos que puedan aplicarse se indican cuando se añaden.",
+        "Los Proveedores de pago (operadores de dinero móvil, tarjetas bancarias) pueden cobrar gastos de procesamiento. Cuando se aplican, se indican antes de confirmar el pago.",
+        "El Editor puede modificar sus comisiones para el futuro, con un aviso previo de al menos quince (15) días en la Aplicación. Las nuevas comisiones no se aplican ni a los botes comunes ya abiertos ni a las entradas ya vendidas."
+      ]}
+    ]},
+    { "n": 10, "title": "Pagos, retiros y plazos", "blocks": [
+      { "h": "10.1 Medios de pago" },
+      { "p": "Los pagos se realizan con los medios propuestos en la Aplicación (dinero móvil, tarjeta bancaria u otros). Son procesados por Proveedores de pago, cuyas propias condiciones se aplican. El Editor no conserva los datos bancarios completos de los usuarios." },
+      { "h": "10.2 Solicitud de retiro" },
+      { "p": "El organizador que desee obtener el pago de los fondos a los que tiene derecho (gasto validado de un bote común, producto neto de una venta de entradas) lo solicita en la Aplicación. El pago se realiza exclusivamente a favor del titular de la cuenta, o del proveedor designado y validado en el caso de un gasto del bote común, en una cuenta o un número de dinero móvil a su nombre. Los pagos a terceros no identificados se rechazan." },
+      { "h": "10.3 Plazos de tramitación" },
+      { "table": { "head": ["Operación", "Plazo indicativo"], "rows": [
+        ["Tramitación de una solicitud de retiro", "De 24 horas a unos 5 días hábiles, a partir de la validación de la solicitud"],
+        ["Reembolso tras la cancelación de un evento", "7 días hábiles como máximo a partir de la constatación de la cancelación"],
+        ["Respuesta a una reclamación", "30 días como máximo"]
+      ]}},
+      { "p": "Estos plazos son indicativos. Pueden ampliarse en caso de verificación adicional de identidad o de justificantes, control antifraude, litigio, días festivos, indisponibilidad o ralentización de un Proveedor de pago o de un operador de telefonía, o de solicitud de una autoridad. El Editor no puede ser considerado responsable de los retrasos imputables a estos terceros, pero se compromete a informar al usuario afectado y a actuar con diligencia." },
+      { "h": "10.4 Errores y disputas de pago" },
+      { "p": "Todo error de pago, doble cargo o disputa debe comunicarse al Editor lo antes posible y a más tardar en los treinta (30) días siguientes a la operación, con los justificantes correspondientes. El usuario que inicie una disputa ante su banco u operador de forma abusiva o fraudulenta se expone a la suspensión de su cuenta y al cobro de las sumas adeudadas." }
+    ]},
+    { "n": 11, "title": "Lucha contra el fraude, el blanqueo de capitales y la financiación del terrorismo", "blocks": [
+      { "p": "El Editor aplica medidas de vigilancia conformes a la normativa vigente en Benín y en el espacio UEMOA. A tal efecto, puede: solicitar justificantes de identidad y del origen o destino de los fondos, limitar o establecer topes a los importes, retrasar, rechazar o congelar una operación o un retiro, cerrar una cuenta y comunicar toda operación sospechosa a las autoridades competentes, sin informar al usuario cuando la ley lo prohíba." }
+    ]},
+    { "n": 12, "title": "Asistencia, código QR y ausencias", "blocks": [
+      { "p": "Cada evento puede disponer de un código QR de asistencia. Se invita al participante a escanearlo a su llegada para confirmar su asistencia. El participante inscrito que no se presente, sin haber avisado al organizador al menos dos (2) horas antes del inicio del evento, queda registrado como ausencia injustificada, lo que puede reducir su puntuación de fiabilidad. Tras varias ausencias injustificadas, el acceso a ciertos eventos puede quedar sujeto a la aprobación del organizador o suspenderse temporalmente." }
+    ]},
+    { "n": 13, "title": "Valoraciones y reputación", "blocks": [
+      { "p": "Al finalizar un evento, los participantes cuya asistencia se haya confirmado pueden valorarse mutuamente según criterios de puntualidad, actitud y fiabilidad. La puntuación global es visible en el perfil del usuario y puede tenerse en cuenta para el acceso a ciertos eventos. Las valoraciones deben reflejar una experiencia real. Están prohibidas: las valoraciones de complacencia entre cuentas vinculadas, las valoraciones de represalia, las valoraciones falsas y toda manipulación. El usuario puede impugnar una valoración ante el Editor, que la examina de buena fe y puede descartarla si es manifiestamente abusiva." }
+    ]},
+    { "n": 14, "title": "Normas de conducta y contenidos", "blocks": [
+      { "h": "14.1 Comportamientos prohibidos" },
+      { "p": "El usuario se compromete a utilizar la Aplicación respetando la ley y a los demás miembros. Están prohibidos en particular:" },
+      { "ul": [
+        "el acoso, las amenazas, los comentarios de odio, discriminatorios, difamatorios, injuriosos o de carácter sexual no solicitado;",
+        "los contenidos ilícitos, violentos, pornográficos o que vulneren los derechos de terceros (imagen, vida privada, propiedad intelectual);",
+        "el fraude, la suplantación de identidad, la creación de eventos falsos, las estafas y la solicitud de dinero fuera de la Aplicación;",
+        "la recopilación de datos personales de otros usuarios con fines no autorizados, la prospección comercial no autorizada y el spam;",
+        "todo intento de pirateo, extracción automatizada de datos, elusión de las medidas de seguridad o perturbación del servicio;",
+        "el desvío del pago fuera de la Aplicación para evitar las comisiones."
+      ]},
+      { "h": "14.2 Denuncia y moderación" },
+      { "p": "Cada usuario puede denunciar un contenido, un perfil o un evento desde la Aplicación. El Editor examina las denuncias en un plazo razonable y puede, sin previo aviso, retirar un contenido, restringir una función, suspender o eliminar una cuenta. El Editor no tiene una obligación general de supervisar los contenidos publicados por los usuarios y no es su autor." }
+    ]},
+    { "n": 15, "title": "Derecho de imagen y contenidos de los eventos", "blocks": [
+      { "p": "Durante los eventos Let's Out pueden tomarse fotografías y vídeos, en particular para compartirlos en la comunidad y promocionar la Aplicación (redes sociales, feed de noticias, soportes de comunicación). Al participar en un evento, el participante queda informado de ello y, salvo oposición notificada al organizador o al Editor antes o durante el evento, autoriza el uso de su imagen en este marco, a título gratuito, durante el periodo de promoción de la Aplicación. Cualquier persona puede solicitar en todo momento la retirada de un contenido en el que aparezca escribiendo a fihodecorp@gmail.com. Los organizadores se comprometen a informar a los participantes de la captación de imágenes y a respetar su oposición." }
+    ]},
+    { "n": 16, "title": "Propiedad intelectual", "blocks": [
+      { "p": "La Aplicación, su código fuente, su arquitectura, sus bases de datos, su diseño, su identidad gráfica, sus textos, sus logotipos, la marca «Let's Out» y los nombres «Outsters» y «Connect & Enjoy» son propiedad exclusiva del Editor y están protegidos por las leyes aplicables. Toda reproducción, representación, extracción, modificación, descompilación o explotación, total o parcial, sin autorización previa por escrito, está prohibida y constituye una infracción." },
+      { "p": "El usuario conserva la propiedad de los contenidos que publica (textos, fotos, descripciones, opiniones). Concede al Editor una licencia no exclusiva, gratuita y mundial, durante el periodo de protección legal, para alojar, reproducir, adaptar por necesidades técnicas, mostrar y difundir estos contenidos en la Aplicación y en el marco de la promoción del servicio. El usuario garantiza que dispone de los derechos necesarios sobre los contenidos que publica." }
+    ]},
+    { "n": 17, "title": "Datos personales", "blocks": [
+      { "p": "El tratamiento de los datos personales se describe en la Política de privacidad (Parte II), que forma parte integrante de las presentes CGU." }
+    ]},
+    { "n": 18, "title": "Responsabilidad del Editor", "blocks": [
+      { "p": "El Editor se compromete a proporcionar la Aplicación con diligencia y a proteger los fondos que se le confían conforme al artículo 7. Está sujeto a una obligación de medios en cuanto al funcionamiento de la Aplicación." },
+      { "p": "En los límites permitidos por la ley, el Editor no puede ser considerado responsable:" },
+      { "ul": [
+        "del contenido, desarrollo, cancelación o calidad de los eventos organizados por los usuarios, ni de los daños corporales, materiales o morales ocurridos con ocasión de dichos eventos;",
+        "del comportamiento de los usuarios, antes, durante o después de un evento;",
+        "de los contenidos publicados por los usuarios;",
+        "de las interrupciones, retrasos o errores imputables a los Proveedores de pago, operadores de telefonía, redes de telecomunicaciones, proveedores de alojamiento o tiendas de aplicaciones;",
+        "de los daños indirectos (pérdida de oportunidad, lucro cesante, daño a la reputación)."
+      ]},
+      { "p": "En la medida en que lo permita la ley, la responsabilidad total del Editor frente a un usuario, por cualquier daño relacionado con una transacción o un servicio, se limita al importe de las comisiones efectivamente percibidas por el Editor por dicha transacción. Esta limitación no se aplica a la obligación de restituir o desembolsar los fondos mantenidos conforme a las presentes CGU, ni en caso de dolo o culpa grave del Editor, ni en los casos en que la ley lo prohíba." }
+    ]},
+    { "n": 19, "title": "Responsabilidad del usuario y garantía", "blocks": [
+      { "p": "El usuario es responsable del uso que haga de la Aplicación y de los contenidos que publique. Se compromete a mantener indemne e indemnizar al Editor frente a toda reclamación, acción, condena o gastos (incluidos honorarios razonables de abogados) procedentes de un tercero y derivados de una infracción de las presentes CGU, de la ley o de los derechos de terceros por parte de dicho usuario, en particular en su calidad de organizador o anfitrión local." }
+    ]},
+    { "n": 20, "title": "Fuerza mayor", "blocks": [
+      { "p": "El Editor no es responsable del incumplimiento de sus obligaciones causado por un evento de fuerza mayor en el sentido del derecho aplicable, en particular catástrofe natural, pandemia, conflicto, acto de terrorismo, corte generalizado de electricidad o de telecomunicaciones, ciberataque de gran envergadura, fallo de un proveedor esencial o decisión de una autoridad. Las obligaciones quedan suspendidas mientras dure el impedimento. Los fondos mantenidos siguen protegidos y se restituyen o desembolsan lo antes posible." }
+    ]},
+    { "n": 21, "title": "Suspensión, rescisión y eliminación de la cuenta", "blocks": [
+      { "p": "El usuario puede eliminar su cuenta en cualquier momento desde los ajustes de la Aplicación, previa liquidación de las operaciones en curso (botes comunes abiertos, entradas vendidas, litigios)." },
+      { "p": "El Editor puede suspender o eliminar una cuenta, con o sin previo aviso según la gravedad, en caso de infracción de las CGU, fraude o sospecha de fraude, información inexacta, comportamiento peligroso o abusivo, denuncias reiteradas, manipulación de las valoraciones o del bote común, orden de una autoridad o riesgo para la seguridad de la comunidad. En caso de suspensión, el Editor puede congelar los fondos afectados durante el examen. Las sumas adeudadas a otros usuarios o reembolsables se les restituyen conforme a las CGU, tras la eventual deducción de los importes adeudados al Editor en reparación de un incumplimiento demostrado." }
+    ]},
+    { "n": 22, "title": "Disponibilidad y evolución del servicio", "blocks": [
+      { "p": "La Aplicación se proporciona «tal cual». El Editor se esfuerza por garantizar su disponibilidad, pero no garantiza un acceso ininterrumpido ni la ausencia de errores, en particular durante los mantenimientos y actualizaciones. El Editor puede hacer evolucionar, suspender o suprimir funciones, entendiéndose que las operaciones financieras en curso se llevarán a término." }
+    ]},
+    { "n": 23, "title": "Modificación de las CGU", "blocks": [
+      { "p": "El Editor puede modificar las presentes CGU y la Política de privacidad para tener en cuenta la evolución del servicio, de la normativa o de las colaboraciones financieras. Toda modificación sustancial se notifica en la Aplicación o por email al menos quince (15) días antes de su entrada en vigor. El usuario que rechace las nuevas condiciones puede eliminar su cuenta antes de esa fecha. Seguir utilizando la Aplicación tras la entrada en vigor implica su aceptación." }
+    ]},
+    { "n": 24, "title": "Comunicaciones y prueba", "blocks": [
+      { "p": "El usuario acepta recibir las comunicaciones relativas a su cuenta y a sus operaciones mediante notificación en la Aplicación, email o SMS. Los datos registrados en los sistemas del Editor y de sus Proveedores de pago dan fe, salvo prueba en contrario, de la existencia y el contenido de las operaciones realizadas." }
+    ]},
+    { "n": 25, "title": "Disposiciones generales", "blocks": [
+      { "ul": [
+        "Integridad: las CGU y la Política de privacidad constituyen la totalidad del acuerdo entre el usuario y el Editor para el uso de la Aplicación.",
+        "Nulidad parcial: si una cláusula se declara nula o inaplicable, las demás cláusulas siguen en vigor.",
+        "No renuncia: el hecho de que el Editor no ejerza un derecho no implica renuncia a dicho derecho.",
+        "Cesión: el Editor puede ceder o transferir sus derechos y obligaciones a una sociedad que asuma la explotación de la Aplicación, informando a los usuarios. El usuario no puede ceder su cuenta.",
+        "Supervivencia: las cláusulas que, por su naturaleza, deben sobrevivir a la terminación de las CGU (propiedad intelectual, responsabilidad, garantía, datos, litigios) siguen siendo aplicables."
+      ]}
+    ]},
+    { "n": 26, "title": "Reclamaciones y resolución amistosa", "blocks": [
+      { "p": "Cualquier reclamación puede dirigirse a fihodecorp@gmail.com o al +229 01 66 65 23 13, precisando los hechos y adjuntando los justificantes. El Editor acusa recibo y responde en un plazo máximo de treinta (30) días. En caso de desacuerdo, las partes buscan primero una solución amistosa, incluida la mediación o la conciliación, antes de cualquier acción judicial." }
+    ]},
+    { "n": 27, "title": "Derecho aplicable y jurisdicción competente", "blocks": [
+      { "p": "Las presentes CGU se rigen por el derecho de la República de Benín y, en su caso, por los actos uniformes de la OHADA. A falta de resolución amistosa, todo litigio es competencia de los tribunales beninenses del distrito del domicilio social del Editor, sin perjuicio de las normas imperativas de competencia aplicables a los consumidores." }
+    ]},
+    { "n": 28, "title": "Contacto", "blocks": [
+      { "p": "FIHODECORP SARL, Quartier Honmèho, Bohicon, República de Benín. Email: fihodecorp@gmail.com. Teléfono: +229 01 66 65 23 13." }
+    ]}
+  ],
+  "privacy": [
+    { "n": 29, "title": "Introducción y responsable del tratamiento", "blocks": [
+      { "p": "La presente Política de privacidad explica qué datos personales recopila Let's Out, por qué, cómo se protegen y cuáles son tus derechos. Se establece conforme a los principios de protección de datos personales y a la normativa aplicable en Benín, en particular el Código Digital." },
+      { "p": "El responsable del tratamiento es FIHODECORP SARL, cuyo domicilio social se encuentra en Bohicon, República de Benín. Contacto para cualquier pregunta relativa a los datos: fihodecorp@gmail.com." },
+      { "p": "Nuestro compromiso: no vendemos tus datos personales. Solo recopilamos lo necesario para el funcionamiento del servicio y te damos el control sobre tu información." }
+    ]},
+    { "n": 30, "title": "Datos recopilados", "blocks": [
+      { "table": { "head": ["Categoría", "Ejemplos", "Origen"], "rows": [
+        ["Identidad y cuenta", "Apellido, nombre, seudónimo, email, número de teléfono, contraseña cifrada, foto de perfil, fecha de nacimiento o confirmación de mayoría de edad", "Tú"],
+        ["Perfil y preferencias", "Intereses, ciudad, biografía, preferencias de actividades", "Tú"],
+        ["Verificación de identidad", "Documento de identidad y justificantes, cuando se soliciten (art. 4.3 y 11)", "Tú"],
+        ["Transacciones", "Contribuciones, entradas compradas o vendidas, solicitudes de retiro, importes, fechas, identificadores de transacción, número de dinero móvil o referencias del medio de pago", "Tú, Proveedores de pago"],
+        ["Actividad en la Aplicación", "Eventos creados o a los que te has unido, asistencias (escaneo QR), valoraciones dadas y recibidas, mensajes de grupo, denuncias", "Tú, otros usuarios"],
+        ["Datos técnicos", "Dirección IP, modelo de dispositivo, sistema, versión de la Aplicación, identificadores técnicos, registros de conexión, datos de fallos", "Recopilación automática"],
+        ["Ubicación", "Posición aproximada o precisa, solo si la autorizas", "Tu dispositivo"],
+        ["Contenidos", "Fotos, vídeos y textos que publicas o que se captan durante los eventos", "Tú, organizadores"]
+      ]}},
+      { "p": "No solicitamos datos denominados sensibles (origen, opiniones, salud, vida sexual, etc.). Te invitamos a no publicarlos en tu perfil ni en tus mensajes." }
+    ]},
+    { "n": 31, "title": "Finalidades y bases legales", "blocks": [
+      { "table": { "head": ["Finalidad", "Detalle", "Base legal"], "rows": [
+        ["Crear y gestionar tu cuenta", "Registro, inicio de sesión, seguridad, soporte", "Ejecución del contrato"],
+        ["Prestar el servicio", "Eventos, chat, botes comunes, venta de entradas, QR de asistencia, notificaciones sobre tus eventos", "Ejecución del contrato"],
+        ["Procesar pagos y retiros", "Cobro, depósito en garantía, reembolsos, pagos", "Ejecución del contrato, obligación legal"],
+        ["Valoración y fiabilidad", "Cálculo y visualización de la puntuación de fiabilidad", "Interés legítimo (confianza y seguridad de la comunidad)"],
+        ["Prevenir el fraude y proteger", "Detección de anomalías, lucha contra el blanqueo, moderación", "Interés legítimo, obligación legal"],
+        ["Personalizar", "Sugerencias de eventos según tus intereses y tu zona", "Interés legítimo, consentimiento para la ubicación"],
+        ["Comunicación y promoción", "Información, novedades, ofertas, difusión de imágenes de eventos", "Consentimiento o interés legítimo, con derecho de oposición"],
+        ["Mejorar la Aplicación", "Estadísticas agregadas, corrección de errores", "Interés legítimo"],
+        ["Cumplir la ley", "Obligaciones contables y fiscales, respuestas a las autoridades", "Obligación legal"]
+      ]}}
+    ]},
+    { "n": 32, "title": "Destinatarios de los datos", "blocks": [
+      { "p": "Tus datos solo son accesibles para las personas autorizadas del Editor y, en la medida necesaria, para los siguientes destinatarios:" },
+      { "ul": [
+        "Proveedores de pago (FedaPay, operadores de dinero móvil, bancos, entidades financieras asociadas) para procesar las transacciones y cumplir las obligaciones reglamentarias;",
+        "Proveedores técnicos (alojamiento, base de datos, envío de notificaciones, mensajería, análisis de errores), sujetos a compromisos de confidencialidad y seguridad;",
+        "Otros usuarios, para la información de tu perfil público (nombre o seudónimo, foto, puntuación de fiabilidad, insignias, intereses, eventos) y la información necesaria para participar en un evento (por ejemplo, la lista de participantes);",
+        "Organizadores y anfitriones locales, para la gestión de sus eventos (lista de inscritos, asistencia);",
+        "Autoridades judiciales, administrativas o financieras, previa solicitud legal;",
+        "Un adquirente o socio financiero autorizado, en caso de colaboración para la custodia de fondos, cesión o reestructuración, con información previa a los usuarios cuando la ley lo exija."
+      ]},
+      { "p": "No vendemos ni alquilamos tus datos personales a terceros con fines publicitarios." }
+    ]},
+    { "n": 33, "title": "Transferencias fuera de Benín", "blocks": [
+      { "p": "Algunos proveedores técnicos pueden alojar o tratar datos fuera de Benín. En ese caso, velamos por que la transferencia esté enmarcada por garantías adecuadas (compromisos contractuales, medidas de seguridad, declaración o autorización cuando la ley lo exija) y por que tus datos gocen de un nivel de protección adecuado." }
+    ]},
+    { "n": 34, "title": "Plazos de conservación", "blocks": [
+      { "table": { "head": ["Datos", "Plazo de conservación"], "rows": [
+        ["Cuenta y perfil", "Durante la vida de la cuenta, y después supresión o anonimización en un plazo de 30 días tras la eliminación de la cuenta"],
+        ["Transacciones y documentos contables", "Diez (10) años, conforme a las obligaciones contables y mercantiles"],
+        ["Verificación de identidad y lucha contra el blanqueo", "Durante el plazo exigido por la normativa, que puede llegar a diez (10) años tras el fin de la relación"],
+        ["Mensajes de grupo", "Hasta la eliminación de la cuenta o doce (12) meses después del fin del evento"],
+        ["Registros de conexión y datos técnicos", "Doce (12) meses"],
+        ["Ubicación", "Utilizada en tiempo real, no se conserva de forma permanente"],
+        ["Preferencias de comunicación", "Hasta que retires tu consentimiento"],
+        ["Denuncias y sanciones", "Durante el tiempo necesario para la seguridad de la comunidad y la defensa de nuestros derechos, dentro de los plazos de prescripción"]
+      ]}},
+      { "p": "Al vencer estos plazos, los datos se suprimen o anonimizan de forma irreversible." }
+    ]},
+    { "n": 35, "title": "Perfil público, valoración y tratamientos automatizados", "blocks": [
+      { "p": "Tu perfil público y tu puntuación de fiabilidad son visibles para los demás usuarios, lo que es esencial para la confianza en la comunidad. La puntuación se calcula a partir de la asistencia confirmada, la puntualidad, el comportamiento y las valoraciones recibidas. Nuestras sugerencias de eventos se basan en tus intereses y tu zona. No se toma ninguna decisión que produzca efectos jurídicos importantes para ti de forma exclusivamente automatizada sin posibilidad de revisión: puedes solicitar en cualquier momento una revisión humana escribiendo a fihodecorp@gmail.com." }
+    ]},
+    { "n": 36, "title": "Geolocalización", "blocks": [
+      { "p": "La ubicación solo se utiliza si la autorizas en los ajustes de tu dispositivo, para mostrar los eventos cercanos y facilitar el check-in. No seguimos tus desplazamientos fuera de la Aplicación. Puedes retirar esta autorización en cualquier momento en los ajustes de tu dispositivo; la Aplicación sigue siendo utilizable introduciendo la ciudad manualmente." }
+    ]},
+    { "n": 37, "title": "Notificaciones y comunicaciones", "blocks": [
+      { "p": "Te enviamos las notificaciones necesarias para el servicio (nuevos participantes, mensajes, recordatorios de eventos, validaciones de gastos, reembolsos, seguridad). Puedes gestionar las notificaciones no esenciales en los ajustes de la Aplicación o de tu dispositivo, y darte de baja de cualquier comunicación promocional." }
+    ]},
+    { "n": 38, "title": "Fotos y vídeos de eventos", "blocks": [
+      { "p": "Las imágenes captadas durante los eventos se tratan conforme al artículo 15 de las CGU. Puedes oponerte a su uso o solicitar su retirada escribiendo a fihodecorp@gmail.com. Tramitamos tu solicitud lo antes posible y retiramos los contenidos bajo nuestro control, sin poder garantizar la supresión de copias ya compartidas por terceros." }
+    ]},
+    { "n": 39, "title": "Menores", "blocks": [
+      { "p": "La Aplicación está prohibida a las personas menores de 18 años. Si constatamos que una cuenta pertenece a un menor, la eliminamos junto con los datos asociados. Si crees que un menor ha proporcionado datos, contáctanos." }
+    ]},
+    { "n": 40, "title": "Seguridad de los datos", "blocks": [
+      { "p": "Aplicamos medidas técnicas y organizativas adecuadas: cifrado de las comunicaciones, autenticación, control de accesos, separación de las cuentas de fondos, copias de seguridad, registro de actividad y formación de las personas autorizadas. Los datos de pago sensibles son tratados por nuestros Proveedores de pago y el Editor no los conserva en texto plano. Como ningún sistema es infalible, te invitamos a elegir una contraseña robusta, a no compartirla y a proteger tu dispositivo." }
+    ]},
+    { "n": 41, "title": "Violación de datos", "blocks": [
+      { "p": "En caso de violación de datos que pueda generar un riesgo para tus derechos y libertades, informamos a la autoridad de protección de datos competente en los plazos legales y, cuando el riesgo es elevado, a los usuarios afectados lo antes posible, precisando las medidas adoptadas." }
+    ]},
+    { "n": 42, "title": "Tus derechos", "blocks": [
+      { "p": "Dispones de los siguientes derechos sobre tus datos:" },
+      { "ul": [
+        "Acceso: obtener una copia de los datos que te conciernen e información sobre su tratamiento.",
+        "Rectificación: hacer corregir los datos inexactos o incompletos.",
+        "Supresión: solicitar la eliminación de tus datos, sin perjuicio de los plazos legales de conservación.",
+        "Oposición: oponerte a un tratamiento basado en el interés legítimo y, en cualquier momento, a la prospección comercial.",
+        "Limitación: solicitar la suspensión de un tratamiento en los casos previstos por la ley.",
+        "Portabilidad: recibir tus datos en un formato estructurado y de uso común.",
+        "Retirada del consentimiento: en cualquier momento, sin afectar a la licitud del tratamiento anterior.",
+        "Revisión humana: de cualquier decisión automatizada que te concierna."
+      ]},
+      { "p": "Para ejercer tus derechos, escribe a fihodecorp@gmail.com indicando el objeto de tu solicitud. Podemos solicitar un justificante de identidad para evitar cualquier suplantación. Respondemos en un plazo máximo de treinta (30) días. Si consideras que tus derechos no se respetan, puedes presentar una reclamación ante la Autoridad de Protección de Datos Personales de Benín (APDP)." }
+    ]},
+    { "n": 43, "title": "Rastreadores e identificadores técnicos", "blocks": [
+      { "p": "La Aplicación utiliza identificadores técnicos estrictamente necesarios para su funcionamiento (sesión, seguridad, preferencias) y para la medición de audiencia y estabilidad. No utiliza rastreadores publicitarios de terceros. Puedes limitar ciertos identificadores en los ajustes de tu dispositivo, con el riesgo de degradar algunas funciones." }
+    ]},
+    { "n": 44, "title": "Modificaciones de la política", "blocks": [
+      { "p": "Podemos actualizar la presente Política para reflejar la evolución del servicio, de nuestros proveedores o de la ley. Las modificaciones sustanciales se te notifican en las condiciones del artículo 23. La fecha de la última versión figura en la Aplicación." }
+    ]},
+    { "n": 45, "title": "Contacto", "blocks": [
+      { "ul": [
+        "Email: fihodecorp@gmail.com",
+        "Teléfono: +229 01 66 65 23 13",
+        "Correo postal: FIHODECORP SARL, Quartier Honmèho, Bohicon, República de Benín"
+      ]}
+    ]}
+  ]
+}

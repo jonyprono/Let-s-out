@@ -1,0 +1,347 @@
+{
+  "keyPoints": {
+    "title": "Key points at a glance",
+    "intro": "This summary helps you understand the essentials. It does not replace the full terms that follow, which prevail.",
+    "table": {
+      "head": ["Topic", "What to remember"],
+      "rows": [
+        ["Who can use Let's Out", "Any natural person aged at least 18."],
+        ["Commission on shared pots", "4% of the amount of each contribution."],
+        ["Commission on ticketing", "7% of the price of each ticket sold."],
+        ["Withdrawal processing time", "From 24 hours to about 5 business days, from the validation of the request."],
+        ["Shared pot security", "Shared pot funds are only disbursed after validation according to the group's rules, and are refunded in full if the event is cancelled."],
+        ["Your role as organizer", "You are solely responsible for the event you create. Let's Out is a technical intermediary."],
+        ["Your data", "It is never sold. You can view, correct or delete it at any time."],
+        ["Contact", "fihodecorp@gmail.com or +229 01 66 65 23 13."]
+      ]
+    }
+  },
+  "cgu": [
+    { "n": 1, "title": "Purpose and acceptance", "blocks": [
+      { "p": "These Terms of Use (the \"Terms\") govern access to and use of the Let's Out mobile application (the \"Application\"), published by FIHODECORP SARL (the \"Publisher\")." },
+      { "p": "Let's Out is a social platform that lets users create and join local group events, finance these events through shared pots, sell and buy tickets, and connect with other users who share the same interests." },
+      { "p": "By creating an account, ticking the acceptance box or using the Application, the user declares that they have read, understood and accepted without reservation these Terms and the Privacy Policy (Part II). If the user does not accept these terms, they must refrain from using the Application." }
+    ]},
+    { "n": 2, "title": "Definitions", "blocks": [
+      { "ul": [
+        "User: any person holding a Let's Out account.",
+        "Organizer: the user who creates an event, a shared pot or a ticketing service.",
+        "Participant: the user who joins an event, contributes to a shared pot or buys a ticket.",
+        "Local host: the user, private individual or professional, who offers a venue or space to host an event.",
+        "Event: any outing, activity, meetup or gathering published on the Application.",
+        "Shared pot: a collection of contributions among the participants of an event, intended to finance that event's expenses.",
+        "Ticketing: a service for selling access tickets to an event through the Application.",
+        "Payment provider: any payment aggregator, mobile money operator, bank or financial institution involved in processing payments, including FedaPay.",
+        "Business day: Monday to Friday, excluding public holidays in Benin."
+      ]}
+    ]},
+    { "n": 3, "title": "Publisher and legal notice", "blocks": [
+      { "p": "The Application is published by the following company:" },
+      { "table": { "head": ["Item", "Information"], "rows": [
+        ["Company name", "FIHODECORP (FIHODECORP SARL)"],
+        ["Legal form", "Limited liability company (SARL) under Beninese law"],
+        ["Share capital", "100,000 FCFA"],
+        ["Trade and companies register (RCCM)", "RB/ABY/26 B 3100, registered on 4 June 2026, Registry of the Commercial Court of Abomey"],
+        ["Tax identification number (IFU)", "3202634790371"],
+        ["Registered office", "Quartier Honmèho, Bohicon, Republic of Benin"],
+        ["Email", "fihodecorp@gmail.com"],
+        ["Phone", "+229 01 66 65 23 13"],
+        ["Published application", "Let's Out"]
+      ]}}
+    ]},
+    { "n": 4, "title": "Access to the service and user account", "blocks": [
+      { "h": "4.1 Minimum age" },
+      { "p": "The Application is reserved for natural persons aged at least 18 and legally capable. Minors are prohibited from creating an account, contributing to a shared pot or buying a ticket. The Publisher may request any proof of age and delete without notice any account whose holder is a minor." },
+      { "h": "4.2 Account creation and security" },
+      { "ul": [
+        "The information provided must be accurate, complete and kept up to date.",
+        "Each person may hold only one account. Identity theft is prohibited.",
+        "The user is responsible for the confidentiality of their credentials and for any activity carried out from their account.",
+        "In the event of loss, theft or fraudulent use of their credentials, the user must immediately inform the Publisher at fihodecorp@gmail.com."
+      ]},
+      { "h": "4.3 Identity verification" },
+      { "p": "For the safety of the community and to comply with regulations, the Publisher may require verification of the user's identity, in particular before creating a paid event, opening a ticketing service, or processing a withdrawal request. Refusing this verification may result in these services being refused or suspended." }
+    ]},
+    { "n": 5, "title": "Role of the Publisher", "blocks": [
+      { "p": "The Publisher provides a technical platform for connecting people. It is neither the organizer, co-organizer nor seller of the events published by users, and is not a party to the agreements concluded between organizers, local hosts and participants." },
+      { "p": "The Publisher is neither a bank nor a credit institution. Payments are processed by Payment providers. Sums held for shared pots and ticketing do not constitute bank deposits, bear no interest and generate no return for the user." }
+    ]},
+    { "n": 6, "title": "Events, organizers and local hosts", "blocks": [
+      { "h": "6.1 Organizer's obligations" },
+      { "p": "The organizer is solely responsible for their event. They undertake to:" },
+      { "ul": [
+        "provide accurate information (date, venue, programme, price, number of places, cancellation terms) and update it without delay;",
+        "comply with applicable laws and regulations, in particular regarding safety, administrative authorizations, sale of alcohol, noise, taxation and copyright;",
+        "ensure the safety of participants and take out the insurance needed for the event;",
+        "not organize any event that is unlawful, discriminatory, dangerous or contrary to public decency."
+      ]},
+      { "h": "6.2 Local hosts" },
+      { "p": "The local host acts entirely independently. They guarantee that they have the right to host the event at the proposed venue, that the venue matches its description and complies with safety rules, and that they respect the rights of neighbours and third parties. A \"verified\" badge or mention only reflects the Publisher's check of certain information and is neither a certification nor a guarantee of the venue's safety or quality." },
+      { "h": "6.3 Participation and caution" },
+      { "p": "Real-life meetups carry risks. The participant remains the sole judge of their participation, must exercise caution (especially at a first meeting) and is encouraged to report any inappropriate behaviour to the Publisher. In case of danger, they must contact the competent authorities immediately." }
+    ]},
+    { "n": 7, "title": "Shared pots", "blocks": [
+      { "h": "7.1 Principle" },
+      { "p": "The shared pot lets the participants of an event pool funds to finance that event's expenses (transport, catering, rental, entrance fees, equipment, etc.). The purpose, target amount and validation rules are set by the organizer when creating the shared pot and are visible to all participants before any contribution." },
+      { "h": "7.2 Holding of funds" },
+      { "p": "In the current version of the Application, collected funds are held by FIHODECORP SARL in an account dedicated to shared pots, separate from its own operating funds, as a temporary trusted third party, pending a partnership with an approved financial institution. The Publisher refrains from using these funds for any purpose other than those provided for in these Terms. Users will be informed of any change in the holding arrangement." },
+      { "h": "7.3 Contribution" },
+      { "ul": [
+        "Contributions are free and voluntary, subject to any minimum amount set by the organizer.",
+        "The applicable commission is clearly displayed before payment is confirmed.",
+        "A confirmed contribution can only be withdrawn in the cases provided for in these Terms (event cancellation, unused balance, proven technical error or decision of the Publisher)."
+      ]},
+      { "h": "7.4 Disbursement of funds" },
+      { "ul": [
+        "Every expense is submitted by the organizer with the supporting documents requested by the Application (quote, invoice, supplier name, amount).",
+        "Disbursement only takes place after the expense has been validated according to the rule set when the shared pot was created (approval threshold of participants).",
+        "Each participant can view in real time the contributions received, the expenses submitted, validated or rejected, and the available balance.",
+        "The Publisher may refuse or suspend a disbursement in case of serious doubt about its regularity, a dispute between participants, suspected fraud or an order from an authority."
+      ]},
+      { "h": "7.5 Cancellation and refund" },
+      { "p": "If the event is cancelled, postponed without the participants' agreement, or cannot take place, contributions are refunded in full to the contributors, including the Publisher's commission, within a maximum of seven (7) business days from the cancellation being established. Any non-refundable fees charged by a Payment provider, where they exist, are indicated before payment." },
+      { "h": "7.6 Unused balance" },
+      { "p": "After the event, the unspent balance is, according to the group's decision made in the Application, either paid back in proportion to the contributions or allocated to another use validated by the group. If no decision is made within thirty (30) days after the event, the balance is paid back in proportion to the contributions." },
+      { "h": "7.7 Prohibitions" },
+      { "p": "It is prohibited to use a shared pot to collect funds unrelated to an event, for an unlawful purpose, for undeclared donations, to finance illegal activities, or for a use other than the one announced. Any misappropriation of funds may lead to account suspension, freezing of the sums concerned, and civil and criminal proceedings." }
+    ]},
+    { "n": 8, "title": "Ticketing", "blocks": [
+      { "h": "8.1 Principle" },
+      { "p": "Ticketing lets an organizer sell tickets for their event and a user buy them through the Application. The ticket is personal and takes the form of a unique code or QR code, presented at the entrance." },
+      { "h": "8.2 Organizer's responsibility" },
+      { "p": "The organizer sets the price, the number of tickets and the conditions of the event. They are the seller of the ticket and solely responsible for the service, its content, its holding and their tax obligations. The Publisher only acts as a technical intermediary for payment collection and access management." },
+      { "h": "8.3 Purchase and use of the ticket" },
+      { "ul": [
+        "The purchase is firm and final once payment is confirmed, subject to the refund cases provided below.",
+        "The ticket is nominative or linked to the buyer's account. It can only be used once: any ticket already scanned is invalidated.",
+        "Reselling tickets above their original price, or copying or forging a ticket, is prohibited and results in cancellation of the ticket without refund and suspension of the account."
+      ]},
+      { "h": "8.4 Cancellation, postponement and refund" },
+      { "ul": [
+        "If the organizer cancels the event, tickets are refunded in full, commission included, within a maximum of seven (7) business days.",
+        "If the event is postponed, the ticket remains valid for the new date. A buyer who cannot attend may request a refund within seven (7) days of the postponement being announced.",
+        "Unless otherwise stated before purchase, a buyer who does not show up or no longer wishes to attend is not entitled to any refund. The organizer may offer a more favourable refund policy, which must be stated on the event page."
+      ]},
+      { "h": "8.5 Payout to the organizer" },
+      { "p": "The net proceeds of ticket sales (after deduction of the Publisher's commission) are made available to the organizer after the event has taken place, unless special conditions are displayed in the Application. The organizer requests payment in accordance with article 10. The Publisher may defer the payout in case of a dispute, a report, a high proportion of refund requests or suspected fraud." }
+    ]},
+    { "n": 9, "title": "Fees and commissions", "blocks": [
+      { "p": "Use of the Application is free for creating an account, browsing and joining a free event. The shared pot and ticketing services are subject to the following commissions:" },
+      { "table": { "head": ["Service", "Commission", "Calculation basis", "When it is charged"], "rows": [
+        ["Shared pot", "4%", "Amount of each contribution", "When the contribution is paid"],
+        ["Ticketing", "7%", "Price of each ticket sold", "When the ticket is sold"]
+      ]}},
+      { "ul": [
+        "Commissions are deducted from the sums collected. The net amount available to the organizer is displayed in the Application. Any applicable taxes are indicated when they are added.",
+        "Processing fees may be charged by Payment providers (mobile money operators, bank cards). Where they apply, they are indicated before payment is confirmed.",
+        "The Publisher may change its commissions for the future, with at least fifteen (15) days' prior notice in the Application. New commissions do not apply to shared pots already open or to tickets already sold."
+      ]}
+    ]},
+    { "n": 10, "title": "Payments, withdrawals and timeframes", "blocks": [
+      { "h": "10.1 Payment methods" },
+      { "p": "Payments are made using the methods offered in the Application (mobile money, bank card or others). They are processed by Payment providers, whose own terms apply. The Publisher does not store users' full banking details." },
+      { "h": "10.2 Withdrawal request" },
+      { "p": "An organizer who wishes to receive funds to which they are entitled (a validated shared pot expense, net ticketing proceeds) requests it in the Application. Payment is made exclusively to the account holder, or to the designated and validated supplier in the case of a shared pot expense, to an account or mobile money number in their name. Payments to unidentified third parties are refused." },
+      { "h": "10.3 Processing times" },
+      { "table": { "head": ["Operation", "Indicative timeframe"], "rows": [
+        ["Processing a withdrawal request", "From 24 hours to about 5 business days, from the validation of the request"],
+        ["Refund after an event is cancelled", "7 business days maximum from the cancellation being established"],
+        ["Response to a complaint", "30 days maximum"]
+      ]}},
+      { "p": "These timeframes are indicative. They may be extended in the event of additional identity or document checks, anti-fraud controls, disputes, public holidays, unavailability or slowdown of a Payment provider or telephone operator, or a request from an authority. The Publisher cannot be held liable for delays attributable to these third parties, but undertakes to inform the user concerned and to act diligently." },
+      { "h": "10.4 Payment errors and disputes" },
+      { "p": "Any payment error, double charge or dispute must be reported to the Publisher as soon as possible and no later than thirty (30) days after the transaction, with supporting evidence. A user who abusively or fraudulently initiates a dispute with their bank or operator exposes themselves to suspension of their account and recovery of the sums due." }
+    ]},
+    { "n": 11, "title": "Fight against fraud, money laundering and terrorist financing", "blocks": [
+      { "p": "The Publisher applies due diligence measures in accordance with the regulations in force in Benin and in the WAEMU area. To this end, it may: request proof of identity and of the origin or destination of funds, limit or cap amounts, delay, refuse or freeze a transaction or withdrawal, close an account, and report any suspicious transaction to the competent authorities, without informing the user where the law prohibits it." }
+    ]},
+    { "n": 12, "title": "Attendance, QR code and absences", "blocks": [
+      { "p": "Each event may have an attendance QR code. Participants are invited to scan it on arrival to confirm their attendance. A registered participant who does not show up, without having notified the organizer at least two (2) hours before the start of the event, is recorded as an unjustified absence, which may lower their reliability score. After several unjustified absences, access to certain events may be subject to the organizer's approval or temporarily suspended." }
+    ]},
+    { "n": 13, "title": "Ratings and reputation", "blocks": [
+      { "p": "After an event, participants whose attendance is confirmed can rate each other on punctuality, attitude and reliability. The overall score is visible on the user's profile and may be taken into account for access to certain events. Ratings must reflect a real experience. The following are prohibited: favour ratings between linked accounts, retaliatory ratings, fake ratings and any manipulation. The user may contest a rating with the Publisher, which reviews it in good faith and may discard it if it is clearly abusive." }
+    ]},
+    { "n": 14, "title": "Rules of conduct and content", "blocks": [
+      { "h": "14.1 Prohibited behaviour" },
+      { "p": "The user undertakes to use the Application in compliance with the law and with respect for other members. The following are prohibited in particular:" },
+      { "ul": [
+        "harassment, threats, hateful, discriminatory, defamatory or insulting remarks, or unsolicited sexual remarks;",
+        "content that is unlawful, violent, pornographic, or infringes the rights of third parties (image, privacy, intellectual property);",
+        "fraud, identity theft, creating fake events, scams and soliciting money outside the Application;",
+        "collecting other users' personal data for unauthorized purposes, unauthorized commercial solicitation and spam;",
+        "any attempt at hacking, automated data extraction, circumventing security measures or disrupting the service;",
+        "diverting payment outside the Application to avoid commissions."
+      ]},
+      { "h": "14.2 Reporting and moderation" },
+      { "p": "Every user can report content, a profile or an event from the Application. The Publisher reviews reports within a reasonable time and may, without notice, remove content, restrict a feature, or suspend or delete an account. The Publisher has no general obligation to monitor content published by users and is not its author." }
+    ]},
+    { "n": 15, "title": "Image rights and content from events", "blocks": [
+      { "p": "Photos and videos may be taken at Let's Out events, in particular for sharing within the community and promoting the Application (social networks, news feed, communication materials). By attending an event, the participant is informed of this and, unless they object to the organizer or the Publisher before or during the event, authorizes the use of their image in this context, free of charge, for the duration of the Application's promotion. Anyone may at any time request the removal of content in which they appear by writing to fihodecorp@gmail.com. Organizers undertake to inform participants that images are being captured and to respect their objection." }
+    ]},
+    { "n": 16, "title": "Intellectual property", "blocks": [
+      { "p": "The Application, its source code, architecture, databases, design, visual identity, texts, logos, the \"Let's Out\" brand and the names \"Outsters\" and \"Connect & Enjoy\" are the exclusive property of the Publisher and are protected by applicable laws. Any reproduction, representation, extraction, modification, decompilation or exploitation, in whole or in part, without prior written authorization, is prohibited and constitutes infringement." },
+      { "p": "The user retains ownership of the content they publish (texts, photos, descriptions, reviews). They grant the Publisher a non-exclusive, free, worldwide licence, for the duration of legal protection, to host, reproduce, adapt for technical purposes, display and distribute this content in the Application and to promote the service. The user guarantees that they hold the necessary rights to the content they publish." }
+    ]},
+    { "n": 17, "title": "Personal data", "blocks": [
+      { "p": "The processing of personal data is described in the Privacy Policy (Part II), which forms an integral part of these Terms." }
+    ]},
+    { "n": 18, "title": "Liability of the Publisher", "blocks": [
+      { "p": "The Publisher undertakes to provide the Application diligently and to protect the funds entrusted to it in accordance with article 7. It is bound by an obligation of means for the operation of the Application." },
+      { "p": "To the extent permitted by law, the Publisher cannot be held liable for:" },
+      { "ul": [
+        "the content, running, cancellation or quality of events organized by users, nor for bodily, material or moral damage occurring during these events;",
+        "the behaviour of users, before, during or after an event;",
+        "content published by users;",
+        "interruptions, delays or errors attributable to Payment providers, telephone operators, telecommunication networks, hosting providers or app stores;",
+        "indirect damage (loss of chance, loss of opportunity, loss of earnings, damage to reputation)."
+      ]},
+      { "p": "To the extent permitted by law, the Publisher's total liability to a user, for any damage related to a transaction or service, is limited to the amount of commissions actually received by the Publisher for that transaction. This limitation does not apply to the obligation to return or disburse funds held in accordance with these Terms, nor in the event of fraud or gross negligence by the Publisher, nor where the law prohibits it." }
+    ]},
+    { "n": 19, "title": "User liability and indemnity", "blocks": [
+      { "p": "The user is responsible for their use of the Application and for the content they publish. They undertake to indemnify and hold the Publisher harmless against any claim, action, judgment or costs (including reasonable legal fees) brought by a third party and resulting from a breach of these Terms, the law or the rights of third parties by that user, in particular as an organizer or local host." }
+    ]},
+    { "n": 20, "title": "Force majeure", "blocks": [
+      { "p": "The Publisher is not liable for a failure to perform its obligations caused by a force majeure event within the meaning of applicable law, including natural disaster, pandemic, conflict, act of terrorism, widespread power or telecommunications outage, large-scale cyberattack, failure of an essential supplier, or decision of an authority. Obligations are suspended for the duration of the impediment. Funds held remain protected and are returned or disbursed as soon as possible." }
+    ]},
+    { "n": 21, "title": "Suspension, termination and account deletion", "blocks": [
+      { "p": "The user may delete their account at any time from the Application settings, subject to prior settlement of ongoing operations (open shared pots, tickets sold, disputes)." },
+      { "p": "The Publisher may suspend or delete an account, with or without notice depending on the seriousness, in the event of a breach of the Terms, fraud or suspected fraud, inaccurate information, dangerous or abusive behaviour, repeated reports, manipulation of ratings or shared pots, an order from an authority or a risk to the safety of the community. In the event of suspension, the Publisher may freeze the funds concerned during the review. Sums owed to other users or refundable to them are returned in accordance with the Terms, after any deduction of amounts owed to the Publisher as compensation for an established breach." }
+    ]},
+    { "n": 22, "title": "Availability and evolution of the service", "blocks": [
+      { "p": "The Application is provided \"as is\". The Publisher strives to ensure its availability but does not guarantee uninterrupted access or the absence of errors, particularly during maintenance and updates. The Publisher may change, suspend or remove features, it being specified that ongoing financial operations will be completed." }
+    ]},
+    { "n": 23, "title": "Changes to the Terms", "blocks": [
+      { "p": "The Publisher may modify these Terms and the Privacy Policy to reflect changes in the service, regulations or financial partnerships. Any substantial change is notified in the Application or by email at least fifteen (15) days before it takes effect. A user who refuses the new terms may delete their account before that date. Continued use after the effective date constitutes acceptance." }
+    ]},
+    { "n": 24, "title": "Communications and evidence", "blocks": [
+      { "p": "The user agrees to receive communications about their account and transactions by in-app notification, email or SMS. Data recorded in the systems of the Publisher and its Payment providers is authoritative, unless proven otherwise, as to the existence and content of the transactions carried out." }
+    ]},
+    { "n": 25, "title": "General provisions", "blocks": [
+      { "ul": [
+        "Entire agreement: the Terms and the Privacy Policy constitute the entire agreement between the user and the Publisher for the use of the Application.",
+        "Partial invalidity: if a clause is declared void or unenforceable, the other clauses remain in force.",
+        "No waiver: the Publisher's failure to exercise a right does not constitute a waiver of that right.",
+        "Assignment: the Publisher may assign or transfer its rights and obligations to a company taking over the operation of the Application, after informing users. The user may not assign their account.",
+        "Survival: clauses which by their nature must survive the end of the Terms (intellectual property, liability, indemnity, data, disputes) remain applicable."
+      ]}
+    ]},
+    { "n": 26, "title": "Complaints and amicable settlement", "blocks": [
+      { "p": "Any complaint may be sent to fihodecorp@gmail.com or +229 01 66 65 23 13, stating the facts and attaching supporting documents. The Publisher acknowledges receipt and responds within a maximum of thirty (30) days. In the event of a dispute, the parties first seek an amicable solution, including through mediation or conciliation, before any legal action." }
+    ]},
+    { "n": 27, "title": "Governing law and jurisdiction", "blocks": [
+      { "p": "These Terms are governed by the law of the Republic of Benin and, where applicable, by the OHADA Uniform Acts. Failing amicable resolution, any dispute falls under the jurisdiction of the Beninese courts of the district of the Publisher's registered office, without prejudice to the mandatory rules of jurisdiction applicable to consumers." }
+    ]},
+    { "n": 28, "title": "Contact", "blocks": [
+      { "p": "FIHODECORP SARL, Quartier Honmèho, Bohicon, Republic of Benin. Email: fihodecorp@gmail.com. Phone: +229 01 66 65 23 13." }
+    ]}
+  ],
+  "privacy": [
+    { "n": 29, "title": "Introduction and data controller", "blocks": [
+      { "p": "This Privacy Policy explains what personal data Let's Out collects, why, how it is protected and what your rights are. It is established in accordance with the principles of personal data protection and the regulations applicable in Benin, in particular the Digital Code." },
+      { "p": "The data controller is FIHODECORP SARL, whose registered office is in Bohicon, Republic of Benin. Contact for any data-related question: fihodecorp@gmail.com." },
+      { "p": "Our commitment: we do not sell your personal data. We only collect what is necessary for the service to work, and we give you control over your information." }
+    ]},
+    { "n": 30, "title": "Data collected", "blocks": [
+      { "table": { "head": ["Category", "Examples", "Source"], "rows": [
+        ["Identity and account", "Last name, first name, username, email, phone number, encrypted password, profile photo, date of birth or confirmation of legal age", "You"],
+        ["Profile and preferences", "Interests, city, bio, activity preferences", "You"],
+        ["Identity verification", "Identity document and supporting documents, when requested (art. 4.3 and 11)", "You"],
+        ["Transactions", "Contributions, tickets bought or sold, withdrawal requests, amounts, dates, transaction IDs, mobile money number or payment method references", "You, Payment providers"],
+        ["Activity on the Application", "Events created or joined, attendance (QR scan), ratings given and received, group messages, reports", "You, other users"],
+        ["Technical data", "IP address, device model, operating system, Application version, technical identifiers, connection logs, crash data", "Automatic collection"],
+        ["Location", "Approximate or precise position, only if you allow it", "Your device"],
+        ["Content", "Photos, videos and texts that you publish or that are captured during events", "You, organizers"]
+      ]}},
+      { "p": "We do not request so-called sensitive data (origin, opinions, health, sex life, etc.). We encourage you not to publish it in your profile or messages." }
+    ]},
+    { "n": 31, "title": "Purposes and legal bases", "blocks": [
+      { "table": { "head": ["Purpose", "Details", "Legal basis"], "rows": [
+        ["Create and manage your account", "Sign-up, login, security, support", "Performance of the contract"],
+        ["Provide the service", "Events, chat, shared pots, ticketing, attendance QR, notifications about your events", "Performance of the contract"],
+        ["Process payments and withdrawals", "Collection, escrow, refunds, payouts", "Performance of the contract, legal obligation"],
+        ["Ratings and reliability", "Calculating and displaying the reliability score", "Legitimate interest (community trust and safety)"],
+        ["Prevent fraud and secure", "Anomaly detection, anti-money laundering, moderation", "Legitimate interest, legal obligation"],
+        ["Personalize", "Event suggestions based on your interests and area", "Legitimate interest, consent for location"],
+        ["Communication and promotion", "Information, news, offers, sharing of event images", "Consent or legitimate interest, with right to object"],
+        ["Improve the Application", "Aggregated statistics, bug fixing", "Legitimate interest"],
+        ["Comply with the law", "Accounting and tax obligations, responses to authorities", "Legal obligation"]
+      ]}}
+    ]},
+    { "n": 32, "title": "Recipients of data", "blocks": [
+      { "p": "Your data is only accessible to the Publisher's authorized personnel and, to the extent necessary, to the following recipients:" },
+      { "ul": [
+        "Payment providers (FedaPay, mobile money operators, banks, partner financial institutions) to process transactions and meet regulatory obligations;",
+        "Technical providers (hosting, database, sending notifications, messaging, error analysis), bound by confidentiality and security commitments;",
+        "Other users, for your public profile information (name or username, photo, reliability score, badges, interests, events) and the information needed to take part in an event (for example the list of participants);",
+        "Organizers and local hosts, to manage their events (list of registrants, attendance);",
+        "Judicial, administrative or financial authorities, upon lawful request;",
+        "An acquirer or approved financial partner, in the event of a fund-holding partnership, transfer or restructuring, with prior information to users where the law requires it."
+      ]},
+      { "p": "We neither sell nor rent your personal data to third parties for advertising purposes." }
+    ]},
+    { "n": 33, "title": "Transfers outside Benin", "blocks": [
+      { "p": "Some technical providers may host or process data outside Benin. In this case, we ensure that the transfer is governed by appropriate safeguards (contractual commitments, security measures, declaration or authorization where the law requires it) and that your data benefits from an adequate level of protection." }
+    ]},
+    { "n": 34, "title": "Retention periods", "blocks": [
+      { "table": { "head": ["Data", "Retention period"], "rows": [
+        ["Account and profile", "For the lifetime of the account, then deletion or anonymization within 30 days after the account is deleted"],
+        ["Transactions and accounting records", "Ten (10) years, in accordance with accounting and commercial obligations"],
+        ["Identity verification and anti-money laundering", "For the period required by regulations, up to ten (10) years after the end of the relationship"],
+        ["Group messages", "Until the account is deleted or twelve (12) months after the end of the event"],
+        ["Connection logs and technical data", "Twelve (12) months"],
+        ["Location", "Used in real time, not stored permanently"],
+        ["Communication preferences", "Until you withdraw your consent"],
+        ["Reports and sanctions", "For the time needed for community safety and the defence of our rights, within the limits of limitation periods"]
+      ]}},
+      { "p": "At the end of these periods, data is irreversibly deleted or anonymized." }
+    ]},
+    { "n": 35, "title": "Public profile, ratings and automated processing", "blocks": [
+      { "p": "Your public profile and reliability score are visible to other users, which is essential for trust within the community. The score is calculated from confirmed attendance, punctuality, behaviour and ratings received. Our event suggestions are based on your interests and area. No decision producing significant legal effects for you is taken solely by automated means without the possibility of review: you can request a human review at any time by writing to fihodecorp@gmail.com." }
+    ]},
+    { "n": 36, "title": "Geolocation", "blocks": [
+      { "p": "Location is only used if you allow it in your device settings, to show nearby events and facilitate check-in. We do not track your movements outside the Application. You can withdraw this permission at any time in your device settings; the Application remains usable by entering your city manually." }
+    ]},
+    { "n": 37, "title": "Notifications and communications", "blocks": [
+      { "p": "We send you notifications necessary for the service (new participants, messages, event reminders, expense validations, refunds, security). You can manage non-essential notifications in the Application or device settings, and unsubscribe from any promotional communication." }
+    ]},
+    { "n": 38, "title": "Event photos and videos", "blocks": [
+      { "p": "Images captured during events are processed in accordance with article 15 of the Terms. You can object to their use or request their removal by writing to fihodecorp@gmail.com. We process your request as soon as possible and remove the content under our control, without being able to guarantee the deletion of copies already shared by third parties." }
+    ]},
+    { "n": 39, "title": "Minors", "blocks": [
+      { "p": "The Application is prohibited to persons under 18. If we find that an account belongs to a minor, we delete it along with the associated data. If you believe a minor has provided data, contact us." }
+    ]},
+    { "n": 40, "title": "Data security", "blocks": [
+      { "p": "We implement appropriate technical and organizational measures: encryption of communications, authentication, access control, separation of fund accounts, backups, logging and training of authorized personnel. Sensitive payment data is processed by our Payment providers and is not stored in plain text by the Publisher. As no system is infallible, we encourage you to choose a strong password, not to share it and to protect your device." }
+    ]},
+    { "n": 41, "title": "Data breach", "blocks": [
+      { "p": "In the event of a data breach likely to create a risk to your rights and freedoms, we inform the competent data protection authority within the legal timeframes and, where the risk is high, the users concerned as soon as possible, specifying the measures taken." }
+    ]},
+    { "n": 42, "title": "Your rights", "blocks": [
+      { "p": "You have the following rights over your data:" },
+      { "ul": [
+        "Access: obtain a copy of the data concerning you and information about its processing.",
+        "Rectification: have inaccurate or incomplete data corrected.",
+        "Erasure: request the deletion of your data, subject to legal retention periods.",
+        "Objection: object to processing based on legitimate interest, and at any time to direct marketing.",
+        "Restriction: request the suspension of processing in the cases provided for by law.",
+        "Portability: receive your data in a structured and commonly used format.",
+        "Withdrawal of consent: at any time, without affecting the lawfulness of prior processing.",
+        "Human review: of any automated decision concerning you."
+      ]},
+      { "p": "To exercise your rights, write to fihodecorp@gmail.com stating the purpose of your request. We may ask for proof of identity to prevent identity theft. We respond within a maximum of thirty (30) days. If you believe your rights are not being respected, you can lodge a complaint with the Personal Data Protection Authority of Benin (APDP)." }
+    ]},
+    { "n": 43, "title": "Trackers and technical identifiers", "blocks": [
+      { "p": "The Application uses technical identifiers that are strictly necessary for its operation (session, security, preferences) and for audience and stability measurement. It does not use third-party advertising trackers. You can limit certain identifiers in your device settings, at the risk of degrading some features." }
+    ]},
+    { "n": 44, "title": "Changes to the policy", "blocks": [
+      { "p": "We may update this Policy to reflect changes in the service, our providers or the law. Substantial changes are notified to you under the conditions of article 23. The date of the latest version appears in the Application." }
+    ]},
+    { "n": 45, "title": "Contact", "blocks": [
+      { "ul": [
+        "Email: fihodecorp@gmail.com",
+        "Phone: +229 01 66 65 23 13",
+        "Mail: FIHODECORP SARL, Quartier Honmèho, Bohicon, Republic of Benin"
+      ]}
+    ]}
+  ]
+}

@@ -180,7 +180,7 @@
     "submit": "Iniciar sesión",
     "submitting": "Iniciando sesión...",
     "or": "O",
-    "google": "Iniciar sesión con Google",
+    "google": "Iniciar sesión con tu Email",
     "googleLoading": "Iniciar sesión con Google...",
     "newUser": "¿Eres nuevo en Lets Out?",
     "signUp": "Regístrate",
@@ -204,7 +204,7 @@
     "step2Subtitle": "Código de {{length}} dígitos enviado por {{channel}} al",
     "resend": "Reenviar el código",
     "resendIn": "en",
-    "google": "Registrarse con Google",
+    "google": "Registrarse con tu Email",
     "otpAlternative": "¿El código tarda en llegar? También puedes:",
     "step3Title": "¿Cómo te llamas?",
     "step3Subtitle": "Esta información ayudará a tus amigos a reconocerte y solo será visible en Lets Out.",
@@ -2879,5 +2879,22 @@
     "live": "En curso",
     "upcoming": "Próximo evento",
     "ended": "Evento finalizado"
+  },
+  "legal": {
+    "termsTitle": "Condiciones Generales de Uso",
+    "privacyTitle": "Política de privacidad",
+    "partI": "Parte I — Condiciones Generales de Uso (CGU)",
+    "partII": "Parte II — Política de privacidad",
+    "versionLabel": "Versión:",
+    "versionValue": "2.0 — en vigor desde su fecha de publicación en la aplicación",
+    "publisherLabel": "Editor:",
+    "publisherValue": "FIHODECORP SARL, sociedad de responsabilidad limitada de derecho beninés",
+    "headOfficeLabel": "Domicilio social:",
+    "headOfficeValue": "Quartier Honmèho, Bohicon, República de Benín",
+    "registration": "RCCM RB/ABY/26 B 3100 (Tribunal de Comercio de Abomey) | IFU 3202634790371",
+    "frenchPrevails": "Esta traducción se ofrece por comodidad. En caso de discrepancia, prevalece la versión francesa.",
+    "articleTitle": "Artículo {{n}} — {{title}}",
+    "backHome": "← Volver al inicio",
+    "footer": "Let's Out, por FIHODECORP SARL. Versión 2.0"
   }
 }

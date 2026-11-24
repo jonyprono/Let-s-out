@@ -1,0 +1,950 @@
+{
+  "keyPoints": {
+    "title": "Les points clés en bref",
+    "intro": "Ce résumé vous aide à comprendre l'essentiel. Il ne remplace pas les conditions complètes qui suivent, lesquelles font foi.",
+    "table": {
+      "head": [
+        "Sujet",
+        "Ce qu'il faut retenir"
+      ],
+      "rows": [
+        [
+          "Qui peut utiliser Let's Out",
+          "Toute personne physique âgée d'au moins 18 ans."
+        ],
+        [
+          "Commission sur les cagnottes collectives",
+          "4 % du montant de chaque contribution."
+        ],
+        [
+          "Commission sur la billetterie",
+          "7 % du prix de chaque billet vendu."
+        ],
+        [
+          "Délai de traitement d'un retrait",
+          "De 24 heures à 5 jours ouvrables environ, à compter de la validation de la demande."
+        ],
+        [
+          "Sécurité des cagnottes",
+          "Les fonds d'une cagnotte ne sont décaissés qu'après validation selon les règles du groupe, et sont intégralement remboursés si l'événement est annulé."
+        ],
+        [
+          "Votre rôle d'organisateur",
+          "Vous êtes seul responsable de l'événement que vous créez. Let's Out est un intermédiaire technique."
+        ],
+        [
+          "Vos données",
+          "Elles ne sont jamais vendues. Vous pouvez les consulter, les corriger ou les supprimer à tout moment."
+        ],
+        [
+          "Contact",
+          "fihodecorp@gmail.com ou +229 01 66 65 23 13."
+        ]
+      ]
+    }
+  },
+  "cgu": [
+    {
+      "n": 1,
+      "title": "Objet et acceptation",
+      "blocks": [
+        {
+          "p": "Les présentes Conditions Générales d'Utilisation (les « CGU ») régissent l'accès et l'utilisation de l'application mobile Let's Out (l'« Application »), éditée par FIHODECORP SARL (l'« Éditeur »)."
+        },
+        {
+          "p": "Let's Out est une plateforme sociale qui permet de créer et rejoindre des événements collectifs locaux, de financer ces événements au moyen de cagnottes collectives, de vendre et d'acheter des billets, et d'entrer en relation avec d'autres utilisateurs partageant les mêmes centres d'intérêt."
+        },
+        {
+          "p": "En créant un compte, en cochant la case d'acceptation ou en utilisant l'Application, l'utilisateur déclare avoir lu, compris et accepté sans réserve les présentes CGU ainsi que la Politique de confidentialité (Partie II). Si l'utilisateur n'accepte pas ces conditions, il doit s'abstenir d'utiliser l'Application."
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "title": "Définitions",
+      "blocks": [
+        {
+          "ul": [
+            "Utilisateur : toute personne disposant d'un compte Let's Out.",
+            "Organisateur : l'utilisateur qui crée un événement, une cagnotte ou une billetterie.",
+            "Participant : l'utilisateur qui rejoint un événement, contribue à une cagnotte ou achète un billet.",
+            "Hôte local : l'utilisateur, particulier ou professionnel, qui propose un lieu ou un espace pour accueillir un événement.",
+            "Événement : toute sortie, activité, rencontre ou manifestation publiée sur l'Application.",
+            "Cagnotte : collecte de contributions entre participants d'un événement, destinée à financer les dépenses de cet événement.",
+            "Billetterie : service de vente de billets d'accès à un événement via l'Application.",
+            "Prestataire de paiement : tout agrégateur de paiement, opérateur de mobile money, banque ou établissement financier intervenant dans le traitement des paiements, notamment FedaPay.",
+            "Jour ouvrable : du lundi au vendredi, hors jours fériés au Bénin."
+          ]
+        }
+      ]
+    },
+    {
+      "n": 3,
+      "title": "Éditeur et mentions légales",
+      "blocks": [
+        {
+          "p": "L'Application est éditée par la société suivante :"
+        },
+        {
+          "table": {
+            "head": [
+              "Rubrique",
+              "Information"
+            ],
+            "rows": [
+              [
+                "Dénomination sociale",
+                "FIHODECORP (FIHODECORP SARL)"
+              ],
+              [
+                "Forme juridique",
+                "Société à Responsabilité Limitée (SARL) de droit béninois"
+              ],
+              [
+                "Capital social",
+                "100 000 FCFA"
+              ],
+              [
+                "Registre du commerce (RCCM)",
+                "RB/ABY/26 B 3100, immatriculation du 4 juin 2026, Greffe du Tribunal de commerce d'Abomey"
+              ],
+              [
+                "Identifiant fiscal unique (IFU)",
+                "3202634790371"
+              ],
+              [
+                "Siège social",
+                "Quartier Honmèho, Bohicon, République du Bénin"
+              ],
+              [
+                "Email",
+                "fihodecorp@gmail.com"
+              ],
+              [
+                "Téléphone",
+                "+229 01 66 65 23 13"
+              ],
+              [
+                "Application éditée",
+                "Let's Out"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "title": "Accès au service et compte utilisateur",
+      "blocks": [
+        {
+          "h": "4.1 Âge minimum"
+        },
+        {
+          "p": "L'Application est réservée aux personnes physiques âgées d'au moins 18 ans révolus et juridiquement capables. Il est interdit aux mineurs de créer un compte, de participer à une cagnotte ou d'acheter un billet. L'Éditeur peut demander tout justificatif d'âge et supprimer sans préavis tout compte dont le titulaire serait mineur."
+        },
+        {
+          "h": "4.2 Création et sécurité du compte"
+        },
+        {
+          "ul": [
+            "Les informations fournies doivent être exactes, complètes et tenues à jour.",
+            "Chaque personne ne peut détenir qu'un seul compte. L'usurpation d'identité est interdite.",
+            "L'utilisateur est responsable de la confidentialité de ses identifiants et de toute activité réalisée depuis son compte.",
+            "En cas de perte, de vol ou d'utilisation frauduleuse de ses identifiants, l'utilisateur doit en informer immédiatement l'Éditeur à fihodecorp@gmail.com."
+          ]
+        },
+        {
+          "h": "4.3 Vérification d'identité"
+        },
+        {
+          "p": "Pour la sécurité de la communauté et le respect de la réglementation, l'Éditeur peut exiger la vérification de l'identité de l'utilisateur, notamment avant la création d'un événement payant, l'ouverture d'une billetterie, ou le traitement d'une demande de retrait. Le refus de se soumettre à cette vérification peut entraîner le refus ou la suspension de ces services."
+        }
+      ]
+    },
+    {
+      "n": 5,
+      "title": "Rôle de l'Éditeur",
+      "blocks": [
+        {
+          "p": "L'Éditeur fournit une plateforme technique de mise en relation. Il n'est ni organisateur, ni co-organisateur, ni vendeur des événements publiés par les utilisateurs, et n'est pas partie aux accords conclus entre organisateurs, hôtes locaux et participants."
+        },
+        {
+          "p": "L'Éditeur n'est ni une banque, ni un établissement de crédit. Les paiements sont traités par des Prestataires de paiement. Les sommes détenues au titre des cagnottes et de la billetterie ne constituent pas des dépôts bancaires, ne sont pas rémunérées et ne génèrent aucun intérêt au profit de l'utilisateur."
+        }
+      ]
+    },
+    {
+      "n": 6,
+      "title": "Événements, organisateurs et hôtes locaux",
+      "blocks": [
+        {
+          "h": "6.1 Obligations de l'organisateur"
+        },
+        {
+          "p": "L'organisateur est seul responsable de son événement. Il s'engage à :"
+        },
+        {
+          "ul": [
+            "fournir des informations exactes (date, lieu, programme, prix, nombre de places, conditions d'annulation) et les mettre à jour sans délai ;",
+            "respecter les lois et règlements applicables, notamment en matière de sécurité, d'autorisations administratives, de débit de boissons, de nuisances sonores, de fiscalité et de droits d'auteur ;",
+            "assurer la sécurité des participants et souscrire les assurances nécessaires à l'événement ;",
+            "ne pas organiser d'événement illicite, discriminatoire, dangereux ou contraire aux bonnes mœurs."
+          ]
+        },
+        {
+          "h": "6.2 Hôtes locaux"
+        },
+        {
+          "p": "L'hôte local agit en toute indépendance. Il garantit disposer du droit d'accueillir l'événement dans le lieu proposé, que celui-ci est conforme à sa description et aux règles de sécurité, et qu'il respecte les droits des voisins et des tiers. Un badge ou une mention « vérifié » reflète uniquement le contrôle de certaines informations par l'Éditeur et ne constitue ni une certification, ni une garantie de sécurité ou de qualité du lieu."
+        },
+        {
+          "h": "6.3 Participation et prudence"
+        },
+        {
+          "p": "Les rencontres réelles comportent des risques. Le participant reste seul juge de sa participation, doit faire preuve de prudence (notamment lors d'une première rencontre) et est invité à signaler à l'Éditeur tout comportement inapproprié. En cas de danger, il doit contacter immédiatement les autorités compétentes."
+        }
+      ]
+    },
+    {
+      "n": 7,
+      "title": "Cagnottes collectives",
+      "blocks": [
+        {
+          "h": "7.1 Principe"
+        },
+        {
+          "p": "La cagnotte permet aux participants d'un événement de mettre en commun des fonds pour financer les dépenses de cet événement (transport, restauration, location, entrées, matériel, etc.). L'objet, le montant objectif et les règles de validation sont définis par l'organisateur lors de la création de la cagnotte et sont visibles par tous les participants avant toute contribution."
+        },
+        {
+          "h": "7.2 Conservation des fonds"
+        },
+        {
+          "p": "Dans la version actuelle de l'Application, les fonds collectés sont conservés par FIHODECORP SARL sur un compte dédié aux cagnottes, distinct de ses fonds propres d'exploitation, en qualité de tiers de confiance temporaire, dans l'attente de la mise en place d'un partenariat avec un établissement financier agréé. L'Éditeur s'interdit d'utiliser ces fonds à d'autres fins que celles prévues par les présentes CGU. Les utilisateurs seront informés de tout changement de dispositif de conservation."
+        },
+        {
+          "h": "7.3 Contribution"
+        },
+        {
+          "ul": [
+            "La contribution est libre et volontaire, sous réserve du montant minimum éventuellement fixé par l'organisateur.",
+            "Le montant de la commission applicable est affiché clairement avant la confirmation du paiement.",
+            "Une contribution confirmée ne peut être retirée que dans les cas prévus aux présentes CGU (annulation de l'événement, solde non utilisé, erreur technique avérée ou décision de l'Éditeur)."
+          ]
+        },
+        {
+          "h": "7.4 Décaissement des fonds"
+        },
+        {
+          "ul": [
+            "Toute dépense est soumise par l'organisateur avec les justificatifs demandés par l'Application (devis, facture, nom du prestataire, montant).",
+            "Le décaissement n'a lieu qu'après validation de la dépense selon la règle fixée à la création de la cagnotte (seuil de participants approuvant).",
+            "Chaque participant peut consulter en temps réel les contributions reçues, les dépenses soumises, validées ou refusées, et le solde disponible.",
+            "L'Éditeur peut refuser ou suspendre un décaissement en cas de doute sérieux sur sa régularité, de litige entre participants, de suspicion de fraude ou d'injonction d'une autorité."
+          ]
+        },
+        {
+          "h": "7.5 Annulation et remboursement"
+        },
+        {
+          "p": "En cas d'annulation de l'événement, de report sans accord des participants, ou d'impossibilité de le tenir, les contributions sont intégralement remboursées aux contributeurs, commission de l'Éditeur incluse, dans un délai maximum de sept (7) jours ouvrables à compter de la constatation de l'annulation. Les frais non remboursables éventuellement facturés par un Prestataire de paiement, lorsqu'ils existent, sont indiqués avant le paiement."
+        },
+        {
+          "h": "7.6 Solde non utilisé"
+        },
+        {
+          "p": "À l'issue de l'événement, le solde non dépensé est, selon la décision du groupe prise dans l'Application, soit reversé au prorata des contributions, soit affecté à un autre usage validé par le groupe. À défaut de décision dans un délai de trente (30) jours après l'événement, le solde est reversé au prorata des contributions."
+        },
+        {
+          "h": "7.7 Interdictions"
+        },
+        {
+          "p": "Il est interdit d'utiliser une cagnotte pour collecter des fonds sans lien avec un événement, pour un objet illicite, pour des dons non déclarés, pour le financement d'activités illégales, ou pour un usage différent de celui annoncé. Tout détournement de fonds peut donner lieu à la suspension du compte, au gel des sommes concernées, et à des poursuites civiles et pénales."
+        }
+      ]
+    },
+    {
+      "n": 8,
+      "title": "Billetterie",
+      "blocks": [
+        {
+          "h": "8.1 Principe"
+        },
+        {
+          "p": "La billetterie permet à un organisateur de vendre des billets pour son événement et à un utilisateur d'en acheter via l'Application. Le billet est personnel et prend la forme d'un code ou QR code unique, présenté à l'entrée."
+        },
+        {
+          "h": "8.2 Responsabilité de l'organisateur"
+        },
+        {
+          "p": "L'organisateur fixe le prix, le nombre de billets et les conditions de l'événement. Il est le vendeur du billet et seul responsable de la prestation, de son contenu, de sa tenue et de ses obligations fiscales. L'Éditeur n'agit que comme intermédiaire technique d'encaissement et de gestion des accès."
+        },
+        {
+          "h": "8.3 Achat et utilisation du billet"
+        },
+        {
+          "ul": [
+            "L'achat est ferme et définitif dès la confirmation du paiement, sous réserve des cas de remboursement prévus ci-après.",
+            "Le billet est nominatif ou associé au compte de l'acheteur. Il ne peut être utilisé qu'une seule fois : tout billet déjà scanné est invalidé.",
+            "La revente de billets au-delà de leur prix d'origine, la reproduction ou la falsification d'un billet sont interdites et entraînent l'annulation du billet sans remboursement et la suspension du compte."
+          ]
+        },
+        {
+          "h": "8.4 Annulation, report et remboursement"
+        },
+        {
+          "ul": [
+            "Si l'organisateur annule l'événement, les billets sont intégralement remboursés, commission incluse, dans un délai maximum de sept (7) jours ouvrables.",
+            "En cas de report, le billet reste valable pour la nouvelle date. L'acheteur qui ne peut y assister peut demander le remboursement dans les sept (7) jours suivant l'annonce du report.",
+            "Sauf mention contraire affichée avant l'achat, l'acheteur qui ne se présente pas ou ne souhaite plus participer ne peut prétendre à aucun remboursement. L'organisateur peut prévoir une politique de remboursement plus favorable, qui doit être indiquée sur la page de l'événement."
+          ]
+        },
+        {
+          "h": "8.5 Reversement à l'organisateur"
+        },
+        {
+          "p": "Le produit net des ventes de billets (après déduction de la commission de l'Éditeur) est mis à la disposition de l'organisateur après la tenue de l'événement, sauf conditions particulières affichées dans l'Application. L'organisateur en demande le versement selon les modalités de l'article 10. L'Éditeur peut différer le reversement en cas de litige, de signalement, de forte proportion de demandes de remboursement ou de suspicion de fraude."
+        }
+      ]
+    },
+    {
+      "n": 9,
+      "title": "Frais et commissions",
+      "blocks": [
+        {
+          "p": "L'utilisation de l'Application est gratuite pour la création de compte, la navigation et la participation à un événement gratuit. Les services de cagnotte et de billetterie donnent lieu aux commissions suivantes :"
+        },
+        {
+          "table": {
+            "head": [
+              "Service",
+              "Commission",
+              "Base de calcul",
+              "Moment du prélèvement"
+            ],
+            "rows": [
+              [
+                "Cagnotte collective",
+                "4 %",
+                "Montant de chaque contribution",
+                "Lors du paiement de la contribution"
+              ],
+              [
+                "Billetterie",
+                "7 %",
+                "Prix de chaque billet vendu",
+                "Lors de la vente du billet"
+              ]
+            ]
+          }
+        },
+        {
+          "ul": [
+            "Les commissions sont retenues sur les sommes collectées. Le montant net disponible pour l'organisateur est affiché dans l'Application. Les taxes éventuellement applicables sont indiquées lorsqu'elles s'ajoutent.",
+            "Des frais de traitement peuvent être facturés par les Prestataires de paiement (opérateurs de mobile money, cartes bancaires). Lorsqu'ils s'appliquent, ils sont indiqués avant la confirmation du paiement.",
+            "L'Éditeur peut modifier ses commissions pour l'avenir, moyennant une information préalable d'au moins quinze (15) jours dans l'Application. Les nouvelles commissions ne s'appliquent ni aux cagnottes déjà ouvertes, ni aux billets déjà vendus."
+          ]
+        }
+      ]
+    },
+    {
+      "n": 10,
+      "title": "Paiements, retraits et délais",
+      "blocks": [
+        {
+          "h": "10.1 Moyens de paiement"
+        },
+        {
+          "p": "Les paiements sont effectués par les moyens proposés dans l'Application (mobile money, carte bancaire ou autres). Ils sont traités par des Prestataires de paiement, dont les propres conditions s'appliquent. L'Éditeur ne conserve pas les données bancaires complètes des utilisateurs."
+        },
+        {
+          "h": "10.2 Demande de retrait"
+        },
+        {
+          "p": "L'organisateur qui souhaite obtenir le versement de fonds auxquels il a droit (dépense validée d'une cagnotte, produit net d'une billetterie) en fait la demande dans l'Application. Le versement est effectué exclusivement au bénéfice du titulaire du compte, ou du prestataire désigné et validé dans le cas d'une dépense de cagnotte, sur un compte ou un numéro de mobile money à son nom. Les versements à des tiers non identifiés sont refusés."
+        },
+        {
+          "h": "10.3 Délais de traitement"
+        },
+        {
+          "table": {
+            "head": [
+              "Opération",
+              "Délai indicatif"
+            ],
+            "rows": [
+              [
+                "Traitement d'une demande de retrait",
+                "De 24 heures à 5 jours ouvrables environ, à compter de la validation de la demande"
+              ],
+              [
+                "Remboursement après annulation d'un événement",
+                "7 jours ouvrables maximum à compter de la constatation de l'annulation"
+              ],
+              [
+                "Réponse à une réclamation",
+                "30 jours maximum"
+              ]
+            ]
+          }
+        },
+        {
+          "p": "Ces délais sont indicatifs. Ils peuvent être allongés en cas de vérification complémentaire d'identité ou de justificatifs, de contrôle antifraude, de litige, de jours fériés, d'indisponibilité ou de ralentissement d'un Prestataire de paiement ou d'un opérateur de téléphonie, ou de demande d'une autorité. L'Éditeur ne saurait être tenu responsable des retards imputables à ces tiers, mais s'engage à en informer l'utilisateur concerné et à agir avec diligence."
+        },
+        {
+          "h": "10.4 Erreurs et contestations de paiement"
+        },
+        {
+          "p": "Toute erreur de paiement, double débit ou contestation doit être signalée à l'Éditeur dans les plus brefs délais et au plus tard dans les trente (30) jours suivant l'opération, avec les éléments justificatifs. L'utilisateur qui initie une contestation auprès de sa banque ou de son opérateur de manière abusive ou frauduleuse s'expose à la suspension de son compte et au recouvrement des sommes dues."
+        }
+      ]
+    },
+    {
+      "n": 11,
+      "title": "Lutte contre la fraude, le blanchiment et le financement du terrorisme",
+      "blocks": [
+        {
+          "p": "L'Éditeur applique des mesures de vigilance conformes à la réglementation en vigueur au Bénin et dans l'espace UEMOA. À ce titre, il peut : demander des justificatifs d'identité et de provenance ou de destination des fonds, limiter ou plafonner les montants, retarder, refuser ou geler une opération ou un retrait, clôturer un compte, et signaler toute opération suspecte aux autorités compétentes, sans que l'utilisateur en soit informé lorsque la loi l'interdit."
+        }
+      ]
+    },
+    {
+      "n": 12,
+      "title": "Présence, QR code et absences",
+      "blocks": [
+        {
+          "p": "Chaque événement peut disposer d'un QR code de présence. Le participant est invité à le scanner à son arrivée pour confirmer sa présence. Le participant inscrit qui ne se présente pas, sans avoir prévenu l'organisateur au moins deux (2) heures avant le début de l'événement, est enregistré comme absent non justifié, ce qui peut diminuer son score de fiabilité. Après plusieurs absences non justifiées, l'accès à certains événements peut être soumis à l'approbation de l'organisateur ou temporairement suspendu."
+        }
+      ]
+    },
+    {
+      "n": 13,
+      "title": "Notation et réputation",
+      "blocks": [
+        {
+          "p": "À l'issue d'un événement, les participants dont la présence est confirmée peuvent se noter mutuellement sur des critères de ponctualité, d'attitude et de fiabilité. Le score global est visible sur le profil de l'utilisateur et peut être pris en compte pour l'accès à certains événements. Les notes doivent refléter une expérience réelle. Sont interdits : les notes de complaisance entre comptes liés, les notes de représailles, les fausses notes et toute manipulation. L'utilisateur peut contester une note auprès de l'Éditeur, qui l'examine de bonne foi et peut l'écarter si elle est manifestement abusive."
+        }
+      ]
+    },
+    {
+      "n": 14,
+      "title": "Règles de conduite et contenus",
+      "blocks": [
+        {
+          "h": "14.1 Comportements interdits"
+        },
+        {
+          "p": "L'utilisateur s'engage à utiliser l'Application dans le respect des lois et des autres membres. Sont notamment interdits :"
+        },
+        {
+          "ul": [
+            "le harcèlement, les menaces, les propos haineux, discriminatoires, diffamatoires, injurieux ou à caractère sexuel non sollicité ;",
+            "les contenus illicites, violents, pornographiques, ou portant atteinte aux droits de tiers (image, vie privée, propriété intellectuelle) ;",
+            "la fraude, l'usurpation d'identité, la création de faux événements, les arnaques et la sollicitation d'argent hors de l'Application ;",
+            "la collecte de données personnelles d'autres utilisateurs à des fins non autorisées, le démarchage commercial non autorisé et le spam ;",
+            "toute tentative de piratage, d'extraction automatisée de données, de contournement des mesures de sécurité ou de perturbation du service ;",
+            "le détournement du paiement hors de l'Application pour éviter les commissions."
+          ]
+        },
+        {
+          "h": "14.2 Signalement et modération"
+        },
+        {
+          "p": "Chaque utilisateur peut signaler un contenu, un profil ou un événement depuis l'Application. L'Éditeur examine les signalements dans un délai raisonnable et peut, sans préavis, retirer un contenu, restreindre une fonctionnalité, suspendre ou supprimer un compte. L'Éditeur n'a pas d'obligation générale de surveillance des contenus publiés par les utilisateurs et n'en est pas l'auteur."
+        }
+      ]
+    },
+    {
+      "n": 15,
+      "title": "Droit à l'image et contenus issus des événements",
+      "blocks": [
+        {
+          "p": "Des photographies et vidéos peuvent être réalisées lors des événements Let's Out, notamment à des fins de partage dans la communauté et de promotion de l'Application (réseaux sociaux, fil d'actualité, supports de communication). En participant à un événement, le participant en est informé et, sauf opposition notifiée à l'organisateur ou à l'Éditeur avant ou pendant l'événement, autorise l'utilisation de son image dans ce cadre, à titre gratuit, pour la durée de promotion de l'Application. Toute personne peut à tout moment demander le retrait d'un contenu où elle figure en écrivant à fihodecorp@gmail.com. Les organisateurs s'engagent à informer les participants de la captation d'images et à respecter leur opposition."
+        }
+      ]
+    },
+    {
+      "n": 16,
+      "title": "Propriété intellectuelle",
+      "blocks": [
+        {
+          "p": "L'Application, son code source, son architecture, ses bases de données, son design, sa charte graphique, ses textes, ses logos, la marque « Let's Out » et les noms « Outsters » et « Connect & Enjoy » sont la propriété exclusive de l'Éditeur et sont protégés par les lois applicables. Toute reproduction, représentation, extraction, modification, décompilation ou exploitation, totale ou partielle, sans autorisation écrite préalable, est interdite et constitue une contrefaçon."
+        },
+        {
+          "p": "L'utilisateur conserve la propriété des contenus qu'il publie (textes, photos, descriptions, avis). Il concède à l'Éditeur une licence non exclusive, gratuite, mondiale, pour la durée de la protection légale, d'héberger, reproduire, adapter pour les besoins techniques, afficher et diffuser ces contenus dans l'Application et dans le cadre de la promotion du service. L'utilisateur garantit disposer des droits nécessaires sur les contenus qu'il publie."
+        }
+      ]
+    },
+    {
+      "n": 17,
+      "title": "Données personnelles",
+      "blocks": [
+        {
+          "p": "Le traitement des données personnelles est décrit dans la Politique de confidentialité (Partie II), qui fait partie intégrante des présentes CGU."
+        }
+      ]
+    },
+    {
+      "n": 18,
+      "title": "Responsabilité de l'Éditeur",
+      "blocks": [
+        {
+          "p": "L'Éditeur s'engage à fournir l'Application avec diligence et à protéger les fonds qui lui sont confiés conformément à l'article 7. Il est tenu à une obligation de moyens pour le fonctionnement de l'Application."
+        },
+        {
+          "p": "Dans les limites autorisées par la loi, l'Éditeur ne saurait être tenu responsable :"
+        },
+        {
+          "ul": [
+            "du contenu, du déroulement, de l'annulation ou de la qualité des événements organisés par les utilisateurs, ni des dommages corporels, matériels ou moraux survenus à l'occasion de ces événements ;",
+            "du comportement des utilisateurs, avant, pendant ou après un événement ;",
+            "des contenus publiés par les utilisateurs ;",
+            "des interruptions, retards ou erreurs imputables aux Prestataires de paiement, aux opérateurs de téléphonie, aux réseaux de télécommunication, aux fournisseurs d'hébergement ou aux magasins d'applications ;",
+            "des dommages indirects (perte de chance, perte d'opportunité, manque à gagner, atteinte à la réputation)."
+          ]
+        },
+        {
+          "p": "Dans la mesure permise par la loi, la responsabilité totale de l'Éditeur envers un utilisateur, pour tout dommage lié à une transaction ou à un service, est limitée au montant des commissions effectivement perçues par l'Éditeur au titre de cette transaction. Cette limitation ne s'applique pas à l'obligation de restituer ou de décaisser les fonds détenus conformément aux présentes CGU, ni en cas de dol ou de faute lourde de l'Éditeur, ni aux cas où la loi l'interdit."
+        }
+      ]
+    },
+    {
+      "n": 19,
+      "title": "Responsabilité de l'utilisateur et garantie",
+      "blocks": [
+        {
+          "p": "L'utilisateur est responsable de l'usage qu'il fait de l'Application et des contenus qu'il publie. Il s'engage à garantir et à indemniser l'Éditeur contre toute réclamation, action, condamnation ou frais (y compris frais d'avocat raisonnables) émanant d'un tiers et résultant d'une violation des présentes CGU, de la loi ou des droits de tiers par cet utilisateur, notamment en sa qualité d'organisateur ou d'hôte local."
+        }
+      ]
+    },
+    {
+      "n": 20,
+      "title": "Force majeure",
+      "blocks": [
+        {
+          "p": "L'Éditeur n'est pas responsable d'un manquement à ses obligations causé par un événement de force majeure au sens du droit applicable, notamment catastrophe naturelle, pandémie, conflit, acte de terrorisme, coupure généralisée d'électricité ou de télécommunications, cyberattaque d'ampleur, défaillance d'un fournisseur essentiel, décision d'une autorité. Les obligations sont suspendues pendant la durée de l'empêchement. Les fonds détenus restent protégés et sont restitués ou décaissés dès que possible."
+        }
+      ]
+    },
+    {
+      "n": 21,
+      "title": "Suspension, résiliation et suppression du compte",
+      "blocks": [
+        {
+          "p": "L'utilisateur peut supprimer son compte à tout moment depuis les paramètres de l'Application, sous réserve du règlement préalable des opérations en cours (cagnottes ouvertes, billets vendus, litiges)."
+        },
+        {
+          "p": "L'Éditeur peut suspendre ou supprimer un compte, avec ou sans préavis selon la gravité, en cas de violation des CGU, de fraude ou de suspicion de fraude, d'informations inexactes, de comportement dangereux ou abusif, de signalements répétés, de manipulation de la notation ou de la cagnotte, d'injonction d'une autorité ou de risque pour la sécurité de la communauté. En cas de suspension, l'Éditeur peut geler les fonds concernés le temps de l'examen. Les sommes dues aux autres utilisateurs ou remboursables leur sont restituées conformément aux CGU, après déduction éventuelle des montants dus à l'Éditeur en réparation d'un manquement établi."
+        }
+      ]
+    },
+    {
+      "n": 22,
+      "title": "Disponibilité et évolution du service",
+      "blocks": [
+        {
+          "p": "L'Application est fournie « en l'état ». L'Éditeur s'efforce d'en assurer la disponibilité mais ne garantit pas un accès ininterrompu ni l'absence d'erreurs, notamment pendant les maintenances et mises à jour. L'Éditeur peut faire évoluer, suspendre ou supprimer des fonctionnalités, étant précisé que les opérations financières en cours seront menées à leur terme."
+        }
+      ]
+    },
+    {
+      "n": 23,
+      "title": "Modification des CGU",
+      "blocks": [
+        {
+          "p": "L'Éditeur peut modifier les présentes CGU et la Politique de confidentialité pour tenir compte de l'évolution du service, de la réglementation ou des partenariats financiers. Toute modification substantielle est notifiée dans l'Application ou par email au moins quinze (15) jours avant son entrée en vigueur. L'utilisateur qui refuse les nouvelles conditions peut supprimer son compte avant cette date. La poursuite de l'utilisation après l'entrée en vigueur vaut acceptation."
+        }
+      ]
+    },
+    {
+      "n": 24,
+      "title": "Communications et preuve",
+      "blocks": [
+        {
+          "p": "L'utilisateur accepte de recevoir les communications relatives à son compte et à ses opérations par notification dans l'Application, email ou SMS. Les données enregistrées dans les systèmes de l'Éditeur et de ses Prestataires de paiement font foi, sauf preuve contraire, de l'existence et du contenu des opérations réalisées."
+        }
+      ]
+    },
+    {
+      "n": 25,
+      "title": "Dispositions générales",
+      "blocks": [
+        {
+          "ul": [
+            "Intégralité : les CGU et la Politique de confidentialité constituent l'intégralité de l'accord entre l'utilisateur et l'Éditeur pour l'utilisation de l'Application.",
+            "Nullité partielle : si une clause est déclarée nulle ou inapplicable, les autres clauses demeurent en vigueur.",
+            "Non-renonciation : le fait pour l'Éditeur de ne pas exercer un droit n'emporte pas renonciation à ce droit.",
+            "Cession : l'Éditeur peut céder ou transférer ses droits et obligations à une société qui reprendrait l'exploitation de l'Application, moyennant information des utilisateurs. L'utilisateur ne peut céder son compte.",
+            "Survie : les clauses qui, par nature, doivent survivre à la fin des CGU (propriété intellectuelle, responsabilité, garantie, données, litiges) demeurent applicables."
+          ]
+        }
+      ]
+    },
+    {
+      "n": 26,
+      "title": "Réclamations et règlement amiable",
+      "blocks": [
+        {
+          "p": "Toute réclamation peut être adressée à fihodecorp@gmail.com ou au +229 01 66 65 23 13, en précisant les faits et en joignant les justificatifs. L'Éditeur accuse réception et répond dans un délai maximum de trente (30) jours. En cas de différend, les parties recherchent d'abord une solution amiable, y compris par la médiation ou la conciliation, avant toute action judiciaire."
+        }
+      ]
+    },
+    {
+      "n": 27,
+      "title": "Droit applicable et juridiction compétente",
+      "blocks": [
+        {
+          "p": "Les présentes CGU sont régies par le droit de la République du Bénin et, le cas échéant, par les actes uniformes de l'OHADA. À défaut de résolution amiable, tout litige relève de la compétence des juridictions béninoises du ressort du siège social de l'Éditeur, sans préjudice des règles impératives de compétence applicables aux consommateurs."
+        }
+      ]
+    },
+    {
+      "n": 28,
+      "title": "Contact",
+      "blocks": [
+        {
+          "p": "FIHODECORP SARL, Quartier Honmèho, Bohicon, République du Bénin. Email : fihodecorp@gmail.com. Téléphone : +229 01 66 65 23 13."
+        }
+      ]
+    }
+  ],
+  "privacy": [
+    {
+      "n": 29,
+      "title": "Introduction et responsable du traitement",
+      "blocks": [
+        {
+          "p": "La présente Politique de confidentialité explique quelles données personnelles Let's Out collecte, pourquoi, comment elles sont protégées et quels sont vos droits. Elle est établie conformément aux principes de la protection des données personnelles et à la réglementation applicable au Bénin, notamment le Code du numérique."
+        },
+        {
+          "p": "Le responsable du traitement est FIHODECORP SARL, dont le siège social est situé à Bohicon, République du Bénin. Contact pour toute question relative aux données : fihodecorp@gmail.com."
+        },
+        {
+          "p": "Notre engagement : nous ne vendons pas vos données personnelles. Nous ne collectons que ce qui est nécessaire au fonctionnement du service, et nous vous donnons le contrôle sur vos informations."
+        }
+      ]
+    },
+    {
+      "n": 30,
+      "title": "Données collectées",
+      "blocks": [
+        {
+          "table": {
+            "head": [
+              "Catégorie",
+              "Exemples",
+              "Source"
+            ],
+            "rows": [
+              [
+                "Identité et compte",
+                "Nom, prénom, pseudonyme, email, numéro de téléphone, mot de passe chiffré, photo de profil, date de naissance ou confirmation de majorité",
+                "Vous"
+              ],
+              [
+                "Profil et préférences",
+                "Centres d'intérêt, ville, bio, préférences d'activités",
+                "Vous"
+              ],
+              [
+                "Vérification d'identité",
+                "Pièce d'identité et justificatifs, lorsqu'ils sont demandés (art. 4.3 et 11)",
+                "Vous"
+              ],
+              [
+                "Transactions",
+                "Contributions, billets achetés ou vendus, demandes de retrait, montants, dates, identifiants de transaction, numéro de mobile money ou références du moyen de paiement",
+                "Vous, Prestataires de paiement"
+              ],
+              [
+                "Activité sur l'Application",
+                "Événements créés ou rejoints, présences (scan QR), notes données et reçues, messages de groupe, signalements",
+                "Vous, autres utilisateurs"
+              ],
+              [
+                "Données techniques",
+                "Adresse IP, modèle d'appareil, système, version de l'Application, identifiants techniques, journaux de connexion, données de plantage",
+                "Collecte automatique"
+              ],
+              [
+                "Localisation",
+                "Position approximative ou précise, uniquement si vous l'autorisez",
+                "Votre appareil"
+              ],
+              [
+                "Contenus",
+                "Photos, vidéos et textes que vous publiez ou qui sont captés lors d'événements",
+                "Vous, organisateurs"
+              ]
+            ]
+          }
+        },
+        {
+          "p": "Nous ne demandons pas de données dites sensibles (origine, opinions, santé, vie sexuelle, etc.). Nous vous invitons à ne pas les publier dans votre profil ou vos messages."
+        }
+      ]
+    },
+    {
+      "n": 31,
+      "title": "Finalités et bases légales",
+      "blocks": [
+        {
+          "table": {
+            "head": [
+              "Finalité",
+              "Détail",
+              "Base légale"
+            ],
+            "rows": [
+              [
+                "Créer et gérer votre compte",
+                "Inscription, connexion, sécurité, support",
+                "Exécution du contrat"
+              ],
+              [
+                "Fournir le service",
+                "Événements, chat, cagnottes, billetterie, QR de présence, notifications liées à vos événements",
+                "Exécution du contrat"
+              ],
+              [
+                "Traiter les paiements et retraits",
+                "Encaissement, séquestre, remboursements, versements",
+                "Exécution du contrat, obligation légale"
+              ],
+              [
+                "Notation et fiabilité",
+                "Calcul et affichage du score de fiabilité",
+                "Intérêt légitime (confiance et sécurité de la communauté)"
+              ],
+              [
+                "Prévenir la fraude et sécuriser",
+                "Détection d'anomalies, lutte contre le blanchiment, modération",
+                "Intérêt légitime, obligation légale"
+              ],
+              [
+                "Personnaliser",
+                "Suggestions d'événements selon vos centres d'intérêt et votre zone",
+                "Intérêt légitime, consentement pour la localisation"
+              ],
+              [
+                "Communication et promotion",
+                "Informations, actualités, offres, partage d'images d'événements",
+                "Consentement ou intérêt légitime, avec droit d'opposition"
+              ],
+              [
+                "Améliorer l'Application",
+                "Statistiques agrégées, correction de bogues",
+                "Intérêt légitime"
+              ],
+              [
+                "Respecter la loi",
+                "Obligations comptables, fiscales, réponses aux autorités",
+                "Obligation légale"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "n": 32,
+      "title": "Destinataires des données",
+      "blocks": [
+        {
+          "p": "Vos données sont accessibles uniquement aux personnes habilitées de l'Éditeur et, dans la mesure nécessaire, aux destinataires suivants :"
+        },
+        {
+          "ul": [
+            "Prestataires de paiement (FedaPay, opérateurs de mobile money, banques, établissements financiers partenaires) pour le traitement des transactions et le respect des obligations réglementaires ;",
+            "Prestataires techniques (hébergement, base de données, envoi de notifications, messagerie, analyse d'erreurs), liés par des engagements de confidentialité et de sécurité ;",
+            "Autres utilisateurs, pour les informations de votre profil public (nom ou pseudonyme, photo, score de fiabilité, badges, centres d'intérêt, événements) et les informations nécessaires à la participation à un événement (par exemple la liste des participants) ;",
+            "Organisateurs et hôtes locaux, pour la gestion de leurs événements (liste des inscrits, présence) ;",
+            "Autorités judiciaires, administratives ou financières, sur demande légale ;",
+            "Un repreneur ou partenaire financier agréé, en cas de partenariat de conservation des fonds, de cession ou de restructuration, avec information préalable des utilisateurs lorsque la loi l'exige."
+          ]
+        },
+        {
+          "p": "Nous ne vendons ni ne louons vos données personnelles à des tiers à des fins publicitaires."
+        }
+      ]
+    },
+    {
+      "n": 33,
+      "title": "Transferts hors du Bénin",
+      "blocks": [
+        {
+          "p": "Certains prestataires techniques peuvent héberger ou traiter des données en dehors du Bénin. Dans ce cas, nous veillons à ce que le transfert soit encadré par des garanties appropriées (engagements contractuels, mesures de sécurité, déclaration ou autorisation lorsque la loi l'exige) et à ce que vos données bénéficient d'un niveau de protection adéquat."
+        }
+      ]
+    },
+    {
+      "n": 34,
+      "title": "Durées de conservation",
+      "blocks": [
+        {
+          "table": {
+            "head": [
+              "Données",
+              "Durée de conservation"
+            ],
+            "rows": [
+              [
+                "Compte et profil",
+                "Pendant la durée de vie du compte, puis suppression ou anonymisation dans un délai de 30 jours après la suppression du compte"
+              ],
+              [
+                "Transactions et pièces comptables",
+                "Dix (10) ans, conformément aux obligations comptables et commerciales"
+              ],
+              [
+                "Vérification d'identité et lutte contre le blanchiment",
+                "Pendant la durée exigée par la réglementation, pouvant aller jusqu'à dix (10) ans après la fin de la relation"
+              ],
+              [
+                "Messages de groupe",
+                "Jusqu'à la suppression du compte ou douze (12) mois après la fin de l'événement"
+              ],
+              [
+                "Journaux de connexion et données techniques",
+                "Douze (12) mois"
+              ],
+              [
+                "Localisation",
+                "Utilisée en temps réel, non conservée de manière permanente"
+              ],
+              [
+                "Préférences de communication",
+                "Jusqu'au retrait de votre consentement"
+              ],
+              [
+                "Signalements et sanctions",
+                "Pendant la durée nécessaire à la sécurité de la communauté et à la défense de nos droits, dans la limite des délais de prescription"
+              ]
+            ]
+          }
+        },
+        {
+          "p": "À l'expiration de ces durées, les données sont supprimées ou anonymisées de manière irréversible."
+        }
+      ]
+    },
+    {
+      "n": 35,
+      "title": "Profil public, notation et traitements automatisés",
+      "blocks": [
+        {
+          "p": "Votre profil public et votre score de fiabilité sont visibles des autres utilisateurs, ce qui est essentiel à la confiance dans la communauté. Le score est calculé à partir de la présence confirmée, de la ponctualité, du comportement et des notes reçues. Nos suggestions d'événements reposent sur vos centres d'intérêt et votre zone. Aucune décision produisant des effets juridiques importants à votre égard n'est prise uniquement de façon automatisée sans possibilité de réexamen : vous pouvez demander à tout moment un réexamen humain en écrivant à fihodecorp@gmail.com."
+        }
+      ]
+    },
+    {
+      "n": 36,
+      "title": "Géolocalisation",
+      "blocks": [
+        {
+          "p": "La localisation n'est utilisée que si vous l'autorisez dans les réglages de votre appareil, pour afficher les événements proches et faciliter le check-in. Nous ne suivons pas vos déplacements en dehors de l'Application. Vous pouvez retirer cette autorisation à tout moment dans les réglages de votre appareil, l'Application restant utilisable avec une saisie manuelle de la ville."
+        }
+      ]
+    },
+    {
+      "n": 37,
+      "title": "Notifications et communications",
+      "blocks": [
+        {
+          "p": "Nous vous envoyons des notifications nécessaires au service (nouveaux participants, messages, rappels d'événement, validations de dépenses, remboursements, sécurité). Vous pouvez gérer les notifications non essentielles dans les paramètres de l'Application ou de votre appareil, et vous désabonner de toute communication promotionnelle."
+        }
+      ]
+    },
+    {
+      "n": 38,
+      "title": "Photos et vidéos d'événements",
+      "blocks": [
+        {
+          "p": "Les images captées lors des événements sont traitées conformément à l'article 15 des CGU. Vous pouvez vous opposer à leur utilisation ou demander leur retrait en écrivant à fihodecorp@gmail.com. Nous traitons votre demande dans les meilleurs délais et procédons au retrait des contenus sous notre contrôle, sans pouvoir garantir la suppression de copies déjà partagées par des tiers."
+        }
+      ]
+    },
+    {
+      "n": 39,
+      "title": "Mineurs",
+      "blocks": [
+        {
+          "p": "L'Application est interdite aux personnes de moins de 18 ans. Si nous constatons qu'un compte appartient à un mineur, nous le supprimons ainsi que les données associées. Si vous pensez qu'un mineur a fourni des données, contactez-nous."
+        }
+      ]
+    },
+    {
+      "n": 40,
+      "title": "Sécurité des données",
+      "blocks": [
+        {
+          "p": "Nous mettons en œuvre des mesures techniques et organisationnelles adaptées : chiffrement des communications, authentification, contrôle des accès, séparation des comptes de fonds, sauvegardes, journalisation et formation des personnes habilitées. Les données de paiement sensibles sont traitées par nos Prestataires de paiement et ne sont pas conservées en clair par l'Éditeur. Aucun système n'étant infaillible, nous vous invitons à choisir un mot de passe robuste, à ne pas le partager et à protéger votre appareil."
+        }
+      ]
+    },
+    {
+      "n": 41,
+      "title": "Violation de données",
+      "blocks": [
+        {
+          "p": "En cas de violation de données susceptible d'engendrer un risque pour vos droits et libertés, nous en informons l'autorité de protection des données compétente dans les délais légaux et, lorsque le risque est élevé, les utilisateurs concernés dans les meilleurs délais, en précisant les mesures prises."
+        }
+      ]
+    },
+    {
+      "n": 42,
+      "title": "Vos droits",
+      "blocks": [
+        {
+          "p": "Vous disposez des droits suivants sur vos données :"
+        },
+        {
+          "ul": [
+            "Accès : obtenir une copie des données vous concernant et des informations sur leur traitement.",
+            "Rectification : faire corriger des données inexactes ou incomplètes.",
+            "Effacement : demander la suppression de vos données, sous réserve des durées de conservation légales.",
+            "Opposition : vous opposer à un traitement fondé sur l'intérêt légitime, et à tout moment à la prospection.",
+            "Limitation : demander la suspension d'un traitement dans les cas prévus par la loi.",
+            "Portabilité : recevoir vos données dans un format structuré et couramment utilisé.",
+            "Retrait du consentement : à tout moment, sans remettre en cause la licéité du traitement antérieur.",
+            "Réexamen humain : de toute décision automatisée vous concernant."
+          ]
+        },
+        {
+          "p": "Pour exercer vos droits, écrivez à fihodecorp@gmail.com en précisant l'objet de votre demande. Nous pouvons demander un justificatif d'identité pour éviter toute usurpation. Nous répondons dans un délai maximum de trente (30) jours. Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de l'Autorité de protection des données personnelles du Bénin (APDP)."
+        }
+      ]
+    },
+    {
+      "n": 43,
+      "title": "Traceurs et identifiants techniques",
+      "blocks": [
+        {
+          "p": "L'Application utilise des identifiants techniques strictement nécessaires à son fonctionnement (session, sécurité, préférences) et à la mesure d'audience et de stabilité. Elle n'utilise pas de traceurs publicitaires de tiers. Vous pouvez limiter certains identifiants dans les réglages de votre appareil, au risque de dégrader certaines fonctionnalités."
+        }
+      ]
+    },
+    {
+      "n": 44,
+      "title": "Modifications de la politique",
+      "blocks": [
+        {
+          "p": "Nous pouvons mettre à jour la présente Politique pour refléter l'évolution du service, de nos prestataires ou de la loi. Les modifications substantielles vous sont notifiées dans les conditions de l'article 23. La date de la dernière version figure dans l'Application."
+        }
+      ]
+    },
+    {
+      "n": 45,
+      "title": "Contact",
+      "blocks": [
+        {
+          "ul": [
+            "Email : fihodecorp@gmail.com",
+            "Téléphone : +229 01 66 65 23 13",
+            "Courrier : FIHODECORP SARL, Quartier Honmèho, Bohicon, République du Bénin"
+          ]
+        }
+      ]
+    }
+  ]
+}

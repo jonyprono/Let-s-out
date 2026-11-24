@@ -180,7 +180,7 @@
     "submit": "Log in",
     "submitting": "Logging in...",
     "or": "Or",
-    "google": "Sign in with Google",
+    "google": "Log in with your Email",
     "googleLoading": "Sign in with Google...",
     "newUser": "Are you new to Let's Out?",
     "signUp": "Sign up",
@@ -204,7 +204,7 @@
     "step2Subtitle": "A {{length}}-digit code sent via {{channel}} to the",
     "resend": "Resend the code",
     "resendIn": "in",
-    "google": "Sign up with Google",
+    "google": "Sign up with your Email",
     "otpAlternative": "Code taking too long? You can also:",
     "step3Title": "What is your name?",
     "step3Subtitle": "This information will help your friends recognise you and will only be visible on Let's Out.",
@@ -2875,5 +2875,22 @@
     "live": "Live",
     "upcoming": "Upcoming event",
     "ended": "Event ended"
+  },
+  "legal": {
+    "termsTitle": "Terms of Use",
+    "privacyTitle": "Privacy Policy",
+    "partI": "Part I — Terms of Use",
+    "partII": "Part II — Privacy Policy",
+    "versionLabel": "Version:",
+    "versionValue": "2.0 — effective from its publication date in the app",
+    "publisherLabel": "Publisher:",
+    "publisherValue": "FIHODECORP SARL, limited liability company under Beninese law",
+    "headOfficeLabel": "Registered office:",
+    "headOfficeValue": "Quartier Honmèho, Bohicon, Republic of Benin",
+    "registration": "RCCM RB/ABY/26 B 3100 (Commercial Court of Abomey) | IFU 3202634790371",
+    "frenchPrevails": "This is a translation provided for convenience. In the event of any discrepancy, the French version prevails.",
+    "articleTitle": "Article {{n}} — {{title}}",
+    "backHome": "← Back to home",
+    "footer": "Let's Out, by FIHODECORP SARL. Version 2.0"
   }
 }
