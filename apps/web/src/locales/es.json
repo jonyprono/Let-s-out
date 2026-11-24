@@ -436,7 +436,8 @@
     "tabs": {
       "all": "Todo",
       "friends": "Amigos y amigas",
-      "groups": "Grupos"
+      "groups": "Grupos",
+      "radar": "OUT RADAR"
     },
     "types": {
       "photo": "📷 Foto",
@@ -456,7 +457,9 @@
       "markRead": "Marcar como leído",
       "markUnread": "Marcar como no leído",
       "delete": "Eliminar"
-    }
+    },
+    "noRadarConversations": "Aún no hay chats de OUT RADAR",
+    "noRadarConversationsSub": "Los chats iniciados desde OUT RADAR aparecerán aquí."
   },
   "wallet": {
     "title": "Mi cartera",

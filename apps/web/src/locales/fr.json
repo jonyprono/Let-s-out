@@ -480,7 +480,8 @@
     "tabs": {
       "all": "Tout",
       "friends": "Ami(e)s",
-      "groups": "Groupes"
+      "groups": "Groupes",
+      "radar": "OUT RADAR"
     },
     "types": {
       "photo": "📷 Photo",
@@ -500,7 +501,9 @@
       "markRead": "Marquer comme lu",
       "markUnread": "Marquer comme non lu",
       "delete": "Supprimer"
-    }
+    },
+    "noRadarConversations": "Aucune discussion OUT RADAR",
+    "noRadarConversationsSub": "Les discussions ouvertes depuis OUT RADAR apparaîtront ici."
   },
   "wallet": {
     "title": "Mon Portefeuille",

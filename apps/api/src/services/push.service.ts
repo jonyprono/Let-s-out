@@ -176,7 +176,8 @@ export async function sendOneSignalPush(userId: string, payload: PushPayload): P
         data: payload.data || {},
         small_icon: 'ic_stat_notification',
         ...(payload.imageUrl && { large_icon: payload.imageUrl }),
-        accent_color: 'FFFF7A00',
+        // Couleur d'accent Android (format ARGB) — le champ API est android_accent_color.
+        android_accent_color: 'FFFF7A00',
         priority: 10,
       }),
       signal: controller.signal,

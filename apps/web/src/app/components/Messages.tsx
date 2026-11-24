@@ -1,9 +1,9 @@
 import { useState, useMemo, memo, useEffect, useCallback } from 'react';
 import i18n from '@/lib/i18n'
-import { Search, X, Pin, PinOff, Bell, BellOff, Circle, Trash2, CheckCircle2 } from 'lucide-react';
+import { Search, X, Pin, PinOff, Bell, BellOff, Circle, Trash2, CheckCircle2, Radio } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useConversations, chatApi } from '@/features/chat/api';
+import { useConversations, useRadarConversations, chatApi } from '@/features/chat/api';
 import { useChatSocket } from '@/features/chat/hooks/useChatSocket';
 import { NewConversationModal } from '@/features/chat/components/NewConversationModal';
 import { AddFriendsModal } from '@/features/users/components/AddFriendsModal';
@@ -22,11 +22,19 @@ export function Messages(_props: MessagesProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   useChatSocket();
-  const { data: conversations, isLoading, isError: isConversationsError, refetch } = useConversations();
+  const { data: mainConversations, isLoading: mainLoading, isError: isConversationsError, refetch: refetchMain } = useConversations();
+  // Discussions OUT RADAR : exclues de la liste par défaut par l'API → chargées à part pour l'onglet dédié.
+  const { data: radarConversations, isLoading: radarLoading, refetch: refetchRadar } = useRadarConversations();
+  const conversations = useMemo(() => {
+    const main = mainConversations ?? [];
+    const ids = new Set(main.map((c: any) => c.id));
+    return [...main, ...(radarConversations ?? []).filter((c: any) => !ids.has(c.id))];
+  }, [mainConversations, radarConversations]);
+  const refetch = useCallback(() => Promise.all([refetchMain(), refetchRadar()]), [refetchMain, refetchRadar]);
   const [showNewConv, setShowNewConv] = useState(false);
   const [showAddFriends, setShowAddFriends] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'friends' | 'groups'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'friends' | 'groups' | 'radar'>('all');
 
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
@@ -160,6 +168,7 @@ export function Messages(_props: MessagesProps) {
           return {
             id: conv.id,
             isGroup: conv.isGroup,
+            isRadar: conv.isRadar ?? false,
             name,
             avatarUrl,
             lastMessageAt: conv.lastMessageAt,
@@ -187,26 +196,27 @@ export function Messages(_props: MessagesProps) {
     return displayConversations.filter(c => c.name.toLowerCase().includes(q));
   }, [displayConversations, searchQuery]);
 
-  const groups = filtered.filter(c => c.isGroup);
-  const directs = filtered.filter(c => !c.isGroup);
-  // Apply tab filter
+  // Apply tab filter — OUT RADAR a son propre onglet et n'apparaît dans aucun autre.
   const visibleConversations = useMemo(() => {
-    if (activeFilter === 'groups') return groups;
-    if (activeFilter === 'friends') return directs;
-    return filtered;
-  }, [activeFilter, filtered, groups, directs]);
+    if (activeFilter === 'radar') return filtered.filter(c => c.isRadar);
+    const nonRadar = filtered.filter(c => !c.isRadar);
+    if (activeFilter === 'groups') return nonRadar.filter(c => c.isGroup);
+    if (activeFilter === 'friends') return nonRadar.filter(c => !c.isGroup);
+    return nonRadar;
+  }, [activeFilter, filtered]);
+  const isLoading = activeFilter === 'radar' ? radarLoading : mainLoading;
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#FFFFFF] dark:bg-[#0a0a0b] font-poppins">
+    <div className="w-full h-full overflow-hidden flex flex-col bg-[#FFFFFF] dark:bg-[#0a0a0b] font-poppins">
 
       {/* Header Section */}
-      <div className="flex flex-col items-start w-full bg-[#FFFFFF] dark:bg-[#0a0a0b] sticky top-0 z-20">
+      <div className="flex flex-col items-start w-full flex-shrink-0 bg-[#FFFFFF] dark:bg-[#0a0a0b] z-20">
         {/* App bar */}
         <div className="flex flex-row items-center px-[16px] pt-[calc(env(safe-area-inset-top)+12px)] pb-[12px] gap-[12px] w-full min-h-[56px] box-border">
           <h1 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5]">{t('messages.title')}</h1>
         </div>
 
-        {visibleConversations.length > 0 || searchQuery ? (
+        {displayConversations.length > 0 || searchQuery || activeFilter !== 'all' ? (
           <div className="w-full flex flex-col gap-[12px] px-[16px] pb-[10px]">
             {/* Search */}
             <div className="w-full h-[36px] bg-[#FFFFFF] dark:bg-[#0a0a0b] opacity-80 border border-[#D4D4D4] rounded-[1000px] flex items-center gap-[8px] px-[12px] py-[8px] box-border">
@@ -231,6 +241,7 @@ export function Messages(_props: MessagesProps) {
                 { key: 'all' as const, label: t('messages.tabs.all') },
                 { key: 'friends' as const, label: t('messages.tabs.friends') },
                 { key: 'groups' as const, label: t('messages.tabs.groups') },
+                { key: 'radar' as const, label: t('messages.tabs.radar') },
               ].map(tab => {
                 const isActive = activeFilter === tab.key;
                 return (
@@ -255,9 +266,10 @@ export function Messages(_props: MessagesProps) {
         </div>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center py-[16px] w-full" style={{ scrollbarWidth: 'none' }}>
-        <PullToRefresh onRefresh={async () => { await refetch(); }} pullingContent="" refreshingContent={<div className="p-4 text-center text-[var(--color-text-secondary)] text-sm">Actualisation...</div>}>
-          <div className="flex flex-col items-center w-full min-h-[100vh]">
+      {/* Une seule zone de défilement : pas de min-h-[100vh] interne (double débordement). */}
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain w-full" style={{ scrollbarWidth: 'none' }}>
+        <PullToRefresh className="h-full" onRefresh={async () => { await refetch(); }} pullingContent="" refreshingContent={<div className="p-4 text-center text-[var(--color-text-secondary)] text-sm"><span>{t('home.refreshing')}</span></div>}>
+          <div className="flex flex-col items-center w-full py-[16px]">
             {isLoading ? (
               <div className="w-full flex flex-col gap-[16px] px-[16px]">
                 {[1, 2, 3].map(i => (
@@ -294,7 +306,7 @@ export function Messages(_props: MessagesProps) {
                   </div>
                 ) : (
               /* Empty state */
-              <div className="flex-1 flex flex-col items-center justify-center gap-[20px] px-[16px] w-full max-w-[358px] pb-[100px]">
+              <div className="flex flex-col items-center justify-center gap-[20px] px-[16px] pt-[48px] w-full max-w-[358px] pb-[100px]">
                 {/* Chat Empty Illustration */}
                 <div className="relative w-[256px] h-[110px] mx-auto flex-shrink-0">
                   {/* Orange Bubble */}
@@ -330,10 +342,10 @@ export function Messages(_props: MessagesProps) {
                 {/* Text and supporting text */}
                 <div className="flex flex-col items-center gap-[8px] w-full max-w-[320px]">
                   <h3 className="font-poppins font-medium text-[18px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5] text-center">
-                    {t('messages.noConversations')}
+                    <span>{activeFilter === 'radar' ? t('messages.noRadarConversations') : t('messages.noConversations')}</span>
                   </h3>
                   <p className="font-inter font-normal text-[12px] leading-[16px] text-center text-[#404040] dark:text-[#a3a3a3]">
-                    {t('messages.noConversationsSub')}
+                    <span>{activeFilter === 'radar' ? t('messages.noRadarConversationsSub') : t('messages.noConversationsSub')}</span>
                   </p>
                 </div>
 
@@ -490,8 +502,11 @@ const ConvItem = memo(function ConvItem({ conv, onNavigate, onContextMenu, onPre
       <div className="flex-1 min-w-0 flex flex-col gap-[2px] h-[38px] justify-center">
         {/* Top Row */}
         <div className="w-full flex flex-row justify-between items-center h-[20px]">
-          <h3 className="font-poppins font-medium text-[14px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5] truncate">
-            {conv.name}
+          <h3 className="flex items-center gap-1 min-w-0 font-poppins font-medium text-[14px] leading-[20px] text-[#1B1818] dark:text-[#f5f5f5]">
+            {conv.isRadar && (
+              <Radio className="w-3.5 h-3.5 text-[#FF7A00] flex-shrink-0" strokeWidth={2.25} aria-label="OUT RADAR" />
+            )}
+            <span className="truncate">{conv.name}</span>
           </h3>
           <span className="font-inter font-normal text-[10px] leading-[16px] text-[#737373] flex-shrink-0 ml-2">
             {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString(intlLocale(), { hour: '2-digit', minute: '2-digit' }) : ''}

@@ -436,7 +436,8 @@
     "tabs": {
       "all": "All",
       "friends": "Friends",
-      "groups": "Groups"
+      "groups": "Groups",
+      "radar": "OUT RADAR"
     },
     "types": {
       "photo": "📷 Photo",
@@ -456,7 +457,9 @@
       "markRead": "Mark as read",
       "markUnread": "Mark as unread",
       "delete": "Delete"
-    }
+    },
+    "noRadarConversations": "No OUT RADAR chats yet",
+    "noRadarConversationsSub": "Chats started from OUT RADAR will appear here."
   },
   "wallet": {
     "title": "My Wallet",

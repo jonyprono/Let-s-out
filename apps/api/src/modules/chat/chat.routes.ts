@@ -526,12 +526,17 @@ export default async function chatRoutes(app: FastifyInstance) {
   // List conversations
   app.get('/conversations', async (req, reply) => {
     const { sub } = req.user as { sub: string }
-    const { limit = '20', offset = '0', includeRadar } = req.query as any
+    const { limit = '20', offset = '0', includeRadar, onlyRadar } = req.query as any
+
+    // Par défaut : sans les discussions OUT RADAR. onlyRadar=true : uniquement elles (onglet OUT RADAR).
+    const radarFilter = onlyRadar === 'true'
+      ? { conversation: { isRadar: true } }
+      : includeRadar === 'true' ? {} : { conversation: { isRadar: false } }
 
     const convos = await app.prisma.conversationMember.findMany({
       where: {
         userId: sub,
-        ...(includeRadar === 'true' ? {} : { conversation: { isRadar: false } }),
+        ...radarFilter,
       },
       include: {
         conversation: {

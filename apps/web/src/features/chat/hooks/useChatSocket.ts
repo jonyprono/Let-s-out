@@ -15,6 +15,7 @@ import { notifTitle, notifBody } from '@/lib/notification-text'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
+import { applyMessageToConversationLists } from '@/features/chat/api'
 
 // ─── Singleton WebSocket ────────────────────────────────────────────────────
 let globalWs: WebSocket | null = null
@@ -173,7 +174,9 @@ export function useChatSocket() {
             return [msg, ...old]
           })
         }
-        // Always refresh the conversation list (last message preview, unread count)
+        // Aperçu + compteur non lus mis à jour tout de suite dans la liste en cache,
+        // puis resynchronisation serveur (source de vérité, ex. conversation absente du cache).
+        applyMessageToConversationLists(qc, msg, userId)
         qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
       }
 

@@ -117,6 +117,12 @@ export const chatApi = {
     return data.data
   },
 
+  /** Discussions OUT RADAR uniquement (exclues de la liste par défaut). */
+  getRadarConversations: async (): Promise<Conversation[]> => {
+    const { data } = await apiClient.get('/chat/conversations', { params: { onlyRadar: 'true' } })
+    return data.data
+  },
+
   getConversation: async (id: string): Promise<Conversation> => {
     const { data } = await apiClient.get(`/chat/conversations/${id}`)
     return data
@@ -208,6 +214,43 @@ export function useConversations() {
   })
 }
 
+/** Clé sous ['chat', 'conversations'] : invalidée avec la liste principale. */
+export function useRadarConversations() {
+  return useQuery({
+    queryKey: ['chat', 'conversations', 'radar'],
+    queryFn: chatApi.getRadarConversations,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Met à jour l'aperçu (dernier message), la date et le compteur non lus d'une conversation
+ * dans les listes en cache, sans attendre le refetch serveur.
+ * - Message de l'utilisateur courant → unread = 0 (il vient d'écrire, donc d'avoir lu).
+ * - Message reçu → unread + 1, sauf si la discussion est ouverte à l'écran.
+ */
+export function applyMessageToConversationLists(
+  qc: ReturnType<typeof useQueryClient>,
+  msg: Message,
+  currentUserId: string | undefined,
+) {
+  const isOwnMessage = msg.senderId === currentUserId
+  const isOpen = typeof window !== 'undefined' && window.location.pathname === `/chat/${msg.conversationId}`
+  qc.setQueriesData<Conversation[]>({ queryKey: ['chat', 'conversations'] }, (old) => {
+    if (!Array.isArray(old)) return old
+    return old.map((c: any) => {
+      if (c.id !== msg.conversationId) return c
+      if (c.messages?.[0]?.id === msg.id) return c // déjà appliqué
+      return {
+        ...c,
+        messages: [msg, ...(c.messages ?? [])].slice(0, 1),
+        lastMessageAt: msg.createdAt,
+        unread: isOwnMessage || isOpen ? 0 : (c.unread ?? 0) + 1,
+      }
+    })
+  })
+}
+
 export function useConversation(conversationId: string) {
   return useQuery({
     queryKey: ['chat', 'conversation', conversationId],
@@ -294,12 +337,16 @@ export function useSendMessage(conversationId: string) {
         optimisticMsg,
         ...old,
       ])
+      // Aperçu immédiat dans la liste des conversations
+      applyMessageToConversationLists(qc, optimisticMsg, user?.id)
       return { prev, optimisticId }
     },
     onError: (_err, _vars, context) => {
       if (context?.prev) {
         qc.setQueryData(['chat', 'messages', conversationId], context.prev)
       }
+      // Annule l'aperçu optimiste de la liste
+      qc.invalidateQueries({ queryKey: ['chat', 'conversations'] })
     },
     onSuccess: (serverMsg, _vars, context) => {
       // Swap optimistic entry with real server message — no refetch, no flash
