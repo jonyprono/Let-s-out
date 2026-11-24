@@ -16,6 +16,10 @@ if (typeof window !== 'undefined' && window.crypto && !window.crypto.randomUUID)
 }
 
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
+import { initOneSignal } from '@/lib/onesignal'
+
+// Notifications push OneSignal (app native uniquement ; no-op sur le web)
+initOneSignal()
 
 // Restore cached query data from localStorage before first render
 // This ensures offline users see their last-known data immediately

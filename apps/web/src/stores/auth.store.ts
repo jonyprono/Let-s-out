@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { apiClient } from '@/lib/api-client'
+import { setOneSignalUser, clearOneSignalUser } from '@/lib/onesignal'
 
 export interface AuthUser {
   id: string
@@ -47,7 +48,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       accessToken: null,
       refreshToken: null,
       user: null,
@@ -61,12 +62,18 @@ export const useAuthStore = create<AuthState>()(
 
       setRefreshToken: (token) => set({ refreshToken: token }),
 
-      setUser: (user) => set({ user }),
+      setUser: (user) => {
+        const previousId = get().user?.id
+        set({ user })
+        // Lie l'appareil à OneSignal à la connexion (ou au changement de compte).
+        if (user?.id && user.id !== previousId) setOneSignalUser(user.id)
+      },
 
       setLoggingOut: (value) => set({ isLoggingOut: value }),
 
       logout: () => {
         set({ accessToken: null, refreshToken: null, user: null, isLoggingOut: false })
+        clearOneSignalUser()
       },
 
       refreshUser: async () => {
@@ -94,6 +101,7 @@ export const useAuthStore = create<AuthState>()(
           // AppBootstrap's fire-and-forget usage).
           if (err?.response?.status === 401) {
             set({ accessToken: null, refreshToken: null, user: null })
+            clearOneSignalUser()
           }
         } finally {
           set({ isLoading: false })
@@ -108,6 +116,8 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         // Called once localStorage hydration is complete
         state?.setHasHydrated(true)
+        // Session déjà ouverte au lancement (ex. mise à jour de l'app) : lier l'appareil à OneSignal.
+        if (state?.user?.id) setOneSignalUser(state.user.id)
       },
       // Guard against corrupted persisted state (e.g. Firebase error objects with {code, message})
       // that would cause React error #31 when rendered

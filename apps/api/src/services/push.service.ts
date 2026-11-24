@@ -142,8 +142,70 @@ export async function sendToToken(token: string, payload: PushPayload): Promise<
   }
 }
 
+const ONESIGNAL_API_URL = 'https://api.onesignal.com/notifications'
+const ONESIGNAL_TIMEOUT_MS = 8_000
+
+/**
+ * Envoie une notification via OneSignal à tous les appareils liés à l'utilisateur
+ * (alias `external_id` = id Let's Out, posé côté app par `OneSignal.login(userId)`).
+ *
+ * Retourne true uniquement si OneSignal a accepté la notification pour au moins un
+ * abonnement. false si non configuré, aucun appareil abonné, ou erreur → l'appelant
+ * se rabat sur FCM (anciennes versions de l'app sans SDK OneSignal).
+ */
+export async function sendOneSignalPush(userId: string, payload: PushPayload): Promise<boolean> {
+  const appId = process.env.ONESIGNAL_APP_ID
+  const apiKey = process.env.ONESIGNAL_REST_API_KEY
+  if (!appId || !apiKey) return false
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), ONESIGNAL_TIMEOUT_MS)
+  try {
+    const res = await fetch(ONESIGNAL_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Key ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        app_id: appId,
+        target_channel: 'push',
+        include_aliases: { external_id: [userId] },
+        headings: { fr: payload.title, en: payload.title },
+        contents: { fr: payload.body, en: payload.body },
+        data: payload.data || {},
+        small_icon: 'ic_stat_notification',
+        ...(payload.imageUrl && { large_icon: payload.imageUrl }),
+        accent_color: 'FFFF7A00',
+        priority: 10,
+      }),
+      signal: controller.signal,
+    })
+    const json: any = await res.json().catch(() => null)
+    if (!res.ok) {
+      console.warn(`[OneSignal] HTTP ${res.status} for user ${userId}:`, JSON.stringify(json?.errors ?? json))
+      return false
+    }
+    // Aucun abonnement pour cet external_id → id vide et/ou errors renseigné.
+    if (!json?.id || (json.errors && Object.keys(json.errors).length > 0)) {
+      console.log(`[OneSignal] No subscribed device for user ${userId} — falling back to FCM`)
+      return false
+    }
+    console.log(`[OneSignal] ✅ Push accepted for user ${userId} (notification ${json.id})`)
+    return true
+  } catch (e: any) {
+    console.warn(`[OneSignal] Send error for user ${userId}:`, e?.name === 'AbortError' ? 'timeout' : e?.message)
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 /**
  * Send a push notification to ALL registered devices of a user.
+ * OneSignal en priorité ; si OneSignal n'a livré à aucun appareil, repli sur FCM.
+ * Les appels (isCall) restent sur FCM : ils reposent sur des messages data à TTL court
+ * traités par l'app (écran d'appel entrant), que OneSignal ne reproduit pas.
  * Automatically cleans up invalid tokens from the database.
  */
 export async function sendPushToUser(
@@ -151,6 +213,8 @@ export async function sendPushToUser(
   userId: string,
   payload: PushPayload,
 ): Promise<void> {
+  if (!payload.isCall && await sendOneSignalPush(userId, payload)) return
+
   const app = getFirebaseApp()
   if (!app) {
     // FCM not configured — silent no-op in dev

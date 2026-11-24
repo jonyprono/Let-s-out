@@ -18,6 +18,7 @@ import { LocalNotifications } from '@capacitor/local-notifications'
 import { chatApi } from '@/features/chat/api'
 import { apiClient } from '@/lib/api-client'
 import { DebugPanel } from '@/app/components/DebugPanel'
+import { setOneSignalClickHandler } from '@/lib/onesignal'
 
 export function AppBootstrap() {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -189,6 +190,9 @@ export function AppBootstrap() {
         // actionId === 'tap' (or anything else) → open chat/screen
         handleNotificationRouting(data)
       })
+
+      // ── 4b. Tap sur une notification OneSignal → même routage que FCM ──
+      setOneSignalClickHandler((data) => handleNotificationRouting(data))
 
       // ── 5. Push notification action (background / killed app) ───────────
       PushNotifications.addListener('pushNotificationActionPerformed', async (action: any) => {
