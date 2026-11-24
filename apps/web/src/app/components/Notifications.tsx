@@ -286,7 +286,7 @@ export function Notifications({ onBack }: NotificationsProps) {
 
   // ── List view ────────────────────────────────────────────────────────────────
   return (
-    <div className="w-full h-full flex flex-col bg-white dark:bg-[#111111]">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-white dark:bg-[#111111]">
       <TopBar
         title={t('notifications.notifications')}
         onBack={onBack}
@@ -320,7 +320,7 @@ export function Notifications({ onBack }: NotificationsProps) {
         ))}
       </div>
 
-      <div className="flex-1 overflow-y-auto flex flex-col items-center pb-safe-4 px-4 gap-2" style={{ scrollbarWidth: 'none' }}>
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain touch-pan-y flex flex-col items-center pb-safe-4 px-4 gap-2" style={{ scrollbarWidth: 'none' }}>
         {isLoading ? (
           <div className="w-full flex flex-col gap-3 py-4">
             {[1, 2, 3, 4].map((i) => (
@@ -365,8 +365,8 @@ export function Notifications({ onBack }: NotificationsProps) {
 
                     {/* Text */}
                     <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0">
-                      <div className="flex items-center justify-between w-full">
-                        <span className={`font-semibold text-[13px] leading-[20px] ${notif.isRead ? 'text-gray-700 dark:text-gray-300' : 'text-[#1B1818] dark:text-white'}`}>
+                      <div className="flex items-center justify-between w-full min-w-0">
+                        <span className={`truncate font-semibold text-[13px] leading-[20px] ${notif.isRead ? 'text-gray-700 dark:text-gray-300' : 'text-[#1B1818] dark:text-white'}`}>
                           {cfg.label}
                         </span>
                         <span className="text-[11px] text-gray-400 shrink-0 ml-2">{timeAgo}</span>
@@ -383,7 +383,7 @@ export function Notifications({ onBack }: NotificationsProps) {
                   </button>
 
                   {index < displayedNotifications.length - 1 && (
-                    <div className="w-full h-[0.5px] bg-gray-100 dark:bg-[#2A2A2A] ml-[52px]" />
+                    <div className="h-[0.5px] bg-gray-100 dark:bg-[#2A2A2A] ml-[52px]" />
                   )}
                 </div>
               );
