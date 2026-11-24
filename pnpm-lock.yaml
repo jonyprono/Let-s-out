@@ -197,6 +197,9 @@ importers:
       '@capgo/capacitor-incoming-call-kit':
         specifier: ^8.2.1
         version: 8.2.1(@capacitor/core@8.3.1)
+      '@onesignal/capacitor-plugin':
+        specifier: ^1.2.3
+        version: 1.2.3(@capacitor/core@8.3.1)
       '@radix-ui/react-accordion':
         specifier: 1.2.3
         version: 1.2.3(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -332,9 +335,6 @@ importers:
       next-themes:
         specifier: 0.4.6
         version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      onesignal-cordova-plugin:
-        specifier: ^5.6.3
-        version: 5.6.3
       qrcode.react:
         specifier: ^4.2.0
         version: 4.2.0(react@18.3.1)
@@ -1338,6 +1338,11 @@ packages:
 
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
+
+  '@onesignal/capacitor-plugin@1.2.3':
+    resolution: {integrity: sha512-x8zw8OzMW9OF5Lz3L+TOtErYYIIHcTBjVIpgpCGI9ouoT3F6IP6X+l8VAxZBq5dgALn8jZsHhG1nYbI34WO3Mw==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
 
   '@opentelemetry/api@1.9.1':
     resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
@@ -3816,10 +3821,6 @@ packages:
   once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
 
-  onesignal-cordova-plugin@5.6.3:
-    resolution: {integrity: sha512-Cic0X7EZatQRkrKBmWOBM+XSyJBuJyrEMjjrWlq40t9Ny4iCnFG8Mb2WFYUUJNGjr/E0TloI8Oupu+dzUs8yew==}
-    engines: {'0': {name: cordova-android, version: '>=4.0.0'}, '1': {name: apple-xcode, version: '>=8.0.0'}, '2': {name: apple-ios, version: '>=7.0.0'}, '3': {name: cordova, version: '>=6.4.0'}, '4': {name: cordova-ios, version: '>=4.3.0'}}
-
   open@8.4.2:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
@@ -5824,6 +5825,10 @@ snapshots:
     optional: true
 
   '@one-ini/wasm@0.1.1': {}
+
+  '@onesignal/capacitor-plugin@1.2.3(@capacitor/core@8.3.1)':
+    dependencies:
+      '@capacitor/core': 8.3.1
 
   '@opentelemetry/api@1.9.1':
     optional: true
@@ -8312,8 +8317,6 @@ snapshots:
   once@1.4.0:
     dependencies:
       wrappy: 1.0.2
-
-  onesignal-cordova-plugin@5.6.3: {}
 
   open@8.4.2:
     dependencies:

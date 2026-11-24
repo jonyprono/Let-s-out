@@ -18,8 +18,13 @@ if (typeof window !== 'undefined' && window.crypto && !window.crypto.randomUUID)
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
 import { initOneSignal } from '@/lib/onesignal'
 
-// Notifications push OneSignal (app native uniquement ; no-op sur le web)
-initOneSignal()
+// Notifications push OneSignal (app native uniquement ; no-op sur le web).
+// Non bloquant et isolé : quoi qu'il arrive, le rendu React ci-dessous s'exécute.
+try {
+  initOneSignal().catch((e) => console.warn('[OneSignal] init error caught:', e))
+} catch (e) {
+  console.warn('[OneSignal] sync error caught:', e)
+}
 
 // Restore cached query data from localStorage before first render
 // This ensures offline users see their last-known data immediately

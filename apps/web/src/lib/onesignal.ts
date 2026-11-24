@@ -1,16 +1,20 @@
 import { Capacitor } from '@capacitor/core'
-import type { OneSignalPlugin } from 'onesignal-cordova-plugin'
+import type { OneSignalPlugin } from '@onesignal/capacitor-plugin'
 
 /**
- * OneSignal (push natif Android / iOS).
- * - Actif uniquement dans l'app native Capacitor (no-op sur le web).
+ * OneSignal (push natif Android / iOS) — plugin Capacitor officiel @onesignal/capacitor-plugin.
+ * - Actif uniquement dans l'app native ; no-op sur le web.
+ * - Rétrocompatible : si le binaire installé (APK / build iOS) n'embarque pas encore le plugin
+ *   natif, rien n'est chargé ni appelé (aucune erreur, l'app démarre normalement).
  * - L'utilisateur Let's Out est lié via `OneSignal.login(userId)` → alias `external_id`,
  *   que le serveur cible (push.service.ts → sendOneSignalPush).
- * - Le SDK est chargé à la demande pour ne pas alourdir le bundle web.
  * L'App ID est un identifiant public (la clé REST, elle, reste exclusivement côté serveur).
  */
 const ONESIGNAL_APP_ID = (import.meta.env.VITE_ONESIGNAL_APP_ID as string | undefined)
   || '14cb6201-b51e-4d53-a3b5-bb3e7e479fb4'
+
+/** Nom d'enregistrement natif du plugin (@CapacitorPlugin(name = "OneSignalCapacitor") / jsName iOS). */
+const NATIVE_PLUGIN_NAME = 'OneSignalCapacitor'
 
 let sdkPromise: Promise<OneSignalPlugin | null> | null = null
 let clickHandler: ((data: Record<string, any>) => void) | null = null
@@ -18,18 +22,29 @@ let pendingClick: Record<string, any> | null = null
 /** Utilisateur à lier dès que le SDK est prêt (login appelé avant la fin de l'init). */
 let pendingUserId: string | null = null
 
-function isNative(): boolean {
-  try { return Capacitor.isNativePlatform() } catch { return false }
+/** true seulement dans l'app native ET si le binaire contient le plugin OneSignal. */
+function isOneSignalAvailable(): boolean {
+  try {
+    return Capacitor.isNativePlatform() && Capacitor.isPluginAvailable(NATIVE_PLUGIN_NAME)
+  } catch {
+    return false
+  }
 }
 
-/** Initialise OneSignal une seule fois (idempotent). Retourne le SDK, ou null hors natif / en cas d'échec. */
+/** Initialise OneSignal une seule fois (idempotent). Ne lève jamais : retourne le SDK, ou null. */
 export function initOneSignal(): Promise<OneSignalPlugin | null> {
-  if (!isNative()) return Promise.resolve(null)
   if (sdkPromise) return sdkPromise
+  if (!isOneSignalAvailable()) {
+    try {
+      if (Capacitor.isNativePlatform()) console.warn('[OneSignal] Plugin not available on this binary build. Skipping.')
+    } catch { /* ignore */ }
+    return Promise.resolve(null)
+  }
 
-  sdkPromise = import('onesignal-cordova-plugin')
-    .then(({ default: OneSignal }) => {
-      OneSignal.initialize(ONESIGNAL_APP_ID)
+  sdkPromise = (async () => {
+    try {
+      const { default: OneSignal } = await import('@onesignal/capacitor-plugin')
+      await OneSignal.initialize(ONESIGNAL_APP_ID)
 
       // Tap sur une notification OneSignal → même routage que les push FCM.
       OneSignal.Notifications.addEventListener('click', (event) => {
@@ -39,41 +54,40 @@ export function initOneSignal(): Promise<OneSignalPlugin | null> {
         try { clickHandler(data) } catch (e) { console.error('[OneSignal] click handler error:', e) }
       })
 
-      // Demande la permission (fallbackToSettings = true : renvoie vers les réglages si refusée auparavant).
+      // Demande la permission (true : renvoie vers les réglages si refusée auparavant). Non bloquant.
       OneSignal.Notifications.requestPermission(true).catch(() => {})
 
       if (pendingUserId) {
-        OneSignal.login(pendingUserId)
+        const userId = pendingUserId
         pendingUserId = null
+        await OneSignal.login(userId).catch((e) => console.warn('[OneSignal] login failed:', e))
       }
       return OneSignal
-    })
-    .catch((e) => {
-      console.warn('[OneSignal] init failed:', e?.message ?? e)
+    } catch (e: any) {
+      console.warn('[OneSignal] Init non-fatal failure:', e?.message ?? e)
       return null
-    })
+    }
+  })()
 
   return sdkPromise
 }
 
 /** Lie l'appareil à l'utilisateur Let's Out (alias external_id). */
 export function setOneSignalUser(userId: string): void {
-  if (!isNative() || !userId) return
+  if (!userId || !isOneSignalAvailable()) return
   if (!sdkPromise) { pendingUserId = userId; return }
   sdkPromise.then((OneSignal) => {
-    if (!OneSignal) return
-    try { OneSignal.login(userId) } catch (e) { console.warn('[OneSignal] login failed:', e) }
-  })
+    OneSignal?.login(userId).catch((e) => console.warn('[OneSignal] login failed:', e))
+  }).catch(() => {})
 }
 
 /** Délie l'appareil de l'utilisateur (déconnexion) : il ne recevra plus ses notifications. */
 export function clearOneSignalUser(): void {
   pendingUserId = null
-  if (!isNative() || !sdkPromise) return
+  if (!sdkPromise) return
   sdkPromise.then((OneSignal) => {
-    if (!OneSignal) return
-    try { OneSignal.logout() } catch (e) { console.warn('[OneSignal] logout failed:', e) }
-  })
+    OneSignal?.logout().catch((e) => console.warn('[OneSignal] logout failed:', e))
+  }).catch(() => {})
 }
 
 /** Enregistre la fonction de navigation appelée au tap sur une notification OneSignal. */

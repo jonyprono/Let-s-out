@@ -6,6 +6,7 @@
  */
 
 import type { PrismaClient } from '@prisma/client'
+import { isApnsConfigured, isApnsToken, sendApnsPush } from './apns.service'
 
 let firebaseApp: any = null
 
@@ -204,7 +205,8 @@ export async function sendOneSignalPush(userId: string, payload: PushPayload): P
 
 /**
  * Send a push notification to ALL registered devices of a user.
- * OneSignal en priorité ; si OneSignal n'a livré à aucun appareil, repli sur FCM.
+ * OneSignal en priorité ; si OneSignal n'a livré à aucun appareil, repli sur FCM (Android)
+ * et APNs direct (iPhone).
  * Les appels (isCall) restent sur FCM : ils reposent sur des messages data à TTL court
  * traités par l'app (écran d'appel entrant), que OneSignal ne reproduit pas.
  * Automatically cleans up invalid tokens from the database.
@@ -216,6 +218,44 @@ export async function sendPushToUser(
 ): Promise<void> {
   if (!payload.isCall && await sendOneSignalPush(userId, payload)) return
 
+  let allTokens: { token: string; platform: string }[] = []
+  try {
+    allTokens = await prisma.deviceToken.findMany({
+      where: { userId },
+      select: { token: true, platform: true },
+    })
+  } catch (e) {
+    console.error('[Push] Failed to fetch device tokens for user', userId, e)
+    return
+  }
+
+  // iPhone : jetons APNs (Capacitor iOS) → envoi direct à Apple. Firebase les refuserait.
+  const apnsTokens = allTokens.filter((t) => t.platform === 'ios' && isApnsToken(t.token))
+  if (apnsTokens.length > 0) {
+    if (!isApnsConfigured()) {
+      console.warn(`[APNs] ⚠️ ${apnsTokens.length} iPhone(s) for user ${userId} but APNS_* env vars missing — iOS push NOT sent.`)
+    } else {
+      const invalidApns: string[] = []
+      await Promise.allSettled(apnsTokens.map(async ({ token }) => {
+        const r = await sendApnsPush(token, payload)
+        if (r === 'invalid') invalidApns.push(token)
+        else if (r === 'ok') console.log('[APNs] ✅ Push sent successfully')
+      }))
+      if (invalidApns.length > 0) {
+        try { await prisma.deviceToken.deleteMany({ where: { token: { in: invalidApns } } }) } catch {}
+        console.warn(`[APNs] Removed ${invalidApns.length} invalid iOS token(s)`)
+      }
+    }
+  }
+
+  const tokens = allTokens.filter((t) => !(t.platform === 'ios' && isApnsToken(t.token)))
+  if (tokens.length === 0) {
+    if (apnsTokens.length === 0) {
+      console.warn(`[FCM] ⚠️ No device tokens for user ${userId} — notification NOT sent. User must open app and grant permission first.`)
+    }
+    return
+  }
+
   const app = getFirebaseApp()
   if (!app) {
     // FCM not configured — silent no-op in dev
@@ -223,23 +263,7 @@ export async function sendPushToUser(
     return
   }
 
-  let tokens: { token: string }[] = []
-  try {
-    tokens = await prisma.deviceToken.findMany({
-      where: { userId },
-      select: { token: true },
-    })
-  } catch (e) {
-    console.error('[FCM] Failed to fetch device tokens for user', userId, e)
-    return
-  }
-
   console.log(`[FCM] Sending push to user ${userId} — ${tokens.length} device(s) registered`)
-
-  if (tokens.length === 0) {
-    console.warn(`[FCM] ⚠️ No device tokens for user ${userId} — notification NOT sent. User must open app and grant permission first.`)
-    return
-  }
 
   const invalidTokens: string[] = []
   const errors: string[] = []

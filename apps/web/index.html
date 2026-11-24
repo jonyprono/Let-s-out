@@ -72,6 +72,32 @@
         window.addEventListener('unhandledrejection', function(e) {
           console.error('[Unhandled Rejection]:', e.reason);
         });
+
+        // Garde-fou : si React n'a toujours pas remplacé l'écran de chargement après 7 s
+        // (blocage JS ou réseau lent), proposer de recharger au lieu d'un spinner infini.
+        // i18next n'est pas encore chargé ici : textes fr / en / es selon la langue de l'app.
+        setTimeout(function () {
+          var loading = document.querySelector('#root .loading-container');
+          if (!loading) return;
+          var p = loading.querySelector('p');
+          if (!p) return;
+          var lang = 'fr';
+          try {
+            var saved = JSON.parse(localStorage.getItem('letsout-settings') || '{}');
+            lang = (saved && saved.state && saved.state.language) || (navigator.language || 'fr');
+          } catch (e) { lang = navigator.language || 'fr'; }
+          lang = String(lang).slice(0, 2);
+          var txt = {
+            fr: { slow: 'Connexion lente...', retry: 'Réessayer' },
+            en: { slow: 'Slow connection...', retry: 'Try again' },
+            es: { slow: 'Conexión lenta...', retry: 'Reintentar' }
+          }[lang] || { slow: 'Connexion lente...', retry: 'Réessayer' };
+          p.innerHTML = '<span></span><br/><button type="button" style="margin-top:12px;padding:8px 18px;background:#FF7A00;color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;"><span></span></button>';
+          p.querySelector('span').textContent = txt.slow;
+          var btn = p.querySelector('button');
+          btn.querySelector('span').textContent = txt.retry;
+          btn.addEventListener('click', function () { window.location.reload(); });
+        }, 7000);
       </script>
       <script type="module" src="/src/main.tsx"></script>
     </body>
