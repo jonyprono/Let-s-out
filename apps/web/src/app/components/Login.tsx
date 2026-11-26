@@ -16,6 +16,7 @@ import { Divider } from '@/components/ui/divider'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { useTranslation } from 'react-i18next'
 import { googleAuthLogger } from '@/lib/auth-logger'
+import { AuthMethodTabs, AuthMethod, isValidEmail } from '@/components/shared/AuthMethodTabs'
 
 interface LoginProps {
   onSignup: () => void
@@ -33,6 +34,9 @@ function validatePhone(code: string, phone: string) {
 export function Login({ onSignup, onForgotPassword }: LoginProps) {
   const { t } = useTranslation()
   const nav = useNavigate()
+  // E-mail en 1re position (par défaut), téléphone en 2e
+  const [method, setMethod] = useState<AuthMethod>('email')
+  const [email, setEmail] = useState('')
   const [country, setCountry] = useState<Country>(COUNTRIES.find(c => c.code === '+229') || COUNTRIES[0])
   const { displayValue, rawValue: phone, handleChange: handlePhoneChange, reset: resetPhone } = usePhoneFormatter()
   const [password, setPassword] = useState('')
@@ -44,8 +48,15 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
 
+  const identifierFilled = method === 'email' ? !!email.trim() : !!phone.trim()
+
   const handleLogin = () => {
-    if (!phone.trim() || !password) return
+    if (!identifierFilled || !password) return
+    if (method === 'email') {
+      if (!isValidEmail(email)) return toast.error(t('login.errorInvalidEmail'))
+      directLogin({ target: email.trim().toLowerCase(), password })
+      return
+    }
     if (!validatePhone(country.code, phone)) {
       return toast.error(country.code === '+229'
         ? t('login.errorBenin')
@@ -150,17 +161,45 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
 
         {/* Formulaire */}
         <div className="flex flex-col gap-3 w-full">
-          {/* Téléphone */}
-          <div className="flex flex-col gap-1">
-            <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">{t('login.phone')}</label>
-            <PhoneInputField
-              country={country}
-              onCountryChange={c => { setCountry(c); resetPhone() }}
-              phoneDisplay={displayValue}
-              onPhoneChange={handlePhoneChange}
-              onEnter={handleLogin}
-            />
-          </div>
+          {/* Choix de l'identifiant : E-mail (1er) ou Téléphone (2e) */}
+          <AuthMethodTabs
+            value={method}
+            onChange={setMethod}
+            labels={{ email: t('login.tabs.email'), phone: t('login.tabs.phone') }}
+          />
+
+          {method === 'email' ? (
+            /* E-mail */
+            <div className="flex flex-col gap-1">
+              <label htmlFor="login-email" className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">{t('login.email')}</label>
+              <Input
+                id="login-email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                placeholder={t('login.emailPlaceholder')}
+                className="border-[#E0E0E0] focus-visible:ring-[#FF991C]"
+              />
+            </div>
+          ) : (
+            /* Téléphone */
+            <div className="flex flex-col gap-1">
+              <label className="block font-poppins text-[14px] font-normal leading-[20px] text-[#1B1818] dark:text-gray-200">{t('login.phone')}</label>
+              <PhoneInputField
+                country={country}
+                onCountryChange={c => { setCountry(c); resetPhone() }}
+                phoneDisplay={displayValue}
+                onPhoneChange={handlePhoneChange}
+                onEnter={handleLogin}
+              />
+            </div>
+          )}
 
           {/* Mot de passe */}
           <div className="flex flex-col gap-1">
@@ -202,7 +241,7 @@ export function Login({ onSignup, onForgotPassword }: LoginProps) {
           {/* Bouton Se connecter */}
           <PrimaryButton
             onClick={handleLogin}
-            disabled={!phone.trim() || !password}
+            disabled={!identifierFilled || !password}
             loading={logging}
           >
             {logging ? t('login.submitting') : t('login.submit')}

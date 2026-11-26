@@ -50,6 +50,7 @@ import { PhoneInputField } from '@/components/shared/PhoneInputField'
 import { CategoryChip } from '@/components/shared/CategoryChip'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { Input } from '@/components/ui/input'
+import { AuthMethodTabs, AuthMethod, isValidEmail } from '@/components/shared/AuthMethodTabs'
 import { SocialButton } from '@/components/ui/social-button'
 import { Divider } from '@/components/ui/divider'
 import { useSignupIntroStore, hasCompletedSignupIntro } from '@/stores/signup-intro.store'
@@ -121,6 +122,10 @@ export function Signup({ onBack }: SignupProps) {
   useEffect(() => {
     if (!isGoogleMode && !hasCompletedSignupIntro(intro)) nav('/signup?step=1', { replace: true })
   }, [isGoogleMode, intro, nav])
+
+  // Step 1 – Méthode : E-mail (1re position, par défaut) ou Téléphone (2e)
+  const [method, setMethod] = useState<AuthMethod>('email')
+  const [email, setEmail] = useState('')
 
   // Step 1 – Phone
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
@@ -264,6 +269,9 @@ export function Signup({ onBack }: SignupProps) {
   }
 
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
+  const normalizedEmail = email.trim().toLowerCase()
+  /** Identifiant envoyé au serveur (OTP, vérification, inscription) selon la méthode choisie. */
+  const target = method === 'email' ? normalizedEmail : fullPhone
 
   useEffect(() => {
     if (countdown <= 0) return
@@ -313,7 +321,37 @@ export function Signup({ onBack }: SignupProps) {
   }, [city])
 
   // ── Navigation ─────────────────────────────────────────────────
+  /** Envoie (ou renvoie) le code de vérification par e-mail — toujours via le backend (Resend). */
+  const sendEmailCode = (onSent: () => void) => {
+    // Aucun état Firebase ne doit intercepter la vérification d'un code reçu par e-mail
+    setConfirmationResult(null)
+    setNativeVerificationId('')
+    setIdToken('')
+    setLastCodeVia('backend')
+    sendOtp({ target: normalizedEmail, type: 'email' }, {
+      onSuccess: onSent,
+      onError: (e: any) => {
+        if (e?.response?.status === 429) toast.error(t('signup.errorTooManyAttempts'))
+        else toast.error(t('signup.errorSendEmail'))
+      },
+    })
+  }
+
   const handleNext = async () => {
+    if (step === 1 && method === 'email') {
+      if (!normalizedEmail) return
+      if (!isValidEmail(normalizedEmail)) return toast.error(t('signup.errorInvalidEmail'))
+      const goToOtp = () => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) }
+      checkTarget({ target: normalizedEmail }, {
+        onSuccess: ({ data }) => {
+          if (data.exists) toast.error(t('signup.errorEmailExists'))
+          else sendEmailCode(goToOtp)
+        },
+        // Même comportement que le parcours téléphone : si la vérification échoue, on tente l'envoi
+        onError: () => sendEmailCode(goToOtp),
+      })
+      return
+    }
     if (step === 1) {
       if (!phone.trim()) return
       if (!currentChannel) {
@@ -415,7 +453,7 @@ export function Signup({ onBack }: SignupProps) {
     } else if (step === 2) {
       const codeStr = otp.join('')
       if (codeStr.length < OTP_LENGTH) return
-      otpLogger.verifyStart(fullPhone)
+      otpLogger.verifyStart(target)
       // Use lastCodeVia to determine the EXACT path — prevents stale Firebase session
       // from hijacking a verification that should go to backend (the OTP bug root cause)
       const useFirebasePath = lastCodeVia === 'firebase' && (confirmationResult || nativeVerificationId)
@@ -446,7 +484,7 @@ export function Signup({ onBack }: SignupProps) {
       } else {
         // Vérification via backend (WhatsApp, fallback SMS, ou lastCodeVia=backend)
         otpLogger.verifyRequest()
-        checkOtp({ target: fullPhone, code: codeStr }, {
+        checkOtp({ target, code: codeStr }, {
           onSuccess: () => { otpLogger.verifySuccess(); setStep(FIRST_PROFILE_STEP) },
           onError: (err: unknown) => { otpLogger.verifyError(err); toast.error(t('signup.errorOtp')) },
         })
@@ -484,7 +522,7 @@ export function Signup({ onBack }: SignupProps) {
         if (!intro.birthDate || !intro.gender) { nav('/signup?step=1', { replace: true }); return }
         const usernameBase = intro.firstName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '') || 'outster'
         register({
-          target: fullPhone,
+          target,
           code: isFirebaseFlow ? undefined : otp.join(''),
           idToken: isFirebaseFlow ? idToken : undefined,
           username: `${usernameBase.padEnd(3, '0').slice(0, 24)}_${Math.floor(Math.random() * 9999)}`,
@@ -561,6 +599,14 @@ export function Signup({ onBack }: SignupProps) {
   const handleResend = async () => {
     if (countdown > 0) return
     setOtp(Array(OTP_LENGTH).fill(''))
+    if (method === 'email') {
+      sendEmailCode(() => {
+        setCountdown(59)
+        toast.success(t('signup.successResendAlt'))
+        setTimeout(() => otpRefs.current[0]?.focus(), 100)
+      })
+      return
+    }
     try {
       setIsFirebaseSending(true)
 
@@ -652,6 +698,7 @@ export function Signup({ onBack }: SignupProps) {
   const isPwdValid = pwdLength && hasLower && hasUpper && pwdNumber && pwdMatch
 
   const isNextDisabled = () => {
+    if (!isGoogleMode && step === 1 && method === 'email') return !normalizedEmail || sendingOtp || checkingTarget
     if (!isGoogleMode && step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
     if (!isGoogleMode && step === 2) return otp.join('').length < OTP_LENGTH || isFirebaseVerifying || checkingOtp
     if (step === 5) return false
@@ -698,13 +745,45 @@ export function Signup({ onBack }: SignupProps) {
         {/* ── STEP 1: PHONE ── */}
         {!isGoogleMode && step === 1 && (
           <div>
+            {/* Méthode d'inscription : E-mail (1re position) ou Téléphone (2e) */}
+            <AuthMethodTabs
+              value={method}
+              onChange={setMethod}
+              labels={{ email: t('signup.tabs.email'), phone: t('signup.tabs.phone') }}
+              className="mb-6"
+            />
+
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              {t('signup.step1Title')}
+              {method === 'email' ? t('signup.step1EmailTitle') : t('signup.step1Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              {t('signup.step1Subtitle')}
+              {method === 'email' ? t('signup.step1EmailSubtitle') : t('signup.step1Subtitle')}
             </p>
 
+            {method === 'email' && (
+              <>
+                <label htmlFor="signup-email" className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
+                  {t('signup.emailLabel')}
+                </label>
+                <div className="mb-2">
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' && !isNextDisabled()) handleNext() }}
+                    placeholder={t('signup.emailPlaceholder')}
+                  />
+                </div>
+              </>
+            )}
+
+            {method === 'phone' && (<>
             <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
               {t('signup.step1PhoneLabel')}
             </label>
@@ -753,6 +832,7 @@ export function Signup({ onBack }: SignupProps) {
                 )
               })}
             </div>
+            </>)}
 
             {/* Séparateur Ou */}
             <div className="my-6 w-full">
@@ -780,10 +860,21 @@ export function Signup({ onBack }: SignupProps) {
               {t('signup.step2Title')}
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              {t('signup.step2Subtitle', { length: OTP_LENGTH, channel: currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS' })}{' '}
-              <strong className="text-gray-900 dark:text-white">
-                {formatPhone(country.code, phone)}
-              </strong>
+              {method === 'email' ? (
+                <>
+                  <span>{t('signup.otpSentToEmail', { length: OTP_LENGTH })}</span>{' '}
+                  <strong className="text-gray-900 dark:text-white break-all">
+                    <span>{normalizedEmail}</span>
+                  </strong>
+                </>
+              ) : (
+                <>
+                  {t('signup.step2Subtitle', { length: OTP_LENGTH, channel: currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS' })}{' '}
+                  <strong className="text-gray-900 dark:text-white">
+                    {formatPhone(country.code, phone)}
+                  </strong>
+                </>
+              )}
             </p>
 
             {/* OTP boxes — same width for all */}

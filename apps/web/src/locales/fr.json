@@ -224,7 +224,7 @@
     "submit": "Se connecter",
     "submitting": "Connexion...",
     "or": "Ou",
-    "google": "Se connecter avec votre Email",
+    "google": "Continuer avec Google",
     "googleLoading": "Connexion avec Google...",
     "newUser": "Vous êtes nouveau sur Let's Out ?",
     "signUp": "Inscrivez-vous",
@@ -236,7 +236,14 @@
     "errorPhone": "Le format de votre numéro de téléphone est incorrect.",
     "errorGoogle": "Connexion Google échouée. Veuillez réessayer.",
     "errorToken": "Impossible de récupérer le token d'authentification.",
-    "googleNoAccount": "Aucun compte associé à cette adresse Google. Veuillez d’abord créer un compte."
+    "googleNoAccount": "Aucun compte associé à cette adresse Google. Veuillez d’abord créer un compte.",
+    "tabs": {
+      "email": "E-mail",
+      "phone": "Téléphone"
+    },
+    "email": "Adresse e-mail",
+    "emailPlaceholder": "votre@email.com",
+    "errorInvalidEmail": "Veuillez entrer une adresse e-mail valide"
   },
   "signup": {
     "title": "Inscription",
@@ -248,7 +255,7 @@
     "step2Subtitle": "Code à {{length}} chiffres envoyé par {{channel}} au",
     "resend": "Renvoyer le code",
     "resendIn": "dans",
-    "google": "S'inscrire avec votre Email",
+    "google": "Continuer avec Google",
     "otpAlternative": "Le code tarde à arriver ? Vous pouvez aussi :",
     "step3Title": "Quel est votre nom ?",
     "step3Subtitle": "Ces informations aideront vos amis à vous reconnaître et ne seront visibles que sur Let's Out.",
@@ -289,7 +296,20 @@
     "errorSaving": "Erreur lors de l'enregistrement",
     "successResend": "Code renvoyé par SMS",
     "successResendAlt": "Code renvoyé",
-    "errorResend": "Impossible de renvoyer le code."
+    "errorResend": "Impossible de renvoyer le code.",
+    "tabs": {
+      "email": "Par e-mail",
+      "phone": "Par téléphone"
+    },
+    "step1EmailTitle": "Quelle est votre adresse e-mail ?",
+    "step1EmailSubtitle": "Vous recevrez un code de vérification pour confirmer votre adresse.",
+    "emailLabel": "Adresse e-mail",
+    "emailPlaceholder": "votre@email.com",
+    "otpSentToEmail": "Code à {{length}} chiffres envoyé par e-mail à",
+    "errorInvalidEmail": "Veuillez entrer une adresse e-mail valide",
+    "errorEmailExists": "Cette adresse e-mail est déjà associée à un compte",
+    "errorSendEmail": "Impossible d'envoyer le code par e-mail. Réessayez.",
+    "errorTooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes."
   },
   "editProfile": {
     "birthDateLabel": "Date de naissance",
@@ -2303,7 +2323,12 @@
     "auMoins6CaracteresNumeriques": "Au moins 6 caractères numériques",
     "reinitialiser": "Réinitialiser",
     "whichCode": "Quel est le code reçu ?",
-    "codeSentBy": "Code à {{count}} chiffres envoyé par"
+    "codeSentBy": "Code à {{count}} chiffres envoyé par",
+    "emailTitle": "Entrez votre adresse e-mail",
+    "emailSubtitle": "Entrez l'adresse e-mail associée à votre compte. Vous recevrez un code pour réinitialiser votre mot de passe.",
+    "emailNotLinked": "Cette adresse e-mail n'est liée à aucun compte.",
+    "emailCheckError": "Erreur de vérification de l'adresse e-mail.",
+    "toNumber": "au"
   },
   "editProfileModal": {
     "photoDeProfilMiseA": "Photo de profil mise à jour !",

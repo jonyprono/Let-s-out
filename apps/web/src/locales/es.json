@@ -180,7 +180,7 @@
     "submit": "Iniciar sesión",
     "submitting": "Iniciando sesión...",
     "or": "O",
-    "google": "Iniciar sesión con tu Email",
+    "google": "Continuar con Google",
     "googleLoading": "Iniciar sesión con Google...",
     "newUser": "¿Eres nuevo en Lets Out?",
     "signUp": "Regístrate",
@@ -192,7 +192,14 @@
     "errorPhone": "El formato de tu número de teléfono es incorrecto.",
     "errorGoogle": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
     "errorToken": "No se ha podido recuperar el token de autenticación.",
-    "googleNoAccount": "No hay ninguna cuenta asociada a esta dirección de Google. Crea primero una cuenta."
+    "googleNoAccount": "No hay ninguna cuenta asociada a esta dirección de Google. Crea primero una cuenta.",
+    "tabs": {
+      "email": "Correo",
+      "phone": "Teléfono"
+    },
+    "email": "Correo electrónico",
+    "emailPlaceholder": "tu@correo.com",
+    "errorInvalidEmail": "Introduce una dirección de correo válida"
   },
   "signup": {
     "title": "Inscripción",
@@ -204,7 +211,7 @@
     "step2Subtitle": "Código de {{length}} dígitos enviado por {{channel}} al",
     "resend": "Reenviar el código",
     "resendIn": "en",
-    "google": "Registrarse con tu Email",
+    "google": "Continuar con Google",
     "otpAlternative": "¿El código tarda en llegar? También puedes:",
     "step3Title": "¿Cómo te llamas?",
     "step3Subtitle": "Esta información ayudará a tus amigos a reconocerte y solo será visible en Lets Out.",
@@ -245,7 +252,20 @@
     "errorSaving": "Error al guardar",
     "successResend": "Código enviado por SMS",
     "successResendAlt": "Código devuelto",
-    "errorResend": "No es posible reenviar el código."
+    "errorResend": "No es posible reenviar el código.",
+    "tabs": {
+      "email": "Con correo",
+      "phone": "Con teléfono"
+    },
+    "step1EmailTitle": "¿Cuál es tu correo electrónico?",
+    "step1EmailSubtitle": "Recibirás un código de verificación para confirmar tu dirección.",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@correo.com",
+    "otpSentToEmail": "Código de {{length}} dígitos enviado por correo a",
+    "errorInvalidEmail": "Introduce una dirección de correo válida",
+    "errorEmailExists": "Esta dirección de correo ya está asociada a una cuenta",
+    "errorSendEmail": "No se ha podido enviar el código por correo. Inténtalo de nuevo.",
+    "errorTooManyAttempts": "Demasiados intentos. Inténtalo de nuevo en unos minutos."
   },
   "editProfile": {
     "birthDateLabel": "Fecha de nacimiento",
@@ -2303,7 +2323,12 @@
     "auMoins6CaracteresNumeriques": "Al menos 6 caracteres numéricos",
     "reinitialiser": "Restablecer",
     "whichCode": "¿Cuál es el código que has recibido?",
-    "codeSentBy": "Código de {{count}} dígitos enviado por"
+    "codeSentBy": "Código de {{count}} dígitos enviado por",
+    "emailTitle": "Introduce tu correo electrónico",
+    "emailSubtitle": "Introduce el correo electrónico asociado a tu cuenta. Recibirás un código para restablecer tu contraseña.",
+    "emailNotLinked": "Este correo electrónico no está asociado a ninguna cuenta.",
+    "emailCheckError": "Error al verificar el correo electrónico.",
+    "toNumber": "al"
   },
   "editProfileModal": {
     "photoDeProfilMiseA": "¡He actualizado mi foto de perfil!",

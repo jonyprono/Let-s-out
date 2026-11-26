@@ -180,7 +180,7 @@
     "submit": "Log in",
     "submitting": "Logging in...",
     "or": "Or",
-    "google": "Log in with your Email",
+    "google": "Continue with Google",
     "googleLoading": "Sign in with Google...",
     "newUser": "Are you new to Let's Out?",
     "signUp": "Sign up",
@@ -192,7 +192,14 @@
     "errorPhone": "The format of your telephone number is incorrect.",
     "errorGoogle": "Google sign-in failed. Please try again.",
     "errorToken": "Unable to retrieve the authentication token.",
-    "googleNoAccount": "No account is linked to this Google address. Please create an account first."
+    "googleNoAccount": "No account is linked to this Google address. Please create an account first.",
+    "tabs": {
+      "email": "Email",
+      "phone": "Phone"
+    },
+    "email": "Email address",
+    "emailPlaceholder": "your@email.com",
+    "errorInvalidEmail": "Please enter a valid email address"
   },
   "signup": {
     "title": "Registration",
@@ -204,7 +211,7 @@
     "step2Subtitle": "A {{length}}-digit code sent via {{channel}} to the",
     "resend": "Resend the code",
     "resendIn": "in",
-    "google": "Sign up with your Email",
+    "google": "Continue with Google",
     "otpAlternative": "Code taking too long? You can also:",
     "step3Title": "What is your name?",
     "step3Subtitle": "This information will help your friends recognise you and will only be visible on Let's Out.",
@@ -245,7 +252,20 @@
     "errorSaving": "An error occurred while saving.",
     "successResend": "Code sent by text message",
     "successResendAlt": "Code returned",
-    "errorResend": "Unable to resend the code."
+    "errorResend": "Unable to resend the code.",
+    "tabs": {
+      "email": "With email",
+      "phone": "With phone"
+    },
+    "step1EmailTitle": "What is your email address?",
+    "step1EmailSubtitle": "You will receive a verification code to confirm your address.",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "your@email.com",
+    "otpSentToEmail": "{{length}}-digit code sent by email to",
+    "errorInvalidEmail": "Please enter a valid email address",
+    "errorEmailExists": "This email address is already linked to an account",
+    "errorSendEmail": "Unable to send the code by email. Please try again.",
+    "errorTooManyAttempts": "Too many attempts. Please try again in a few minutes."
   },
   "editProfile": {
     "birthDateLabel": "Date of birth",
@@ -2302,7 +2322,12 @@
     "auMoins6CaracteresNumeriques": "At least 6 numeric characters",
     "reinitialiser": "Reset",
     "whichCode": "What is the code you received?",
-    "codeSentBy": "{{count}}-digit code sent by"
+    "codeSentBy": "{{count}}-digit code sent by",
+    "emailTitle": "Enter your email address",
+    "emailSubtitle": "Enter the email address linked to your account. You will receive a code to reset your password.",
+    "emailNotLinked": "This email address is not linked to any account.",
+    "emailCheckError": "Error while checking the email address.",
+    "toNumber": "to"
   },
   "editProfileModal": {
     "photoDeProfilMiseA": "Profile photo updated!",

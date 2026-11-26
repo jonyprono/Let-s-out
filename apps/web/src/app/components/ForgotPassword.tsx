@@ -14,6 +14,7 @@ import { usePhoneFormatter } from '@/lib/usePhoneFormatter'
 import { Input } from '@/components/ui/input'
 import { PrimaryButton } from '@/components/shared/PrimaryButton'
 import { useTranslation } from 'react-i18next'
+import { AuthMethodTabs, AuthMethod, isValidEmail } from '@/components/shared/AuthMethodTabs'
 
 declare global {
   interface Window { recaptchaVerifier: any }
@@ -44,6 +45,9 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const { t } = useTranslation()
   // step: 1=phone, 2=otp(6 digits), 3=new password
   const [step, setStep] = useState(1)
+  // Méthode : E-mail (1re position, par défaut) ou Téléphone (2e)
+  const [method, setMethod] = useState<AuthMethod>('email')
+  const [email, setEmail] = useState('')
   const [country, setCountry] = useState<Country>(COUNTRIES[0])
   const { displayValue: phoneDisplay, rawValue: phone, handleChange: handlePhoneChange, reset: resetPhone } = usePhoneFormatter()
   const [currentChannel, setCurrentChannel] = useState<'sms' | 'whatsapp' | ''>('')
@@ -69,6 +73,9 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const { mutate: resetPassword, isPending: resetting } = useResetPassword()
 
   const fullPhone = `${country.code}${phone.replace(/\s+/g, '')}`
+  const normalizedEmail = email.trim().toLowerCase()
+  /** Identifiant envoyé au serveur (code, vérification, réinitialisation) selon la méthode choisie. */
+  const target = method === 'email' ? normalizedEmail : fullPhone
 
   // ── Countdown ────────────────────────────────────────────────
   useEffect(() => {
@@ -78,7 +85,35 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   }, [countdown])
 
   // ── Navigation ──────────────────────────────────────────────
+  /** Envoie (ou renvoie) le code de réinitialisation par e-mail — toujours via le backend (Resend). */
+  const sendEmailCode = (onSent: () => void) => {
+    // Aucun état Firebase ne doit intercepter la vérification d'un code reçu par e-mail
+    setConfirmationResult(null)
+    setNativeVerificationId('')
+    setIdToken('')
+    setLastCodeVia('backend')
+    sendOtp({ target: normalizedEmail, type: 'email' }, {
+      onSuccess: onSent,
+      onError: (e: any) => {
+        if (e?.response?.status === 429) toast.error(t('signup.errorTooManyAttempts'))
+        else toast.error(t('signup.errorSendEmail'))
+      },
+    })
+  }
+
   const handleNext = async () => {
+    if (step === 1 && method === 'email') {
+      if (!normalizedEmail) return
+      if (!isValidEmail(normalizedEmail)) return toast.error(t('login.errorInvalidEmail'))
+      checkTarget({ target: normalizedEmail }, {
+        onSuccess: ({ data }) => {
+          if (!data.exists) toast.error(t('forgotPassword.emailNotLinked'))
+          else sendEmailCode(() => { setStep(2); setCountdown(59); setTimeout(() => otpRefs.current[0]?.focus(), 100) })
+        },
+        onError: () => toast.error(t('forgotPassword.emailCheckError')),
+      })
+      return
+    }
     if (step === 1) {
       if (!phone.trim()) return
       if (!currentChannel) { toast.error(t('forgotPassword.veuillezSelectionnerSmsOuWhatsapp')); return }
@@ -159,7 +194,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         } catch { toast.error(t('forgotPassword.codeSmsInvalideOuExpire')) }
         finally { setIsFirebaseVerifying(false) }
       } else {
-        checkOtp({ target: fullPhone, code: codeStr }, {
+        checkOtp({ target, code: codeStr }, {
           onSuccess: () => setStep(3),
           onError: () => toast.error(t('forgotPassword.codeInvalideOuExpireVerifiez')),
         })
@@ -167,7 +202,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
     } else if (step === 3) {
       const isFirebaseFlow = currentChannel === 'sms' && (!!idToken || !!nativeVerificationId)
       resetPassword({
-        target: fullPhone,
+        target,
         code: isFirebaseFlow ? undefined : otp.join(''),
         idToken: isFirebaseFlow ? idToken : undefined,
         newPassword: password,
@@ -203,6 +238,14 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const handleResend = async () => {
     if (countdown > 0) return
     setOtp(Array(OTP_LENGTH).fill(''))
+    if (method === 'email') {
+      sendEmailCode(() => {
+        setCountdown(59)
+        toast.success(t('forgotPassword.codeRenvoye'))
+        setTimeout(() => otpRefs.current[0]?.focus(), 100)
+      })
+      return
+    }
     try {
       setIsFirebaseSending(true)
       if (Capacitor.isNativePlatform()) {
@@ -241,6 +284,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
   const isPwdValid = pwdLength && hasLower && hasUpper && pwdNumber && pwdMatch
 
   const isNextDisabled = () => {
+    if (step === 1 && method === 'email') return !normalizedEmail || sendingOtp || checkingTarget
     if (step === 1) return !phone.trim() || !currentChannel || sendingOtp || checkingTarget || isFirebaseSending
     if (step === 2) return otp.join('').length < OTP_LENGTH || isFirebaseVerifying || checkingOtp
     if (step === 3) return !isPwdValid || resetting
@@ -280,13 +324,43 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
         {/* ── STEP 1: PHONE ── */}
         {step === 1 && (
           <div>
+            {/* Méthode : E-mail (1re position) ou Téléphone (2e) */}
+            <AuthMethodTabs
+              value={method}
+              onChange={setMethod}
+              labels={{ email: t('login.tabs.email'), phone: t('login.tabs.phone') }}
+              className="mb-6"
+            />
+
             <h1 className="font-poppins font-semibold text-[22px] leading-[28px] text-gray-900 dark:text-white mb-2">
-              <span>{t('forgotPassword.entrezVotreNumeroDeTelephone')}</span>
+              <span>{method === 'email' ? t('forgotPassword.emailTitle') : t('forgotPassword.entrezVotreNumeroDeTelephone')}</span>
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              <span>{t('forgotPassword.entrezLeNumeroDeTelephone')}</span>
+              <span>{method === 'email' ? t('forgotPassword.emailSubtitle') : t('forgotPassword.entrezLeNumeroDeTelephone')}</span>
             </p>
 
+            {method === 'email' && (
+              <>
+                <label htmlFor="forgot-email" className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
+                  <span>{t('login.email')}</span>
+                </label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !isNextDisabled()) handleNext() }}
+                  placeholder={t('login.emailPlaceholder')}
+                />
+              </>
+            )}
+
+            {method === 'phone' && (<>
             <label className="font-poppins text-[13px] font-medium text-gray-500 dark:text-gray-400 mb-2 block">
               <span>{t('forgotPassword.numeroDeTelephone')}</span>
             </label>
@@ -334,6 +408,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
                 )
               })}
             </div>
+            </>)}
           </div>
         )}
 
@@ -344,14 +419,26 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               <span>{i18n.t('forgotPassword.whichCode')}</span>
             </h1>
             <p className="font-poppins text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 mb-8">
-              <span>{i18n.t('forgotPassword.codeSentBy', { count: OTP_LENGTH })}</span>{' '}
-              <strong className="text-gray-900 dark:text-white">
-                {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}
-              </strong>{' '}au
-              <br />
-              <strong className="text-gray-900 dark:text-white">
-                {formatPhone(country.code, phone)}
-              </strong>
+              {method === 'email' ? (
+                <>
+                  <span>{t('signup.otpSentToEmail', { length: OTP_LENGTH })}</span>
+                  <br />
+                  <strong className="text-gray-900 dark:text-white break-all">
+                    <span>{normalizedEmail}</span>
+                  </strong>
+                </>
+              ) : (
+                <>
+                  <span>{i18n.t('forgotPassword.codeSentBy', { count: OTP_LENGTH })}</span>{' '}
+                  <strong className="text-gray-900 dark:text-white">
+                    {currentChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}
+                  </strong>{' '}<span>{t('forgotPassword.toNumber')}</span>
+                  <br />
+                  <strong className="text-gray-900 dark:text-white">
+                    {formatPhone(country.code, phone)}
+                  </strong>
+                </>
+              )}
             </p>
 
             {/* OTP boxes */}
@@ -392,7 +479,7 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
               </button>
               {countdown > 0 && (
                 <span className="font-poppins text-[13px] text-gray-500 dark:text-gray-400">
-                  dans{' '}
+                  <span>{t('signup.resendIn')}</span>{' '}
                   {String(Math.floor(countdown / 60)).padStart(2, '0')}:
                   {String(countdown % 60).padStart(2, '0')}
                 </span>
@@ -465,8 +552,8 @@ export function ForgotPassword({ onBack, onComplete }: ForgotPasswordProps) {
             <div className="space-y-2 mb-2">
               {[
                 { ok: pwdLength, label: t('forgotPassword.auMoins6CaracteresNumeriques') },
-                { ok: hasLower && hasUpper, label: 'Au moins 1 majuscule et 1 minuscule' },
-                { ok: pwdNumber, label: 'Au moins 1 chiffre' },
+                { ok: hasLower && hasUpper, label: t('signup.step7Rule2') },
+                { ok: pwdNumber, label: t('signup.step7Rule3') },
               ].map(({ ok, label }) => (
                 <div key={label} className="flex items-center gap-2">
                   <div
