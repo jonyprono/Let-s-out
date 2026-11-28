@@ -34,6 +34,7 @@ import { sortFeaturedEvents, sortPopularEvents } from '@/utils/event-ranking';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
+import { PageVerifiedBadge } from '@/features/pages/components/PageVerifiedBadge'
 
 interface HomeProps {
   userData: any;
@@ -224,7 +225,10 @@ const PagePostCard = memo(function PagePostCard({
                 </div>
               )}
             </div>
-            <p className="font-semibold text-sm text-gray-900 dark:text-white leading-tight truncate hover:underline">{post.page.name}</p>
+            <p className="flex items-center gap-1 min-w-0 font-semibold text-sm text-gray-900 dark:text-white leading-tight hover:underline">
+              <span className="truncate">{post.page.name}</span>
+              <PageVerifiedBadge page={post.page} size={14} />
+            </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">

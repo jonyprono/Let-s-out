@@ -16,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
 import { applyMessageToConversationLists } from '@/features/chat/api'
+import { isConversationOpen } from '@/lib/active-conversation'
 
 // ─── Singleton WebSocket ────────────────────────────────────────────────────
 let globalWs: WebSocket | null = null
@@ -213,9 +214,13 @@ export function useChatSocket() {
       if (data.type === 'notification:new') {
         qc.invalidateQueries({ queryKey: ['notifications'] })
         qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] })
-        
-        // Show real-time toast
-        if (data.notification?.title && data.notification?.body) {
+        // Invitation OUT RADAR reçue / acceptée → liste + pastille « en attente » à jour tout de suite
+        if (data.notification?.type === 'RADAR_INVITE' || data.notification?.type === 'RADAR_INVITE_ACCEPTED') {
+          qc.invalidateQueries({ queryKey: ['radar', 'invites'] })
+        }
+
+        // Show real-time toast (sauf pour la discussion déjà ouverte à l'écran)
+        if (data.notification?.title && data.notification?.body && !isConversationOpen(data.notification?.data?.conversationId)) {
           // Titre / texte traduits pour les notifications qui le permettent (billet d'accès)
           toast.success(notifTitle(data.notification), {
             description: notifBody(data.notification),

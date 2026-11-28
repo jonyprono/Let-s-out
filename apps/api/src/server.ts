@@ -68,6 +68,7 @@ async function bootstrap() {
   await app.register(import('./modules/videos/videos.routes'), { prefix: '/api/v1/videos' })
   await app.register(import('./modules/pages/pages.routes'), { prefix: '/api/v1/pages' })
   await app.register(import('./modules/radar/radar.routes'), { prefix: '/api/v1/radar' })
+  await app.register(import('./modules/charities/charities.routes'), { prefix: '/api/v1/charities' })
   // Aperçus de partage (OpenGraph) servis aux robots des réseaux sociaux via une réécriture Vercel
   await app.register(import('./modules/share/share.routes'), { prefix: '/api/v1/share' })
 

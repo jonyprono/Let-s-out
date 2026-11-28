@@ -6,6 +6,7 @@ import { PayoutError, adminForceRelease, adminReject } from '../../services/payo
 import { format } from 'date-fns'
 import adminStatsRoutes from './admin-stats.routes'
 import adminListsRoutes from './admin-lists.routes'
+import adminVerificationsRoutes from './admin-verifications.routes'
 import { kycFileUrl } from '../../services/cloudinary.service'
 import {
   validateSystemSettingValue,
@@ -681,4 +682,5 @@ export default async function adminRoutes(app: FastifyInstance) {
   // Register stats routes
   app.register(adminStatsRoutes)
   app.register(adminListsRoutes)
+  app.register(adminVerificationsRoutes)
 }

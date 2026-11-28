@@ -54,6 +54,7 @@ import { dateLocale, currentLang } from '@/lib/locale';
 import { useTranslation } from 'react-i18next'
 import { getEventCategory, eventCategoryLabel } from '@/lib/event-categories'
 import { EventCategorySheet } from '@/features/events/components/EventCategorySheet'
+import { CharityPoolFields } from '@/features/charities/components/CharityPoolFields'
 interface CreateEventProps { onBack: () => void }
 
 let sessionDraft: any = null;
@@ -189,6 +190,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // ── Form state ──────────────────────────────────────────────────────────
   const [title, setTitle] = useState(sessionDraft?.title ?? '')
   const [category, setCategory] = useState<string | null>(sessionDraft?.category ?? null)
+  // Cagnotte solidaire (catégorie CHARITY) : ONG partenaire agréée + justificatif médical facultatif
+  const [charityOrgId, setCharityOrgId] = useState<string | null>(null)
+  const [medicalProofRef, setMedicalProofRef] = useState<string | null>(null)
+  const isCharity = category === 'CHARITY'
   const [startDate, setStartDate] = useState(sessionDraft?.startDate ?? '')
   const [startTime, setStartTime] = useState(sessionDraft?.startTime ?? '')
   const [hasEndDate, setHasEndDate] = useState(sessionDraft?.hasEndDate ?? false)
@@ -520,7 +525,9 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   // Enable/disable 'Next' button
   const isDescriptionValid = description.trim().length >= 3
   const isStartDateValid = startDate ? new Date(startDate) >= new Date(new Date().setHours(0, 0, 0, 0)) : false;
-  const canGoToStep2 = isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid && !!category
+  // Cagnotte solidaire : à la création, KYC vérifié + ONG partenaire choisie (fixés ensuite, non modifiables)
+  const isCharityValid = !isCharity || isEdit || (isKycVerified && !!charityOrgId)
+  const canGoToStep2 = isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid && !!category && isCharityValid
   const isCagnotteValid = participationMode === 'cagnotte' ? (Number(poolTarget) > 0) : true
   // Seul le créateur définit le compte de versement (un co-organisateur qui modifie l'événement n'y touche pas)
   const canEditPayout = !isEdit || !eventCreator || eventCreator.id === me?.id
@@ -575,6 +582,10 @@ export function CreateEvent({ onBack }: CreateEventProps) {
   const handleSubmit = async () => {
     if (formStep === 1) {
       if (!canGoToStep2) {
+        if (!isCharityValid) {
+          toast.error(isKycVerified ? t('charity.errors.orgRequired') : t('charity.kycRequiredTitle'))
+          return
+        }
         const onlyCategoryMissing = !category && isFieldValid(title) && isStartDateValid && !!startTime && !!(address || city) && !!privacy && isDescriptionValid
         toast.error(onlyCategoryMissing ? t('createEvent.toasts.categoryRequired') : t('createEvent.toasts.fillRequired'))
         return
@@ -680,6 +691,11 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           : (location.state?.reschedule ? null : undefined),
         status: isEdit ? (eventStatus || undefined) : 'PUBLISHED',
         coHostIds: selectedCoOrgs.map(o => o.id),
+        // Cagnotte solidaire : rattachement ONG + justificatif (création uniquement, contrôlés par l'API)
+        ...(isCharity && !isEdit && {
+          charityOrgId: charityOrgId ?? undefined,
+          medicalProofUrl: medicalProofRef ?? undefined,
+        }),
       }
 
       // Optimistic Update
@@ -1409,6 +1425,15 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                     {!category && (
                       <p className="text-[11px] text-[var(--color-text-muted)] mt-1.5 ml-1"><span>{t('createEvent.fields.categoryRequired')}</span></p>
                     )}
+                    {isCharity && !isEdit && (
+                      <CharityPoolFields
+                        isKycVerified={isKycVerified}
+                        orgId={charityOrgId}
+                        onOrgChange={setCharityOrgId}
+                        proofRef={medicalProofRef}
+                        onProofChange={setMedicalProofRef}
+                      />
+                    )}
                   </div>
                 </div>
               )}
@@ -1941,7 +1966,19 @@ export function CreateEvent({ onBack }: CreateEventProps) {
         open={showCategorySheet}
         onClose={() => setShowCategorySheet(false)}
         value={category}
-        onSelect={setCategory}
+        onSelect={(next) => {
+          // Une cagnotte solidaire est fixée à la création : pas de bascule vers / depuis « Solidaire » ensuite
+          if (isEdit && (category === 'CHARITY') !== (next === 'CHARITY')) {
+            toast.error(t('charity.errors.categoryLocked'))
+            return
+          }
+          setCategory(next)
+          // Solidaire = cagnotte obligatoire (sauf billetterie déjà enregistrée, refusée par l'API)
+          if (next === 'CHARITY' && Object.keys(savedTiers).length === 0) {
+            setParticipationMode('cagnotte')
+            setEnablePool(true)
+          }
+        }}
       />
 
       {/* ── Catégorie de billets (ajout / modification) ─────────────────── */}
@@ -1974,10 +2011,16 @@ export function CreateEvent({ onBack }: CreateEventProps) {
           ].map(mode => {
             const isSelected = participationMode === mode.value
             const isLocked = mode.requiresKyc && !isKycVerified
+            // Événement solidaire : seule la cagnotte est possible
+            const isCharityLocked = isCharity && mode.value !== 'cagnotte'
             return (
               <button
                 key={mode.value}
                 onClick={() => {
+                  if (isCharityLocked) {
+                    toast.error(t('charity.errors.poolOnly'))
+                    return
+                  }
                   if (isLocked) {
                     toast.error(mode.value === 'ticket' ? t('ticketing.toasts.kycRequired') : t('createEvent.toasts.kycPool'))
                     return
@@ -1991,7 +2034,7 @@ export function CreateEvent({ onBack }: CreateEventProps) {
                   setShowParticipationSheet(false);
                   setEnablePool(mode.value === 'cagnotte');
                 }}
-                className={`w-full flex items-center gap-4 py-4 text-left ${isLocked ? 'opacity-60' : ''}`}
+                className={`w-full flex items-center gap-4 py-4 text-left ${isLocked || isCharityLocked ? 'opacity-60' : ''}`}
               >
                 <div className="w-[32px] h-[32px] rounded-[16px] bg-[#F5F5F5] flex items-center justify-center shrink-0">
                   <mode.Icon className="w-[20px] h-[20px] text-[#737373]" strokeWidth={1.25} />

@@ -884,8 +884,10 @@
       "TRAVEL": "Voyages",
       "SCIENCE": "Science",
       "TOURISM": "Tourisme",
-      "GAMES": "Jeux"
-    }
+      "GAMES": "Jeux",
+      "CHARITY": "Solidaire"
+    },
+    "CHARITY": "Solidaire / Aide médicale"
   },
   "createEvent": {
     "header": {
@@ -1888,7 +1890,8 @@
     "video2": "🎥 Vidéo",
     "vousAvezBloqueCetUtilisateur": "Vous avez bloqué cet utilisateur",
     "vousNePouvezPasRepondre": "Vous ne pouvez pas répondre à cette conversation",
-    "lieuNonPrecise": "Lieu non précisé"
+    "lieuNonPrecise": "Lieu non précisé",
+    "voiceNote": "🎤 Message vocal"
   },
   "groupChatInfoSheet": {
     "uneErreurEstSurvenue": "Une erreur est survenue",
@@ -2022,7 +2025,10 @@
     "inviteInfo": "Une notification sera envoyée à {{name}}. Si elle accepte, vous pourrez discuter ensemble pour organiser la sortie.",
     "reessayer": "Réessayer",
     "kycRequiredForFilter": "Vous devez faire certifier votre profil (KYC) pour utiliser ce filtre.",
-    "certifyMyProfile": "Faire certifier mon profil"
+    "certifyMyProfile": "Faire certifier mon profil",
+    "invitationsTab": "Invitations",
+    "pendingInvitesAria_one": "{{count}} invitation en attente",
+    "pendingInvitesAria_other": "{{count}} invitations en attente"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Recherche d'Outsters à proximité...",
@@ -2924,5 +2930,160 @@
     "articleTitle": "Article {{n}} — {{title}}",
     "backHome": "← Retour à l'accueil",
     "footer": "Let's Out, par FIHODECORP SARL. Version 2.0"
+  },
+  "charity": {
+    "kycRequiredTitle": "Compte vérifié obligatoire",
+    "kycRequiredDesc": "Pour ouvrir une cagnotte solidaire ou médicale, votre identité doit d'abord être vérifiée (KYC). Cela protège les donateurs.",
+    "verifyProfile": "Vérifier mon profil",
+    "intro": "Une cagnotte solidaire est obligatoirement supervisée par une ONG partenaire agréée par Let's Out.",
+    "orgLabel": "Sélectionner l'ONG partenaire responsable",
+    "orgPlaceholder": "Choisir une ONG agréée",
+    "noOrg": "Aucune ONG partenaire n'est encore agréée.",
+    "applyLink": "Votre ONG n'est pas listée ? Demander son agrément",
+    "proofLabel": "Justificatif médical (devis ou attestation)",
+    "proofHint": "Recommandé pour une aide médicale. Ce document reste privé : seule l'équipe Let's Out peut le consulter.",
+    "proofAttached": "Justificatif joint",
+    "removeProof": "Retirer le justificatif",
+    "uploading": "Envoi en cours…",
+    "addProof": "Ajouter un justificatif",
+    "supervisedBy": "Cagnotte supervisée par {{name}}",
+    "certifiedStructure": "Structure certifiée",
+    "errors": {
+      "fileTooLarge": "Le fichier dépasse 10 Mo.",
+      "proofUpload": "Impossible d'envoyer le justificatif. Réessayez.",
+      "orgRequired": "Sélectionnez une ONG partenaire pour la cagnotte solidaire.",
+      "categoryLocked": "La catégorie « Solidaire » ne peut pas être ajoutée ou retirée après la création.",
+      "poolOnly": "Un événement solidaire fonctionne uniquement avec une cagnotte."
+    }
+  },
+  "charityApply": {
+    "title": "Agrément d'une ONG",
+    "intro": "Les ONG et associations agréées peuvent superviser des cagnottes solidaires et médicales. Notre équipe examine vos pièces légales avant l'agrément.",
+    "submitted": "Demande envoyée. Vous serez notifié après l'examen de votre dossier.",
+    "myApplications": "Mes demandes",
+    "status": {
+      "PENDING": "En cours d'examen",
+      "VERIFIED": "Agréée",
+      "REJECTED": "Refusée"
+    },
+    "reason": "Motif : {{reason}}",
+    "pendingInfo": "Votre demande est en cours d'examen. Vous pourrez en déposer une nouvelle une fois la décision rendue.",
+    "fields": {
+      "name": "Nom de l'organisation",
+      "description": "Description de la mission",
+      "contactEmail": "E-mail de contact",
+      "contactPhone": "Téléphone de contact",
+      "address": "Adresse du siège",
+      "ifu": "Numéro IFU",
+      "rccmOrReceiptNumber": "N° RCCM ou de récépissé"
+    },
+    "documentsTitle": "Pièces justificatives",
+    "documentsHint": "Images (JPG, PNG, WEBP, HEIC) ou PDF, 10 Mo maximum par fichier.",
+    "docs": {
+      "logo": "Logo (public)",
+      "receipt": "Récépissé de déclaration d'association",
+      "statutes": "Statuts",
+      "rib": "RIB officiel",
+      "representativeId": "Pièce d'identité du représentant légal",
+      "ifuDoc": "Attestation IFU"
+    },
+    "chooseFile": "Choisir un fichier",
+    "submit": "Envoyer la demande",
+    "submitting": "Envoi…",
+    "errors": {
+      "pending": "Une demande est déjà en cours d'examen.",
+      "missingDocs": "Des pièces obligatoires sont manquantes.",
+      "fileType": "Format non accepté : image ou PDF uniquement.",
+      "generic": "Impossible d'envoyer la demande. Réessayez."
+    }
+  },
+  "pageVerification": {
+    "badgeBlue": "Page certifiée",
+    "badgeGold": "Page certifiée — ONG ou institution officielle",
+    "title": "Certification de la page",
+    "verified": "Page certifiée",
+    "pending": "Demande en cours d'examen",
+    "pendingDesc": "Notre équipe vérifie vos pièces. Vous serez notifié de la décision.",
+    "intro": "Le badge officiel protège votre page contre l'usurpation d'identité. Envoyez les pièces correspondant à votre structure.",
+    "rejected": "Votre précédente demande a été refusée.",
+    "entityTypeLabel": "Type de structure",
+    "entityTypes": {
+      "COMPANY": "Entreprise / marque",
+      "VENUE": "Lieu (bar, club, salle, restaurant…)",
+      "PUBLIC_FIGURE": "Artiste / créateur / personnalité",
+      "NGO": "ONG / organisation humanitaire",
+      "INSTITUTION": "Institution officielle"
+    },
+    "docs": {
+      "rccm": "Registre du commerce (RCCM)",
+      "ifu": "Attestation IFU",
+      "receipt": "Récépissé de déclaration d'association",
+      "managerId": "Pièce d'identité du gérant / titulaire",
+      "notoriety": "Justificatif de notoriété ou du lieu",
+      "officialLetter": "Lettre officielle ou mandat de l'institution"
+    },
+    "submit": "Envoyer le dossier",
+    "submitting": "Envoi…",
+    "submitted": "Dossier envoyé. Il sera examiné par notre équipe.",
+    "nameLocked": "Le nom d'une page certifiée ou en cours de certification ne peut pas être modifié.",
+    "errors": {
+      "missingDocs": "Des pièces obligatoires sont manquantes.",
+      "generic": "Impossible d'envoyer le dossier. Réessayez."
+    }
+  },
+  "adminVerif": {
+    "status": {
+      "ALL": "Tous",
+      "PENDING": "En attente",
+      "VERIFIED": "Validé",
+      "REJECTED": "Rejeté"
+    },
+    "noDocuments": "Aucune pièce.",
+    "linksExpire": "Liens sécurisés valables 10 minutes (rechargez la page pour en obtenir de nouveaux).",
+    "rejectPlaceholder": "Motif du rejet (envoyé au demandeur)…",
+    "cancel": "Annuler",
+    "confirmReject": "Confirmer le rejet",
+    "reject": "Rejeter",
+    "back": "Retour à la liste",
+    "error": "L'opération a échoué.",
+    "submittedAt": "Soumis le",
+    "applicant": "Demandeur (KYC)",
+    "kyc": {
+      "pending": "KYC non vérifié",
+      "verified": "KYC vérifié",
+      "rejected": "KYC rejeté"
+    },
+    "documents": "Pièces justificatives",
+    "empty": "Aucun dossier.",
+    "charities": {
+      "nav": "ONG partenaires",
+      "title": "ONG partenaires",
+      "subtitle": "Agrément des ONG pouvant superviser des cagnottes solidaires et médicales.",
+      "approved": "ONG agréée",
+      "rejected": "Demande rejetée",
+      "approve": "Agréer l'ONG",
+      "fundraisers": "Cagnottes supervisées"
+    },
+    "pages": {
+      "nav": "Certification des pages",
+      "title": "Certification des pages",
+      "subtitle": "Badge officiel anti-usurpation pour les organisateurs, marques, lieux et personnalités.",
+      "approved": "Page certifiée",
+      "rejected": "Demande rejetée",
+      "approve": "Certifier la page",
+      "category": "Catégorie",
+      "audience": "Audience",
+      "audienceValue": "{{followers}} abonnés · {{posts}} publications",
+      "pageCreated": "Page créée le",
+      "badge": "Badge attribué :",
+      "badges": {
+        "BLUE": "Bleu",
+        "GOLD": "Or"
+      },
+      "badgeRule": {
+        "BLUE": "(entreprises, marques, lieux, artistes, personnalités)",
+        "GOLD": "(ONG, organisations humanitaires, institutions officielles)"
+      }
+    }
   }
 }

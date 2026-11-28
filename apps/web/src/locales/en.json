@@ -883,8 +883,10 @@
       "TRAVEL": "Travel",
       "SCIENCE": "Science",
       "TOURISM": "Tourism",
-      "GAMES": "Games"
-    }
+      "GAMES": "Games",
+      "CHARITY": "Charity"
+    },
+    "CHARITY": "Charity / Medical aid"
   },
   "createEvent": {
     "header": {
@@ -1887,7 +1889,8 @@
     "video2": "🎥 Video",
     "vousAvezBloqueCetUtilisateur": "You have blocked this user",
     "vousNePouvezPasRepondre": "You cannot reply to this conversation",
-    "lieuNonPrecise": "Location not specified"
+    "lieuNonPrecise": "Location not specified",
+    "voiceNote": "🎤 Voice message"
   },
   "groupChatInfoSheet": {
     "uneErreurEstSurvenue": "An error has occurred",
@@ -2021,7 +2024,10 @@
     "inviteInfo": "A notification will be sent to {{name}}. If she accepts, you can discuss the plans together to organise the outing.",
     "reessayer": "Try again",
     "kycRequiredForFilter": "You must verify your profile (KYC) to use this filter.",
-    "certifyMyProfile": "Get my profile verified"
+    "certifyMyProfile": "Get my profile verified",
+    "invitationsTab": "Invitations",
+    "pendingInvitesAria_one": "{{count}} pending invitation",
+    "pendingInvitesAria_other": "{{count}} pending invitations"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Searching for Outsters nearby...",
@@ -2920,5 +2926,160 @@
     "articleTitle": "Article {{n}} — {{title}}",
     "backHome": "← Back to home",
     "footer": "Let's Out, by FIHODECORP SARL. Version 2.0"
+  },
+  "charity": {
+    "kycRequiredTitle": "Verified account required",
+    "kycRequiredDesc": "To open a charity or medical fundraiser, your identity must first be verified (KYC). This protects donors.",
+    "verifyProfile": "Verify my profile",
+    "intro": "A charity fundraiser must be supervised by a partner NGO approved by Let's Out.",
+    "orgLabel": "Select the responsible partner NGO",
+    "orgPlaceholder": "Choose an approved NGO",
+    "noOrg": "No partner NGO has been approved yet.",
+    "applyLink": "Your NGO is not listed? Apply for approval",
+    "proofLabel": "Medical proof (quote or certificate)",
+    "proofHint": "Recommended for medical aid. This document stays private: only the Let's Out team can view it.",
+    "proofAttached": "Proof attached",
+    "removeProof": "Remove the proof",
+    "uploading": "Uploading…",
+    "addProof": "Add a proof",
+    "supervisedBy": "Fundraiser supervised by {{name}}",
+    "certifiedStructure": "Certified organization",
+    "errors": {
+      "fileTooLarge": "The file is larger than 10 MB.",
+      "proofUpload": "Unable to upload the proof. Please try again.",
+      "orgRequired": "Select a partner NGO for the charity fundraiser.",
+      "categoryLocked": "The \"Charity\" category cannot be added or removed after creation.",
+      "poolOnly": "A charity event only works with a shared pot."
+    }
+  },
+  "charityApply": {
+    "title": "NGO approval",
+    "intro": "Approved NGOs and associations can supervise charity and medical fundraisers. Our team reviews your legal documents before approval.",
+    "submitted": "Request sent. You will be notified once your file has been reviewed.",
+    "myApplications": "My requests",
+    "status": {
+      "PENDING": "Under review",
+      "VERIFIED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "reason": "Reason: {{reason}}",
+    "pendingInfo": "Your request is under review. You can submit a new one once a decision has been made.",
+    "fields": {
+      "name": "Organization name",
+      "description": "Mission description",
+      "contactEmail": "Contact email",
+      "contactPhone": "Contact phone",
+      "address": "Head office address",
+      "ifu": "IFU number",
+      "rccmOrReceiptNumber": "RCCM or registration receipt no."
+    },
+    "documentsTitle": "Supporting documents",
+    "documentsHint": "Images (JPG, PNG, WEBP, HEIC) or PDF, 10 MB max per file.",
+    "docs": {
+      "logo": "Logo (public)",
+      "receipt": "Association registration receipt",
+      "statutes": "Statutes",
+      "rib": "Official bank details (RIB)",
+      "representativeId": "Legal representative's ID",
+      "ifuDoc": "IFU certificate"
+    },
+    "chooseFile": "Choose a file",
+    "submit": "Send the request",
+    "submitting": "Sending…",
+    "errors": {
+      "pending": "A request is already under review.",
+      "missingDocs": "Some required documents are missing.",
+      "fileType": "Format not accepted: image or PDF only.",
+      "generic": "Unable to send the request. Please try again."
+    }
+  },
+  "pageVerification": {
+    "badgeBlue": "Certified page",
+    "badgeGold": "Certified page — NGO or official institution",
+    "title": "Page certification",
+    "verified": "Certified page",
+    "pending": "Request under review",
+    "pendingDesc": "Our team is checking your documents. You will be notified of the decision.",
+    "intro": "The official badge protects your page against impersonation. Send the documents matching your organization.",
+    "rejected": "Your previous request was rejected.",
+    "entityTypeLabel": "Type of organization",
+    "entityTypes": {
+      "COMPANY": "Company / brand",
+      "VENUE": "Venue (bar, club, hall, restaurant…)",
+      "PUBLIC_FIGURE": "Artist / creator / public figure",
+      "NGO": "NGO / humanitarian organization",
+      "INSTITUTION": "Official institution"
+    },
+    "docs": {
+      "rccm": "Trade register (RCCM)",
+      "ifu": "IFU certificate",
+      "receipt": "Association registration receipt",
+      "managerId": "Manager's / holder's ID",
+      "notoriety": "Proof of notoriety or of the venue",
+      "officialLetter": "Official letter or mandate from the institution"
+    },
+    "submit": "Send the file",
+    "submitting": "Sending…",
+    "submitted": "File sent. It will be reviewed by our team.",
+    "nameLocked": "The name of a certified page, or one under review, cannot be changed.",
+    "errors": {
+      "missingDocs": "Some required documents are missing.",
+      "generic": "Unable to send the file. Please try again."
+    }
+  },
+  "adminVerif": {
+    "status": {
+      "ALL": "All",
+      "PENDING": "Pending",
+      "VERIFIED": "Approved",
+      "REJECTED": "Rejected"
+    },
+    "noDocuments": "No documents.",
+    "linksExpire": "Secure links valid for 10 minutes (reload the page to get new ones).",
+    "rejectPlaceholder": "Reason for rejection (sent to the applicant)…",
+    "cancel": "Cancel",
+    "confirmReject": "Confirm rejection",
+    "reject": "Reject",
+    "back": "Back to the list",
+    "error": "The operation failed.",
+    "submittedAt": "Submitted on",
+    "applicant": "Applicant (KYC)",
+    "kyc": {
+      "pending": "KYC not verified",
+      "verified": "KYC verified",
+      "rejected": "KYC rejected"
+    },
+    "documents": "Supporting documents",
+    "empty": "No files.",
+    "charities": {
+      "nav": "Partner NGOs",
+      "title": "Partner NGOs",
+      "subtitle": "Approval of NGOs that can supervise charity and medical fundraisers.",
+      "approved": "NGO approved",
+      "rejected": "Request rejected",
+      "approve": "Approve the NGO",
+      "fundraisers": "Supervised fundraisers"
+    },
+    "pages": {
+      "nav": "Page certification",
+      "title": "Page certification",
+      "subtitle": "Official anti-impersonation badge for organizers, brands, venues and public figures.",
+      "approved": "Page certified",
+      "rejected": "Request rejected",
+      "approve": "Certify the page",
+      "category": "Category",
+      "audience": "Audience",
+      "audienceValue": "{{followers}} followers · {{posts}} posts",
+      "pageCreated": "Page created on",
+      "badge": "Badge granted:",
+      "badges": {
+        "BLUE": "Blue",
+        "GOLD": "Gold"
+      },
+      "badgeRule": {
+        "BLUE": "(companies, brands, venues, artists, public figures)",
+        "GOLD": "(NGOs, humanitarian organizations, official institutions)"
+      }
+    }
   }
 }

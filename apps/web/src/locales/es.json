@@ -884,8 +884,10 @@
       "TRAVEL": "Viajes",
       "SCIENCE": "Ciencia",
       "TOURISM": "Turismo",
-      "GAMES": "Juegos"
-    }
+      "GAMES": "Juegos",
+      "CHARITY": "Solidaria"
+    },
+    "CHARITY": "Solidaria / Ayuda médica"
   },
   "createEvent": {
     "header": {
@@ -1888,7 +1890,8 @@
     "video2": "🎥 Vídeo",
     "vousAvezBloqueCetUtilisateur": "Has bloqueado a este usuario",
     "vousNePouvezPasRepondre": "No puedes responder a esta conversación",
-    "lieuNonPrecise": "Lugar sin especificar"
+    "lieuNonPrecise": "Lugar sin especificar",
+    "voiceNote": "🎤 Mensaje de voz"
   },
   "groupChatInfoSheet": {
     "uneErreurEstSurvenue": "Se ha producido un error",
@@ -2022,7 +2025,10 @@
     "inviteInfo": "Se le enviará una notificación a {{name}}. Si acepta, podréis hablar para organizar la salida.",
     "reessayer": "Reintentar",
     "kycRequiredForFilter": "Debes verificar tu perfil (KYC) para usar este filtro.",
-    "certifyMyProfile": "Verificar mi perfil"
+    "certifyMyProfile": "Verificar mi perfil",
+    "invitationsTab": "Invitaciones",
+    "pendingInvitesAria_one": "{{count}} invitación pendiente",
+    "pendingInvitesAria_other": "{{count}} invitaciones pendientes"
   },
   "radarView": {
     "rechercheDOutstersAProximite": "Buscando a Outsters por aquí...",
@@ -2924,5 +2930,160 @@
     "articleTitle": "Artículo {{n}} — {{title}}",
     "backHome": "← Volver al inicio",
     "footer": "Let's Out, por FIHODECORP SARL. Versión 2.0"
+  },
+  "charity": {
+    "kycRequiredTitle": "Cuenta verificada obligatoria",
+    "kycRequiredDesc": "Para abrir una colecta solidaria o médica, primero debes verificar tu identidad (KYC). Así se protege a los donantes.",
+    "verifyProfile": "Verificar mi perfil",
+    "intro": "Una colecta solidaria debe estar supervisada por una ONG asociada aprobada por Let's Out.",
+    "orgLabel": "Seleccionar la ONG asociada responsable",
+    "orgPlaceholder": "Elegir una ONG aprobada",
+    "noOrg": "Todavía no hay ninguna ONG asociada aprobada.",
+    "applyLink": "¿Tu ONG no aparece? Solicitar su aprobación",
+    "proofLabel": "Justificante médico (presupuesto o certificado)",
+    "proofHint": "Recomendado para una ayuda médica. Este documento es privado: solo el equipo de Let's Out puede consultarlo.",
+    "proofAttached": "Justificante adjunto",
+    "removeProof": "Quitar el justificante",
+    "uploading": "Enviando…",
+    "addProof": "Añadir un justificante",
+    "supervisedBy": "Colecta supervisada por {{name}}",
+    "certifiedStructure": "Organización certificada",
+    "errors": {
+      "fileTooLarge": "El archivo supera los 10 MB.",
+      "proofUpload": "No se ha podido enviar el justificante. Inténtalo de nuevo.",
+      "orgRequired": "Selecciona una ONG asociada para la colecta solidaria.",
+      "categoryLocked": "La categoría «Solidaria» no se puede añadir ni quitar después de la creación.",
+      "poolOnly": "Un evento solidario solo funciona con un bote común."
+    }
+  },
+  "charityApply": {
+    "title": "Aprobación de una ONG",
+    "intro": "Las ONG y asociaciones aprobadas pueden supervisar colectas solidarias y médicas. Nuestro equipo revisa tus documentos legales antes de la aprobación.",
+    "submitted": "Solicitud enviada. Recibirás una notificación cuando se haya revisado tu expediente.",
+    "myApplications": "Mis solicitudes",
+    "status": {
+      "PENDING": "En revisión",
+      "VERIFIED": "Aprobada",
+      "REJECTED": "Rechazada"
+    },
+    "reason": "Motivo: {{reason}}",
+    "pendingInfo": "Tu solicitud está en revisión. Podrás enviar una nueva cuando se haya tomado una decisión.",
+    "fields": {
+      "name": "Nombre de la organización",
+      "description": "Descripción de la misión",
+      "contactEmail": "Correo de contacto",
+      "contactPhone": "Teléfono de contacto",
+      "address": "Dirección de la sede",
+      "ifu": "Número IFU",
+      "rccmOrReceiptNumber": "N.º RCCM o de resguardo de registro"
+    },
+    "documentsTitle": "Documentos justificativos",
+    "documentsHint": "Imágenes (JPG, PNG, WEBP, HEIC) o PDF, 10 MB como máximo por archivo.",
+    "docs": {
+      "logo": "Logotipo (público)",
+      "receipt": "Resguardo de registro de la asociación",
+      "statutes": "Estatutos",
+      "rib": "Datos bancarios oficiales (RIB)",
+      "representativeId": "Documento de identidad del representante legal",
+      "ifuDoc": "Certificado IFU"
+    },
+    "chooseFile": "Elegir un archivo",
+    "submit": "Enviar la solicitud",
+    "submitting": "Enviando…",
+    "errors": {
+      "pending": "Ya hay una solicitud en revisión.",
+      "missingDocs": "Faltan documentos obligatorios.",
+      "fileType": "Formato no aceptado: solo imagen o PDF.",
+      "generic": "No se ha podido enviar la solicitud. Inténtalo de nuevo."
+    }
+  },
+  "pageVerification": {
+    "badgeBlue": "Página certificada",
+    "badgeGold": "Página certificada — ONG o institución oficial",
+    "title": "Certificación de la página",
+    "verified": "Página certificada",
+    "pending": "Solicitud en revisión",
+    "pendingDesc": "Nuestro equipo está revisando tus documentos. Recibirás una notificación con la decisión.",
+    "intro": "La insignia oficial protege tu página contra la suplantación de identidad. Envía los documentos que correspondan a tu organización.",
+    "rejected": "Tu solicitud anterior fue rechazada.",
+    "entityTypeLabel": "Tipo de organización",
+    "entityTypes": {
+      "COMPANY": "Empresa / marca",
+      "VENUE": "Local (bar, club, sala, restaurante…)",
+      "PUBLIC_FIGURE": "Artista / creador / personalidad",
+      "NGO": "ONG / organización humanitaria",
+      "INSTITUTION": "Institución oficial"
+    },
+    "docs": {
+      "rccm": "Registro mercantil (RCCM)",
+      "ifu": "Certificado IFU",
+      "receipt": "Resguardo de registro de la asociación",
+      "managerId": "Documento de identidad del gerente / titular",
+      "notoriety": "Justificante de notoriedad o del local",
+      "officialLetter": "Carta oficial o mandato de la institución"
+    },
+    "submit": "Enviar el expediente",
+    "submitting": "Enviando…",
+    "submitted": "Expediente enviado. Nuestro equipo lo revisará.",
+    "nameLocked": "El nombre de una página certificada o en revisión no se puede modificar.",
+    "errors": {
+      "missingDocs": "Faltan documentos obligatorios.",
+      "generic": "No se ha podido enviar el expediente. Inténtalo de nuevo."
+    }
+  },
+  "adminVerif": {
+    "status": {
+      "ALL": "Todos",
+      "PENDING": "Pendiente",
+      "VERIFIED": "Validado",
+      "REJECTED": "Rechazado"
+    },
+    "noDocuments": "Ningún documento.",
+    "linksExpire": "Enlaces seguros válidos durante 10 minutos (recarga la página para obtener otros nuevos).",
+    "rejectPlaceholder": "Motivo del rechazo (se envía al solicitante)…",
+    "cancel": "Cancelar",
+    "confirmReject": "Confirmar el rechazo",
+    "reject": "Rechazar",
+    "back": "Volver a la lista",
+    "error": "La operación ha fallado.",
+    "submittedAt": "Enviado el",
+    "applicant": "Solicitante (KYC)",
+    "kyc": {
+      "pending": "KYC no verificado",
+      "verified": "KYC verificado",
+      "rejected": "KYC rechazado"
+    },
+    "documents": "Documentos justificativos",
+    "empty": "Ningún expediente.",
+    "charities": {
+      "nav": "ONG asociadas",
+      "title": "ONG asociadas",
+      "subtitle": "Aprobación de las ONG que pueden supervisar colectas solidarias y médicas.",
+      "approved": "ONG aprobada",
+      "rejected": "Solicitud rechazada",
+      "approve": "Aprobar la ONG",
+      "fundraisers": "Colectas supervisadas"
+    },
+    "pages": {
+      "nav": "Certificación de páginas",
+      "title": "Certificación de páginas",
+      "subtitle": "Insignia oficial contra la suplantación para organizadores, marcas, locales y personalidades.",
+      "approved": "Página certificada",
+      "rejected": "Solicitud rechazada",
+      "approve": "Certificar la página",
+      "category": "Categoría",
+      "audience": "Audiencia",
+      "audienceValue": "{{followers}} seguidores · {{posts}} publicaciones",
+      "pageCreated": "Página creada el",
+      "badge": "Insignia asignada:",
+      "badges": {
+        "BLUE": "Azul",
+        "GOLD": "Oro"
+      },
+      "badgeRule": {
+        "BLUE": "(empresas, marcas, locales, artistas, personalidades)",
+        "GOLD": "(ONG, organizaciones humanitarias, instituciones oficiales)"
+      }
+    }
   }
 }

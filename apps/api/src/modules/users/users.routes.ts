@@ -1010,7 +1010,7 @@ export default async function usersRoutes(app: FastifyInstance) {
     // 2. Pages followed
     const pageFollows = await app.prisma.pageFollower.findMany({
       where: { userId },
-      include: { page: { select: { id: true, name: true, avatarUrl: true, category: true } } }
+      include: { page: { select: { id: true, name: true, avatarUrl: true, category: true, verificationStatus: true, verificationBadge: true } } }
     })
 
     const users = userFollows

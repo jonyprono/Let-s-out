@@ -102,6 +102,10 @@ export async function initializePushNotifications(navigate?: (path: string) => v
     // Foreground notification received: display custom in-app notification / toast
     await PushNotifications.addListener('pushNotificationReceived', (notification: PushNotificationSchema) => {
       console.log('[Push] Notification received in foreground:', notification);
+      // Messages : une seule notification, la notification système avec le bouton « Répondre »
+      // (AppBootstrap → LocalNotifications, qui ignore déjà la discussion ouverte et mes propres
+      // messages). Pas de toast en doublon ici.
+      if (notification.data?.type === 'NEW_MESSAGE') return;
       const title = notification.title || "Let's Out";
       const body = notification.body || '';
 

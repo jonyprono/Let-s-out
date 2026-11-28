@@ -38,6 +38,7 @@ import { toast } from 'sonner'
 import { formatVideoDurationLimit, isVideoTooLong, readVideoDuration } from '@/lib/video-limits'
 import { useConfirm } from '@/components/shared/ConfirmContext'
 import { useTranslation } from 'react-i18next'
+import { PageVerifiedBadge } from '@/features/pages/components/PageVerifiedBadge'
 
 type PageTab = 'publications' | 'events' | 'about' | 'photos'
 
@@ -392,7 +393,8 @@ export function PageView() {
 
         {/* Name & Stats */}
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-2.5 text-center px-2 break-words max-w-full">
-          {page.name}
+          <span>{page.name}</span>
+          <PageVerifiedBadge page={page} size={20} className="ml-1.5 -mt-0.5" />
         </h1>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
           <span>{i18n.t('pageView.followStats', { count: page._count?.followers ?? 0 })}</span>

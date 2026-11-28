@@ -29,6 +29,7 @@ import { PollCard } from './PollCard'
 
 import { dateLocale } from '@/lib/locale'
 import { useTranslation } from 'react-i18next'
+import { setActiveConversation } from '@/lib/active-conversation'
 // Swipe to reply row component — must be top-level for React hooks
 interface SwipeReplyRowProps {
   msgId: string
@@ -119,26 +120,50 @@ function AudioMessage({ src }: { src: string }) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
   const [duration, setDuration] = useState(0)
+  const [currentTime, setCurrentTime] = useState(0)
   const audioRef = useRef<HTMLAudioElement>(null)
+  // Vocaux enregistrés en WebM (MediaRecorder) : le navigateur annonce souvent une durée « Infinity ».
+  // On force alors la lecture du fichier jusqu'à la fin pour obtenir la vraie durée.
+  const resolvingDurationRef = useRef(false)
 
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
     const updateProgress = () => {
-      setProgress((audio.currentTime / (audio.duration || 1)) * 100)
+      if (resolvingDurationRef.current) return
+      const total = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : duration
+      setCurrentTime(audio.currentTime)
+      setProgress(total > 0 ? Math.min(100, (audio.currentTime / total) * 100) : 0)
     }
-    const handleLoaded = () => setDuration(audio.duration)
-    const handleEnd = () => { setIsPlaying(false); setProgress(0) }
-    
+    const handleLoaded = () => {
+      if (Number.isFinite(audio.duration)) {
+        setDuration(audio.duration)
+      } else {
+        resolvingDurationRef.current = true
+        audio.currentTime = 1e101
+      }
+    }
+    const handleDurationChange = () => {
+      if (!Number.isFinite(audio.duration)) return
+      setDuration(audio.duration)
+      if (resolvingDurationRef.current) {
+        resolvingDurationRef.current = false
+        audio.currentTime = 0
+      }
+    }
+    const handleEnd = () => { setIsPlaying(false); setProgress(0); setCurrentTime(0) }
+
     audio.addEventListener('timeupdate', updateProgress)
     audio.addEventListener('loadedmetadata', handleLoaded)
+    audio.addEventListener('durationchange', handleDurationChange)
     audio.addEventListener('ended', handleEnd)
     return () => {
       audio.removeEventListener('timeupdate', updateProgress)
       audio.removeEventListener('loadedmetadata', handleLoaded)
+      audio.removeEventListener('durationchange', handleDurationChange)
       audio.removeEventListener('ended', handleEnd)
     }
-  }, [])
+  }, [duration])
 
   const togglePlay = () => {
     if (audioRef.current?.paused) {
@@ -151,7 +176,7 @@ function AudioMessage({ src }: { src: string }) {
   }
 
   const formatTime = (secs: number) => {
-    if (!secs || isNaN(secs)) return '0:00'
+    if (!secs || !Number.isFinite(secs)) return '0:00'
     const m = Math.floor(secs / 60)
     const s = Math.floor(secs % 60)
     return `${m}:${s.toString().padStart(2, '0')}`
@@ -165,14 +190,23 @@ function AudioMessage({ src }: { src: string }) {
         {isPlaying ? <span className="w-3.5 h-3.5 bg-current rounded-sm" /> : <Play className="w-[20px] h-[20px] text-current fill-current" />}
       </button>
       
-      <div className="flex-1 flex items-center gap-[2px] opacity-80 h-[24px]">
-        {waveformHeights.map((h, i) => (
-          <div key={i} className="w-[2.5px] bg-current rounded-full transition-all duration-100" style={{ height: `${h}px`, opacity: progress > (i / waveformHeights.length) * 100 ? 1 : 0.4 }} />
-        ))}
+      {/* Onde : partie déjà lue en orange, reste en gris (style WhatsApp) */}
+      <div className="flex-1 flex items-center gap-[2px] h-[24px]">
+        {waveformHeights.map((h, i) => {
+          const played = progress > (i / waveformHeights.length) * 100
+          return (
+            <div
+              key={i}
+              className={`w-[2.5px] rounded-full transition-colors duration-150 ${played ? 'bg-[#FF7A00]' : 'bg-gray-300 dark:bg-gray-600'}`}
+              style={{ height: `${h}px` }}
+            />
+          )
+        })}
       </div>
-      
-      <span className="text-[12px] font-medium text-[#1B1818]">
-        {formatTime(duration || 16)}
+
+      {/* Lecture : temps écoulé (0:01, 0:02…) ; pause / fin : durée totale */}
+      <span className="text-[12px] font-medium text-[#1B1818] tabular-nums min-w-[30px] text-right">
+        {formatTime(isPlaying ? currentTime : duration)}
       </span>
       <audio ref={audioRef} src={src} className="hidden" preload="metadata" />
     </div>
@@ -257,6 +291,13 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
   const { id: paramId } = useParams<{ id: string }>()
   const id = propConvId || paramId
   const navigate = useNavigate()
+
+  // Conversation ouverte : aucune notification (locale, toast, OneSignal) pour ses nouveaux messages
+  useEffect(() => {
+    if (!id) return
+    setActiveConversation(id)
+    return () => setActiveConversation(null)
+  }, [id])
   const { user } = useAuthStore()
   const { sendTyping, sendRead } = useChatSocket()
 
@@ -331,6 +372,9 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
   const [forwardMsg, setForwardMsg] = useState<{ content: string; type: string } | null>(null)
   // Reply-to state: message quoted when sending a file
   const [replyToMsg, setReplyToMsg] = useState<{ id: string; content: string; senderName: string; type: string } | null>(null)
+  // Valeur courante de la citation, lue au moment de l'envoi d'un vocal (callback asynchrone de l'enregistreur)
+  const replyToMsgRef = useRef(replyToMsg)
+  replyToMsgRef.current = replyToMsg
   // Pending file with optional caption (image + text)
   const [pendingFile, setPendingFile] = useState<{ file: File; localUrl: string } | null>(null)
   const [localDeletedMessages, setLocalDeletedMessagesState] = useState<string[]>(() => {
@@ -380,6 +424,12 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
       container.scrollTop = 0
     }
   }, [])
+
+  /** Après un envoi : retour immédiat tout en bas (avant et après l'ajout du message optimiste). */
+  const scrollToBottomAfterSend = useCallback(() => {
+    scrollToBottom(false)
+    requestAnimationFrame(() => scrollToBottom(false))
+  }, [scrollToBottom])
 
   // Scroll immediately on initial load; on new messages only scroll if already near bottom
   const prevMsgCountRef = useRef(0)
@@ -440,6 +490,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
       setReplyToMsg(null)
     }
     sendMsg(payload)
+    scrollToBottomAfterSend()
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -475,6 +526,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
         } : {})
       }
       sendMsg(payload)
+      scrollToBottomAfterSend()
     } catch {
       toast.error(t('chatDetails.erreurLorsDeLEnvoi'))
     } finally {
@@ -491,6 +543,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
 
     setPendingFile(null)
     setReplyToMsg(null)
+    scrollToBottomAfterSend()
 
     // Show local blob preview immediately via the optimistic message in useSendMessage
     try {
@@ -509,6 +562,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
         } : {})
       }
       sendMsg(payload)
+      scrollToBottomAfterSend()
     } catch {
       toast.error(t('chatDetails.erreurLorsDeLEnvoi2'))
     }
@@ -539,6 +593,14 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
           
           const tempId = `optimistic-${Date.now()}`
           const localUrl = URL.createObjectURL(audioBlob)
+          // Citation éventuelle (vocal envoyé en réponse à un message)
+          const currentReply = replyToMsgRef.current
+          // `any` comme les autres envois (handleSendText / handleFileUpload) : _replyTo est un aperçu partiel du Message
+          const replyFields: any = currentReply ? {
+            replyToId: currentReply.id,
+            _replyTo: { id: currentReply.id, content: currentReply.content, type: currentReply.type, sender: { profile: { displayName: currentReply.senderName } } },
+          } : {}
+          setReplyToMsg(null)
 
           // Prepend so the newest message is at index 0 (bottom of flex-col-reverse)
           qc.setQueryData<any[]>(['chat', 'messages', id], (old = []) => [
@@ -552,17 +614,19 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
               isDeleted: false,
               reactions: [],
               sender: { id: user?.id, profile: user?.profile },
+              ...(currentReply ? { replyToId: currentReply.id, replyTo: replyFields._replyTo } : {}),
               _optimistic: true,
             },
             ...old,
           ])
+          scrollToBottomAfterSend()
 
           try {
             if (Capacitor.isNativePlatform()) {
               await saveFileLocally(audioBlob, file.name)
             }
             const url = await chatApi.uploadMedia(file)
-            sendMsg({ content: url, type: 'AUDIO' })
+            sendMsg({ content: url, type: 'AUDIO', ...replyFields })
           } catch (e) {
             toast.error(t('chatDetails.erreurDEnvoiDeLa'))
           } finally {
@@ -1152,7 +1216,7 @@ export function ChatDetails({ conversationId: propConvId, onBack, isRadarMode }:
               <div className="flex flex-col min-w-0">
                 <span className="text-[11px] font-semibold text-[#FF7A00] truncate">{replyToMsg.senderName}</span>
                 <span className="text-[12px] text-gray-500 dark:text-gray-400 truncate">
-                  {replyToMsg.type === 'IMAGE' ? t('chatDetails.photo') : replyToMsg.type === 'VIDEO' ? t('chatDetails.video2') : replyToMsg.content}
+                  {replyToMsg.type === 'IMAGE' ? t('chatDetails.photo') : replyToMsg.type === 'VIDEO' ? t('chatDetails.video2') : replyToMsg.type === 'AUDIO' ? t('chatDetails.voiceNote') : replyToMsg.content}
                 </span>
               </div>
             </div>

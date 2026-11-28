@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { PageVerifiedBadge } from '@/features/pages/components/PageVerifiedBadge'
 import { BarChart3, Eye, LayoutDashboard, Loader2, Megaphone, Plus, RefreshCw, Settings2, Sparkles, Users } from 'lucide-react'
 import { TopBar } from '@/components/ui/TopBar'
 import { SafeImage } from '@/components/shared/SafeImage'
@@ -90,7 +91,10 @@ function PageCard({ page, nf }: { page: Page; nf: Intl.NumberFormat }) {
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-[15px] font-bold truncate"><span>{page.name}</span></p>
+          <p className="flex items-center gap-1 min-w-0 text-[15px] font-bold">
+            <span className="truncate">{page.name}</span>
+            <PageVerifiedBadge page={page} size={15} />
+          </p>
           <p className="text-[12px] text-gray-500 dark:text-gray-400 truncate"><span>{pageCategoryLabel(page.category)}</span></p>
           <div className="flex items-center gap-3 mt-1.5 text-[12px] text-gray-600 dark:text-gray-300">
             <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" aria-hidden="true" /><span>{t('myPages.followersCount', { count: followers, formatted: nf.format(followers) })}</span></span>

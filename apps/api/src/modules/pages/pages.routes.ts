@@ -5,6 +5,12 @@ import { createAndSendNotification, createAndSendNotificationMany } from '../not
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 import {
+  readDocumentsForm, DocumentUploadError, documentErrorMessage,
+} from '../../services/private-documents.service'
+import {
+  PAGE_ENTITY_TYPES, PAGE_DOC_FIELDS, REQUIRED_PAGE_DOCS, type PageEntityType,
+} from '../../services/page-verification-policy'
+import {
   buildCommentThreads, commentInclude, COMMENT_MAX_LENGTH, excerpt, readCommentText, toCommentDto, toggleLike,
 } from '../../services/social.service'
 
@@ -25,6 +31,10 @@ function withPostLikes<T extends { _count?: any; likes?: any[] }>(post: T) {
   const { likes, ...rest } = post as any
   return { ...rest, likesCount: post._count?.likes ?? 0, hasLiked: !!likes?.length }
 }
+
+
+/** Champs de certification affichés partout où une page apparaît (badge à côté du nom). */
+const PAGE_BADGE_SELECT = { verificationStatus: true, verificationBadge: true } as const
 
 export default async function pagesRoutes(app: FastifyInstance) {
   // CREATE A PAGE
@@ -241,7 +251,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
     const findManyArgs: any = {
       where,
       include: {
-        page: { select: { id: true, name: true, avatarUrl: true, creatorId: true } },
+        page: { select: { id: true, name: true, avatarUrl: true, creatorId: true, ...PAGE_BADGE_SELECT } },
         ...postSocialInclude(sub ?? null),
       },
       orderBy: { createdAt: 'desc' },
@@ -350,6 +360,16 @@ export default async function pagesRoutes(app: FastifyInstance) {
     if (!page) return reply.code(404).send({ error: 'Page not found' })
     if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
 
+    // Anti-usurpation : une page certifiée (ou en cours d'examen) ne peut pas changer de nom,
+    // sinon le badge obtenu pour un nom pourrait être réutilisé sous un autre.
+    const nameChanged = typeof body.name === 'string' && body.name.trim() !== page.name
+    if (nameChanged && (page.verificationStatus === 'VERIFIED' || page.verificationStatus === 'PENDING')) {
+      return reply.code(409).send({
+        error: 'Le nom d\'une page certifiée ou en cours de certification ne peut pas être modifié.',
+        code: 'PAGE_NAME_LOCKED',
+      })
+    }
+
     const updated = await app.prisma.page.update({
       where: { id },
       data: {
@@ -361,6 +381,70 @@ export default async function pagesRoutes(app: FastifyInstance) {
       }
     })
     return reply.send(updated)
+  })
+
+  // CERTIFICATION — statut et dernier dossier (propriétaire uniquement, sans les pièces)
+  app.get('/:id/verification', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const page = await app.prisma.page.findUnique({
+      where: { id },
+      select: { creatorId: true, verificationStatus: true, verificationBadge: true, verifiedAt: true },
+    })
+    if (!page) return reply.code(404).send({ error: 'Page not found' })
+    if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+    const lastRequest = await app.prisma.pageVerificationRequest.findFirst({
+      where: { pageId: id },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, entityType: true, status: true, rejectionReason: true, createdAt: true, reviewedAt: true },
+    })
+    return reply.send({
+      status: page.verificationStatus,
+      badge: page.verificationBadge,
+      verifiedAt: page.verifiedAt,
+      lastRequest,
+    })
+  })
+
+  // CERTIFICATION — dépôt du dossier (multipart : entityType + pièces privées)
+  app.post('/:id/verify-request', { preHandler: [app.authenticate] }, async (req, reply) => {
+    const { sub } = req.user as { sub: string }
+    const { id } = req.params as { id: string }
+    const page = await app.prisma.page.findUnique({ where: { id }, select: { creatorId: true, verificationStatus: true } })
+    if (!page) return reply.code(404).send({ error: 'Page not found' })
+    if (page.creatorId !== sub) return reply.code(403).send({ error: 'Forbidden' })
+    if (page.verificationStatus === 'VERIFIED') {
+      return reply.code(409).send({ error: 'Cette page est déjà certifiée.', code: 'ALREADY_VERIFIED' })
+    }
+    if (page.verificationStatus === 'PENDING') {
+      return reply.code(409).send({ error: 'Une demande est déjà en cours d\'examen.', code: 'REQUEST_PENDING' })
+    }
+
+    let form
+    try {
+      form = await readDocumentsForm(req, { folder: `page-verification/${id}`, documentFields: PAGE_DOC_FIELDS })
+    } catch (e) {
+      if (e instanceof DocumentUploadError) return reply.code(400).send({ error: documentErrorMessage(e), code: e.code })
+      throw e
+    }
+
+    const entityType = form.fields.entityType as PageEntityType
+    if (!PAGE_ENTITY_TYPES.includes(entityType)) {
+      return reply.code(400).send({ error: 'Type de structure invalide', code: 'INVALID_ENTITY_TYPE' })
+    }
+    const missing = REQUIRED_PAGE_DOCS[entityType].filter((d) => !form.documents[d])
+    if (missing.length > 0) {
+      return reply.code(400).send({ error: 'Pièces obligatoires manquantes', code: 'MISSING_DOCUMENTS', missing })
+    }
+
+    const [request] = await app.prisma.$transaction([
+      app.prisma.pageVerificationRequest.create({
+        data: { pageId: id, submittedById: sub, entityType, documents: form.documents },
+        select: { id: true, entityType: true, status: true, createdAt: true },
+      }),
+      app.prisma.page.update({ where: { id }, data: { verificationStatus: 'PENDING' } }),
+    ])
+    return reply.code(201).send({ data: request })
   })
 
   // DELETE PAGE
@@ -456,7 +540,7 @@ export default async function pagesRoutes(app: FastifyInstance) {
     const post = await app.prisma.pagePost.findUnique({
       where: { id: postId },
       include: {
-        page: { select: { id: true, name: true, avatarUrl: true, creatorId: true, creator: { select: { isBanned: true } } } },
+        page: { select: { id: true, name: true, avatarUrl: true, creatorId: true, ...PAGE_BADGE_SELECT, creator: { select: { isBanned: true } } } },
         ...postSocialInclude(viewerId),
       },
     })

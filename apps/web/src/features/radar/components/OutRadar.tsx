@@ -223,11 +223,16 @@ export function OutRadar() {
   }, [searchResults, isManualSearching, coords, radiusKm, genderFilter, verifiedOnly, outingTypeFilter, searchSessionId])
 
   // ── 3. Query: Mes invitations ──────────────────────────────────────────────
+  // Toujours chargée (et rafraîchie) : alimente la pastille « invitations en attente » de l'onglet.
+  // Rafraîchie aussi en temps réel par le socket (notification RADAR_INVITE → useChatSocket).
   const { data: invitesList, isLoading: loadingInvites } = useQuery({
     queryKey: ['radar', 'invites'],
     queryFn: radarApi.getInvites,
-    enabled: activeTab === 'invites',
+    refetchInterval: 30_000,
   })
+  const pendingReceivedCount = (invitesList ?? []).filter(
+    (inv) => inv.status === 'PENDING' && inv.receiverId === currentUser?.id && new Date(inv.expiresAt).getTime() > Date.now(),
+  ).length
 
   // ── 4. Demande de géolocalisation native uniquement au moment de la recherche ──
   // Utilise le plugin @capacitor/geolocation (et pas l'API web navigator.geolocation
@@ -496,7 +501,15 @@ export function OutRadar() {
             }`}
           >
             <Inbox className="w-3.5 h-3.5" />
-            <span>Invitations</span>
+            <span>{t('outRadar.invitationsTab')}</span>
+            {pendingReceivedCount > 0 && (
+              <span
+                aria-label={t('outRadar.pendingInvitesAria', { count: pendingReceivedCount })}
+                className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full animate-pulse min-w-[20px] text-center leading-none"
+              >
+                <span>{pendingReceivedCount > 99 ? '99+' : pendingReceivedCount}</span>
+              </span>
+            )}
           </button>
         </div>
       </div>

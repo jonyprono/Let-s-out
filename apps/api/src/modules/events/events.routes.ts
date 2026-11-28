@@ -6,6 +6,7 @@ import { uploadBufferToCloudinary } from '../../services/cloudinary.service'
 import { EmailService } from '../../services/email.service'
 import { eventGenderDenial } from '../../services/signup-policy.service'
 import { isKycVerified } from '../../services/kyc.service'
+import { isOwnMedicalProofRef, PUBLIC_PARTNER_ORG_SELECT } from '../charities/charities.routes'
 import { checkInTicket, ensureTicketToken, parseTicketPayload, ticketQrPayload, ticketQrPng } from '../../services/ticket.service'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
@@ -23,7 +24,7 @@ const PUBLIC_USER_SELECT = {
 const CreateEventSchema = z.object({
   title: z.string().min(3).max(100),
   description: z.string().min(3).max(5000),
-  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY']).nullable().optional().transform(v => v || 'OTHER'),
+  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY','CHARITY']).nullable().optional().transform(v => v || 'OTHER'),
   maxAttendees: z.number().int().positive().optional(),
   price: z.number().min(0).default(0),
   currency: z.string().length(3).default('XOF'),
@@ -49,6 +50,9 @@ const CreateEventSchema = z.object({
   poolMode: z.enum(['libre', 'minimum', 'fixe']).optional(),
   poolMinAmount: z.number().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED']).default('PUBLISHED'),
+  // Cagnotte solidaire (catégorie CHARITY) : ONG partenaire agréée + justificatif médical facultatif
+  charityOrgId: z.string().min(1).optional(),
+  medicalProofUrl: z.string().min(1).optional(),
 })
 
 /**
@@ -66,7 +70,7 @@ export function hasActivePoolForCandidates(e: { poolTarget: number | null; poolR
 const UpdateEventSchema = z.object({
   title: z.string().min(3).max(100).optional(),
   description: z.string().min(3).max(5000).optional(),
-  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY']).nullable().optional(),
+  category: z.enum(['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY','CHARITY']).nullable().optional(),
   maxAttendees: z.number().int().positive().nullable().optional(),
   price: z.number().min(0).optional(),
   currency: z.string().length(3).optional(),
@@ -181,7 +185,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
 
     const interests = userProfile?.interests || []
 
-    const validEnums = ['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY'];
+    const validEnums = ['SPORT','CULTURE','FOOD','NIGHTLIFE','TRAVEL','GAMING','WELLNESS','ART','MUSIC','OTHER','SOCIAL','TECH','SCIENCE','LIFESTYLE','TOURISM','GAMES','CONCERTS','COMEDY','CHARITY'];
     const mappedCategories = interests.map((i: string) => {
       const upper = i.toUpperCase();
       if (upper === 'MUSIQUE') return 'MUSIC';
@@ -831,10 +835,15 @@ export default async function eventsRoutes(app: FastifyInstance) {
       include: {
         creator: { select: { id: true, profile: { select: { username: true, displayName: true, avatarUrl: true, followersCount: true, eventsCount: true } } } },
         _count: { select: { bookings: true, comments: true } },
-        payoutRequests: true
+        payoutRequests: true,
+        // kycStatus : le badge « Structure certifiée » ne s'affiche que si l'ONG est toujours agréée
+        charityOrg: { select: { ...PUBLIC_PARTNER_ORG_SELECT, kycStatus: true } },
       },
     })
     if (!event) return reply.code(404).send({ error: 'Event not found' })
+    // Référence privée du justificatif médical : jamais renvoyée (indique seulement sa présence)
+    const hasMedicalProof = !!event.medicalProofUrl
+    event.medicalProofUrl = null
 
     // joinCode is only disclosed to the organizer/co-hosts or confirmed participants —
     // anonymous visitors and users who haven't joined must never see it.
@@ -910,7 +919,7 @@ export default async function eventsRoutes(app: FastifyInstance) {
     // Increment view count (fire-and-forget, don't fail if this fails)
     app.prisma.event.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {})
 
-    return reply.send({ ...eventWithCoHosts, validatorVotes, expectedValidatorVotes })
+    return reply.send({ ...eventWithCoHosts, validatorVotes, expectedValidatorVotes, hasMedicalProof })
   })
 
   // ── Protected routes ─────────────────────────────────────────────────────
@@ -1005,9 +1014,41 @@ export default async function eventsRoutes(app: FastifyInstance) {
       }
     }
 
+    // Cagnotte solidaire / santé : KYC vérifié + ONG partenaire agréée obligatoires
+    const isCharity = body.category === 'CHARITY'
+    if (isCharity) {
+      if (!(await isKycVerified(app.prisma, sub))) {
+        return reply.code(403).send({
+          error: 'Vérification requise',
+          code: 'KYC_REQUIRED',
+          message: "Votre compte doit être vérifié (KYC) pour ouvrir une cagnotte solidaire.",
+        })
+      }
+      if (!body.charityOrgId) {
+        return reply.code(400).send({ error: 'ONG partenaire obligatoire', code: 'CHARITY_ORG_REQUIRED' })
+      }
+      const org = await app.prisma.partnerOrg.findUnique({
+        where: { id: body.charityOrgId },
+        select: { kycStatus: true, isEligibleForFundraisers: true },
+      })
+      if (!org || org.kycStatus !== 'VERIFIED' || !org.isEligibleForFundraisers) {
+        return reply.code(400).send({ error: 'ONG partenaire non agréée', code: 'CHARITY_ORG_NOT_ELIGIBLE' })
+      }
+      if (!body.poolTarget || body.poolTarget <= 0) {
+        return reply.code(400).send({ error: 'Objectif de cagnotte obligatoire', code: 'CHARITY_POOL_TARGET_REQUIRED' })
+      }
+      if (body.medicalProofUrl && !isOwnMedicalProofRef(body.medicalProofUrl, sub)) {
+        return reply.code(400).send({ error: 'Justificatif médical invalide', code: 'INVALID_MEDICAL_PROOF' })
+      }
+    }
+
     const event = await app.prisma.event.create({
       data: {
         ...body,
+        // Hors catégorie CHARITY : aucun rattachement ONG ni justificatif (ignorés)
+        charityOrgId: isCharity ? body.charityOrgId : undefined,
+        medicalProofUrl: isCharity ? body.medicalProofUrl : undefined,
+        isCharityPool: isCharity,
         creatorId: sub,
         status: body.status, // use status from body
         startAt: new Date(body.startAt),
@@ -1174,6 +1215,23 @@ export default async function eventsRoutes(app: FastifyInstance) {
       const issues = e.issues ?? []
       const messages = issues.map((i: any) => i.message)
       return reply.code(400).send({ error: 'Validation échouée', details: messages, message: messages.join(', ') })
+    }
+
+    // Une cagnotte solidaire est fixée à la création (KYC + ONG contrôlés à ce moment-là) :
+    // impossible de basculer un événement vers ou depuis la catégorie CHARITY ensuite.
+    if (updateData.category !== undefined) {
+      const wasCharity = event.category === 'CHARITY'
+      const willBeCharity = updateData.category === 'CHARITY'
+      if (wasCharity !== willBeCharity) {
+        return reply.code(409).send({
+          error: 'La catégorie « Solidaire » ne peut pas être ajoutée ou retirée après la création.',
+          code: 'CHARITY_CATEGORY_LOCKED',
+        })
+      }
+    }
+    // Une cagnotte solidaire ne peut pas être supprimée (dons destinés à l'ONG)
+    if (event.isCharityPool && updateData.poolTarget === null) {
+      return reply.code(409).send({ error: 'La cagnotte d\'un événement solidaire ne peut pas être supprimée.', code: 'CHARITY_POOL_LOCKED' })
     }
 
     // Keep published status if already published

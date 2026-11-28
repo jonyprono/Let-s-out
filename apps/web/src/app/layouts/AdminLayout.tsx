@@ -1,7 +1,8 @@
 import { useEffect, useCallback } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router'
-import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet, ToggleRight, Settings, Users, Calendar } from 'lucide-react'
+import { LayoutDashboard, ShieldCheck, LogOut, Shield, MessageSquare, Bot, ArrowLeft, FileText, Wallet, ToggleRight, Settings, Users, Calendar, HeartHandshake, BadgeCheck } from 'lucide-react'
 import { Medal01Icon } from 'hugeicons-react'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth.store'
 import { updateAdminActivity } from '@/app/components/admin/AdminRoute'
 
@@ -11,6 +12,8 @@ const navItems = [
   { to: '/admin/events', end: false, label: 'Événements', icon: Calendar },
   { to: '/admin/badges', end: false, label: 'Badges & Récompenses', icon: Medal01Icon },
   { to: '/admin/kyc', end: false, label: 'Vérifications KYC', icon: ShieldCheck },
+  { to: '/admin/charities', end: false, label: 'ONG partenaires', labelKey: 'adminVerif.charities.nav', icon: HeartHandshake },
+  { to: '/admin/page-verifications', end: false, label: 'Certification des pages', labelKey: 'adminVerif.pages.nav', icon: BadgeCheck },
   { to: '/admin/admins', end: false, label: 'Administrateurs', icon: Shield },
   { to: '/admin/support', end: false, label: 'Chats Support', icon: MessageSquare },
   { to: '/admin/bots', end: false, label: 'Agents IA', icon: Bot },
@@ -21,6 +24,7 @@ const navItems = [
 ]
 
 export function AdminLayout() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
   const logout = useAuthStore(s => s.logout)
@@ -83,7 +87,7 @@ export function AdminLayout() {
               }
             >
               <item.icon className="w-4 h-4 shrink-0" />
-              {item.label}
+              <span>{item.labelKey ? t(item.labelKey) : item.label}</span>
             </NavLink>
           ))}
         </nav>
@@ -137,7 +141,7 @@ export function AdminLayout() {
               }
             >
               <item.icon className="w-3.5 h-3.5" />
-              {item.label}
+              <span>{item.labelKey ? t(item.labelKey) : item.label}</span>
             </NavLink>
           ))}
         </nav>

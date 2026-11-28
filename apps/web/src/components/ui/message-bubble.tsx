@@ -1,6 +1,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 import { optimizeImageUrl } from "@/lib/cloudinary-image"
+import { useTranslation } from "react-i18next"
 
 export interface MessageBubbleProps extends React.HTMLAttributes<HTMLDivElement> {
   content?: string;
@@ -62,6 +63,13 @@ export function MessageBubble({
   children,
   ...props
 }: MessageBubbleProps) {
+  const { t } = useTranslation()
+  /** Aperçu d'un message cité (type média → libellé traduit au lieu de l'URL du fichier) */
+  const replyPreview = (r: NonNullable<MessageBubbleProps['replyTo']>) =>
+    r.type === 'IMAGE' ? t('chatDetails.photo')
+      : r.type === 'VIDEO' ? t('chatDetails.video2')
+      : r.type === 'AUDIO' ? t('chatDetails.voiceNote')
+      : r.content
 
   const renderStatusIcon = () => {
     if (!isSender || !status) return null;
@@ -134,7 +142,7 @@ export function MessageBubble({
                   {props.replyTo.senderName}
                 </span>
                 <span className="text-[12px] opacity-75 truncate max-w-[200px]">
-                  {props.replyTo.type === 'IMAGE' ? '📷 Photo' : props.replyTo.type === 'VIDEO' ? '🎥 Vidéo' : props.replyTo.type === 'AUDIO' ? '🎵 Audio' : props.replyTo.content}
+                  <span>{replyPreview(props.replyTo)}</span>
                 </span>
               </div>
             )}
@@ -197,7 +205,7 @@ export function MessageBubble({
                       {props.replyTo.senderName}
                     </span>
                     <span className="text-[12px] opacity-75 truncate max-w-[200px]">
-                      {props.replyTo.type === 'IMAGE' ? '📷 Photo' : props.replyTo.type === 'VIDEO' ? '🎥 Vidéo' : props.replyTo.type === 'AUDIO' ? '🎵 Audio' : props.replyTo.content}
+                      <span>{replyPreview(props.replyTo)}</span>
                     </span>
                   </div>
                 )}

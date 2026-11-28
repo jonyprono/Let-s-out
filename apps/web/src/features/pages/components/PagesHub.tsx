@@ -7,6 +7,7 @@ import { pagesApi, Page } from '../api'
 import { SafeImage } from '@/components/shared/SafeImage'
 import { Loader2, Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { PageVerifiedBadge } from '@/features/pages/components/PageVerifiedBadge'
 
 type TabType = 'decouvrir' | 'invitations' | 'suivies'
 
@@ -36,6 +37,8 @@ export function PagesHub() {
       id: p.id,
       name: p.name,
       avatarUrl: p.avatarUrl,
+      verificationStatus: p.verificationStatus,
+      verificationBadge: p.verificationBadge,
       subtitle: p.category ? t('pagesHub.abonnes', { v0: p.category, v1: p._count?.followers || 0 }) : t('pagesHub.abonnes2', { v0: p._count?.followers || 0 }),
     }))
 
@@ -177,7 +180,10 @@ export function PagesHub() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{p.name}</p>
+                        <p className="flex items-center gap-1 min-w-0 text-sm font-semibold text-gray-900 dark:text-white">
+                          <span className="truncate">{p.name}</span>
+                          <PageVerifiedBadge page={p} size={14} />
+                        </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.category || 'Page'}</p>
                       </div>
                     </div>
@@ -222,7 +228,8 @@ export function PagesHub() {
                         onClick={() => navigate(`/pages/${sug.id}`)}
                         className="text-sm font-bold text-gray-900 dark:text-white leading-tight cursor-pointer hover:underline"
                       >
-                        {sug.name}
+                        <span>{sug.name}</span>
+                        <PageVerifiedBadge page={sug} size={14} className="ml-1" />
                       </p>
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                         {sug.subtitle}

@@ -66,6 +66,7 @@ import { JoinPendingScreen } from '@/app/components/JoinPendingScreen'
 import { dateLocale } from '@/lib/locale'
 import { useTranslation } from 'react-i18next'
 import { eventCategoryLabel } from '@/lib/event-categories'
+import { CharitySupervisionBadge } from '@/features/charities/components/CharitySupervisionBadge'
 const CustomShareIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M10.8333 7.0835H11.25V3.91379C11.25 3.5933 11.5098 3.3335 11.8302 3.3335C11.9917 3.3335 12.1457 3.40068 12.2555 3.51893L17.2165 8.8615C17.3987 9.05775 17.5 9.31566 17.5 9.5835C17.5 9.85133 17.3987 10.1092 17.2165 10.3055L12.2555 15.6481C12.1457 15.7663 11.9917 15.8335 11.8302 15.8335C11.5098 15.8335 11.25 15.5737 11.25 15.2532V12.0835C6.62129 12.0835 4.1224 15.4303 3.49332 16.4041C3.38948 16.5648 3.21428 16.6668 3.02292 16.6668C2.73412 16.6668 2.5 16.4327 2.5 16.1439V15.4168C2.5 10.8145 6.23096 7.0835 10.8333 7.0835Z" stroke="#56514F" strokeWidth="1.25" strokeLinejoin="round"/>
@@ -739,6 +740,8 @@ export function EventDetails({ onBack }: EventDetailsProps) {
             <div>
               {isEventLive(event) && <LiveBadge className="mb-2" />}
               <h1 className="text-[20px] font-semibold font-poppins text-[#1B1818] leading-tight mb-2">{event.title}</h1>
+              {/* Cagnotte solidaire : supervisée par une ONG partenaire certifiée */}
+              {event.isCharityPool && event.charityOrg?.kycStatus === 'VERIFIED' && <CharitySupervisionBadge org={event.charityOrg} />}
               <div className="flex flex-wrap gap-2 mb-4">
                 {event.genderRestriction === 'FEMALE' && (
                   <span className="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-pink-100 text-pink-700">

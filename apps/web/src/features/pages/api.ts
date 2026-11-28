@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api-client'
+import type { PageVerificationStatus, PageVerificationBadge } from './components/PageVerifiedBadge'
 
 export interface Page {
   id: string
@@ -9,6 +10,9 @@ export interface Page {
   avatarUrl?: string
   coverUrl?: string
   createdAt: string
+  /** Certification (badge officiel anti-usurpation) */
+  verificationStatus?: PageVerificationStatus
+  verificationBadge?: PageVerificationBadge | null
   _count?: { followers: number; posts: number }
   isFollowing?: boolean
   creator?: {
@@ -64,7 +68,50 @@ export interface PageFollowerItem {
   followedAt: string
 }
 
+/** Types de structure d'une demande de certification et pièces exigées (suit REQUIRED_PAGE_DOCS côté API). */
+export const PAGE_ENTITY_TYPES = ['COMPANY', 'VENUE', 'PUBLIC_FIGURE', 'NGO', 'INSTITUTION'] as const
+export type PageEntityType = typeof PAGE_ENTITY_TYPES[number]
+export type PageDocField = 'rccm' | 'ifu' | 'receipt' | 'managerId' | 'notoriety' | 'officialLetter'
+export const PAGE_DOCS_BY_TYPE: Record<PageEntityType, { required: PageDocField[]; optional: PageDocField[] }> = {
+  COMPANY: { required: ['rccm', 'managerId'], optional: ['ifu'] },
+  VENUE: { required: ['rccm', 'managerId'], optional: ['ifu', 'notoriety'] },
+  PUBLIC_FIGURE: { required: ['managerId', 'notoriety'], optional: [] },
+  NGO: { required: ['receipt', 'managerId'], optional: ['ifu'] },
+  INSTITUTION: { required: ['officialLetter', 'managerId'], optional: [] },
+}
+
+/** Badge attribué à la validation (même règle que l'API) : or pour ONG et institutions, bleu sinon. */
+export function badgeForEntityType(entityType: string): 'BLUE' | 'GOLD' {
+  return entityType === 'NGO' || entityType === 'INSTITUTION' ? 'GOLD' : 'BLUE'
+}
+
+export interface PageVerificationInfo {
+  status: PageVerificationStatus
+  badge: PageVerificationBadge | null
+  verifiedAt: string | null
+  lastRequest: {
+    id: string
+    entityType: PageEntityType
+    status: PageVerificationStatus
+    rejectionReason: string | null
+    createdAt: string
+    reviewedAt: string | null
+  } | null
+}
+
 export const pagesApi = {
+  /** Certification : statut + dernier dossier (propriétaire uniquement) */
+  getVerification: (id: string) =>
+    apiClient.get<PageVerificationInfo>(`/pages/${id}/verification`).then((r) => r.data),
+
+  /** Certification : dépôt du dossier (type de structure + pièces) */
+  submitVerification: (id: string, entityType: PageEntityType, files: Partial<Record<PageDocField, File>>) => {
+    const form = new FormData()
+    form.append('entityType', entityType)
+    for (const [k, f] of Object.entries(files)) if (f) form.append(k, f)
+    return apiClient.post(`/pages/${id}/verify-request`, form).then((r) => r.data)
+  },
+
   create: (data: { name: string; category: string; description?: string }) =>
     apiClient.post<Page>('/pages', data),
 
@@ -80,7 +127,7 @@ export const pagesApi = {
   getFeed: (params?: { limit?: number; offset?: number; cursor?: string }) =>
     apiClient.get<{
       data: (PagePost & {
-        page: { id: string; name: string; avatarUrl?: string; creatorId: string };
+        page: { id: string; name: string; avatarUrl?: string; creatorId: string; verificationStatus?: PageVerificationStatus; verificationBadge?: PageVerificationBadge | null };
         isFollowing?: boolean;
         isOwner?: boolean;
         _count?: { comments: number };

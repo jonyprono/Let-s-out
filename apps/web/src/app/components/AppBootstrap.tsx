@@ -19,6 +19,7 @@ import { chatApi } from '@/features/chat/api'
 import { apiClient } from '@/lib/api-client'
 import { DebugPanel } from '@/app/components/DebugPanel'
 import { setOneSignalClickHandler } from '@/lib/onesignal'
+import { isConversationOpen } from '@/lib/active-conversation'
 
 export function AppBootstrap() {
   const accessToken = useAuthStore((s) => s.accessToken)
@@ -141,10 +142,7 @@ export function AppBootstrap() {
         if (data.type === 'NEW_MESSAGE' && data.senderId && data.senderId === currentUserId) return
 
         // Don't show notification if the user already has that chat open
-        if (data.type === 'NEW_MESSAGE' && data.conversationId) {
-          const currentPath = window.location.pathname
-          if (currentPath === `/chat/${data.conversationId}`) return
-        }
+        if (data.type === 'NEW_MESSAGE' && isConversationOpen(data.conversationId)) return
 
         await LocalNotifications.schedule({
           notifications: [{

@@ -102,6 +102,9 @@ const AdminAuditLogsPage = lazyRoute(() => import('./components/admin/AdminAudit
 const AdminPayoutsPage = lazyRoute(() => import('./components/admin/AdminPayoutsPage').then(m => m.AdminPayoutsPage))
 const AdminFeatureFlagsPage = lazyRoute(() => import('./components/admin/AdminFeatureFlagsPage').then(m => m.default))
 const AdminBadgesPage = lazyRoute(() => import('./components/admin/AdminBadgesPage').then(m => m.AdminBadgesPage))
+const AdminCharitiesPage = lazyRoute(() => import('./components/admin/AdminCharitiesPage').then(m => m.AdminCharitiesPage))
+const AdminPageVerificationsPage = lazyRoute(() => import('./components/admin/AdminPageVerificationsPage').then(m => m.AdminPageVerificationsPage))
+const CharityApplyPage = lazyRoute(() => import('@/features/charities/components/CharityApplyPage').then(m => m.CharityApplyPage))
 const AdminSettingsPage = lazyRoute(() => import('./components/admin/AdminSettingsPage').then(m => m.default))
 const AdminUsersPage = lazyRoute(() => import('./components/admin/AdminUsersPage').then(m => m.default))
 const AdminEventsPage = lazyRoute(() => import('./components/admin/AdminEventsPage').then(m => m.default))
@@ -419,6 +422,8 @@ export default function App() {
             <Route path="feature-flags" element={<AdminFeatureFlagsPage />} />
             <Route path="settings" element={<AdminSettingsPage />} />
             <Route path="badges" element={<AdminBadgesPage />} />
+            <Route path="charities" element={<AdminCharitiesPage />} />
+            <Route path="page-verifications" element={<AdminPageVerificationsPage />} />
           </Route>
 
           {/* Protected app */}
@@ -446,6 +451,8 @@ export default function App() {
             <Route path="/events/:id/pay" element={<PaymentPage />} />
             <Route path="/payments/:bookingId" element={<PaymentReceipt />} />
             <Route path="/verify-profile" element={<VerifyProfile />} />
+            {/* Demande d'agrément d'une ONG partenaire (cagnottes solidaires) */}
+            <Route path="/charities/apply" element={<CharityApplyPage />} />
             <Route path="/friend-requests" element={<FriendRequests />} />
             <Route path="/friends" element={<FriendsList />} />
             <Route path="/friends/:userId" element={<FriendsList />} />

@@ -14,6 +14,7 @@ import { useConfirm } from '@/components/shared/ConfirmContext'
 import { EventCategorySheet } from '@/features/events/components/EventCategorySheet'
 import { PageStatsPanel } from './PageStatsPanel'
 import { PageFollowersPanel } from './PageFollowersPanel'
+import { PageCertificationSection } from './PageCertificationSection'
 
 import { intlLocale } from '@/lib/locale'
 import { useTranslation } from 'react-i18next'
@@ -233,8 +234,13 @@ export function ManagePage() {
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[16px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors"
+                  // Anti-usurpation : nom figé pour une page certifiée ou en cours d'examen (refusé aussi par l'API)
+                  readOnly={page?.verificationStatus === 'VERIFIED' || page?.verificationStatus === 'PENDING'}
+                  className="w-full px-4 py-3 border border-[var(--border-default)] rounded-2xl text-[16px] text-[var(--color-text-primary)] bg-[var(--color-background-primary)] focus:outline-none focus:border-[#FF7A00] transition-colors read-only:opacity-60"
                 />
+                {(page?.verificationStatus === 'VERIFIED' || page?.verificationStatus === 'PENDING') && (
+                  <p className="text-[11px] text-[var(--color-text-muted)] mt-1 ml-1"><span>{t('pageVerification.nameLocked')}</span></p>
+                )}
               </div>
               <div>
                 <label className="text-[12px] font-semibold text-[var(--color-text-secondary)] mb-1.5 block"><span>{t('managePage.categorie')}</span></label>
@@ -262,6 +268,8 @@ export function ManagePage() {
               >
                 <span>{t('managePage.enregistrerLesModifications')}</span>
               </PrimaryButton>
+              {/* Certification de la page (badge officiel anti-usurpation) */}
+              {id && <PageCertificationSection pageId={id} />}
               <div className="pt-4 border-t border-[var(--border-tertiary)]">
                 {!showDeleteConfirm ? (
                   <button

@@ -28,6 +28,7 @@ import {
   type CarouselApi,
 } from '@/app/components/ui/carousel';
 import { useTranslation } from 'react-i18next'
+import { PageVerifiedBadge } from '@/features/pages/components/PageVerifiedBadge'
 import i18n from '@/lib/i18n'
 
 interface PagePostDetailModalProps {
@@ -216,6 +217,7 @@ export function PagePostDetailModal({
                     <p className="font-bold text-sm text-gray-900 dark:text-white leading-tight truncate group-hover:text-[#FF7A00] transition-colors">
                       {post.page.name}
                     </p>
+                    <PageVerifiedBadge page={post.page} size={14} />
                   </div>
                   <p className="text-[11px] text-gray-400">
                     {getRelativeTime(post.createdAt) || 'Publication'}

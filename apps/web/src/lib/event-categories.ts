@@ -1,7 +1,7 @@
 import {
   PaintBoardIcon, MaskTheater01Icon, FootballIcon, HealthIcon, KitchenUtensilsIcon, DrinkIcon,
   MoleculesIcon, PartyIcon, HandPrayerIcon, ShoppingBag02Icon, MusicNote03Icon, CameraVideoIcon,
-  GameController01Icon, Airplane01Icon, Book01Icon, MapsIcon,
+  GameController01Icon, Airplane01Icon, Book01Icon, MapsIcon, CharityIcon,
 } from 'hugeicons-react'
 import type { TFunction } from 'i18next'
 
@@ -17,7 +17,7 @@ import type { TFunction } from 'i18next'
 export type EventCategoryId =
   | 'CULTURE' | 'COMEDY' | 'SPORT' | 'WELLNESS' | 'FOOD' | 'LIFESTYLE' | 'SOCIAL' | 'NIGHTLIFE'
   | 'OTHER' | 'TECH' | 'MUSIC' | 'ART' | 'GAMING' | 'CONCERTS' | 'TRAVEL'
-  | 'SCIENCE' | 'TOURISM' | 'GAMES'
+  | 'SCIENCE' | 'TOURISM' | 'GAMES' | 'CHARITY'
 
 export interface EventCategoryDef {
   id: EventCategoryId
@@ -42,6 +42,8 @@ export const EVENT_CATEGORIES: EventCategoryDef[] = [
   { id: 'GAMING',    Icon: GameController01Icon, emoji: '🎮' },
   { id: 'CONCERTS',  Icon: MusicNote03Icon,      emoji: '🎤' },
   { id: 'TRAVEL',    Icon: Airplane01Icon,       emoji: '✈️' },
+  // Solidaire / aide médicale : cagnotte supervisée par une ONG partenaire agréée (KYC obligatoire)
+  { id: 'CHARITY',   Icon: CharityIcon,          emoji: '🎗️' },
 ]
 
 /** Valeurs historiques de l'enum, non proposées à la création mais à afficher. */

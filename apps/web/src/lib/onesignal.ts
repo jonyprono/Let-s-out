@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core'
 import type { OneSignalPlugin } from '@onesignal/capacitor-plugin'
+import { isConversationOpen } from './active-conversation'
 
 /**
  * OneSignal (push natif Android / iOS) — plugin Capacitor officiel @onesignal/capacitor-plugin.
@@ -52,6 +53,15 @@ export function initOneSignal(): Promise<OneSignalPlugin | null> {
         // App lancée par le tap : le routeur n'est peut-être pas encore monté → rejoué à l'enregistrement.
         if (!clickHandler) { pendingClick = data; return }
         try { clickHandler(data) } catch (e) { console.error('[OneSignal] click handler error:', e) }
+      })
+
+      // Premier plan : OneSignal affiche la notification par défaut → masquée pour un message
+      // de la discussion déjà ouverte à l'écran (le message apparaît directement dans le fil).
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+        try {
+          const data = (event.getNotification()?.additionalData ?? {}) as Record<string, any>
+          if (data.type === 'NEW_MESSAGE' && isConversationOpen(data.conversationId)) event.preventDefault()
+        } catch (e) { console.warn('[OneSignal] foregroundWillDisplay error:', e) }
       })
 
       // Demande la permission (true : renvoie vers les réglages si refusée auparavant). Non bloquant.

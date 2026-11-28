@@ -23,6 +23,7 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
 import { intlLocale } from '@/lib/locale';
 import { useTranslation } from 'react-i18next'
+import { PageVerifiedBadge } from '@/features/pages/components/PageVerifiedBadge'
 interface ProfileProps {
   onNavigate: (screen: string, params?: any) => void;
 }
@@ -715,7 +716,10 @@ export function ProfileV2({ onNavigate }: ProfileProps) {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{p.name}</p>
+                        <p className="flex items-center gap-1 min-w-0 text-sm font-bold text-gray-900 dark:text-white">
+                          <span className="truncate">{p.name}</span>
+                          <PageVerifiedBadge page={p} size={14} />
+                        </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{p.category || 'Page'}</p>
                         <p className="text-[11px] text-gray-400 mt-0.5">
                           <span>{`${i18n.t('myPages.followersCount', { count: p._count?.followers || 0, formatted: p._count?.followers || 0 })} · ${i18n.t('myPages.postsCount', { count: p._count?.posts || 0, formatted: p._count?.posts || 0 })}`}</span>
